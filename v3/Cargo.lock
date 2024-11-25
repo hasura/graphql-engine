@@ -2199,6 +2199,7 @@ dependencies = [
  "axum",
  "criterion",
  "execute",
+ "futures-ext",
  "goldenfile",
  "graphql-ir",
  "graphql-schema",

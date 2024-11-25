@@ -14,10 +14,6 @@ use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibi
 use crate::error;
 use crate::{HttpContext, ProjectId};
 
-/// The column name used by NDC query response of functions
-/// <https://github.com/hasura/ndc-spec/blob/main/specification/src/specification/queries/functions.md?plain=1#L3>
-pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
-
 /// Executes a NDC operation
 pub async fn execute_ndc_query<'n, 's>(
     http_context: &HttpContext,

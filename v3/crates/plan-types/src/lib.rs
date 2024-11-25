@@ -1,6 +1,7 @@
 mod execution_plan;
 mod expression;
 mod ndc_field_alias;
+mod ndc_function_ir_value;
 mod ndc_relationship_name;
 mod relationships;
 mod usage_counts;
@@ -8,17 +9,19 @@ mod variable_name;
 
 pub use execution_plan::{
     AggregateFieldSelection, AggregateSelectionSet, Argument, ExecutionTree, Field,
-    FieldsSelection, JoinLocations, JoinNode, LocationKind, MutationArgument,
-    MutationExecutionPlan, NDCMutationExecution, NDCQueryExecution, NestedArray, NestedField,
-    NestedObject, OrderByDirection, OrderByElement, OrderByTarget, PredicateQueryTrees,
-    ProcessResponseAs, QueryExecutionPlan, QueryNodeNew, Relationship, RelationshipArgument,
-    RemoteJoin, RemoteJoinArgument, ResolvedFilterExpression, SourceFieldAlias, TargetField,
+    FieldsSelection, JoinLocations, JoinNode, Location, LocationKind, MutationArgument,
+    MutationExecutionPlan, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
+    NestedArray, NestedField, NestedObject, OrderByDirection, OrderByElement, OrderByTarget,
+    PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryNodeNew, Relationship,
+    RelationshipArgument, RemoteJoin, RemoteJoinArgument, RemoteJoinType, ResolvedFilterExpression,
+    SourceFieldAlias, TargetField,
 };
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,
     SourceNdcColumn,
 };
 pub use ndc_field_alias::NdcFieldAlias;
+pub use ndc_function_ir_value::FUNCTION_IR_VALUE_COLUMN_NAME;
 pub use ndc_relationship_name::NdcRelationshipName;
 pub use relationships::LocalModelRelationshipInfo;
 pub use usage_counts::{CommandCount, ModelCount, UsagesCounts};

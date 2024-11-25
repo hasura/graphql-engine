@@ -25,6 +25,9 @@ pub enum RequestError {
     #[error("{0}")]
     IRConversionError(#[from] graphql_ir::Error),
 
+    #[error("error while generating GraphQL plan: {0}")]
+    GraphQlPlanError(#[from] graphql_ir::PlanError),
+
     #[error("error while generating plan: {0}")]
     PlanError(#[from] plan::error::Error),
 
@@ -59,6 +62,7 @@ impl TraceableError for RequestError {
         match self {
             Self::IRConversionError(ir_error) => ir_error.visibility(),
             Self::PlanError(plan_error) => plan_error.visibility(),
+            Self::GraphQlPlanError(plan_error) => plan_error.visibility(),
             // Rest all errors are visible to users via traces
             Self::ParseFailure(_) | Self::ValidationFailed(_) | Self::ExplainError(_) => {
                 ErrorVisibility::User

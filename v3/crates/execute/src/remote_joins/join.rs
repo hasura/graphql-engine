@@ -6,7 +6,7 @@ use nonempty::NonEmpty;
 use serde_json as json;
 use std::collections::HashMap;
 
-use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
+use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 
 use super::collect::LocationInfo;
 use super::types::{Argument, LocationKind, RemoteJoin};

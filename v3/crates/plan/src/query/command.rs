@@ -5,7 +5,6 @@ use std::sync::Arc;
 use super::field_selection;
 use crate::PlanError;
 use crate::{NDCFunction, NDCProcedure};
-use execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use hasura_authn_core::Session;
 use metadata_resolve::{
     unwrap_custom_type_name, Metadata, Qualified, QualifiedBaseType, QualifiedTypeName,
@@ -17,6 +16,7 @@ use open_dds::{
     data_connector::{CollectionName, DataConnectorColumnName},
     types::CustomTypeName,
 };
+use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{
     Argument, Field, MutationArgument, MutationExecutionPlan, NdcFieldAlias, NestedArray,
     NestedField, NestedObject, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,

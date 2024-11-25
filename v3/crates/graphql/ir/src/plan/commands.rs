@@ -5,22 +5,19 @@ use std::collections::BTreeMap;
 
 use super::arguments;
 use super::error;
-use super::field;
-use super::mutation;
-use super::query;
 use super::selection_set;
-use crate::remote_joins::types::JoinLocations;
-use graphql_ir::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
+use crate::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
 use open_dds::commands::ProcedureName;
-use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{
-    NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, Relationship, VariableName,
+    Argument, Field, FieldsSelection, JoinLocations, MutationExecutionPlan, NdcFieldAlias,
+    NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew, Relationship,
+    VariableName, FUNCTION_IR_VALUE_COLUMN_NAME,
 };
 
-pub(crate) fn plan_query_node<'s>(
-    ir: &CommandInfo<'s>,
+pub(crate) fn plan_query_node(
+    ir: &CommandInfo<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
-) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s>), error::Error> {
+) -> Result<(QueryNodeNew, JoinLocations), error::Error> {
     let mut ndc_nested_field = None;
     let mut jl = JoinLocations::new();
     if let Some(nested_selection) = &ir.selection {
@@ -32,16 +29,18 @@ pub(crate) fn plan_query_node<'s>(
         ndc_nested_field = Some(fields);
         jl = locations;
     }
-    let query = query::QueryNode {
+    let query = QueryNodeNew {
         aggregates: None,
-        fields: Some(IndexMap::from([(
-            NdcFieldAlias::from(FUNCTION_IR_VALUE_COLUMN_NAME),
-            field::Field::Column {
-                column: DataConnectorColumnName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
-                fields: ndc_nested_field,
-                arguments: BTreeMap::new(),
-            },
-        )])),
+        fields: Some(FieldsSelection {
+            fields: IndexMap::from([(
+                NdcFieldAlias::from(FUNCTION_IR_VALUE_COLUMN_NAME),
+                Field::Column {
+                    column: DataConnectorColumnName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
+                    fields: ndc_nested_field,
+                    arguments: BTreeMap::new(),
+                },
+            )]),
+        }),
         limit: None,
         offset: None,
         order_by: None,
@@ -50,9 +49,9 @@ pub(crate) fn plan_query_node<'s>(
     Ok((query, jl))
 }
 
-pub(crate) fn plan_query_execution<'s>(
-    ir: &FunctionBasedCommand<'s>,
-) -> Result<(query::UnresolvedQueryExecutionPlan<'s>, JoinLocations<'s>), error::Error> {
+pub(crate) fn plan_query_execution(
+    ir: &FunctionBasedCommand<'_>,
+) -> Result<(QueryExecutionPlan, JoinLocations), error::Error> {
     let mut collection_relationships = BTreeMap::new();
     let mut arguments =
         arguments::plan_arguments(&ir.command_info.arguments, &mut collection_relationships)?;
@@ -61,7 +60,7 @@ pub(crate) fn plan_query_execution<'s>(
     for (variable_name, variable_argument) in &ir.variable_arguments {
         arguments.insert(
             variable_name.clone(),
-            arguments::Argument::Variable {
+            Argument::Variable {
                 name: VariableName(variable_argument.clone()),
             },
         );
@@ -69,7 +68,7 @@ pub(crate) fn plan_query_execution<'s>(
 
     let (query_node, jl) = plan_query_node(&ir.command_info, &mut collection_relationships)?;
 
-    let query_request = query::UnresolvedQueryExecutionPlan {
+    let query_request = QueryExecutionPlan {
         remote_predicates: PredicateQueryTrees::new(),
         query_node,
         collection: CollectionName::from(ir.function_name.as_str()),
@@ -81,16 +80,10 @@ pub(crate) fn plan_query_execution<'s>(
     Ok((query_request, jl))
 }
 
-pub(crate) fn plan_mutation_execution<'s, 'ir>(
-    procedure_name: &'ir ProcedureName,
-    ir: &'ir ProcedureBasedCommand<'s>,
-) -> Result<
-    (
-        mutation::UnresolvedMutationExecutionPlan<'s>,
-        JoinLocations<'s>,
-    ),
-    error::Error,
-> {
+pub(crate) fn plan_mutation_execution(
+    procedure_name: &ProcedureName,
+    ir: &ProcedureBasedCommand<'_>,
+) -> Result<(MutationExecutionPlan, JoinLocations), error::Error> {
     let mut ndc_nested_field = None;
     let mut jl = JoinLocations::new();
     let mut collection_relationships = BTreeMap::new();
@@ -106,7 +99,7 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
         ndc_nested_field = Some(fields);
         jl = locations;
     }
-    let mutation_request = mutation::MutationExecutionPlan {
+    let mutation_request = MutationExecutionPlan {
         procedure_name: procedure_name.clone(),
         procedure_arguments: arguments::plan_mutation_arguments(
             &ir.command_info.arguments,

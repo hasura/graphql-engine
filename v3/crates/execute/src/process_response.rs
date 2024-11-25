@@ -14,13 +14,13 @@ use lang_graphql::normalized_ast;
 use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 
-use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::error;
 use graphql_ir::{global_id_col_format, GLOBAL_ID_VERSION};
 use graphql_schema::{AggregateOutputAnnotation, Annotation, GlobalID, OutputAnnotation, GDS};
 use metadata_resolve::data_connectors;
 use metadata_resolve::Qualified;
 use plan_types::ProcessResponseAs;
+use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 
 trait KeyValueResponse {
     fn remove(&mut self, key: &str) -> Option<json::Value>;

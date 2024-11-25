@@ -20,8 +20,8 @@ pub use order_by::{OrderByDirection, OrderByElement, OrderByTarget};
 pub use query::{FieldsSelection, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew};
 pub use relationships::{Relationship, RelationshipArgument};
 pub use remote_joins::{
-    JoinLocations, JoinNode, LocationKind, RemoteJoin, RemoteJoinArgument, SourceFieldAlias,
-    TargetField,
+    JoinLocations, JoinNode, Location, LocationKind, RemoteJoin, RemoteJoinArgument,
+    RemoteJoinType, SourceFieldAlias, TargetField,
 };
 
 // these versions of the types are equivalent to the old "Resolved" versions
@@ -42,8 +42,15 @@ pub struct NDCMutationExecution {
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs,
-    // leaving this out for now as it's GraphQL specific stuff
-    // pub selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
+}
+
+#[derive(Debug)]
+pub struct NDCSubscriptionExecution {
+    pub query_execution_plan: QueryExecutionPlan,
+    pub polling_interval_ms: u64,
+    pub execution_span_attribute: &'static str,
+    pub field_span_attribute: String,
+    pub process_response_as: ProcessResponseAs,
 }
 
 #[derive(Debug)]

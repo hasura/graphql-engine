@@ -95,6 +95,20 @@ pub fn build_ir<'n, 's>(
 }
 
 /// Build a plan to execute the request
+pub fn build_request_plan_with_new<'n, 's, 'ir>(
+    ir: &'ir graphql_ir::IR<'n, 's>,
+) -> Result<graphql_ir::RequestPlan<'n, 's, 'ir>, graphql_ir::PlanError> {
+    let tracer = tracing_util::global_tracer();
+    let plan = tracer.in_span(
+        "plan",
+        "Construct a plan to execute the request",
+        SpanVisibility::Internal,
+        || graphql_ir::generate_request_plan(ir),
+    )?;
+    Ok(plan)
+}
+
+/// Build a plan to execute the request
 pub fn build_request_plan<'n, 's, 'ir>(
     ir: &'ir graphql_ir::IR<'n, 's>,
 ) -> Result<execute::RequestPlan<'n, 's, 'ir>, execute::PlanError> {

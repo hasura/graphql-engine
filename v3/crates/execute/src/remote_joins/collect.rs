@@ -16,7 +16,7 @@ use super::error;
 use super::types::{
     Argument, JoinLocations, JoinNode, LocationKind, RemoteJoin, SourceFieldAlias, TargetField,
 };
-use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
+use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{ProcessResponseAs, VariableName};
 
 /// An executable join node is a remote join node, it's collected join values

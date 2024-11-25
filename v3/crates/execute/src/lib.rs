@@ -19,7 +19,7 @@ pub use plan::filter::plan_remote_predicate;
 pub use plan::query::{QueryExecutionPlan, QueryNode, UnresolvedQueryExecutionPlan};
 pub use plan::{
     execute_mutation_plan, execute_query_plan, generate_request_plan, ExecuteQueryResult,
-    RequestPlan,
+    RequestPlan, RootFieldResult,
 };
 pub use process_response::process_response;
 pub use query_usage::analyze_query_usage;

@@ -12,13 +12,11 @@ use datafusion::{
 };
 use futures::TryFutureExt;
 use metadata_resolve::Qualified;
+use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use serde::{Deserialize, Serialize};
 use std::{any::Any, sync::Arc};
 
-use execute::{
-    ndc::{NdcQueryResponse, FUNCTION_IR_VALUE_COLUMN_NAME},
-    HttpContext,
-};
+use execute::{ndc::NdcQueryResponse, HttpContext};
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 use plan::NDCFunction;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};

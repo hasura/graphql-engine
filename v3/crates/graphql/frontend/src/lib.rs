@@ -1,3 +1,4 @@
+mod execute;
 mod explain;
 mod query;
 mod steps;

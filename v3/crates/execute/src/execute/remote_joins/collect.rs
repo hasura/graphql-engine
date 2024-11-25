@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, HashSet};
 use json_ext::ValueExt;
 
 use super::error;
-use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
+use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{
     JoinLocations, JoinNode, LocationKind, RemoteJoin, RemoteJoinArgument, SourceFieldAlias,
     TargetField,
