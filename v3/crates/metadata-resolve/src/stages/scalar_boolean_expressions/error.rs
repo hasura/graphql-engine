@@ -35,3 +35,15 @@ pub enum ScalarBooleanExpressionTypeError {
     #[error("{0}")]
     GraphqlError(#[from] graphql_config::GraphqlConfigError),
 }
+
+#[derive(Debug, thiserror::Error)]
+pub enum ScalarBooleanExpressionTypeIssue {
+    #[error("a graphql section is defined in boolean expression type '{type_name}' but it will not appear in the GraphQL API unless logical operator field names are also configured in the GraphqlConfig in query.filterInputConfig")]
+    MissingLogicalOperatorNamesInGraphqlConfig {
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("the boolean expression '{type_name}' has enabled logical operators, but they will not appear in the GraphQL API unless you update your CompatibilityConfig date to at least 2024-11-26")]
+    LogicalOperatorsUnavailable {
+        type_name: Qualified<CustomTypeName>,
+    },
+}

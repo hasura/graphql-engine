@@ -23,8 +23,8 @@ use metadata_resolve::{
     self, data_connectors::ArgumentPresetValue, deserialize_non_string_key_btreemap,
     deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
     serialize_qualified_btreemap, ArgumentPresets, DataConnectorLink, FieldPresetInfo,
-    NdcColumnForComparison, OperatorMapping, OrderByExpressionIdentifier, Qualified,
-    QualifiedTypeReference, TypeMapping,
+    LogicalOperators, NdcColumnForComparison, OperatorMapping, OrderByExpressionIdentifier,
+    Qualified, QualifiedTypeReference, TypeMapping,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -257,9 +257,7 @@ pub enum BooleanExpressionAnnotation {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ObjectBooleanExpressionField {
-    AndOp,
-    OrOp,
-    NotOp,
+    LogicalOperatorField(LogicalOperatorField),
     Field {
         field_name: types::FieldName,
         object_type: Qualified<types::CustomTypeName>,
@@ -272,6 +270,7 @@ pub enum ObjectBooleanExpressionField {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ScalarBooleanExpressionField {
+    LogicalOperatorField(LogicalOperatorField),
     ComparisonOperation {
         #[serde(
             serialize_with = "serialize_non_string_key_btreemap",
@@ -280,6 +279,13 @@ pub enum ScalarBooleanExpressionField {
         operator_mapping: BTreeMap<Qualified<DataConnectorName>, DataConnectorOperatorName>,
     },
     IsNullOperation,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum LogicalOperatorField {
+    AndOp,
+    OrOp,
+    NotOp,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
@@ -400,6 +406,7 @@ pub enum TypeId {
         operators: Vec<(ast::Name, QualifiedTypeReference)>,
         operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
         is_null_operator_name: Option<ast::Name>,
+        logical_operators: LogicalOperators,
     },
     NodeRoot,
     ModelArgumentsInput {

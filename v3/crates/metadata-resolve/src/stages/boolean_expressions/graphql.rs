@@ -5,7 +5,10 @@ pub use super::{
     ObjectBooleanExpressionGraphqlConfig, ScalarBooleanExpressionGraphqlConfig,
 };
 use crate::helpers::types::{mk_name, store_new_graphql_type};
-use crate::stages::{graphql_config, scalar_boolean_expressions};
+use crate::stages::{
+    graphql_config,
+    scalar_boolean_expressions::{self, LogicalOperatorsGraphqlConfig},
+};
 use crate::Qualified;
 use lang_graphql::ast::common::{self as ast};
 use open_dds::{
@@ -116,9 +119,11 @@ pub(crate) fn resolve_object_boolean_graphql(
         object_fields,
         field_config: (BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
-            and_operator_name: filter_graphql_config.operator_names.and.clone(),
-            or_operator_name: filter_graphql_config.operator_names.or.clone(),
-            not_operator_name: filter_graphql_config.operator_names.not.clone(),
+            logical_operators: LogicalOperatorsGraphqlConfig {
+                and_operator_name: filter_graphql_config.operator_names.and.clone(),
+                or_operator_name: filter_graphql_config.operator_names.or.clone(),
+                not_operator_name: filter_graphql_config.operator_names.not.clone(),
+            },
         }),
     })
 }

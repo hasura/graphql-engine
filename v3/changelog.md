@@ -4,6 +4,43 @@
 
 ### Added
 
+#### Logical operators in scalar boolean expressions
+
+Adds the ability to use `_and`, `_or` and `_not` operators at every level of the
+where clause in GraphQL queries. Previously logical operators only appeared at
+the object type level of expressions, not at the scalar type level.
+
+Instead of writing:
+
+```graphql
+query {
+  AuthorMany(
+    where: { _or: [{ author_id: { _eq: 1 } }, { author_id: { _eq: 2 } }] }
+  ) {
+    author_id
+    first_name
+  }
+}
+```
+
+You can now write:
+
+```graphql
+query {
+  AuthorMany(where: { author_id: { _or: [{ _eq: 1 }, { _eq: 2 }] } }) {
+    author_id
+    first_name
+  }
+}
+```
+
+In order to use this, you must have `logicalOperators` enabled on your scalar
+`BooleanExpressionType` and your
+[compatibility date](https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/)
+must be at least `2024-11-26`.
+
+#### Other
+
 - Added support for fetching relationships in JSON:API using the `include`
   parameter.
 

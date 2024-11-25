@@ -8,7 +8,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
         object_types: {
             Qualified {
                 subgraph: SubgraphName(
-                    "__unknown_namespace",
+                    "default",
                 ),
                 name: CustomTypeName(
                     Identifier(
@@ -132,7 +132,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                     mappings: {
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: DataConnectorName(
                                 Identifier(
@@ -245,7 +245,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
             objects: {
                 Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(
@@ -255,7 +255,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                 }: ResolvedObjectBooleanExpressionType {
                     name: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -265,7 +265,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                     },
                     object_type: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -335,15 +335,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 where_field_name: Name(
                                     "where",
                                 ),
-                                and_operator_name: Name(
-                                    "_and",
-                                ),
-                                or_operator_name: Name(
-                                    "_or",
-                                ),
-                                not_operator_name: Name(
-                                    "_not",
-                                ),
+                                logical_operators: LogicalOperatorsGraphqlConfig {
+                                    and_operator_name: Name(
+                                        "_and",
+                                    ),
+                                    or_operator_name: Name(
+                                        "_or",
+                                    ),
+                                    not_operator_name: Name(
+                                        "_not",
+                                    ),
+                                },
                             },
                         },
                     ),
@@ -358,7 +360,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 object_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: CustomTypeName(
                                             Identifier(
@@ -397,7 +399,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 operator_mapping: {
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: DataConnectorName(
                                             Identifier(
@@ -414,6 +416,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                         },
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                             FieldName(
                                 Identifier(
@@ -423,7 +426,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 object_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: CustomTypeName(
                                             Identifier(
@@ -462,7 +465,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 operator_mapping: {
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: DataConnectorName(
                                             Identifier(
@@ -479,6 +482,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                         },
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                             FieldName(
                                 Identifier(
@@ -488,7 +492,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 object_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: CustomTypeName(
                                             Identifier(
@@ -527,7 +531,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 operator_mapping: {
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: DataConnectorName(
                                             Identifier(
@@ -544,6 +548,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                         },
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                         },
                         relationship_fields: {},
@@ -554,7 +559,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
             scalars: {
                 Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(
@@ -564,7 +569,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -605,7 +610,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                     data_connector_operator_mappings: {
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: DataConnectorName(
                                 Identifier(
@@ -635,11 +640,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                             "PostgresIntBoolExp",
                         ),
                     ),
+                    logical_operators: Exclude,
                     include_is_null: Yes,
                 },
                 Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(
@@ -649,7 +655,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -690,7 +696,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                     data_connector_operator_mappings: {
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: DataConnectorName(
                                 Identifier(
@@ -720,6 +726,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                             "PostgresStringBoolExp",
                         ),
                     ),
+                    logical_operators: Exclude,
                     include_is_null: Yes,
                 },
             },
@@ -775,5 +782,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
             ),
         },
     },
-    [],
+    [
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "postgres_int_comparison_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "postgres_string_comparison_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+    ],
 )

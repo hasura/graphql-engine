@@ -40,8 +40,8 @@ pub use types::output_type::relationship::{
 };
 pub use types::{
     Annotation, ApolloFederationRootFields, BooleanExpressionAnnotation, CommandSourceDetail,
-    EntityFieldTypeNameMapping, GlobalID, InputAnnotation, ModelInputAnnotation,
-    ModelOrderByDirection, NamespaceAnnotation, NodeFieldTypeNameMapping,
+    EntityFieldTypeNameMapping, GlobalID, InputAnnotation, LogicalOperatorField,
+    ModelInputAnnotation, ModelOrderByDirection, NamespaceAnnotation, NodeFieldTypeNameMapping,
     ObjectBooleanExpressionField, ObjectFieldKind, OutputAnnotation, RootFieldAnnotation,
     RootFieldKind, ScalarBooleanExpressionField, TypeKind,
 };
@@ -196,6 +196,7 @@ impl gql_schema::SchemaContext for GDS {
                 operators,
                 operator_mapping,
                 is_null_operator_name,
+                logical_operators,
             } => boolean_expression::build_scalar_boolean_expression_input(
                 self,
                 builder,
@@ -203,6 +204,7 @@ impl gql_schema::SchemaContext for GDS {
                 operators,
                 operator_mapping,
                 is_null_operator_name,
+                logical_operators,
             ),
             types::TypeId::ModelOrderByExpression {
                 order_by_expression_identifier,

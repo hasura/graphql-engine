@@ -1,4 +1,7 @@
-use crate::stages::{aggregate_boolean_expressions, scalar_boolean_expressions};
+use crate::stages::{
+    aggregate_boolean_expressions,
+    scalar_boolean_expressions::{self, LogicalOperators, LogicalOperatorsGraphqlConfig},
+};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
@@ -149,6 +152,7 @@ pub struct ComparisonExpressionInfo {
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     #[serde_as(as = "Vec<(_, _)>")]
     pub operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
+    pub logical_operators: LogicalOperators,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -167,9 +171,7 @@ pub struct ObjectComparisonExpressionInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionGraphqlFieldConfig {
     pub where_field_name: ast::Name,
-    pub and_operator_name: ast::Name,
-    pub or_operator_name: ast::Name,
-    pub not_operator_name: ast::Name,
+    pub logical_operators: LogicalOperatorsGraphqlConfig,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

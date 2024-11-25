@@ -313,5 +313,8 @@
         }
       ]
     }
-  ]
+  ],
+  "flags": {
+    "logical_operators_in_scalar_boolean_expressions": true
+  }
 }

@@ -341,6 +341,9 @@ fn resolve_comparable_fields(
                                         .comparison_operators
                                         .clone(),
                                     operator_mapping,
+                                    logical_operators: scalar_boolean_expression_type
+                                        .logical_operators
+                                        .clone(),
                                 },
                             );
                         };

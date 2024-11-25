@@ -64,7 +64,9 @@ pub use stages::order_by_expressions::{
     OrderableRelationships, OrderableScalarField,
 };
 pub use stages::plugins::LifecyclePluginConfigs;
-pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
+pub use stages::scalar_boolean_expressions::{
+    LogicalOperators, LogicalOperatorsGraphqlConfig, ResolvedScalarBooleanExpressionType,
+};
 pub use stages::scalar_type_representations::ScalarTypeRepresentation;
 pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};
 pub use stages::{

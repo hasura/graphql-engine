@@ -2,7 +2,7 @@ use open_dds::flags;
 
 use crate::stages::{
     aggregate_boolean_expressions, aggregates, boolean_expressions, commands, data_connectors,
-    models, models_graphql, object_boolean_expressions, scalar_types,
+    models, models_graphql, object_boolean_expressions, scalar_boolean_expressions, scalar_types,
 };
 
 use super::error::ShouldBeAnError;
@@ -15,6 +15,10 @@ pub enum Warning {
     ObjectBooleanExpressionIssue(#[from] object_boolean_expressions::ObjectBooleanExpressionIssue),
     #[error("{0}")]
     DataConnectorIssue(#[from] data_connectors::NamedDataConnectorIssue),
+    #[error("{0}")]
+    ScalarBooleanExpressionIssue(
+        #[from] scalar_boolean_expressions::ScalarBooleanExpressionTypeIssue,
+    ),
     #[error("{0}")]
     BooleanExpressionIssue(#[from] boolean_expressions::BooleanExpressionIssue),
     #[error("{0}")]

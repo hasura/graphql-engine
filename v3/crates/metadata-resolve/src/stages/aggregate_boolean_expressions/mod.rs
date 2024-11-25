@@ -15,7 +15,8 @@ use open_dds::{
 
 use super::{
     aggregates::{AggregateCountDefinition, AggregateExpression},
-    graphql_config, relationships, scalar_boolean_expressions,
+    graphql_config, relationships,
+    scalar_boolean_expressions::{self, resolve_logical_operators, LogicalOperators},
     scalar_types::ScalarTypeRepresentation,
     type_permissions::ObjectTypeWithPermissions,
 };
@@ -293,7 +294,10 @@ fn resolve_scalar_aggregate_boolean_expression(
         .transpose()?;
 
     // Resolve logical operators
-    let logical_operators = resolve_logical_operators(boolean_expression, graphql_config, issues);
+    let logical_operators =
+        resolve_logical_operators(boolean_expression, graphql_config, issues, || {
+            AggregateBooleanExpressionIssue::MissingLogicalOperatorNamesInGraphqlConfig
+        });
 
     // Resolve the graphql configuration
     let graphql = resolve_aggregate_bool_exp_graphql_config(boolean_expression, graphql_types)?;
@@ -597,7 +601,10 @@ fn resolve_object_aggregate_boolean_expression(
         .transpose()?;
 
     // Resolve logical operators
-    let logical_operators = resolve_logical_operators(boolean_expression, graphql_config, issues);
+    let logical_operators =
+        resolve_logical_operators(boolean_expression, graphql_config, issues, || {
+            AggregateBooleanExpressionIssue::MissingLogicalOperatorNamesInGraphqlConfig
+        });
 
     // Resolve graphql configuration
     let graphql = resolve_aggregate_bool_exp_graphql_config(boolean_expression, graphql_types)?;
@@ -1013,36 +1020,6 @@ fn resolve_object_aggregate_filter_input(
                 FromModelFilterInputDefinition { model_name },
             ))
         }
-    }
-}
-
-fn resolve_logical_operators(
-    boolean_expression: &open_dds::boolean_expression::BooleanExpressionTypeV1,
-    graphql_config: &graphql_config::GraphqlConfig,
-    issues: &mut Vec<AggregateBooleanExpressionIssue>,
-) -> LogicalOperators {
-    if boolean_expression.logical_operators.enable {
-        let graphql =
-            graphql_config
-                .query
-                .filter_input_config
-                .as_ref()
-                .map(|filter_input_config| LogicalOperatorsGraphqlConfig {
-                    and_operator_name: filter_input_config.operator_names.and.clone(),
-                    or_operator_name: filter_input_config.operator_names.or.clone(),
-                    not_operator_name: filter_input_config.operator_names.not.clone(),
-                });
-
-        // If they've enabled graphql for this boolean expression, but the logical operator names
-        // have been omitted from the GraphqlConfig, raise an issue because this is probably a mistake
-        if boolean_expression.graphql.is_some() && graphql.is_none() {
-            issues
-                .push(AggregateBooleanExpressionIssue::MissingLogicalOperatorNamesInGraphqlConfig);
-        }
-
-        LogicalOperators::Include { graphql }
-    } else {
-        LogicalOperators::Exclude
     }
 }
 

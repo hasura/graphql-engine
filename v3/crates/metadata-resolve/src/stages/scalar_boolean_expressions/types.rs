@@ -9,11 +9,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use lang_graphql::ast::common as ast;
 use serde_with::serde_as;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct ScalarBooleanExpressionsOutput {
     pub boolean_expression_scalar_types:
         BTreeMap<Qualified<CustomTypeName>, ResolvedScalarBooleanExpressionType>,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<super::error::ScalarBooleanExpressionTypeIssue>,
 }
 
 #[serde_as]
@@ -38,6 +39,8 @@ pub struct ResolvedScalarBooleanExpressionType {
     // optional name for exposing this in the GraphQL schema
     pub graphql_name: Option<GraphQlTypeName>,
 
+    pub logical_operators: LogicalOperators,
+
     // do we allow _is_null comparisons for this type?
     pub include_is_null: IncludeIsNull,
 }
@@ -46,4 +49,19 @@ pub struct ResolvedScalarBooleanExpressionType {
 pub enum IncludeIsNull {
     Yes,
     No,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum LogicalOperators {
+    Include {
+        graphql: Option<LogicalOperatorsGraphqlConfig>,
+    },
+    Exclude,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct LogicalOperatorsGraphqlConfig {
+    pub and_operator_name: ast::Name,
+    pub or_operator_name: ast::Name,
+    pub not_operator_name: ast::Name,
 }

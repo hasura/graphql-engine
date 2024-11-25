@@ -2,7 +2,9 @@ mod helpers;
 pub mod types;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
-    object_types, type_permissions,
+    object_types,
+    scalar_boolean_expressions::{LogicalOperators, LogicalOperatorsGraphqlConfig},
+    type_permissions,
 };
 pub use helpers::resolve_ndc_type;
 use open_dds::identifier::SubgraphName;
@@ -337,6 +339,7 @@ pub fn resolve_scalar_fields(
                                 object_type_name: None,
                                 operator_mapping,
                                 operators,
+                                logical_operators: LogicalOperators::Exclude,
                             },
                         );
                     };
@@ -401,9 +404,11 @@ pub fn resolve_boolean_expression_graphql_config(
         scalar_fields,
         field_config: (boolean_expressions::BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
-            and_operator_name: filter_graphql_config.operator_names.and.clone(),
-            or_operator_name: filter_graphql_config.operator_names.or.clone(),
-            not_operator_name: filter_graphql_config.operator_names.not.clone(),
+            logical_operators: LogicalOperatorsGraphqlConfig {
+                and_operator_name: filter_graphql_config.operator_names.and.clone(),
+                or_operator_name: filter_graphql_config.operator_names.or.clone(),
+                not_operator_name: filter_graphql_config.operator_names.not.clone(),
+            },
         }),
     })
 }

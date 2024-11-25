@@ -13,7 +13,7 @@ use std::sync::Arc;
 use super::types::input_type;
 use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
-use super::types::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind, TypeId};
+use super::types::{ObjectFieldKind, TypeId};
 use metadata_resolve::{
     mk_name, BooleanExpressionComparableRelationship, ComparisonExpressionInfo,
     GlobalGraphqlConfig, IncludeLogicalOperators, ModelExpressionType, ModelWithArgumentPresets,
@@ -73,10 +73,13 @@ pub fn build_boolean_expression_input_schema(
 }
 
 // add input fields for `_and`, `_or`, etc
-fn build_builtin_operator_schema(
-    field_config: &metadata_resolve::BooleanExpressionGraphqlFieldConfig,
+fn build_logical_operators_schema<
+    FMkAnnotation: Fn(types::LogicalOperatorField) -> types::BooleanExpressionAnnotation,
+>(
+    field_config: &metadata_resolve::LogicalOperatorsGraphqlConfig,
     type_name: &ast::TypeName,
     builder: &mut gql_schema::Builder<GDS>,
+    mk_annotation: FMkAnnotation,
 ) -> BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>> {
     let mut input_fields = BTreeMap::new();
 
@@ -88,11 +91,9 @@ fn build_builtin_operator_schema(
         builder.allow_all_namespaced(gql_schema::InputField::<GDS>::new(
             not_field_name.clone(),
             None,
-            types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
-                    types::ObjectBooleanExpressionField::NotOp,
-                ),
-            )),
+            types::Annotation::Input(types::InputAnnotation::BooleanExpression(mk_annotation(
+                types::LogicalOperatorField::NotOp,
+            ))),
             ast::TypeContainer::named_null(gql_schema::RegisteredTypeName::new(
                 type_name.0.clone(),
             )),
@@ -108,11 +109,9 @@ fn build_builtin_operator_schema(
         builder.allow_all_namespaced(gql_schema::InputField::<GDS>::new(
             and_field_name.clone(),
             None,
-            types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
-                    types::ObjectBooleanExpressionField::AndOp,
-                ),
-            )),
+            types::Annotation::Input(types::InputAnnotation::BooleanExpression(mk_annotation(
+                types::LogicalOperatorField::AndOp,
+            ))),
             ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
                 gql_schema::RegisteredTypeName::new(type_name.0.clone()),
             )),
@@ -127,11 +126,9 @@ fn build_builtin_operator_schema(
         builder.allow_all_namespaced(gql_schema::InputField::<GDS>::new(
             or_field_name.clone(),
             None,
-            types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
-                    types::ObjectBooleanExpressionField::OrOp,
-                ),
-            )),
+            types::Annotation::Input(types::InputAnnotation::BooleanExpression(mk_annotation(
+                types::LogicalOperatorField::OrOp,
+            ))),
             ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
                 gql_schema::RegisteredTypeName::new(type_name.0.clone()),
             )),
@@ -181,8 +178,8 @@ fn build_comparable_fields_schema(
                 })?;
 
             // create Field annotation for this field
-            let annotation = types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+            let annotation = types::Annotation::Input(types::InputAnnotation::BooleanExpression(
+                types::BooleanExpressionAnnotation::ObjectBooleanExpressionField(
                     types::ObjectBooleanExpressionField::Field {
                         field_name: field_name.clone(),
                         object_field_kind: ObjectFieldKind::Scalar,
@@ -255,8 +252,8 @@ fn build_comparable_fields_schema(
                 })?;
 
             // create Field annotation for field
-            let annotation = types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+            let annotation = types::Annotation::Input(types::InputAnnotation::BooleanExpression(
+                types::BooleanExpressionAnnotation::ObjectBooleanExpressionField(
                     types::ObjectBooleanExpressionField::Field {
                         field_name: field_name.clone(),
                         object_field_kind: match object_comparison_expression.field_kind {
@@ -566,8 +563,8 @@ fn build_model_relationship_schema(
             gql_schema::InputField::<GDS>::new(
                 relationship.field_name.clone(),
                 None,
-                types::Annotation::Input(InputAnnotation::BooleanExpression(
-                    BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                types::Annotation::Input(types::InputAnnotation::BooleanExpression(
+                    types::BooleanExpressionAnnotation::ObjectBooleanExpressionField(
                         types::ObjectBooleanExpressionField::RelationshipField(annotation),
                     ),
                 )),
@@ -602,10 +599,15 @@ fn build_schema_with_object_boolean_expression_type(
         let mut input_fields = BTreeMap::new();
 
         // add `_and`, `_not` etc
-        input_fields.extend(build_builtin_operator_schema(
-            &boolean_expression_info.field_config,
+        input_fields.extend(build_logical_operators_schema(
+            &boolean_expression_info.field_config.logical_operators,
             type_name,
             builder,
+            |ann| {
+                types::BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                    types::ObjectBooleanExpressionField::LogicalOperatorField(ann),
+                )
+            },
         ));
 
         let object_type_representation =
@@ -654,10 +656,15 @@ fn build_schema_with_boolean_expression_type(
         if boolean_expression_object_type.include_logical_operators == IncludeLogicalOperators::Yes
         {
             // add `_and`, `_not` etc
-            input_fields.extend(build_builtin_operator_schema(
-                &boolean_expression_info.field_config,
+            input_fields.extend(build_logical_operators_schema(
+                &boolean_expression_info.field_config.logical_operators,
                 type_name,
                 builder,
+                |ann| {
+                    types::BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                        types::ObjectBooleanExpressionField::LogicalOperatorField(ann),
+                    )
+                },
             ));
         }
 
@@ -716,6 +723,7 @@ fn get_scalar_boolean_expression_type(
             is_null_operator_name: scalar_boolean_expression_graphql
                 .is_null_operator_name
                 .clone(),
+            logical_operators: comparison_expression.logical_operators.clone(),
         }),
     )
 }
@@ -737,6 +745,7 @@ pub fn build_scalar_boolean_expression_input(
     operators: &Vec<(ast::Name, QualifiedTypeReference)>,
     operator_mapping: &BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
     maybe_is_null_operator_name: &Option<ast::Name>,
+    logical_operator: &metadata_resolve::LogicalOperators,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
     let mut input_fields: BTreeMap<
         ast::Name,
@@ -765,6 +774,25 @@ pub fn build_scalar_boolean_expression_input(
                 gql_schema::DeprecationStatus::NotDeprecated,
             )),
         );
+    }
+
+    match logical_operator {
+        metadata_resolve::LogicalOperators::Include {
+            graphql: Some(graphql_config),
+        } => {
+            input_fields.extend(build_logical_operators_schema(
+                graphql_config,
+                type_name,
+                builder,
+                |ann| {
+                    types::BooleanExpressionAnnotation::ScalarBooleanExpressionField(
+                        types::ScalarBooleanExpressionField::LogicalOperatorField(ann),
+                    )
+                },
+            ));
+        }
+        metadata_resolve::LogicalOperators::Include { graphql: None }
+        | metadata_resolve::LogicalOperators::Exclude => {}
     }
 
     for (op_name, input_type) in operators {

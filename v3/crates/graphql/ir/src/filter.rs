@@ -11,12 +11,12 @@ use std::ops::Deref;
 
 use crate::error;
 use crate::model_tracking::count_model;
-use graphql_schema::GDS;
 use graphql_schema::{self};
 use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind};
 use graphql_schema::{
     FilterRelationshipAnnotation, ObjectBooleanExpressionField, ScalarBooleanExpressionField,
 };
+use graphql_schema::{LogicalOperatorField, GDS};
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName},
@@ -78,7 +78,7 @@ fn resolve_object_boolean_expression<'s>(
 
             let field_expression = match field_annotation {
                 // "_and" field
-                ObjectBooleanExpressionField::AndOp => {
+                ObjectBooleanExpressionField::LogicalOperatorField(LogicalOperatorField::AndOp) => {
                     // The "_and" field value should be a list
                     let and_values = field.value.as_list()?;
 
@@ -99,7 +99,7 @@ fn resolve_object_boolean_expression<'s>(
                     Expression::mk_and(and_expressions)
                 }
                 // "_or" field
-                ObjectBooleanExpressionField::OrOp => {
+                ObjectBooleanExpressionField::LogicalOperatorField(LogicalOperatorField::OrOp) => {
                     // The "_or" field value should be a list
                     let or_values = field.value.as_list()?;
 
@@ -120,7 +120,7 @@ fn resolve_object_boolean_expression<'s>(
                     Expression::mk_or(or_expressions)
                 }
                 // "_not" field
-                ObjectBooleanExpressionField::NotOp => {
+                ObjectBooleanExpressionField::LogicalOperatorField(LogicalOperatorField::NotOp) => {
                     // The "_not" field value should be an object
                     let not_value = field.value.as_object()?;
 
@@ -262,6 +262,59 @@ fn resolve_scalar_boolean_expression<'s>(
                 extract_scalar_boolean_expression_field_annotation(field.info.generic)?;
 
             let field_expression = match field_annotation {
+                // "_and" field
+                ScalarBooleanExpressionField::LogicalOperatorField(LogicalOperatorField::AndOp) => {
+                    // The "_and" field value should be a list
+                    let and_values = field.value.as_list()?;
+
+                    let and_expressions = and_values
+                        .iter()
+                        .map(|value| {
+                            let value_object = value.as_object()?;
+                            resolve_scalar_boolean_expression(
+                                value_object,
+                                data_connector_link,
+                                column_path,
+                                column,
+                            )
+                        })
+                        .collect::<Result<Vec<_>, _>>()?;
+
+                    Expression::mk_and(and_expressions)
+                }
+                // "_or" field
+                ScalarBooleanExpressionField::LogicalOperatorField(LogicalOperatorField::OrOp) => {
+                    // The "_or" field value should be a list
+                    let or_values = field.value.as_list()?;
+
+                    let or_expressions = or_values
+                        .iter()
+                        .map(|value| {
+                            let value_object = value.as_object()?;
+                            resolve_scalar_boolean_expression(
+                                value_object,
+                                data_connector_link,
+                                column_path,
+                                column,
+                            )
+                        })
+                        .collect::<Result<Vec<_>, _>>()?;
+
+                    Expression::mk_or(or_expressions)
+                }
+                // "_not" field
+                ScalarBooleanExpressionField::LogicalOperatorField(LogicalOperatorField::NotOp) => {
+                    // The "_not" field value should be an object
+                    let not_value = field.value.as_object()?;
+
+                    let not_filter_expression = resolve_scalar_boolean_expression(
+                        not_value,
+                        data_connector_link,
+                        column_path,
+                        column,
+                    )?;
+                    Expression::mk_not(not_filter_expression)
+                }
                 ScalarBooleanExpressionField::IsNullOperation => {
                     build_is_null_expression(column_path, column, &field.value)?
                 }

@@ -174,9 +174,7 @@ fn analyze_input_annotation(annotation: &graphql_schema::InputAnnotation) -> Vec
                     deprecated_reason: reason,
                 }));
             }
-            graphql_schema::ObjectBooleanExpressionField::AndOp
-            | graphql_schema::ObjectBooleanExpressionField::OrOp
-            | graphql_schema::ObjectBooleanExpressionField::NotOp => {}
+            graphql_schema::ObjectBooleanExpressionField::LogicalOperatorField(_) => {}
         },
         graphql_schema::InputAnnotation::BooleanExpression(
             graphql_schema::BooleanExpressionAnnotation::BooleanExpressionRootField

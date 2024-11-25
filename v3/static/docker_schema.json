@@ -15631,6 +15631,7 @@
     "json_session_variables": true,
     "disallow_array_field_compared_with_scalar_boolean_type": true,
     "allow_boolean_expression_fields_without_graphql": true,
-    "require_unique_model_graphql_names": true
+    "require_unique_model_graphql_names": true,
+    "logical_operators_in_scalar_boolean_expressions": true
   }
 }

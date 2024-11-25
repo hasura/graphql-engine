@@ -963,15 +963,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                         where_field_name: Name(
                                             "where",
                                         ),
-                                        and_operator_name: Name(
-                                            "_and",
-                                        ),
-                                        or_operator_name: Name(
-                                            "_or",
-                                        ),
-                                        not_operator_name: Name(
-                                            "_not",
-                                        ),
+                                        logical_operators: LogicalOperatorsGraphqlConfig {
+                                            and_operator_name: Name(
+                                                "_and",
+                                            ),
+                                            or_operator_name: Name(
+                                                "_or",
+                                            ),
+                                            not_operator_name: Name(
+                                                "_not",
+                                            ),
+                                        },
                                     },
                                 },
                             ),
@@ -1027,6 +1029,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 },
                                             ),
                                         },
+                                        logical_operators: Exclude,
                                     },
                                     FieldName(
                                         Identifier(
@@ -1077,6 +1080,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 },
                                             ),
                                         },
+                                        logical_operators: Exclude,
                                     },
                                     FieldName(
                                         Identifier(
@@ -1127,6 +1131,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 },
                                             ),
                                         },
+                                        logical_operators: Exclude,
                                     },
                                 },
                                 relationship_fields: {},
@@ -1264,15 +1269,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                 where_field_name: Name(
                                     "where",
                                 ),
-                                and_operator_name: Name(
-                                    "_and",
-                                ),
-                                or_operator_name: Name(
-                                    "_or",
-                                ),
-                                not_operator_name: Name(
-                                    "_not",
-                                ),
+                                logical_operators: LogicalOperatorsGraphqlConfig {
+                                    and_operator_name: Name(
+                                        "_and",
+                                    ),
+                                    or_operator_name: Name(
+                                        "_or",
+                                    ),
+                                    not_operator_name: Name(
+                                        "_not",
+                                    ),
+                                },
                             },
                         },
                     ),
@@ -1328,6 +1335,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                         },
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                             FieldName(
                                 Identifier(
@@ -1378,6 +1386,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                         },
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                             FieldName(
                                 Identifier(
@@ -1428,6 +1437,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                         },
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                         },
                         relationship_fields: {},
@@ -1504,6 +1514,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                             "Int_bool_exp",
                         ),
                     ),
+                    logical_operators: Exclude,
                     include_is_null: Yes,
                 },
                 Qualified {
@@ -1574,6 +1585,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                             "String_bool_exp",
                         ),
                     ),
+                    logical_operators: Exclude,
                     include_is_null: Yes,
                 },
             },
@@ -1750,5 +1762,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
             ),
         },
     },
-    [],
+    [
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "article_namespace",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "article_namespace",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+    ],
 )

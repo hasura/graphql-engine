@@ -11,7 +11,8 @@ use open_dds::{
 };
 
 use crate::{
-    stages::graphql_config::GraphqlConfigError, Qualified, QualifiedTypeName,
+    stages::graphql_config::GraphqlConfigError,
+    stages::scalar_boolean_expressions::LogicalOperators, Qualified, QualifiedTypeName,
     QualifiedTypeReference,
 };
 
@@ -70,21 +71,6 @@ pub struct CustomFilterInputGraphqlConfig {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregateBooleanExpressionGraphqlConfig {
     pub type_name: ast::TypeName,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum LogicalOperators {
-    Include {
-        graphql: Option<LogicalOperatorsGraphqlConfig>,
-    },
-    Exclude,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct LogicalOperatorsGraphqlConfig {
-    pub and_operator_name: ast::Name,
-    pub or_operator_name: ast::Name,
-    pub not_operator_name: ast::Name,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

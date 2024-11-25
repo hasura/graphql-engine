@@ -43,6 +43,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             "Int_bool_exp",
                         ),
                     ),
+                    logical_operators: Exclude,
                     include_is_null: Yes,
                 },
                 Qualified {
@@ -75,6 +76,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             "String_bool_exp",
                         ),
                     ),
+                    logical_operators: Exclude,
                     include_is_null: Yes,
                 },
             },
@@ -295,5 +297,34 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
         },
         roles: {},
     },
-    [],
+    [
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+    ],
 )

@@ -1602,15 +1602,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 where_field_name: Name(
                                     "where",
                                 ),
-                                and_operator_name: Name(
-                                    "_and",
-                                ),
-                                or_operator_name: Name(
-                                    "_or",
-                                ),
-                                not_operator_name: Name(
-                                    "_not",
-                                ),
+                                logical_operators: LogicalOperatorsGraphqlConfig {
+                                    and_operator_name: Name(
+                                        "_and",
+                                    ),
+                                    or_operator_name: Name(
+                                        "_or",
+                                    ),
+                                    not_operator_name: Name(
+                                        "_not",
+                                    ),
+                                },
                             },
                         },
                     ),
@@ -1677,6 +1679,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         {},
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                             FieldName(
                                 Identifier(
@@ -1710,6 +1713,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         {},
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                         },
                         relationship_fields: {},
@@ -1792,15 +1796,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 where_field_name: Name(
                                     "where",
                                 ),
-                                and_operator_name: Name(
-                                    "_and",
-                                ),
-                                or_operator_name: Name(
-                                    "_or",
-                                ),
-                                not_operator_name: Name(
-                                    "_not",
-                                ),
+                                logical_operators: LogicalOperatorsGraphqlConfig {
+                                    and_operator_name: Name(
+                                        "_and",
+                                    ),
+                                    or_operator_name: Name(
+                                        "_or",
+                                    ),
+                                    not_operator_name: Name(
+                                        "_not",
+                                    ),
+                                },
                             },
                         },
                     ),
@@ -1839,6 +1845,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         {},
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                             FieldName(
                                 Identifier(
@@ -1872,6 +1879,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         {},
                                     ),
                                 },
+                                logical_operators: Exclude,
                             },
                         },
                         relationship_fields: {},
@@ -1931,6 +1939,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             "Int_Comparison_Exp",
                         ),
                     ),
+                    logical_operators: Exclude,
                     include_is_null: Yes,
                 },
                 Qualified {
@@ -1984,6 +1993,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             "String_Comparison_Exp",
                         ),
                     ),
+                    logical_operators: Exclude,
                     include_is_null: Yes,
                 },
             },
@@ -2204,5 +2214,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             ),
         },
     },
-    [],
+    [
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "string_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+    ],
 )
