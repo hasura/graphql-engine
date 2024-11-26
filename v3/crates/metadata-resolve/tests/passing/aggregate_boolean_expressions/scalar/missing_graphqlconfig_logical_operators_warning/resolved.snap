@@ -44,7 +44,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                         ),
                     ),
                     logical_operators: Exclude,
-                    include_is_null: Yes,
+                    is_null_operator: Include {
+                        graphql: None,
+                    },
                 },
                 Qualified {
                     subgraph: SubgraphName(
@@ -77,7 +79,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                         ),
                     ),
                     logical_operators: Exclude,
-                    include_is_null: Yes,
+                    is_null_operator: Include {
+                        graphql: None,
+                    },
                 },
             },
             object_aggregates: {},
@@ -301,7 +305,35 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
             },
         ),
         ScalarBooleanExpressionIssue(
+            MissingIsNullOperatorNameInGraphqlConfig {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
             LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            MissingIsNullOperatorNameInGraphqlConfig {
                 type_name: Qualified {
                     subgraph: SubgraphName(
                         "default",

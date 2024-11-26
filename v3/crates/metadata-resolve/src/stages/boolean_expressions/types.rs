@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Debug, thiserror::Error, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
 pub enum BooleanExpressionIssue {
     #[error("The data connector {data_connector_name} cannot be used for filtering nested array {nested_type_name:} within {parent_type_name:} as it has not defined any capabilities for nested array filtering")]
     NoNestedArrayFilteringCapabilitiesDefined {
@@ -28,6 +28,23 @@ pub enum BooleanExpressionIssue {
         field_name: FieldName,
         boolean_expression_type_name: Qualified<CustomTypeName>,
     },
+    #[error("the comparable field '{name}' is defined more than once in the boolean expression type '{type_name}'")]
+    DuplicateComparableFieldFound {
+        type_name: Qualified<CustomTypeName>,
+        name: FieldName,
+    },
+    #[error("the comparable relationship '{name}' is defined more than once in the boolean expression type '{type_name}'")]
+    DuplicateComparableRelationshipFound {
+        type_name: Qualified<CustomTypeName>,
+        name: RelationshipName,
+    },
+    #[error("the boolean expression '{type_name}' has a GraphQL field name conflict between the '{name}' {name_source_1} and the '{name}' {name_source_2}. One of these will need to be renamed.")]
+    GraphqlFieldNameConflict {
+        type_name: Qualified<CustomTypeName>,
+        name: String,
+        name_source_1: FieldNameSource,
+        name_source_2: FieldNameSource,
+    },
 }
 
 impl ShouldBeAnError for BooleanExpressionIssue {
@@ -39,8 +56,23 @@ impl ShouldBeAnError for BooleanExpressionIssue {
             BooleanExpressionIssue::BooleanExpressionArrayFieldComparedWithScalarType {
                 ..
             } => flags.disallow_array_field_compared_with_scalar_boolean_type,
+            BooleanExpressionIssue::DuplicateComparableFieldFound { .. }
+            | BooleanExpressionIssue::DuplicateComparableRelationshipFound { .. }
+            | BooleanExpressionIssue::GraphqlFieldNameConflict { .. } => {
+                flags.disallow_duplicate_names_in_boolean_expressions
+            }
         }
     }
+}
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
+pub enum FieldNameSource {
+    #[display("comparable field")]
+    ComparableField,
+    #[display("comparable relationship")]
+    ComparableRelationship,
+    #[display("logical operator")]
+    LogicalOperator,
 }
 
 #[serde_as]
@@ -65,7 +97,7 @@ pub struct BooleanExpressionTypes {
     >,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionsOutput {
     pub boolean_expression_types: BooleanExpressionTypes,
     pub graphql_types: BTreeSet<ast::TypeName>,
@@ -111,7 +143,7 @@ pub struct ResolvedObjectBooleanExpressionTypeFields {
     pub relationship_fields: BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IncludeLogicalOperators {
     Yes,
     No,

@@ -63,6 +63,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     ),
     BooleanExpressionError,
 > {
+    let mut issues = vec![];
     let qualified_object_type_name = Qualified::new(
         subgraph.clone(),
         object_boolean_expression_operand.r#type.clone(),
@@ -81,7 +82,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
     // resolve any comparable fields
     let ComparableFieldsOutput {
         comparable_fields,
-        issues,
         object_fields,
         scalar_fields,
     } = resolve_comparable_fields(
@@ -93,6 +93,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         graphql,
         raw_boolean_expression_types,
         flags,
+        &mut issues,
     )?;
 
     // resolve any comparable relationships
@@ -105,7 +106,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
         raw_boolean_expression_types,
         raw_models,
         object_boolean_expression_type_names,
+        &mut issues,
     )?;
+
+    let include_logical_operators = helpers::resolve_logical_operators(logical_operators);
 
     // resolve graphql schema information
     let resolved_graphql = graphql
@@ -115,10 +119,13 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 boolean_expression_type_name,
                 object_boolean_graphql_config,
                 &comparable_fields,
+                &comparable_relationships,
+                include_logical_operators,
                 scalar_boolean_expression_types,
                 raw_boolean_expression_types,
                 graphql_config,
                 graphql_types,
+                &mut issues,
             )
         })
         .transpose()?;
@@ -126,7 +133,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     Ok((
         ResolvedObjectBooleanExpressionType {
             name: boolean_expression_type_name.clone(),
-            include_logical_operators: helpers::resolve_logical_operators(logical_operators),
+            include_logical_operators,
             fields: ResolvedObjectBooleanExpressionTypeFields {
                 object_fields,
                 scalar_fields,
@@ -152,6 +159,7 @@ fn resolve_comparable_relationships(
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     raw_models: &BTreeMap<Qualified<ModelName>, &open_dds::models::Model>,
     object_boolean_expression_type_names: &BTreeSet<Qualified<CustomTypeName>>,
+    issues: &mut Vec<BooleanExpressionIssue>,
 ) -> Result<BTreeMap<FieldName, BooleanExpressionComparableRelationship>, BooleanExpressionError> {
     let mut resolved_comparable_relationships = BTreeMap::new();
 
@@ -232,13 +240,20 @@ fn resolve_comparable_relationships(
                         }
                     }?;
 
-                    resolved_comparable_relationships.insert(
+                    if let Some(_duplicate_relationship) = resolved_comparable_relationships.insert(
                         FieldName::new(comparable_relationship.relationship_name.inner().clone()),
                         BooleanExpressionComparableRelationship {
                             relationship_name: comparable_relationship.relationship_name.clone(),
                             boolean_expression_type: target_boolean_expression_type,
                         },
-                    );
+                    ) {
+                        issues.push(
+                            BooleanExpressionIssue::DuplicateComparableRelationshipFound {
+                                type_name: boolean_expression_type_name.clone(),
+                                name: relationship.name.clone(),
+                            },
+                        );
+                    }
                 }
             }
 
@@ -255,7 +270,6 @@ pub struct ComparableFieldsOutput {
     comparable_fields: BTreeMap<FieldName, (ComparableFieldKind, Qualified<CustomTypeName>)>,
     object_fields: BTreeMap<FieldName, ObjectComparisonExpressionInfo>,
     scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
-    issues: Vec<BooleanExpressionIssue>,
 }
 
 // comparable_fields don't do much, all we can do is ensure that the other BooleanExpressionTypes
@@ -272,9 +286,10 @@ fn resolve_comparable_fields(
     graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     flags: &open_dds::flags::Flags,
+    issues: &mut Vec<BooleanExpressionIssue>,
 ) -> Result<ComparableFieldsOutput, BooleanExpressionError> {
     let mut resolved_comparable_fields = BTreeMap::new();
-    let mut issues = Vec::new();
+
     let mut object_fields = BTreeMap::new();
     let mut scalar_fields = BTreeMap::new();
 
@@ -354,10 +369,15 @@ fn resolve_comparable_fields(
             });
         }
 
-        resolved_comparable_fields.insert(
+        if let Some(_duplicate_field) = resolved_comparable_fields.insert(
             comparable_field.field_name.clone(),
             (field_kind, field_boolean_expression_type_name),
-        );
+        ) {
+            issues.push(BooleanExpressionIssue::DuplicateComparableFieldFound {
+                type_name: boolean_expression_type_name.clone(),
+                name: comparable_field.field_name.clone(),
+            });
+        };
     }
 
     // doing this validation when there is no graphql configuration is a breaking change, so we
@@ -380,8 +400,10 @@ fn resolve_comparable_fields(
                         if !scalar_boolean_expression_type
                             .comparison_operators
                             .is_empty()
-                            || scalar_boolean_expression_type.include_is_null
-                                == scalar_boolean_expressions::IncludeIsNull::Yes
+                            || matches!(
+                                scalar_boolean_expression_type.is_null_operator,
+                                scalar_boolean_expressions::IsNullOperator::Include { graphql: _ }
+                            )
                         {
                             scalar_fields.insert(
                                 comparable_field_name.clone(),
@@ -438,7 +460,6 @@ fn resolve_comparable_fields(
         object_fields,
         scalar_fields,
         comparable_fields: resolved_comparable_fields,
-        issues,
     })
 }
 

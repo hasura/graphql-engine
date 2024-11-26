@@ -13,7 +13,7 @@ use crate::Qualified;
 
 pub use scalar::resolve_logical_operators;
 pub use types::{
-    IncludeIsNull, LogicalOperators, LogicalOperatorsGraphqlConfig,
+    IsNullOperator, LogicalOperators, LogicalOperatorsGraphqlConfig,
     ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionsOutput,
 };
 

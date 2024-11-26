@@ -42,13 +42,20 @@ pub struct ResolvedScalarBooleanExpressionType {
     pub logical_operators: LogicalOperators,
 
     // do we allow _is_null comparisons for this type?
-    pub include_is_null: IncludeIsNull,
+    pub is_null_operator: IsNullOperator,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum IncludeIsNull {
-    Yes,
-    No,
+pub enum IsNullOperator {
+    Include {
+        graphql: Option<IsNullOperatorGraphqlConfig>,
+    },
+    Exclude,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct IsNullOperatorGraphqlConfig {
+    pub is_null_operator_name: ast::Name,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]

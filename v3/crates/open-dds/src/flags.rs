@@ -53,6 +53,9 @@ pub struct Flags {
 
     #[opendd(default, rename = "logical_operators_in_scalar_boolean_expressions")]
     pub logical_operators_in_scalar_boolean_expressions: bool,
+
+    #[opendd(default, rename = "disallow_duplicate_names_in_boolean_expressions")]
+    pub disallow_duplicate_names_in_boolean_expressions: bool,
 }
 
 impl Flags {
@@ -73,6 +76,7 @@ impl Flags {
             require_unique_model_graphql_names: false,
             disallow_object_boolean_expression_type: false,
             logical_operators_in_scalar_boolean_expressions: false,
+            disallow_duplicate_names_in_boolean_expressions: false,
         }
     }
 
