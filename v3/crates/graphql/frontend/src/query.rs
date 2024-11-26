@@ -2,7 +2,7 @@ use super::steps;
 use indexmap::IndexMap;
 
 use super::types::GraphQLResponse;
-use crate::execute::execute_query_plan;
+use crate::execute::{execute_mutation_plan, execute_query_plan};
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
 use execute::{
     plan::{self, RootFieldResult},
@@ -118,15 +118,13 @@ pub async fn execute_query_internal_new(
 
                             Box::pin(async {
                                 let execute_query_result = match request_plan {
-                                    graphql_ir::RequestPlan::MutationPlan(_mutation_plan) => {
-                                        todo!("fix execute_mutation_plan");
-                                        /*
-                                        plan::execute_mutation_plan(
+                                    graphql_ir::RequestPlan::MutationPlan(mutation_plan) => {
+                                        execute_mutation_plan(
                                             http_context,
                                             mutation_plan,
                                             project_id,
                                         )
-                                        .await*/
+                                        .await
                                     }
                                     graphql_ir::RequestPlan::QueryPlan(query_plan) => {
                                         execute_query_plan(http_context, query_plan, project_id)

@@ -1,5 +1,6 @@
 //! Tests that run JSONAPI to see if it works
 
+use engine_types::HttpContext;
 use hasura_authn_core::{Identity, Role};
 use jsonapi_library::api::{DocumentData, IdentifierData, PrimaryData};
 use reqwest::header::HeaderMap;
@@ -27,7 +28,7 @@ fn test_get_succeeding_requests() {
             // always test in `default` subgraph for now
             let request_path = format!("/default/{model_name}");
 
-            let http_context = engine_types::HttpContext {
+            let http_context = HttpContext {
                 client: reqwest::Client::new(),
                 ndc_response_size_limit: None,
             };
@@ -82,7 +83,7 @@ fn test_get_failing_requests() {
             // always test in `default` subgraph for now
             let request_path = format!("/default/{model_name}");
 
-            let http_context = engine_types::HttpContext {
+            let http_context = HttpContext {
                 client: reqwest::Client::new(),
                 ndc_response_size_limit: None,
             };

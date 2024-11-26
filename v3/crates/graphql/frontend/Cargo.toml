@@ -26,6 +26,7 @@ metadata-resolve = {path = "../../metadata-resolve" }
 
 async-recursion = { workspace = true }
 axum = { workspace = true }
+futures-util = { workspace = true }
 indexmap = { workspace = true }
 ndc-models = { workspace = true }
 ndc-models-v01 = { workspace = true }

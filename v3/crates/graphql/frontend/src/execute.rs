@@ -1,13 +1,24 @@
 use engine_types::{HttpContext, ProjectId};
-use execute::{ExecuteQueryResult, RootFieldResult};
-use graphql_ir::{NodeQueryPlan, QueryPlan};
+use execute::{resolve_ndc_mutation_execution, resolve_ndc_query_execution, ProcessedResponse};
+use execute::{ExecuteQueryResult, FieldError, RootFieldResult};
+use gql::normalized_ast;
+use gql::schema::NamespacedGetter;
+use graphql_ir::MutationPlan;
+use graphql_ir::{ApolloFederationSelect, NodeQueryPlan, QueryPlan};
+use graphql_schema::GDSRoleNamespaceGetter;
+use graphql_schema::GDS;
 use indexmap::IndexMap;
+use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
+use plan_types::{NDCMutationExecution, NDCQueryExecution};
+use tracing_util::{set_attribute_on_active_span, AttributeVisibility};
 
 /// This is where the GraphQL execution will live
 /// We'll use the `execute` crate for running queries etc
 /// but resolve stuff like type names and Apollo / Relay stuff here
 /// Things here are incomplete, and being moved over / fixed as we go.
+
+/// Does not currently include subscriptions
 
 /// Given an entire plan for a query, produce a result. We do this by executing all the singular
 /// root fields of the query in parallel, and joining the results back together.
@@ -52,7 +63,6 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
             || {
                 Box::pin(async {
                     match query_plan {
-                        /*
                         NodeQueryPlan::TypeName { type_name } => {
                             set_attribute_on_active_span(
                                 AttributeVisibility::Default,
@@ -94,7 +104,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                 false, // __schema: __Schema! ; the schema field is not nullable
                                 resolve_schema_field(selection_set, schema, &GDSRoleNamespaceGetter{scope:namespace}),
                             )
-                        }*/
+                        }
                         NodeQueryPlan::NDCQueryExecution {
                             query_execution: ndc_query,
                             selection_set,
@@ -119,7 +129,6 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                 processed_response,
                             )
                         }
-                        /*
 
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::from_processed_response(
                             optional_query.as_ref().map_or(true, |(ndc_query,_selection_set)| {
@@ -160,7 +169,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                 }
                             }
 
-                            RootFieldResult::new(true, Ok(json::Value::Array(entities_result)))
+                            RootFieldResult::new(true, Ok(serde_json::Value::Array(entities_result)))
                         }
                         NodeQueryPlan::ApolloFederationSelect(
                             ApolloFederationSelect::ServiceField { sdl, selection_set },
@@ -169,7 +178,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                 match field_call.info.generic {
                                     graphql_schema::Annotation::Output(graphql_schema::OutputAnnotation::SDL) => {
                                         let extended_sdl = "extend schema\n  @link(url: \"https://specs.apollo.dev/federation/v2.0\", import: [\"@key\", \"@extends\", \"@external\", \"@shareable\"])\n\n".to_string() + &sdl;
-                                        Ok(json::Value::String(extended_sdl))
+                                        Ok(serde_json::Value::String(extended_sdl))
                                     },
                                     _ => {
                                         Err(FieldError::FieldNotFoundInService {
@@ -178,16 +187,151 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                     }
                                 }
 
-                            }).and_then(|v| json::to_value(v).map_err(FieldError::from));
+                            }).and_then(|v| serde_json::to_value(v).map_err(FieldError::from));
                             match result {
                                 Ok(value) => RootFieldResult::new(true, Ok(value)),
                                 Err(e) => RootFieldResult::new(true, Err(e))
                             }
-                        }*/,
-                        _ => todo!("not implemented yet"),
+                        }
                     }
                 })
             },
         )
         .await
+}
+
+fn resolve_type_name(type_name: ast::TypeName) -> Result<serde_json::Value, FieldError> {
+    Ok(serde_json::to_value(type_name)?)
+}
+
+/// Execute a single root field's mutation plan to produce a result.
+async fn execute_mutation_field_plan<'n, 's>(
+    http_context: &HttpContext,
+    mutation_plan: NDCMutationExecution,
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+    project_id: Option<&ProjectId>,
+) -> RootFieldResult {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "execute_mutation_field_plan",
+            "Execute request plan for mutation field",
+            tracing_util::SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    let process_response_as = &mutation_plan.process_response_as.clone();
+                    let processed_response =
+                        resolve_ndc_mutation_execution(http_context, mutation_plan, project_id)
+                            .await
+                            .and_then(|mutation_response| {
+                                execute::process_mutation_response(
+                                    selection_set,
+                                    mutation_response,
+                                    process_response_as,
+                                )
+                            });
+
+                    RootFieldResult::from_processed_response(
+                        process_response_as.is_nullable(),
+                        processed_response,
+                    )
+                })
+            },
+        )
+        .await
+}
+
+/// Given an entire plan for a mutation, produce a result. We do this by executing the singular
+/// root fields of the mutation sequentially rather than concurrently, in the order defined by the
+/// `IndexMap`'s keys.
+pub async fn execute_mutation_plan<'n, 's>(
+    http_context: &HttpContext,
+    mutation_plan: MutationPlan<'n, 's>,
+    project_id: Option<&ProjectId>,
+) -> ExecuteQueryResult {
+    let mut root_fields = IndexMap::new();
+    let mut executed_root_fields = Vec::new();
+
+    for (alias, type_name) in mutation_plan.type_names {
+        set_attribute_on_active_span(AttributeVisibility::Default, "field", "__typename");
+
+        executed_root_fields.push((
+            alias,
+            RootFieldResult::new(
+                false, // __typename: String! ; the __typename field is not nullable
+                resolve_type_name(type_name),
+            ),
+        ));
+    }
+
+    for (_, mutation_group) in mutation_plan.nodes {
+        for (alias, field_plan) in mutation_group {
+            executed_root_fields.push((
+                alias,
+                execute_mutation_field_plan(
+                    http_context,
+                    field_plan.mutation_execution,
+                    field_plan.selection_set,
+                    project_id,
+                )
+                .await,
+            ));
+        }
+    }
+
+    for (alias, root_field) in executed_root_fields {
+        root_fields.insert(alias, root_field);
+    }
+
+    ExecuteQueryResult { root_fields }
+}
+
+fn resolve_type_field<NSGet: NamespacedGetter<GDS>>(
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+    schema: &gql::schema::Schema<GDS>,
+    type_name: &ast::TypeName,
+    namespaced_getter: &NSGet,
+) -> Result<serde_json::Value, FieldError> {
+    match schema.get_type(type_name) {
+        Some(type_info) => Ok(serde_json::to_value(gql::introspection::named_type(
+            schema,
+            namespaced_getter,
+            type_info,
+            selection_set,
+        )?)?),
+        None => Ok(serde_json::Value::Null),
+    }
+}
+
+fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+    schema: &gql::schema::Schema<GDS>,
+    namespaced_getter: &NSGet,
+) -> Result<serde_json::Value, FieldError> {
+    Ok(serde_json::to_value(gql::introspection::schema_type(
+        schema,
+        namespaced_getter,
+        selection_set,
+    )?)?)
+}
+
+async fn resolve_optional_ndc_select(
+    http_context: &HttpContext,
+    optional_query: Option<(NDCQueryExecution, &normalized_ast::SelectionSet<'_, GDS>)>,
+    project_id: Option<&ProjectId>,
+) -> Result<ProcessedResponse, FieldError> {
+    match optional_query {
+        None => Ok(ProcessedResponse {
+            response_headers: None,
+            response: serde_json::Value::Null,
+        }),
+        Some((ndc_query, selection_set)) => {
+            let process_response_as = &ndc_query.process_response_as.clone();
+            resolve_ndc_query_execution(http_context, ndc_query, project_id)
+                .await
+                .and_then(|row_sets| {
+                    execute::process_response(selection_set, row_sets, process_response_as)
+                })
+        }
+    }
 }

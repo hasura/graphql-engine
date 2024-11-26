@@ -20,6 +20,6 @@ pub use plan::{
     execute_mutation_plan, execute_query_plan, generate_request_plan, ExecuteQueryResult,
     RequestPlan, RootFieldResult,
 };
-pub use process_response::process_response;
+pub use process_response::{process_mutation_response, process_response, ProcessedResponse};
 pub use query_usage::analyze_query_usage;
 pub use remote_joins::types::{JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};

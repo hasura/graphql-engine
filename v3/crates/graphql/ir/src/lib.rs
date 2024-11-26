@@ -31,7 +31,10 @@ pub use model_tracking::get_all_usage_counts_in_query;
 pub use mutation_root::generate_ir as generate_mutation_ir;
 pub use order_by::ResolvedOrderBy;
 pub use permissions::process_model_predicate;
-pub use plan::{generate_request_plan, Error as PlanError, NodeQueryPlan, QueryPlan, RequestPlan};
+pub use plan::{
+    generate_request_plan, ApolloFederationSelect, Error as PlanError, MutationPlan, NodeQueryPlan,
+    QueryPlan, RequestPlan,
+};
 pub use query_root::generate_ir as generate_query_ir;
 pub use relationship::{
     build_remote_command_relationship, build_remote_relationship, LocalCommandRelationshipInfo,

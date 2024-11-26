@@ -2211,6 +2211,7 @@ dependencies = [
  "engine-types",
  "execute",
  "futures-ext",
+ "futures-util",
  "goldenfile",
  "graphql-ir",
  "graphql-schema",
