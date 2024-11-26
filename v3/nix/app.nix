@@ -44,9 +44,6 @@ let
     ];
   };
 
-  # only build the binary we care about
-  cargoExtraArgs = "--package ${packageName}";
-
   # helpers function for filtering files for a build to increase cache hits
   filterSrcWithRegexes = regexes: src:
     let
@@ -85,8 +82,8 @@ let
   # Build the dependencies first.
   cargoArtifacts = craneLib.buildDepsOnly (buildArgs //
     {
-      inherit cargoExtraArgs;
       src = filterWorkspaceDepsBuildFiles ../.;
+      buildPhaseCargoCommand = "cargo build --profile $CARGO_PROFILE --package ${packageName} --locked";
       doCheck = false;
     }
 
@@ -95,7 +92,8 @@ in
 # Then build the crate.
 craneLib.buildPackage
   (buildArgs // {
-    inherit cargoArtifacts cargoExtraArgs;
+    inherit cargoArtifacts;
+    cargoExtraArgs = "--package ${packageName} --locked";
     doCheck = false;
     RELEASE_VERSION = version;
   })
