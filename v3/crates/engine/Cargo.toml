@@ -22,6 +22,7 @@ harness = false
 
 [dependencies]
 axum-ext = { path = "../utils/axum-ext" }
+engine-types = { path = "../engine-types" }
 execute = { path = "../execute" }
 graphql-frontend = { path = "../graphql/frontend" }
 graphql-schema = { path = "../graphql/schema" }

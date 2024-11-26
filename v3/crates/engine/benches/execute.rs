@@ -1,6 +1,6 @@
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
-use execute::HttpContext;
+use engine_types::{ExposeInternalErrors, HttpContext};
 use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
 use graphql_frontend::{execute_query_internal, generate_ir};
 use graphql_schema::GDS;
@@ -194,7 +194,7 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 execute_query_internal(
-                    execute::ExposeInternalErrors::Expose,
+                    ExposeInternalErrors::Expose,
                     &http_context,
                     schema,
                     &session,

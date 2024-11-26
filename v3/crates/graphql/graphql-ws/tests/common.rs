@@ -1,5 +1,5 @@
 use axum::{extract::State, response::IntoResponse, routing::get};
-use execute::HttpContext;
+use engine_types::{ExposeInternalErrors, HttpContext};
 use futures_util::{SinkExt, StreamExt};
 use graphql_ws::Context;
 use graphql_ws::GRAPHQL_WS_PROTOCOL;
@@ -88,7 +88,7 @@ pub(crate) async fn start_websocket_server_expiry(
     let context = Context {
         connection_expiry: expiry,
         http_context,
-        expose_internal_errors: execute::ExposeInternalErrors::Expose,
+        expose_internal_errors: ExposeInternalErrors::Expose,
         project_id: None,
         schema: Arc::new(schema),
         auth_config: Arc::new(auth_config),

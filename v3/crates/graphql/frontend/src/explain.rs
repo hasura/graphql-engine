@@ -5,11 +5,11 @@ use super::steps;
 use std::borrow::Cow;
 
 use async_recursion::async_recursion;
+use engine_types::{ExposeInternalErrors, HttpContext};
 use execute::ndc::client as ndc_client;
 use execute::plan::{
     self, ApolloFederationSelect, NDCQueryExecution, NodeQueryPlan, ResolveFilterExpressionContext,
 };
-use execute::HttpContext;
 use execute::{JoinLocations, JoinNode, RemoteJoinType};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
@@ -21,7 +21,7 @@ use plan_types::ProcessResponseAs;
 use tracing_util::{AttributeVisibility, SpanVisibility};
 
 pub async fn execute_explain(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
@@ -50,7 +50,7 @@ pub async fn execute_explain(
 
 /// Explains (query plan) a GraphQL query
 async fn explain_query_internal(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
@@ -145,7 +145,7 @@ async fn explain_query_internal(
 
 /// Produce an /explain plan for a given GraphQL query.
 pub(crate) async fn explain_query_plan(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     query_plan: plan::QueryPlan<'_, '_, '_>,
 ) -> Result<types::Step, execute::RequestError> {
@@ -286,7 +286,7 @@ pub(crate) async fn explain_query_plan(
 
 /// Produce an /explain plan for a given GraphQL mutation.
 pub(crate) async fn explain_mutation_plan(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     mutation_plan: plan::MutationPlan<'_, '_>,
 ) -> Result<types::Step, execute::RequestError> {
@@ -355,7 +355,7 @@ pub(crate) async fn explain_mutation_plan(
 }
 
 async fn get_execution_steps<'s>(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     resolve_context: &ResolveFilterExpressionContext<'_>,
     alias: gql::ast::common::Alias,
@@ -420,7 +420,7 @@ async fn get_execution_steps<'s>(
 /// TODO: Currently the steps are sequential, we should make them parallel once the executor supports it.
 #[async_recursion]
 async fn get_join_steps(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     join_locations: JoinLocations<'async_recursion>,
     http_context: &HttpContext,
     resolve_context: &ResolveFilterExpressionContext,
@@ -518,7 +518,7 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
 }
 
 pub(crate) async fn fetch_explain_from_data_connector(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     ndc_request: &types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,

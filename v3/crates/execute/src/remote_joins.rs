@@ -85,8 +85,9 @@ use tracing_util::SpanVisibility;
 use crate::plan::filter::ResolveFilterExpressionContext;
 use plan_types::ProcessResponseAs;
 
+use super::error;
 use super::ndc::execute_ndc_query;
-use super::{error, HttpContext, ProjectId};
+use engine_types::{HttpContext, ProjectId};
 
 use self::collect::ExecutableJoinNode;
 use types::{Argument, JoinLocations};

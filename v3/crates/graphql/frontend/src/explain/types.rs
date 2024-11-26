@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use nonempty::NonEmpty;
 use serde::Serialize;
 
+use engine_types::ExposeInternalErrors;
 use lang_graphql::http::GraphQLError;
 use ndc_models as ndc_models_v02;
 use ndc_models_v01;
@@ -110,7 +111,7 @@ pub(crate) enum NDCRequest {
 impl NDCExplainResponse {
     pub(crate) fn error(
         error: &execute::FieldError,
-        expose_internal_errors: execute::ExposeInternalErrors,
+        expose_internal_errors: ExposeInternalErrors,
     ) -> Self {
         Self::Error(error.to_graphql_error(expose_internal_errors, None))
     }

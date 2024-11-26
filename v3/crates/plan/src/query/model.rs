@@ -8,6 +8,7 @@ use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve::{Metadata, Qualified};
 use open_dds::query::{
@@ -25,7 +26,7 @@ pub async fn from_model_aggregate_selection(
     selection: &IndexMap<String, Aggregate>,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<execute::HttpContext>,
+    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<
     (
@@ -111,7 +112,7 @@ pub async fn from_model_selection(
     model_selection: &ModelSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<execute::HttpContext>,
+    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<(Qualified<CustomTypeName>, NDCQuery, FieldsSelection), PlanError> {
     let model_target = &model_selection.target;
@@ -224,7 +225,7 @@ pub async fn from_relationship_selection(
     relationship_selection: &RelationshipSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<execute::HttpContext>,
+    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     model: &metadata_resolve::ModelWithArgumentPresets,
     model_source: &Arc<metadata_resolve::ModelSource>,

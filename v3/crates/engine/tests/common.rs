@@ -1,5 +1,4 @@
 use anyhow::anyhow;
-use execute::{HttpContext, ProjectId};
 use goldenfile::{differs::text_diff, Mint};
 use graphql_frontend::execute_query;
 use graphql_schema::GDS;
@@ -27,6 +26,7 @@ use std::{
     path::PathBuf,
 };
 extern crate json_value_merge;
+use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
 use json_value_merge::Merge;
 use serde_json::Value;
 
@@ -143,7 +143,7 @@ pub(crate) fn test_introspection_expectation(
         let mut responses = Vec::new();
         for session in &sessions {
             let (_, response) = execute_query(
-                execute::ExposeInternalErrors::Expose,
+                ExposeInternalErrors::Expose,
                 &test_ctx.http_context,
                 &schema,
                 session,
@@ -337,7 +337,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 
                         // do actual test
                         let (_, response) = execute_query(
-                            execute::ExposeInternalErrors::Expose,
+                            ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
                             session,
@@ -348,7 +348,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
                         let http_response = response.inner();
                         let graphql_ws_response = run_query_graphql_ws(
-                            execute::ExposeInternalErrors::Expose,
+                            ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
                             session,
@@ -383,7 +383,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
                         // do actual test
                         let (_, response) = execute_query(
-                            execute::ExposeInternalErrors::Expose,
+                            ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
                             session,
@@ -394,7 +394,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
                         let http_response = response.inner();
                         let graphql_ws_response = run_query_graphql_ws(
-                            execute::ExposeInternalErrors::Expose,
+                            ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
                             session,
@@ -509,7 +509,7 @@ pub fn test_execute_explain(
             variables: None,
         };
         let (_, raw_response) = graphql_frontend::execute_explain(
-            execute::ExposeInternalErrors::Expose,
+            ExposeInternalErrors::Expose,
             &test_ctx.http_context,
             &schema,
             &session,
@@ -651,7 +651,7 @@ async fn snapshot_sql(
     catalog: &Arc<sql::catalog::Catalog>,
     metadata: &Arc<metadata_resolve::Metadata>,
     session: &Arc<hasura_authn_core::Session>,
-    http_context: &Arc<execute::HttpContext>,
+    http_context: &Arc<HttpContext>,
     mint: &mut Mint,
     response_path: String,
     request_headers: &Arc<reqwest::header::HeaderMap>,
@@ -714,7 +714,7 @@ fn compare_graphql_responses(
 
 /// Execute a GraphQL query over a dummy WebSocket connection.
 async fn run_query_graphql_ws(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,

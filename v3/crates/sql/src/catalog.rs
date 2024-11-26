@@ -1,6 +1,7 @@
 use std::{any::Any, sync::Arc};
 
 use crate::catalog::subgraph::Subgraph;
+use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
@@ -198,7 +199,7 @@ impl Catalog {
         metadata: Arc<resolved::Metadata>,
         request_headers: &Arc<reqwest::header::HeaderMap>,
         session: &Arc<Session>,
-        http_context: &Arc<execute::HttpContext>,
+        http_context: &Arc<HttpContext>,
     ) -> datafusion::SessionContext {
         let session_config = datafusion::SessionConfig::new()
             .set(

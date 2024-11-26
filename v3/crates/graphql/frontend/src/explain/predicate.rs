@@ -1,16 +1,16 @@
 use super::fetch_explain_from_data_connector;
 use super::types;
 use async_recursion::async_recursion;
+use engine_types::{ExposeInternalErrors, HttpContext};
 use execute::plan::field::{UnresolvedField, UnresolvedNestedField};
 use execute::plan::{ResolveFilterExpressionContext, UnresolvedQueryNode};
-use execute::HttpContext;
 use indexmap::IndexMap;
 use plan_types::NdcFieldAlias;
 use std::collections::BTreeMap;
 
 #[async_recursion]
 pub(crate) async fn explain_query_predicate_node<'s>(
-    expose_internal_errors: &execute::ExposeInternalErrors,
+    expose_internal_errors: &ExposeInternalErrors,
     http_context: &HttpContext,
     node: &UnresolvedQueryNode<'s>,
     steps: &mut Vec<types::Step>,
@@ -38,7 +38,7 @@ pub(crate) async fn explain_query_predicate_node<'s>(
 }
 
 async fn explain_query_predicate_fields<'s, 'a>(
-    expose_internal_errors: &execute::ExposeInternalErrors,
+    expose_internal_errors: &ExposeInternalErrors,
     http_context: &HttpContext,
     fields: Option<&'a IndexMap<NdcFieldAlias, UnresolvedField<'s>>>,
     steps: &mut Vec<types::Step>,
@@ -72,7 +72,7 @@ async fn explain_query_predicate_fields<'s, 'a>(
 
 #[async_recursion]
 pub(crate) async fn explain_query_predicate_nested_field<'s, 'a>(
-    expose_internal_errors: &execute::ExposeInternalErrors,
+    expose_internal_errors: &ExposeInternalErrors,
     http_context: &HttpContext,
     nested_field: Option<&'a UnresolvedNestedField<'s>>,
     steps: &mut Vec<types::Step>,
@@ -104,7 +104,7 @@ pub(crate) async fn explain_query_predicate_nested_field<'s, 'a>(
 
 #[async_recursion]
 async fn explain_query_predicate<'s>(
-    expose_internal_errors: &execute::ExposeInternalErrors,
+    expose_internal_errors: &ExposeInternalErrors,
     http_context: &HttpContext,
     predicate: &plan_types::Expression<'s>,
     steps: &mut Vec<types::Step>,

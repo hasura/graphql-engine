@@ -12,6 +12,7 @@ name = "generate_ir"
 harness = false
 
 [dependencies]
+engine-types = { path = "../../engine-types" }
 execute = { path = "../../execute" }
 futures-ext = { path = "../../utils/futures-ext" }
 graphql-schema = { path = "../schema" }

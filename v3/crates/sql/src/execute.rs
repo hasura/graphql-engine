@@ -8,6 +8,7 @@ use datafusion::{
     dataframe::DataFrame,
     error::DataFusionError,
 };
+use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve as resolved;
 use planner::{
@@ -95,7 +96,7 @@ pub async fn execute_sql(
     catalog: Arc<crate::catalog::Catalog>,
     metadata: Arc<resolved::Metadata>,
     session: Arc<Session>,
-    http_context: Arc<execute::HttpContext>,
+    http_context: Arc<HttpContext>,
     request: &SqlRequest,
 ) -> Result<Vec<u8>, SqlExecutionError> {
     let tracer = tracing_util::global_tracer();

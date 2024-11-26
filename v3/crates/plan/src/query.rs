@@ -15,6 +15,7 @@ pub use model::{
 use std::sync::Arc;
 pub use types::{NDCFunction, NDCProcedure, NDCQuery, QueryContext};
 
+use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use open_dds::query::{Query, QueryRequest};
@@ -31,7 +32,7 @@ pub async fn plan_query_request<'req, 'metadata>(
     query_request: &'req QueryRequest,
     metadata: &'metadata Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<execute::HttpContext>,
+    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<(SingleNodeExecutionPlan, QueryContext), PlanError>
 where
@@ -51,7 +52,7 @@ async fn query_to_plan<'req, 'metadata>(
     query: &'req Query,
     metadata: &'metadata Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<execute::HttpContext>,
+    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<(SingleNodeExecutionPlan, QueryContext), PlanError>
 where

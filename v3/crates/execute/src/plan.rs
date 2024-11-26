@@ -31,9 +31,10 @@ use super::ndc;
 use super::process_response::process_response;
 use super::remote_joins::execute_join_locations;
 use super::remote_joins::types::JoinLocations;
-use super::{HttpContext, ProjectId};
 use crate::error::FieldError;
 use crate::process_response::{process_mutation_response, ProcessedResponse};
+use engine_types::ExposeInternalErrors;
+use engine_types::{HttpContext, ProjectId};
 use graphql_ir::ModelSelection;
 use graphql_schema::GDSRoleNamespaceGetter;
 use graphql_schema::GDS;
@@ -489,7 +490,7 @@ impl ExecuteQueryResult {
     #[allow(clippy::wrong_self_convention)]
     pub fn to_graphql_response(
         self,
-        expose_internal_errors: crate::ExposeInternalErrors,
+        expose_internal_errors: ExposeInternalErrors,
     ) -> gql::http::Response {
         let mut data = IndexMap::new();
         let mut errors = Vec::new();

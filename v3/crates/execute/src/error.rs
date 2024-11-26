@@ -1,3 +1,4 @@
+use engine_types::ExposeInternalErrors;
 use gql::{ast::common as ast, http::GraphQLError};
 use lang_graphql as gql;
 use open_dds::relationships::RelationshipName;
@@ -36,16 +37,13 @@ pub enum RequestError {
 }
 
 impl RequestError {
-    pub fn to_graphql_error(
-        &self,
-        expose_internal_errors: crate::ExposeInternalErrors,
-    ) -> GraphQLError {
+    pub fn to_graphql_error(&self, expose_internal_errors: ExposeInternalErrors) -> GraphQLError {
         let message = match (self, expose_internal_errors) {
             // Error messages for internal errors from IR conversion and Plan generations are masked.
             (
                 Self::IRConversionError(graphql_ir::Error::Internal(_))
                 | Self::PlanError(plan::error::Error::Internal(_)),
-                crate::ExposeInternalErrors::Censor,
+                ExposeInternalErrors::Censor,
             ) => "internal error".into(),
             (e, _) => e.to_string(),
         };
@@ -114,12 +112,12 @@ impl FieldError {
 
     pub fn to_graphql_error(
         &self,
-        expose_internal_errors: crate::ExposeInternalErrors,
+        expose_internal_errors: ExposeInternalErrors,
         path: Option<Vec<gql::http::PathSegment>>,
     ) -> GraphQLError {
         let details = self.get_details();
         match (self, expose_internal_errors) {
-            (Self::InternalError(_internal), crate::ExposeInternalErrors::Censor) => GraphQLError {
+            (Self::InternalError(_internal), ExposeInternalErrors::Censor) => GraphQLError {
                 message: "internal error".into(),
                 path,
                 // Internal errors showing up in the API response is not desirable.

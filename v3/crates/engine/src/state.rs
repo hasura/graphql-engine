@@ -4,7 +4,7 @@ use std::fmt::Display;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use execute::HttpContext;
+use engine_types::{ExposeInternalErrors, HttpContext};
 
 #[allow(clippy::print_stdout)]
 /// Print any build warnings to stdout
@@ -16,7 +16,7 @@ fn print_warnings<T: Display>(warnings: Vec<T>) {
 
 /// Build the engine state - include auth, metadata, and sql context.
 pub fn build_state(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
     enable_sql_interface: bool,

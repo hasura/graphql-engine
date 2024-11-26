@@ -1,5 +1,5 @@
 use axum::extract::ws;
-use execute::{ExposeInternalErrors, HttpContext, ProjectId};
+use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
 use hasura_authn::AuthConfig;
 use metadata_resolve::LifecyclePluginConfigs;
 use serde::Serialize;

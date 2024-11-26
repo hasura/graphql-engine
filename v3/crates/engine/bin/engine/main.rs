@@ -7,6 +7,7 @@ use engine::{
     internal_flags::{resolve_unstable_features, UnstableFeature},
     EngineRouter, StartupError, VERSION,
 };
+use engine_types::ExposeInternalErrors;
 use tracing_util::{add_event_on_active_span, set_attribute_on_active_span, SpanVisibility};
 
 #[global_allocator]
@@ -113,9 +114,9 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     };
 
     let expose_internal_errors = if server.expose_internal_errors {
-        execute::ExposeInternalErrors::Expose
+        ExposeInternalErrors::Expose
     } else {
-        execute::ExposeInternalErrors::Censor
+        ExposeInternalErrors::Censor
     };
 
     let state = engine::build_state(

@@ -3,11 +3,11 @@ use indexmap::IndexMap;
 
 use super::types::GraphQLResponse;
 use crate::execute::execute_query_plan;
+use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
 use execute::{
     plan::{self, RootFieldResult},
-    ExecuteQueryResult, HttpContext, ProjectId,
+    ExecuteQueryResult,
 };
-
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -20,7 +20,7 @@ use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibi
 static USE_THE_NEW_EXECUTION_PIPELINE: bool = false;
 
 pub async fn execute_query(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
@@ -73,7 +73,7 @@ pub async fn execute_query(
 
 /// Executes a GraphQL query using new pipeline
 pub async fn execute_query_internal_new(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
@@ -172,7 +172,7 @@ pub async fn execute_query_internal_new(
 
 /// Executes a GraphQL query
 pub async fn execute_query_internal(
-    expose_internal_errors: execute::ExposeInternalErrors,
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,

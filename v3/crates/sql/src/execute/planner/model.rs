@@ -36,7 +36,8 @@ use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use super::common::from_plan_error;
 use crate::catalog::model::filter;
-use execute::{ndc::NdcQueryResponse, HttpContext};
+use engine_types::HttpContext;
+use execute::ndc::NdcQueryResponse;
 use plan_types::{AggregateFieldSelection, FieldsSelection, NdcFieldAlias};
 
 use plan::{
@@ -76,7 +77,7 @@ impl ModelAggregate {
     pub(crate) async fn to_physical_node(
         &self,
         session: &Arc<Session>,
-        http_context: &Arc<execute::HttpContext>,
+        http_context: &Arc<HttpContext>,
         metadata: &metadata_resolve::Metadata,
         request_headers: &reqwest::header::HeaderMap,
     ) -> Result<NDCAggregatePushdown> {
@@ -408,7 +409,7 @@ impl ModelQuery {
     pub(super) async fn to_physical_node(
         &self,
         session: &Arc<Session>,
-        http_context: &Arc<execute::HttpContext>,
+        http_context: &Arc<HttpContext>,
         metadata: &metadata_resolve::Metadata,
         request_headers: &reqwest::header::HeaderMap,
     ) -> Result<NDCQueryPushDown> {
@@ -630,7 +631,7 @@ impl ExecutionPlan for NDCAggregatePushdown {
 
 #[derive(Debug, Clone)]
 pub(crate) struct NDCQueryPushDown {
-    http_context: Arc<execute::HttpContext>,
+    http_context: Arc<HttpContext>,
     fields: FieldsSelection,
     query: NDCQuery,
     projected_schema: SchemaRef,

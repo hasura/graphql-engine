@@ -1,5 +1,5 @@
 use axum::http;
-use execute::HttpContext;
+use engine_types::HttpContext;
 use hasura_authn::{authenticate, AuthConfig, AuthError};
 use hasura_authn_core::{authorize_identity, Session, SessionError};
 use std::collections::HashMap;

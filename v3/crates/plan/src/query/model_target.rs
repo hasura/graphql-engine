@@ -5,7 +5,7 @@ use crate::order_by::to_resolved_order_by_element;
 use crate::types::PlanError;
 use std::collections::BTreeMap;
 
-use execute::HttpContext;
+use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve::{FilterPermission, ModelExpressionType};
 use open_dds::query::ModelTarget;

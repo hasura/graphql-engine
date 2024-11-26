@@ -8,6 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
+engine-types = { path = "../engine-types" }
 graphql-schema = { path = "../graphql/schema" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 graphql-ir = { path = "../graphql/ir" }

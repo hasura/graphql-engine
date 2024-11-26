@@ -12,7 +12,7 @@ use lang_graphql::ast::common as ast;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
 use crate::error;
-use crate::{HttpContext, ProjectId};
+use engine_types::{HttpContext, ProjectId};
 
 /// Executes a NDC operation
 pub async fn execute_ndc_query<'n, 's>(

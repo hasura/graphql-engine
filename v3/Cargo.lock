@@ -1807,6 +1807,7 @@ dependencies = [
  "build-data",
  "clap",
  "criterion",
+ "engine-types",
  "execute",
  "futures-util",
  "goldenfile",
@@ -1844,6 +1845,14 @@ dependencies = [
  "tower 0.5.1",
  "tower-http",
  "tracing-util",
+]
+
+[[package]]
+name = "engine-types"
+version = "3.0.0"
+dependencies = [
+ "reqwest",
+ "serde",
 ]
 
 [[package]]
@@ -1912,6 +1921,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "bytes",
+ "engine-types",
  "futures-ext",
  "futures-util",
  "graphql-ir",
@@ -2198,6 +2208,7 @@ dependencies = [
  "async-recursion",
  "axum",
  "criterion",
+ "engine-types",
  "execute",
  "futures-ext",
  "goldenfile",
@@ -2277,6 +2288,7 @@ dependencies = [
  "axum",
  "blake2",
  "derive_more",
+ "engine-types",
  "execute",
  "futures-util",
  "graphql-frontend",
@@ -3054,6 +3066,7 @@ dependencies = [
  "axum",
  "axum-core",
  "derive_more",
+ "engine-types",
  "execute",
  "hasura-authn-core",
  "indexmap 2.6.0",
@@ -4135,6 +4148,7 @@ version = "3.0.0"
 dependencies = [
  "async-recursion",
  "derive_more",
+ "engine-types",
  "execute",
  "graphql-ir",
  "hasura-authn-core",
@@ -5069,6 +5083,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "datafusion",
+ "engine-types",
  "execute",
  "futures",
  "hasura-authn-core",

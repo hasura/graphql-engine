@@ -5,6 +5,7 @@ use super::process_response;
 use super::types::{QueryResult, RelationshipTree, RequestError};
 use crate::catalog::{Catalog, Model, State};
 use axum::http::{HeaderMap, Method, Uri};
+use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::Metadata;
@@ -14,7 +15,7 @@ use tracing_util::SpanVisibility;
 #[allow(clippy::unused_async)]
 pub async fn handler_internal<'metadata>(
     request_headers: Arc<HeaderMap>,
-    http_context: Arc<execute::HttpContext>,
+    http_context: Arc<HttpContext>,
     session: Arc<Session>,
     catalog: &Catalog,
     metadata: Arc<Metadata>,
@@ -97,7 +98,7 @@ async fn query_engine_execute(
     query_ir: &open_dds::query::QueryRequest,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<execute::HttpContext>,
+    http_context: &Arc<HttpContext>,
     request_headers: &HeaderMap,
 ) -> Result<QueryResult, RequestError> {
     let (query_execution_plan, query_context) =

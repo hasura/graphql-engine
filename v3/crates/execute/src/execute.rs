@@ -3,9 +3,9 @@
 // frontend
 mod ndc_request;
 mod remote_joins;
-use super::{HttpContext, ProjectId};
 use crate::error::FieldError;
 use crate::ndc;
+use engine_types::{HttpContext, ProjectId};
 pub use ndc_request::{make_ndc_mutation_request, make_ndc_query_request};
 use plan_types::{
     JoinLocations, NDCMutationExecution, NDCQueryExecution, ProcessResponseAs, QueryExecutionPlan,

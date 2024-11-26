@@ -15,13 +15,14 @@ use datafusion::{
     physical_plan::ExecutionPlan,
     physical_planner::{DefaultPhysicalPlanner, ExtensionPlanner, PhysicalPlanner},
 };
+use engine_types::HttpContext;
 
 use async_trait::async_trait;
 
 pub(crate) struct OpenDDQueryPlanner {
     pub(crate) request_headers: Arc<reqwest::header::HeaderMap>,
     pub(crate) session: Arc<Session>,
-    pub(crate) http_context: Arc<execute::HttpContext>,
+    pub(crate) http_context: Arc<HttpContext>,
     pub(crate) metadata: Arc<resolved::Metadata>,
 }
 
@@ -52,7 +53,7 @@ impl QueryPlanner for OpenDDQueryPlanner {
 pub(crate) struct NDCPushDownPlanner {
     pub(crate) request_headers: Arc<reqwest::header::HeaderMap>,
     pub(crate) session: Arc<Session>,
-    pub(crate) http_context: Arc<execute::HttpContext>,
+    pub(crate) http_context: Arc<HttpContext>,
     pub(crate) metadata: Arc<resolved::Metadata>,
 }
 

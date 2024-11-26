@@ -10,6 +10,7 @@ members = [
   "crates/compatibility",
   "crates/custom-connector",
   "crates/engine",
+  "crates/engine-types",
   "crates/execute",
   "crates/graphql/*",
   "crates/jsonapi",

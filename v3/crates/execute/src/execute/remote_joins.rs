@@ -81,8 +81,9 @@ use tracing_util::SpanVisibility;
 
 use plan_types::ProcessResponseAs;
 
+use crate::error;
 use crate::ndc::execute_ndc_query;
-use crate::{error, HttpContext, ProjectId};
+use engine_types::{HttpContext, ProjectId};
 
 use collect::ExecutableJoinNode;
 use plan_types::{JoinLocations, RemoteJoinArgument};

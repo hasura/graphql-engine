@@ -1,6 +1,7 @@
 use axum::http;
 use blake2::{Blake2b, Digest};
-use execute::{self, plan, ExposeInternalErrors};
+use engine_types::ExposeInternalErrors;
+use execute::{self, plan};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use nonempty::NonEmpty;

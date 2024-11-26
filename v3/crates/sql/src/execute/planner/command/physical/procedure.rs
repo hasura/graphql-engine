@@ -13,7 +13,8 @@ use datafusion::{
 use futures::TryFutureExt;
 use std::{any::Any, sync::Arc};
 
-use execute::{ndc::NdcMutationResponse, HttpContext};
+use engine_types::HttpContext;
+use execute::ndc::NdcMutationResponse;
 use open_dds::{data_connector::DataConnectorColumnName, query::CommandTarget};
 use plan::NDCProcedure;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
@@ -53,7 +54,7 @@ impl TraceableError for ExecutionPlanError {
 // should come from engine's plan but we aren't there yet
 #[derive(Debug, Clone)]
 pub(crate) struct NDCProcedurePushDown {
-    http_context: Arc<execute::HttpContext>,
+    http_context: Arc<HttpContext>,
     procedure: NDCProcedure,
     // the original invocation of this procedure, useful for error messages
     opendd_source: CommandTarget,
@@ -73,7 +74,7 @@ impl NDCProcedurePushDown {
     pub fn new(
         procedure: NDCProcedure,
         opendd_source: CommandTarget,
-        http_context: Arc<execute::HttpContext>,
+        http_context: Arc<HttpContext>,
         // schema of the output of the command selection
         schema: &DFSchemaRef,
         output: CommandOutput,

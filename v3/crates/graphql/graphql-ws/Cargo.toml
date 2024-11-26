@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+engine-types = { path = "../../engine-types" }
 execute = { path = "../../execute" }
 graphql-frontend = { path = "../frontend" }
 graphql-schema = { path = "../schema" }

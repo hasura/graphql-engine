@@ -7,7 +7,8 @@ use super::error as plan_error;
 use super::field;
 use super::query;
 use super::relationships::process_model_relationship_definition;
-use crate::{error, ndc, HttpContext};
+use crate::{error, ndc};
+use engine_types::HttpContext;
 use plan_types::{
     NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, Relationship, ResolvedFilterExpression,
 };
