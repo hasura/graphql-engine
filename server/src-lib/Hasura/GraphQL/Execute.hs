@@ -388,6 +388,7 @@ getResolvedExecPlan
   traceQueryStatus = do
     let gCtx = makeGQLContext userInfo sc queryType
         tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
+        includeInternalErrors = Init.shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
 
     -- Construct the full 'ResolvedExecutionPlan' from the 'queryParts :: SingleOperation'.
     (parameterizedQueryHash, resolvedExecPlan, modelInfoList') <-
@@ -435,6 +436,7 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
+              includeInternalErrors
               headerPrecedence
               traceQueryStatus
           Tracing.attachMetadata [("graphql.operation.type", "mutation")]

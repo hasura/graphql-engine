@@ -371,7 +371,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
           (HTTP.statusCode $ qeStatus qErr)
           (HTTP.statusMessage $ qeStatus qErr)
           []
-          (LBS.toStrict $ J.encodingToLazyByteString $ encodeGQLErr False qErr)
+          (LBS.toStrict $ J.encodingToLazyByteString $ encodeGQLErr HideInternalErrors qErr)
 
     checkPath = case WS.requestPath requestHead of
       "/v1alpha1/graphql" -> return (ERTLegacy, E.QueryHasura)
@@ -881,6 +881,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       _keepAliveDelay
       _serverMetrics
       prometheusMetrics
+      _loggerSettings
       _ = serverEnv
 
     -- Hook to retrieve the latest subscription options(live query + stream query options) from the `appStateRef`
@@ -909,7 +910,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       sendMsg wsConn
         $ SMErr
         $ ErrorMsg opId
-        $ errFn False
+        $ errFn HideInternalErrors
         $ err400 StartFailed e
       liftIO $ logOpEv (ODProtoErr e) Nothing Nothing
       liftIO $ reportGQLQueryError granularPrometheusMetricsState mOpName Nothing Nothing
@@ -928,7 +929,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       QErr ->
       ExceptT () m ()
     postExecErr granularPrometheusMetricsState reqId gqlOpType mOpName pqh qErr = do
-      let errFn = getErrFn errRespTy False
+      let errFn = getErrFn errRespTy HideInternalErrors
       liftIO $ logOpEv (ODQueryErr qErr) (Just reqId) Nothing
       postExecErr' granularPrometheusMetricsState gqlOpType mOpName pqh $ GQExecError $ pure $ errFn qErr
 
@@ -947,8 +948,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId) Nothing
       let err = case errRespTy of
-            ERTLegacy -> errFn False qErr
-            ERTGraphqlCompliant -> fmtErrorMessage [errFn False qErr]
+            ERTLegacy -> errFn HideInternalErrors qErr
+            ERTGraphqlCompliant -> fmtErrorMessage [errFn HideInternalErrors qErr]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
     sendSuccResp ::
