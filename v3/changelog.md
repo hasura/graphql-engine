@@ -6,6 +6,10 @@
 
 ### Fixed
 
+- Conflicts between `BooleanExpressionType` fields that have the same name are
+  now detected and a build error is raised. Previously the duplicated fields
+  would have been silently dropped.
+
 ### Changed
 
 ## [v2024.11.25]
@@ -58,9 +62,6 @@ must be at least `2024-11-26`.
   time.
 - Fixed an error that occurred when filtering using logical operators (eg
   `_and`) from inside a nested field.
-- Conflicts between `BooleanExpressionType` fields that have the same name are
-  now detected and a build error is raised. Previously the duplicated fields
-  would have been silently dropped.
 
 ### Changed
 
