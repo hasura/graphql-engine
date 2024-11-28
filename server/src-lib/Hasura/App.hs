@@ -1356,6 +1356,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           (leActionEvents lockedEventsCtx)
           Nothing
           appEnvAsyncActionsFetchBatchSize
+          HideInternalErrors
           (acHeaderPrecedence <$> getAppContext appStateRef)
 
       -- start a background thread to handle async action live queries
