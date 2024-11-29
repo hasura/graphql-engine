@@ -96,6 +96,7 @@ pub fn select_one_generate_ir<'n, 's>(
             argument,
             &model_source.type_mappings,
             &model_source.data_connector,
+            session_variables,
             &mut usage_counts,
         )?;
 
@@ -126,7 +127,7 @@ pub fn select_one_generate_ir<'n, 's>(
         model_source,
         model_arguments,
         query_filter,
-        permissions::get_select_filter_predicate(field_call)?,
+        permissions::get_select_filter_predicate(&field_call.info)?,
         None, // limit
         None, // offset
         None, // order_by

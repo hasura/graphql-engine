@@ -2,6 +2,7 @@ query MyQuery {
   Album(where: { Tracks: { TrackAlbums: { AlbumId: { _eq: 3 } } } }) {
     AlbumId
     Tracks {
+      TrackId
       TrackAlbums {
         AlbumId
         Title
@@ -50,7 +51,16 @@ query MyQuery {
       ]
     }
   ) {
+    ArtistId
     Name
+    Albums {
+      AlbumId
+      Title
+      Tracks {
+        TrackId
+        Name
+      }
+    }
   }
 
   ArtistAlbumAndTrackNested: Artist(
@@ -63,6 +73,15 @@ query MyQuery {
       }
     }
   ) {
+    ArtistId
     Name
+    Albums {
+      AlbumId
+      Title
+      Tracks {
+        TrackId
+        Name
+      }
+    }
   }
 }

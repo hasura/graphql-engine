@@ -1,3 +1,4 @@
+use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
@@ -9,8 +10,8 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::ops::Deref;
 
-use crate::error;
 use crate::model_tracking::count_model;
+use crate::{error, permissions};
 use graphql_schema::{self};
 use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind};
 use graphql_schema::{
@@ -52,6 +53,7 @@ pub fn resolve_filter_expression<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'s>, error::Error> {
     resolve_object_boolean_expression(
@@ -59,6 +61,7 @@ pub fn resolve_filter_expression<'s>(
         data_connector_link,
         type_mappings,
         &[],
+        session_variables,
         usage_counts,
     )
 }
@@ -68,6 +71,7 @@ fn resolve_object_boolean_expression<'s>(
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     column_path: &[&'s DataConnectorColumnName],
+    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'s>, error::Error> {
     let field_expressions = fields
@@ -91,6 +95,7 @@ fn resolve_object_boolean_expression<'s>(
                                 data_connector_link,
                                 type_mappings,
                                 column_path,
+                                session_variables,
                                 usage_counts,
                             )
                         })
@@ -112,6 +117,7 @@ fn resolve_object_boolean_expression<'s>(
                                 data_connector_link,
                                 type_mappings,
                                 column_path,
+                                session_variables,
                                 usage_counts,
                             )
                         })
@@ -129,6 +135,7 @@ fn resolve_object_boolean_expression<'s>(
                         data_connector_link,
                         type_mappings,
                         column_path,
+                        session_variables,
                         usage_counts,
                     )?;
                     Expression::mk_not(not_filter_expression)
@@ -158,6 +165,7 @@ fn resolve_object_boolean_expression<'s>(
                                 data_connector_link,
                                 type_mappings,
                                 &field_path,
+                                session_variables,
                                 usage_counts,
                             )?
                         }
@@ -167,6 +175,7 @@ fn resolve_object_boolean_expression<'s>(
                                 data_connector_link,
                                 type_mappings,
                                 &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
+                                session_variables,
                                 usage_counts,
                             )?;
 
@@ -197,17 +206,37 @@ fn resolve_object_boolean_expression<'s>(
                     // Add the target model being used in the usage counts
                     count_model(target_model_name, usage_counts);
 
+                    // Get the filter permissions for the target model
+                    let filter_permission = permissions::get_select_filter_predicate(&field.info)?;
+                    let filter_predicate = permissions::build_model_permissions_filter_predicate(
+                        &target_source.model.data_connector,
+                        &target_source.model.type_mappings,
+                        filter_permission,
+                        session_variables,
+                        usage_counts,
+                    )?;
+
                     // This map contains the relationships or the columns of the
                     // relationship that needs to be used for ordering.
                     let filter_object = field.value.as_object()?;
 
+                    // The predicate being applied across the relationship
                     let relationship_predicate = resolve_object_boolean_expression(
                         filter_object,
                         &target_source.model.data_connector,
                         &target_source.model.type_mappings,
                         &[], // We're traversing across the relationship, so we reset the field path
+                        session_variables,
                         usage_counts,
                     )?;
+
+                    // Combine the filter predicate and the relationship predicate
+                    let predicate = match filter_predicate {
+                        Some(filter_predicate) => {
+                            Expression::mk_and(vec![filter_predicate, relationship_predicate])
+                        }
+                        None => relationship_predicate,
+                    };
 
                     // build and return relationshp comparison expression
                     build_relationship_comparison_expression(
@@ -221,7 +250,7 @@ fn resolve_object_boolean_expression<'s>(
                         target_source,
                         target_type,
                         mappings,
-                        relationship_predicate,
+                        predicate,
                     )?
                 }
             };

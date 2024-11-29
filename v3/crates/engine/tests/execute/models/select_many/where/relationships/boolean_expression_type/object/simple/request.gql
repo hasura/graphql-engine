@@ -1,5 +1,6 @@
 query MyQuery {
   Track(where: { Album: { Title: { _eq: "Restless and Wild" } } }) {
+    TrackId
     AlbumId
     Name
     Album {
@@ -9,6 +10,7 @@ query MyQuery {
   TrackWithoutRelationshipField: Track(
     where: { Album: { Title: { _eq: "Restless and Wild" } } }
   ) {
+    TrackId
     Name
   }
   TrackAnd: Track(
@@ -19,6 +21,7 @@ query MyQuery {
       ]
     }
   ) {
+    TrackId
     AlbumId
     Name
     Album {
@@ -33,6 +36,7 @@ query MyQuery {
       ]
     }
   ) {
+    TrackId
     AlbumId
     Name
     Album {

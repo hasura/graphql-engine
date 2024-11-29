@@ -89,6 +89,7 @@
         {
           "Tracks": [
             {
+              "TrackId": 1,
               "Genre": {
                 "GenreId": 1
               },
@@ -98,6 +99,7 @@
               "Name": "For Those About To Rock (We Salute You)"
             },
             {
+              "TrackId": 6,
               "Genre": {
                 "GenreId": 1
               },
@@ -113,66 +115,14 @@
   },
   {
     "data": {
-      "Album": [
-        {
-          "AlbumId": 3,
-          "Title": "Restless and Wild",
-          "ArtistId": 2,
-          "Tracks": [
-            {
-              "AlbumId": 3,
-              "Name": "Fast As a Shark",
-              "TrackId": 3
-            },
-            {
-              "AlbumId": 3,
-              "Name": "Restless and Wild",
-              "TrackId": 4
-            },
-            {
-              "AlbumId": 3,
-              "Name": "Princess of the Dawn",
-              "TrackId": 5
-            }
-          ]
-        }
-      ],
-      "AlbumAnd": [
-        {
-          "AlbumId": 3,
-          "Title": "Restless and Wild",
-          "ArtistId": 2,
-          "Tracks": [
-            {
-              "AlbumId": 3,
-              "Name": "Fast As a Shark",
-              "TrackId": 3
-            },
-            {
-              "AlbumId": 3,
-              "Name": "Restless and Wild",
-              "TrackId": 4
-            },
-            {
-              "AlbumId": 3,
-              "Name": "Princess of the Dawn",
-              "TrackId": 5
-            }
-          ]
-        }
-      ],
+      "Album": [],
+      "AlbumAnd": [],
       "AlbumOr": [
         {
           "AlbumId": 2,
           "Title": "Balls to the Wall",
           "ArtistId": 2,
-          "Tracks": [
-            {
-              "AlbumId": 2,
-              "Name": "Balls to the Wall",
-              "TrackId": 2
-            }
-          ]
+          "Tracks": []
         },
         {
           "AlbumId": 3,
@@ -181,46 +131,13 @@
           "Tracks": [
             {
               "AlbumId": 3,
-              "Name": "Fast As a Shark",
-              "TrackId": 3
-            },
-            {
-              "AlbumId": 3,
               "Name": "Restless and Wild",
               "TrackId": 4
-            },
-            {
-              "AlbumId": 3,
-              "Name": "Princess of the Dawn",
-              "TrackId": 5
             }
           ]
         }
       ],
-      "AlbumTracksTwoRelationships": [
-        {
-          "Tracks": [
-            {
-              "Genre": {
-                "GenreId": 1
-              },
-              "Album": {
-                "AlbumId": 1
-              },
-              "Name": "For Those About To Rock (We Salute You)"
-            },
-            {
-              "Genre": {
-                "GenreId": 1
-              },
-              "Album": {
-                "AlbumId": 1
-              },
-              "Name": "Put The Finger On You"
-            }
-          ]
-        }
-      ]
+      "AlbumTracksTwoRelationships": []
     }
   }
 ]

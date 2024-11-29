@@ -233,6 +233,7 @@ pub fn build_ndc_argument_as_value<'a, 's>(
     argument: &'a InputField<'s, GDS>,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector_link: &'s DataConnectorLink,
+    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<(DataConnectorArgumentName, Argument<'s>), error::Error> {
     let (argument_type, argument_kind, ndc_argument) = match argument.info.generic {
@@ -272,6 +273,7 @@ pub fn build_ndc_argument_as_value<'a, 's>(
             argument.value.as_object()?,
             data_connector_link,
             type_mappings,
+            session_variables,
             usage_counts,
         )
         .map(|predicate| Argument::BooleanExpression { predicate })?,

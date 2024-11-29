@@ -1,5 +1,5 @@
 use hasura_authn_core::{SessionVariableName, SessionVariableValue, SessionVariables};
-use lang_graphql::normalized_ast;
+use lang_graphql::schema;
 use std::collections::BTreeMap;
 
 use open_dds::{
@@ -24,10 +24,9 @@ use super::arguments::Argument;
 /// of the field call. If the filter predicate namespace annotation
 /// is not found, then an error will be thrown.
 pub(crate) fn get_select_filter_predicate<'s>(
-    field_call: &normalized_ast::FieldCall<'s, GDS>,
+    node_info: &schema::NodeInfo<'s, GDS>,
 ) -> Result<&'s metadata_resolve::FilterPermission, error::Error> {
-    field_call
-        .info
+    node_info
         .namespaced
         .as_ref()
         .and_then(|annotation| match annotation {
@@ -73,6 +72,28 @@ pub(crate) fn get_argument_presets(
                 )))
             }
         },
+    }
+}
+
+pub fn build_model_permissions_filter_predicate<'s>(
+    model_data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    model_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    permissions_predicate: &'s metadata_resolve::FilterPermission,
+    session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
+) -> Result<Option<Expression<'s>>, error::Error> {
+    match permissions_predicate {
+        metadata_resolve::FilterPermission::AllowAll => Ok(None),
+        metadata_resolve::FilterPermission::Filter(predicate) => {
+            let permission_filter = process_model_predicate(
+                model_data_connector_link,
+                model_type_mappings,
+                predicate,
+                session_variables,
+                usage_counts,
+            )?;
+            Ok(Some(permission_filter))
+        }
     }
 }
 

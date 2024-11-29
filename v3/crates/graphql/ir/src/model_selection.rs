@@ -85,7 +85,7 @@ pub fn model_selection_ir<'s>(
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
-    let permission_filter = build_permissions_filter(
+    let permission_filter = permissions::build_model_permissions_filter_predicate(
         &model_source.data_connector,
         &model_source.type_mappings,
         permissions_predicate,
@@ -124,28 +124,6 @@ pub fn model_selection_ir<'s>(
     })
 }
 
-fn build_permissions_filter<'s>(
-    data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    permissions_predicate: &'s metadata_resolve::FilterPermission,
-    session_variables: &SessionVariables,
-    usage_counts: &mut UsagesCounts,
-) -> Result<Option<Expression<'s>>, error::Error> {
-    match permissions_predicate {
-        metadata_resolve::FilterPermission::AllowAll => Ok(None),
-        metadata_resolve::FilterPermission::Filter(predicate) => {
-            let permission_filter = permissions::process_model_predicate(
-                data_connector_link,
-                type_mappings,
-                predicate,
-                session_variables,
-                usage_counts,
-            )?;
-            Ok(Some(permission_filter))
-        }
-    }
-}
-
 pub fn generate_aggregate_model_selection_ir<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
@@ -158,8 +136,12 @@ pub fn generate_aggregate_model_selection_ir<'s>(
 ) -> Result<ModelSelection<'s>, error::Error> {
     count_model(model_name, usage_counts);
 
-    let mut arguments =
-        read_model_select_aggregate_arguments(field_call, model_source, usage_counts)?;
+    let mut arguments = read_model_select_aggregate_arguments(
+        field_call,
+        model_source,
+        session_variables,
+        usage_counts,
+    )?;
 
     let model_argument_presets = permissions::get_argument_presets(field_call.info.namespaced)?;
 
@@ -185,7 +167,7 @@ pub fn generate_aggregate_model_selection_ir<'s>(
         model_source,
         arguments.model_arguments,
         query_filter,
-        permissions::get_select_filter_predicate(field_call)?,
+        permissions::get_select_filter_predicate(&field_call.info)?,
         arguments.filter_input_arguments.limit,
         arguments.filter_input_arguments.offset,
         arguments.filter_input_arguments.order_by,
@@ -198,6 +180,7 @@ pub fn generate_aggregate_model_selection_ir<'s>(
 fn read_model_select_aggregate_arguments<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     model_source: &'s metadata_resolve::ModelSource,
+    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelectAggregateArguments<'s>, error::Error> {
     let mut model_arguments = None;
@@ -230,6 +213,7 @@ fn read_model_select_aggregate_arguments<'s>(
                                         argument,
                                         &model_source.type_mappings,
                                         &model_source.data_connector,
+                                        session_variables,
                                         usage_counts,
                                     )
                                 {
@@ -263,8 +247,12 @@ fn read_model_select_aggregate_arguments<'s>(
         }
     }
 
-    let filter_input_arguments =
-        read_filter_input_arguments(filter_input_props, model_source, usage_counts)?;
+    let filter_input_arguments = read_filter_input_arguments(
+        filter_input_props,
+        model_source,
+        session_variables,
+        usage_counts,
+    )?;
 
     Ok(ModelSelectAggregateArguments {
         model_arguments: model_arguments.unwrap_or_else(BTreeMap::new),
@@ -275,6 +263,7 @@ fn read_model_select_aggregate_arguments<'s>(
 fn read_filter_input_arguments<'s>(
     filter_input_field_props: Option<&IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>>,
     model_source: &'s metadata_resolve::ModelSource,
+    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FilterInputArguments<'s>, error::Error> {
     let mut limit = None;
@@ -351,6 +340,7 @@ fn read_filter_input_arguments<'s>(
                         filter_input_field_arg.value.as_object()?,
                         &model_source.data_connector,
                         &model_source.type_mappings,
+                        session_variables,
                         usage_counts,
                     )?);
                 }
@@ -388,7 +378,7 @@ fn model_aggregate_selection_ir<'s>(
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
-    let permission_filter = build_permissions_filter(
+    let permission_filter = permissions::build_model_permissions_filter_predicate(
         &model_source.data_connector,
         &model_source.type_mappings,
         permissions_predicate,

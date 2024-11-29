@@ -101,6 +101,7 @@ pub fn generate_command_info<'n, 's>(
             argument,
             &command_source.type_mappings,
             &command_source.data_connector,
+            session_variables,
             usage_counts,
         )?;
 

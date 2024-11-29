@@ -114,6 +114,7 @@ pub fn generate_model_relationship_ir<'s>(
                                 argument.value.as_object()?,
                                 &model_source.model.data_connector,
                                 &model_source.model.type_mappings,
+                                session_variables,
                                 usage_counts,
                             )?);
                         }
@@ -159,7 +160,7 @@ pub fn generate_model_relationship_ir<'s>(
         &target_source.model,
         BTreeMap::new(),
         query_filter,
-        permissions::get_select_filter_predicate(field_call)?,
+        permissions::get_select_filter_predicate(&field_call.info)?,
         limit,
         offset,
         order_by,

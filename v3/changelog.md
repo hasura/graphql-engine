@@ -9,6 +9,8 @@
 - Conflicts between `BooleanExpressionType` fields that have the same name are
   now detected and a build error is raised. Previously the duplicated fields
   would have been silently dropped.
+- Row filters configured in `ModelPermissions` are now correctly applied when
+  referencing the model across a relationship in a filter predicate.
 
 ### Changed
 
