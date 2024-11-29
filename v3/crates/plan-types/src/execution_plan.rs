@@ -17,7 +17,9 @@ pub use field::{Field, NestedArray, NestedField, NestedObject};
 pub use filter::ResolvedFilterExpression;
 pub use mutation::MutationExecutionPlan;
 pub use order_by::{OrderByDirection, OrderByElement, OrderByTarget};
-pub use query::{FieldsSelection, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew};
+pub use query::{
+    FieldsSelection, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
+};
 pub use relationships::{Relationship, RelationshipArgument};
 pub use remote_joins::{
     JoinLocations, JoinNode, Location, LocationKind, RemoteJoin, RemoteJoinArgument,
@@ -53,8 +55,9 @@ pub struct NDCSubscriptionExecution {
     pub process_response_as: ProcessResponseAs,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ExecutionTree {
+    pub remote_predicates: PredicateQueryTrees,
     pub query_execution_plan: query::QueryExecutionPlan,
     pub remote_join_executions: remote_joins::JoinLocations,
 }

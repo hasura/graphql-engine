@@ -14,7 +14,7 @@ use open_dds::query::{Aggregate, AggregationFunction, ModelSelection, ModelTarge
 use open_dds::types::CustomTypeName;
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, NdcFieldAlias,
-    PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
+    QueryExecutionPlan, QueryNodeNew,
 };
 
 pub async fn from_model_aggregate_selection(
@@ -202,7 +202,6 @@ pub fn ndc_query_to_query_execution_plan(
     };
 
     QueryExecutionPlan {
-        remote_predicates: PredicateQueryTrees::new(),
         query_node: QueryNodeNew {
             fields: query_fields,
             aggregates: query_aggregate_fields,

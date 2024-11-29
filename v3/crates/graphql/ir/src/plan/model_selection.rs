@@ -5,10 +5,11 @@ use super::error;
 use super::filter;
 use super::relationships;
 use super::selection_set;
+use crate::plan::Plan;
 use crate::ModelSelection;
 use plan_types::{
-    FieldsSelection, JoinLocations, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan,
-    QueryNodeNew, Relationship,
+    ExecutionTree, FieldsSelection, JoinLocations, NdcRelationshipName, PredicateQueryTrees,
+    QueryExecutionPlan, QueryNodeNew, Relationship,
 };
 use std::collections::BTreeMap;
 
@@ -17,20 +18,30 @@ use std::collections::BTreeMap;
 pub(crate) fn plan_query_node(
     ir: &ModelSelection<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
-) -> Result<(QueryNodeNew, JoinLocations), error::Error> {
+) -> Result<Plan<QueryNodeNew>, error::Error> {
     let mut query_fields = None;
     let mut join_locations = JoinLocations::new();
+    let mut remote_predicates = PredicateQueryTrees::new();
     if let Some(selection) = &ir.selection {
-        let (fields, locations) = selection_set::plan_selection_set(
+        let Plan {
+            inner: fields,
+            join_locations: locations,
+            remote_predicates: selection_set_remote_predicates,
+        } = selection_set::plan_selection_set(
             selection,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
         )?;
         query_fields = Some(fields);
         join_locations = locations;
+        remote_predicates = selection_set_remote_predicates;
     }
 
-    let predicate = filter::plan_filter_expression(&ir.filter_clause, relationships)?;
+    let (predicate, filter_remote_predicates) =
+        filter::plan_filter_expression(&ir.filter_clause, relationships)?;
+
+    remote_predicates.0.extend(filter_remote_predicates.0);
+
     let query_node = QueryNodeNew {
         limit: ir.limit,
         offset: ir.offset,
@@ -40,25 +51,41 @@ pub(crate) fn plan_query_node(
         fields: query_fields.map(|fields| FieldsSelection { fields }),
     };
 
-    Ok((query_node, join_locations))
+    Ok(Plan {
+        inner: query_node,
+        join_locations,
+        remote_predicates,
+    })
 }
 
 /// Generate query execution plan from internal IR (`ModelSelection`)
-pub(crate) fn plan_query_execution(
-    ir: &ModelSelection<'_>,
-) -> Result<(QueryExecutionPlan, JoinLocations), error::Error> {
+pub(crate) fn plan_query_execution(ir: &ModelSelection<'_>) -> Result<ExecutionTree, error::Error> {
     let mut collection_relationships = BTreeMap::new();
-    let (query, join_locations) = plan_query_node(ir, &mut collection_relationships)?;
+    let Plan {
+        inner: query,
+        join_locations: remote_join_executions,
+        mut remote_predicates,
+    } = plan_query_node(ir, &mut collection_relationships)?;
+
     // collection relationships from order_by clause
     relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;
-    let execution_node = QueryExecutionPlan {
-        remote_predicates: PredicateQueryTrees::new(),
+
+    let (arguments, argument_remote_predicates) =
+        arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?;
+
+    remote_predicates.0.extend(argument_remote_predicates.0);
+
+    let query_execution_plan = QueryExecutionPlan {
         query_node: query,
         collection: ir.collection.clone(),
-        arguments: arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?,
+        arguments,
         collection_relationships,
         variables: None,
         data_connector: ir.data_connector.clone(),
     };
-    Ok((execution_node, join_locations))
+    Ok(ExecutionTree {
+        query_execution_plan,
+        remote_join_executions,
+        remote_predicates,
+    })
 }

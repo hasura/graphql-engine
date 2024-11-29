@@ -87,7 +87,7 @@ async fn explain_query_internal(
                         steps::build_ir(schema, session, request_headers, &normalized_request)?;
 
                     // construct a plan to execute the request
-                    let request_plan = steps::build_request_plan(&ir)?;
+                    let request_plan = steps::build_request_plan_with_old(&ir)?;
 
                     // explain the query plan
                     let response = tracer

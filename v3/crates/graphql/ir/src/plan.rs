@@ -7,8 +7,8 @@ mod relationships;
 mod selection_set;
 mod types;
 use crate::{
-    ApolloFederationRootFields, ModelSelection, MutationRootField, ProcedureBasedCommand,
-    QueryRootField, SubscriptionRootField, IR,
+    ApolloFederationRootFields, MutationRootField, ProcedureBasedCommand, QueryRootField,
+    SubscriptionRootField, IR,
 };
 pub use error::Error;
 use graphql_schema::{GDSRoleNamespaceGetter, GDS};
@@ -18,9 +18,10 @@ use plan_types::{
     ExecutionTree, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
     ProcessResponseAs, QueryExecutionPlan,
 };
+pub use relationships::process_model_relationship_definition;
 pub use types::{
-    ApolloFederationSelect, MutationPlan, MutationSelect, NodeQueryPlan, QueryPlan, RequestPlan,
-    SubscriptionSelect,
+    ApolloFederationSelect, MutationPlan, MutationSelect, NodeQueryPlan, Plan, QueryPlan,
+    RequestPlan, SubscriptionSelect,
 };
 
 // in the new world, this is where we'll create execution plans in GraphQL
@@ -79,7 +80,17 @@ fn plan_mutation<'n, 's>(
     selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
     ir: &ProcedureBasedCommand<'s>,
 ) -> Result<MutationSelect<'n, 's>, error::Error> {
-    let (ndc_ir, join_locations) = commands::plan_mutation_execution(ir.procedure_name, ir)?;
+    let Plan {
+        inner: ndc_ir,
+        join_locations,
+        remote_predicates,
+    } = commands::plan_mutation_execution(ir.procedure_name, ir)?;
+
+    // _should not_ happen but let's fail rather than do a query with missing filters
+    if !remote_predicates.0.is_empty() {
+        return Err(error::Error::RemotePredicatesAreNotSupportedInMutations);
+    }
+
     Ok(MutationSelect {
         selection_set,
         mutation_execution: NDCMutationExecution {
@@ -106,7 +117,7 @@ fn plan_subscription<'s, 'ir>(
             selection_set,
             polling_interval_ms,
         } => {
-            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let execution_tree = model_selection::plan_query_execution(&ir.model_selection)?;
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
@@ -127,7 +138,7 @@ fn plan_subscription<'s, 'ir>(
             selection_set,
             polling_interval_ms,
         } => {
-            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let execution_tree = model_selection::plan_query_execution(&ir.model_selection)?;
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
@@ -148,7 +159,7 @@ fn plan_subscription<'s, 'ir>(
             selection_set,
             polling_interval_ms,
         } => {
-            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let execution_tree = model_selection::plan_query_execution(&ir.model_selection)?;
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
@@ -200,7 +211,7 @@ fn plan_query<'n, 's, 'ir>(
             schema,
         },
         QueryRootField::ModelSelectOne { ir, selection_set } => {
-            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let execution_tree = model_selection::plan_query_execution(&ir.model_selection)?;
             NodeQueryPlan::NDCQueryExecution {
                 selection_set,
                 query_execution: NDCQueryExecution {
@@ -215,7 +226,7 @@ fn plan_query<'n, 's, 'ir>(
         }
 
         QueryRootField::ModelSelectMany { ir, selection_set } => {
-            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let execution_tree = model_selection::plan_query_execution(&ir.model_selection)?;
             NodeQueryPlan::NDCQueryExecution {
                 selection_set,
                 query_execution: NDCQueryExecution {
@@ -229,7 +240,7 @@ fn plan_query<'n, 's, 'ir>(
             }
         }
         QueryRootField::ModelSelectAggregate { ir, selection_set } => {
-            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let execution_tree = model_selection::plan_query_execution(&ir.model_selection)?;
             NodeQueryPlan::NDCQueryExecution {
                 query_execution: NDCQueryExecution {
                     execution_tree,
@@ -242,7 +253,7 @@ fn plan_query<'n, 's, 'ir>(
         }
         QueryRootField::NodeSelect(optional_ir) => match optional_ir {
             Some(ir) => {
-                let execution_tree = generate_execution_tree(&ir.model_selection)?;
+                let execution_tree = model_selection::plan_query_execution(&ir.model_selection)?;
                 NodeQueryPlan::RelayNodeSelect(Some((
                     NDCQueryExecution {
                         execution_tree,
@@ -256,11 +267,8 @@ fn plan_query<'n, 's, 'ir>(
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
         QueryRootField::FunctionBasedCommand { ir, selection_set } => {
-            let (query_execution_plan, join_locations) = commands::plan_query_execution(ir)?;
-            let execution_tree = ExecutionTree {
-                query_execution_plan,
-                remote_join_executions: join_locations,
-            };
+            let execution_tree = commands::plan_query_execution(ir)?;
+
             NodeQueryPlan::NDCQueryExecution {
                 selection_set,
                 query_execution: NDCQueryExecution {
@@ -278,7 +286,7 @@ fn plan_query<'n, 's, 'ir>(
         QueryRootField::ApolloFederation(ApolloFederationRootFields::EntitiesSelect(irs)) => {
             let mut ndc_query_executions = Vec::new();
             for ir in irs {
-                let execution_tree = generate_execution_tree(&ir.model_selection)?;
+                let execution_tree = model_selection::plan_query_execution(&ir.model_selection)?;
                 ndc_query_executions.push((
                     NDCQueryExecution {
                         execution_tree,
@@ -308,12 +316,4 @@ fn plan_query<'n, 's, 'ir>(
         }
     };
     Ok(query_plan)
-}
-
-fn generate_execution_tree(ir: &ModelSelection<'_>) -> Result<ExecutionTree, error::Error> {
-    let (query_execution_plan, join_locations) = model_selection::plan_query_execution(ir)?;
-    Ok(ExecutionTree {
-        query_execution_plan,
-        remote_join_executions: join_locations,
-    })
 }

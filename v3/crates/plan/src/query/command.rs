@@ -19,7 +19,7 @@ use open_dds::{
 use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{
     Argument, Field, MutationArgument, MutationExecutionPlan, NdcFieldAlias, NestedArray,
-    NestedField, NestedObject, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
+    NestedField, NestedObject, QueryExecutionPlan, QueryNodeNew,
 };
 
 #[derive(Debug)]
@@ -298,7 +298,6 @@ fn return_type_shape(output_type: &QualifiedTypeReference) -> Option<OutputShape
 
 pub fn execute_plan_from_function(function: &NDCFunction) -> QueryExecutionPlan {
     QueryExecutionPlan {
-        remote_predicates: PredicateQueryTrees::new(),
         query_node: QueryNodeNew {
             fields: Some(plan_types::FieldsSelection {
                 fields: function.fields.clone(),

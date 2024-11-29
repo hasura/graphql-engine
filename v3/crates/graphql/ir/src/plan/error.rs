@@ -14,6 +14,9 @@ pub enum Error {
 
     #[error("remote joins are not supported in subscriptions")]
     RemoteJoinsAreNotSupportedSubscriptions,
+
+    #[error("remote predicates are not supported in mutations")]
+    RemotePredicatesAreNotSupportedInMutations,
 }
 
 impl TraceableError for Error {
@@ -21,6 +24,9 @@ impl TraceableError for Error {
         match self {
             Self::Internal(_internal) => tracing_util::ErrorVisibility::Internal,
             Self::RemoteJoinsAreNotSupportedSubscriptions => tracing_util::ErrorVisibility::User,
+            Self::RemotePredicatesAreNotSupportedInMutations => {
+                tracing_util::ErrorVisibility::Internal
+            }
         }
     }
 }

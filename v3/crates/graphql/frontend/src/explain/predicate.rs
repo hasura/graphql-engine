@@ -158,7 +158,6 @@ async fn explain_query_predicate<'s>(
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let query_execution_plan = plan_types::QueryExecutionPlan {
-                remote_predicates: plan_types::PredicateQueryTrees::new(),
                 query_node: resolved_query_node,
                 collection: target_model_source.collection.clone(),
                 arguments: BTreeMap::new(),

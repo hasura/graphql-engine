@@ -4,20 +4,13 @@ use indexmap::IndexMap;
 use super::types::GraphQLResponse;
 use crate::execute::{execute_mutation_plan, execute_query_plan};
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
-use execute::{
-    plan::{self, RootFieldResult},
-    ExecuteQueryResult,
-};
+use execute::{plan::RootFieldResult, ExecuteQueryResult};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
-
-// the new pipeline is very work in progress, only turn it on in development
-// otherwise most things will break
-static USE_THE_NEW_EXECUTION_PIPELINE: bool = false;
 
 pub async fn execute_query(
     expose_internal_errors: ExposeInternalErrors,
@@ -28,147 +21,28 @@ pub async fn execute_query(
     request: RawRequest,
     project_id: Option<&ProjectId>,
 ) -> (Option<ast::OperationType>, GraphQLResponse) {
-    if USE_THE_NEW_EXECUTION_PIPELINE {
-        execute_query_internal_new(
-            expose_internal_errors,
-            http_context,
-            schema,
-            session,
-            request_headers,
-            request,
-            project_id,
-        )
-        .await
-        .map_or_else(
-            |e| {
-                (
-                    None,
-                    GraphQLResponse::from_error(&e, expose_internal_errors),
-                )
-            },
-            |(op_type, response)| (Some(op_type), response),
-        )
-    } else {
-        execute_query_internal(
-            expose_internal_errors,
-            http_context,
-            schema,
-            session,
-            request_headers,
-            request,
-            project_id,
-        )
-        .await
-        .map_or_else(
-            |e| {
-                (
-                    None,
-                    GraphQLResponse::from_error(&e, expose_internal_errors),
-                )
-            },
-            |(op_type, response)| (Some(op_type), response),
-        )
-    }
+    execute_query_internal(
+        expose_internal_errors,
+        http_context,
+        schema,
+        session,
+        request_headers,
+        request,
+        project_id,
+    )
+    .await
+    .map_or_else(
+        |e| {
+            (
+                None,
+                GraphQLResponse::from_error(&e, expose_internal_errors),
+            )
+        },
+        |(op_type, response)| (Some(op_type), response),
+    )
 }
 
 /// Executes a GraphQL query using new pipeline
-pub async fn execute_query_internal_new(
-    expose_internal_errors: ExposeInternalErrors,
-    http_context: &HttpContext,
-    schema: &gql::schema::Schema<GDS>,
-    session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
-    raw_request: gql::http::RawRequest,
-    project_id: Option<&ProjectId>,
-) -> Result<(ast::OperationType, GraphQLResponse), execute::RequestError> {
-    let tracer = tracing_util::global_tracer();
-    tracer
-        .in_span_async(
-            "execute_query",
-            "Execute query request",
-            SpanVisibility::User,
-            || {
-                // Set GraphQL request metadata attributes on the current span
-                set_request_metadata_attributes(&raw_request, session);
-                Box::pin(async {
-                    // parse the raw request into a GQL query
-                    let query = steps::parse_query(&raw_request.query)?;
-
-                    // normalize the parsed GQL query
-                    let normalized_request =
-                        steps::normalize_request(schema, session, query, &raw_request)?;
-
-                    // generate IR
-                    let ir =
-                        steps::build_ir(schema, session, request_headers, &normalized_request)?;
-
-                    // construct a plan to execute the request
-                    let request_plan = steps::build_request_plan_with_new(&ir)?;
-
-                    let display_name = match normalized_request.name {
-                        Some(ref name) => std::borrow::Cow::Owned(format!("Execute {name}")),
-                        None => std::borrow::Cow::Borrowed("Execute request plan"),
-                    };
-
-                    // execute the query plan
-                    let response = tracer
-                        .in_span_async("execute", display_name, SpanVisibility::User, || {
-                            // Set usage analytics attributes on the current span
-                            set_usage_attributes(&normalized_request, &ir);
-
-                            Box::pin(async {
-                                let execute_query_result = match request_plan {
-                                    graphql_ir::RequestPlan::MutationPlan(mutation_plan) => {
-                                        execute_mutation_plan(
-                                            http_context,
-                                            mutation_plan,
-                                            project_id,
-                                        )
-                                        .await
-                                    }
-                                    graphql_ir::RequestPlan::QueryPlan(query_plan) => {
-                                        execute_query_plan(http_context, query_plan, project_id)
-                                            .await
-                                    }
-                                    graphql_ir::RequestPlan::SubscriptionPlan(
-                                        alias,
-                                        subscription_plan,
-                                    ) => {
-                                        // subscriptions are not supported over HTTP
-                                        let result =
-                                            Err(execute::FieldError::SubscriptionsNotSupported);
-                                        let root_field_result = RootFieldResult {
-                                            is_nullable: subscription_plan
-                                                .subscription_execution
-                                                .process_response_as
-                                                .is_nullable(),
-                                            result,
-                                            headers: None,
-                                        };
-                                        ExecuteQueryResult {
-                                            root_fields: IndexMap::from([(
-                                                alias,
-                                                root_field_result,
-                                            )]),
-                                        }
-                                    }
-                                };
-
-                                GraphQLResponse::from_result(
-                                    execute_query_result,
-                                    expose_internal_errors,
-                                )
-                            })
-                        })
-                        .await;
-                    Ok((normalized_request.ty, response))
-                })
-            },
-        )
-        .await
-}
-
-/// Executes a GraphQL query
 pub async fn execute_query_internal(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
@@ -215,23 +89,19 @@ pub async fn execute_query_internal(
 
                             Box::pin(async {
                                 let execute_query_result = match request_plan {
-                                    plan::RequestPlan::MutationPlan(mutation_plan) => {
-                                        plan::execute_mutation_plan(
+                                    graphql_ir::RequestPlan::MutationPlan(mutation_plan) => {
+                                        execute_mutation_plan(
                                             http_context,
                                             mutation_plan,
                                             project_id,
                                         )
                                         .await
                                     }
-                                    plan::RequestPlan::QueryPlan(query_plan) => {
-                                        plan::execute_query_plan(
-                                            http_context,
-                                            query_plan,
-                                            project_id,
-                                        )
-                                        .await
+                                    graphql_ir::RequestPlan::QueryPlan(query_plan) => {
+                                        execute_query_plan(http_context, query_plan, project_id)
+                                            .await
                                     }
-                                    plan::RequestPlan::SubscriptionPlan(
+                                    graphql_ir::RequestPlan::SubscriptionPlan(
                                         alias,
                                         subscription_plan,
                                     ) => {
@@ -240,6 +110,7 @@ pub async fn execute_query_internal(
                                             Err(execute::FieldError::SubscriptionsNotSupported);
                                         let root_field_result = RootFieldResult {
                                             is_nullable: subscription_plan
+                                                .subscription_execution
                                                 .process_response_as
                                                 .is_nullable(),
                                             result,

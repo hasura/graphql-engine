@@ -5,8 +5,8 @@ use async_recursion::async_recursion;
 use indexmap::IndexMap;
 use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
 use plan_types::{
-    AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, PredicateQueryTrees,
-    Relationship, VariableName,
+    AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, Relationship,
+    VariableName,
 };
 use std::collections::BTreeMap;
 
@@ -19,7 +19,6 @@ pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QueryExecutionPlan<'s> {
-    pub remote_predicates: PredicateQueryTrees,
     pub query_node: QueryNode<'s>,
     /// The name of a collection
     pub collection: CollectionName,
@@ -40,7 +39,6 @@ impl<'s> QueryExecutionPlan<'s> {
         resolve_context: &ResolveFilterExpressionContext<'_>,
     ) -> Result<plan_types::QueryExecutionPlan, error::FieldError> {
         let QueryExecutionPlan {
-            remote_predicates,
             query_node,
             collection,
             arguments,
@@ -49,7 +47,6 @@ impl<'s> QueryExecutionPlan<'s> {
             data_connector,
         } = self;
         let query_request = plan_types::QueryExecutionPlan {
-            remote_predicates,
             query_node: query_node.resolve(resolve_context).await?,
             collection,
             arguments: arguments::resolve_arguments(resolve_context, arguments).await?,

@@ -13,9 +13,7 @@ use crate::remote_joins::types::JoinLocations;
 use graphql_ir::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
 use open_dds::commands::ProcedureName;
 use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
-use plan_types::{
-    NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, Relationship, VariableName,
-};
+use plan_types::{NdcFieldAlias, NdcRelationshipName, Relationship, VariableName};
 
 pub(crate) fn plan_query_node<'s>(
     ir: &CommandInfo<'s>,
@@ -70,7 +68,6 @@ pub(crate) fn plan_query_execution<'s>(
     let (query_node, jl) = plan_query_node(&ir.command_info, &mut collection_relationships)?;
 
     let query_request = query::UnresolvedQueryExecutionPlan {
-        remote_predicates: PredicateQueryTrees::new(),
         query_node,
         collection: CollectionName::from(ir.function_name.as_str()),
         arguments: arguments.clone(),

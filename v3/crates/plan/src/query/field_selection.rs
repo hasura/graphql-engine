@@ -337,7 +337,6 @@ async fn from_relationship_selection(
     )
     .await?;
     let plan_types::QueryExecutionPlan {
-        remote_predicates: _,
         query_node,
         collection: _,
         arguments,

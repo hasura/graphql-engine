@@ -9,7 +9,9 @@ use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::Metadata;
-use plan_types::{ExecutionTree, JoinLocations, NDCQueryExecution, ProcessResponseAs};
+use plan_types::{
+    ExecutionTree, JoinLocations, NDCQueryExecution, PredicateQueryTrees, ProcessResponseAs,
+};
 use tracing_util::SpanVisibility;
 
 #[allow(clippy::unused_async)]
@@ -110,6 +112,7 @@ async fn query_engine_execute(
             let ndc_query_execution = NDCQueryExecution {
                 execution_span_attribute: "REST",
                 execution_tree: ExecutionTree {
+                    remote_predicates: PredicateQueryTrees::new(),
                     query_execution_plan,
                     remote_join_executions: JoinLocations {
                         locations: IndexMap::new(),

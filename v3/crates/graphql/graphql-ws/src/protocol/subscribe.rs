@@ -270,7 +270,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
     // Generate Intermediate Representation (IR) from the query.
     let ir = graphql_frontend::build_ir(schema, &session, &headers, &normalized_request)?;
     // Build a request plan based on the IR.
-    let request_plan = graphql_frontend::build_request_plan(&ir)?;
+    let request_plan = graphql_frontend::build_request_plan_with_old(&ir)?;
 
     let display_name = match normalized_request.name {
         Some(ref name) => std::borrow::Cow::Owned(format!("Execute {name}")),

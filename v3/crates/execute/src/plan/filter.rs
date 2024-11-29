@@ -326,7 +326,6 @@ where
                                 })?;
 
                             let query_execution_plan = plan_types::QueryExecutionPlan {
-                                remote_predicates: PredicateQueryTrees::new(),
                                 query_node: remote_query_node.resolve(resolve_context).await?,
                                 collection: target_model_source.collection.clone(),
                                 arguments: BTreeMap::new(),

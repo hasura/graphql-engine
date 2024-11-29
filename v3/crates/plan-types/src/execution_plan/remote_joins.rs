@@ -13,7 +13,7 @@ use std::sync::Arc;
 /// remote joins are found.
 ///
 /// It also includes other info, like field mapping etc., for the join
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct JoinLocations {
     pub locations: IndexMap<String, Location>,
 }
@@ -36,13 +36,13 @@ impl Default for JoinLocations {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub enum LocationKind {
     NestedData,
     LocalRelationship,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum JoinNode {
     Local(LocationKind),
     Remote(RemoteJoin),
@@ -100,7 +100,7 @@ pub enum JoinNode {
 ///
 /// Note: `join_node` and `rest` both cannot be empty; it is an invalid/illegal
 /// state.
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Location {
     pub join_node: JoinNode,
     pub rest: JoinLocations,

@@ -95,7 +95,8 @@ pub fn build_ir<'n, 's>(
 }
 
 /// Build a plan to execute the request
-pub fn build_request_plan_with_new<'n, 's, 'ir>(
+/// using the new execution plan
+pub fn build_request_plan<'n, 's, 'ir>(
     ir: &'ir graphql_ir::IR<'n, 's>,
 ) -> Result<graphql_ir::RequestPlan<'n, 's, 'ir>, graphql_ir::PlanError> {
     let tracer = tracing_util::global_tracer();
@@ -109,7 +110,8 @@ pub fn build_request_plan_with_new<'n, 's, 'ir>(
 }
 
 /// Build a plan to execute the request
-pub fn build_request_plan<'n, 's, 'ir>(
+/// uses old code in `execute` which we'll soon delete
+pub fn build_request_plan_with_old<'n, 's, 'ir>(
     ir: &'ir graphql_ir::IR<'n, 's>,
 ) -> Result<execute::RequestPlan<'n, 's, 'ir>, execute::PlanError> {
     let tracer = tracing_util::global_tracer();

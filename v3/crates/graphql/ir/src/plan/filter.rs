@@ -3,15 +3,17 @@ use std::collections::BTreeMap;
 use super::error as plan_error;
 use super::relationships::process_model_relationship_definition;
 use crate::FilterExpression;
+use indexmap::IndexMap;
 use plan_types::{
-    NdcRelationshipName, PredicateQueryTrees, Relationship, ResolvedFilterExpression,
+    ExecutionTree, Field, FieldsSelection, JoinLocations, NdcFieldAlias, NdcRelationshipName,
+    PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew, Relationship,
+    ResolvedFilterExpression,
 };
 
 /// Plan the filter expression IR.
 /// This function will take the filter expression IR and convert it into a planned filter expression
 /// that can be converted the NDC filter expression.
 /// This will record the relationships that are used in the filter expression.
-/// TODO: combine this with resolve step as they are no longer separate
 pub(crate) fn plan_filter_expression(
     FilterExpression {
         query_filter,
@@ -19,7 +21,7 @@ pub(crate) fn plan_filter_expression(
         relationship_join_filter,
     }: &FilterExpression<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
-) -> Result<Option<ResolvedFilterExpression>, plan_error::Error> {
+) -> Result<(Option<ResolvedFilterExpression>, PredicateQueryTrees), plan_error::Error> {
     let mut expressions = Vec::new();
     let mut remote_predicates = PredicateQueryTrees::new();
 
@@ -56,14 +58,17 @@ pub(crate) fn plan_filter_expression(
         expressions.push(planned_expression);
     }
 
-    Ok(ResolvedFilterExpression::mk_and(expressions).remove_always_true_expression())
+    Ok((
+        ResolvedFilterExpression::mk_and(expressions).remove_always_true_expression(),
+        remote_predicates,
+    ))
 }
 
 /// Plan the expression IR type.
 pub fn plan_expression<'a>(
     expression: &'a plan_types::Expression<'_>,
     relationships: &'a mut BTreeMap<NdcRelationshipName, Relationship>,
-    _remote_predicates: &'a mut PredicateQueryTrees,
+    remote_predicates: &'a mut PredicateQueryTrees,
 ) -> Result<ResolvedFilterExpression, plan_error::Error> {
     match expression {
         plan_types::Expression::And {
@@ -71,7 +76,7 @@ pub fn plan_expression<'a>(
         } => {
             let mut results = Vec::new();
             for and_expression in and_expressions {
-                let result = plan_expression(and_expression, relationships, _remote_predicates)?;
+                let result = plan_expression(and_expression, relationships, remote_predicates)?;
                 results.push(result);
             }
             Ok(ResolvedFilterExpression::mk_and(results))
@@ -81,7 +86,7 @@ pub fn plan_expression<'a>(
         } => {
             let mut results = Vec::new();
             for or_expression in or_expressions {
-                let result = plan_expression(or_expression, relationships, _remote_predicates)?;
+                let result = plan_expression(or_expression, relationships, remote_predicates)?;
                 results.push(result);
             }
             Ok(ResolvedFilterExpression::mk_or(results))
@@ -89,7 +94,7 @@ pub fn plan_expression<'a>(
         plan_types::Expression::Not {
             expression: not_expression,
         } => {
-            let result = plan_expression(not_expression, relationships, _remote_predicates)?;
+            let result = plan_expression(not_expression, relationships, remote_predicates)?;
             Ok(ResolvedFilterExpression::mk_not(result))
         }
         plan_types::Expression::LocalField(local_field_comparison) => Ok(
@@ -100,7 +105,7 @@ pub fn plan_expression<'a>(
             field_path,
             column,
         } => {
-            let resolved_predicate = plan_expression(predicate, relationships, _remote_predicates)?;
+            let resolved_predicate = plan_expression(predicate, relationships, remote_predicates)?;
             Ok(ResolvedFilterExpression::LocalNestedArray {
                 column: column.clone(),
                 field_path: field_path.clone(),
@@ -112,8 +117,7 @@ pub fn plan_expression<'a>(
             predicate,
             info,
         } => {
-            let relationship_filter =
-                plan_expression(predicate, relationships, _remote_predicates)?;
+            let relationship_filter = plan_expression(predicate, relationships, remote_predicates)?;
             relationships.insert(
                 relationship.clone(),
                 process_model_relationship_definition(info)?,
@@ -127,23 +131,87 @@ pub fn plan_expression<'a>(
         plan_types::Expression::RelationshipRemoteComparison {
             relationship: _,
             target_model_name: _,
-            target_model_source: _,
-            ndc_column_mapping: _,
-            predicate: _,
+            target_model_source,
+            ndc_column_mapping,
+            predicate,
         } => {
-            // TODO: Plan the remote relationship comparison expression and populate the remote_predicates
+            let (remote_query_node, rest_predicate_trees, collection_relationships) =
+                plan_remote_predicate(ndc_column_mapping, predicate)?;
 
-            // this is where the action will happen
-            todo!("need to generate remote predicate plan");
-            /*
-            // This needs to be resolved in engine itself, further planning is deferred until it is resolved
-            Ok(ResolvedFilterExpression::RemoteRelationshipComparison {
-                relationship: relationship.clone(),
-                target_model_name,
-                target_model_source: target_model_source.clone(),
+            let query_execution_plan: QueryExecutionPlan = QueryExecutionPlan {
+                query_node: remote_query_node,
+                collection: target_model_source.collection.clone(),
+                arguments: BTreeMap::new(),
+                collection_relationships,
+                variables: None,
+                data_connector: target_model_source.data_connector.clone(),
+            };
+
+            let predicate_query_tree = PredicateQueryTree {
                 ndc_column_mapping: ndc_column_mapping.clone(),
-                predicate: predicate.clone(),
-            })*/
+                query: ExecutionTree {
+                    query_execution_plan,
+                    remote_predicates: PredicateQueryTrees::new(),
+                    remote_join_executions: JoinLocations::new(),
+                },
+                children: rest_predicate_trees,
+            };
+
+            let remote_predicate_id = remote_predicates.insert(predicate_query_tree);
+
+            Ok(ResolvedFilterExpression::RemoteRelationshipComparison {
+                remote_predicate_id,
+            })
         }
     }
+}
+
+/// Generate comparison expression plan for remote relationshp predicate.
+pub fn plan_remote_predicate<'a>(
+    ndc_column_mapping: &'a [plan_types::RelationshipColumnMapping],
+    predicate: &'a plan_types::Expression<'_>,
+) -> Result<
+    (
+        QueryNodeNew,
+        PredicateQueryTrees,
+        BTreeMap<NdcRelationshipName, Relationship>,
+    ),
+    plan_error::Error,
+> {
+    let mut relationships = BTreeMap::new();
+    let mut remote_predicates = PredicateQueryTrees::new();
+    let planned_predicate = plan_expression(predicate, &mut relationships, &mut remote_predicates)?;
+
+    let query_node = QueryNodeNew {
+        limit: None,
+        offset: None,
+        order_by: None,
+        predicate: Some(planned_predicate),
+        aggregates: None,
+        fields: Some(FieldsSelection {
+            fields: build_ndc_query_fields(ndc_column_mapping),
+        }),
+    };
+
+    Ok((query_node, remote_predicates, relationships))
+}
+
+/// Generate the NDC query fields with the mapped NDC columns in a remote relationship.
+/// These field values are fetched from the remote data connector.
+fn build_ndc_query_fields(
+    ndc_column_mapping: &[plan_types::RelationshipColumnMapping],
+) -> IndexMap<NdcFieldAlias, Field> {
+    let mut fields = IndexMap::new();
+    for mapping in ndc_column_mapping {
+        let field = Field::Column {
+            column: mapping.target_ndc_column.clone(),
+            fields: None,
+            arguments: BTreeMap::new(),
+        };
+        fields.insert(
+            NdcFieldAlias::from(mapping.target_ndc_column.as_str()),
+            field,
+        );
+    }
+    fields
 }

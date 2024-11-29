@@ -11,64 +11,76 @@ use plan_types::{
 pub fn plan_argument(
     ir_argument: &crate::Argument<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
-) -> Result<Argument, super::error::Error> {
-    match ir_argument {
-        crate::Argument::Literal { value } => Ok(Argument::Literal {
-            value: value.clone(),
-        }),
+) -> Result<(Argument, PredicateQueryTrees), plan_error::Error> {
+    let mut remote_predicates = PredicateQueryTrees::new();
+    let argument = match ir_argument {
+        crate::Argument::Literal { value } => {
+            Ok::<Argument, plan_error::Error>(Argument::Literal {
+                value: value.clone(),
+            })
+        }
         crate::Argument::BooleanExpression { predicate } => {
             let expression =
-                filter::plan_expression(predicate, relationships, &mut PredicateQueryTrees::new())?;
+                filter::plan_expression(predicate, relationships, &mut remote_predicates)?;
 
             Ok(Argument::BooleanExpression {
                 predicate: expression,
             })
         }
-    }
+    }?;
+
+    Ok((argument, remote_predicates))
 }
 
 /// Generate the argument plan from IR argument
 #[allow(clippy::unnecessary_wraps)]
 pub fn plan_mutation_argument(
     ir_argument: &crate::Argument<'_>,
-    _relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
-) -> Result<MutationArgument, super::error::Error> {
-    let planned_argument = match ir_argument {
-        crate::Argument::Literal { value } => MutationArgument::Literal {
-            value: value.clone(),
-        },
-        crate::Argument::BooleanExpression { predicate: _ } => {
-            todo!("here we'll need to plan straight into the new data types");
-            /*
-                            let expression = super::filter::plan_expression(
-                                predicate,
-                                relationships,
-                                &mut PredicateQueryTrees::new(),
-                            )?;
+    relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+) -> Result<MutationArgument, plan_error::Error> {
+    let mut remote_predicates = PredicateQueryTrees::new();
 
-                            let resolved_predicate =
-                                filter::resolve_expression(predicate, resolve_context).await?;
-                            Ok(plan_types::MutationArgument::BooleanExpression {
-                                predicate: resolved_predicate,
-                            })
-            */
+    let argument = match ir_argument {
+        crate::Argument::Literal { value } => {
+            Ok::<MutationArgument, plan_error::Error>(MutationArgument::Literal {
+                value: value.clone(),
+            })
         }
-    };
-    Ok(planned_argument)
+        crate::Argument::BooleanExpression { predicate } => {
+            let expression =
+                super::filter::plan_expression(predicate, relationships, &mut remote_predicates)?;
+
+            Ok(MutationArgument::BooleanExpression {
+                predicate: expression,
+            })
+        }
+    }?;
+
+    Ok(argument)
 }
 
 pub fn plan_arguments(
     arguments: &BTreeMap<DataConnectorArgumentName, crate::Argument<'_>>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
-) -> Result<BTreeMap<DataConnectorArgumentName, Argument>, plan_error::Error> {
+) -> Result<
+    (
+        BTreeMap<DataConnectorArgumentName, Argument>,
+        PredicateQueryTrees,
+    ),
+    plan_error::Error,
+> {
     let mut result = BTreeMap::new();
+    let mut remote_predicates = PredicateQueryTrees::new();
+
     for (argument_name, argument_value) in arguments {
-        result.insert(
-            argument_name.clone(),
-            plan_argument(argument_value, relationships)?,
-        );
+        let (argument, argument_remote_predicates) = plan_argument(argument_value, relationships)?;
+
+        remote_predicates.0.extend(argument_remote_predicates.0);
+
+        result.insert(argument_name.clone(), argument);
     }
-    Ok(result)
+
+    Ok((result, remote_predicates))
 }
 
 pub fn plan_mutation_arguments(

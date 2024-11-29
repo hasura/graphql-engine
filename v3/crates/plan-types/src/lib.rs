@@ -12,9 +12,9 @@ pub use execution_plan::{
     FieldsSelection, JoinLocations, JoinNode, Location, LocationKind, MutationArgument,
     MutationExecutionPlan, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
     NestedArray, NestedField, NestedObject, OrderByDirection, OrderByElement, OrderByTarget,
-    PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryNodeNew, Relationship,
-    RelationshipArgument, RemoteJoin, RemoteJoinArgument, RemoteJoinType, ResolvedFilterExpression,
-    SourceFieldAlias, TargetField,
+    PredicateQueryTree, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryNodeNew,
+    Relationship, RelationshipArgument, RemoteJoin, RemoteJoinArgument, RemoteJoinType,
+    ResolvedFilterExpression, SourceFieldAlias, TargetField,
 };
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,

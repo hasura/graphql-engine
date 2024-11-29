@@ -4,7 +4,10 @@ use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
-use plan_types::{NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution};
+use plan_types::{
+    JoinLocations, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
+    PredicateQueryTrees,
+};
 use std::sync::Arc;
 
 // in the new world, this is where we'll create execution plans in GraphQL
@@ -93,4 +96,10 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
         sdl: String,
         selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
     },
+}
+
+pub struct Plan<T> {
+    pub inner: T,
+    pub join_locations: JoinLocations,
+    pub remote_predicates: PredicateQueryTrees,
 }

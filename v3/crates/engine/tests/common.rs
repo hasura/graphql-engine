@@ -5,12 +5,13 @@ use graphql_schema::GDS;
 use hasura_authn_core::{
     Identity, JsonSessionVariableValue, Role, Session, SessionError, SessionVariableValue,
 };
-use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
-use plan_types::{ExecutionTree, JoinLocations, NDCQueryExecution, ProcessResponseAs};
+use plan_types::{
+    ExecutionTree, JoinLocations, NDCQueryExecution, PredicateQueryTrees, ProcessResponseAs,
+};
 use pretty_assertions::assert_eq;
 use serde_json as json;
 use sql::catalog::CatalogSerializable;
@@ -901,10 +902,9 @@ pub async fn open_dd_pipeline_test(
                             let ndc_query_execution = NDCQueryExecution {
                                 execution_span_attribute: "Engine GraphQL OpenDD pipeline tests",
                                 execution_tree: ExecutionTree {
+                                    remote_predicates: PredicateQueryTrees::new(),
                                     query_execution_plan,
-                                    remote_join_executions: JoinLocations {
-                                        locations: IndexMap::new(),
-                                    },
+                                    remote_join_executions: JoinLocations::new(),
                                 },
                                 field_span_attribute: "Engine GraphQL OpenDD pipeline tests".into(),
                                 process_response_as: ProcessResponseAs::Array {

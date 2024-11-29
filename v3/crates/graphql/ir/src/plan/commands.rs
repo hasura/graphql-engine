@@ -6,28 +6,36 @@ use std::collections::BTreeMap;
 use super::arguments;
 use super::error;
 use super::selection_set;
+use crate::plan::Plan;
 use crate::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
 use open_dds::commands::ProcedureName;
 use plan_types::{
-    Argument, Field, FieldsSelection, JoinLocations, MutationExecutionPlan, NdcFieldAlias,
-    NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew, Relationship,
-    VariableName, FUNCTION_IR_VALUE_COLUMN_NAME,
+    Argument, ExecutionTree, Field, FieldsSelection, JoinLocations, MutationExecutionPlan,
+    NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
+    Relationship, VariableName, FUNCTION_IR_VALUE_COLUMN_NAME,
 };
 
 pub(crate) fn plan_query_node(
     ir: &CommandInfo<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
-) -> Result<(QueryNodeNew, JoinLocations), error::Error> {
+) -> Result<Plan<QueryNodeNew>, error::Error> {
     let mut ndc_nested_field = None;
-    let mut jl = JoinLocations::new();
+    let mut join_locations = JoinLocations::new();
+    let mut remote_predicates = PredicateQueryTrees::new();
+
     if let Some(nested_selection) = &ir.selection {
-        let (fields, locations) = selection_set::plan_nested_selection(
+        let Plan {
+            inner: fields,
+            join_locations: nested_join_locations,
+            remote_predicates: nested_remote_predicates,
+        } = selection_set::plan_nested_selection(
             nested_selection,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
         )?;
         ndc_nested_field = Some(fields);
-        jl = locations;
+        join_locations = nested_join_locations;
+        remote_predicates = nested_remote_predicates;
     }
     let query = QueryNodeNew {
         aggregates: None,
@@ -46,14 +54,18 @@ pub(crate) fn plan_query_node(
         order_by: None,
         predicate: None,
     };
-    Ok((query, jl))
+    Ok(Plan {
+        inner: query,
+        join_locations,
+        remote_predicates,
+    })
 }
 
 pub(crate) fn plan_query_execution(
     ir: &FunctionBasedCommand<'_>,
-) -> Result<(QueryExecutionPlan, JoinLocations), error::Error> {
+) -> Result<ExecutionTree, error::Error> {
     let mut collection_relationships = BTreeMap::new();
-    let mut arguments =
+    let (mut arguments, mut remote_predicates) =
         arguments::plan_arguments(&ir.command_info.arguments, &mut collection_relationships)?;
 
     // Add the variable arguments which are used for remote joins
@@ -66,10 +78,15 @@ pub(crate) fn plan_query_execution(
         );
     }
 
-    let (query_node, jl) = plan_query_node(&ir.command_info, &mut collection_relationships)?;
+    let Plan {
+        inner: query_node,
+        join_locations: remote_join_executions,
+        remote_predicates: query_remote_predicates,
+    } = plan_query_node(&ir.command_info, &mut collection_relationships)?;
 
-    let query_request = QueryExecutionPlan {
-        remote_predicates: PredicateQueryTrees::new(),
+    remote_predicates.0.extend(query_remote_predicates.0);
+
+    let query_execution_plan = QueryExecutionPlan {
         query_node,
         collection: CollectionName::from(ir.function_name.as_str()),
         arguments: arguments.clone(),
@@ -77,18 +94,28 @@ pub(crate) fn plan_query_execution(
         variables: None,
         data_connector: ir.command_info.data_connector.clone(),
     };
-    Ok((query_request, jl))
+    Ok(ExecutionTree {
+        query_execution_plan,
+        remote_join_executions,
+        remote_predicates,
+    })
 }
 
 pub(crate) fn plan_mutation_execution(
     procedure_name: &ProcedureName,
     ir: &ProcedureBasedCommand<'_>,
-) -> Result<(MutationExecutionPlan, JoinLocations), error::Error> {
+) -> Result<Plan<MutationExecutionPlan>, error::Error> {
     let mut ndc_nested_field = None;
-    let mut jl = JoinLocations::new();
+    let mut join_locations = JoinLocations::new();
+    let mut remote_predicates = PredicateQueryTrees::new();
     let mut collection_relationships = BTreeMap::new();
+
     if let Some(nested_selection) = &ir.command_info.selection {
-        let (fields, locations) = selection_set::plan_nested_selection(
+        let Plan {
+            inner: fields,
+            join_locations: nested_join_locations,
+            remote_predicates: nested_remote_predicates,
+        } = selection_set::plan_nested_selection(
             nested_selection,
             ir.command_info
                 .data_connector
@@ -97,7 +124,8 @@ pub(crate) fn plan_mutation_execution(
             &mut collection_relationships,
         )?;
         ndc_nested_field = Some(fields);
-        jl = locations;
+        join_locations = nested_join_locations;
+        remote_predicates = nested_remote_predicates;
     }
     let mutation_request = MutationExecutionPlan {
         procedure_name: procedure_name.clone(),
@@ -109,5 +137,9 @@ pub(crate) fn plan_mutation_execution(
         collection_relationships,
         data_connector: ir.command_info.data_connector.clone(),
     };
-    Ok((mutation_request, jl))
+    Ok(Plan {
+        inner: mutation_request,
+        join_locations,
+        remote_predicates,
+    })
 }

@@ -7,7 +7,9 @@ mod types;
 
 pub use explain::execute_explain;
 pub use explain::types::{redact_ndc_explain, ExplainResponse};
-pub use steps::{build_ir, build_request_plan, generate_ir, normalize_request, parse_query};
+pub use steps::{
+    build_ir, build_request_plan_with_old, generate_ir, normalize_request, parse_query,
+};
 pub use to_opendd_ir::to_opendd_ir;
 
 pub use query::{

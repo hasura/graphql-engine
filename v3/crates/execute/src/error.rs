@@ -216,15 +216,18 @@ pub enum FilterPredicateError {
 
     #[error("too many rows returned from remote connector request")]
     TooManyRowsReturned,
+
+    #[error("could not find remote predicate result for {0}")]
+    CouldNotFindRemotePredicate(uuid::Uuid),
 }
 
 impl TraceableError for FilterPredicateError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
             Self::RemoteRelationshipPlanError(error) => error.visibility(),
-            Self::RemoteRelationshipNDCRequest(_) | Self::NotASingleRowSet(_) => {
-                ErrorVisibility::Internal
-            }
+            Self::RemoteRelationshipNDCRequest(_)
+            | Self::CouldNotFindRemotePredicate(_)
+            | Self::NotASingleRowSet(_) => ErrorVisibility::Internal,
             Self::TooManyRowsReturned => ErrorVisibility::User,
         }
     }

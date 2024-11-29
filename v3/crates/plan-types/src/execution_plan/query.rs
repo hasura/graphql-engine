@@ -1,6 +1,6 @@
 use super::{aggregates, arguments, field, filter, order_by, relationships};
 use crate::NdcFieldAlias;
-use crate::{NdcRelationshipName, VariableName};
+use crate::{ExecutionTree, NdcRelationshipName, RelationshipColumnMapping, VariableName};
 use indexmap::IndexMap;
 use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
 use std::collections::BTreeMap;
@@ -11,7 +11,6 @@ use uuid::Uuid;
 // this represents an execution plan. all predicates only refer to local comparisons.
 // remote predicates are represented as additional execution nodes
 pub struct QueryExecutionPlan {
-    pub remote_predicates: PredicateQueryTrees,
     pub query_node: QueryNodeNew,
     /// The name of a collection
     pub collection: CollectionName,
@@ -29,7 +28,8 @@ pub struct QueryExecutionPlan {
 /// A tree of queries that are used to execute remote predicates
 #[derive(Debug, Clone, PartialEq)]
 pub struct PredicateQueryTree {
-    pub query: QueryExecutionPlan,
+    pub ndc_column_mapping: Vec<RelationshipColumnMapping>,
+    pub query: ExecutionTree,
     pub children: PredicateQueryTrees,
 }
 
