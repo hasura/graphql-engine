@@ -15,7 +15,7 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 mod filter;
 mod include;
-use crate::catalog::{Model, ObjectType, RelationshipTarget};
+use crate::catalog::{Model, ObjectType, RelationshipTarget, Type};
 use metadata_resolve::Qualified;
 use std::collections::BTreeMap;
 
@@ -139,7 +139,7 @@ fn resolve_field_selection(
 
     // create the selection fields; include all fields of the model output type
     let mut selection = IndexMap::new();
-    for field_name in object_type.type_fields.keys() {
+    for (field_name, field_type) in &object_type.type_fields {
         if include_field(query_string, field_name, &object_type_name.name) {
             let field_name_ident = Identifier::new(field_name.as_str())
                 .map_err(|e| RequestError::BadRequest(e.into()))?;
@@ -152,7 +152,13 @@ fn resolve_field_selection(
                         arguments: IndexMap::new(),
                         field_name,
                     },
-                    selection: None,
+                    selection: resolve_nested_field_selection(
+                        object_types,
+                        relationship_tree,
+                        query_string,
+                        include_relationships,
+                        field_type,
+                    )?,
                 });
             selection.insert(field_alias, sub_sel);
         }
@@ -166,6 +172,36 @@ fn resolve_field_selection(
         include_relationships,
     )?;
     selection.append(&mut relationship_fields);
+    Ok(selection)
+}
+
+fn resolve_nested_field_selection(
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
+    relationship_tree: &mut RelationshipTree,
+    query_string: &jsonapi_library::query::Query,
+    include_relationships: Option<&include::IncludeRelationships>,
+    field_type: &Type,
+) -> Result<Option<IndexMap<Alias, ObjectSubSelection>>, RequestError> {
+    let selection = match field_type {
+        Type::Scalar(_) | Type::ScalarForDataConnector(_) => None,
+        Type::List(inner) => resolve_nested_field_selection(
+            object_types,
+            relationship_tree,
+            query_string,
+            include_relationships,
+            inner.as_ref(),
+        )?,
+        Type::Object(type_name) => {
+            let object_field_selection = resolve_field_selection(
+                object_types,
+                type_name,
+                relationship_tree,
+                query_string,
+                include_relationships,
+            )?;
+            Some(object_field_selection)
+        }
+    };
     Ok(selection)
 }
 

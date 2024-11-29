@@ -58,7 +58,44 @@ V1(
                                     ),
                                     arguments: {},
                                 },
-                                selection: None,
+                                selection: Some(
+                                    {
+                                        Alias(
+                                            Identifier(
+                                                "city",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "city",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                        Alias(
+                                            Identifier(
+                                                "campuses",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "campuses",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                         Alias(
@@ -75,7 +112,47 @@ V1(
                                     ),
                                     arguments: {},
                                 },
-                                selection: None,
+                                selection: Some(
+                                    {
+                                        Alias(
+                                            Identifier(
+                                                "country",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "country",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: Some(
+                                                    {
+                                                        Alias(
+                                                            Identifier(
+                                                                "name",
+                                                            ),
+                                                        ): Field(
+                                                            ObjectFieldSelection {
+                                                                target: ObjectFieldTarget {
+                                                                    field_name: FieldName(
+                                                                        Identifier(
+                                                                            "name",
+                                                                        ),
+                                                                    ),
+                                                                    arguments: {},
+                                                                },
+                                                                selection: None,
+                                                            },
+                                                        ),
+                                                    },
+                                                ),
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                         Alias(
@@ -92,7 +169,44 @@ V1(
                                     ),
                                     arguments: {},
                                 },
-                                selection: None,
+                                selection: Some(
+                                    {
+                                        Alias(
+                                            Identifier(
+                                                "last_name",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "last_name",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                        Alias(
+                                            Identifier(
+                                                "specialities",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "specialities",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                         Alias(
@@ -109,7 +223,27 @@ V1(
                                     ),
                                     arguments: {},
                                 },
-                                selection: None,
+                                selection: Some(
+                                    {
+                                        Alias(
+                                            Identifier(
+                                                "first_name",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "first_name",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                         Alias(

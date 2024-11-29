@@ -9,43 +9,36 @@ expression: rowsets
         {
           "id": 1,
           "location": {
+            "city": "London",
             "campuses": [
               "Mile End",
               "Whitechapel",
               "Charterhouse Square",
               "West Smithfield"
-            ],
-            "city": "London",
-            "country": "UK"
+            ]
           },
           "location_country": {
-            "campuses": [
-              "Mile End",
-              "Whitechapel",
-              "Charterhouse Square",
-              "West Smithfield"
-            ],
-            "city": "London",
             "country": "UK"
           },
           "staff": [
             {
-              "first_name": "Peter",
               "last_name": "Landin",
               "specialities": [
                 "Computer Science",
                 "Education"
-              ]
+              ],
+              "actor": {
+                "rows": [
+                  {
+                    "name": "Peter"
+                  }
+                ]
+              }
             }
           ],
           "staff_first_name": [
             {
-              "first_name": "Peter",
-              "last_name": "Landin",
-              "specialities": [
-                "Computer Science",
-                "Education"
-              ]
+              "first_name": "Peter"
             }
           ],
           "departments": [
@@ -57,59 +50,45 @@ expression: rowsets
         {
           "id": 2,
           "location": {
+            "city": "Gothenburg",
             "campuses": [
               "Johanneberg",
               "Lindholmen"
-            ],
-            "city": "Gothenburg",
-            "country": "Sweden"
+            ]
           },
           "location_country": {
-            "campuses": [
-              "Johanneberg",
-              "Lindholmen"
-            ],
-            "city": "Gothenburg",
             "country": "Sweden"
           },
           "staff": [
             {
-              "first_name": "John",
               "last_name": "Hughes",
               "specialities": [
                 "Computer Science",
                 "Functional Programming",
                 "Software Testing"
-              ]
+              ],
+              "actor": {
+                "rows": []
+              }
             },
             {
-              "first_name": "Koen",
               "last_name": "Claessen",
               "specialities": [
                 "Computer Science",
                 "Functional Programming",
                 "Automated Reasoning"
-              ]
+              ],
+              "actor": {
+                "rows": []
+              }
             }
           ],
           "staff_first_name": [
             {
-              "first_name": "John",
-              "last_name": "Hughes",
-              "specialities": [
-                "Computer Science",
-                "Functional Programming",
-                "Software Testing"
-              ]
+              "first_name": "John"
             },
             {
-              "first_name": "Koen",
-              "last_name": "Claessen",
-              "specialities": [
-                "Computer Science",
-                "Functional Programming",
-                "Automated Reasoning"
-              ]
+              "first_name": "Koen"
             }
           ],
           "departments": [

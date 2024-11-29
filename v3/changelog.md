@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added support for the sparse fieldset parameter for nested field types in
+  JSON:API.
+
 ### Fixed
 
 - Conflicts between `BooleanExpressionType` fields that have the same name are

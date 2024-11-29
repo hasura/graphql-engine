@@ -1,0 +1,84 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/nested_fields/institutions.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_institution",
+                    id: "1",
+                    attributes: {
+                        "location": Object {
+                            "city": String("London"),
+                            "country": String("UK"),
+                        },
+                        "name": String("Queen Mary University of London"),
+                        "staff": Array [
+                            Object {
+                                "first_name": String("Peter"),
+                                "specialities": Array [
+                                    String("Computer Science"),
+                                    String("Education"),
+                                ],
+                            },
+                        ],
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_institution",
+                    id: "2",
+                    attributes: {
+                        "location": Object {
+                            "city": String("Gothenburg"),
+                            "country": String("Sweden"),
+                        },
+                        "name": String("Chalmers University of Technology"),
+                        "staff": Array [
+                            Object {
+                                "first_name": String("John"),
+                                "specialities": Array [
+                                    String("Computer Science"),
+                                    String("Functional Programming"),
+                                    String("Software Testing"),
+                                ],
+                            },
+                            Object {
+                                "first_name": String("Koen"),
+                                "specialities": Array [
+                                    String("Computer Science"),
+                                    String("Functional Programming"),
+                                    String("Automated Reasoning"),
+                                ],
+                            },
+                        ],
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_institution",
+                    id: "3",
+                    attributes: {
+                        "location": Null,
+                        "name": String("University of Nowhere"),
+                        "staff": Null,
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: None,
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

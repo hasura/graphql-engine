@@ -34,21 +34,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Album]",
-              "in": "query",
-              "description": "Optional list of fields from Album to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "AlbumId",
-                    "ArtistId",
-                    "Title"
-                  ]
-                }
-              },
-              "example": "AlbumId,ArtistId,Title"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Album to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -77,6 +62,21 @@ expression: generated_openapi
                 }
               },
               "example": "Artist,Tracks"
+            },
+            {
+              "name": "fields[Album]",
+              "in": "query",
+              "description": "Optional list of fields from Album type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "AlbumId",
+                    "ArtistId",
+                    "Title"
+                  ]
+                }
+              },
+              "example": "AlbumId,ArtistId,Title"
             }
           ],
           "responses": {
@@ -470,21 +470,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Article]",
-              "in": "query",
-              "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
-                }
-              },
-              "example": "article_id,title,author_id"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Articles to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -513,6 +498,21 @@ expression: generated_openapi
                 }
               },
               "example": "Author,AuthorFromCommand"
+            },
+            {
+              "name": "fields[Article]",
+              "in": "query",
+              "description": "Optional list of fields from Article type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "article_id",
+                    "title",
+                    "author_id"
+                  ]
+                }
+              },
+              "example": "article_id,title,author_id"
             }
           ],
           "responses": {
@@ -692,20 +692,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Artist]",
-              "in": "query",
-              "description": "Optional list of fields from Artist to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "ArtistId",
-                    "Name"
-                  ]
-                }
-              },
-              "example": "ArtistId,Name"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Artist to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -732,6 +718,20 @@ expression: generated_openapi
                 }
               },
               "example": "Albums"
+            },
+            {
+              "name": "fields[Artist]",
+              "in": "query",
+              "description": "Optional list of fields from Artist type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "ArtistId",
+                    "Name"
+                  ]
+                }
+              },
+              "example": "ArtistId,Name"
             }
           ],
           "responses": {
@@ -940,20 +940,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Author]",
-              "in": "query",
-              "description": "Optional list of fields from Authors to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "author_id",
-                    "first_name"
-                  ]
-                }
-              },
-              "example": "author_id,first_name"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Authors to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -980,6 +966,20 @@ expression: generated_openapi
                 }
               },
               "example": "articles"
+            },
+            {
+              "name": "fields[Author]",
+              "in": "query",
+              "description": "Optional list of fields from Author type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "author_id",
+                    "first_name"
+                  ]
+                }
+              },
+              "example": "author_id,first_name"
             }
           ],
           "responses": {
@@ -1159,31 +1159,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Customer]",
-              "in": "query",
-              "description": "Optional list of fields from Customer to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "Address",
-                    "City",
-                    "Company",
-                    "Country",
-                    "CustomerId",
-                    "Email",
-                    "Fax",
-                    "FirstName",
-                    "LastName",
-                    "Phone",
-                    "PostalCode",
-                    "State",
-                    "SupportRepId"
-                  ]
-                }
-              },
-              "example": "Address,City,Company,Country,CustomerId,Email,Fax,FirstName,LastName,Phone,PostalCode,State,SupportRepId"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Customer to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -1232,6 +1207,31 @@ expression: generated_openapi
                 }
               },
               "example": "Employee,Invoices"
+            },
+            {
+              "name": "fields[Customer]",
+              "in": "query",
+              "description": "Optional list of fields from Customer type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "Address",
+                    "City",
+                    "Company",
+                    "Country",
+                    "CustomerId",
+                    "Email",
+                    "Fax",
+                    "FirstName",
+                    "LastName",
+                    "Phone",
+                    "PostalCode",
+                    "State",
+                    "SupportRepId"
+                  ]
+                }
+              },
+              "example": "Address,City,Company,Country,CustomerId,Email,Fax,FirstName,LastName,Phone,PostalCode,State,SupportRepId"
             }
           ],
           "responses": {
@@ -1646,722 +1646,6 @@ expression: generated_openapi
           }
         }
       },
-      "/v1/rest/default/Employee": {
-        "get": {
-          "summary": "Fetch Employee values",
-          "parameters": [
-            {
-              "name": "page[limit]",
-              "in": "query",
-              "description": "Optional limit for fetched items",
-              "schema": {
-                "type": "integer"
-              },
-              "example": "5"
-            },
-            {
-              "name": "page[offset]",
-              "in": "query",
-              "description": "Optional offset for fetched items",
-              "schema": {
-                "type": "integer"
-              },
-              "example": "10"
-            },
-            {
-              "name": "fields[Employee]",
-              "in": "query",
-              "description": "Optional list of fields from Employee to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "Address",
-                    "BirthDate",
-                    "City",
-                    "Country",
-                    "Email",
-                    "EmployeeId",
-                    "Fax",
-                    "FirstName",
-                    "HireDate",
-                    "LastName",
-                    "Phone",
-                    "PostalCode",
-                    "ReportsTo",
-                    "State",
-                    "Title"
-                  ]
-                }
-              },
-              "example": "Address,BirthDate,City,Country,Email,EmployeeId,Fax,FirstName,HireDate,LastName,Phone,PostalCode,ReportsTo,State,Title"
-            },
-            {
-              "name": "sort",
-              "in": "query",
-              "description": "Optional list of fields from Employee to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "Address",
-                    "-Address",
-                    "BirthDate",
-                    "-BirthDate",
-                    "City",
-                    "-City",
-                    "Country",
-                    "-Country",
-                    "Email",
-                    "-Email",
-                    "EmployeeId",
-                    "-EmployeeId",
-                    "Fax",
-                    "-Fax",
-                    "FirstName",
-                    "-FirstName",
-                    "HireDate",
-                    "-HireDate",
-                    "LastName",
-                    "-LastName",
-                    "Phone",
-                    "-Phone",
-                    "PostalCode",
-                    "-PostalCode",
-                    "ReportsTo",
-                    "-ReportsTo",
-                    "State",
-                    "-State",
-                    "Title",
-                    "-Title"
-                  ]
-                }
-              },
-              "example": "Address,-BirthDate,Country,-Email"
-            },
-            {
-              "name": "include",
-              "in": "query",
-              "description": "Optional list of relationships from Employee to include in the response. Use dot-separated names to include nested relationships.",
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "example": "Customers,Employee,Employees"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Successful Employee response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "required": [
-                      "data"
-                    ],
-                    "properties": {
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "required": [
-                            "id",
-                            "_type",
-                            "attributes"
-                          ],
-                          "properties": {
-                            "_type": {
-                              "enum": [
-                                "default_Employee"
-                              ]
-                            },
-                            "attributes": {
-                              "type": "object",
-                              "properties": {
-                                "Address": {
-                                  "type": "object"
-                                },
-                                "BirthDate": {
-                                  "type": "object"
-                                },
-                                "City": {
-                                  "type": "object"
-                                },
-                                "Country": {
-                                  "type": "object"
-                                },
-                                "Email": {
-                                  "type": "object"
-                                },
-                                "EmployeeId": {
-                                  "type": "object"
-                                },
-                                "Fax": {
-                                  "type": "object"
-                                },
-                                "FirstName": {
-                                  "type": "object"
-                                },
-                                "HireDate": {
-                                  "type": "object"
-                                },
-                                "LastName": {
-                                  "type": "object"
-                                },
-                                "Phone": {
-                                  "type": "object"
-                                },
-                                "PostalCode": {
-                                  "type": "object"
-                                },
-                                "ReportsTo": {
-                                  "type": "object"
-                                },
-                                "State": {
-                                  "type": "object"
-                                },
-                                "Title": {
-                                  "type": "object"
-                                }
-                              }
-                            },
-                            "id": {
-                              "type": "string"
-                            },
-                            "relationships": {
-                              "type": "object",
-                              "properties": {
-                                "Customers": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
-                                  "properties": {
-                                    "data": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "object",
-                                        "required": [
-                                          "id",
-                                          "_type"
-                                        ],
-                                        "properties": {
-                                          "_type": {
-                                            "enum": [
-                                              "default_Customer"
-                                            ]
-                                          },
-                                          "id": {
-                                            "type": "string"
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                },
-                                "Employee": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
-                                  "properties": {
-                                    "data": {
-                                      "type": "object",
-                                      "required": [
-                                        "id",
-                                        "_type"
-                                      ],
-                                      "properties": {
-                                        "_type": {
-                                          "enum": [
-                                            "default_Employee"
-                                          ]
-                                        },
-                                        "id": {
-                                          "type": "string"
-                                        }
-                                      }
-                                    }
-                                  }
-                                },
-                                "Employees": {
-                                  "type": "object",
-                                  "required": [
-                                    "data"
-                                  ],
-                                  "properties": {
-                                    "data": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "object",
-                                        "required": [
-                                          "id",
-                                          "_type"
-                                        ],
-                                        "properties": {
-                                          "_type": {
-                                            "enum": [
-                                              "default_Employee"
-                                            ]
-                                          },
-                                          "id": {
-                                            "type": "string"
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "included": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "anyOf": [
-                            {
-                              "type": "object",
-                              "required": [
-                                "id",
-                                "_type",
-                                "attributes"
-                              ],
-                              "properties": {
-                                "_type": {
-                                  "enum": [
-                                    "default_Customer"
-                                  ]
-                                },
-                                "attributes": {
-                                  "type": "object",
-                                  "properties": {
-                                    "Address": {
-                                      "type": "object"
-                                    },
-                                    "City": {
-                                      "type": "object"
-                                    },
-                                    "Company": {
-                                      "type": "object"
-                                    },
-                                    "Country": {
-                                      "type": "object"
-                                    },
-                                    "CustomerId": {
-                                      "type": "object"
-                                    },
-                                    "Email": {
-                                      "type": "object"
-                                    },
-                                    "Fax": {
-                                      "type": "object"
-                                    },
-                                    "FirstName": {
-                                      "type": "object"
-                                    },
-                                    "LastName": {
-                                      "type": "object"
-                                    },
-                                    "Phone": {
-                                      "type": "object"
-                                    },
-                                    "PostalCode": {
-                                      "type": "object"
-                                    },
-                                    "State": {
-                                      "type": "object"
-                                    },
-                                    "SupportRepId": {
-                                      "type": "object"
-                                    }
-                                  }
-                                },
-                                "id": {
-                                  "type": "string"
-                                },
-                                "relationships": {
-                                  "type": "object",
-                                  "properties": {
-                                    "Employee": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
-                                      "properties": {
-                                        "data": {
-                                          "type": "object",
-                                          "required": [
-                                            "id",
-                                            "_type"
-                                          ],
-                                          "properties": {
-                                            "_type": {
-                                              "enum": [
-                                                "default_Employee"
-                                              ]
-                                            },
-                                            "id": {
-                                              "type": "string"
-                                            }
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "Invoices": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
-                                      "properties": {
-                                        "data": {
-                                          "type": "array",
-                                          "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
-                                            "properties": {
-                                              "_type": {
-                                                "enum": [
-                                                  "default_Invoice"
-                                                ]
-                                              },
-                                              "id": {
-                                                "type": "string"
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            },
-                            {
-                              "type": "object",
-                              "required": [
-                                "id",
-                                "_type",
-                                "attributes"
-                              ],
-                              "properties": {
-                                "_type": {
-                                  "enum": [
-                                    "default_Employee"
-                                  ]
-                                },
-                                "attributes": {
-                                  "type": "object",
-                                  "properties": {
-                                    "Address": {
-                                      "type": "object"
-                                    },
-                                    "BirthDate": {
-                                      "type": "object"
-                                    },
-                                    "City": {
-                                      "type": "object"
-                                    },
-                                    "Country": {
-                                      "type": "object"
-                                    },
-                                    "Email": {
-                                      "type": "object"
-                                    },
-                                    "EmployeeId": {
-                                      "type": "object"
-                                    },
-                                    "Fax": {
-                                      "type": "object"
-                                    },
-                                    "FirstName": {
-                                      "type": "object"
-                                    },
-                                    "HireDate": {
-                                      "type": "object"
-                                    },
-                                    "LastName": {
-                                      "type": "object"
-                                    },
-                                    "Phone": {
-                                      "type": "object"
-                                    },
-                                    "PostalCode": {
-                                      "type": "object"
-                                    },
-                                    "ReportsTo": {
-                                      "type": "object"
-                                    },
-                                    "State": {
-                                      "type": "object"
-                                    },
-                                    "Title": {
-                                      "type": "object"
-                                    }
-                                  }
-                                },
-                                "id": {
-                                  "type": "string"
-                                },
-                                "relationships": {
-                                  "type": "object",
-                                  "properties": {
-                                    "Customers": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
-                                      "properties": {
-                                        "data": {
-                                          "type": "array",
-                                          "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
-                                            "properties": {
-                                              "_type": {
-                                                "enum": [
-                                                  "default_Customer"
-                                                ]
-                                              },
-                                              "id": {
-                                                "type": "string"
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "Employee": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
-                                      "properties": {
-                                        "data": {
-                                          "type": "object",
-                                          "required": [
-                                            "id",
-                                            "_type"
-                                          ],
-                                          "properties": {
-                                            "_type": {
-                                              "enum": [
-                                                "default_Employee"
-                                              ]
-                                            },
-                                            "id": {
-                                              "type": "string"
-                                            }
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "Employees": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
-                                      "properties": {
-                                        "data": {
-                                          "type": "array",
-                                          "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
-                                            "properties": {
-                                              "_type": {
-                                                "enum": [
-                                                  "default_Employee"
-                                                ]
-                                              },
-                                              "id": {
-                                                "type": "string"
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            },
-                            {
-                              "type": "object",
-                              "required": [
-                                "id",
-                                "_type",
-                                "attributes"
-                              ],
-                              "properties": {
-                                "_type": {
-                                  "enum": [
-                                    "default_Employee"
-                                  ]
-                                },
-                                "attributes": {
-                                  "type": "object",
-                                  "properties": {
-                                    "Address": {
-                                      "type": "object"
-                                    },
-                                    "BirthDate": {
-                                      "type": "object"
-                                    },
-                                    "City": {
-                                      "type": "object"
-                                    },
-                                    "Country": {
-                                      "type": "object"
-                                    },
-                                    "Email": {
-                                      "type": "object"
-                                    },
-                                    "EmployeeId": {
-                                      "type": "object"
-                                    },
-                                    "Fax": {
-                                      "type": "object"
-                                    },
-                                    "FirstName": {
-                                      "type": "object"
-                                    },
-                                    "HireDate": {
-                                      "type": "object"
-                                    },
-                                    "LastName": {
-                                      "type": "object"
-                                    },
-                                    "Phone": {
-                                      "type": "object"
-                                    },
-                                    "PostalCode": {
-                                      "type": "object"
-                                    },
-                                    "ReportsTo": {
-                                      "type": "object"
-                                    },
-                                    "State": {
-                                      "type": "object"
-                                    },
-                                    "Title": {
-                                      "type": "object"
-                                    }
-                                  }
-                                },
-                                "id": {
-                                  "type": "string"
-                                },
-                                "relationships": {
-                                  "type": "object",
-                                  "properties": {
-                                    "Customers": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
-                                      "properties": {
-                                        "data": {
-                                          "type": "array",
-                                          "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
-                                            "properties": {
-                                              "_type": {
-                                                "enum": [
-                                                  "default_Customer"
-                                                ]
-                                              },
-                                              "id": {
-                                                "type": "string"
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "Employee": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
-                                      "properties": {
-                                        "data": {
-                                          "type": "object",
-                                          "required": [
-                                            "id",
-                                            "_type"
-                                          ],
-                                          "properties": {
-                                            "_type": {
-                                              "enum": [
-                                                "default_Employee"
-                                              ]
-                                            },
-                                            "id": {
-                                              "type": "string"
-                                            }
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "Employees": {
-                                      "type": "object",
-                                      "required": [
-                                        "data"
-                                      ],
-                                      "properties": {
-                                        "data": {
-                                          "type": "array",
-                                          "items": {
-                                            "type": "object",
-                                            "required": [
-                                              "id",
-                                              "_type"
-                                            ],
-                                            "properties": {
-                                              "_type": {
-                                                "enum": [
-                                                  "default_Employee"
-                                                ]
-                                              },
-                                              "id": {
-                                                "type": "string"
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       "/v1/rest/default/Genre": {
         "get": {
           "summary": "Fetch Genre values",
@@ -2383,20 +1667,6 @@ expression: generated_openapi
                 "type": "integer"
               },
               "example": "10"
-            },
-            {
-              "name": "fields[Genre]",
-              "in": "query",
-              "description": "Optional list of fields from Genre to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "GenreId",
-                    "Name"
-                  ]
-                }
-              },
-              "example": "GenreId,Name"
             },
             {
               "name": "sort",
@@ -2425,6 +1695,20 @@ expression: generated_openapi
                 }
               },
               "example": "Tracks"
+            },
+            {
+              "name": "fields[Genre]",
+              "in": "query",
+              "description": "Optional list of fields from Genre type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "GenreId",
+                    "Name"
+                  ]
+                }
+              },
+              "example": "GenreId,Name"
             }
           ],
           "responses": {
@@ -2728,27 +2012,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Invoice]",
-              "in": "query",
-              "description": "Optional list of fields from Invoice to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "BillingAddress",
-                    "BillingCity",
-                    "BillingCountry",
-                    "BillingPostalCode",
-                    "BillingState",
-                    "CustomerId",
-                    "InvoiceDate",
-                    "InvoiceId",
-                    "Total"
-                  ]
-                }
-              },
-              "example": "BillingAddress,BillingCity,BillingCountry,BillingPostalCode,BillingState,CustomerId,InvoiceDate,InvoiceId,Total"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Invoice to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -2789,6 +2052,27 @@ expression: generated_openapi
                 }
               },
               "example": "Customer,InvoiceLines"
+            },
+            {
+              "name": "fields[Invoice]",
+              "in": "query",
+              "description": "Optional list of fields from Invoice type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "BillingAddress",
+                    "BillingCity",
+                    "BillingCountry",
+                    "BillingPostalCode",
+                    "BillingState",
+                    "CustomerId",
+                    "InvoiceDate",
+                    "InvoiceId",
+                    "Total"
+                  ]
+                }
+              },
+              "example": "BillingAddress,BillingCity,BillingCountry,BillingPostalCode,BillingState,CustomerId,InvoiceDate,InvoiceId,Total"
             }
           ],
           "responses": {
@@ -3165,23 +2449,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[InvoiceLine]",
-              "in": "query",
-              "description": "Optional list of fields from InvoiceLine to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "InvoiceId",
-                    "InvoiceLineId",
-                    "Quantity",
-                    "TrackId",
-                    "UnitPrice"
-                  ]
-                }
-              },
-              "example": "InvoiceId,InvoiceLineId,Quantity,TrackId,UnitPrice"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from InvoiceLine to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -3214,6 +2481,23 @@ expression: generated_openapi
                 }
               },
               "example": "Invoice,Track"
+            },
+            {
+              "name": "fields[InvoiceLine]",
+              "in": "query",
+              "description": "Optional list of fields from InvoiceLine type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "InvoiceId",
+                    "InvoiceLineId",
+                    "Quantity",
+                    "TrackId",
+                    "UnitPrice"
+                  ]
+                }
+              },
+              "example": "InvoiceId,InvoiceLineId,Quantity,TrackId,UnitPrice"
             }
           ],
           "responses": {
@@ -3656,20 +2940,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[MediaType]",
-              "in": "query",
-              "description": "Optional list of fields from MediaType to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "MediaTypeId",
-                    "Name"
-                  ]
-                }
-              },
-              "example": "MediaTypeId,Name"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from MediaType to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -3696,6 +2966,20 @@ expression: generated_openapi
                 }
               },
               "example": "Tracks"
+            },
+            {
+              "name": "fields[MediaType]",
+              "in": "query",
+              "description": "Optional list of fields from MediaType type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "MediaTypeId",
+                    "Name"
+                  ]
+                }
+              },
+              "example": "MediaTypeId,Name"
             }
           ],
           "responses": {
@@ -3999,20 +3283,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Playlist]",
-              "in": "query",
-              "description": "Optional list of fields from Playlist to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "Name",
-                    "PlaylistId"
-                  ]
-                }
-              },
-              "example": "Name,PlaylistId"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Playlist to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -4039,6 +3309,20 @@ expression: generated_openapi
                 }
               },
               "example": "PlaylistTracks"
+            },
+            {
+              "name": "fields[Playlist]",
+              "in": "query",
+              "description": "Optional list of fields from Playlist type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "Name",
+                    "PlaylistId"
+                  ]
+                }
+              },
+              "example": "Name,PlaylistId"
             }
           ],
           "responses": {
@@ -4240,20 +3524,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[PlaylistTrack]",
-              "in": "query",
-              "description": "Optional list of fields from PlaylistTrack to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "PlaylistId",
-                    "TrackId"
-                  ]
-                }
-              },
-              "example": "PlaylistId,TrackId"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from PlaylistTrack to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -4280,6 +3550,20 @@ expression: generated_openapi
                 }
               },
               "example": "Playlist,Track"
+            },
+            {
+              "name": "fields[PlaylistTrack]",
+              "in": "query",
+              "description": "Optional list of fields from PlaylistTrack type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "PlaylistId",
+                    "TrackId"
+                  ]
+                }
+              },
+              "example": "PlaylistId,TrackId"
             }
           ],
           "responses": {
@@ -4667,27 +3951,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Track]",
-              "in": "query",
-              "description": "Optional list of fields from Track to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "AlbumId",
-                    "Bytes",
-                    "Composer",
-                    "GenreId",
-                    "MediaTypeId",
-                    "Milliseconds",
-                    "Name",
-                    "TrackId",
-                    "UnitPrice"
-                  ]
-                }
-              },
-              "example": "AlbumId,Bytes,Composer,GenreId,MediaTypeId,Milliseconds,Name,TrackId,UnitPrice"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Track to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -4728,6 +3991,27 @@ expression: generated_openapi
                 }
               },
               "example": "Album,Genre,InvoiceLines,MediaType,PlaylistTracks"
+            },
+            {
+              "name": "fields[Track]",
+              "in": "query",
+              "description": "Optional list of fields from Track type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "AlbumId",
+                    "Bytes",
+                    "Composer",
+                    "GenreId",
+                    "MediaTypeId",
+                    "Milliseconds",
+                    "Name",
+                    "TrackId",
+                    "UnitPrice"
+                  ]
+                }
+              },
+              "example": "AlbumId,Bytes,Composer,GenreId,MediaTypeId,Milliseconds,Name,TrackId,UnitPrice"
             }
           ],
           "responses": {
@@ -5360,23 +4644,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[institution]",
-              "in": "query",
-              "description": "Optional list of fields from institutions to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "id",
-                    "name",
-                    "location",
-                    "staff",
-                    "departments"
-                  ]
-                }
-              },
-              "example": "id,name,location,staff,departments"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from institutions to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -5409,6 +4676,52 @@ expression: generated_openapi
                 }
               },
               "example": ""
+            },
+            {
+              "name": "fields[institution]",
+              "in": "query",
+              "description": "Optional list of fields from institution type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              },
+              "example": "id,name,location,staff,departments"
+            },
+            {
+              "name": "fields[location]",
+              "in": "query",
+              "description": "Optional list of fields from location type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "city",
+                    "country",
+                    "campuses"
+                  ]
+                }
+              },
+              "example": "city,country,campuses"
+            },
+            {
+              "name": "fields[staff_member]",
+              "in": "query",
+              "description": "Optional list of fields from staff_member type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "first_name",
+                    "specialities"
+                  ]
+                }
+              },
+              "example": "first_name,specialities"
             }
           ],
           "responses": {
@@ -5500,23 +4813,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[spatial_ref_sys]",
-              "in": "query",
-              "description": "Optional list of fields from spatial_ref_sys to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "auth_name",
-                    "auth_srid",
-                    "proj4text",
-                    "srid",
-                    "srtext"
-                  ]
-                }
-              },
-              "example": "auth_name,auth_srid,proj4text,srid,srtext"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from spatial_ref_sys to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -5549,6 +4845,23 @@ expression: generated_openapi
                 }
               },
               "example": ""
+            },
+            {
+              "name": "fields[spatial_ref_sys]",
+              "in": "query",
+              "description": "Optional list of fields from spatial_ref_sys type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "auth_name",
+                    "auth_srid",
+                    "proj4text",
+                    "srid",
+                    "srtext"
+                  ]
+                }
+              },
+              "example": "auth_name,auth_srid,proj4text,srid,srtext"
             }
           ],
           "responses": {
@@ -5634,26 +4947,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[topology_layer]",
-              "in": "query",
-              "description": "Optional list of fields from topology_layer to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "child_id",
-                    "feature_column",
-                    "feature_type",
-                    "layer_id",
-                    "level",
-                    "schema_name",
-                    "table_name",
-                    "topology_id"
-                  ]
-                }
-              },
-              "example": "child_id,feature_column,feature_type,layer_id,level,schema_name,table_name,topology_id"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from topology_layer to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -5692,6 +4985,26 @@ expression: generated_openapi
                 }
               },
               "example": "topology_topology"
+            },
+            {
+              "name": "fields[topology_layer]",
+              "in": "query",
+              "description": "Optional list of fields from topology_layer type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "child_id",
+                    "feature_column",
+                    "feature_type",
+                    "layer_id",
+                    "level",
+                    "schema_name",
+                    "table_name",
+                    "topology_id"
+                  ]
+                }
+              },
+              "example": "child_id,feature_column,feature_type,layer_id,level,schema_name,table_name,topology_id"
             }
           ],
           "responses": {
@@ -5895,23 +5208,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[topology_topology]",
-              "in": "query",
-              "description": "Optional list of fields from topology_topology to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "hasz",
-                    "id",
-                    "name",
-                    "precision",
-                    "srid"
-                  ]
-                }
-              },
-              "example": "hasz,id,name,precision,srid"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from topology_topology to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -5944,6 +5240,23 @@ expression: generated_openapi
                 }
               },
               "example": "topology_layers"
+            },
+            {
+              "name": "fields[topology_topology]",
+              "in": "query",
+              "description": "Optional list of fields from topology_topology type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "hasz",
+                    "id",
+                    "name",
+                    "precision",
+                    "srid"
+                  ]
+                }
+              },
+              "example": "hasz,id,name,precision,srid"
             }
           ],
           "responses": {
@@ -6494,9 +5807,6 @@ expression: generated_openapi
           "type": "object",
           "properties": {
             "first_name": {
-              "type": "string"
-            },
-            "last_name": {
               "type": "string"
             },
             "specialities": {

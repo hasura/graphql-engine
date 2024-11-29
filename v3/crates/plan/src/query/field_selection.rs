@@ -1,39 +1,113 @@
 use crate::types::PlanError;
+use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use execute::plan::process_model_relationship_definition;
 use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
-    models::ModelName,
-    permissions::TypeOutputPermission,
-    query::ObjectFieldSelection,
+    query::{
+        Alias, ModelSelection, ModelTarget, ObjectFieldSelection, ObjectSubSelection,
+        RelationshipSelection,
+    },
     types::{CustomTypeName, FieldName},
 };
 use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject};
 
-pub fn from_field_selection(
-    field_selection: &ObjectFieldSelection,
-    session: &Arc<Session>,
+#[async_recursion::async_recursion]
+pub async fn resolve_field_selection(
     metadata: &Metadata,
-    qualified_model_name: &Qualified<ModelName>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    session: &Arc<Session>,
+    http_context: &Arc<HttpContext>,
+    request_headers: &reqwest::header::HeaderMap,
+    object_type_name: &Qualified<CustomTypeName>,
+    object_type: &metadata_resolve::ObjectTypeWithRelationships,
     model_source: &Arc<metadata_resolve::ModelSource>,
-    model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    selection: &IndexMap<Alias, ObjectSubSelection>,
+    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+) -> Result<IndexMap<NdcFieldAlias, Field>, PlanError> {
+    let metadata_resolve::TypeMapping::Object { field_mappings, .. } = model_source
+        .type_mappings
+        .get(object_type_name)
+        .ok_or_else(|| {
+            PlanError::Internal(format!(
+                "couldn't fetch type_mapping of type {object_type_name}",
+            ))
+        })?;
+
+    let mut ndc_fields = IndexMap::new();
+    for (field_alias, object_sub_selection) in selection {
+        let ndc_field = match object_sub_selection {
+            ObjectSubSelection::Field(field_selection) => {
+                from_field_selection(
+                    metadata,
+                    session,
+                    http_context,
+                    request_headers,
+                    model_source,
+                    field_selection,
+                    field_mappings,
+                    object_type_name,
+                    object_type,
+                    relationships,
+                )
+                .await?
+            }
+            ObjectSubSelection::Relationship(relationship_selection) => {
+                from_relationship_selection(
+                    relationship_selection,
+                    metadata,
+                    session,
+                    http_context,
+                    request_headers,
+                    object_type_name,
+                    object_type,
+                    model_source,
+                    relationships,
+                )
+                .await?
+            }
+            ObjectSubSelection::RelationshipAggregate(_) => {
+                return Err(PlanError::Internal(
+                    "only normal field/relationship selections are supported in NDCPushDownPlanner.".into(),
+                ));
+            }
+        };
+        ndc_fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_field);
+    }
+    Ok(ndc_fields)
+}
+
+async fn from_field_selection(
+    metadata: &Metadata,
+    session: &Arc<Session>,
+    http_context: &Arc<HttpContext>,
+    request_headers: &reqwest::header::HeaderMap,
+    model_source: &Arc<metadata_resolve::ModelSource>,
+    field_selection: &ObjectFieldSelection,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
-    type_permissions: &TypeOutputPermission,
+    object_type_name: &Qualified<CustomTypeName>,
+    object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
 ) -> Result<Field, PlanError> {
+    let type_permissions = object_type
+        .type_output_permissions
+        .get(&session.role)
+        .ok_or_else(|| {
+            PlanError::Permission(format!(
+                "role {} does not have permission to select any fields of type {}",
+                session.role, object_type_name,
+            ))
+        })?;
     if !type_permissions
         .allowed_fields
         .contains(&field_selection.target.field_name)
     {
         return Err(PlanError::Permission(format!(
-            "role {} does not have permission to select the field {} from type {} of model {}",
-            session.role,
-            field_selection.target.field_name,
-            model.model.data_type,
-            qualified_model_name
+            "role {} does not have permission to select the field {} from type {}",
+            session.role, field_selection.target.field_name, object_type_name,
         )));
     }
 
@@ -42,12 +116,12 @@ pub fn from_field_selection(
         // .map(|field_mapping| field_mapping.column.clone())
         .ok_or_else(|| {
             PlanError::Internal(format!(
-                "couldn't fetch field mapping of field {} in type {} for model {}",
-                field_selection.target.field_name, model.model.data_type, qualified_model_name
+                "couldn't fetch field mapping of field {} in type {}",
+                field_selection.target.field_name, object_type_name,
             ))
         })?;
 
-    let field_type = &model_object_type
+    let field_type = &object_type
         .object_type
         .fields
         .get(&field_selection.target.field_name)
@@ -59,12 +133,230 @@ pub fn from_field_selection(
         })?
         .field_type;
 
-    let fields = ndc_nested_field_selection_for(metadata, field_type, &model_source.type_mappings)?;
+    let fields = resolve_nested_field_selection(
+        metadata,
+        session,
+        http_context,
+        request_headers,
+        model_source,
+        field_selection,
+        field_type,
+        relationships,
+    )
+    .await?;
 
     let ndc_field = Field::Column {
         column: field_mapping.column.clone(),
         fields,
         arguments: BTreeMap::new(),
+    };
+    Ok(ndc_field)
+}
+
+async fn resolve_nested_field_selection(
+    metadata: &Metadata,
+    session: &Arc<Session>,
+    http_context: &Arc<HttpContext>,
+    request_headers: &reqwest::header::HeaderMap,
+    model_source: &Arc<metadata_resolve::ModelSource>,
+    field_selection: &ObjectFieldSelection,
+    field_type: &QualifiedTypeReference,
+    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+) -> Result<Option<NestedField>, PlanError> {
+    match &field_selection.selection {
+        None => {
+            // Nested selection not found. Fallback to selecting all accessible nested fields.
+            ndc_nested_field_selection_for(metadata, field_type, &model_source.type_mappings)
+        }
+        Some(nested_selection) => {
+            // Get the underlying object type
+            let field_type_name = match field_type.get_underlying_type_name() {
+                metadata_resolve::QualifiedTypeName::Custom(custom_type) => custom_type,
+                metadata_resolve::QualifiedTypeName::Inbuilt(_) => {
+                    // Inbuilt type can't have nested selection. Raise internal error.
+                    return Err(PlanError::Internal(format!(
+                        "field {} is a built-in scalar and cannot have a nested selection",
+                        field_selection.target.field_name,
+                    )));
+                }
+            };
+            let nested_object_type =
+                metadata.object_types.get(field_type_name).ok_or_else(|| {
+                    PlanError::Internal(format!(
+                        "could not find object type {} in metadata for field {}",
+                        field_type_name, field_selection.target.field_name
+                    ))
+                })?;
+            // Resolve the nested selection
+            let resolved_nested_selection = resolve_field_selection(
+                metadata,
+                session,
+                http_context,
+                request_headers,
+                field_type_name,
+                nested_object_type,
+                model_source,
+                nested_selection,
+                relationships,
+            )
+            .await?;
+
+            // Build the nested field based on the underlying type
+            let nested_field = match field_type.underlying_type {
+                metadata_resolve::QualifiedBaseType::Named(_) => {
+                    // This is an object type
+                    plan_types::NestedField::Object(plan_types::NestedObject {
+                        fields: resolved_nested_selection,
+                    })
+                }
+                metadata_resolve::QualifiedBaseType::List(_) => {
+                    // This is a list of object type
+                    plan_types::NestedField::Array(plan_types::NestedArray {
+                        fields: Box::new(plan_types::NestedField::Object(
+                            plan_types::NestedObject {
+                                fields: resolved_nested_selection,
+                            },
+                        )),
+                    })
+                }
+            };
+            Ok(Some(nested_field))
+        }
+    }
+}
+
+/// Resolve a relationship field
+async fn from_relationship_selection(
+    relationship_selection: &RelationshipSelection,
+    metadata: &Metadata,
+    session: &Arc<Session>,
+    http_context: &Arc<HttpContext>,
+    request_headers: &reqwest::header::HeaderMap,
+    object_type_name: &Qualified<CustomTypeName>,
+    object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    model_source: &Arc<metadata_resolve::ModelSource>,
+    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+) -> Result<Field, PlanError> {
+    let RelationshipSelection { target, selection } = relationship_selection;
+    let (_, relationship_field) = object_type
+        .relationship_fields
+        .iter()
+        .find(|(_, relationship_field)| {
+            relationship_field.relationship_name == target.relationship_name
+        })
+        .ok_or_else(|| {
+            PlanError::Internal(format!(
+                "couldn't find the relationship {} in the type {}",
+                target.relationship_name, &object_type_name,
+            ))
+        })?;
+
+    let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
+        &relationship_field.target
+    else {
+        return Err(PlanError::Relationship(format!(
+            "Expecting Model as a relationship target for {}",
+            target.relationship_name,
+        )));
+    };
+    let target_model_name = &model_relationship_target.model_name;
+    let target_model = metadata.models.get(target_model_name).ok_or_else(|| {
+        PlanError::Internal(format!("model {target_model_name} not found in metadata"))
+    })?;
+
+    let target_model_source =
+        target_model.model.source.as_ref().ok_or_else(|| {
+            PlanError::Internal(format!("model {target_model_name} has no source"))
+        })?;
+
+    // Reject remote relationships
+    if target_model_source.data_connector.name != model_source.data_connector.name {
+        return Err(PlanError::Relationship(format!(
+            "Remote relationships are not supported: {}",
+            &target.relationship_name
+        )));
+    }
+
+    let target_source = metadata_resolve::ModelTargetSource {
+        model: target_model_source.clone(),
+        capabilities: relationship_field
+            .target_capabilities
+            .as_ref()
+            .ok_or_else(|| {
+                PlanError::Relationship(format!(
+                    "Relationship capabilities not found for relationship {} in data connector {}",
+                    &target.relationship_name, &target_model_source.data_connector.name,
+                ))
+            })?
+            .clone(),
+    };
+    let local_model_relationship_info = plan_types::LocalModelRelationshipInfo {
+        relationship_name: &target.relationship_name,
+        relationship_type: &model_relationship_target.relationship_type,
+        source_type: object_type_name,
+        source_data_connector: &model_source.data_connector,
+        source_type_mappings: &model_source.type_mappings,
+        target_source: &target_source,
+        target_type: &model_relationship_target.target_typename,
+        mappings: &model_relationship_target.mappings,
+    };
+
+    let ndc_relationship_name =
+        plan_types::NdcRelationshipName::new(object_type_name, &target.relationship_name);
+    relationships.insert(
+        ndc_relationship_name.clone(),
+        process_model_relationship_definition(&local_model_relationship_info).map_err(|err| {
+            PlanError::Internal(format!(
+                "Unable to process relationship {} definition: {}",
+                &target.relationship_name, err
+            ))
+        })?,
+    );
+
+    let relationship_model_target = ModelTarget {
+        subgraph: target_model_name.subgraph.clone(),
+        model_name: target_model_name.name.clone(),
+        arguments: target.arguments.clone(),
+        filter: target.filter.clone(),
+        order_by: target.order_by.clone(),
+        limit: target.limit,
+        offset: target.offset,
+    };
+
+    let relationship_target_model_selection = ModelSelection {
+        target: relationship_model_target,
+        selection: selection.as_ref().map_or_else(IndexMap::new, Clone::clone),
+    };
+
+    let (_, ndc_query, relationship_fields) = super::model::from_model_selection(
+        &relationship_target_model_selection,
+        metadata,
+        session,
+        http_context,
+        request_headers,
+    )
+    .await?;
+    let plan_types::QueryExecutionPlan {
+        remote_predicates: _,
+        query_node,
+        collection: _,
+        arguments,
+        mut collection_relationships,
+        variables: _,
+        data_connector: _,
+    } = super::model::ndc_query_to_query_execution_plan(
+        &ndc_query,
+        &relationship_fields,
+        &IndexMap::new(),
+    );
+
+    // Collect relationships from the generated query above
+    relationships.append(&mut collection_relationships);
+
+    let ndc_field = Field::Relationship {
+        relationship: ndc_relationship_name,
+        arguments,
+        query_node: Box::new(query_node),
     };
     Ok(ndc_field)
 }

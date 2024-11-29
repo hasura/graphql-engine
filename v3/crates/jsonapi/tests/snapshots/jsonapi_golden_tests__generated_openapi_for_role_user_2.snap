@@ -34,20 +34,6 @@ expression: generated_openapi
               "example": "10"
             },
             {
-              "name": "fields[Article]",
-              "in": "query",
-              "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
-              "schema": {
-                "items": {
-                  "enum": [
-                    "article_id",
-                    "title"
-                  ]
-                }
-              },
-              "example": "article_id,title"
-            },
-            {
               "name": "sort",
               "in": "query",
               "description": "Optional list of fields from Articles to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
@@ -74,6 +60,20 @@ expression: generated_openapi
                 }
               },
               "example": "Author,AuthorFromCommand"
+            },
+            {
+              "name": "fields[Article]",
+              "in": "query",
+              "description": "Optional list of fields from Article type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "article_id",
+                    "title"
+                  ]
+                }
+              },
+              "example": "article_id,title"
             }
           ],
           "responses": {

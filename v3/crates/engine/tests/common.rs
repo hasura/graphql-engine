@@ -883,43 +883,52 @@ pub async fn open_dd_pipeline_test(
                 );
 
                 // create a query execution plan for a single node with the new pipeline
-                let (execution_plan, _) = plan::plan_query_request(
+                let plan_result = plan::plan_query_request(
                     &query_ir,
                     metadata,
                     &Arc::new(session.clone()),
                     http_context,
                     request_headers,
                 )
-                .await
-                .unwrap();
+                .await;
 
-                match execution_plan {
-                    plan::SingleNodeExecutionPlan::Mutation(_) => {
-                        todo!("Executing mutations in OpenDD IR pipeline tests not implemented yet")
-                    }
-                    plan::SingleNodeExecutionPlan::Query(query_execution_plan) => {
-                        let ndc_query_execution = NDCQueryExecution {
-                            execution_span_attribute: "Engine GraphQL OpenDD pipeline tests",
-                            execution_tree: ExecutionTree {
-                                query_execution_plan,
-                                remote_join_executions: JoinLocations {
-                                    locations: IndexMap::new(),
+                match plan_result {
+                    Ok((execution_plan, _)) => match execution_plan {
+                        plan::SingleNodeExecutionPlan::Mutation(_) => {
+                            todo!("Executing mutations in OpenDD IR pipeline tests not implemented yet")
+                        }
+                        plan::SingleNodeExecutionPlan::Query(query_execution_plan) => {
+                            let ndc_query_execution = NDCQueryExecution {
+                                execution_span_attribute: "Engine GraphQL OpenDD pipeline tests",
+                                execution_tree: ExecutionTree {
+                                    query_execution_plan,
+                                    remote_join_executions: JoinLocations {
+                                        locations: IndexMap::new(),
+                                    },
                                 },
-                            },
-                            field_span_attribute: "Engine GraphQL OpenDD pipeline tests".into(),
-                            process_response_as: ProcessResponseAs::Array { is_nullable: false },
-                        };
-                        let rowsets = execute::resolve_ndc_query_execution(
-                            http_context,
-                            ndc_query_execution,
-                            None,
-                        )
-                        .await
-                        .map_err(|e| e.to_string());
+                                field_span_attribute: "Engine GraphQL OpenDD pipeline tests".into(),
+                                process_response_as: ProcessResponseAs::Array {
+                                    is_nullable: false,
+                                },
+                            };
+                            let rowsets = execute::resolve_ndc_query_execution(
+                                http_context,
+                                ndc_query_execution,
+                                None,
+                            )
+                            .await
+                            .map_err(|e| e.to_string());
 
-                        insta::assert_json_snapshot!(
-                            format!("rowsets_{test_path_string}_{}", session.role),
-                            rowsets
+                            insta::assert_json_snapshot!(
+                                format!("rowsets_{test_path_string}_{}", session.role),
+                                rowsets
+                            );
+                        }
+                    },
+                    Err(err) => {
+                        insta::assert_debug_snapshot!(
+                            format!("{test_path_string}_{}_error", session.role),
+                            err
                         );
                     }
                 }

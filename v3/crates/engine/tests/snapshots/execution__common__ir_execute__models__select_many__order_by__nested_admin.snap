@@ -74,7 +74,44 @@ V1(
                                     ),
                                     arguments: {},
                                 },
-                                selection: None,
+                                selection: Some(
+                                    {
+                                        Alias(
+                                            Identifier(
+                                                "city",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "city",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                        Alias(
+                                            Identifier(
+                                                "campuses",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "campuses",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                     },
@@ -149,7 +186,44 @@ V1(
                                     ),
                                     arguments: {},
                                 },
-                                selection: None,
+                                selection: Some(
+                                    {
+                                        Alias(
+                                            Identifier(
+                                                "city",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "city",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                        Alias(
+                                            Identifier(
+                                                "campuses",
+                                            ),
+                                        ): Field(
+                                            ObjectFieldSelection {
+                                                target: ObjectFieldTarget {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "campuses",
+                                                        ),
+                                                    ),
+                                                    arguments: {},
+                                                },
+                                                selection: None,
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                     },

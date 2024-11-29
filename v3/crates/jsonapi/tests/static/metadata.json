@@ -3254,21 +3254,6 @@
           }
         },
         {
-          "kind": "ModelPermissions",
-          "version": "v1",
-          "definition": {
-            "modelName": "Employee",
-            "permissions": [
-              {
-                "role": "admin",
-                "select": {
-                  "filter": null
-                }
-              }
-            ]
-          }
-        },
-        {
           "kind": "ObjectType",
           "version": "v1",
           "definition": {
@@ -6673,7 +6658,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": ["first_name", "last_name", "specialities"]
+                  "allowedFields": ["first_name", "specialities"]
                 }
               }
             ]

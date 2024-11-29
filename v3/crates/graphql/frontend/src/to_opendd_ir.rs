@@ -3,7 +3,8 @@ use lang_graphql::ast::common::{self as ast};
 use lang_graphql::normalized_ast::Operation;
 use open_dds::query::{
     Alias, CommandSelection, CommandTarget, ModelSelection, ModelTarget, ObjectFieldSelection,
-    ObjectFieldTarget, ObjectSubSelection, Query, QueryRequest, QueryRequestV1, Value,
+    ObjectFieldTarget, ObjectSubSelection, Query, QueryRequest, QueryRequestV1,
+    RelationshipSelection, RelationshipTarget, Value,
 };
 use open_dds::{arguments::ArgumentName, identifier::Identifier};
 
@@ -165,24 +166,51 @@ fn to_model_selection(
     for field in fields.values() {
         let field_alias = Alias::new(Identifier::new(field.alias.0.as_str()).unwrap());
 
-        let field_name = match field.field_calls.iter().next() {
+        let sub_selection = if field.selection_set.fields.is_empty() {
+            None
+        } else {
+            Some(to_model_selection(&field.selection_set.fields))
+        };
+
+        let object_sub_selection = match field.field_calls.iter().next() {
             Some((_, field_call)) => match field_call.info.generic {
                 graphql_schema::Annotation::Output(graphql_schema::OutputAnnotation::Field {
                     name,
                     ..
-                }) => name,
-                _ => todo!("only the simplest fields supported"),
+                }) => ObjectSubSelection::Field(ObjectFieldSelection {
+                    selection: sub_selection,
+                    target: ObjectFieldTarget {
+                        field_name: name.clone(),
+                        arguments: IndexMap::new(),
+                    },
+                }),
+                graphql_schema::Annotation::Output(
+                    graphql_schema::OutputAnnotation::RelationshipToModel(
+                        model_relationship_annotation,
+                    ),
+                ) => {
+                    let ArgumentOutputs {
+                        arguments,
+                        offset,
+                        limit,
+                    } = to_model_arguments(&field_call.arguments);
+                    let relationship_target = RelationshipTarget {
+                        relationship_name: model_relationship_annotation.relationship_name.clone(),
+                        arguments,
+                        filter: None,
+                        order_by: vec![],
+                        limit,
+                        offset,
+                    };
+                    ObjectSubSelection::Relationship(RelationshipSelection {
+                        target: relationship_target,
+                        selection: sub_selection,
+                    })
+                }
+                _ => todo!("only the simplest fields/relationship supported"),
             },
             _ => todo!("error: a field call must exist"),
         };
-
-        let object_sub_selection = ObjectSubSelection::Field(ObjectFieldSelection {
-            selection: None,
-            target: ObjectFieldTarget {
-                field_name: field_name.clone(),
-                arguments: IndexMap::new(),
-            },
-        });
 
         selection.insert(field_alias, object_sub_selection);
     }

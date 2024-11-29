@@ -55,13 +55,19 @@ fn get_route_for_model(
     object_type: &ObjectType,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
 ) -> oas3::spec::Operation {
-    let parameters = vec![
+    let mut parameters = vec![
         oas3::spec::ObjectOrReference::Object(parameters::page_limit_parameter()),
         oas3::spec::ObjectOrReference::Object(parameters::page_offset_parameter()),
-        oas3::spec::ObjectOrReference::Object(parameters::fields_parameter(model, object_type)),
         oas3::spec::ObjectOrReference::Object(parameters::ordering_parameter(model, object_type)),
         oas3::spec::ObjectOrReference::Object(parameters::include_parameter(model, object_type)),
     ];
+
+    let fields_parameters =
+        parameters::fields_parameters(&model.data_type, object_type, object_types)
+            .into_iter()
+            .map(oas3::spec::ObjectOrReference::Object)
+            .collect::<Vec<_>>();
+    parameters.extend_from_slice(&fields_parameters);
 
     let mut responses = BTreeMap::new();
     responses.insert(
