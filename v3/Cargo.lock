@@ -2293,6 +2293,7 @@ dependencies = [
  "execute",
  "futures-util",
  "graphql-frontend",
+ "graphql-ir",
  "graphql-schema",
  "hasura-authn",
  "hasura-authn-core",

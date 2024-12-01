@@ -2,6 +2,7 @@ use axum::http;
 use blake2::{Blake2b, Digest};
 use engine_types::ExposeInternalErrors;
 use execute::{self, plan};
+use graphql_ir::RequestPlan;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
@@ -270,7 +271,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
     // Generate Intermediate Representation (IR) from the query.
     let ir = graphql_frontend::build_ir(schema, &session, &headers, &normalized_request)?;
     // Build a request plan based on the IR.
-    let request_plan = graphql_frontend::build_request_plan_with_old(&ir)?;
+    let request_plan = graphql_frontend::build_request_plan(&ir)?;
 
     let display_name = match normalized_request.name {
         Some(ref name) => std::borrow::Cow::Owned(format!("Execute {name}")),
@@ -310,16 +311,17 @@ async fn execute<M: WebSocketMetrics>(
     session: Session,
     headers: http::HeaderMap,
     raw_request: lang_graphql::http::RawRequest,
-    request_plan: execute::RequestPlan<'_, '_, '_>,
+    request_plan: RequestPlan<'_, '_, '_>,
 ) {
     let project_id = connection.context.project_id.as_ref();
     let http_context = &connection.context.http_context;
     let expose_internal_errors = connection.context.expose_internal_errors;
     match request_plan {
         // Handle mutations.
-        plan::RequestPlan::MutationPlan(mutation_plan) => {
+        RequestPlan::MutationPlan(mutation_plan) => {
             let execute_query_result =
-                plan::execute_mutation_plan(http_context, mutation_plan, project_id).await;
+                graphql_frontend::execute_mutation_plan(http_context, mutation_plan, project_id)
+                    .await;
             send_single_result_operation_response(
                 operation_id,
                 &raw_request,
@@ -332,9 +334,9 @@ async fn execute<M: WebSocketMetrics>(
             .await;
         }
         // Handle queries.
-        plan::RequestPlan::QueryPlan(query_plan) => {
+        RequestPlan::QueryPlan(query_plan) => {
             let execute_query_result =
-                plan::execute_query_plan(http_context, query_plan, project_id).await;
+                graphql_frontend::execute_query_plan(http_context, query_plan, project_id).await;
             send_single_result_operation_response(
                 operation_id,
                 &raw_request,
@@ -347,12 +349,12 @@ async fn execute<M: WebSocketMetrics>(
             .await;
         }
         // Handle subscriptions by starting a polling loop to repeatedly fetch data.
-        plan::RequestPlan::SubscriptionPlan(alias, plan) => {
-            match plan::resolve_ndc_subscription_execution(plan).await {
+        RequestPlan::SubscriptionPlan(alias, plan) => {
+            match execute::resolve_ndc_subscription_execution(plan.subscription_execution).await {
                 Ok(ndc_subscription) => {
                     let query_request = ndc_subscription.query_request;
                     let data_connector = ndc_subscription.data_connector;
-                    let selection_set = ndc_subscription.selection_set;
+                    let selection_set = plan.selection_set;
                     let process_response_as = ndc_subscription.process_response_as;
                     let is_nullable = process_response_as.is_nullable();
                     let polling_interval_duration =

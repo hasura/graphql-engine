@@ -5,16 +5,14 @@ mod steps;
 mod to_opendd_ir;
 mod types;
 
+pub use execute::{execute_mutation_plan, execute_query_plan};
 pub use explain::execute_explain;
 pub use explain::types::{redact_ndc_explain, ExplainResponse};
-pub use steps::{
-    build_ir, build_request_plan_with_old, generate_ir, normalize_request, parse_query,
-};
-pub use to_opendd_ir::to_opendd_ir;
-
 pub use query::{
     execute_query, execute_query_internal, set_request_metadata_attributes, set_usage_attributes,
 };
+pub use steps::{build_ir, build_request_plan, generate_ir, normalize_request, parse_query};
+pub use to_opendd_ir::to_opendd_ir;
 pub use types::{GraphQLErrors, GraphQLResponse};
 
 #[cfg(test)]

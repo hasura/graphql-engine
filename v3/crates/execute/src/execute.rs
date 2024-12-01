@@ -2,6 +2,7 @@
 // ideally we'll bin off everything around GraphQL-specific nodes and leave those to the GraphQL
 // frontend
 
+use std::sync::Arc;
 use uuid::Uuid;
 mod ndc_request;
 mod remote_joins;
@@ -12,8 +13,9 @@ use async_recursion::async_recursion;
 use engine_types::{HttpContext, ProjectId};
 pub use ndc_request::{make_ndc_mutation_request, make_ndc_query_request};
 use plan_types::{
-    ExecutionTree, JoinLocations, NDCMutationExecution, NDCQueryExecution, PredicateQueryTrees,
-    ProcessResponseAs, QueryExecutionPlan, ResolvedFilterExpression,
+    ExecutionTree, JoinLocations, NDCMutationExecution, NDCQueryExecution,
+    NDCSubscriptionExecution, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan,
+    ResolvedFilterExpression,
 };
 use std::collections::BTreeMap;
 
@@ -239,4 +241,36 @@ pub async fn resolve_ndc_mutation_execution(
     .as_latest();
 
     Ok(mutation_response)
+}
+
+/// A subscription NDC query.
+/// Contains required information to execute a NDC query for a subscription in a polling loop.
+pub struct NDCSubscriptionQuery {
+    pub query_request: ndc::NdcQueryRequest,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
+    pub process_response_as: ProcessResponseAs,
+    pub polling_interval_ms: u64,
+}
+
+/// Resolve a subscription execution plan to a NDC query.
+pub async fn resolve_ndc_subscription_execution<'s, 'ir>(
+    execution: NDCSubscriptionExecution,
+) -> Result<NDCSubscriptionQuery, FieldError> {
+    let NDCSubscriptionExecution {
+        query_execution_plan,
+        execution_span_attribute: _,
+        field_span_attribute: _,
+        process_response_as,
+        polling_interval_ms,
+    } = execution;
+    // Remote relationships and relationships without NDC comparison capability are not allowed in predicates for subscriptions.
+    // Only allow local relationships and fields that can be pushed down to NDC.
+    let data_connector = query_execution_plan.data_connector.clone();
+    let query_request = make_ndc_query_request(query_execution_plan)?;
+    Ok(NDCSubscriptionQuery {
+        query_request,
+        data_connector,
+        process_response_as,
+        polling_interval_ms,
+    })
 }

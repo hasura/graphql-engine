@@ -10,7 +10,7 @@ mod remote_joins;
 pub use error::{FieldError, QueryUsageAnalyzeError, RequestError};
 pub use execute::{
     make_ndc_mutation_request, make_ndc_query_request, resolve_ndc_mutation_execution,
-    resolve_ndc_query_execution,
+    resolve_ndc_query_execution, resolve_ndc_subscription_execution,
 };
 pub use ndc::fetch_from_data_connector;
 pub use plan::error::Error as PlanError;

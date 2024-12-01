@@ -32,6 +32,7 @@ pub(crate) fn plan_query_node(
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
         )?;
+
         query_fields = Some(fields);
         join_locations = locations;
         remote_predicates = selection_set_remote_predicates;

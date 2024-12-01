@@ -8,6 +8,7 @@ license.workspace = true
 engine-types = { path = "../../engine-types" }
 execute = { path = "../../execute" }
 graphql-frontend = { path = "../frontend" }
+graphql-ir = { path = "../ir" }
 graphql-schema = { path = "../schema" }
 hasura-authn = { path = "../../auth/hasura-authn" }
 hasura-authn-core = { path = "../../auth/hasura-authn-core" }
