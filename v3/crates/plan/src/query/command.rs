@@ -122,10 +122,11 @@ pub fn from_command(
                 ))
             })?;
 
+        let field_name = &field_selection.target.field_name;
         let field_type = &output_object_type
             .object_type
             .fields
-            .get(&field_selection.target.field_name)
+            .get(field_name)
             .ok_or_else(|| {
                 PlanError::Internal(format!(
                     "could not look up type of field {}",
@@ -136,6 +137,8 @@ pub fn from_command(
 
         let fields = field_selection::ndc_nested_field_selection_for(
             metadata,
+            session,
+            field_name,
             field_type,
             &command_source.type_mappings,
         )?;

@@ -837,13 +837,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": ["first_name", "last_name", "specialities"]
-                }
-              },
-              {
-                "role": "user",
-                "output": {
-                  "allowedFields": ["first_name", "last_name", "specialities"]
+                  "allowedFields": ["first_name", "specialities"]
                 }
               }
             ]
@@ -910,6 +904,12 @@
             "permissions": [
               {
                 "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
                 "select": {
                   "filter": null
                 }

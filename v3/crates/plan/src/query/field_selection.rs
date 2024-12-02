@@ -166,7 +166,13 @@ fn resolve_nested_field_selection(
     match &field_selection.selection {
         None => {
             // Nested selection not found. Fallback to selecting all accessible nested fields.
-            ndc_nested_field_selection_for(metadata, field_type, &model_source.type_mappings)
+            ndc_nested_field_selection_for(
+                metadata,
+                session,
+                &field_selection.target.field_name,
+                field_type,
+                &model_source.type_mappings,
+            )
         }
         Some(nested_selection) => {
             // Get the underlying object type
@@ -363,6 +369,8 @@ fn from_relationship_selection(
 
 pub fn ndc_nested_field_selection_for(
     metadata: &Metadata,
+    session: &Arc<Session>,
+    column_name: &FieldName,
     column_type: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
 ) -> Result<Option<NestedField>, PlanError> {
@@ -380,25 +388,41 @@ pub fn ndc_nested_field_selection_for(
                         PlanError::Internal(format!("can't find mapping object for type: {name}"))
                     })?;
 
+                    let type_output_permissions = object_type
+                        .type_output_permissions
+                        .get(&session.role)
+                        .ok_or_else(|| {
+                            PlanError::Permission(format!(
+                                "cannot select nested field {column_name}; role {} does not have permission to select any fields of type {}",
+                                session.role, name,
+                            ))
+                        })?;
+
                     let mut fields = IndexMap::new();
 
                     for (field_name, field_mapping) in field_mappings {
-                        let field_def = object_type.object_type.fields.get(field_name).ok_or_else(|| PlanError::Internal(format!(
-                            "can't find object field definition for field {field_name} in type: {name}"
-                        )))?;
-                        let nested_fields: Option<NestedField> = ndc_nested_field_selection_for(
-                            metadata,
-                            &field_def.field_type,
-                            type_mappings,
-                        )?;
-                        fields.insert(
-                            NdcFieldAlias::from(field_name.as_str()),
-                            Field::Column {
-                                column: field_mapping.column.clone(),
-                                fields: nested_fields,
-                                arguments: BTreeMap::new(),
-                            },
-                        );
+                        // Only include field if the role has access to it.
+                        if type_output_permissions.allowed_fields.contains(field_name) {
+                            let field_def = object_type.object_type.fields.get(field_name).ok_or_else(|| PlanError::Internal(format!(
+                                "can't find object field definition for field {field_name} in type: {name}"
+                            )))?;
+                            let nested_fields: Option<NestedField> =
+                                ndc_nested_field_selection_for(
+                                    metadata,
+                                    session,
+                                    field_name,
+                                    &field_def.field_type,
+                                    type_mappings,
+                                )?;
+                            fields.insert(
+                                NdcFieldAlias::from(field_name.as_str()),
+                                Field::Column {
+                                    column: field_mapping.column.clone(),
+                                    fields: nested_fields,
+                                    arguments: BTreeMap::new(),
+                                },
+                            );
+                        }
                     }
 
                     return Ok(Some(NestedField::Object(NestedObject { fields })));
@@ -411,8 +435,13 @@ pub fn ndc_nested_field_selection_for(
             metadata_resolve::QualifiedTypeName::Inbuilt(_) => Ok(None),
         },
         metadata_resolve::QualifiedBaseType::List(list_type) => {
-            let fields =
-                ndc_nested_field_selection_for(metadata, list_type.as_ref(), type_mappings)?;
+            let fields = ndc_nested_field_selection_for(
+                metadata,
+                session,
+                column_name,
+                list_type.as_ref(),
+                type_mappings,
+            )?;
 
             Ok(fields.map(|fields| {
                 NestedField::Array(NestedArray {

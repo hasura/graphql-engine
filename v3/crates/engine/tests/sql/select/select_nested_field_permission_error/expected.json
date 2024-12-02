@@ -1,0 +1,3 @@
+{
+  "error": "error in data fusion: Error during planning: cannot select nested field staff; role user does not have permission to select any fields of type staff_member (in subgraph default)"
+}

@@ -14,7 +14,7 @@
     "staff": [
       {
         "first_name": "Peter",
-        "last_name": "Landin",
+        "last_name": null,
         "specialities": ["Computer Science", "Education"]
       }
     ],
