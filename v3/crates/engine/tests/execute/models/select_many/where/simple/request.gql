@@ -28,4 +28,10 @@ query {
     author_id
     first_name
   }
+  AuthorManyScalarBool: AuthorMany(
+    where: { author_id: { _or: [{ _eq: 1 }, { _eq: 2 }] } }
+  ) {
+    author_id
+    first_name
+  }
 }

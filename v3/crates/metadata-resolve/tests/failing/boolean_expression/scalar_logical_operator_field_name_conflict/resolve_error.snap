@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/scalar_logical_operator_field_name_conflict/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+the boolean expression 'string_bool_exp (in subgraph default)' has a GraphQL field name conflict between the '_and' comparable operator and the '_and' logical operator. One of these will need to be renamed.

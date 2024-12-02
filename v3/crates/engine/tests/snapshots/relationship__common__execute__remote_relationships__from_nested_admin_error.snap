@@ -1,0 +1,7 @@
+---
+source: crates/engine/tests/common.rs
+expression: err
+---
+Relationship(
+    "Remote relationships are not supported: favourite_artist",
+)

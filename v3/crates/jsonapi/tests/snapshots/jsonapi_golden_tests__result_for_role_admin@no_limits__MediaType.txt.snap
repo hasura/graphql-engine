@@ -1,0 +1,72 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/no_limits/MediaType.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_MediaType",
+                    id: "1",
+                    attributes: {
+                        "MediaTypeId": Number(1),
+                        "Name": String("MPEG audio file"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_MediaType",
+                    id: "2",
+                    attributes: {
+                        "MediaTypeId": Number(2),
+                        "Name": String("Protected AAC audio file"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_MediaType",
+                    id: "3",
+                    attributes: {
+                        "MediaTypeId": Number(3),
+                        "Name": String("Protected MPEG-4 video file"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_MediaType",
+                    id: "4",
+                    attributes: {
+                        "MediaTypeId": Number(4),
+                        "Name": String("Purchased AAC audio file"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_MediaType",
+                    id: "5",
+                    attributes: {
+                        "MediaTypeId": Number(5),
+                        "Name": String("AAC audio file"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: None,
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

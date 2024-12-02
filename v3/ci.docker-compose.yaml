@@ -1,3 +1,5 @@
+name: v3-engine-tests
+
 services:
   postgres:
     extends:
@@ -10,6 +12,8 @@ services:
       - 8080:8080
     environment:
       CONNECTION_URI: "postgresql://postgres:password@postgres"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
+      OTEL_SERVICE_NAME: "ndc-postgres"
       RUST_LOG: info
     volumes:
       - type: bind
@@ -29,6 +33,24 @@ services:
       - "8102:8102"
     environment:
       RUST_LOG: info
+      ENABLE_RELATIONSHIP_SUPPORT: "1" # Enabled
+    healthcheck:
+      test: curl -fsS http://localhost:8102/schema
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  custom_connector_no_relationships:
+    build:
+      dockerfile: custom-connector.Dockerfile
+    entrypoint:
+      - ./bin/custom-connector
+    ports:
+      - "8103:8102"
+    environment:
+      RUST_LOG: info
+      ENABLE_RELATIONSHIP_SUPPORT: "0" # Disabled
     healthcheck:
       test: curl -fsS http://localhost:8102/schema
       start_period: 5s
@@ -43,6 +65,15 @@ services:
       - "8101:8101"
     environment:
       RUST_LOG: info
+
+  # Required to test graphql-ws; subscriptions with custom session variables
+  auth_hook:
+    build:
+      dockerfile: dev-auth-webhook.Dockerfile
+    environment:
+      RUST_LOG: debug
+    ports:
+      - "3050:3050"
 
 volumes:
   postgres:

@@ -7,23 +7,33 @@ use std::str::FromStr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+/// Used to represent a reference to a session variable,
+/// where one is required in the IR
+#[derive(Debug, Clone, Hash, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
+#[schemars(rename = "OpenDdSessionVariableReference")]
+pub struct SessionVariableReference {
+    pub name: SessionVariableName,
+    pub passed_as_json: bool,
+}
+
 /// Used to represent the name of a session variable, like
 /// "x-hasura-role".
 #[derive(Debug, Clone, Hash, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
 #[schemars(rename = "OpenDdSessionVariable")]
-pub struct SessionVariable(Cow<'static, str>);
+pub struct SessionVariableName(Cow<'static, str>);
 
-pub const SESSION_VARIABLE_ROLE: SessionVariable = SessionVariable(Cow::Borrowed("x-hasura-role"));
+pub const SESSION_VARIABLE_ROLE: SessionVariableName =
+    SessionVariableName(Cow::Borrowed("x-hasura-role"));
 
-impl FromStr for SessionVariable {
+impl FromStr for SessionVariableName {
     type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(SessionVariable(s.trim().to_lowercase().into()))
+        Ok(SessionVariableName(s.trim().to_lowercase().into()))
     }
 }
 
-impl std::fmt::Display for SessionVariable {
+impl std::fmt::Display for SessionVariableName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
@@ -54,12 +64,12 @@ mod tests {
     fn serialize_and_deserialize_session_variable() {
         let mut session_variables = HashMap::new();
         session_variables.insert(
-            SessionVariable("test-role".into()),
+            SessionVariableName("test-role".into()),
             SessionVariableValue("test-role".into()),
         );
         let json_str = serde_json::to_string(&session_variables).unwrap();
 
-        let parsed_from_string: HashMap<SessionVariable, SessionVariableValue> =
+        let parsed_from_string: HashMap<SessionVariableName, SessionVariableValue> =
             serde_json::from_str(json_str.trim()).unwrap();
 
         assert_eq!(parsed_from_string, session_variables);

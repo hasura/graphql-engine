@@ -156,15 +156,33 @@ export function getRelationshipRefTable(
       if (fkCol.table) {
         refTable = generateTableDef(fkCol.table.name, fkCol.table.schema);
       } else {
-        for (let i = 0; i < table.foreign_key_constraints.length; i++) {
-          const fkConstraint = table.foreign_key_constraints[i];
-          const fkConstraintCol = Object.keys(fkConstraint.column_mapping)[0];
-          if (fkCol === fkConstraintCol) {
-            refTable = generateTableDef(
-              fkConstraint.ref_table,
-              fkConstraint.ref_table_table_schema
-            );
-            break;
+        // Handle both single column and composite foreign keys
+        if (Array.isArray(fkCol)) {
+          // For composite foreign keys
+          for (const constraint of table.foreign_key_constraints) {
+            const constraintColumns = Object.keys(constraint.column_mapping);
+            // Check if all columns in the foreign key match the constraint
+            const isMatch = fkCol.every(col => constraintColumns.includes(col));
+            if (isMatch) {
+              refTable = generateTableDef(
+                constraint.ref_table,
+                constraint.ref_table_table_schema
+              );
+              break;
+            }
+          }
+        } else {
+          // Original behavior for single column foreign keys
+          for (let i = 0; i < table.foreign_key_constraints.length; i++) {
+            const fkConstraint = table.foreign_key_constraints[i];
+            const fkConstraintCol = Object.keys(fkConstraint.column_mapping)[0];
+            if (fkCol === fkConstraintCol) {
+              refTable = generateTableDef(
+                fkConstraint.ref_table,
+                fkConstraint.ref_table_table_schema
+              );
+              break;
+            }
           }
         }
       }

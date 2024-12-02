@@ -32,12 +32,8 @@
           "author_id": 2,
           "first_name": "John"
         }
-      ]
-    }
-  },
-  {
-    "data": {
-      "AuthorManyNot": [
+      ],
+      "AuthorManyScalarBool": [
         {
           "author_id": 1,
           "first_name": "Peter"
@@ -46,24 +42,26 @@
           "author_id": 2,
           "first_name": "John"
         }
-      ],
-      "AuthorManyOr": [
+      ]
+    }
+  },
+  {
+    "data": {
+      "AuthorManyNot": [
         {
-          "author_id": 1,
-          "first_name": "Peter"
+          "author_id": 2,
+          "first_name": "John"
         }
       ],
-      "AuthorManyAnd": [
-        {
-          "author_id": 1,
-          "first_name": "Peter"
-        }
-      ],
+      "AuthorManyOr": [],
+      "AuthorManyAnd": [],
       "AuthorManyNestedBool": [
         {
-          "author_id": 1,
-          "first_name": "Peter"
-        },
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyScalarBool": [
         {
           "author_id": 2,
           "first_name": "John"

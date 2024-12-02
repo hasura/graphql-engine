@@ -8,9 +8,11 @@ pub use error::{
 };
 use std::collections::BTreeMap;
 pub use types::{
-    ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig, DataConnectorCapabilities,
-    DataConnectorContext, DataConnectorLink, DataConnectorSchema, DataConnectors,
-    DataConnectorsOutput, NdcVersion,
+    ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig,
+    DataConnectorAggregateCapabilities, DataConnectorCapabilities, DataConnectorContext,
+    DataConnectorLink, DataConnectorNestedRelationshipCapabilities,
+    DataConnectorRelationshipCapabilities, DataConnectorSchema, DataConnectors,
+    DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
 };
 
 /// Resolve data connectors.
@@ -21,6 +23,7 @@ pub fn resolve<'a>(
     let mut data_connectors = BTreeMap::new();
     let mut issues = vec![];
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: data_connector,
     } in &metadata_accessor.data_connectors
@@ -28,12 +31,15 @@ pub fn resolve<'a>(
         let qualified_data_connector_name =
             Qualified::new(subgraph.clone(), data_connector.name.clone());
 
-        let (data_connector_context, connector_issues) =
-            types::DataConnectorContext::new(data_connector, &configuration.unstable_features)
-                .map_err(|error| NamedDataConnectorError {
-                    data_connector_name: qualified_data_connector_name.clone(),
-                    error,
-                })?;
+        let (data_connector_context, connector_issues) = types::DataConnectorContext::new(
+            metadata_accessor,
+            data_connector,
+            &configuration.unstable_features,
+        )
+        .map_err(|error| NamedDataConnectorError {
+            data_connector_name: qualified_data_connector_name.clone(),
+            error,
+        })?;
 
         issues.extend(
             connector_issues

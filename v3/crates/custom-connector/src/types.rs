@@ -15,28 +15,10 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
         (
             "String".into(),
             ndc_models::ScalarType {
-                representation: Some(ndc_models::TypeRepresentation::String),
+                representation: ndc_models::TypeRepresentation::String,
                 aggregate_functions: BTreeMap::from_iter([
-                    (
-                        "max".into(),
-                        ndc_models::AggregateFunctionDefinition {
-                            result_type: ndc_models::Type::Nullable {
-                                underlying_type: Box::new(ndc_models::Type::Named {
-                                    name: "String".into(),
-                                }),
-                            },
-                        },
-                    ),
-                    (
-                        "min".into(),
-                        ndc_models::AggregateFunctionDefinition {
-                            result_type: ndc_models::Type::Nullable {
-                                underlying_type: Box::new(ndc_models::Type::Named {
-                                    name: "String".into(),
-                                }),
-                            },
-                        },
-                    ),
+                    ("max".into(), ndc_models::AggregateFunctionDefinition::Max),
+                    ("min".into(), ndc_models::AggregateFunctionDefinition::Min),
                 ]),
                 comparison_operators: BTreeMap::from_iter([
                     (
@@ -57,28 +39,10 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
         (
             "Int".into(),
             ndc_models::ScalarType {
-                representation: Some(ndc_models::TypeRepresentation::Int32),
+                representation: ndc_models::TypeRepresentation::Int32,
                 aggregate_functions: BTreeMap::from_iter([
-                    (
-                        "max".into(),
-                        ndc_models::AggregateFunctionDefinition {
-                            result_type: ndc_models::Type::Nullable {
-                                underlying_type: Box::new(ndc_models::Type::Named {
-                                    name: "Int".into(),
-                                }),
-                            },
-                        },
-                    ),
-                    (
-                        "min".into(),
-                        ndc_models::AggregateFunctionDefinition {
-                            result_type: ndc_models::Type::Nullable {
-                                underlying_type: Box::new(ndc_models::Type::Named {
-                                    name: "Int".into(),
-                                }),
-                            },
-                        },
-                    ),
+                    ("max".into(), ndc_models::AggregateFunctionDefinition::Max),
+                    ("min".into(), ndc_models::AggregateFunctionDefinition::Min),
                 ]),
                 comparison_operators: BTreeMap::from_iter([(
                     "_eq".into(),
@@ -89,7 +53,7 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
         (
             "Bool".into(),
             ndc_models::ScalarType {
-                representation: Some(ndc_models::TypeRepresentation::Boolean),
+                representation: ndc_models::TypeRepresentation::Boolean,
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::from_iter([(
                     "eq".into(),
@@ -104,7 +68,7 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
         (
             "Actor_Name".into(),
             ndc_models::ScalarType {
-                representation: Some(ndc_models::TypeRepresentation::String),
+                representation: ndc_models::TypeRepresentation::String,
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::new(),
             },
@@ -112,7 +76,7 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
         (
             "HeaderMap".into(),
             ndc_models::ScalarType {
-                representation: Some(ndc_models::TypeRepresentation::JSON),
+                representation: ndc_models::TypeRepresentation::JSON,
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::new(),
             },

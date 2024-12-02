@@ -96,6 +96,10 @@
                   {
                     "fieldName": "staff",
                     "booleanExpressionType": "staff_bool_exp"
+                  },
+                  {
+                    "fieldName": "songs",
+                    "booleanExpressionType": "institution_songs_bool_exp"
                   }
                 ],
                 "comparableRelationships": []
@@ -109,6 +113,38 @@
             },
             "graphql": {
               "typeName": "InstitutionBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "institution_songs_bool_exp",
+            "operand": {
+              "object": {
+                "type": "institution_songs",
+                "comparableFields": [
+                  {
+                    "fieldName": "primaryAnthemTrackId",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "secondaryAnthemTrackId",
+                    "booleanExpressionType": "int_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "InstitutionSongsBoolExp"
             }
           }
         },
@@ -209,6 +245,10 @@
               {
                 "name": "departments",
                 "type": "[String]"
+              },
+              {
+                "name": "songs",
+                "type": "institution_songs"
               }
             ],
             "graphql": {
@@ -243,6 +283,11 @@
                     "column": {
                       "name": "departments"
                     }
+                  },
+                  "songs": {
+                    "column": {
+                      "name": "songs"
+                    }
                   }
                 }
               }
@@ -263,7 +308,64 @@
                     "name",
                     "location",
                     "staff",
-                    "departments"
+                    "departments",
+                    "songs"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "institution_songs",
+            "fields": [
+              {
+                "name": "primaryAnthemTrackId",
+                "type": "Int"
+              },
+              {
+                "name": "secondaryAnthemTrackId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "InstitutionSongs"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "institution_songs",
+                "fieldMapping": {
+                  "primaryAnthemTrackId": {
+                    "column": {
+                      "name": "primary_anthem_track_id"
+                    }
+                  },
+                  "secondaryAnthemTrackId": {
+                    "column": {
+                      "name": "secondary_anthem_track_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "institution_songs",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "primaryAnthemTrackId",
+                    "secondaryAnthemTrackId"
                   ]
                 }
               }
@@ -624,6 +726,12 @@
               },
               {
                 "fieldName": "departments",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "songs",
                 "orderByDirections": {
                   "enableAll": true
                 }

@@ -3,10 +3,9 @@
 use std::{any::Any, sync::Arc};
 
 use async_trait::async_trait;
-// use column_metadata::{ColumnMetadata, ColumnMetadataRow, COLUMN_METADATA};
 use foreign_keys::{InferredForeignKeys, InferredForeignKeysRow, INFERRED_FOREIGN_KEY_CONSTRAINTS};
 use indexmap::IndexMap;
-use metadata_resolve::{self as resolved, ModelRelationshipTarget};
+use metadata_resolve::{self as resolved, ModelRelationshipTarget, Qualified};
 use struct_type::{
     StructTypeFieldRow, StructTypeFields, StructTypeRow, StructTypes, STRUCT_TYPE,
     STRUCT_TYPE_FIELD,
@@ -18,16 +17,25 @@ mod datafusion {
         catalog::SchemaProvider, datasource::TableProvider, error::Result,
     };
 }
-use open_dds::relationships::RelationshipType;
+use open_dds::{commands::CommandName, models::ModelName, relationships::RelationshipType};
 use serde::{Deserialize, Serialize};
+use unsupported_objects::{
+    UnsupportedCommands, UnsupportedCommandsRow, UnsupportedModels, UnsupportedModelsRow,
+    UnsupportedObjectTypeFields, UnsupportedObjectTypeFieldsRow, UnsupportedObjectTypes,
+    UnsupportedObjectTypesRow, UnsupportedScalars, UnsupportedScalarsRow, UNSUPPORTED_COMMANDS,
+    UNSUPPORTED_MODELS, UNSUPPORTED_OBJECT_TYPES, UNSUPPORTED_OBJECT_TYPE_FIELDS,
+    UNSUPPORTED_SCALARS,
+};
 
-use super::{mem_table::MemTable, types::TypeRegistry};
+use super::{
+    command::UnsupportedCommand, mem_table::MemTable, model::UnsupportedModel, types::TypeRegistry,
+};
 
-// mod column_metadata;
 mod foreign_keys;
 mod struct_type;
 mod table_metadata;
 mod table_valued_function;
+mod unsupported_objects;
 
 pub const HASURA_METADATA_SCHEMA: &str = "hasura";
 
@@ -40,6 +48,11 @@ pub(crate) struct Introspection {
     inferred_foreign_key_constraints: InferredForeignKeys,
     functions: TableValuedFunction,
     function_arguments: TableValuedFunctionArgument,
+    unsupported_models: UnsupportedModels,
+    unsupported_commands: UnsupportedCommands,
+    unsupported_scalars: UnsupportedScalars,
+    unsupported_object_types: UnsupportedObjectTypes,
+    unsupported_object_type_fields: UnsupportedObjectTypeFields,
 }
 
 impl Introspection {
@@ -49,24 +62,58 @@ impl Introspection {
         type_registry: &TypeRegistry,
         schemas: &IndexMap<String, crate::catalog::subgraph::Subgraph>,
         functions: &IndexMap<String, Arc<super::command::Command>>,
+        unsupported_models: &IndexMap<Qualified<ModelName>, UnsupportedModel>,
+        unsupported_commands: &IndexMap<Qualified<CommandName>, UnsupportedCommand>,
     ) -> Self {
+        // unsupported scalar types
+        let mut unsupported_scalar_types = Vec::new();
+        for (name, scalar_type) in type_registry.custom_scalars() {
+            if let Err(unsupported) = scalar_type {
+                unsupported_scalar_types.push(UnsupportedScalarsRow::new(
+                    name.subgraph.to_string(),
+                    name.name.to_string(),
+                    unsupported.to_string(),
+                ));
+            }
+        }
+
         let mut struct_types = Vec::new();
         let mut struct_type_fields = Vec::new();
-
-        for struct_type in type_registry.struct_types().values() {
-            struct_types.push(StructTypeRow::new(
-                struct_type.name().clone(),
-                struct_type.description().cloned(),
-            ));
-            for (field_name, field) in struct_type.fields() {
-                struct_type_fields.push(StructTypeFieldRow::new(
-                    struct_type.name().clone(),
-                    field_name.to_string(),
-                    field.data_type.clone(),
-                    field.normalized_type.clone(),
-                    field.is_nullable,
-                    field.description.clone(),
-                ));
+        let mut unsupported_object_types = Vec::new();
+        let mut unsupported_object_type_fields = Vec::new();
+        for (name, struct_type) in type_registry.struct_types() {
+            match struct_type {
+                Ok(struct_type) => {
+                    struct_types.push(StructTypeRow::new(
+                        struct_type.name().clone(),
+                        struct_type.description().cloned(),
+                    ));
+                    for (field_name, unsupported_field) in &struct_type.unsupported_fields {
+                        unsupported_object_type_fields.push(UnsupportedObjectTypeFieldsRow::new(
+                            name.subgraph.to_string(),
+                            name.name.to_string(),
+                            field_name.to_string(),
+                            unsupported_field.reason.to_string(),
+                        ));
+                    }
+                    for (field_name, field) in struct_type.fields() {
+                        struct_type_fields.push(StructTypeFieldRow::new(
+                            struct_type.name().clone(),
+                            field_name.to_string(),
+                            field.data_type.clone(),
+                            field.normalized_type.clone(),
+                            field.is_nullable,
+                            field.description.clone(),
+                        ));
+                    }
+                }
+                Err(unsupported_object) => {
+                    unsupported_object_types.push(UnsupportedObjectTypesRow::new(
+                        name.subgraph.to_string(),
+                        name.name.to_string(),
+                        unsupported_object.to_string(),
+                    ));
+                }
             }
         }
 
@@ -133,6 +180,26 @@ impl Introspection {
                 ));
             }
         }
+
+        // unsupported models
+        let mut unsupported_model_rows = Vec::new();
+        for (name, unsupported) in unsupported_models {
+            unsupported_model_rows.push(UnsupportedModelsRow::new(
+                name.subgraph.to_string(),
+                name.name.to_string(),
+                unsupported.to_string(),
+            ));
+        }
+
+        // unsupported commands
+        let mut unsupported_command_rows = Vec::new();
+        for (name, unsupported) in unsupported_commands {
+            unsupported_command_rows.push(UnsupportedCommandsRow::new(
+                name.subgraph.to_string(),
+                name.name.to_string(),
+                unsupported.to_string(),
+            ));
+        }
         Introspection {
             table_metadata: TableMetadata::new(table_metadata_rows),
             inferred_foreign_key_constraints: InferredForeignKeys::new(foreign_key_constraint_rows),
@@ -140,6 +207,13 @@ impl Introspection {
             function_arguments: TableValuedFunctionArgument::new(function_argument_rows),
             struct_types: StructTypes::new(struct_types),
             struct_type_fields: StructTypeFields::new(struct_type_fields),
+            unsupported_models: UnsupportedModels::new(unsupported_model_rows),
+            unsupported_commands: UnsupportedCommands::new(unsupported_command_rows),
+            unsupported_scalars: UnsupportedScalars::new(unsupported_scalar_types),
+            unsupported_object_types: UnsupportedObjectTypes::new(unsupported_object_types),
+            unsupported_object_type_fields: UnsupportedObjectTypeFields::new(
+                unsupported_object_type_fields,
+            ),
         }
     }
 }
@@ -174,6 +248,28 @@ impl IntrospectionSchemaProvider {
             (
                 STRUCT_TYPE_FIELD,
                 introspection.struct_type_fields.to_table_provider(),
+            ),
+            (
+                UNSUPPORTED_MODELS,
+                introspection.unsupported_models.to_table_provider(),
+            ),
+            (
+                UNSUPPORTED_COMMANDS,
+                introspection.unsupported_commands.to_table_provider(),
+            ),
+            (
+                UNSUPPORTED_SCALARS,
+                introspection.unsupported_scalars.to_table_provider(),
+            ),
+            (
+                UNSUPPORTED_OBJECT_TYPES,
+                introspection.unsupported_object_types.to_table_provider(),
+            ),
+            (
+                UNSUPPORTED_OBJECT_TYPE_FIELDS,
+                introspection
+                    .unsupported_object_type_fields
+                    .to_table_provider(),
             ),
         ]
         .into_iter()

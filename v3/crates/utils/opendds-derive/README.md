@@ -89,6 +89,10 @@ here.
 
   If the value is not present when deserializing, use the `Default::default()`.
 
+- `#[opendd(default = <value>)]`
+
+  If the value is not present when deserializing, use the value provided.
+
 - `#[opendd(rename = "name")]`
 
   Deserialize this field with the given name instead of _camel-cased_ Rust field

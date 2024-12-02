@@ -1,0 +1,24 @@
+[package]
+name = "plan"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+engine-types = { path = "../engine-types" }
+graphql-ir = { path = "../graphql/ir" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
+metadata-resolve = {path = "../metadata-resolve" }
+open-dds = { path = "../open-dds" }
+plan-types = { path = "../plan-types" }
+
+derive_more = { workspace = true }
+indexmap = { workspace = true }
+reqwest = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

@@ -67,6 +67,36 @@
   },
   {
     "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "unsupported_models",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "unsupported_commands",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "unsupported_scalars",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "unsupported_object_types",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "unsupported_object_type_fields",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
     "table_schema": "information_schema",
     "table_name": "tables",
     "table_type": "VIEW"

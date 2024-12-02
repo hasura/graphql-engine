@@ -1,0 +1,71 @@
+---
+description: New monitoring dashboard in Hasura Cloud
+sidebar_label: Monitoring Dashboard
+title: 'Cloud: Project monitoring view'
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - monitoring
+sidebar_position: 9
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Monitoring Your Hasura Cloud Project
+
+<ProductBadge pro ee />
+
+## Introduction
+
+Hasura Cloud now offers a new built-in observability feature, accessible from your project dashboard, allowing you to
+monitor key performance metrics of your Hasura GraphQL API. This feature is designed to help you track and optimize the
+performance of your project in real-time.
+
+## Accessing the Monitoring Dashboard
+
+To view the observability data for your project:
+
+1. Navigate to Your Project: From the Hasura Cloud dashboard, select the project for which you want to view the monitoring data.
+
+	<Thumbnail src="/img/observability/cloud_observability_1.png" alt="Cloud dashboard projects list" width="1400px" />
+
+2. Monitoring Tab: On the project page, locate the Monitoring tab in the sidebar. Click on it to view the detailed performance metrics.
+
+	<Thumbnail src="/img/observability/cloud_observability_2.png" alt="Cloud dashboard projects page" width="1400px" />
+
+3. Alternatively you can click on Metrics URL from the project page to view the metrics in Grafana.
+
+	<Thumbnail src="/img/observability/cloud_observability_3.png" alt="Cloud dashboard projects page" width="1400px" />
+
+## Available metrics
+
+Once inside the Monitoring tab or Grafana, you can view the following metrics:
+
+1. Project Info: Displays the project version, cloud region, metadata version, etc.
+
+	<Thumbnail src="/img/observability/cloud_observability_4.png" alt="Project info" width="1400px" />
+
+2. Traffic overview: Displays the total number of requests, average response time, error rate, and other relevant details.
+
+	<Thumbnail src="/img/observability/cloud_observability_5.png" alt="Traffic overview" width="1400px" />
+
+3. PostgreSQL Metrics: Displays the performance metrics of the PostgreSQL database, including the number of active connections, connection pool latency, etc.
+
+	<Thumbnail src="/img/observability/cloud_observability_6.png" alt="Subscription metrics" width="1400px" />
+
+4. Subscription Metrics: Displays the performance metrics of the GraphQL subscriptions, including the number of active subscriptions, subscription latency, etc.
+
+	<Thumbnail src="/img/observability/cloud_observability_7.png" alt="Subscription metrics" width="1400px" />
+
+5. Event trigger Metrics: Displays the performance metrics of the event triggers, including the number of event trigger http workers, events processing rate, latency, etc.
+
+	<Thumbnail src="/img/observability/cloud_observability_8.png" alt="Event trigger metrics" width="1400px" />
+
+## Future enhancements
+
+This monitoring feature is in beta, and we are continuously working on expanding its capabilities. Stay tuned for updates!
+
+Let us know if you’d like any adjustments or additional details.

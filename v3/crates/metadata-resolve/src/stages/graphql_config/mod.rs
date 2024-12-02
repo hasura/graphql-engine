@@ -207,6 +207,8 @@ pub fn resolve_graphql_config(
                     enable_apollo_federation_fields,
                     bypass_relation_comparisons_ndc_capability: flags
                         .bypass_relation_comparisons_ndc_capability,
+                    propagate_boolean_expression_deprecation_status: flags
+                        .propagate_boolean_expression_deprecation_status,
                 },
             })
         }
@@ -260,7 +262,6 @@ fn fallback_graphql_config() -> &'static graphql_config::GraphqlConfig {
             mutation: graphql_config::MutationGraphqlConfig {
                 root_operation_type_name: GraphQlTypeName::from("Mutation"),
             },
-            // TODO: Subscriptions are still unsupported. No need to consider them for now.
             subscription: None,
             apollo_federation: None,
         })

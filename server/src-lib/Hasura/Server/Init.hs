@@ -211,6 +211,9 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soEnableMetadataQueryLogging <- case rsoEnableMetadataQueryLoggingEnv of
     Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption
     metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
+  soHttpLogQueryOnlyOnError <- case rsoHttpLogQueryOnlyOnError of
+    Server.Logging.HttpLogQueryOnlyOnErrorDisabled -> withOptionDefault Nothing httpLogQueryOnlyOnErrorOption
+    httpLogQueryOnlyOnError -> pure httpLogQueryOnlyOnError
   soDefaultNamingConvention <- withOptionDefault rsoDefaultNamingConvention defaultNamingConventionOption
   soMetadataDefaults <- withOptionDefault rsoMetadataDefaults metadataDefaultsOption
   soExtensionsSchema <- withOptionDefault rsoExtensionsSchema metadataDBExtensionsSchemaOption

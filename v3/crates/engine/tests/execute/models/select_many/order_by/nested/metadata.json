@@ -73,27 +73,57 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
-            "name": "InstitutionOrderByExpression",
-            "orderedType": "institution",
-            "orderableFields": [
-              {
-                "fieldName": "id",
+            "name": "IntOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "Int",
                 "enableOrderByDirections": {
                   "enableAll": true
                 }
-              },
-              {
-                "fieldName": "name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "location",
-                "orderByExpression": "LocationOrderByExpression"
               }
-            ],
-            "orderableRelationships": [],
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "InstitutionOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "institution",
+                "orderableFields": [
+                  {
+                    "fieldName": "id",
+                    "orderByExpression": "IntOrderByExpression"
+                  },
+                  {
+                    "fieldName": "name",
+                    "orderByExpression": "StringOrderByExpression"
+                  },
+                  {
+                    "fieldName": "location",
+                    "orderByExpression": "LocationOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
             "graphql": {
               "expressionTypeName": "InstitutionOrderBy"
             }
@@ -172,22 +202,22 @@
           "version": "v1",
           "definition": {
             "name": "LocationOrderByExpression",
-            "orderedType": "location",
-            "orderableFields": [
-              {
-                "fieldName": "city",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "country",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "location",
+                "orderableFields": [
+                  {
+                    "fieldName": "city",
+                    "orderByExpression": "StringOrderByExpression"
+                  },
+                  {
+                    "fieldName": "country",
+                    "orderByExpression": "StringOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "LocationOrderBy"
             }

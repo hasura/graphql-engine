@@ -59,6 +59,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     gracefulShutdownOption,
     webSocketConnectionInitTimeoutOption,
     enableMetadataQueryLoggingOption,
+    httpLogQueryOnlyOnErrorOption,
     defaultNamingConventionOption,
     metadataDBExtensionsSchemaOption,
     parseMetadataDefaults,
@@ -158,6 +159,7 @@ serveCommandParser =
     <*> parseGracefulShutdownTimeout
     <*> parseWebSocketConnectionInitTimeout
     <*> parseEnableMetadataQueryLogging
+    <*> parseHttpLogQueryOnlyOnError
     <*> parseDefaultNamingConvention
     <*> parseExtensionsSchema
     <*> parseMetadataDefaults
@@ -1163,6 +1165,22 @@ enableMetadataQueryLoggingOption =
     { Config._default = Server.Logging.MetadataQueryLoggingDisabled,
       Config._envVar = "HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING",
       Config._helpMessage = "Enables the query field in http-logs for metadata queries (default: false)"
+    }
+
+parseHttpLogQueryOnlyOnError :: Opt.Parser Server.Logging.HttpLogQueryOnlyOnError
+parseHttpLogQueryOnlyOnError =
+  fmap (bool Server.Logging.HttpLogQueryOnlyOnErrorDisabled Server.Logging.HttpLogQueryOnlyOnErrorEnabled)
+    $ Opt.switch
+      ( Opt.long "http-log-query-only-on-error"
+          <> Opt.help (Config._helpMessage httpLogQueryOnlyOnErrorOption)
+      )
+
+httpLogQueryOnlyOnErrorOption :: Config.Option Server.Logging.HttpLogQueryOnlyOnError
+httpLogQueryOnlyOnErrorOption =
+  Config.Option
+    { Config._default = Server.Logging.HttpLogQueryOnlyOnErrorDisabled,
+      Config._envVar = "HASURA_GRAPHQL_HTTP_LOG_QUERY_ONLY_ON_ERROR",
+      Config._helpMessage = "Only add query to http log on error (default: false)"
     }
 
 -- TODO(SOLOMON): The defaulting behavior for this occurs inside the Engine. In

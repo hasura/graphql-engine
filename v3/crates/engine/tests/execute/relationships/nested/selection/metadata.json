@@ -1,0 +1,485 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "artist",
+            "objectType": "artist",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Artist"
+            },
+            "orderableFields": [
+              {
+                "fieldName": "artist_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArtistById",
+                  "uniqueIdentifier": ["artist_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Artists"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "artist",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user1",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "institutions",
+            "arguments": [],
+            "objectType": "institution",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "institution",
+              "argumentMapping": {}
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "InstitutionMany"
+              }
+            },
+            "orderableFields": [
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "location",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "staff",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "departments",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "institutions",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user1",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "artist",
+            "fields": [
+              {
+                "name": "artist_id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Artist"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "artist_id": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "artist",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["artist_id", "name"]
+                }
+              },
+              {
+                "role": "user1",
+                "output": {
+                  "allowedFields": ["artist_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "institution",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "location",
+                "type": "location"
+              },
+              {
+                "name": "staff",
+                "type": "[staff_member]"
+              },
+              {
+                "name": "departments",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "Institution"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "institution",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "location": {
+                    "column": {
+                      "name": "location"
+                    }
+                  },
+                  "staff": {
+                    "column": {
+                      "name": "staff"
+                    }
+                  },
+                  "departments": {
+                    "column": {
+                      "name": "departments"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "institution",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              },
+              {
+                "role": "user1",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "staff_member",
+            "fields": [
+              {
+                "name": "first_name",
+                "type": "String"
+              },
+              {
+                "name": "last_name",
+                "type": "String"
+              },
+              {
+                "name": "specialities",
+                "type": "[String]"
+              },
+              {
+                "name": "favourite_artist_id",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "StaffMember"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "staff",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  },
+                  "specialities": {
+                    "column": {
+                      "name": "specialities"
+                    }
+                  },
+                  "favourite_artist_id": {
+                    "column": {
+                      "name": "favourite_artist_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "staff_member",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "first_name",
+                    "last_name",
+                    "specialities",
+                    "favourite_artist_id"
+                  ]
+                }
+              },
+              {
+                "role": "user1",
+                "output": {
+                  "allowedFields": [
+                    "first_name",
+                    "last_name",
+                    "specialities",
+                    "favourite_artist_id"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "staff_member",
+            "name": "favourite_artist",
+            "target": {
+              "model": {
+                "name": "artist",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "favourite_artist_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "artist_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "location",
+            "fields": [
+              {
+                "name": "city",
+                "type": "String"
+              },
+              {
+                "name": "country",
+                "type": "String"
+              },
+              {
+                "name": "campuses",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "Location"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "location",
+                "fieldMapping": {
+                  "city": {
+                    "column": {
+                      "name": "city"
+                    }
+                  },
+                  "country": {
+                    "column": {
+                      "name": "country"
+                    }
+                  },
+                  "campuses": {
+                    "column": {
+                      "name": "campuses"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "location",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["city", "country", "campuses"]
+                }
+              },
+              {
+                "role": "user1",
+                "output": {
+                  "allowedFields": ["city", "country", "campuses"]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

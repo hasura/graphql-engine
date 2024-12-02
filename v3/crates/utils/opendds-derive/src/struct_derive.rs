@@ -7,10 +7,7 @@ pub fn impl_opendd_struct(name: &syn::Ident, data: &StructData<'_>) -> TraitImpl
     let (impl_deserialize, json_schema_expr) = match &data {
         StructData::Newtype(field) => (
             quote! {
-                let __internal = open_dds::traits::OpenDd::deserialize(json).map_err(|e| open_dds::traits::OpenDdDeserializeError{
-                    path: e.path.prepend_index(0),
-                    error: e.error,
-                })?;
+                let __internal = open_dds::traits::deserialize_index(json, path.clone(), 0)?;
                 Ok(#name(__internal))
             },
             impl_json_schema_newtype(field),
@@ -52,7 +49,7 @@ fn impl_deserialize_named_fields<'a>(
                         serde::de::Unexpected::Other("not an object"),
                         &"object",
                     ),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 })
             },
         };
@@ -66,7 +63,7 @@ fn impl_deserialize_named_fields<'a>(
                     __remaining_keys.join(", "),
                     [#(#expected_fields),*].join(", "),
                 )),
-                path: open_dds::traits::JSONPath::new(),
+                path: jsonpath::JSONPath::new(),
             });
         }
         Ok(__value)
@@ -83,11 +80,7 @@ fn generate_named_fields_value<'a>(
         let field_name_str = field.renamed_field.as_str();
 
         let field_value_deserialize = quote! {
-            |__value| open_dds::traits::OpenDd::deserialize(__value)
-                .map_err(|e| open_dds::traits::OpenDdDeserializeError {
-                    path: e.path.prepend_key(#field_name_str.to_string()),
-                    error: e.error,
-                })
+            |__value| open_dds::traits::deserialize_key(__value, path.clone(), #field_name_str.to_string())
         };
 
         let deserialize_field = quote! {
@@ -101,9 +94,18 @@ fn generate_named_fields_value<'a>(
             },
         };
 
-        let field_value_fallback = if field.is_default {
-            quote! {
-                .unwrap_or_default()
+        let field_value_fallback = if let Some(default) = &field.default {
+            match default {
+                DefaultAttribute::Flag => {
+                    quote! {
+                        .unwrap_or_default()
+                    }
+                }
+                DefaultAttribute::Expr(default_exp) => {
+                    quote! {
+                        .unwrap_or(#default_exp)
+                    }
+                }
             }
         } else if field.is_optional {
             quote! {
@@ -113,7 +115,7 @@ fn generate_named_fields_value<'a>(
             quote! {
                 .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
                     error: serde::de::Error::missing_field(#field_name_str),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 })?
             }
         };
@@ -137,11 +139,18 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
         let field_name = field.renamed_field.as_str();
         let ty = field.field_type.clone();
 
-        let default_prop = if field.is_default {
+        let default_prop = if let Some(default) = &field.default {
             let default_exp = field.default_exp.as_ref().map_or_else(
-                || {
-                    quote! {
-                        serde_json::json!(<#ty as Default>::default())
+                || match default {
+                    DefaultAttribute::Flag => {
+                        quote! {
+                            serde_json::json!(<#ty as Default>::default())
+                        }
+                    }
+                    DefaultAttribute::Expr(default_exp) => {
+                        quote! {
+                            serde_json::json!(#default_exp)
+                        }
                     }
                 },
                 quote::ToTokens::to_token_stream,
@@ -199,7 +208,7 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
                 #field_name.to_string(), #field_schema_exp
             );
         };
-        let required_insert = if !field.is_default && !field.is_optional {
+        let required_insert = if field.default.is_none() && !field.is_optional {
             quote! {
                 required.insert(#field_name.to_string());
             }

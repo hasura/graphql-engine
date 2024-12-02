@@ -27,6 +27,7 @@ def ws_conn_init_graphql_ws(hge_key, ws_client_graphql_ws):
 
 # This is used in other test files! Be careful when modifying it.
 def init_ws_conn(hge_key, ws_client, payload = None):
+    ws_client.create_conn()
     init_msg = {
         'type': 'connection_init',
         'payload': payload or ws_payload(hge_key),
@@ -36,6 +37,7 @@ def init_ws_conn(hge_key, ws_client, payload = None):
     assert ev['type'] == 'connection_ack', ev
 
 def init_graphql_ws_conn(hge_key, ws_client_graphql_ws):
+    ws_client_graphql_ws.create_conn()
     init_msg = {
         'type': 'connection_init',
         'payload': ws_payload(hge_key),
@@ -67,7 +69,6 @@ def get_explain_graphql_query_response(hge_ctx, hge_key, query, variables, user_
 @pytest.mark.no_admin_secret
 class TestSubscriptionCtrlWithoutSecret(object):
     def test_connection(self, ws_client):
-        ws_client.recreate_conn()
         init_ws_conn(None, ws_client)
 
         obj = {
@@ -86,7 +87,6 @@ class TestSubscriptionCtrl(object):
     '''
 
     def test_connection(self, hge_key, ws_client):
-        ws_client.recreate_conn()
         init_ws_conn(hge_key, ws_client)
 
         obj = {
@@ -104,6 +104,7 @@ class TestSubscriptionBasicNoAuth:
 
     def test_closed_connection_apollo(self, ws_client):
         # sends empty header so that there is not authentication present in the test
+        ws_client.create_conn()
         init_msg = {
             'type': 'connection_init',
             'payload':{'headers':{}}
@@ -115,6 +116,7 @@ class TestSubscriptionBasicNoAuth:
 
     def test_closed_connection_graphql_ws(self, ws_client_graphql_ws):
         # sends empty header so that there is not authentication present in the test
+        ws_client_graphql_ws.create_conn()
         init_msg = {
             'type': 'connection_init',
             'payload':{'headers':{}}
@@ -383,7 +385,10 @@ class TestSubscriptionLiveQueries:
         '''
             Create connection using connection_init
         '''
-        ws_client.init_as_admin()
+        headers={}
+        if hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_key
+        ws_client.init(headers=headers)
 
         with open(self.dir() + "/steps.yaml") as c:
             conf = yaml.load(c)
@@ -401,11 +406,8 @@ class TestSubscriptionLiveQueries:
         liveQs = []
         for i, resultLimit in queries:
             query = queryTmplt.replace('{0}',str(i))
-            headers={}
-            if hge_key is not None:
-                headers['X-Hasura-Admin-Secret'] = hge_key
             subscrPayload = { 'query': query, 'variables': { 'result_limit': resultLimit } }
-            respLive = ws_client.send_query(subscrPayload, query_id='live_'+str(i), headers=headers, timeout=15)
+            respLive = ws_client.send_query(subscrPayload, query_id='live_'+str(i), timeout=15)
             liveQs.append(respLive)
             ev = next(respLive)
             assert ev['type'] == 'data', ev
@@ -466,7 +468,10 @@ class TestStreamingSubscription:
         '''
             Create connection using connection_init
         '''
-        ws_client.init_as_admin()
+        headers={}
+        if hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_key
+        ws_client.init(headers=headers)
 
         query = """
         subscription ($batch_size: Int!) {
@@ -478,15 +483,12 @@ class TestStreamingSubscription:
         """
 
         liveQs = []
-        headers={}
         articles_to_insert = []
         for i in range(10):
             articles_to_insert.append({"id": i + 1, "title": "Article title {}".format(i + 1)})
         insert_many(hge_ctx, {"schema": "hge_tests", "name": "articles"}, articles_to_insert)
-        if hge_key is not None:
-            headers['X-Hasura-Admin-Secret'] = hge_key
         subscrPayload = { 'query': query, 'variables': { 'batch_size': 2 } }
-        respLive = ws_client.send_query(subscrPayload, query_id='stream_1', headers=headers, timeout=15)
+        respLive = ws_client.send_query(subscrPayload, query_id='stream_1', timeout=15)
         liveQs.append(respLive)
         for idx in range(5):
           ev = next(respLive)
@@ -511,7 +513,6 @@ class TestStreamingSubscription:
             Create connection using connection_init
         '''
         ws_client.init_as_admin()
-        headers={}
         query = """
         subscription ($batch_size: Int!, $initial_created_at: timestamptz!) {
           hge_tests_stream_query: hge_tests_test_t2_stream(cursor: [{initial_value: {created_at: $initial_created_at}, ordering: ASC}], batch_size: $batch_size) {
@@ -525,7 +526,7 @@ class TestStreamingSubscription:
             conf = yaml.load(c)
 
         subscrPayload = { 'query': query, 'variables': { 'batch_size': 2, 'initial_created_at': "2020-01-01" } }
-        respLive = ws_client.send_query(subscrPayload, query_id='stream_1', headers=headers, timeout=15)
+        respLive = ws_client.send_query(subscrPayload, query_id='stream_1', timeout=15)
 
         assert isinstance(conf, list) == True, 'Not an list'
         for index, step in enumerate(conf):
@@ -566,7 +567,10 @@ class TestStreamingSubscription:
         '''
             Create connection using connection_init
         '''
-        ws_client.init_as_admin()
+        headers={}
+        if hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_key
+        ws_client.init(headers=headers)
 
         query = """
         subscription ($batch_size: Int!) {
@@ -578,11 +582,8 @@ class TestStreamingSubscription:
         """
 
         liveQs = []
-        headers={}
-        if hge_key is not None:
-            headers['X-Hasura-Admin-Secret'] = hge_key
         subscrPayload = { 'query': query, 'variables': { 'batch_size': 1 } }
-        respLive = ws_client.send_query(subscrPayload, query_id='stream_1', headers=headers, timeout=15)
+        respLive = ws_client.send_query(subscrPayload, query_id='stream_1', timeout=15)
         liveQs.append(respLive)
         for idx in range(2):
           ev = next(respLive)
@@ -614,7 +615,10 @@ class TestSubscriptionLiveQueriesForGraphQLWS:
         '''
             Create connection using connection_init
         '''
-        ws_client_graphql_ws.init_as_admin()
+        headers={}
+        if hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_key
+        ws_client_graphql_ws.init(headers=headers)
 
         with open(self.dir() + "/steps.yaml") as c:
             conf = yaml.load(c)
@@ -632,11 +636,8 @@ class TestSubscriptionLiveQueriesForGraphQLWS:
         liveQs = []
         for i, resultLimit in queries:
             query = queryTmplt.replace('{0}',str(i))
-            headers={}
-            if hge_key is not None:
-                headers['X-Hasura-Admin-Secret'] = hge_key
             subscrPayload = { 'query': query, 'variables': { 'result_limit': resultLimit } }
-            respLive = ws_client_graphql_ws.send_query(subscrPayload, query_id='live_'+str(i), headers=headers, timeout=15)
+            respLive = ws_client_graphql_ws.send_query(subscrPayload, query_id='live_'+str(i), timeout=15)
             liveQs.append(respLive)
             ev = next(respLive)
             assert ev['type'] == 'next', ev
@@ -761,12 +762,12 @@ class TestSubscriptionUDFWithSessionArg:
         return 'queries/subscriptions/udf_session_args'
 
     def test_user_defined_function_with_session_argument(self, hge_key, ws_client):
-        ws_client.init_as_admin()
         headers = {'x-hasura-role': 'user', 'x-hasura-user-id': '42'}
         if hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_key
+        ws_client.init(headers=headers)
         payload = {'query': self.query}
-        resp = ws_client.send_query(payload, headers=headers, timeout=15)
+        resp = ws_client.send_query(payload, timeout=15)
         ev = next(resp)
         assert ev['type'] == 'data', ev
         assert ev['payload']['data'] == {'me': [{'id': '42', 'name': 'Charlie'}]}, ev['payload']['data']

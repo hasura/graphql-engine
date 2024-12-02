@@ -1,0 +1,96 @@
+---
+source: crates/engine/tests/common.rs
+expression: ir
+---
+V1(
+    QueryRequestV1 {
+        queries: {
+            Alias(
+                Identifier(
+                    "getActorsByBoolExp",
+                ),
+            ): Command(
+                CommandSelection {
+                    target: CommandTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        command_name: CommandName(
+                            Identifier(
+                                "get_actors_by_bool_exp",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "actor_boolean_expression",
+                                ),
+                            ): Literal(
+                                Object {
+                                    "actor_id": Object {
+                                        "fancy_equals_operator": Number(2),
+                                    },
+                                },
+                            ),
+                        },
+                    },
+                    selection: Some(
+                        {
+                            Alias(
+                                Identifier(
+                                    "actor_id",
+                                ),
+                            ): Field(
+                                ObjectFieldSelection {
+                                    target: ObjectFieldTarget {
+                                        field_name: FieldName(
+                                            Identifier(
+                                                "actor_id",
+                                            ),
+                                        ),
+                                        arguments: {},
+                                    },
+                                    selection: None,
+                                },
+                            ),
+                            Alias(
+                                Identifier(
+                                    "movie_id",
+                                ),
+                            ): Field(
+                                ObjectFieldSelection {
+                                    target: ObjectFieldTarget {
+                                        field_name: FieldName(
+                                            Identifier(
+                                                "movie_id",
+                                            ),
+                                        ),
+                                        arguments: {},
+                                    },
+                                    selection: None,
+                                },
+                            ),
+                            Alias(
+                                Identifier(
+                                    "name",
+                                ),
+                            ): Field(
+                                ObjectFieldSelection {
+                                    target: ObjectFieldTarget {
+                                        field_name: FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ),
+                                        arguments: {},
+                                    },
+                                    selection: None,
+                                },
+                            ),
+                        },
+                    ),
+                },
+            ),
+        },
+    },
+)

@@ -15,7 +15,6 @@ const RightPanel = props => {
   const { location, dispatch, projectConfig, metadata, refetchMetadata } =
     props;
   const { pathname } = location;
-
   const strippedUrl = strippedCurrUrl(pathname);
 
   const getHeaderName = () => {

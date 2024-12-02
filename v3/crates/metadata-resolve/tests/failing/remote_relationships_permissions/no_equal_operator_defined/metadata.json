@@ -4,6 +4,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "db",
             "schema": {
@@ -995,9 +997,7 @@
                 "value": "http://localhost:8080"
               }
             }
-          },
-          "kind": "DataConnectorLink",
-          "version": "v1"
+          }
         }
       ]
     },
@@ -1005,6 +1005,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "remote_db",
             "schema": {
@@ -2000,11 +2002,11 @@
                 "value": "http://localhost:8080"
               }
             }
-          },
-          "kind": "DataConnectorLink",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -2054,11 +2056,11 @@
               "typeName": "Artist"
             },
             "name": "Artist"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -2122,11 +2124,11 @@
               "typeName": "Album"
             },
             "name": "Album"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "Artist_Where_Exp"
@@ -2154,11 +2156,11 @@
                 "type": "Artist"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "Album_Where_Exp"
@@ -2190,11 +2192,11 @@
                 "type": "Album"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -2272,11 +2274,11 @@
               "typeName": "Track"
             },
             "name": "Track"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "Track_Where_Exp"
@@ -2312,11 +2314,11 @@
                 "type": "Track"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -2366,11 +2368,11 @@
               "typeName": "Genre"
             },
             "name": "Genre"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "Genre_Where_Exp"
@@ -2398,11 +2400,11 @@
                 "type": "Genre"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "Int_Comparison_Exp"
@@ -2437,11 +2439,11 @@
                 "type": "Int"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "String_Comparison_Exp"
@@ -2480,21 +2482,21 @@
                 "type": "String"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ScalarType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "CustomString"
             },
             "name": "CustomString"
-          },
-          "kind": "ScalarType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "filterExpressionType": "artist_bool_exp",
             "graphql": {
@@ -2524,11 +2526,11 @@
               "collection": "Artist",
               "dataConnectorName": "db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "filterExpressionType": "artist_bool_exp",
             "graphql": {
@@ -2558,11 +2560,11 @@
               "collection": "Artist",
               "dataConnectorName": "remote_db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "filterExpressionType": "album_bool_exp",
             "graphql": {
@@ -2598,11 +2600,11 @@
               "collection": "Album",
               "dataConnectorName": "db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "filterExpressionType": "album_bool_exp",
             "graphql": {
@@ -2638,11 +2640,11 @@
               "collection": "Album",
               "dataConnectorName": "remote_db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "filterExpressionType": "track_bool_exp",
             "graphql": {
@@ -2684,11 +2686,11 @@
               "collection": "Track",
               "dataConnectorName": "db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "filterExpressionType": "track_bool_exp",
             "graphql": {
@@ -2730,11 +2732,11 @@
               "collection": "Track",
               "dataConnectorName": "remote_db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "filterExpressionType": "genre_bool_exp",
             "graphql": {
@@ -2764,11 +2766,11 @@
               "collection": "Genre",
               "dataConnectorName": "db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "filterExpressionType": "genre_bool_exp",
             "graphql": {
@@ -2798,11 +2800,11 @@
               "collection": "Genre",
               "dataConnectorName": "remote_db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -2819,11 +2821,11 @@
               }
             ],
             "typeName": "Artist"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -2840,11 +2842,11 @@
               }
             ],
             "typeName": "Album"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -2861,11 +2863,11 @@
               }
             ],
             "typeName": "Track"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -2882,11 +2884,11 @@
               }
             ],
             "typeName": "Genre"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "mapping": [
               {
@@ -2914,11 +2916,11 @@
                 "relationshipType": "Array"
               }
             }
-          },
-          "kind": "Relationship",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -2935,9 +2937,7 @@
               }
             ],
             "typeName": "Artist"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         }
       ]
     },
@@ -2945,6 +2945,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Albums",
             "permissions": [
@@ -2974,11 +2976,11 @@
                 }
               }
             ]
-          },
-          "kind": "ModelPermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Tracks",
             "permissions": [
@@ -2995,11 +2997,11 @@
                 }
               }
             ]
-          },
-          "kind": "ModelPermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Artist",
             "permissions": [
@@ -3016,9 +3018,7 @@
                 }
               }
             ]
-          },
-          "kind": "ModelPermissions",
-          "version": "v1"
+          }
         }
       ]
     }

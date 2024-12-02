@@ -236,7 +236,8 @@
               {
                 "role": "admin",
                 "select": {
-                  "filter": null
+                  "filter": null,
+                  "allowSubscriptions": true
                 }
               }
             ]

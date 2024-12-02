@@ -494,22 +494,17 @@ fn validate_argument_preset_type(
                 .get(type_name.as_str())
                 .ok_or_else(|| NDCValidationError::NoSuchType(type_name.as_str().to_owned()))?;
 
-            // if there is no representation default is assumed to be JSON
-            // (https://github.com/hasura/ndc-spec/blob/main/ndc-models/src/lib.rs#L130),
-            // so that's fine
-            if let Some(scalar_type_representation) = &scalar_type.representation {
-                if *scalar_type_representation != ndc_models::TypeRepresentation::JSON {
-                    return Err(
-                        NDCValidationError::UnsupportedTypeInDataConnectorLinkArgumentPreset {
-                            representation: serde_json::to_string(&scalar_type_representation)
-                                .map_err(|e| NDCValidationError::InternalSerializationError {
-                                    err: e,
-                                })?,
-                            scalar_type: DataConnectorScalarType::from(type_name.as_str()),
-                            argument_name: preset_argument_name.clone(),
-                        },
-                    );
-                }
+            if scalar_type.representation != ndc_models::TypeRepresentation::JSON {
+                return Err(
+                    NDCValidationError::UnsupportedTypeInDataConnectorLinkArgumentPreset {
+                        representation: serde_json::to_string(&scalar_type.representation)
+                            .map_err(|e| NDCValidationError::InternalSerializationError {
+                                err: e,
+                            })?,
+                        scalar_type: DataConnectorScalarType::from(type_name.as_str()),
+                        argument_name: preset_argument_name.clone(),
+                    },
+                );
             }
         }
     }
@@ -524,5 +519,13 @@ pub fn get_underlying_named_type(result_type: &ndc_models::Type) -> &ndc_models:
             get_underlying_named_type(underlying_type)
         }
         ndc_models::Type::Predicate { object_type_name } => object_type_name.as_ref(),
+    }
+}
+
+pub fn unwrap_nullable_type(ndc_type: &ndc_models::Type) -> &ndc_models::Type {
+    if let ndc_models::Type::Nullable { underlying_type } = ndc_type {
+        unwrap_nullable_type(underlying_type)
+    } else {
+        ndc_type
     }
 }

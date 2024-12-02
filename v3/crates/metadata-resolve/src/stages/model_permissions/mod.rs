@@ -1,14 +1,14 @@
 mod types;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, models_graphql,
-    object_boolean_expressions, relationships, scalar_types,
+    object_boolean_expressions, object_relationships, scalar_types,
 };
 use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 pub use types::{
-    ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
-    SelectPermission, UnaryComparisonOperator,
+    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
+    UnaryComparisonOperator,
 };
 mod model_permission;
 pub(crate) use model_permission::resolve_model_predicate_with_type;
@@ -23,9 +23,12 @@ pub fn resolve(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     object_boolean_expression_types: &BTreeMap<
@@ -33,6 +36,7 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    flags: &open_dds::flags::Flags,
 ) -> Result<IndexMap<Qualified<ModelName>, ModelWithPermissions>, Error> {
     let mut models_with_permissions: IndexMap<Qualified<ModelName>, ModelWithPermissions> = models
         .iter()
@@ -53,6 +57,7 @@ pub fn resolve(
     // hence Model permissions should be resolved after the relationships of a
     // model is resolved.
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: permissions,
     } in &metadata_accessor.model_permissions
@@ -65,22 +70,25 @@ pub fn resolve(
             })?;
 
         if model.select_permissions.is_empty() {
-            let boolean_expression_graphql = model
-                .filter_expression_type
-                .as_ref()
-                .and_then(|filter| match filter {
-                    models_graphql::ModelExpressionType::BooleanExpressionType(
-                        boolean_expression_type,
-                    ) => Some(boolean_expression_type),
-                    models_graphql::ModelExpressionType::ObjectBooleanExpressionType(_) => None,
-                })
-                .and_then(|bool_exp| bool_exp.graphql.as_ref());
+            // `boolean_expression_fields` is Some for new `BooleanExpressionType` but None for
+            // old `ObjectBooleanExpressionType`.
+            let boolean_expression_fields =
+                model
+                    .filter_expression_type
+                    .as_ref()
+                    .and_then(|filter| match filter {
+                        models_graphql::ModelExpressionType::BooleanExpressionType(
+                            boolean_expression_type,
+                        ) => boolean_expression_type.get_fields(flags),
+                        models_graphql::ModelExpressionType::ObjectBooleanExpressionType(_) => None,
+                    });
 
             let select_permissions = model_permission::resolve_model_select_permissions(
+                &metadata_accessor.flags,
                 &model.model,
                 subgraph,
                 permissions,
-                boolean_expression_graphql,
+                boolean_expression_fields,
                 data_connectors,
                 data_connector_scalars,
                 object_types,

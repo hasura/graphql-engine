@@ -44,4 +44,36 @@ query MyQuery {
     }
     departments
   }
+
+  match_two_nested_fields: InstitutionMany(
+    where: {
+      songs: {
+        primaryAnthemTrackId: { _eq: 2270 }
+        secondaryAnthemTrackId: { _eq: 2271 }
+      }
+    }
+  ) {
+    id
+    songs {
+      primaryAnthemTrackId
+      secondaryAnthemTrackId
+    }
+  }
+
+  nested_logical_operators: InstitutionMany(
+    where: {
+      songs: {
+        _or: [
+          { primaryAnthemTrackId: { _eq: 2270 } }
+          { primaryAnthemTrackId: { _eq: 3421 } }
+        ]
+      }
+    }
+  ) {
+    id
+    songs {
+      primaryAnthemTrackId
+      secondaryAnthemTrackId
+    }
+  }
 }

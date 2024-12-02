@@ -1,0 +1,27 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/filtering/Album.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_Album",
+                    id: "1",
+                    attributes: {
+                        "Title": String("Greatest Hits I"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: None,
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

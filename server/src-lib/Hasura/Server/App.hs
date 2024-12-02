@@ -314,7 +314,7 @@ mkSpockAction ::
   ) =>
   AppStateRef impl ->
   -- | `QErr` JSON encoder function
-  (Bool -> QErr -> Encoding) ->
+  (IncludeInternalErrors -> QErr -> Encoding) ->
   -- | `QErr` modifier
   (QErr -> QErr) ->
   APIHandler m a ->
@@ -346,7 +346,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
 
   let getInfo parsedRequest = do
         authenticationResp <- lift (resolveUserInfo (_lsLogger appEnvLoggers) appEnvManager headers acAuthMode parsedRequest)
-        authInfo <- authenticationResp `onLeft` (logErrorAndResp Nothing requestId req (reqBody, Nothing) False Nothing origHeaders (ExtraUserInfo Nothing) . qErrModifier)
+        authInfo <- authenticationResp `onLeft` (logErrorAndResp Nothing requestId req (reqBody, Nothing) HideInternalErrors Nothing origHeaders (ExtraUserInfo Nothing) . qErrModifier)
         let (userInfo, _, authHeaders, extraUserInfo) = authInfo
         appContext <- liftIO $ getAppContext appStateRef
         schemaCache <- liftIO $ getRebuildableSchemaCacheWithVersion appStateRef
@@ -383,7 +383,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
             -- if the request fails to parse, call the webhook without a request body
             -- TODO should we signal this to the webhook somehow?
             (userInfo, _, _, _, extraUserInfo) <- getInfo Nothing
-            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False Nothing origHeaders extraUserInfo (qErrModifier e)
+            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) HideInternalErrors Nothing origHeaders extraUserInfo (qErrModifier e)
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo (Just parsedReq)
 
         res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
@@ -394,7 +394,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
             -- if the request fails to parse, call the webhook without a request body
             -- TODO should we signal this to the webhook somehow?
             (userInfo, _, _, _, extraUserInfo) <- getInfo Nothing
-            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False Nothing origHeaders extraUserInfo (qErrModifier e)
+            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) HideInternalErrors Nothing origHeaders extraUserInfo (qErrModifier e)
         let newReq = case parsedReq of
               EqrGQLReq reqText -> Just reqText
               -- Note: We send only `ReqsText` to the webhook in case of `ExtPersistedQueryRequest` (persisted queries),
@@ -433,7 +433,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
       RequestId ->
       Wai.Request ->
       (BL.ByteString, Maybe Value) ->
-      Bool ->
+      IncludeInternalErrors ->
       Maybe (DiffTime, DiffTime) ->
       [HTTP.Header] ->
       ExtraUserInfo ->
@@ -863,7 +863,7 @@ spockInternalErrorHandler :: HTTP.Status -> Spock.ActionCtxT ctx IO ()
 spockInternalErrorHandler _status = do
   -- Ignore the status code and always return 500
   Spock.setStatus HTTP.status500
-  Spock.lazyBytes $ J.encodingToLazyByteString $ encodeQErr False $ err500 Unexpected "Internal Server Error"
+  Spock.lazyBytes $ J.encodingToLazyByteString $ encodeQErr HideInternalErrors $ err500 Unexpected "Internal Server Error"
 
 -- | Logger for internal errors arising from spock
 spockInternalErrorLogger :: (Tracing.MonadTraceContext m, MonadIO m) => L.Logger L.Hasura -> Text -> m ()
@@ -967,6 +967,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
     Spock.lazyBytes $ encode $ object $ ["version" .= currentVersion] <> extraData
 
   responseErrorsConfig <- liftIO $ acResponseInternalErrorsConfig <$> getAppContext appStateRef
+
   let customEndpointHandler ::
         RestRequest Spock.SpockMethod ->
         Handler m (HttpLogGraphQLInfo, APIResp)
@@ -1180,7 +1181,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
     spockAction ::
       forall a.
       (FromJSON a) =>
-      (Bool -> QErr -> Encoding) ->
+      (IncludeInternalErrors -> QErr -> Encoding) ->
       (QErr -> QErr) ->
       APIHandler m a ->
       Spock.ActionT m ()
@@ -1231,7 +1232,7 @@ onlyWhenApiEnabled isEnabled appStateRef endpointAction = do
       let qErr = err404 NotFound "resource does not exist"
       Spock.setStatus $ qeStatus qErr
       setHeader jsonHeader
-      Spock.lazyBytes . J.encodingToLazyByteString $ encodeQErr False qErr
+      Spock.lazyBytes . J.encodingToLazyByteString $ encodeQErr HideInternalErrors qErr
 
 raiseGenericApiError ::
   forall m.

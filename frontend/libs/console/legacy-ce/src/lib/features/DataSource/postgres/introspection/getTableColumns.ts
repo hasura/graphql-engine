@@ -19,8 +19,6 @@ const adaptSequencesResult = (
   runSQLResult: RunSQLResponse,
   table: PostgresTable
 ) => {
-  console.log(runSQLResult.result?.slice(1));
-
   return runSQLResult.result?.slice(1).map(row => row[0]);
 };
 
@@ -144,8 +142,6 @@ WHERE a.attnum > 0
 
   const serialColumns =
     adaptSequencesResult(sequencesSQLResult, { schema, name }) ?? [];
-
-  console.log(serialColumns);
 
   const result = sqlResult.map<TableColumn>(column => {
     const graphqlFieldName =

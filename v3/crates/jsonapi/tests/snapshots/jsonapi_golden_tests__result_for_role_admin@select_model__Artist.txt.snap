@@ -1,0 +1,83 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/select_model/Artist.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_Artist",
+                    id: "1",
+                    attributes: {
+                        "ArtistId": Number(3),
+                        "Name": String("Aerosmith"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "2",
+                    attributes: {
+                        "ArtistId": Number(4),
+                        "Name": String("Alanis Morissette"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "3",
+                    attributes: {
+                        "ArtistId": Number(5),
+                        "Name": String("Alice In Chains"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "4",
+                    attributes: {
+                        "ArtistId": Number(6),
+                        "Name": String("Antônio Carlos Jobim"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "5",
+                    attributes: {
+                        "ArtistId": Number(7),
+                        "Name": String("Apocalyptica"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "6",
+                    attributes: {
+                        "ArtistId": Number(8),
+                        "Name": String("Audioslave"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: None,
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

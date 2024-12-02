@@ -240,6 +240,22 @@ fn test_introspect_model_select_many_where_object_boolean_array_relationship_sim
     )
 }
 
+// Tests for order by
+
+#[test]
+fn test_introspect_model_select_many_order_by() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
+fn test_introspect_model_select_many_order_by_with_model_v2() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/with_model_v2";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
+}
+
 // Tests for subscriptions
 
 // Tests subscription schema generation with introspection queries

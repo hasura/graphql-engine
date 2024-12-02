@@ -11,23 +11,12 @@ use datafusion::{
     },
 };
 use futures::TryFutureExt;
-use indexmap::IndexMap;
-use std::{any::Any, collections::BTreeMap, sync::Arc};
+use std::{any::Any, sync::Arc};
 
-use execute::{
-    ndc::NdcMutationResponse,
-    plan::{
-        self,
-        field::{NestedArray, NestedField, ResolvedNestedField},
-        MutationArgument, Relationship, ResolvedField, ResolvedMutationExecutionPlan,
-    },
-    HttpContext,
-};
-use ir::{NdcFieldAlias, NdcRelationshipName};
-use open_dds::{
-    commands::ProcedureName, data_connector::DataConnectorColumnName,
-    types::DataConnectorArgumentName,
-};
+use engine_types::HttpContext;
+use execute::ndc::NdcMutationResponse;
+use open_dds::{data_connector::DataConnectorColumnName, query::CommandTarget};
+use plan::NDCProcedure;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use crate::execute::planner::common::PhysicalPlanOptions;
@@ -52,7 +41,7 @@ pub enum ExecutionPlanError {
     PhysicalPlanOptionsNotFound,
 
     #[error("Mutations are requested to be disallowed as part of the request")]
-    MutationsAreDisallowed,
+    MutationsAreDisallowed(CommandTarget),
 }
 
 impl TraceableError for ExecutionPlanError {
@@ -65,17 +54,15 @@ impl TraceableError for ExecutionPlanError {
 // should come from engine's plan but we aren't there yet
 #[derive(Debug, Clone)]
 pub(crate) struct NDCProcedurePushDown {
-    http_context: Arc<execute::HttpContext>,
-    procedure_name: ProcedureName,
-    arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-    fields: Option<ResolvedNestedField>,
-    collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
+    http_context: Arc<HttpContext>,
+    procedure: NDCProcedure,
+    // the original invocation of this procedure, useful for error messages
+    opendd_source: CommandTarget,
     // used to post process a command's output
     output: CommandOutput,
     //  The key from which the response has to be extracted if the command output is not the
     //  same as the ndc type. This happens with response config in a data connector link
     extract_response_from: Option<DataConnectorColumnName>,
-    data_connector: Arc<metadata_resolve::DataConnectorLink>,
     // the schema of the node's output
     projected_schema: SchemaRef,
     // some datafusion detail
@@ -83,46 +70,24 @@ pub(crate) struct NDCProcedurePushDown {
     metrics: ExecutionPlanMetricsSet,
 }
 
-fn wrap_ndc_fields(
-    command_output: &CommandOutput,
-    ndc_fields: IndexMap<NdcFieldAlias, ResolvedField>,
-) -> ResolvedNestedField {
-    match command_output {
-        CommandOutput::Object(_) => {
-            NestedField::Object(plan::field::NestedObject { fields: ndc_fields })
-        }
-        CommandOutput::ListOfObjects(_) => {
-            let nested_fields =
-                NestedField::Object(plan::field::NestedObject { fields: ndc_fields });
-            NestedField::Array(NestedArray {
-                fields: Box::new(nested_fields),
-            })
-        }
-    }
-}
-
 impl NDCProcedurePushDown {
     pub fn new(
-        http_context: Arc<execute::HttpContext>,
-        data_connector: Arc<metadata_resolve::DataConnectorLink>,
-        procedure_name: ProcedureName,
-        arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-        ndc_fields: IndexMap<NdcFieldAlias, ResolvedField>,
+        procedure: NDCProcedure,
+        opendd_source: CommandTarget,
+        http_context: Arc<HttpContext>,
         // schema of the output of the command selection
         schema: &DFSchemaRef,
         output: CommandOutput,
         extract_response_from: Option<DataConnectorColumnName>,
     ) -> NDCProcedurePushDown {
         let metrics = ExecutionPlanMetricsSet::new();
+
         Self {
             http_context,
-            procedure_name,
-            arguments,
-            fields: Some(wrap_ndc_fields(&output, ndc_fields)),
-            collection_relationships: BTreeMap::new(),
+            procedure,
+            opendd_source,
             output,
             extract_response_from,
-            data_connector,
             projected_schema: schema.inner().clone(),
             cache: Self::compute_properties(schema.inner().clone()),
             metrics,
@@ -195,38 +160,22 @@ impl ExecutionPlan for NDCProcedurePushDown {
 
         if physical_plan_options.disallow_mutations {
             return Err(DataFusionError::External(Box::new(
-                ExecutionPlanError::MutationsAreDisallowed,
+                ExecutionPlanError::MutationsAreDisallowed(self.opendd_source.clone()),
             )));
         }
 
         let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
-        let execution_plan = ResolvedMutationExecutionPlan {
-            procedure_name: self.procedure_name.clone(),
-            procedure_arguments: self
-                .arguments
-                .iter()
-                .map(|(argument, value)| {
-                    (
-                        argument.clone(),
-                        MutationArgument::Literal {
-                            value: value.clone(),
-                        },
-                    )
-                })
-                .collect(),
-            procedure_fields: self.fields.clone(),
-            collection_relationships: self.collection_relationships.clone(),
-            data_connector: &self.data_connector,
-        };
-        let query_request = plan::ndc_request::make_ndc_mutation_request(execution_plan)
+        let execution_plan = plan::execute_plan_from_procedure(&self.procedure);
+
+        let query_request = execute::make_ndc_mutation_request(execution_plan)
             .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
 
         let fut = fetch_from_data_connector(
             self.projected_schema.clone(),
             self.http_context.clone(),
             query_request,
-            self.data_connector.clone(),
+            self.procedure.data_connector.clone(),
             self.output.clone(),
             self.extract_response_from.clone(),
             baseline_metrics,

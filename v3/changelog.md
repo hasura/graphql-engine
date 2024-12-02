@@ -4,11 +4,394 @@
 
 ### Added
 
+- Added support for the sparse fieldset parameter for nested field types in
+  JSON:API.
+
 ### Fixed
 
-- Disallow recursive types in SQL table column types
+- Conflicts between `BooleanExpressionType` fields that have the same name are
+  now detected and a build error is raised. Previously the duplicated fields
+  would have been silently dropped.
+- Row filters configured in `ModelPermissions` are now correctly applied when
+  referencing the model across a relationship in a filter predicate.
 
 ### Changed
+
+## [v2024.11.25]
+
+### Added
+
+#### Logical operators in scalar boolean expressions
+
+Adds the ability to use `_and`, `_or` and `_not` operators at every level of the
+where clause in GraphQL queries. Previously logical operators only appeared at
+the object type level of expressions, not at the scalar type level.
+
+Instead of writing:
+
+```graphql
+query {
+  AuthorMany(
+    where: { _or: [{ author_id: { _eq: 1 } }, { author_id: { _eq: 2 } }] }
+  ) {
+    author_id
+    first_name
+  }
+}
+```
+
+You can now write:
+
+```graphql
+query {
+  AuthorMany(where: { author_id: { _or: [{ _eq: 1 }, { _eq: 2 }] } }) {
+    author_id
+    first_name
+  }
+}
+```
+
+In order to use this, you must have `logicalOperators` enabled on your scalar
+`BooleanExpressionType` and your
+[compatibility date](https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/)
+must be at least `2024-11-26`.
+
+#### Other
+
+- Added support for fetching relationships in JSON:API using the `include`
+  parameter.
+
+### Fixed
+
+- Fixed an error that occurred when filtering by more than one nested field at a
+  time.
+- Fixed an error that occurred when filtering using logical operators (eg
+  `_and`) from inside a nested field.
+
+### Changed
+
+- MBS error contexts now contain explicit subgraphs where appropriate for each
+  individual error step.
+
+## [v2024.11.18]
+
+### Added
+
+#### Subscriptions
+
+Adds real-time data capabilities through GraphQL subscriptions. Available for a
+model's select unique, select many, and aggregate queries.
+
+For fresh DDN projects, subscription support is automatically enabled when
+adding models via `ddn model add`. For existing projects, run
+`ddn codemod upgrade-graphqlconfig-subscriptions` to enable.
+
+Configure
+[polling intervals](https://hasura.io/docs/3.0/graphql-api/subscriptions/#polling-interval)
+in your model's metadata (defaults to 1000ms). Use the `allowSubscriptions` flag
+in
+[select permissions](https://hasura.io/docs/3.0/graphql-api/subscriptions/#permissions)
+to control role access.
+
+Example subscription:
+
+```graphql
+subscription UserNotificationSubscription {
+  notifications(where: { user_id: { _eq: 123 } }) {
+    id
+    created_at
+    message
+  }
+}
+```
+
+For more details, see the
+[subscriptions documentation](https://hasura.io/docs/3.0/graphql-api/subscriptions/).
+
+## [v2024.11.13]
+
+Minor internal refactors
+
+## [v2024.11.11]
+
+### Changed
+
+- Prevent duplicate GraphQL root field names for models; previously, one was
+  arbitrarily chosen as the exposed field. This change does not impact existing
+  projects, and warnings are emitted while creating a build. Projects created or
+  with a
+  [compatibility date](https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/)
+  after `2024-11-15` are affected.
+
+## [v2024.11.05]
+
+### Added
+
+#### JSONAPI alpha release
+
+Adds a new set of endpoints at `/v1/rest` that follow the
+[JSONAPI](https://jsonapi.org/) specification.
+
+An [OpenAPI](https://swagger.io/specification/) schema for a given role can be
+accessed at `v1/rest/__schema`.
+
+Currently, every model that a given role is able to access is exposed at
+`GET v1/rest/subgraph/model`. In further releases models will be explicitly
+configured and exposed via metadata to match the GraphQL schema.
+
+Select the fields you receive with `?fields[model]=fieldname,anotherfield`.
+
+Limit the number of results with `?page[limit]=10`
+
+Offset the results with `?page[offset]=5`
+
+Order the results with `?sort[model]=fieldname,-anotherfield`. Default is
+sorting in ascending order, adding `-` at the start of the field name makes the
+ordering descending instead.
+
+This feature is still very much alpha and in active development, all feedback
+gratefully received.
+
+## [v2024.10.30]
+
+### Added
+
+#### Order by Nested Fields
+
+Add support for ordering by nested fields.
+
+Example query:
+
+```graphql
+query MyQuery {
+  InstitutionMany(order_by: { location: { city: Asc } }) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+}
+```
+
+This will order by the value of the nested field `city` within the `location`
+column.
+
+- New metadata item `OrderByExpression`
+
+- New metadata item `Model` version 2
+
+### Fixed
+
+### Changed
+
+## [v2024.10.25]
+
+### Fixed
+
+- `ModelPermissions` and `CommandPermissions` can now correctly preset
+  predicate-typed arguments that are nullable. Previously, trying to do so
+  resulted in a build error.
+
+## [v2024.10.23]
+
+### Added
+
+- Add a check to disallow defining boolean expression of array fields with
+  scalar boolean type while resolving the boolean expression
+
+### Fixed
+
+- Improve performance of metadata builds
+
+- When the `CompatibilityConfig` date is set to `2024-10-16` or newer, session
+  variables returned by webhooks, set in `noAuth` config in `AuthConfig` or set
+  in JWT claims are now correctly allowed to be full JSON values, not just JSON
+  strings. This fixes the bug where you were incorrectly required to JSON-encode
+  your JSON value inside a string. For example, you were previously incorrectly
+  required to return session variables like this
+  `{ "X-Hasura-AllowedUserIds": "[1,2,3]" }`, but now you can correctly return
+  them like this: `{ "X-Hasura-AllowedUserIds": [1,2,3] }`.
+
+- The warning about AuthConfig v1 being deprecated was only being displayed in
+  the engine's stdout logs and not as a build warning. This has been corrected.
+
+## [v2024.10.21]
+
+### Added
+
+- Support array values in session variables
+
+### Fixed
+
+### Changed
+
+## [v2024.10.14]
+
+### Added
+
+- Added contexts to more MBS errors: when a model refers to a collection that
+  doesn't exist, the path to the offending reference will be reported.
+
+### Fixed
+
+- Fix local `docker-compose.yaml` file so that running `docker compose up`
+  builds the engine and serves it along with a sample schema using
+  `ndc-postgres` and a `postgres` database.
+
+- Subgraph builds that have relationships to other external subgraphs can now be
+  run locally and no longer fail with missing subgraph errors. Subgraph builds
+  are marked with a new OpenDD flag and when these builds are run by the engine
+  relationships to unknown subgraphs are automatically pruned.
+
+- Aggregate queries now support `__typename` introspection fields.
+
+### Changed
+
+- metadata-build-service POST endpoints now accept zstd (preferred) or gzip
+  -encoded request bodies
+
+- The `--partial-supergraph` command-line argument and `PARTIAL_SUPERGRAPH`
+  environment variable have been removed. Builds now contain an OpenDD flag that
+  indicates if they are subgraph builds and should be run as such.
+
+## [v2024.10.02]
+
+### Added
+
+#### Metadata build error contexts
+
+Contexts are being added to errors raised during the build process to allow
+users to locate the source of the issue more quickly. These contexts will be
+surfaced in the Build Server API responses. The first example and test bed for
+developing the scaffolding is the error raised when a model refers to a
+nonexistent data connector. This error will now also contain the path to the
+offending data connector name.
+
+#### Pre-response Plugin
+
+Engine now supports calling a HTTP webhook in the pre-response execution step.
+This can be used to add some post execution functionalities to the DDN, such as
+sending the response to a logging service, sending notifications for specific
+requests like mutations, etc.
+
+The following is an example of the OpenDD metadata for the pre-response plugin:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  name: logging
+  url:
+    value: http://localhost:5001/log
+  pre: response
+  config:
+    request:
+      headers:
+        additional:
+          hasura-m-auth:
+            value: "your-strong-m-auth-key"
+      session: {}
+      rawRequest:
+        query: {}
+        variables: {}
+      rawResponse: {}
+```
+
+Similar to the pre-parse plugin, the pre-response plugin's request can be
+customized using the `LifecyclePluginHook` metadata object. Currently we support
+the following customizations:
+
+- adding/removing session information
+- adding new headers
+- forwarding specific headers
+- adding/removing graphql query and variables
+- adding/removing response
+
+### Fixed
+
+- Fix poor performance of `process_response` for large and deeply-nested results
+- Fixed issue in partial supergraph builds where a `BooleanExpressionType` that
+  referenced a relationship that targeted an unknown subgraph would incorrectly
+  produce an error rather than ignoring the relationship
+- Fixed double string escaping when forwarding headers to a data connector
+
+### Changed
+
+- Making `args` non-compulsory for models where all arguments have presets.
+
+Previously, if a model had arguments specified that were all provided by
+presets, then we would require them to pass an empty `args: {}` argument:
+
+```graphql
+query MyQuery
+  ActorsByMovieMany(args: {}) {
+    actor_id
+    movie_id
+    name
+  }
+}
+```
+
+This change loosens the restriction, so now the following query is valid too:
+
+```graphql
+query MyQuery
+  ActorsByMovieMany {
+    actor_id
+    movie_id
+    name
+  }
+}
+```
+
+- OpenTelemetry service name set to `ddn-engine` to avoid confusion with
+  `graphql-engine`.
+
+- Builds can no longer contain two commands with the same root field name.
+  Previously, one of the two commands would be chosen arbitrarily as the exposed
+  root field. Now, this raises a build-time error.
+
+## [v2024.09.23]
+
+### Fixed
+
+- Disallow defining custom scalar types with names that conflict with built-in
+  types, such as `String` or `Int`.
+
+- Fixed bug where relationships defined on a boolean expression would not take
+  the target subgraph into account.
+
+- Propagate deprecation status to boolean expression relationship fields.
+
+## [v2024.09.16]
+
+### Fixed
+
+- Raise a warning when nested array comparisons are used without the necessary
+  data connector capability. A new OpenDD flag
+  `require_nested_array_filtering_capability` can be used to promote this
+  warning to an error.
+
+- Disallow recursive types in SQL table column types.
+
+- Previously, if you had `AggregateExpressions` that were configured to be used
+  in GraphQL, or `Models` configured for aggregates in GraphQL, but you did not
+  set the appropriate configuration in
+  `GraphqlConfig.definition.query.aggregates`, the build would fail with an
+  error. This has been relaxed so that the build now succeeds, but warnings are
+  raised instead. However, the aggregates will not appear in your GraphQL API
+  until the `GraphqlConfig` is updated. This allows you to add
+  `AggregateExpressions` and configure your `Model` but update your
+  `GraphqlConfig` separately, which is useful if they are in separate
+  repositories.
+
+- A build error is now raised if an `AggregateExpression` specifies an
+  `aggregatableField` that has field arguments. This is an unsupported scenario
+  and previously would have allowed invalid queries that omitted the required
+  field arguments. These queries may have failed with errors at query time.
+
+- Add a missing typecheck of `ValueExpression` while resolving model predicates.
 
 ## [v2024.09.05]
 
@@ -78,27 +461,6 @@ query MyQuery {
 
 This query would return us details of `Chalmers University of Technology`, where
 `John Hughes` is a member of staff.
-
-#### Order by Nested Fields
-
-Add support for ordering by nested fields.
-
-Example query:
-
-```graphql
-query MyQuery {
-  InstitutionMany(order_by: { location: { city: Asc } }) {
-    id
-    location {
-      city
-      campuses
-    }
-  }
-}
-```
-
-This will order by the value of the nested field `city` within the `location`
-JSONB column.
 
 ### Fixed
 
@@ -494,7 +856,21 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.09.02...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.25...HEAD
+[v2024.11.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.25
+[v2024.11.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.18
+[v2024.11.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.13
+[v2024.11.11]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.11
+[v2024.11.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.05
+[v2024.10.30]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.30
+[v2024.10.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.25
+[v2024.10.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.23
+[v2024.10.21]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.21
+[v2024.10.14]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.14
+[v2024.10.02]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.02
+[v2024.09.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.23
+[v2024.09.16]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.16
+[v2024.09.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.05
 [v2024.09.02]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.02
 [v2024.08.07]: https://github.com/hasura/v3-engine/releases/tag/v2024.08.07
 [v2024.07.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.25

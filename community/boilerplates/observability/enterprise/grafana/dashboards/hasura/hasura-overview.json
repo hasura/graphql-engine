@@ -3453,7 +3453,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Total number of incoming requests for cache lookup",
+      "description": "Postgres connection errors from GraphQL Engine instances",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -3501,6 +3501,10 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
               }
             ]
           },
@@ -3514,7 +3518,7 @@
         "x": 12,
         "y": 81
       },
-      "id": 57,
+      "id": 66,
       "options": {
         "legend": {
           "calcs": [],
@@ -3534,25 +3538,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(hasura_cache_request_count{job=~\"$job\",instance=~\"$instance\",status=\"hit\"}[$__rate_interval]))",
-          "legendFormat": "Cache Hit",
+          "expr": "sum by (job, role,conn_info,source_name) (increase(hasura_postgres_connection_error_total{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) ",
+          "legendFormat": "__auto",
           "range": true,
-          "refId": "Hit"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(rate(hasura_cache_request_count{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]))",
-          "hide": false,
-          "legendFormat": "Total",
-          "range": true,
-          "refId": "Total"
+          "refId": "A"
         }
       ],
-      "title": "Cache Request Rate",
+      "title": "Postgres Connectionr Errors",
       "type": "timeseries"
     },
     {
@@ -3748,6 +3740,113 @@
       ],
       "title": "Postgres Pool Wait Time (P95)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "Total number of incoming requests for cache lookup",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 95
+      },
+      "id": 57,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(hasura_cache_request_count{job=~\"$job\",instance=~\"$instance\",status=\"hit\"}[$__rate_interval]))",
+          "legendFormat": "Cache Hit",
+          "range": true,
+          "refId": "Hit"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(hasura_cache_request_count{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]))",
+          "hide": false,
+          "legendFormat": "Total",
+          "range": true,
+          "refId": "Total"
+        }
+      ],
+      "title": "Cache Request Rate",
+      "type": "timeseries"
     }
   ],
   "refresh": "",
@@ -3832,6 +3931,6 @@
   "timezone": "",
   "title": "Hasura Overview",
   "uid": "Of9GFjr7z",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }

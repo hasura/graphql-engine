@@ -1,0 +1,11 @@
+---
+source: crates/engine/tests/common.rs
+expression: rowsets
+---
+{
+  "Ok": [
+    {
+      "rows": []
+    }
+  ]
+}

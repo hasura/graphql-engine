@@ -92,7 +92,7 @@ pub struct ObjectFieldSelection {
     #[serde(flatten)]
     pub target: ObjectFieldTarget,
     /// If the field has an object type or an array of object types, what to select from that/those object(s).
-    pub selection: Option<IndexMap<String, ObjectSubSelection>>,
+    pub selection: Option<IndexMap<Alias, ObjectSubSelection>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -102,7 +102,7 @@ pub struct RelationshipSelection {
     #[serde(flatten)]
     pub target: RelationshipTarget,
     /// If the relationship output produces an object type or an array of object types, what to select from that/those object(s).
-    pub selection: Option<IndexMap<String, ObjectSubSelection>>,
+    pub selection: Option<IndexMap<Alias, ObjectSubSelection>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

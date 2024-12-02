@@ -1,0 +1,5 @@
+query MyQuery {
+  AuthorMany {
+    author_id
+  }
+}

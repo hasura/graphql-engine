@@ -1,0 +1,15 @@
+---
+source: crates/engine/tests/common.rs
+expression: rowsets
+---
+{
+  "Ok": [
+    {
+      "rows": [
+        {
+          "author_id": 1
+        }
+      ]
+    }
+  ]
+}

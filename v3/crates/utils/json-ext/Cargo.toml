@@ -10,6 +10,7 @@ bench = false
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+indexmap = { workspace = true }
 
 [lints]
 workspace = true

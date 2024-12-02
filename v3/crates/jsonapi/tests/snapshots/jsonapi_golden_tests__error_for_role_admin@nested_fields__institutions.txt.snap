@@ -1,0 +1,10 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/failing/nested_fields/institutions.txt
+---
+Err(
+    BadRequest(
+        "Unknown field in sparse fields: last_name in staff_member",
+    ),
+)

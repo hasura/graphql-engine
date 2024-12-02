@@ -35,16 +35,18 @@
           "version": "v1",
           "definition": {
             "name": "MyOrderByExpression",
-            "orderedType": "RowType",
-            "orderableFields": [
-              {
-                "fieldName": "foo",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "RowType",
+                "orderableFields": [
+                  {
+                    "fieldName": "foo",
+                    "orderByExpression": "FooOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "mycollection_order_by"
             },

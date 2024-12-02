@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::env;
 
 pub type Row = BTreeMap<ndc_models::FieldName, serde_json::Value>;
 
@@ -7,6 +8,7 @@ pub struct AppState {
     pub actors: BTreeMap<i32, Row>,
     pub institutions: BTreeMap<i32, Row>,
     pub movies: BTreeMap<i32, Row>,
+    pub enable_relationship_support: bool,
 }
 
 const ACTORS_JSON: &str = include_str!("../data/actors.json");
@@ -32,6 +34,8 @@ fn read_json_lines(json: &str) -> anyhow::Result<BTreeMap<i32, Row>> {
 }
 
 pub fn init_app_state() -> anyhow::Result<AppState> {
+    let enable_relationship_support =
+        env::var_os("ENABLE_RELATIONSHIP_SUPPORT") == Some("1".into());
     let actors = read_json_lines(ACTORS_JSON)?;
     let institutions = read_json_lines(INSTITUTIONS_JSON)?;
     let movies = read_json_lines(MOVIES_JSON)?;
@@ -39,5 +43,6 @@ pub fn init_app_state() -> anyhow::Result<AppState> {
         actors,
         institutions,
         movies,
+        enable_relationship_support,
     })
 }

@@ -1,675 +1,683 @@
-[
-  {
-    "kind": "DataConnectorScalarRepresentation",
-    "version": "v1",
-    "definition": {
-      "dataConnectorName": "db",
-      "dataConnectorScalarType": "String",
-      "representation": "String",
-      "graphql": {
-        "comparisonExpressionTypeName": "String_Comparison_Exp"
-      }
-    }
-  },
-  {
-    "kind": "DataConnectorScalarRepresentation",
-    "version": "v1",
-    "definition": {
-      "dataConnectorName": "db",
-      "dataConnectorScalarType": "Int",
-      "representation": "Int",
-      "graphql": {
-        "comparisonExpressionTypeName": "Int_Comparison_Exp"
-      }
-    }
-  },
-  {
-    "kind": "ObjectType",
-    "version": "v1",
-    "definition": {
-      "name": "movie_analytics",
-      "fields": [
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
         {
-          "name": "analytics_id",
-          "type": "Int!"
-        },
-        {
-          "name": "movie_id",
-          "type": "Int!"
-        },
-        {
-          "name": "num_users_faved",
-          "type": "Int"
-        },
-        {
-          "name": "num_users_watchlisted",
-          "type": "Int"
-        },
-        {
-          "name": "num_views_day",
-          "type": "Int"
-        },
-        {
-          "name": "num_votes_day",
-          "type": "Int"
-        },
-        {
-          "name": "prev_day_scores",
-          "type": "Int"
-        },
-        {
-          "name": "total_votes",
-          "type": "Int"
-        }
-      ],
-      "globalIdFields": ["analytics_id"],
-      "graphql": {
-        "typeName": "MovieAnalytics"
-      },
-      "dataConnectorTypeMapping": [
-        {
-          "dataConnectorName": "db",
-          "dataConnectorObjectType": "movie_analytics",
-          "fieldMapping": {
-            "analytics_id": {
-              "column": {
-                "name": "id"
-              }
-            },
-            "movie_id": {
-              "column": {
-                "name": "movie_id"
-              }
-            },
-            "num_users_faved": {
-              "column": {
-                "name": "num_users_faved"
-              }
-            },
-            "num_users_watchlisted": {
-              "column": {
-                "name": "num_users_watchlisted"
-              }
-            },
-            "num_views_day": {
-              "column": {
-                "name": "num_views_day"
-              }
-            },
-            "num_votes_day": {
-              "column": {
-                "name": "num_votes_day"
-              }
-            },
-            "prev_day_scores": {
-              "column": {
-                "name": "prev_day_scores"
-              }
-            },
-            "total_votes": {
-              "column": {
-                "name": "total_votes"
-              }
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
             }
           }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "Model",
-    "version": "v1",
-    "definition": {
-      "name": "MovieAnalytics",
-      "objectType": "movie_analytics",
-      "globalIdSource": true,
-      "source": {
-        "dataConnectorName": "db",
-        "collection": "movie_analytics"
-      },
-      "orderableFields": [
+        },
         {
-          "fieldName": "analytics_id",
-          "orderByDirections": {
-            "enableAll": true
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "Int_Comparison_Exp"
+            }
           }
         },
         {
-          "fieldName": "movie_id",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_users_faved",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_users_watchlisted",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_views_day",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_votes_day",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "prev_day_scores",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "total_votes",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        }
-      ],
-      "graphql": {
-        "selectUniques": [
-          {
-            "queryRootField": "AnalyticsById",
-            "uniqueIdentifier": ["analytics_id"]
-          }
-        ],
-        "selectMany": {
-          "queryRootField": "Analytics"
-        },
-        "orderByExpressionType": "AnalyticsOrderBy"
-      }
-    }
-  },
-  {
-    "kind": "TypePermissions",
-    "version": "v1",
-    "definition": {
-      "typeName": "movie_analytics",
-      "permissions": [
-        {
-          "role": "admin",
-          "output": {
-            "allowedFields": [
-              "analytics_id",
-              "movie_id",
-              "num_users_faved",
-              "num_users_watchlisted",
-              "num_views_day",
-              "num_votes_day",
-              "total_votes"
-            ]
-          }
-        },
-        {
-          "role": "user",
-          "output": {
-            "allowedFields": [
-              "analytics_id",
-              "movie_id",
-              "num_users_faved",
-              "num_views_day",
-              "total_votes"
-            ]
-          }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "ModelPermissions",
-    "version": "v1",
-    "definition": {
-      "modelName": "MovieAnalytics",
-      "permissions": [
-        {
-          "role": "admin",
-          "select": {
-            "filter": null
-          }
-        },
-        {
-          "role": "user",
-          "select": {
-            "filter": {
-              "fieldComparison": {
-                "field": "movie_id",
-                "operator": "_eq",
-                "value": {
-                  "sessionVariable": "x-hasura-user-id"
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "movie_analytics",
+            "fields": [
+              {
+                "name": "analytics_id",
+                "type": "Int!"
+              },
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              },
+              {
+                "name": "num_users_faved",
+                "type": "Int"
+              },
+              {
+                "name": "num_users_watchlisted",
+                "type": "Int"
+              },
+              {
+                "name": "num_views_day",
+                "type": "Int"
+              },
+              {
+                "name": "num_votes_day",
+                "type": "Int"
+              },
+              {
+                "name": "prev_day_scores",
+                "type": "Int"
+              },
+              {
+                "name": "total_votes",
+                "type": "Int"
+              }
+            ],
+            "globalIdFields": ["analytics_id"],
+            "graphql": {
+              "typeName": "MovieAnalytics"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "movie_analytics",
+                "fieldMapping": {
+                  "analytics_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  },
+                  "num_users_faved": {
+                    "column": {
+                      "name": "num_users_faved"
+                    }
+                  },
+                  "num_users_watchlisted": {
+                    "column": {
+                      "name": "num_users_watchlisted"
+                    }
+                  },
+                  "num_views_day": {
+                    "column": {
+                      "name": "num_views_day"
+                    }
+                  },
+                  "num_votes_day": {
+                    "column": {
+                      "name": "num_votes_day"
+                    }
+                  },
+                  "prev_day_scores": {
+                    "column": {
+                      "name": "prev_day_scores"
+                    }
+                  },
+                  "total_votes": {
+                    "column": {
+                      "name": "total_votes"
+                    }
+                  }
                 }
               }
-            }
+            ]
           }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "DataConnectorScalarRepresentation",
-    "version": "v1",
-    "definition": {
-      "dataConnectorName": "custom",
-      "dataConnectorScalarType": "String",
-      "representation": "String",
-      "graphql": {
-        "comparisonExpressionTypeName": "String_Comparison_Exp_Custom"
-      }
-    }
-  },
-  {
-    "kind": "DataConnectorScalarRepresentation",
-    "version": "v1",
-    "definition": {
-      "dataConnectorName": "custom",
-      "dataConnectorScalarType": "Int",
-      "representation": "Int",
-      "graphql": {
-        "comparisonExpressionTypeName": "Int_Comparison_Exp_Custom"
-      }
-    }
-  },
-  {
-    "kind": "ObjectType",
-    "version": "v1",
-    "definition": {
-      "name": "movie",
-      "fields": [
-        {
-          "name": "movie_id",
-          "type": "Int!"
         },
         {
-          "name": "title",
-          "type": "String!"
-        },
-        {
-          "name": "rating",
-          "type": "Int!"
-        }
-      ],
-      "globalIdFields": ["movie_id"],
-      "graphql": {
-        "typeName": "Movie"
-      },
-      "dataConnectorTypeMapping": [
-        {
-          "dataConnectorName": "custom",
-          "dataConnectorObjectType": "movie",
-          "fieldMapping": {
-            "movie_id": {
-              "column": {
-                "name": "id"
-              }
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "MovieAnalytics",
+            "objectType": "movie_analytics",
+            "globalIdSource": true,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "movie_analytics"
             },
-            "title": {
-              "column": {
-                "name": "title"
-              }
-            },
-            "rating": {
-              "column": {
-                "name": "rating"
-              }
-            }
-          }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "Model",
-    "version": "v1",
-    "definition": {
-      "name": "Movies",
-      "objectType": "movie",
-      "globalIdSource": true,
-      "source": {
-        "dataConnectorName": "custom",
-        "collection": "movies"
-      },
-      "graphql": {
-        "selectUniques": [],
-        "selectMany": {
-          "queryRootField": "MovieMany"
-        },
-        "orderByExpressionType": "MoviesOrderBy"
-      },
-      "orderableFields": [
-        {
-          "fieldName": "movie_id",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "title",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "rating",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "TypePermissions",
-    "version": "v1",
-    "definition": {
-      "typeName": "movie",
-      "permissions": [
-        {
-          "role": "admin",
-          "output": {
-            "allowedFields": ["movie_id", "title", "rating"]
-          }
-        },
-        {
-          "role": "user",
-          "output": {
-            "allowedFields": ["movie_id", "title", "rating"]
-          }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "ModelPermissions",
-    "version": "v1",
-    "definition": {
-      "modelName": "Movies",
-      "permissions": [
-        {
-          "role": "admin",
-          "select": {
-            "filter": null
-          }
-        },
-        {
-          "role": "user",
-          "select": {
-            "filter": {
-              "fieldComparison": {
-                "field": "movie_id",
-                "operator": "_eq",
-                "value": {
-                  "sessionVariable": "x-hasura-user-id"
+            "orderableFields": [
+              {
+                "fieldName": "analytics_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "movie_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "num_users_faved",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "num_users_watchlisted",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "num_views_day",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "num_votes_day",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "prev_day_scores",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "total_votes",
+                "orderByDirections": {
+                  "enableAll": true
                 }
               }
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AnalyticsById",
+                  "uniqueIdentifier": ["analytics_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Analytics"
+              },
+              "orderByExpressionType": "AnalyticsOrderBy"
             }
           }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "ObjectType",
-    "version": "v1",
-    "definition": {
-      "name": "actor",
-      "fields": [
-        {
-          "name": "actor_id",
-          "type": "Int!"
         },
         {
-          "name": "name",
-          "type": "String!"
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "movie_analytics",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "analytics_id",
+                    "movie_id",
+                    "num_users_faved",
+                    "num_users_watchlisted",
+                    "num_views_day",
+                    "num_votes_day",
+                    "total_votes"
+                  ]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": [
+                    "analytics_id",
+                    "movie_id",
+                    "num_users_faved",
+                    "num_views_day",
+                    "total_votes"
+                  ]
+                }
+              }
+            ]
+          }
         },
         {
-          "name": "movie_id",
-          "type": "Int!"
-        }
-      ],
-      "graphql": {
-        "typeName": "Actor"
-      },
-      "dataConnectorTypeMapping": [
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "MovieAnalytics",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "movie_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
         {
-          "dataConnectorName": "custom",
-          "dataConnectorObjectType": "actor",
-          "fieldMapping": {
-            "actor_id": {
-              "column": {
-                "name": "id"
-              }
-            },
-            "name": {
-              "column": {
-                "name": "name"
-              }
-            },
-            "movie_id": {
-              "column": {
-                "name": "movie_id"
-              }
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp_Custom"
             }
           }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "TypePermissions",
-    "version": "v1",
-    "definition": {
-      "typeName": "actor",
-      "permissions": [
+        },
         {
-          "role": "admin",
-          "output": {
-            "allowedFields": ["actor_id", "name", "movie_id"]
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "Int_Comparison_Exp_Custom"
+            }
           }
         },
         {
-          "role": "user",
-          "output": {
-            "allowedFields": ["actor_id", "name", "movie_id"]
-          }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "Model",
-    "version": "v1",
-    "definition": {
-      "name": "Actors",
-      "objectType": "actor",
-      "source": {
-        "dataConnectorName": "custom",
-        "collection": "actors"
-      },
-      "graphql": {
-        "selectUniques": [],
-        "selectMany": {
-          "queryRootField": "ActorMany"
-        }
-      },
-      "orderableFields": [
-        {
-          "fieldName": "actor_id",
-          "orderByDirections": {
-            "enableAll": true
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "movie",
+            "fields": [
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "rating",
+                "type": "Int!"
+              }
+            ],
+            "globalIdFields": ["movie_id"],
+            "graphql": {
+              "typeName": "Movie"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "movie",
+                "fieldMapping": {
+                  "movie_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "rating": {
+                    "column": {
+                      "name": "rating"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
-          "fieldName": "name",
-          "orderByDirections": {
-            "enableAll": true
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Movies",
+            "objectType": "movie",
+            "globalIdSource": true,
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "movies"
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "MovieMany"
+              },
+              "orderByExpressionType": "MoviesOrderBy"
+            },
+            "orderableFields": [
+              {
+                "fieldName": "movie_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "rating",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
           }
         },
         {
-          "fieldName": "movie_id",
-          "orderByDirections": {
-            "enableAll": true
-          }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "ModelPermissions",
-    "version": "v1",
-    "definition": {
-      "modelName": "Actors",
-      "permissions": [
-        {
-          "role": "admin",
-          "select": {
-            "filter": null
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "movie",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating"]
+                }
+              }
+            ]
           }
         },
         {
-          "role": "user",
-          "select": {
-            "filter": null
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Movies",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "movie_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
           }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "Relationship",
-    "version": "v1",
-    "definition": {
-      "sourceType": "actor",
-      "name": "Movie",
-      "target": {
-        "model": {
-          "name": "Movies",
-          "relationshipType": "Object"
-        }
-      },
-      "mapping": [
+        },
         {
-          "source": {
-            "fieldPath": [
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "actor",
+            "fields": [
               {
-                "fieldName": "movie_id"
+                "name": "actor_id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "movie_id",
+                "type": "Int!"
               }
-            ]
-          },
-          "target": {
-            "modelField": [
+            ],
+            "graphql": {
+              "typeName": "Actor"
+            },
+            "dataConnectorTypeMapping": [
               {
-                "fieldName": "movie_id"
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
               }
             ]
           }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "Relationship",
-    "version": "v1",
-    "definition": {
-      "sourceType": "movie",
-      "name": "Actors",
-      "target": {
-        "model": {
-          "name": "Actors",
-          "relationshipType": "Array"
-        }
-      },
-      "mapping": [
+        },
         {
-          "source": {
-            "fieldPath": [
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "actor",
+            "permissions": [
               {
-                "fieldName": "movie_id"
-              }
-            ]
-          },
-          "target": {
-            "modelField": [
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
               {
-                "fieldName": "movie_id"
+                "role": "user",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
               }
             ]
           }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "Relationship",
-    "version": "v1",
-    "definition": {
-      "sourceType": "movie",
-      "name": "Analytics",
-      "target": {
-        "model": {
-          "name": "MovieAnalytics",
-          "relationshipType": "Array"
-        }
-      },
-      "mapping": [
+        },
         {
-          "source": {
-            "fieldPath": [
-              {
-                "fieldName": "movie_id"
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Actors",
+            "objectType": "actor",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "actors"
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "ActorMany"
               }
-            ]
-          },
-          "target": {
-            "modelField": [
+            },
+            "orderableFields": [
               {
-                "fieldName": "movie_id"
+                "fieldName": "actor_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "movie_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
               }
             ]
           }
-        }
-      ]
-    }
-  },
-  {
-    "kind": "Relationship",
-    "version": "v1",
-    "definition": {
-      "sourceType": "movie_analytics",
-      "name": "Movie",
-      "target": {
-        "model": {
-          "name": "Movies",
-          "relationshipType": "Object"
-        }
-      },
-      "mapping": [
+        },
         {
-          "source": {
-            "fieldPath": [
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Actors",
+            "permissions": [
               {
-                "fieldName": "movie_id"
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
               }
             ]
-          },
-          "target": {
-            "modelField": [
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "actor",
+            "name": "Movie",
+            "target": {
+              "model": {
+                "name": "Movies",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
               {
-                "fieldName": "movie_id"
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "movie",
+            "name": "Actors",
+            "target": {
+              "model": {
+                "name": "Actors",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "movie",
+            "name": "Analytics",
+            "target": {
+              "model": {
+                "name": "MovieAnalytics",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "movie_analytics",
+            "name": "Movie",
+            "target": {
+              "model": {
+                "name": "Movies",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                }
               }
             ]
           }
         }
       ]
     }
-  }
-]
+  ]
+}

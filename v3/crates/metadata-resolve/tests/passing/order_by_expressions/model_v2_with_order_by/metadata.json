@@ -34,17 +34,34 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
-            "name": "MyOrderByExpression",
-            "orderedType": "RowType",
-            "orderableFields": [
-              {
-                "fieldName": "test",
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
                 "enableOrderByDirections": {
                   "enableAll": true
                 }
               }
-            ],
-            "orderableRelationships": [],
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "MyOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "RowType",
+                "orderableFields": [
+                  {
+                    "fieldName": "test",
+                    "orderByExpression": "StringOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
             "graphql": {
               "expressionTypeName": "mycollection_order_by"
             },

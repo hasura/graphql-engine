@@ -1,7 +1,9 @@
 mod json_ext;
 
+use indexmap::IndexMap;
 pub use json_ext::ValueExt;
 use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
+use serde_json as json;
 use std::{collections::HashMap, hash::Hash};
 
 /// HashMapWithJsonKey serializes the `key<K>` as a String
@@ -49,6 +51,35 @@ impl<'de, K: DeserializeOwned + Hash + Eq + Serialize, V: Deserialize<'de>> Dese
         }
         Ok(HashMapWithJsonKey(result))
     }
+}
+
+// These two functions are workarounds for the performance issue documented in ENG-1073
+// implemented in f709e4f8a. Marked inline so we don't have to re-check performance
+// after factoring these out. Ideally these will go away when we have a more suitable json library
+
+/// More efficient `to_value`, for our ENG-1073 performance workaround.
+#[inline]
+pub fn alias_map_to_value<K>(index_map: IndexMap<K, json::Value>) -> json::Value
+where
+    K: ToString + Eq + Hash,
+{
+    let mut json_object = json::Map::with_capacity(index_map.len());
+    for (alias, value) in index_map {
+        let key: String = alias.to_string();
+        json_object.insert(key, value);
+    }
+    json::Value::Object(json_object)
+}
+
+/// More efficient `to_value`, for our ENG-1073 performance workaround.
+#[inline]
+pub fn vec_alias_map_to_value<K>(index_maps: Vec<IndexMap<K, json::Value>>) -> json::Value
+where
+    K: ToString + Eq + Hash,
+{
+    let json_array: Vec<json::Value> = index_maps.into_iter().map(alias_map_to_value).collect();
+
+    json::Value::Array(json_array)
 }
 
 #[cfg(test)]

@@ -19,7 +19,7 @@ pub fn get_ndc_column_for_comparison<F: Fn() -> String>(
     field: &FieldName,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     comparison_location: F,
 ) -> Result<NdcColumnForComparison, ModelsError> {

@@ -61,6 +61,7 @@ import { Badge } from './../../new-components/Badge';
 import { ConsoleDevTools } from '../../utils/console-dev-tools/ConsoleDevTools';
 import { isFeatureFlagEnabled } from '../../features/FeatureFlags/hooks/useFeatureFlags';
 import { availableFeatureFlagIds } from '../../features/FeatureFlags';
+import { DDNBanner } from './DDNBanner';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -488,6 +489,7 @@ class Main extends React.Component {
               </div>
             </div>
           </div>
+          {globals.consoleMode === 'pro-lite' && <DDNBanner />}
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>

@@ -1,0 +1,14 @@
+query MyQuery {
+  InstitutionMany {
+    id
+    staff {
+      first_name
+      last_name
+      favourite_movie_id
+      favourite_movie {
+        movie_id
+        title
+      }
+    }
+  }
+}

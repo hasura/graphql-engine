@@ -295,7 +295,7 @@
                       "field": "author_id",
                       "operator": "_eq",
                       "value": {
-                        "literal": "-1"
+                        "literal": -1
                       }
                     }
                   }

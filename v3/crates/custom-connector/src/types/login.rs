@@ -52,6 +52,7 @@ pub(crate) fn definition_login_response() -> ndc_models::ObjectType {
                 },
             ),
         ]),
+        foreign_keys: BTreeMap::new(),
     }
 }
 
@@ -80,6 +81,7 @@ pub(crate) fn definition_session_response() -> ndc_models::ObjectType {
                 },
             ),
         ]),
+        foreign_keys: BTreeMap::new(),
     }
 }
 
@@ -108,5 +110,6 @@ pub(crate) fn definition_session_info() -> ndc_models::ObjectType {
                 },
             ),
         ]),
+        foreign_keys: BTreeMap::new(),
     }
 }

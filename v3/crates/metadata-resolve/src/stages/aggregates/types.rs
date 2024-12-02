@@ -17,6 +17,7 @@ use crate::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 pub struct AggregateExpressionsOutput {
     pub aggregate_expressions: BTreeMap<Qualified<AggregateExpressionName>, AggregateExpression>,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<AggregateExpressionIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -26,12 +27,16 @@ pub struct AggregateExpression {
     pub count: AggregateCountDefinition,
     pub count_distinct: AggregateCountDefinition,
     pub graphql: Option<AggregateExpressionGraphqlConfig>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregateCountDefinition {
     pub enable: bool,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 
@@ -45,6 +50,8 @@ pub struct AggregateOperand {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregatableFieldInfo {
     pub field_name: FieldName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub aggregate_expression: Qualified<AggregateExpressionName>,
 }
@@ -52,6 +59,8 @@ pub struct AggregatableFieldInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregationFunctionInfo {
     pub name: AggregationFunctionName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub return_type: QualifiedTypeReference,
     pub data_connector_functions: Vec<DataConnectorAggregationFunctionInfo>,
@@ -72,17 +81,20 @@ pub struct AggregateExpressionGraphqlConfig {
     pub select_output_type_name: ast::TypeName,
 }
 
+#[derive(Debug, thiserror::Error, PartialEq, Eq, Clone)]
+pub enum AggregateExpressionIssue {
+    #[error("the aggregate expression {name} defines a graphql section but it will not appear in the GraphQL API unless {config_name} is also configured in the GraphqlConfig")]
+    ConfigMissingFromGraphQlConfig {
+        name: Qualified<AggregateExpressionName>,
+        config_name: String,
+    },
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum AggregateExpressionError {
     #[error("the following aggregate expression is defined more than once: {name}")]
     DuplicateAggregateExpressionDefinition {
         name: Qualified<AggregateExpressionName>,
-    },
-
-    #[error("the aggregate expression {name} defines a graphql section and so {config_name} must be set in the GraphqlConfig")]
-    ConfigMissingFromGraphQlConfig {
-        name: Qualified<AggregateExpressionName>,
-        config_name: String,
     },
 
     #[error("the name used by {config_name} from the GraphqlConfig conflicts with the aggregatable field name {aggregatable_field_name} in the aggregate expression {name}")]
@@ -113,6 +125,13 @@ pub enum AggregateExpressionError {
 
     #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' that does not exist on its operand type {operand_type}")]
     AggregateOperandObjectFieldNotFound {
+        name: Qualified<AggregateExpressionName>,
+        operand_type: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+
+    #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' (from the operand type {operand_type}) that has field arguments. Fields with arguments cannot be aggregated")]
+    AggregateOperandObjectFieldHasArguments {
         name: Qualified<AggregateExpressionName>,
         operand_type: Qualified<CustomTypeName>,
         field_name: FieldName,

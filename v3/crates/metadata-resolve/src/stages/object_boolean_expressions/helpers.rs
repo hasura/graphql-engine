@@ -14,12 +14,12 @@ use open_dds::identifier::SubgraphName;
 pub fn resolve_ndc_type(
     data_connector: &Qualified<DataConnectorName>,
     source_type: &ndc_models::Type,
-    scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    scalars: &data_connector_scalar_types::DataConnectorScalars,
     subgraph: &SubgraphName,
 ) -> Result<QualifiedTypeReference, scalar_boolean_expressions::ScalarBooleanExpressionTypeError> {
     match source_type {
         ndc_models::Type::Named { name } => {
-            let scalar_type = scalars.0.get(name.as_str()).ok_or(
+            let scalar_type = scalars.by_ndc_type.get(name.as_str()).ok_or(
                 scalar_boolean_expressions::ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
                     data_connector: data_connector.clone(),
                     scalar_type: DataConnectorScalarType::from(name.as_str()),

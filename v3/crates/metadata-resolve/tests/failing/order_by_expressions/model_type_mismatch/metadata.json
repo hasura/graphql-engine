@@ -61,14 +61,18 @@
           "version": "v1",
           "definition": {
             "name": "MyOrderByExpression",
-            "orderedType": "RowType",
-            "orderableFields": [
-              {
-                "fieldName": "test",
-                "orderByExpression": "FooOrderByExpression"
+            "operand": {
+              "object": {
+                "orderedType": "RowType",
+                "orderableFields": [
+                  {
+                    "fieldName": "test",
+                    "orderByExpression": "FooOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "mycollection_order_by"
             },
@@ -79,17 +83,34 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
-            "name": "FooOrderByExpression",
-            "orderedType": "Foo",
-            "orderableFields": [
-              {
-                "fieldName": "foo",
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
                 "enableOrderByDirections": {
                   "enableAll": true
                 }
               }
-            ],
-            "orderableRelationships": [],
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "FooOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "Foo",
+                "orderableFields": [
+                  {
+                    "fieldName": "foo",
+                    "orderByExpression": "StringOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
             "graphql": {
               "expressionTypeName": "foo_order_by"
             },

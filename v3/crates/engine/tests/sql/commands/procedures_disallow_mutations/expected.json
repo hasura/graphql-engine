@@ -1,3 +1,12 @@
 {
-  "error": "error in data fusion: External error: Mutations are requested to be disallowed as part of the request"
+  "error": "error in data fusion: External error: Mutations are requested to be disallowed as part of the request",
+  "detail": {
+    "subgraph": "default",
+    "commandName": "uppercase_actor_name_by_id",
+    "arguments": {
+      "id": {
+        "literal": 1
+      }
+    }
+  }
 }

@@ -1,0 +1,351 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/include/Track.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_Track",
+                    id: "1",
+                    attributes: {
+                        "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                        "Name": String("For Those About To Rock (We Salute You)"),
+                        "TrackId": Number(1),
+                    },
+                    relationships: Some(
+                        {
+                            "Album": Relationship {
+                                data: Some(
+                                    Single(
+                                        ResourceIdentifier {
+                                            _type: "default_Album",
+                                            id: "2",
+                                        },
+                                    ),
+                                ),
+                                links: None,
+                            },
+                            "InvoiceLines": Relationship {
+                                data: Some(
+                                    Multiple(
+                                        [
+                                            ResourceIdentifier {
+                                                _type: "default_InvoiceLine",
+                                                id: "3",
+                                            },
+                                        ],
+                                    ),
+                                ),
+                                links: None,
+                            },
+                        },
+                    ),
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Track",
+                    id: "4",
+                    attributes: {
+                        "Composer": Null,
+                        "Name": String("Balls to the Wall"),
+                        "TrackId": Number(2),
+                    },
+                    relationships: Some(
+                        {
+                            "Album": Relationship {
+                                data: Some(
+                                    Single(
+                                        ResourceIdentifier {
+                                            _type: "default_Album",
+                                            id: "5",
+                                        },
+                                    ),
+                                ),
+                                links: None,
+                            },
+                            "InvoiceLines": Relationship {
+                                data: Some(
+                                    Multiple(
+                                        [
+                                            ResourceIdentifier {
+                                                _type: "default_InvoiceLine",
+                                                id: "6",
+                                            },
+                                            ResourceIdentifier {
+                                                _type: "default_InvoiceLine",
+                                                id: "7",
+                                            },
+                                        ],
+                                    ),
+                                ),
+                                links: None,
+                            },
+                        },
+                    ),
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Track",
+                    id: "8",
+                    attributes: {
+                        "Composer": String("F. Baltes, S. Kaufman, U. Dirkscneider & W. Hoffman"),
+                        "Name": String("Fast As a Shark"),
+                        "TrackId": Number(3),
+                    },
+                    relationships: Some(
+                        {
+                            "Album": Relationship {
+                                data: Some(
+                                    Single(
+                                        ResourceIdentifier {
+                                            _type: "default_Album",
+                                            id: "9",
+                                        },
+                                    ),
+                                ),
+                                links: None,
+                            },
+                            "InvoiceLines": Relationship {
+                                data: Some(
+                                    Multiple(
+                                        [
+                                            ResourceIdentifier {
+                                                _type: "default_InvoiceLine",
+                                                id: "10",
+                                            },
+                                        ],
+                                    ),
+                                ),
+                                links: None,
+                            },
+                        },
+                    ),
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Track",
+                    id: "11",
+                    attributes: {
+                        "Composer": String("F. Baltes, R.A. Smith-Diesel, S. Kaufman, U. Dirkscneider & W. Hoffman"),
+                        "Name": String("Restless and Wild"),
+                        "TrackId": Number(4),
+                    },
+                    relationships: Some(
+                        {
+                            "Album": Relationship {
+                                data: Some(
+                                    Single(
+                                        ResourceIdentifier {
+                                            _type: "default_Album",
+                                            id: "12",
+                                        },
+                                    ),
+                                ),
+                                links: None,
+                            },
+                            "InvoiceLines": Relationship {
+                                data: Some(
+                                    Multiple(
+                                        [
+                                            ResourceIdentifier {
+                                                _type: "default_InvoiceLine",
+                                                id: "13",
+                                            },
+                                        ],
+                                    ),
+                                ),
+                                links: None,
+                            },
+                        },
+                    ),
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Track",
+                    id: "14",
+                    attributes: {
+                        "Composer": String("Deaffy & R.A. Smith-Diesel"),
+                        "Name": String("Princess of the Dawn"),
+                        "TrackId": Number(5),
+                    },
+                    relationships: Some(
+                        {
+                            "Album": Relationship {
+                                data: Some(
+                                    Single(
+                                        ResourceIdentifier {
+                                            _type: "default_Album",
+                                            id: "15",
+                                        },
+                                    ),
+                                ),
+                                links: None,
+                            },
+                            "InvoiceLines": Relationship {
+                                data: Some(
+                                    Multiple(
+                                        [
+                                            ResourceIdentifier {
+                                                _type: "default_InvoiceLine",
+                                                id: "16",
+                                            },
+                                        ],
+                                    ),
+                                ),
+                                links: None,
+                            },
+                        },
+                    ),
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: Some(
+        [
+            Resource {
+                _type: "default_Album",
+                id: "2",
+                attributes: {
+                    "AlbumId": Number(1),
+                    "ArtistId": Number(1),
+                    "Title": String("For Those About To Rock We Salute You"),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_InvoiceLine",
+                id: "3",
+                attributes: {
+                    "InvoiceId": Number(108),
+                    "Quantity": Number(1),
+                    "UnitPrice": Number(0.99),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Album",
+                id: "5",
+                attributes: {
+                    "AlbumId": Number(2),
+                    "ArtistId": Number(2),
+                    "Title": String("Balls to the Wall"),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_InvoiceLine",
+                id: "6",
+                attributes: {
+                    "InvoiceId": Number(1),
+                    "Quantity": Number(1),
+                    "UnitPrice": Number(0.99),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_InvoiceLine",
+                id: "7",
+                attributes: {
+                    "InvoiceId": Number(214),
+                    "Quantity": Number(1),
+                    "UnitPrice": Number(0.99),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Album",
+                id: "9",
+                attributes: {
+                    "AlbumId": Number(3),
+                    "ArtistId": Number(2),
+                    "Title": String("Restless and Wild"),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_InvoiceLine",
+                id: "10",
+                attributes: {
+                    "InvoiceId": Number(319),
+                    "Quantity": Number(1),
+                    "UnitPrice": Number(0.99),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Album",
+                id: "12",
+                attributes: {
+                    "AlbumId": Number(3),
+                    "ArtistId": Number(2),
+                    "Title": String("Restless and Wild"),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_InvoiceLine",
+                id: "13",
+                attributes: {
+                    "InvoiceId": Number(1),
+                    "Quantity": Number(1),
+                    "UnitPrice": Number(0.99),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Album",
+                id: "15",
+                attributes: {
+                    "AlbumId": Number(3),
+                    "ArtistId": Number(2),
+                    "Title": String("Restless and Wild"),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_InvoiceLine",
+                id: "16",
+                attributes: {
+                    "InvoiceId": Number(108),
+                    "Quantity": Number(1),
+                    "UnitPrice": Number(0.99),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+        ],
+    ),
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

@@ -241,8 +241,7 @@
     "Qualified_for_ModelName": {
       "type": "object",
       "required": [
-        "name",
-        "subgraph"
+        "name"
       ],
       "properties": {
         "subgraph": {
@@ -267,8 +266,7 @@
     "Qualified_for_CommandName": {
       "type": "object",
       "required": [
-        "name",
-        "subgraph"
+        "name"
       ],
       "properties": {
         "subgraph": {
@@ -321,8 +319,7 @@
     "Qualified_for_CustomTypeName": {
       "type": "object",
       "required": [
-        "name",
-        "subgraph"
+        "name"
       ],
       "properties": {
         "subgraph": {
@@ -456,15 +453,26 @@
             "model": {
               "type": "object",
               "required": [
+                "mapping",
                 "model_name",
+                "opendd_type",
                 "relationship_type"
               ],
               "properties": {
                 "model_name": {
                   "$ref": "#/definitions/Qualified_for_ModelName"
                 },
+                "opendd_type": {
+                  "$ref": "#/definitions/Qualified_for_CustomTypeName"
+                },
                 "relationship_type": {
                   "$ref": "#/definitions/RelationshipType"
+                },
+                "mapping": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/RelationshipModelMapping"
+                  }
                 }
               }
             }
@@ -480,11 +488,22 @@
             "command": {
               "type": "object",
               "required": [
-                "command_name"
+                "command_name",
+                "mapping",
+                "opendd_type"
               ],
               "properties": {
                 "command_name": {
                   "$ref": "#/definitions/Qualified_for_CommandName"
+                },
+                "opendd_type": {
+                  "$ref": "#/definitions/UnTaggedQualifiedTypeName"
+                },
+                "mapping": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/RelationshipCommandMapping"
+                  }
                 }
               }
             }
@@ -512,6 +531,65 @@
           ]
         }
       ]
+    },
+    "RelationshipModelMapping": {
+      "type": "object",
+      "required": [
+        "source_field",
+        "target_field"
+      ],
+      "properties": {
+        "source_field": {
+          "$ref": "#/definitions/FieldName"
+        },
+        "target_field": {
+          "$ref": "#/definitions/FieldName"
+        }
+      }
+    },
+    "UnTaggedQualifiedTypeName": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/InbuiltType"
+        },
+        {
+          "$ref": "#/definitions/Qualified_for_CustomTypeName"
+        }
+      ]
+    },
+    "InbuiltType": {
+      "title": "InbuiltType",
+      "description": "An inbuilt primitive OpenDD type.",
+      "type": "string",
+      "enum": [
+        "ID",
+        "Int",
+        "Float",
+        "Boolean",
+        "String"
+      ]
+    },
+    "RelationshipCommandMapping": {
+      "type": "object",
+      "required": [
+        "source_field",
+        "target_argument"
+      ],
+      "properties": {
+        "source_field": {
+          "$ref": "#/definitions/FieldName"
+        },
+        "target_argument": {
+          "$ref": "#/definitions/ArgumentName"
+        }
+      }
+    },
+    "ArgumentName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
+      "title": "ArgumentName",
+      "description": "The name of an argument.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "ArgumentPresetsUsage": {
       "type": "object",

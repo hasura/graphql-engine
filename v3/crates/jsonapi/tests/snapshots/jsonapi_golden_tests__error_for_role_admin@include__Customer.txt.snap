@@ -1,0 +1,12 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/failing/include/Customer.txt
+---
+Err(
+    PlanError(
+        Permission(
+            "role admin does not have select permission for model Employee (in subgraph default)",
+        ),
+    ),
+)

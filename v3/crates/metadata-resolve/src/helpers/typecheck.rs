@@ -18,7 +18,7 @@ pub enum TypecheckError {
     NullInNonNullableColumn,
 }
 
-/// These are run at schema resolve time, so that we can warn the user against
+/// These are run at metadata resolve time, so that we can warn the user against
 /// using the wrong types in their engine metadata.
 /// If the values are passed in a session variable then there is nothing we can do at this point
 /// and we must rely on run time casts

@@ -46,7 +46,8 @@ X-Hasura-Role: admin
 {
     "type": "set_metrics_config",
     "args": {
-        "analyze_query_variables": false
+        "analyze_query_variables": false,
+        "analyze_response_body": false
     }
 }
 ```
@@ -55,7 +56,8 @@ X-Hasura-Role: admin
 
 | Key                     | Required | Schema  | Description                                                                                         |
 | ----------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------- |
-| analyze_query_variables | false    | boolean | Enables logging of the values of the query variables provided for each request. Default is `false`. |
+| analyze_query_variables | true     | boolean | Enables logging of the values of the query variables provided for each request. Default is `false`. |
+| analyze_response_body   | true     | boolean | Enables logging of the values of the response body for each request. Default is `false`.            |
 
 Please see the corresponding
 [feature documentation for the usage of these configurations](/observability/cloud-monitoring/operations.mdx#capture-query-variables).
@@ -144,7 +146,7 @@ X-Hasura-Role: admin
 | Key                  | Required | Schema                                                                                             | Description                                                                                                                                                                            |
 | -------------------- | -------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | status               | false    | `String`                                                                                           | Toggle to enable or disable the export. Allowed values are `enabled` and `disabled`. Default is `disabled` (If status is not explicitely passed, then the configuration gets disabled) |
-| data_types           | false    | `[String]`                                                                                         | List of the types of observability data points to be exported. Allowed types: `traces`, `metrics` and `logs` only                                                                              |
+| data_types           | false    | `[String]`                                                                                         | List of the types of observability data points to be exported. Allowed types: `traces`, `metrics` and `logs` only                                                                      |
 | exporter_otlp        | false    | [OTLPExporter](/api-reference/syntax-defs.mdx#otlpexporter). This is required if status is enabled | OpenTelemetry compliant receiver configuration                                                                                                                                         |
 | batch_span_processor | false    | [OpenTelemetryBatchSpanProcessor](/api-reference/syntax-defs.mdx#opentelemetrybatchspanprocessor)  | OpenTelemetry batch export configuration                                                                                                                                               |
 

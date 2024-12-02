@@ -142,6 +142,7 @@ createWSServerEnv appStateRef = do
       appEnvServerMetrics
       appEnvPrometheusMetrics
       appEnvTraceSamplingPolicy
+      appEnvLoggingSettings
 
 mkWSActions :: L.Logger L.Hasura -> WSSubProtocol -> WS.WSActions WSConnData
 mkWSActions logger subProtocol =

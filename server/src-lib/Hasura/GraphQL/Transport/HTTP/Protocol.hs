@@ -208,7 +208,7 @@ getOpNameFromParsedReq reqParsed =
   where
     execDefs = unGQLExecDoc $ _grQuery reqParsed
 
-encodeGQErr :: Bool -> QErr -> J.Encoding
+encodeGQErr :: IncludeInternalErrors -> QErr -> J.Encoding
 encodeGQErr includeInternal qErr =
   J.pairs (J.pair "errors" $ J.list id [encodeGQLErr includeInternal qErr])
 

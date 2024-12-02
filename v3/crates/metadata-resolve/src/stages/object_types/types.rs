@@ -5,6 +5,7 @@ use open_dds::arguments::ArgumentName;
 use open_dds::models::ModelName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, FieldName};
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
@@ -16,16 +17,13 @@ use open_dds::data_connector::{
     DataConnectorColumnName, DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName,
 };
 
+#[serde_as]
 /// A mapping from a data connector to their objects, which contain field types.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct DataConnectorTypeMappingsForObject {
+    #[serde_as(as = "Vec<(_, _)>")]
     mappings:
         BTreeMap<Qualified<DataConnectorName>, BTreeMap<DataConnectorObjectType, TypeMapping>>,
-    // Possible scalar representations for a field that are collected across all data connectors
-    // and across all data connector type mappings. Ideally, this should be a set of one and we
-    // should throw an error but to not break things, we'll only collect all the representations.
-    // This is currently used only in the SQL layer
-    scalar_representations: BTreeMap<FieldName, BTreeSet<ndc_models::TypeRepresentation>>,
 }
 
 impl Default for DataConnectorTypeMappingsForObject {
@@ -38,13 +36,7 @@ impl DataConnectorTypeMappingsForObject {
     pub fn new() -> Self {
         Self {
             mappings: BTreeMap::new(),
-            scalar_representations: BTreeMap::new(),
         }
-    }
-    pub fn scalar_representations(
-        &self,
-    ) -> &BTreeMap<FieldName, BTreeSet<ndc_models::TypeRepresentation>> {
-        &self.scalar_representations
     }
     pub fn get<TObjectTypeName>(
         &self,
@@ -68,20 +60,6 @@ impl DataConnectorTypeMappingsForObject {
         data_connector_object_type: &DataConnectorObjectType,
         type_mapping: TypeMapping,
     ) -> Result<(), ObjectTypesError> {
-        let TypeMapping::Object {
-            ndc_object_type_name: _,
-            field_mappings,
-        } = &type_mapping;
-
-        for (field_name, field_mapping) in field_mappings {
-            if let Some(type_representation) = &field_mapping.column_type_representation {
-                self.scalar_representations
-                    .entry(field_name.clone())
-                    .or_default()
-                    .insert(type_representation.clone());
-            }
-        }
-
         if self
             .mappings
             .entry(data_connector_name.clone())
@@ -146,6 +124,8 @@ pub struct ObjectTypeRepresentation {
     pub apollo_federation_config: Option<ResolvedObjectApolloFederationConfig>,
     pub graphql_output_type_name: Option<ast::TypeName>,
     pub graphql_input_type_name: Option<ast::TypeName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     // TODO: add graphql_output_type_kind if we support creating interfaces.
 }
@@ -158,14 +138,22 @@ pub struct ObjectTypeWithTypeMappings {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldDefinition {
     pub field_type: QualifiedTypeReference,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecated: Option<Deprecated>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub field_arguments: IndexMap<ArgumentName, FieldArgumentInfo>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldArgumentInfo {
     pub argument_type: QualifiedTypeReference,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 
@@ -184,8 +172,12 @@ pub struct ResolvedApolloFederationObjectKey {
 pub struct FieldMapping {
     pub column: DataConnectorColumnName,
     pub column_type: ndc_models::Type,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub column_type_representation: Option<ndc_models::TypeRepresentation>,
     pub comparison_operators: Option<ComparisonOperators>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
 }
 
@@ -193,6 +185,8 @@ pub struct FieldMapping {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ComparisonOperators {
     pub equality_operators: Vec<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub in_operators: Vec<DataConnectorOperatorName>,
 
     // TODO: for now, put other operators here. Later, once we have NDC

@@ -2290,7 +2290,8 @@
               "selectMany": {
                 "queryRootField": "ArticleMany",
                 "subscription": {
-                  "rootField": "ArticleMany"
+                  "rootField": "ArticleMany",
+                  "pollingIntervalMs": 3000
                 }
               },
               "orderByExpressionType": "Article_Order_By"
@@ -2306,7 +2307,8 @@
               {
                 "role": "admin",
                 "select": {
-                  "filter": null
+                  "filter": null,
+                  "allowSubscriptions": true
                 }
               },
               {
@@ -2408,7 +2410,8 @@
               {
                 "role": "admin",
                 "select": {
-                  "filter": null
+                  "filter": null,
+                  "allowSubscriptions": true
                 }
               }
             ]
@@ -4276,7 +4279,10 @@
                 }
               ],
               "selectMany": {
-                "queryRootField": "Track"
+                "queryRootField": "Track",
+                "subscription": {
+                  "rootField": "Track"
+                }
               },
               "orderByExpressionType": "TrackOrderBy"
             },
@@ -4295,7 +4301,8 @@
               {
                 "role": "admin",
                 "select": {
-                  "filter": null
+                  "filter": null,
+                  "allowSubscriptions": true
                 }
               }
             ]
@@ -5281,6 +5288,9 @@
           "definition": {
             "sourceType": "author",
             "name": "Articles",
+            "deprecated": {
+              "reason": "No more articles anymore"
+            },
             "target": {
               "model": {
                 "name": "Articles",

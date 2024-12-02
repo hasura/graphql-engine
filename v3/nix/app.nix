@@ -15,6 +15,8 @@ let
   buildArgs = {
     inherit pname;
 
+    strictDeps = true;
+
     src =
       let
         isGraphqlFile = path: _type: builtins.match ".*graphql" path != null;
@@ -42,14 +44,46 @@ let
     ];
   };
 
-  # only build the binary we care about
-  cargoExtraArgs = "--package ${packageName}";
+  # helpers function for filtering files for a build to increase cache hits
+  filterSrcWithRegexes = regexes: src:
+    let
+      basePath = toString src + "/";
+    in
+    lib.cleanSourceWith {
+      filter = (path: type:
+        let
+          relPath = lib.removePrefix basePath (toString path);
+          includePath =
+            (type == "directory") ||
+            lib.any
+              (re: builtins.match re relPath != null)
+              regexes;
+        in
+        # uncomment to debug:
+          # builtins.trace "${relPath}: ${lib.boolToString includePath}"
+        includePath
+      );
+      inherit src;
+    };
+
+  # the default `craneLib.buildDepsOnly` behaviour includes workspace crates (ie
+  # `metadata-resolve`) which mean nearly every change invalidates it and it's
+  # all built again. Instead, we use the filter to only build external crates,
+  # which are less likely to change.
+  filterWorkspaceDepsBuildFiles = src: filterSrcWithRegexes [
+    "Cargo.lock"
+    "Cargo.toml"
+    ".cargo"
+    ".cargo/.*"
+    ".*/Cargo.toml"
+  ]
+    src;
 
   # Build the dependencies first.
   cargoArtifacts = craneLib.buildDepsOnly (buildArgs //
     {
-      # without this we'll build deps for the entire workspace every time
-      buildPhaseCargoCommand = "cargo build --profile $CARGO_PROFILE --package ${packageName}";
+      src = filterWorkspaceDepsBuildFiles ../.;
+      buildPhaseCargoCommand = "cargo build --profile $CARGO_PROFILE --package ${packageName} --locked";
       doCheck = false;
     }
 
@@ -58,7 +92,8 @@ in
 # Then build the crate.
 craneLib.buildPackage
   (buildArgs // {
-    inherit cargoArtifacts cargoExtraArgs;
+    inherit cargoArtifacts;
+    cargoExtraArgs = "--package ${packageName} --locked";
     doCheck = false;
     RELEASE_VERSION = version;
   })

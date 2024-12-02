@@ -17,6 +17,7 @@ pub struct GlobalGraphqlConfig {
     pub order_by_input: Option<OrderByInputGraphqlConfig>,
     pub enable_apollo_federation_fields: bool,
     pub bypass_relation_comparisons_ndc_capability: bool,
+    pub propagate_boolean_expression_deprecation_status: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

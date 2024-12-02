@@ -38,7 +38,7 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Schema.Options as Options
 import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Init.Config (ResponseInternalErrorsConfig (..))
+import Hasura.Server.Init.Config (ResponseInternalErrorsConfig (..), shouldIncludeInternal)
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, RequestId (..), TraceQueryStatus)
 import Hasura.Services.Network
@@ -167,6 +167,7 @@ convertQuerySelSet
                         s
                         (ActionExecContext reqHeaders (_uiSession userInfo))
                         (Just (GH._grQuery gqlUnparsed))
+                        (shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig)
                         headerPrecedence,
                     _aaeName s,
                     _aaeForwardClientHeaders s

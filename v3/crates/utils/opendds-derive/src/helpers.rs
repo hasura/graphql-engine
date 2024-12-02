@@ -101,11 +101,7 @@ pub fn apply_schema_metadata(
         .map(|s| quote! { metadata.description = Some(#s.to_owned()); })
         .unwrap_or_default();
 
-    let examples = json_schema_metadata
-        .example
-        .as_ref()
-        .map(|eg| quote! { metadata.examples = [#eg()].to_vec(); })
-        .unwrap_or_default();
+    let examples = set_metadata_examples(&json_schema_metadata.examples);
 
     quote! {
         let schema = {
@@ -118,6 +114,15 @@ pub fn apply_schema_metadata(
         #description
         #examples
         schemars::schema::Schema::Object(schema_object)
+    }
+}
+
+pub fn set_metadata_examples(example_fns: &[syn::Path]) -> proc_macro2::TokenStream {
+    if example_fns.is_empty() {
+        return quote! {};
+    }
+    quote! {
+        metadata.examples = vec![#(#example_fns()),*];
     }
 }
 

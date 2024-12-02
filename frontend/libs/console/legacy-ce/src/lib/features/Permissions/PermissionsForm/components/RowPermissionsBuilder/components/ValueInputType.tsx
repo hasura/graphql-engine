@@ -70,6 +70,7 @@ export const ValueInputType = ({
   return (
     <input
       data-testid={componentLevelId}
+      size={20}
       disabled={isLoading || (comparatorName === '_where' && isEmpty(table))}
       className={`border border-gray-200 rounded-md p-2 !mr-4 ${
         isLoading ? 'bg-gray-100' : ''

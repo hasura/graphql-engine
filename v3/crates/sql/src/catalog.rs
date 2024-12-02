@@ -1,5 +1,7 @@
 use std::{any::Any, sync::Arc};
 
+use crate::catalog::subgraph::Subgraph;
+use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
@@ -24,21 +26,51 @@ pub mod mem_table;
 pub mod model;
 pub mod subgraph;
 pub mod types;
-/// The context in which to compile and execute SQL queries.
+
+/// [`Catalog`] but parameterized, so that `subgraph` can be `SubgraphSerializable` for
+/// serialization.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct Catalog {
-    pub(crate) metadata: Arc<resolved::Metadata>,
-    pub(crate) subgraphs: IndexMap<String, Arc<subgraph::Subgraph>>,
+pub struct CatalogSer<SG> {
+    pub(crate) subgraphs: IndexMap<String, SG>,
     pub(crate) table_valued_functions: IndexMap<String, Arc<command::Command>>,
     pub(crate) introspection: Arc<introspection::IntrospectionSchemaProvider>,
     pub(crate) default_schema: Option<String>,
 }
 
+/// The context in which to compile and execute SQL queries.
+pub type Catalog = CatalogSer<subgraph::Subgraph>;
+
+pub type CatalogSerializable = CatalogSer<subgraph::SubgraphSerializable>;
+
+impl CatalogSerializable {
+    pub fn from_serializable(self, metadata: &Arc<resolved::Metadata>) -> Catalog {
+        let subgraphs = self
+            .subgraphs
+            .into_iter()
+            .map(|(name, tables)| {
+                (
+                    name,
+                    Subgraph {
+                        metadata: metadata.clone(),
+                        tables,
+                    },
+                )
+            })
+            .collect();
+
+        CatalogSer {
+            subgraphs,
+            table_valued_functions: self.table_valued_functions,
+            introspection: self.introspection,
+            default_schema: self.default_schema,
+        }
+    }
+}
+
 impl Catalog {
     /// Create a no-op Catalog, used when `sql` layer is disabled
-    pub fn empty_from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
+    pub fn empty() -> Self {
         Catalog {
-            metadata,
             subgraphs: IndexMap::default(),
             table_valued_functions: IndexMap::default(),
             introspection: Arc::new(introspection::IntrospectionSchemaProvider::new(
@@ -47,24 +79,47 @@ impl Catalog {
             default_schema: None,
         }
     }
+
+    /// prepare a Catalog for serializing by stripping redundant artifacts
+    pub fn to_serializable(self) -> CatalogSer<subgraph::SubgraphSerializable> {
+        let serialized_subgraphs = self
+            .subgraphs
+            .into_iter()
+            .map(|(name, subgraph)| (name, subgraph.tables))
+            .collect();
+
+        CatalogSer {
+            subgraphs: serialized_subgraphs,
+            table_valued_functions: self.table_valued_functions,
+            introspection: self.introspection,
+            default_schema: self.default_schema,
+        }
+    }
+
     /// Derive a SQL Context from resolved Open DDS metadata.
-    pub fn from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
-        let type_registry = TypeRegistry::build_type_registry(&metadata);
+    pub fn from_metadata(metadata: &Arc<resolved::Metadata>) -> Self {
+        let type_registry = TypeRegistry::build_type_registry(metadata);
         // process models
         let mut subgraphs = IndexMap::new();
+        let mut unsupported_models = IndexMap::new();
         for (model_name, model) in &metadata.models {
-            if let Some(table) = model::Model::from_resolved_model(&type_registry, model) {
-                let schema_name = &model_name.subgraph;
-                let table_name = &model_name.name;
-                let subgraph = subgraphs.entry(schema_name.to_string()).or_insert_with(|| {
-                    subgraph::Subgraph {
-                        metadata: metadata.clone(),
-                        tables: IndexMap::new(),
-                    }
-                });
-                subgraph
-                    .tables
-                    .insert(table_name.to_string(), Arc::new(table));
+            match model::Model::from_resolved_model(&type_registry, model) {
+                Ok(table) => {
+                    let schema_name = &model_name.subgraph;
+                    let table_name = &model_name.name;
+                    let subgraph = subgraphs.entry(schema_name.to_string()).or_insert_with(|| {
+                        subgraph::Subgraph {
+                            metadata: metadata.clone(),
+                            tables: IndexMap::new(),
+                        }
+                    });
+                    subgraph
+                        .tables
+                        .insert(table_name.to_string(), Arc::new(table));
+                }
+                Err(unsupported_model) => {
+                    unsupported_models.insert(model_name.clone(), unsupported_model);
+                }
             }
         }
 
@@ -72,35 +127,39 @@ impl Catalog {
         let default_schema = type_registry.default_schema().map(ToString::to_string);
         // process commands
         let mut table_valued_functions = IndexMap::new();
+        let mut unsupported_commands = IndexMap::new();
         for (command_name, command) in &metadata.commands {
-            if let Some(command) = command::Command::from_resolved_command(&type_registry, command)
-            {
-                let schema_name = command_name.subgraph.to_string();
-                let command_name = &command_name.name;
-                let table_valued_function_name = if Some(&schema_name) == default_schema.as_ref() {
-                    format!("{command_name}")
-                } else {
-                    format!("{schema_name}_{command_name}")
-                };
-                table_valued_functions.insert(table_valued_function_name, Arc::new(command));
+            match command::Command::from_resolved_command(&type_registry, command) {
+                Ok(command) => {
+                    let schema_name = command_name.subgraph.to_string();
+                    let command_name = &command_name.name;
+                    let table_valued_function_name =
+                        if Some(&schema_name) == default_schema.as_ref() {
+                            format!("{command_name}")
+                        } else {
+                            format!("{schema_name}_{command_name}")
+                        };
+                    table_valued_functions.insert(table_valued_function_name, Arc::new(command));
+                }
+                Err(unsupported_command) => {
+                    unsupported_commands.insert(command_name.clone(), unsupported_command);
+                }
             }
         }
 
         let introspection = introspection::IntrospectionSchemaProvider::new(
             &introspection::Introspection::from_metadata(
-                &metadata,
+                metadata,
                 &type_registry,
                 &subgraphs,
                 &table_valued_functions,
+                &unsupported_models,
+                &unsupported_commands,
             ),
         );
 
         Catalog {
-            metadata,
-            subgraphs: subgraphs
-                .into_iter()
-                .map(|(k, v)| (k, Arc::new(v)))
-                .collect(),
+            subgraphs,
             table_valued_functions,
             introspection: Arc::new(introspection),
             default_schema,
@@ -122,7 +181,7 @@ impl datafusion::CatalogProvider for model::WithSession<Catalog> {
     fn schema(&self, name: &str) -> Option<Arc<dyn datafusion::SchemaProvider>> {
         let subgraph_provider = self.value.subgraphs.get(name).cloned().map(|schema| {
             Arc::new(model::WithSession {
-                value: schema,
+                value: schema.into(),
                 session: self.session.clone(),
             }) as Arc<dyn datafusion::SchemaProvider>
         });
@@ -137,9 +196,10 @@ impl datafusion::CatalogProvider for model::WithSession<Catalog> {
 impl Catalog {
     pub fn create_session_context(
         self: Arc<Self>,
+        metadata: Arc<resolved::Metadata>,
         request_headers: &Arc<reqwest::header::HeaderMap>,
         session: &Arc<Session>,
-        http_context: &Arc<execute::HttpContext>,
+        http_context: &Arc<HttpContext>,
     ) -> datafusion::SessionContext {
         let session_config = datafusion::SessionConfig::new()
             .set(
@@ -172,10 +232,10 @@ impl Catalog {
             session_config
         };
         let query_planner = Arc::new(super::execute::planner::OpenDDQueryPlanner {
-            catalog: self.clone(),
             session: session.clone(),
             http_context: http_context.clone(),
             request_headers: request_headers.clone(),
+            metadata,
         });
         let session_state = datafusion::SessionStateBuilder::new()
             .with_config(session_config)

@@ -8,20 +8,23 @@ use open_dds::{
 
 use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, models_graphql,
-    object_boolean_expressions, relationships, scalar_types,
+    object_boolean_expressions, object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
 use std::collections::BTreeMap;
 mod types;
-pub use types::CommandWithPermissions;
+pub use types::{CommandPermission, CommandWithPermissions};
 
 /// resolve command permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -32,7 +35,7 @@ pub fn resolve(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
 ) -> Result<IndexMap<Qualified<CommandName>, CommandWithPermissions>, Error> {
     let mut commands_with_permissions: IndexMap<Qualified<CommandName>, CommandWithPermissions> =
@@ -50,6 +53,7 @@ pub fn resolve(
             .collect();
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: command_permissions,
     } in &metadata_accessor.command_permissions
@@ -63,6 +67,7 @@ pub fn resolve(
             })?;
         if command.permissions.is_empty() {
             command.permissions = command_permission::resolve_command_permissions(
+                &metadata_accessor.flags,
                 &command.command,
                 command_permissions,
                 object_types,

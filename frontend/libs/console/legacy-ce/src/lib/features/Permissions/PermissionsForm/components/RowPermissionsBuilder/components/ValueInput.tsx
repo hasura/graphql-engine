@@ -17,7 +17,7 @@ export const ValueInput = ({ value, path }: { value: any; path: string[] }) => {
   }
 
   return (
-    <>
+    <div className="flex items-center">
       <ValueInputType
         componentLevelId={componentLevelId}
         path={path}
@@ -29,6 +29,6 @@ export const ValueInput = ({ value, path }: { value: any; path: string[] }) => {
         path={path}
         componentLevelId={componentLevelId}
       />
-    </>
+    </div>
   );
 };

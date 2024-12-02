@@ -73,7 +73,7 @@ pub fn initialize_tracing(
             service_version,
         ));
     }
-    let config = opentelemetry_sdk::trace::config()
+    let config = opentelemetry_sdk::trace::Config::default()
         .with_resource(opentelemetry_sdk::Resource::new(resource_entries));
 
     let otlp_exporter = opentelemetry_otlp::SpanExporterBuilder::Tonic(
@@ -128,7 +128,7 @@ impl SpanProcessor for BaggageSpanProcessor {
         Ok(())
     }
 
-    fn shutdown(&mut self) -> opentelemetry::trace::TraceResult<()> {
+    fn shutdown(&self) -> opentelemetry::trace::TraceResult<()> {
         Ok(())
     }
 }

@@ -1,0 +1,9 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/nested_array_no_capability/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+The data connector db (in subgraph default) cannot be used for filtering nested array staff_bool_exp (in subgraph default) within institution_bool_exp (in subgraph default) as it has not defined any capabilities for nested array filtering
+The data connector db (in subgraph default) cannot be used for filtering nested array pet_bool_exp (in subgraph default) within staff_bool_exp (in subgraph default) as it has not defined any capabilities for nested array filtering

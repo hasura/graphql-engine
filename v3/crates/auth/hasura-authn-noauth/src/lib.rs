@@ -1,4 +1,4 @@
-use hasura_authn_core::{Role, SessionVariable, SessionVariableValue};
+use hasura_authn_core::{JsonSessionVariableValue, Role, SessionVariableName};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -15,7 +15,7 @@ pub struct NoAuthConfig {
     pub role: Role,
     /// static session variables to use whilst running the engine
     #[schemars(title = "SessionVariables")]
-    pub session_variables: HashMap<SessionVariable, SessionVariableValue>,
+    pub session_variables: HashMap<SessionVariableName, JsonSessionVariableValue>,
 }
 
 impl NoAuthConfig {
@@ -40,7 +40,11 @@ pub fn identity_from_config(no_auth_config: &NoAuthConfig) -> hasura_authn_core:
         no_auth_config.role.clone(),
         hasura_authn_core::RoleAuthorization {
             role: no_auth_config.role.clone(),
-            session_variables: no_auth_config.session_variables.clone(),
+            session_variables: no_auth_config
+                .session_variables
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone().into()))
+                .collect(),
             allowed_session_variables_from_request: hasura_authn_core::SessionVariableList::Some(
                 HashSet::new(),
             ),

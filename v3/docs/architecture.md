@@ -8,21 +8,25 @@ here. Explanations of each are given below:
 ```
 crates
 ├── open-dds
-├── lang-graphql
-│   ├── src
-│   │   ├── ast
-│   │   ├── normalized_ast
-│   │   ├── lexer
-│   │   ├── parser
-│   │   ├── schema
-│   │   ├── introspection
-│   │   ├── validation
 ├── metadata-resolve
-├── schema
-│   ├── operations
-│   ├── types
-├── ir
+├── graphql
+│   ├── lang-graphql
+│   │   ├── src
+│   │   │   ├── ast
+│   │   │   ├── normalized_ast
+│   │   │   ├── lexer
+│   │   │   ├── parser
+│   │   │   ├── schema
+│   │   │   ├── introspection
+│   │   │   ├── validation
+│   ├── schema
+│   │   ├── operations
+│   │   ├── types
+│   ├── ir
+│   ├── frontend
 ├── execute
+├── jsonapi
+├── sql
 ├── engine
 │   ├── bin
 │   │   ├── engine
@@ -35,39 +39,39 @@ This metadata is used to specify the data models, permissions, connectors, and
 essentially everything the engine needs to know about the project when it
 starts.
 
-### `lang-graphql`
+### `graphql/lang-graphql`
 
 This crate is an implementation of the GraphQL specification in Rust. It
 provides types for the GraphQL AST, implements the lexer and parser, as well as
 validation and introspection operations.
 
-#### `lang-graphql/src/ast`
+#### `graphql/lang-graphql/src/ast`
 
 The raw GraphQL AST (abstract syntax tree) types that are emitted by the parser.
 
-#### `lang-graphql/src/normalized_ast`
+#### `graphql/lang-graphql/src/normalized_ast`
 
 The normalized AST types. The raw AST can be validated and elaborated with
 respect to a GraphQL schema, producing the normalized AST.
 
-#### `lang-graphql/src/lexer`
+#### `graphql/lang-graphql/src/lexer`
 
 Lexer that emits tokens (eg: String, Number, Punctuation) for a raw GraphQL
 document string.
 
-#### `lang-graphql/src/parser`
+#### `graphql/lang-graphql/src/parser`
 
 Parser for GraphQL documents (executable operations and schema documents).
 
-#### `lang-graphql/src/schema`
+#### `graphql/lang-graphql/src/schema`
 
 Types to define a GraphQL schema.
 
-#### `lang-graphql/src/introspection`
+#### `graphql/lang-graphql/src/introspection`
 
 Provides schema and type introspection for GraphQL schemas.
 
-#### `lang-graphql/src/validation`
+#### `graphql/lang-graphql/src/validation`
 
 Validates GraphQL requests vs a schema, and produces normalized ASTs, which
 contain additional relevant data from the schema.
@@ -77,19 +81,19 @@ contain additional relevant data from the schema.
 Resolves and validates the input Open DDS metadata and creates intermediate
 structures that are used in the `engine` crate for schema generation.
 
-##### `schema`
+##### `graphql/schema`
 
 Provides functions to resolve the Open DDS metadata, generate the GraphQL scehma
 from it, and execute queries against the schema.
 
-##### `schema/operations`
+##### `graphql/schema/operations`
 
 Contains the logic to define and execute the operations that would be defined by
 the Open DDS spec.
 
 Technically, these are fields of the `query_root`, `subscription_root` or
-`mutation_root` and as such can be defined in `schema::types::*_root` module.
-However, this separation makes it easier to organize them (for example
+`mutation_root` and as such can be defined in `graphql_schema::types::*_root`
+module. However, this separation makes it easier to organize them (for example
 `subscription_root` can also import the same set of operations).
 
 Each module under `operations` would roughly define the following:
@@ -100,7 +104,7 @@ Each module under `operations` would roughly define the following:
 - Logic to parse a normalized field from the request into the defined IR format.
 - Logic to execute the operation.
 
-##### `schema/types`
+##### `graphql/schema/types`
 
 TODO: This is a bit outdated, so we should fix this.
 
@@ -118,7 +122,7 @@ Each module under `types` defines the following:
 - Logic to parse a normalized object (selection set or input value) from the
   request into the defined IR format.
 
-### `ir`
+### `graphql/ir`
 
 Responsible for combining the user input and our resolved metadata into our
 intermediate representation ready to plan a request.
@@ -126,8 +130,20 @@ intermediate representation ready to plan a request.
 ### `execute`
 
 Responsible for the core operation of the engine in the context of a user
-provided metadata, including the web server, requests processing, executing
-requests, etc.
+provided metadata, including requests processing, executing requests, etc.
+
+### `graphql/frontend`
+
+Entrypoints for GraphQL requests. Orchestrates parsing, validation and planning
+requests.
+
+### `sql`
+
+Responsible for SQL frontend currently in development
+
+### `jsonapi`
+
+Responsible for JSONAPI frontend currently in development
 
 #### `engine/bin`
 
