@@ -18,14 +18,17 @@ futures-ext = { path = "../../utils/futures-ext" }
 graphql-schema = { path = "../schema" }
 graphql-ir = { path = "../ir" }
 hasura-authn-core = { path = "../../auth/hasura-authn-core" }
+json-ext = { path = "../../utils/json-ext" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../../open-dds" }
 plan-types = { path = "../../plan-types" }
+query-usage-analytics = { path = "../../query-usage-analytics" }
 tracing-util = { path = "../../utils/tracing-util" }
 metadata-resolve = {path = "../../metadata-resolve" }
 
 async-recursion = { workspace = true }
 axum = { workspace = true }
+base64 = { workspace = true }
 futures-util = { workspace = true }
 indexmap = { workspace = true }
 ndc-models = { workspace = true }

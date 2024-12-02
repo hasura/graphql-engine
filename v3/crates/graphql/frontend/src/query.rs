@@ -2,9 +2,10 @@ use super::steps;
 use indexmap::IndexMap;
 
 use super::types::GraphQLResponse;
-use crate::execute::{execute_mutation_plan, execute_query_plan};
+use crate::execute::{
+    execute_mutation_plan, execute_query_plan, ExecuteQueryResult, RootFieldResult,
+};
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
-use execute::{plan::RootFieldResult, ExecuteQueryResult};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -51,7 +52,7 @@ pub async fn execute_query_internal(
     request_headers: &reqwest::header::HeaderMap,
     raw_request: gql::http::RawRequest,
     project_id: Option<&ProjectId>,
-) -> Result<(ast::OperationType, GraphQLResponse), execute::RequestError> {
+) -> Result<(ast::OperationType, GraphQLResponse), crate::RequestError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(

@@ -11,64 +11,7 @@ use transitive::Transitive;
 
 use crate::ndc::client as ndc_client;
 
-use super::plan;
 use graphql_schema::Annotation;
-
-/// Request errors are raised before execution of root fields begins.
-/// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>
-#[derive(Debug, thiserror::Error)]
-pub enum RequestError {
-    #[error("parsing failed: {0}")]
-    ParseFailure(#[from] gql::ast::spanning::Positioned<gql::parser::Error>),
-
-    #[error("validation failed: {0}")]
-    ValidationFailed(#[from] gql::validation::Error),
-
-    #[error("{0}")]
-    IRConversionError(#[from] graphql_ir::Error),
-
-    #[error("error while generating GraphQL plan: {0}")]
-    GraphQlPlanError(#[from] graphql_ir::PlanError),
-
-    #[error("error while generating plan: {0}")]
-    PlanError(#[from] plan::error::Error),
-
-    #[error("explain error: {0}")]
-    ExplainError(String),
-}
-
-impl RequestError {
-    pub fn to_graphql_error(&self, expose_internal_errors: ExposeInternalErrors) -> GraphQLError {
-        let message = match (self, expose_internal_errors) {
-            // Error messages for internal errors from IR conversion and Plan generations are masked.
-            (
-                Self::IRConversionError(graphql_ir::Error::Internal(_))
-                | Self::PlanError(plan::error::Error::Internal(_)),
-                ExposeInternalErrors::Censor,
-            ) => "internal error".into(),
-            (e, _) => e.to_string(),
-        };
-        GraphQLError {
-            message,
-            path: None,
-            extensions: None,
-        }
-    }
-}
-
-impl TraceableError for RequestError {
-    fn visibility(&self) -> ErrorVisibility {
-        match self {
-            Self::IRConversionError(ir_error) => ir_error.visibility(),
-            Self::PlanError(plan_error) => plan_error.visibility(),
-            Self::GraphQlPlanError(plan_error) => plan_error.visibility(),
-            // Rest all errors are visible to users via traces
-            Self::ParseFailure(_) | Self::ValidationFailed(_) | Self::ExplainError(_) => {
-                ErrorVisibility::User
-            }
-        }
-    }
-}
 
 /// Field errors are raised during execution from a root field
 /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Field-errors>
@@ -206,17 +149,8 @@ impl TraceableError for FieldInternalError {
 
 #[derive(thiserror::Error, Debug)]
 pub enum FilterPredicateError {
-    #[error("{0}")]
-    RemoteRelationshipPlanError(Box<plan::error::Error>),
-
-    #[error("remote connector request error: {0}")]
-    RemoteRelationshipNDCRequest(ndc_client::Error),
-
     #[error("not a single row set returned from remote connector request: {0}")]
     NotASingleRowSet(String),
-
-    #[error("too many rows returned from remote connector request")]
-    TooManyRowsReturned,
 
     #[error("could not find remote predicate result for {0}")]
     CouldNotFindRemotePredicate(RemotePredicateKey),
@@ -225,11 +159,9 @@ pub enum FilterPredicateError {
 impl TraceableError for FilterPredicateError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::RemoteRelationshipPlanError(error) => error.visibility(),
-            Self::RemoteRelationshipNDCRequest(_)
-            | Self::CouldNotFindRemotePredicate(_)
-            | Self::NotASingleRowSet(_) => ErrorVisibility::Internal,
-            Self::TooManyRowsReturned => ErrorVisibility::User,
+            Self::CouldNotFindRemotePredicate(_) | Self::NotASingleRowSet(_) => {
+                ErrorVisibility::Internal
+            }
         }
     }
 }
@@ -274,17 +206,5 @@ impl From<ndc_client::Error> for FieldError {
         FieldError::InternalError(FieldInternalError::NDCUnexpected(
             NDCUnexpectedError::NDCClientError(ndc_client_error),
         ))
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-#[error("Query usage analytics encoding failed: {0}")]
-/// Error occurs while generating query usage analytics JSON.
-/// Wraps JSON encoding error, the only error currently encountered.
-pub struct QueryUsageAnalyzeError(#[from] serde_json::Error);
-
-impl TraceableError for QueryUsageAnalyzeError {
-    fn visibility(&self) -> ErrorVisibility {
-        ErrorVisibility::Internal
     }
 }

@@ -1,3 +1,5 @@
+use crate::execute::ExecuteQueryResult;
+use crate::RequestError;
 use engine_types::ExposeInternalErrors;
 use lang_graphql as gql;
 use lang_graphql::http::Response;
@@ -31,16 +33,13 @@ pub struct GraphQLResponse(gql::http::Response);
 
 impl GraphQLResponse {
     pub fn from_result(
-        result: execute::ExecuteQueryResult,
+        result: ExecuteQueryResult,
         expose_internal_errors: ExposeInternalErrors,
     ) -> Self {
         Self(result.to_graphql_response(expose_internal_errors))
     }
 
-    pub fn from_error(
-        err: &execute::RequestError,
-        expose_internal_errors: ExposeInternalErrors,
-    ) -> Self {
+    pub fn from_error(err: &RequestError, expose_internal_errors: ExposeInternalErrors) -> Self {
         Self(Response::error(
             err.to_graphql_error(expose_internal_errors),
             axum::http::HeaderMap::default(),

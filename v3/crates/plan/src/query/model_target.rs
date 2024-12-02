@@ -5,43 +5,36 @@ use crate::order_by::to_resolved_order_by_element;
 use crate::types::PlanError;
 use std::collections::BTreeMap;
 
-use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve::{FilterPermission, ModelExpressionType};
 use open_dds::query::ModelTarget;
-use plan_types::{Argument, Relationship, ResolvedFilterExpression};
+use plan_types::{
+    Argument, PredicateQueryTrees, Relationship, ResolvedFilterExpression, UniqueNumber,
+};
 
 // Turn a `plan_types::Expression` into `execute::ResolvedFilterExpression`
 // Currently this works by running all the remote predicates, soon it won't need to
-async fn resolve_filter_expression(
+fn resolve_filter_expression(
     filter_ir: &plan_types::Expression<'_>,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
-    http_context: &HttpContext,
-) -> Result<ResolvedFilterExpression, PlanError> {
-    let filter_plan = execute::plan::plan_expression(
+    unique_number: &mut UniqueNumber,
+) -> Result<(ResolvedFilterExpression, PredicateQueryTrees), PlanError> {
+    let mut remote_predicates = plan_types::PredicateQueryTrees::new();
+
+    let resolved_filter_expression = graphql_ir::plan_expression(
         filter_ir,
         relationships,
-        &mut plan_types::PredicateQueryTrees::new(),
+        &mut remote_predicates,
+        unique_number,
     )
     .map_err(|e| PlanError::Internal(format!("error constructing permission filter plan: {e}")))?;
 
-    // TODO: this thing has to change, need to be pushed into the
-    // execution plan. We shouldn't be running this in the planning phase
-    let resolve_context =
-        execute::plan::ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
-
-    // TODO: this resolve step should go away once we've split `execute` into actual 'plan' and
-    // 'run' steps, then none of this planning will need to be async. (currently the async
-    // is in case we're running remote predicates, which should not be a planning concern).
-    execute::plan::resolve_expression(filter_plan, &resolve_context)
-        .await
-        .map_err(|e| PlanError::Internal(format!("error resolving permission filter plan: {e}")))
+    Ok((resolved_filter_expression, remote_predicates))
 }
 
-pub async fn model_target_to_ndc_query(
+pub fn model_target_to_ndc_query(
     model_target: &ModelTarget,
     session: &Session,
-    http_context: &HttpContext,
     metadata: &metadata_resolve::Metadata,
     request_headers: &reqwest::header::HeaderMap,
     // The following are things we could compute, but we have them on hand
@@ -49,6 +42,7 @@ pub async fn model_target_to_ndc_query(
     model: &metadata_resolve::ModelWithArgumentPresets,
     model_source: &metadata_resolve::ModelSource,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    unique_number: &mut UniqueNumber,
 ) -> Result<NDCQuery, PlanError> {
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
@@ -80,8 +74,8 @@ pub async fn model_target_to_ndc_query(
                 PlanError::Internal(format!("error when processing model predicate: {e}"))
             })?;
 
-            let filter =
-                resolve_filter_expression(&filter_ir, &mut relationships, http_context).await?;
+            let (filter, _remote_predicates) =
+                resolve_filter_expression(&filter_ir, &mut relationships, unique_number)?;
 
             Ok(Some(filter))
         }
@@ -132,8 +126,8 @@ pub async fn model_target_to_ndc_query(
     for (argument_name, argument_value) in &arguments_with_presets {
         let resolved_argument_value = match argument_value {
             graphql_ir::Argument::BooleanExpression { predicate } => {
-                let resolved_filter_expression =
-                    resolve_filter_expression(predicate, &mut relationships, http_context).await?;
+                let (resolved_filter_expression, _remote_predicates) =
+                    resolve_filter_expression(predicate, &mut relationships, unique_number)?;
 
                 Argument::BooleanExpression {
                     predicate: resolved_filter_expression,

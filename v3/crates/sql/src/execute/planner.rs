@@ -73,14 +73,12 @@ impl ExtensionPlanner for NDCPushDownPlanner {
         if let Some(model_query) = node.as_any().downcast_ref::<model::ModelQuery>() {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
-            let ndc_pushdown = model_query
-                .to_physical_node(
-                    &self.session,
-                    &self.http_context,
-                    &self.metadata,
-                    &self.request_headers,
-                )
-                .await?;
+            let ndc_pushdown = model_query.to_physical_node(
+                &self.session,
+                &self.http_context,
+                &self.metadata,
+                &self.request_headers,
+            )?;
             Ok(Some(Arc::new(ndc_pushdown)))
         } else if let Some(command_query) = node.as_any().downcast_ref::<command::CommandQuery>() {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
@@ -100,14 +98,12 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
 
-            let ndc_pushdown = model_aggregate
-                .to_physical_node(
-                    &self.session,
-                    &self.http_context,
-                    &self.metadata,
-                    &self.request_headers,
-                )
-                .await?;
+            let ndc_pushdown = model_aggregate.to_physical_node(
+                &self.session,
+                &self.http_context,
+                &self.metadata,
+                &self.request_headers,
+            )?;
 
             Ok(Some(Arc::new(ndc_pushdown)))
         } else {

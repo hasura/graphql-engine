@@ -9,6 +9,19 @@ use query_usage_analytics::{
     GqlInputField, GqlOperation, OpenddObject, PermissionUsage, PredicateRelationshipUsage,
     RelationshipTarget, RelationshipUsage,
 };
+use tracing_util::{ErrorVisibility, TraceableError};
+
+#[derive(Debug, thiserror::Error)]
+#[error("Query usage analytics encoding failed: {0}")]
+/// Error occurs while generating query usage analytics JSON.
+/// Wraps JSON encoding error, the only error currently encountered.
+pub struct QueryUsageAnalyzeError(#[from] serde_json::Error);
+
+impl TraceableError for QueryUsageAnalyzeError {
+    fn visibility(&self) -> ErrorVisibility {
+        ErrorVisibility::Internal
+    }
+}
 
 pub fn analyze_query_usage<'s>(normalized_request: &'s Operation<'s, GDS>) -> GqlOperation {
     let operation_name = normalized_request

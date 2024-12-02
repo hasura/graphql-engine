@@ -58,7 +58,7 @@ async fn explain_query_internal(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     raw_request: gql::http::RawRequest,
-) -> Result<(ast::OperationType, types::ExplainResponse), execute::RequestError> {
+) -> Result<(ast::OperationType, types::ExplainResponse), crate::RequestError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -121,7 +121,7 @@ async fn explain_query_internal(
                                             _subscription_plan,
                                         ) => {
                                             // subscriptions are not supported over HTTP
-                                            Err(execute::RequestError::ExplainError(
+                                            Err(crate::RequestError::ExplainError(
                                                 "Subscriptions are not supported in explain API"
                                                     .to_string(),
                                             ))
@@ -150,7 +150,7 @@ pub(crate) async fn explain_query_plan(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     query_plan: QueryPlan<'_, '_, '_>,
-) -> Result<types::Step, execute::RequestError> {
+) -> Result<types::Step, crate::RequestError> {
     let mut parallel_root_steps = vec![];
     // Here, we are assuming that all root fields are executed in parallel.
     for (alias, node) in query_plan {
@@ -245,12 +245,12 @@ pub(crate) async fn explain_query_plan(
             | NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::ServiceField {
                 ..
             }) => {
-                return Err(execute::RequestError::ExplainError(
+                return Err(crate::RequestError::ExplainError(
                     "cannot explain introspection queries".to_string(),
                 ));
             }
             NodeQueryPlan::RelayNodeSelect(None) => {
-                return Err(execute::RequestError::ExplainError(
+                return Err(crate::RequestError::ExplainError(
                     "cannot explain relay queries with no execution plan".to_string(),
                 ));
             }
@@ -263,7 +263,7 @@ pub(crate) async fn explain_query_plan(
                 simplify_step(Box::new(types::Step::Parallel(parallel_root_steps)));
             Ok(*simplified_step)
         }
-        None => Err(execute::RequestError::ExplainError(
+        None => Err(crate::RequestError::ExplainError(
             "cannot explain query as there are no explainable root field".to_string(),
         )),
     }
@@ -274,11 +274,11 @@ pub(crate) async fn explain_mutation_plan(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     mutation_plan: MutationPlan<'_, '_>,
-) -> Result<types::Step, execute::RequestError> {
+) -> Result<types::Step, crate::RequestError> {
     let mut root_steps = vec![];
 
     if !mutation_plan.type_names.is_empty() {
-        return Err(execute::RequestError::ExplainError(
+        return Err(crate::RequestError::ExplainError(
             "cannot explain introspection queries".to_string(),
         ));
     }
@@ -292,7 +292,7 @@ pub(crate) async fn explain_mutation_plan(
             let resolved_execution_plan = ndc_mutation_execution.mutation_execution.execution_node;
 
             let mutation_request = execute::make_ndc_mutation_request(resolved_execution_plan)
-                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+                .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
 
             let sequence_steps = get_execution_steps(
                 expose_internal_errors,
@@ -320,7 +320,7 @@ pub(crate) async fn explain_mutation_plan(
             let simplified_step = simplify_step(Box::new(types::Step::Sequence(root_steps)));
             Ok(*simplified_step)
         }
-        None => Err(execute::RequestError::ExplainError(
+        None => Err(crate::RequestError::ExplainError(
             "cannot explain mutation as there are no explainable root fields".to_string(),
         )),
     }
@@ -335,7 +335,7 @@ async fn get_execution_steps(
     join_locations: JoinLocations,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
-) -> Result<NonEmpty<Box<types::Step>>, execute::RequestError> {
+) -> Result<NonEmpty<Box<types::Step>>, crate::RequestError> {
     let mut sequence_steps = match process_response_as {
         ProcessResponseAs::CommandResponse { .. } => {
             // A command execution node
@@ -390,7 +390,7 @@ async fn get_remote_predicate_steps(
     alias: String,
     process_response_as: &ProcessResponseAs,
     filter_expressions: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
-) -> Result<Vec<Box<types::Step>>, execute::RequestError> {
+) -> Result<Vec<Box<types::Step>>, crate::RequestError> {
     let mut steps = vec![];
     for (_uuid, remote_predicate) in remote_predicates.0 {
         if !remote_predicate.children.0.is_empty() {
@@ -417,10 +417,10 @@ async fn get_remote_predicate_steps(
                 remote_predicate.query.query_execution_plan,
                 filter_expressions,
             )
-            .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+            .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
 
         let ndc_request = execute::make_ndc_query_request(query_execution_plan_with_predicates)
-            .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+            .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
 
         let sequence_steps = get_execution_steps(
             expose_internal_errors,
@@ -452,7 +452,7 @@ async fn construct_ndc_query(
         Arc<DataConnectorLink>,
         Vec<Box<types::Step>>,
     ),
-    execute::RequestError,
+    crate::RequestError,
 > {
     // to ensure the downstream queries are realistic, we actually
     // run the remote predicates so that we can include their results
@@ -466,7 +466,7 @@ async fn construct_ndc_query(
         None,
     )
     .await
-    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+    .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
 
     // OK, need to replace in here too
     let predicate_explain_steps = get_remote_predicate_steps(
@@ -484,11 +484,11 @@ async fn construct_ndc_query(
         query_execution_plan,
         &filter_expressions,
     )
-    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+    .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
 
     let data_connector = query_execution_plan_with_predicates.data_connector.clone();
     let ndc_request = execute::make_ndc_query_request(query_execution_plan_with_predicates)
-        .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+        .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
 
     Ok((ndc_request, data_connector, predicate_explain_steps))
 }
@@ -502,7 +502,7 @@ async fn get_join_steps(
     expose_internal_errors: ExposeInternalErrors,
     join_locations: JoinLocations,
     http_context: &HttpContext,
-) -> Result<Option<NonEmpty<Box<types::Step>>>, execute::RequestError> {
+) -> Result<Option<NonEmpty<Box<types::Step>>>, crate::RequestError> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
@@ -513,7 +513,7 @@ async fn get_join_steps(
 
             let target_data_connector = resolved_execution_plan.data_connector.clone();
             let query_request = execute::make_ndc_query_request(resolved_execution_plan)
-                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+                .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
 
             let ndc_request = types::NDCRequest::Query(query_request);
 

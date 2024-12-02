@@ -1,6 +1,9 @@
+mod types;
+
+use crate::process_response::{process_mutation_response, process_response, ProcessedResponse};
 use engine_types::{HttpContext, ProjectId};
-use execute::{resolve_ndc_mutation_execution, resolve_ndc_query_execution, ProcessedResponse};
-use execute::{ExecuteQueryResult, FieldError, RootFieldResult};
+use execute::FieldError;
+use execute::{resolve_ndc_mutation_execution, resolve_ndc_query_execution};
 use gql::normalized_ast;
 use gql::schema::NamespacedGetter;
 use graphql_ir::MutationPlan;
@@ -12,6 +15,7 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use plan_types::{NDCMutationExecution, NDCQueryExecution};
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility};
+pub use types::{ExecuteQueryResult, RootFieldResult};
 
 /// This is where the GraphQL execution will live
 /// We'll use the `execute` crate for running queries etc
@@ -117,7 +121,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                             )
                             .await
                             .and_then(|vec_sets| {
-                                execute::process_response(
+                                process_response(
                                     selection_set,
                                     vec_sets,
                                     process_response_as,
@@ -224,7 +228,7 @@ async fn execute_mutation_field_plan<'n, 's>(
                         resolve_ndc_mutation_execution(http_context, mutation_plan, project_id)
                             .await
                             .and_then(|mutation_response| {
-                                execute::process_mutation_response(
+                                process_mutation_response(
                                     selection_set,
                                     mutation_response,
                                     process_response_as,
@@ -329,9 +333,7 @@ async fn resolve_optional_ndc_select(
             let process_response_as = &ndc_query.process_response_as.clone();
             resolve_ndc_query_execution(http_context, ndc_query, project_id)
                 .await
-                .and_then(|row_sets| {
-                    execute::process_response(selection_set, row_sets, process_response_as)
-                })
+                .and_then(|row_sets| process_response(selection_set, row_sets, process_response_as))
         }
     }
 }

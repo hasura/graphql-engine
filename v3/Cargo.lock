@@ -1812,6 +1812,7 @@ dependencies = [
  "futures-util",
  "goldenfile",
  "graphql-frontend",
+ "graphql-ir",
  "graphql-schema",
  "graphql-ws",
  "hasura-authn",
@@ -1919,14 +1920,9 @@ version = "3.0.0"
 dependencies = [
  "async-recursion",
  "axum",
- "base64 0.22.1",
  "bytes",
  "engine-types",
- "futures-ext",
- "futures-util",
- "graphql-ir",
  "graphql-schema",
- "hasura-authn-core",
  "indexmap 2.7.0",
  "json-ext",
  "lang-graphql",
@@ -1938,7 +1934,6 @@ dependencies = [
  "open-dds",
  "plan-types",
  "pretty_assertions",
- "query-usage-analytics",
  "reqwest",
  "serde",
  "serde_json",
@@ -1946,7 +1941,6 @@ dependencies = [
  "tokio",
  "tracing-util",
  "transitive",
- "uuid",
 ]
 
 [[package]]
@@ -2207,6 +2201,7 @@ version = "3.0.0"
 dependencies = [
  "async-recursion",
  "axum",
+ "base64 0.22.1",
  "criterion",
  "engine-types",
  "execute",
@@ -2217,6 +2212,7 @@ dependencies = [
  "graphql-schema",
  "hasura-authn-core",
  "indexmap 2.7.0",
+ "json-ext",
  "lang-graphql",
  "metadata-resolve",
  "ndc-models 0.1.6",
@@ -2224,6 +2220,7 @@ dependencies = [
  "nonempty",
  "open-dds",
  "plan-types",
+ "query-usage-analytics",
  "reqwest",
  "serde",
  "serde_json",
@@ -4148,10 +4145,8 @@ checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
 name = "plan"
 version = "3.0.0"
 dependencies = [
- "async-recursion",
  "derive_more",
  "engine-types",
- "execute",
  "graphql-ir",
  "hasura-authn-core",
  "indexmap 2.7.0",

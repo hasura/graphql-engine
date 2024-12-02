@@ -32,8 +32,9 @@ pub use mutation_root::generate_ir as generate_mutation_ir;
 pub use order_by::ResolvedOrderBy;
 pub use permissions::process_model_predicate;
 pub use plan::{
-    generate_request_plan, process_model_relationship_definition, ApolloFederationSelect,
-    Error as PlanError, MutationPlan, NodeQueryPlan, QueryPlan, RequestPlan,
+    generate_request_plan, plan_expression, process_model_relationship_definition,
+    ApolloFederationSelect, Error as PlanError, MutationPlan, NodeQueryPlan, QueryPlan,
+    RequestPlan,
 };
 pub use query_root::generate_ir as generate_query_ir;
 pub use relationship::{

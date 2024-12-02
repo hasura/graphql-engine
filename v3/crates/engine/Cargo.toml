@@ -67,6 +67,7 @@ build-data = { workspace = true }
 
 [dev-dependencies]
 plan-types = { path = "../plan-types" }
+graphql-ir = { path = "../graphql/ir" }
 
 criterion = { workspace = true }
 goldenfile = { workspace = true }

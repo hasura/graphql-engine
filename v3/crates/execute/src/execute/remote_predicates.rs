@@ -168,12 +168,9 @@ fn replace_predicates_in_filter_expression(
     Ok(match filter_expression {
         ResolvedFilterExpression::RemoteRelationshipComparison {
             remote_predicate_id,
-        } => predicates
-            .get(&remote_predicate_id)
-            .cloned()
-            .ok_or_else(|| {
-                FilterPredicateError::CouldNotFindRemotePredicate(remote_predicate_id)
-            })?,
+        } => predicates.get(&remote_predicate_id).cloned().ok_or(
+            FilterPredicateError::CouldNotFindRemotePredicate(remote_predicate_id),
+        )?,
         ResolvedFilterExpression::And { expressions } => ResolvedFilterExpression::And {
             expressions: expressions
                 .into_iter()

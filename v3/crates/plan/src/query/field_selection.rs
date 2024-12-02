@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use execute::plan::process_model_relationship_definition;
+use graphql_ir::process_model_relationship_definition;
 use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
     query::{
@@ -14,10 +14,9 @@ use open_dds::{
     },
     types::{CustomTypeName, FieldName},
 };
-use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject};
+use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject, UniqueNumber};
 
-#[async_recursion::async_recursion]
-pub async fn resolve_field_selection(
+pub fn resolve_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
     http_context: &Arc<HttpContext>,
@@ -27,6 +26,7 @@ pub async fn resolve_field_selection(
     model_source: &Arc<metadata_resolve::ModelSource>,
     selection: &IndexMap<Alias, ObjectSubSelection>,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<IndexMap<NdcFieldAlias, Field>, PlanError> {
     let metadata_resolve::TypeMapping::Object { field_mappings, .. } = model_source
         .type_mappings
@@ -40,21 +40,19 @@ pub async fn resolve_field_selection(
     let mut ndc_fields = IndexMap::new();
     for (field_alias, object_sub_selection) in selection {
         let ndc_field = match object_sub_selection {
-            ObjectSubSelection::Field(field_selection) => {
-                from_field_selection(
-                    metadata,
-                    session,
-                    http_context,
-                    request_headers,
-                    model_source,
-                    field_selection,
-                    field_mappings,
-                    object_type_name,
-                    object_type,
-                    relationships,
-                )
-                .await?
-            }
+            ObjectSubSelection::Field(field_selection) => from_field_selection(
+                metadata,
+                session,
+                http_context,
+                request_headers,
+                model_source,
+                field_selection,
+                field_mappings,
+                object_type_name,
+                object_type,
+                relationships,
+                unique_number,
+            )?,
             ObjectSubSelection::Relationship(relationship_selection) => {
                 from_relationship_selection(
                     relationship_selection,
@@ -66,8 +64,8 @@ pub async fn resolve_field_selection(
                     object_type,
                     model_source,
                     relationships,
-                )
-                .await?
+                    unique_number,
+                )?
             }
             ObjectSubSelection::RelationshipAggregate(_) => {
                 return Err(PlanError::Internal(
@@ -80,7 +78,7 @@ pub async fn resolve_field_selection(
     Ok(ndc_fields)
 }
 
-async fn from_field_selection(
+fn from_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
     http_context: &Arc<HttpContext>,
@@ -91,6 +89,7 @@ async fn from_field_selection(
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Field, PlanError> {
     let type_permissions = object_type
         .type_output_permissions
@@ -142,8 +141,8 @@ async fn from_field_selection(
         field_selection,
         field_type,
         relationships,
-    )
-    .await?;
+        unique_number,
+    )?;
 
     let ndc_field = Field::Column {
         column: field_mapping.column.clone(),
@@ -153,7 +152,7 @@ async fn from_field_selection(
     Ok(ndc_field)
 }
 
-async fn resolve_nested_field_selection(
+fn resolve_nested_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
     http_context: &Arc<HttpContext>,
@@ -162,6 +161,7 @@ async fn resolve_nested_field_selection(
     field_selection: &ObjectFieldSelection,
     field_type: &QualifiedTypeReference,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Option<NestedField>, PlanError> {
     match &field_selection.selection {
         None => {
@@ -198,8 +198,8 @@ async fn resolve_nested_field_selection(
                 model_source,
                 nested_selection,
                 relationships,
-            )
-            .await?;
+                unique_number,
+            )?;
 
             // Build the nested field based on the underlying type
             let nested_field = match field_type.underlying_type {
@@ -226,7 +226,7 @@ async fn resolve_nested_field_selection(
 }
 
 /// Resolve a relationship field
-async fn from_relationship_selection(
+fn from_relationship_selection(
     relationship_selection: &RelationshipSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
@@ -236,6 +236,7 @@ async fn from_relationship_selection(
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
     model_source: &Arc<metadata_resolve::ModelSource>,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Field, PlanError> {
     let RelationshipSelection { target, selection } = relationship_selection;
     let (_, relationship_field) = object_type
@@ -334,8 +335,8 @@ async fn from_relationship_selection(
         session,
         http_context,
         request_headers,
-    )
-    .await?;
+        unique_number,
+    )?;
     let plan_types::QueryExecutionPlan {
         query_node,
         collection: _,

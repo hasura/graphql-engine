@@ -42,13 +42,8 @@
 //!
 //! # How it works
 //!
-//! ## IR generation
-//! - Selection set IR generation function - [generate_selection_set_ir]
-//! - Model Remote relationship - [build_remote_relationship]
-//! - Command Remote relationship - [build_remote_command_relationship]
-//!
 //! ## Join Tree generation
-//! - The join tree is generated as part of query plan. See [plan_selection_set] function.
+//! - The join tree is generated as part of query plan.
 //!
 //! ## Execution
 //! Following is the high-level algorithm how remote joins execution is performed.
@@ -69,12 +64,6 @@
 //!    this algorithm.
 //!
 //! 5. Perform join on LHS response and RHS response
-//!
-//! [plan_selection_set]: crate::plan::selection_set::plan_selection_set
-//! [generate_selection_set_ir]: graphql_ir::generate_selection_set_ir
-//! [build_remote_relationship]: graphql_ir::build_remote_relationship
-//! [build_remote_command_relationship]: graphql_ir::build_remote_command_relationship
-
 use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;

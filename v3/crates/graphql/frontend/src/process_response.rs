@@ -14,7 +14,6 @@ use lang_graphql::normalized_ast;
 use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 
-use crate::error;
 use graphql_ir::{global_id_col_format, GLOBAL_ID_VERSION};
 use graphql_schema::{AggregateOutputAnnotation, Annotation, GlobalID, OutputAnnotation, GDS};
 use metadata_resolve::data_connectors;
@@ -61,7 +60,7 @@ fn process_global_id_field<T>(
     global_id_fields: &Vec<FieldName>,
     field_alias: &Alias,
     type_name: &TypeName,
-) -> Result<json::Value, error::FieldError>
+) -> Result<json::Value, execute::FieldError>
 where
     T: KeyValueResponse,
 {
@@ -71,7 +70,7 @@ where
 
         let field_json_value_result =
             row.remove(global_id_ndc_field_name.as_str())
-                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
                     summary: format!("missing field: {}", global_id_ndc_field_name.as_str()),
                 })?;
         global_id_cols.insert(field_name.clone(), field_json_value_result);
@@ -91,7 +90,7 @@ fn process_single_query_response_row<T>(
     mut row: T,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<IndexMap<ast::Alias, json::Value>, error::FieldError>
+) -> Result<IndexMap<ast::Alias, json::Value>, execute::FieldError>
 where
     T: KeyValueResponse,
 {
@@ -110,7 +109,7 @@ where
                         }
                         OutputAnnotation::RelayNodeInterfaceID { typename_mappings } => {
                             let global_id_fields = typename_mappings.get(type_name).ok_or(
-                                error::FieldInternalError::GlobalIdTypenameMappingNotFound {
+                                execute::FieldInternalError::GlobalIdTypenameMappingNotFound {
                                     type_name: type_name.clone(),
                                 },
                             )?;
@@ -124,7 +123,7 @@ where
                         }
                         OutputAnnotation::Field { .. } => {
                             let value = row.remove(field.alias.0.as_str()).ok_or_else(|| {
-                                error::NDCUnexpectedError::BadNDCResponse {
+                                execute::NDCUnexpectedError::BadNDCResponse {
                                     summary: format!("missing field: {}", field.alias.clone()),
                                 }
                             })?;
@@ -146,7 +145,7 @@ where
                         OutputAnnotation::RelationshipToModel { .. } => {
                             let mut field_json_value_result = row
                                 .remove(field.alias.0.as_str())
-                                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
                                     summary: format!("missing field: {}", field.alias.clone()),
                                 })?;
 
@@ -179,11 +178,11 @@ where
                         OutputAnnotation::RelationshipToModelAggregate { .. } => {
                             let field_json_value_result = row
                                 .remove(field.alias.0.as_str())
-                                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
                                     summary: format!("missing field: {}", field.alias.clone()),
                                 })?;
                             match serde_json::from_value(field_json_value_result) {
-                                Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
+                                Err(err) => Err(execute::NDCUnexpectedError::BadNDCResponse {
                                     summary: format!("Unable to parse RowSet: {err}"),
                                 })?,
                                 Ok(row_set) => process_aggregate_requested_fields(
@@ -197,13 +196,13 @@ where
                         ) => {
                             let field_json_value_result = row
                                 .remove(field.alias.0.as_str())
-                                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
                                     summary: format!("missing field: {}", field.alias.clone()),
                                 })?;
                             match serde_json::from_value::<ndc_models::RowSet>(
                                 field_json_value_result,
                             ) {
-                                Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
+                                Err(err) => Err(execute::NDCUnexpectedError::BadNDCResponse {
                                     summary: format!("Unable to parse RowSet: {err}"),
                                 })?,
                                 Ok(rows_set) => {
@@ -226,12 +225,12 @@ where
                                 }
                             }
                         }
-                        _ => Err(error::FieldInternalError::UnexpectedAnnotation {
+                        _ => Err(execute::FieldInternalError::UnexpectedAnnotation {
                             annotation: annotation.clone(),
                         })?,
                     }
                 }
-                annotation => Err(error::FieldInternalError::UnexpectedAnnotation {
+                annotation => Err(execute::FieldInternalError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
                 })?,
             }
@@ -243,7 +242,7 @@ fn process_selection_set_as_list<T>(
     rows: Option<Vec<T>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, error::FieldError>
+) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, execute::FieldError>
 where
     T: KeyValueResponse,
 {
@@ -261,7 +260,7 @@ fn process_selection_set_as_object<T>(
     rows: Option<Vec<T>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<Option<IndexMap<ast::Alias, json::Value>>, error::FieldError>
+) -> Result<Option<IndexMap<ast::Alias, json::Value>>, execute::FieldError>
 where
     T: KeyValueResponse,
 {
@@ -276,7 +275,7 @@ pub fn process_field_selection_as_list(
     value: json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<json::Value, error::FieldError> {
+) -> Result<json::Value, execute::FieldError> {
     if selection_set.fields.is_empty() || value.is_null() {
         // If selection set is empty we return the whole value without further processing.
         // If the value is null we have nothing to process so we return null.
@@ -296,7 +295,7 @@ pub fn process_field_selection_as_object(
     value: json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<json::Value, error::FieldError> {
+) -> Result<json::Value, execute::FieldError> {
     if selection_set.fields.is_empty() || value.is_null() {
         // If selection set is empty we return the whole value without further processing.
         // If the value is null we have nothing to process so we return null.
@@ -315,16 +314,16 @@ pub fn process_command_rows(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<Option<ProcessedResponse>, error::FieldError> {
+) -> Result<Option<ProcessedResponse>, execute::FieldError> {
     match rows {
-        None => Err(error::NDCUnexpectedError::BadNDCResponse {
+        None => Err(execute::NDCUnexpectedError::BadNDCResponse {
             summary: format!(
                 "Expected one row in the response for command, but no rows present: {command_name}"
             ),
         })?,
         Some(row_vector) => {
             if row_vector.len() > 1 {
-                Err(error::NDCUnexpectedError::BadNDCResponse {
+                Err(execute::NDCUnexpectedError::BadNDCResponse {
                     summary: format!(
                         "Expected only one row in the response for command: {command_name}"
                     ),
@@ -353,10 +352,10 @@ fn process_command_response_row(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<ProcessedResponse, error::FieldError> {
+) -> Result<ProcessedResponse, execute::FieldError> {
     let field_value_result = row
         .swap_remove(FUNCTION_IR_VALUE_COLUMN_NAME)
-        .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+        .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
             summary: format!("missing field: {FUNCTION_IR_VALUE_COLUMN_NAME}"),
         })?;
 
@@ -378,7 +377,7 @@ fn process_command_field_value(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<json::Value, error::FieldError> {
+) -> Result<json::Value, execute::FieldError> {
     // When no selection set for commands, return back the value from the
     // connector without any processing.
     if selection_set.fields.is_empty() {
@@ -393,14 +392,14 @@ fn process_command_field_value(
                 if type_container.nullable {
                     Ok(json::Value::Null)
                 } else {
-                    Err(error::NDCUnexpectedError::BadNDCResponse {
+                    Err(execute::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to parse response from NDC, null value expected".into(),
                     })?
                 }
             }
             json::Value::Object(result_map) => {
                 if type_container.is_list() {
-                    Err(error::NDCUnexpectedError::BadNDCResponse {
+                    Err(execute::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to parse response from NDC, object value expected".into(),
                     })?
                 } else {
@@ -422,18 +421,18 @@ fn process_command_field_value(
                     let r: Vec<IndexMap<Alias, json::Value>> = array_values
                         .into_iter()
                         .map(|value| process_single_query_response_row(value, selection_set, response_config))
-                        .collect::<Result<Vec<IndexMap<ast::Alias, json::Value>>, error::FieldError>>(
+                        .collect::<Result<Vec<IndexMap<ast::Alias, json::Value>>, execute::FieldError>>(
                         )?;
 
                     Ok(json::to_value(r)?)
                 } else {
-                    Err(error::NDCUnexpectedError::BadNDCResponse {
+                    Err(execute::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to parse response from NDC, array value expected"
                             .to_string(),
                     })?
                 }
             }
-            _ => Err(error::NDCUnexpectedError::BadNDCResponse {
+            _ => Err(execute::NDCUnexpectedError::BadNDCResponse {
                 summary:
                     "Unable to parse response from NDC, either null, object or array value expected"
                         .to_string(),
@@ -445,9 +444,9 @@ fn process_command_field_value(
 fn process_aggregate_requested_fields(
     row_set: ndc_models::RowSet,
     aggregate_output_selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-) -> Result<json::Value, error::FieldError> {
+) -> Result<json::Value, execute::FieldError> {
     let mut aggregate_results = row_set.aggregates
-        .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+        .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
             summary:
                 "Unable to parse response from NDC, RowSet aggregates property was null when it was expected to be an object"
                     .to_owned(),
@@ -460,7 +459,7 @@ fn reshape_aggregate_fields(
     aggregate_results: &mut IndexMap<ndc_models::FieldName, json::Value>,
     graphql_field_path: &[&Alias],
     aggregate_output_selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-) -> Result<json::Value, error::FieldError> {
+) -> Result<json::Value, execute::FieldError> {
     let result = aggregate_output_selection_set.as_object_selection_set(
         |_type_name, field, field_call| {
             let graphql_field_path = graphql_field_path
@@ -477,10 +476,10 @@ fn reshape_aggregate_fields(
                         graphql_ir::mk_alias_from_graphql_field_path(graphql_field_path.as_slice());
                     let aggregate_value = aggregate_results
                         .swap_remove(field_name.as_str())
-                        .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                        .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
                             summary: format!("missing aggregate field: {field_name}"),
                         })?;
-                    Ok::<_, error::FieldError>(aggregate_value)
+                    Ok::<_, execute::FieldError>(aggregate_value)
                 }
 
                 Annotation::Output(OutputAnnotation::Aggregate(
@@ -493,13 +492,13 @@ fn reshape_aggregate_fields(
                     )?;
                     Ok(json_object)
                 }
-                annotation => Err(error::FieldInternalError::UnexpectedAnnotation {
+                annotation => Err(execute::FieldInternalError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
                 })?,
             }
         },
     )?;
-    let response = json::to_value(result).map_err(error::FieldError::from)?;
+    let response = json::to_value(result).map_err(execute::FieldError::from)?;
     Ok(response)
 }
 
@@ -507,7 +506,7 @@ pub fn process_response(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     rows_sets: Vec<ndc_models::RowSet>,
     process_response_as: &ProcessResponseAs,
-) -> Result<ProcessedResponse, error::FieldError> {
+) -> Result<ProcessedResponse, execute::FieldError> {
     let tracer = tracing_util::global_tracer();
     // Post process the response to add the `__typename` fields
     tracer.in_span(
@@ -519,7 +518,7 @@ pub fn process_response(
             match process_response_as {
                 ProcessResponseAs::Array { .. } => {
                     let result = process_selection_set_as_list(row_set.rows, selection_set, &None)?;
-                    let response = json::to_value(result).map_err(error::FieldError::from)?;
+                    let response = json::to_value(result).map_err(execute::FieldError::from)?;
                     Ok(ProcessedResponse {
                         response,
                         response_headers: None,
@@ -528,7 +527,7 @@ pub fn process_response(
                 ProcessResponseAs::Object { .. } => {
                     let result =
                         process_selection_set_as_object(row_set.rows, selection_set, &None)?;
-                    let response = json::to_value(result).map_err(error::FieldError::from)?;
+                    let response = json::to_value(result).map_err(execute::FieldError::from)?;
                     Ok(ProcessedResponse {
                         response,
                         response_headers: None,
@@ -553,7 +552,7 @@ pub fn process_response(
                         }),
                         Some(r) => Ok(r),
                     }
-                    // json::to_value(result).map_err(error::FieldError::from)
+                    // json::to_value(result).map_err(execute::FieldError::from)
                 }
                 ProcessResponseAs::Aggregates => {
                     let result = process_aggregate_requested_fields(row_set, selection_set)?;
@@ -572,7 +571,7 @@ pub fn process_command_mutation_response(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<ProcessedResponse, error::FieldError> {
+) -> Result<ProcessedResponse, execute::FieldError> {
     match mutation_result {
         ndc_models::MutationOperationResults::Procedure { result } => {
             let ndc_result = extract_response_headers_and_result(result, response_config)?;
@@ -594,7 +593,7 @@ pub fn process_mutation_response(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     connector_response: ndc_models::MutationResponse,
     process_response_as: &ProcessResponseAs,
-) -> Result<ProcessedResponse, error::FieldError> {
+) -> Result<ProcessedResponse, execute::FieldError> {
     let tracer = tracing_util::global_tracer();
 
     // Post process the response to add the `__typename` fields
@@ -610,7 +609,7 @@ pub fn process_mutation_response(
                 .operation_results
                 .into_iter()
                 .next()
-                .ok_or(error::NDCUnexpectedError::BadNDCResponse {
+                .ok_or(execute::NDCUnexpectedError::BadNDCResponse {
                     summary: "missing rowset".to_string(),
                 })?;
 
@@ -625,7 +624,7 @@ pub fn process_mutation_response(
                     type_container,
                     response_config,
                 ),
-                _ => Err(error::FieldInternalError::InternalGeneric {
+                _ => Err(execute::FieldInternalError::InternalGeneric {
                     description: "Only commands are supported for mutations".to_string(),
                 })?,
             }
@@ -635,11 +634,11 @@ pub fn process_mutation_response(
 
 pub(crate) fn get_single_rowset(
     rows_sets: Vec<ndc_models::RowSet>,
-) -> Result<ndc_models::RowSet, error::FieldError> {
+) -> Result<ndc_models::RowSet, execute::FieldError> {
     Ok(rows_sets
         .into_iter()
         .next()
-        .ok_or(error::NDCUnexpectedError::BadNDCResponse {
+        .ok_or(execute::NDCUnexpectedError::BadNDCResponse {
             summary: "missing rowset".into(),
         })?)
 }
@@ -649,7 +648,7 @@ pub(crate) fn get_single_rowset(
 fn extract_response_headers_and_result(
     result: serde_json::Value,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<ProcessedResponse, error::FieldError> {
+) -> Result<ProcessedResponse, execute::FieldError> {
     if let Some(response_config) = response_config {
         match result {
             json::Value::Object(mut result_map) => {
@@ -670,7 +669,7 @@ fn extract_response_headers_and_result(
                 // get the headers JSON from the response object
                 let response_headers_value = result_map
                     .remove(response_config.headers_field.as_str())
-                    .ok_or(error::NDCUnexpectedError::BadNDCResponse {
+                    .ok_or(execute::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to find configured response headers field in NDC response"
                             .to_string(),
                     })?;
@@ -678,7 +677,7 @@ fn extract_response_headers_and_result(
                 // parse the headers JSON into header map
                 let mut response_headers_map: SerializableHeaderMap =
                     serde_json::from_value(response_headers_value).map_err(|e| {
-                        error::NDCUnexpectedError::BadNDCResponse {
+                        execute::NDCUnexpectedError::BadNDCResponse {
                             summary: format!(
                                 "Unable to deserialize JSON into header map. Error: {e:}"
                             ),
@@ -696,7 +695,7 @@ fn extract_response_headers_and_result(
 
                 let result_value = result_map
                     .remove(response_config.result_field.as_str())
-                    .ok_or(error::NDCUnexpectedError::BadNDCResponse {
+                    .ok_or(execute::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to find configured result field in NDC response"
                             .to_string(),
                     })?;

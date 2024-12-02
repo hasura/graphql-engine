@@ -38,7 +38,7 @@ use super::common::from_plan_error;
 use crate::catalog::model::filter;
 use engine_types::HttpContext;
 use execute::ndc::NdcQueryResponse;
-use plan_types::{AggregateFieldSelection, FieldsSelection, NdcFieldAlias};
+use plan_types::{AggregateFieldSelection, FieldsSelection, NdcFieldAlias, UniqueNumber};
 
 use plan::{
     from_model_aggregate_selection, from_model_selection, ndc_query_to_query_execution_plan,
@@ -74,22 +74,25 @@ pub(crate) struct ModelAggregate {
 }
 
 impl ModelAggregate {
-    pub(crate) async fn to_physical_node(
+    pub(crate) fn to_physical_node(
         &self,
         session: &Arc<Session>,
         http_context: &Arc<HttpContext>,
         metadata: &metadata_resolve::Metadata,
         request_headers: &reqwest::header::HeaderMap,
     ) -> Result<NDCAggregatePushdown> {
-        let (_, query, fields) = from_model_aggregate_selection(
+        // this will need to be threaded throughout entire query
+        // if we want to support remote predicates in `sql`
+        let mut unique_number = UniqueNumber::new();
+
+        let plan::ModelAggregateSelection { query, fields, .. } = from_model_aggregate_selection(
             &self.model_target,
             &self.selection,
             metadata,
             session,
-            http_context,
             request_headers,
+            &mut unique_number,
         )
-        .await
         .map_err(from_plan_error)?;
 
         Ok(NDCAggregatePushdown::new(
@@ -406,21 +409,25 @@ fn to_aggregate(aggregate: &Expr) -> datafusion::error::Result<Option<Aggregate>
 }
 
 impl ModelQuery {
-    pub(super) async fn to_physical_node(
+    pub(super) fn to_physical_node(
         &self,
         session: &Arc<Session>,
         http_context: &Arc<HttpContext>,
         metadata: &metadata_resolve::Metadata,
         request_headers: &reqwest::header::HeaderMap,
     ) -> Result<NDCQueryPushDown> {
+        // this will need to be threaded throughout entire query
+        // if we want to support remote predicates in `sql`
+        let mut unique_number = UniqueNumber::new();
+
         let (_, query, ndc_fields) = from_model_selection(
             &self.model_selection,
             metadata,
             session,
             http_context,
             request_headers,
+            &mut unique_number,
         )
-        .await
         .map_err(from_plan_error)?;
 
         let ndc_pushdown = NDCQueryPushDown::new(

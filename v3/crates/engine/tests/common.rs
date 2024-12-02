@@ -890,8 +890,7 @@ pub async fn open_dd_pipeline_test(
                     &Arc::new(session.clone()),
                     http_context,
                     request_headers,
-                )
-                .await;
+                );
 
                 match plan_result {
                     Ok((execution_plan, _)) => match execution_plan {

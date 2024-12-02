@@ -11,6 +11,7 @@ use crate::{
     SubscriptionRootField, IR,
 };
 pub use error::Error;
+pub use filter::plan_expression;
 use graphql_schema::{GDSRoleNamespaceGetter, GDS};
 use indexmap::IndexMap;
 use lang_graphql as gql;

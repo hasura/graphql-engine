@@ -1,8 +1,11 @@
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
 use engine_types::{ExposeInternalErrors, HttpContext};
-use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
-use graphql_frontend::{execute_query_internal, generate_ir};
+use graphql_frontend::{
+    execute_mutation_plan, execute_query_internal, execute_query_plan, generate_ir,
+    ExecuteQueryResult, RootFieldResult,
+};
+use graphql_ir::{generate_request_plan, RequestPlan};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use indexmap::IndexMap;
@@ -164,21 +167,24 @@ pub fn bench_execute(
         |b, runtime| {
             b.to_async(*runtime).iter(|| async {
                 match generate_request_plan(&ir).unwrap() {
-                    execute::RequestPlan::QueryPlan(query_plan) => {
+                    RequestPlan::QueryPlan(query_plan) => {
                         execute_query_plan(&http_context, query_plan, None).await
                     }
-                    execute::RequestPlan::MutationPlan(mutation_plan) => {
+                    RequestPlan::MutationPlan(mutation_plan) => {
                         execute_mutation_plan(&http_context, mutation_plan, None).await
                     }
-                    execute::RequestPlan::SubscriptionPlan(alias, subscription_plan) => {
+                    RequestPlan::SubscriptionPlan(alias, subscription_plan) => {
                         // subscriptions are not supported
                         let result = Err(execute::FieldError::SubscriptionsNotSupported);
-                        let root_field_result = execute::plan::RootFieldResult {
-                            is_nullable: subscription_plan.process_response_as.is_nullable(),
+                        let root_field_result = RootFieldResult {
+                            is_nullable: subscription_plan
+                                .subscription_execution
+                                .process_response_as
+                                .is_nullable(),
                             result,
                             headers: None,
                         };
-                        execute::plan::ExecuteQueryResult {
+                        ExecuteQueryResult {
                             root_fields: IndexMap::from([(alias, root_field_result)]),
                         }
                     }

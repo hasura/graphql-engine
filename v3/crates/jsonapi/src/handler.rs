@@ -105,7 +105,6 @@ async fn query_engine_execute(
 ) -> Result<QueryResult, RequestError> {
     let (query_execution_plan, query_context) =
         plan::plan_query_request(query_ir, metadata, session, http_context, request_headers)
-            .await
             .map_err(RequestError::PlanError)?;
     match query_execution_plan {
         plan::SingleNodeExecutionPlan::Query(query_execution_plan) => {

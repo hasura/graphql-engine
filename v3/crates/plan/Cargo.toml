@@ -9,14 +9,12 @@ bench = false
 
 [dependencies]
 engine-types = { path = "../engine-types" }
-execute = { path = "../execute" }
 graphql-ir = { path = "../graphql/ir" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 plan-types = { path = "../plan-types" }
 
-async-recursion = { workspace = true }
 derive_more = { workspace = true }
 indexmap = { workspace = true }
 reqwest = { workspace = true }

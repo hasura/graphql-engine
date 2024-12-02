@@ -14,24 +14,23 @@ use open_dds::query::{Aggregate, AggregationFunction, ModelSelection, ModelTarge
 use open_dds::types::CustomTypeName;
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, NdcFieldAlias,
-    QueryExecutionPlan, QueryNodeNew,
+    QueryExecutionPlan, QueryNodeNew, UniqueNumber,
 };
 
-pub async fn from_model_aggregate_selection(
+pub struct ModelAggregateSelection {
+    pub object_type_name: Qualified<CustomTypeName>,
+    pub query: NDCQuery,
+    pub fields: IndexMap<NdcFieldAlias, AggregateFieldSelection>,
+}
+
+pub fn from_model_aggregate_selection(
     model_target: &ModelTarget,
     selection: &IndexMap<String, Aggregate>,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
-) -> Result<
-    (
-        Qualified<CustomTypeName>,
-        NDCQuery,
-        IndexMap<NdcFieldAlias, AggregateFieldSelection>,
-    ),
-    PlanError,
-> {
+    unique_number: &mut UniqueNumber,
+) -> Result<ModelAggregateSelection, PlanError> {
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
         model_target.model_name.clone(),
@@ -91,25 +90,28 @@ pub async fn from_model_aggregate_selection(
     let query = model_target::model_target_to_ndc_query(
         model_target,
         session,
-        http_context,
         metadata,
         request_headers,
         model,
         model_source,
         model_object_type,
-    )
-    .await?;
+        unique_number,
+    )?;
 
-    Ok((model.model.data_type.clone(), query, fields))
+    Ok(ModelAggregateSelection {
+        object_type_name: model.model.data_type.clone(),
+        query,
+        fields,
+    })
 }
 
-#[async_recursion::async_recursion]
-pub async fn from_model_selection(
+pub fn from_model_selection(
     model_selection: &ModelSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
     http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
+    unique_number: &mut UniqueNumber,
 ) -> Result<(Qualified<CustomTypeName>, NDCQuery, FieldsSelection), PlanError> {
     let model_target = &model_selection.target;
     let qualified_model_name = metadata_resolve::Qualified::new(
@@ -149,20 +151,19 @@ pub async fn from_model_selection(
         model_source,
         &model_selection.selection,
         &mut relationships,
-    )
-    .await?;
+        unique_number,
+    )?;
 
     let mut query = model_target::model_target_to_ndc_query(
         model_target,
         session,
-        http_context,
         metadata,
         request_headers,
         model,
         model_source,
         model_object_type,
-    )
-    .await?;
+        unique_number,
+    )?;
 
     // collect relationships accummulated in this scope.
     query.collection_relationships.append(&mut relationships);

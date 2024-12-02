@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::types::{GraphQlParseError, GraphQlValidationError};
 
+use crate::query_usage;
 use gql::normalized_ast::Operation;
 use graphql_schema::{GDSRoleNamespaceGetter, GDS};
 use hasura_authn_core::Session;
@@ -146,14 +147,14 @@ pub fn generate_ir<'n, 's>(
 
 pub fn analyze_query_usage<'s>(
     normalized_request: &'s Operation<'s, GDS>,
-) -> Result<String, execute::QueryUsageAnalyzeError> {
+) -> Result<String, query_usage::QueryUsageAnalyzeError> {
     let tracer = tracing_util::global_tracer();
     tracer.in_span(
         "analyze_query_usage",
         "Analyze query usage",
         SpanVisibility::Internal,
         || {
-            let query_usage_analytics = execute::analyze_query_usage(normalized_request);
+            let query_usage_analytics = query_usage::analyze_query_usage(normalized_request);
             Ok(serde_json::to_string(&query_usage_analytics)?)
         },
     )

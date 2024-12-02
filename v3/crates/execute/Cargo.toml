@@ -9,23 +9,17 @@ bench = false
 
 [dependencies]
 engine-types = { path = "../engine-types" }
-futures-ext = { path = "../utils/futures-ext" }
-graphql-ir = { path = "../graphql/ir" }
 graphql-schema = { path = "../graphql/schema" }
-hasura-authn-core = { path = "../auth/hasura-authn-core" }
 json-ext = { path = "../utils/json-ext" }
 lang-graphql = { path = "../graphql/lang-graphql" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 plan-types = { path = "../plan-types" }
-query-usage-analytics = { path = "../query-usage-analytics" }
 tracing-util = { path = "../utils/tracing-util" }
 
 async-recursion = { workspace = true }
 axum = { workspace = true }
-base64 = { workspace = true }
 bytes = { workspace = true }
-futures-util = { workspace = true }
 indexmap = { workspace = true }
 ndc-models = { workspace = true }
 ndc-models-v01 = { workspace = true }
@@ -36,7 +30,6 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 transitive = { workspace = true }
-uuid = { workspace = true }
 
 [dev-dependencies]
 mockito = { workspace = true }

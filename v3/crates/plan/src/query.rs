@@ -11,6 +11,7 @@ pub use command::{
 use indexmap::IndexMap;
 pub use model::{
     from_model_aggregate_selection, from_model_selection, ndc_query_to_query_execution_plan,
+    ModelAggregateSelection,
 };
 use std::sync::Arc;
 pub use types::{NDCFunction, NDCProcedure, NDCQuery, QueryContext};
@@ -19,7 +20,7 @@ use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use open_dds::query::{Query, QueryRequest};
-use plan_types::FieldsSelection;
+use plan_types::{FieldsSelection, UniqueNumber};
 
 // temporary type, we assume only one node atm
 pub enum SingleNodeExecutionPlan {
@@ -28,7 +29,7 @@ pub enum SingleNodeExecutionPlan {
 }
 
 // make a query execution plan, assuming an OpenDD IR with a single model request
-pub async fn plan_query_request<'req, 'metadata>(
+pub fn plan_query_request<'req, 'metadata>(
     query_request: &'req QueryRequest,
     metadata: &'metadata Metadata,
     session: &Arc<Session>,
@@ -39,21 +40,30 @@ where
     'metadata: 'req,
 {
     let QueryRequest::V1(query_request_v1) = query_request;
+    let mut unique_number = UniqueNumber::new();
 
     // to limit scope, let's assume there's one item and explode otherwise
     let (_alias, query) = query_request_v1.queries.first().unwrap();
 
     // return plan for a single query (again, wrong, but let's unblock ourselves for now)
-    query_to_plan(query, metadata, session, http_context, request_headers).await
+    query_to_plan(
+        query,
+        metadata,
+        session,
+        http_context,
+        request_headers,
+        &mut unique_number,
+    )
 }
 
 // turn a single OpenDD IR Query into a query execution plan
-async fn query_to_plan<'req, 'metadata>(
+fn query_to_plan<'req, 'metadata>(
     query: &'req Query,
     metadata: &'metadata Metadata,
     session: &Arc<Session>,
     http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
+    unique_number: &mut UniqueNumber,
 ) -> Result<(SingleNodeExecutionPlan, QueryContext), PlanError>
 where
     'metadata: 'req,
@@ -66,8 +76,9 @@ where
                 session,
                 http_context,
                 request_headers,
-            )
-            .await?;
+                unique_number,
+            )?;
+
             let query_execution_plan =
                 model::ndc_query_to_query_execution_plan(&ndc_query, &fields, &IndexMap::new());
             let query_context = QueryContext { type_name };
@@ -86,15 +97,18 @@ where
                 .map(|(k, v)| (k.to_string(), v.clone()))
                 .collect();
 
-            let (type_name, ndc_query, aggregate_fields) = model::from_model_aggregate_selection(
+            let ModelAggregateSelection {
+                object_type_name: type_name,
+                query: ndc_query,
+                fields: aggregate_fields,
+            } = model::from_model_aggregate_selection(
                 &model_aggregate.target,
                 &selection,
                 metadata,
                 session,
-                http_context,
                 request_headers,
-            )
-            .await?;
+                unique_number,
+            )?;
 
             let query_execution_plan = model::ndc_query_to_query_execution_plan(
                 &ndc_query,
