@@ -65,7 +65,7 @@
         dockerExtraContents = {
           "engine" = [ pkgs.cacert ]; # so local dev can use SSH
           "multitenant-engine" = [ pkgs.bash pkgs.coreutils ]; # to run sleep in a healthcheck, we should remove this soon
-          "artifact-server" = [ pkgs.curl ];
+          "artifact-server" = [ pkgs.curl pkgs.bash ]; # to run healthcheck, we should remove this soon
         };
       in
       {
