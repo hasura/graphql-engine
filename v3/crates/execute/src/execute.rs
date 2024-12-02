@@ -3,7 +3,6 @@
 // frontend
 
 use std::sync::Arc;
-use uuid::Uuid;
 mod ndc_request;
 mod remote_joins;
 mod remote_predicates;
@@ -15,7 +14,7 @@ pub use ndc_request::{make_ndc_mutation_request, make_ndc_query_request};
 use plan_types::{
     ExecutionTree, JoinLocations, NDCMutationExecution, NDCQueryExecution,
     NDCSubscriptionExecution, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan,
-    ResolvedFilterExpression,
+    RemotePredicateKey, ResolvedFilterExpression,
 };
 use std::collections::BTreeMap;
 
@@ -53,7 +52,7 @@ async fn execute_remote_predicates(
     execution_span_attribute: &'static str,
     process_response_as: &ProcessResponseAs,
     project_id: Option<&ProjectId>,
-) -> Result<BTreeMap<Uuid, ResolvedFilterExpression>, FieldError> {
+) -> Result<BTreeMap<RemotePredicateKey, ResolvedFilterExpression>, FieldError> {
     // resolve all our filter expressions into here, ready to && them in
     // at the appropriate moment
     let mut filter_expressions = BTreeMap::new();
@@ -109,7 +108,7 @@ async fn execute_execution_tree<'s>(
     execution_span_attribute: &'static str,
     process_response_as: &ProcessResponseAs,
     project_id: Option<&ProjectId>,
-    child_filter_expressions: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    child_filter_expressions: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<Vec<ndc_models::RowSet>, FieldError> {
     // given an execution tree
     // 1) run remote predicates

@@ -1,6 +1,5 @@
-use crate::{LocalFieldComparison, NdcRelationshipName};
+use crate::{LocalFieldComparison, NdcRelationshipName, RemotePredicateKey};
 use open_dds::data_connector::DataConnectorColumnName;
-use uuid::Uuid;
 
 /// Filter expression plan to be resolved
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -25,7 +24,7 @@ pub enum ResolvedFilterExpression {
         predicate: Box<ResolvedFilterExpression>,
     },
     RemoteRelationshipComparison {
-        remote_predicate_id: Uuid,
+        remote_predicate_id: RemotePredicateKey,
     },
 }
 

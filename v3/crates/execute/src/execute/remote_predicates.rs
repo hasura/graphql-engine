@@ -2,17 +2,16 @@ use crate::error::{FieldError, FieldInternalError, FilterPredicateError};
 use indexmap::{IndexMap, IndexSet};
 use plan_types::{
     Argument, Field, FieldsSelection, NestedArray, NestedField, NestedObject, QueryExecutionPlan,
-    QueryNodeNew, ResolvedFilterExpression,
+    QueryNodeNew, RemotePredicateKey, ResolvedFilterExpression,
 };
 use std::collections::BTreeMap;
-use uuid::Uuid;
 
 // replace any placeholders in our predicates with
 // `ResolvedFilterExpression`s we have calculated from
 // our remote predicate execution
 pub fn replace_predicates_in_query_execution_plan(
     query_execution_plan: QueryExecutionPlan,
-    predicates: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<QueryExecutionPlan, FilterPredicateError> {
     Ok(QueryExecutionPlan {
         query_node: replace_predicates_in_query_node(query_execution_plan.query_node, predicates)?,
@@ -35,7 +34,7 @@ pub fn replace_predicates_in_query_execution_plan(
 
 fn replace_predicates_in_argument(
     argument: Argument,
-    predicates: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<Argument, FilterPredicateError> {
     Ok(match argument {
         Argument::BooleanExpression { predicate } => Argument::BooleanExpression {
@@ -48,7 +47,7 @@ fn replace_predicates_in_argument(
 
 fn replace_predicates_in_query_node(
     query_node: QueryNodeNew,
-    predicates: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<QueryNodeNew, FilterPredicateError> {
     Ok(QueryNodeNew {
         aggregates: query_node.aggregates,
@@ -78,7 +77,7 @@ fn replace_predicates_in_query_node(
 
 fn replace_predicates_in_nested_field(
     nested_field: NestedField,
-    predicates: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<NestedField, FilterPredicateError> {
     Ok(match nested_field {
         NestedField::Object(nested_object) => NestedField::Object(
@@ -92,7 +91,7 @@ fn replace_predicates_in_nested_field(
 }
 fn replace_predicates_in_nested_array(
     nested_array: NestedArray,
-    predicates: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<NestedArray, FilterPredicateError> {
     let NestedArray { fields } = nested_array;
     Ok(NestedArray {
@@ -102,7 +101,7 @@ fn replace_predicates_in_nested_array(
 
 fn replace_predicates_in_nested_object(
     nested_object: NestedObject,
-    predicates: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<NestedObject, FilterPredicateError> {
     let NestedObject { fields } = nested_object;
     Ok(NestedObject {
@@ -120,7 +119,7 @@ fn replace_predicates_in_nested_object(
 
 fn replace_predicates_in_field(
     field: Field,
-    predicates: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<Field, FilterPredicateError> {
     Ok(match field {
         Field::Relationship {
@@ -164,7 +163,7 @@ fn replace_predicates_in_field(
 
 fn replace_predicates_in_filter_expression(
     filter_expression: ResolvedFilterExpression,
-    predicates: &BTreeMap<Uuid, ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
 ) -> Result<ResolvedFilterExpression, FilterPredicateError> {
     Ok(match filter_expression {
         ResolvedFilterExpression::RemoteRelationshipComparison {

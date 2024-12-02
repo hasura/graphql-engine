@@ -2,6 +2,7 @@ use engine_types::ExposeInternalErrors;
 use gql::{ast::common as ast, http::GraphQLError};
 use lang_graphql as gql;
 use open_dds::relationships::RelationshipName;
+use plan_types::RemotePredicateKey;
 use reqwest::StatusCode;
 use serde_json as json;
 use thiserror::Error;
@@ -218,7 +219,7 @@ pub enum FilterPredicateError {
     TooManyRowsReturned,
 
     #[error("could not find remote predicate result for {0}")]
-    CouldNotFindRemotePredicate(uuid::Uuid),
+    CouldNotFindRemotePredicate(RemotePredicateKey),
 }
 
 impl TraceableError for FilterPredicateError {

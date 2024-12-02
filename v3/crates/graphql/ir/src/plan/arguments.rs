@@ -5,12 +5,14 @@ use std::collections::BTreeMap;
 use super::error as plan_error;
 use plan_types::{
     Argument, MutationArgument, NdcRelationshipName, PredicateQueryTrees, Relationship,
+    UniqueNumber,
 };
 
 /// Generate the argument plan from IR argument
 pub fn plan_argument(
     ir_argument: &crate::Argument<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<(Argument, PredicateQueryTrees), plan_error::Error> {
     let mut remote_predicates = PredicateQueryTrees::new();
     let argument = match ir_argument {
@@ -20,8 +22,12 @@ pub fn plan_argument(
             })
         }
         crate::Argument::BooleanExpression { predicate } => {
-            let expression =
-                filter::plan_expression(predicate, relationships, &mut remote_predicates)?;
+            let expression = filter::plan_expression(
+                predicate,
+                relationships,
+                &mut remote_predicates,
+                unique_number,
+            )?;
 
             Ok(Argument::BooleanExpression {
                 predicate: expression,
@@ -37,6 +43,7 @@ pub fn plan_argument(
 pub fn plan_mutation_argument(
     ir_argument: &crate::Argument<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<MutationArgument, plan_error::Error> {
     let mut remote_predicates = PredicateQueryTrees::new();
 
@@ -47,8 +54,12 @@ pub fn plan_mutation_argument(
             })
         }
         crate::Argument::BooleanExpression { predicate } => {
-            let expression =
-                super::filter::plan_expression(predicate, relationships, &mut remote_predicates)?;
+            let expression = super::filter::plan_expression(
+                predicate,
+                relationships,
+                &mut remote_predicates,
+                unique_number,
+            )?;
 
             Ok(MutationArgument::BooleanExpression {
                 predicate: expression,
@@ -62,6 +73,7 @@ pub fn plan_mutation_argument(
 pub fn plan_arguments(
     arguments: &BTreeMap<DataConnectorArgumentName, crate::Argument<'_>>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<
     (
         BTreeMap<DataConnectorArgumentName, Argument>,
@@ -73,7 +85,8 @@ pub fn plan_arguments(
     let mut remote_predicates = PredicateQueryTrees::new();
 
     for (argument_name, argument_value) in arguments {
-        let (argument, argument_remote_predicates) = plan_argument(argument_value, relationships)?;
+        let (argument, argument_remote_predicates) =
+            plan_argument(argument_value, relationships, unique_number)?;
 
         remote_predicates.0.extend(argument_remote_predicates.0);
 
@@ -86,13 +99,14 @@ pub fn plan_arguments(
 pub fn plan_mutation_arguments(
     arguments: &BTreeMap<DataConnectorArgumentName, crate::Argument<'_>>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<BTreeMap<DataConnectorArgumentName, MutationArgument>, plan_error::Error> {
     arguments
         .iter()
         .map(|(name, argument)| {
             Ok((
                 name.clone(),
-                plan_mutation_argument(argument, relationships)?,
+                plan_mutation_argument(argument, relationships, unique_number)?,
             ))
         })
         .collect::<Result<BTreeMap<_, _>, plan_error::Error>>()

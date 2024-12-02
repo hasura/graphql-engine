@@ -19,6 +19,7 @@ pub use mutation::MutationExecutionPlan;
 pub use order_by::{OrderByDirection, OrderByElement, OrderByTarget};
 pub use query::{
     FieldsSelection, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
+    RemotePredicateKey, UniqueNumber,
 };
 pub use relationships::{Relationship, RelationshipArgument};
 pub use remote_joins::{

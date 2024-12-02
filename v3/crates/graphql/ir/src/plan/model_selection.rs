@@ -9,7 +9,7 @@ use crate::plan::Plan;
 use crate::ModelSelection;
 use plan_types::{
     ExecutionTree, FieldsSelection, JoinLocations, NdcRelationshipName, PredicateQueryTrees,
-    QueryExecutionPlan, QueryNodeNew, Relationship,
+    QueryExecutionPlan, QueryNodeNew, Relationship, UniqueNumber,
 };
 use std::collections::BTreeMap;
 
@@ -18,6 +18,7 @@ use std::collections::BTreeMap;
 pub(crate) fn plan_query_node(
     ir: &ModelSelection<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Plan<QueryNodeNew>, error::Error> {
     let mut query_fields = None;
     let mut join_locations = JoinLocations::new();
@@ -31,6 +32,7 @@ pub(crate) fn plan_query_node(
             selection,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
+            unique_number,
         )?;
 
         query_fields = Some(fields);
@@ -39,7 +41,7 @@ pub(crate) fn plan_query_node(
     }
 
     let (predicate, filter_remote_predicates) =
-        filter::plan_filter_expression(&ir.filter_clause, relationships)?;
+        filter::plan_filter_expression(&ir.filter_clause, relationships, unique_number)?;
 
     remote_predicates.0.extend(filter_remote_predicates.0);
 
@@ -60,19 +62,22 @@ pub(crate) fn plan_query_node(
 }
 
 /// Generate query execution plan from internal IR (`ModelSelection`)
-pub(crate) fn plan_query_execution(ir: &ModelSelection<'_>) -> Result<ExecutionTree, error::Error> {
+pub(crate) fn plan_query_execution(
+    ir: &ModelSelection<'_>,
+    unique_number: &mut UniqueNumber,
+) -> Result<ExecutionTree, error::Error> {
     let mut collection_relationships = BTreeMap::new();
     let Plan {
         inner: query,
         join_locations: remote_join_executions,
         mut remote_predicates,
-    } = plan_query_node(ir, &mut collection_relationships)?;
+    } = plan_query_node(ir, &mut collection_relationships, unique_number)?;
 
     // collection relationships from order_by clause
     relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;
 
     let (arguments, argument_remote_predicates) =
-        arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?;
+        arguments::plan_arguments(&ir.arguments, &mut collection_relationships, unique_number)?;
 
     remote_predicates.0.extend(argument_remote_predicates.0);
 

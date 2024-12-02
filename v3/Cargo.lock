@@ -4177,7 +4177,6 @@ dependencies = [
  "serde",
  "serde_json",
  "smol_str",
- "uuid",
 ]
 
 [[package]]

@@ -14,7 +14,7 @@ pub use execution_plan::{
     NestedArray, NestedField, NestedObject, OrderByDirection, OrderByElement, OrderByTarget,
     PredicateQueryTree, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryNodeNew,
     Relationship, RelationshipArgument, RemoteJoin, RemoteJoinArgument, RemoteJoinType,
-    ResolvedFilterExpression, SourceFieldAlias, TargetField,
+    RemotePredicateKey, ResolvedFilterExpression, SourceFieldAlias, TargetField, UniqueNumber,
 };
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,

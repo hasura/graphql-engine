@@ -12,12 +12,13 @@ use open_dds::commands::ProcedureName;
 use plan_types::{
     Argument, ExecutionTree, Field, FieldsSelection, JoinLocations, MutationExecutionPlan,
     NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
-    Relationship, VariableName, FUNCTION_IR_VALUE_COLUMN_NAME,
+    Relationship, UniqueNumber, VariableName, FUNCTION_IR_VALUE_COLUMN_NAME,
 };
 
 pub(crate) fn plan_query_node(
     ir: &CommandInfo<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Plan<QueryNodeNew>, error::Error> {
     let mut ndc_nested_field = None;
     let mut join_locations = JoinLocations::new();
@@ -32,6 +33,7 @@ pub(crate) fn plan_query_node(
             nested_selection,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
+            unique_number,
         )?;
         ndc_nested_field = Some(fields);
         join_locations = nested_join_locations;
@@ -63,10 +65,14 @@ pub(crate) fn plan_query_node(
 
 pub(crate) fn plan_query_execution(
     ir: &FunctionBasedCommand<'_>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<ExecutionTree, error::Error> {
     let mut collection_relationships = BTreeMap::new();
-    let (mut arguments, mut remote_predicates) =
-        arguments::plan_arguments(&ir.command_info.arguments, &mut collection_relationships)?;
+    let (mut arguments, mut remote_predicates) = arguments::plan_arguments(
+        &ir.command_info.arguments,
+        &mut collection_relationships,
+        unique_number,
+    )?;
 
     // Add the variable arguments which are used for remote joins
     for (variable_name, variable_argument) in &ir.variable_arguments {
@@ -82,7 +88,11 @@ pub(crate) fn plan_query_execution(
         inner: query_node,
         join_locations: remote_join_executions,
         remote_predicates: query_remote_predicates,
-    } = plan_query_node(&ir.command_info, &mut collection_relationships)?;
+    } = plan_query_node(
+        &ir.command_info,
+        &mut collection_relationships,
+        unique_number,
+    )?;
 
     remote_predicates.0.extend(query_remote_predicates.0);
 
@@ -104,6 +114,7 @@ pub(crate) fn plan_query_execution(
 pub(crate) fn plan_mutation_execution(
     procedure_name: &ProcedureName,
     ir: &ProcedureBasedCommand<'_>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Plan<MutationExecutionPlan>, error::Error> {
     let mut ndc_nested_field = None;
     let mut join_locations = JoinLocations::new();
@@ -122,6 +133,7 @@ pub(crate) fn plan_mutation_execution(
                 .capabilities
                 .supported_ndc_version,
             &mut collection_relationships,
+            unique_number,
         )?;
         ndc_nested_field = Some(fields);
         join_locations = nested_join_locations;
@@ -132,6 +144,7 @@ pub(crate) fn plan_mutation_execution(
         procedure_arguments: arguments::plan_mutation_arguments(
             &ir.command_info.arguments,
             &mut collection_relationships,
+            unique_number,
         )?,
         procedure_fields: ndc_nested_field,
         collection_relationships,

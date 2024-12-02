@@ -15,13 +15,14 @@ use plan_types::{
     NestedField, NestedObject, PredicateQueryTrees, RemoteJoin, RemoteJoinType, SourceFieldAlias,
     TargetField,
 };
-use plan_types::{NdcFieldAlias, NdcRelationshipName, Relationship};
+use plan_types::{NdcFieldAlias, NdcRelationshipName, Relationship, UniqueNumber};
 use std::collections::{BTreeMap, HashMap};
 
 pub(crate) fn plan_nested_selection(
     nested_selection: &NestedSelection<'_>,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Plan<NestedField>, error::Error> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
@@ -29,7 +30,7 @@ pub(crate) fn plan_nested_selection(
                 inner: fields,
                 join_locations,
                 remote_predicates,
-            } = plan_selection_set(model_selection, ndc_version, relationships)?;
+            } = plan_selection_set(model_selection, ndc_version, relationships, unique_number)?;
             Ok(Plan {
                 inner: NestedField::Object(NestedObject { fields }),
                 join_locations,
@@ -41,7 +42,7 @@ pub(crate) fn plan_nested_selection(
                 inner: field,
                 join_locations,
                 remote_predicates,
-            } = plan_nested_selection(nested_selection, ndc_version, relationships)?;
+            } = plan_nested_selection(nested_selection, ndc_version, relationships, unique_number)?;
             Ok(Plan {
                 inner: NestedField::Array(NestedArray {
                     fields: Box::new(field),
@@ -62,6 +63,7 @@ pub(crate) fn plan_selection_set(
     model_selection: &ResultSelectionSet<'_>,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Plan<IndexMap<NdcFieldAlias, Field>>, error::Error> {
     let mut fields = IndexMap::<NdcFieldAlias, Field>::new();
     let mut join_locations = JoinLocations::new();
@@ -80,7 +82,12 @@ pub(crate) fn plan_selection_set(
                         inner: nested_fields,
                         join_locations: jl,
                         remote_predicates: nested_remote_predicates,
-                    } = plan_nested_selection(nested_selection, ndc_version, relationships)?;
+                    } = plan_nested_selection(
+                        nested_selection,
+                        ndc_version,
+                        relationships,
+                        unique_number,
+                    )?;
 
                     remote_predicates.0.extend(nested_remote_predicates.0);
 
@@ -88,7 +95,7 @@ pub(crate) fn plan_selection_set(
                     nested_join_locations = jl;
                 }
                 let (arguments, argument_remote_predicates) =
-                    arguments::plan_arguments(arguments, relationships)?;
+                    arguments::plan_arguments(arguments, relationships, unique_number)?;
 
                 remote_predicates.0.extend(argument_remote_predicates.0);
 
@@ -124,7 +131,7 @@ pub(crate) fn plan_selection_set(
                     inner: relationship_query,
                     join_locations: jl,
                     remote_predicates: relationship_remote_predicates,
-                } = model_selection::plan_query_node(query, relationships)?;
+                } = model_selection::plan_query_node(query, relationships, unique_number)?;
 
                 remote_predicates.0.extend(relationship_remote_predicates.0);
 
@@ -158,12 +165,16 @@ pub(crate) fn plan_selection_set(
                     inner: relationship_query,
                     join_locations: jl,
                     remote_predicates: command_remote_predicates,
-                } = commands::plan_query_node(&ir.command_info, relationships)?;
+                } = commands::plan_query_node(&ir.command_info, relationships, unique_number)?;
 
                 remote_predicates.0.extend(command_remote_predicates.0);
 
                 let (relationship_arguments, argument_remote_predicates) =
-                    arguments::plan_arguments(&ir.command_info.arguments, relationships)?;
+                    arguments::plan_arguments(
+                        &ir.command_info.arguments,
+                        relationships,
+                        unique_number,
+                    )?;
 
                 remote_predicates.0.extend(argument_remote_predicates.0);
 
@@ -209,7 +220,7 @@ pub(crate) fn plan_selection_set(
                     query_execution_plan: query_execution,
                     remote_join_executions: sub_join_locations,
                     remote_predicates: model_remote_predicates,
-                } = model_selection::plan_query_execution(ir)?;
+                } = model_selection::plan_query_execution(ir, unique_number)?;
 
                 // push any remote predicates to the outer list
                 remote_predicates.0.extend(model_remote_predicates.0);
@@ -255,7 +266,7 @@ pub(crate) fn plan_selection_set(
                     query_execution_plan: ndc_ir,
                     remote_join_executions: sub_join_locations,
                     remote_predicates: command_remote_predicates,
-                } = commands::plan_query_execution(ir)?;
+                } = commands::plan_query_execution(ir, unique_number)?;
 
                 remote_predicates.0.extend(command_remote_predicates.0);
 

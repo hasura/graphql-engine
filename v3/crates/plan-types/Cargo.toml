@@ -20,7 +20,6 @@ schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 smol_str = { workspace = true }
-uuid = { workspace = true }
 
 [lints]
 workspace = true
