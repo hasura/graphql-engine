@@ -1,23 +1,25 @@
-mod predicate;
 pub mod types;
 use super::steps;
 
 use std::borrow::Cow;
+use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use async_recursion::async_recursion;
 use engine_types::{ExposeInternalErrors, HttpContext};
 use execute::ndc::client as ndc_client;
-use execute::plan::{
-    self, ApolloFederationSelect, NDCQueryExecution, NodeQueryPlan, ResolveFilterExpressionContext,
-};
-use execute::{JoinLocations, JoinNode, RemoteJoinType};
+use graphql_ir::{ApolloFederationSelect, MutationPlan, NodeQueryPlan, QueryPlan, RequestPlan};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
+use metadata_resolve::DataConnectorLink;
 use nonempty::NonEmpty;
-use plan_types::ProcessResponseAs;
+use plan_types::{
+    JoinLocations, JoinNode, NDCQueryExecution, PredicateQueryTrees, ProcessResponseAs,
+    QueryExecutionPlan, RemoteJoinType, RemotePredicateKey, ResolvedFilterExpression,
+};
 use tracing_util::{AttributeVisibility, SpanVisibility};
 
 pub async fn execute_explain(
@@ -87,7 +89,7 @@ async fn explain_query_internal(
                         steps::build_ir(schema, session, request_headers, &normalized_request)?;
 
                     // construct a plan to execute the request
-                    let request_plan = steps::build_request_plan_with_old(&ir)?;
+                    let request_plan = steps::build_request_plan(&ir)?;
 
                     // explain the query plan
                     let response = tracer
@@ -98,7 +100,7 @@ async fn explain_query_internal(
                             || {
                                 Box::pin(async {
                                     let request_result = match request_plan {
-                                        plan::RequestPlan::MutationPlan(mutation_plan) => {
+                                        RequestPlan::MutationPlan(mutation_plan) => {
                                             explain_mutation_plan(
                                                 expose_internal_errors,
                                                 http_context,
@@ -106,7 +108,7 @@ async fn explain_query_internal(
                                             )
                                             .await
                                         }
-                                        plan::RequestPlan::QueryPlan(query_plan) => {
+                                        RequestPlan::QueryPlan(query_plan) => {
                                             explain_query_plan(
                                                 expose_internal_errors,
                                                 http_context,
@@ -114,7 +116,7 @@ async fn explain_query_internal(
                                             )
                                             .await
                                         }
-                                        plan::RequestPlan::SubscriptionPlan(
+                                        RequestPlan::SubscriptionPlan(
                                             _alias,
                                             _subscription_plan,
                                         ) => {
@@ -147,12 +149,9 @@ async fn explain_query_internal(
 pub(crate) async fn explain_query_plan(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
-    query_plan: plan::QueryPlan<'_, '_, '_>,
+    query_plan: QueryPlan<'_, '_, '_>,
 ) -> Result<types::Step, execute::RequestError> {
     let mut parallel_root_steps = vec![];
-    // Allow resolving in-engine relationship predicates
-    let resolve_context =
-        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
     // Here, we are assuming that all root fields are executed in parallel.
     for (alias, node) in query_plan {
         match node {
@@ -167,38 +166,30 @@ pub(crate) async fn explain_query_plan(
                     ..
                 } = ndc_query_execution;
 
-                let mut predicate_explain_steps = vec![];
-                predicate::explain_query_predicate_node(
-                    &expose_internal_errors,
+                let remote_join_executions = execution_tree.remote_join_executions.clone();
+
+                let (ndc_request, data_connector, predicate_explain_steps) = construct_ndc_query(
+                    execution_tree.query_execution_plan,
+                    execution_tree.remote_predicates,
+                    expose_internal_errors,
                     http_context,
-                    &execution_tree.query_execution_plan.query_node,
-                    &mut predicate_explain_steps,
+                    alias.to_string(),
+                    &process_response_as,
                 )
                 .await?;
-
-                let resolved_execution_plan = execution_tree
-                    .query_execution_plan
-                    .resolve(&resolve_context)
-                    .await
-                    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
-
-                let data_connector = resolved_execution_plan.data_connector.clone();
-                let ndc_request = execute::make_ndc_query_request(resolved_execution_plan)
-                    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                 let sequence_steps = get_execution_steps(
                     expose_internal_errors,
                     http_context,
-                    &resolve_context,
-                    alias,
+                    alias.to_string(),
                     &process_response_as,
-                    execution_tree.remote_join_executions,
+                    remote_join_executions,
                     types::NDCRequest::Query(ndc_request),
                     &data_connector,
                 )
                 .await?;
                 parallel_root_steps.push(Box::new(types::Step::Sequence(prepend_vec_to_nonempty(
-                    predicate_explain_steps.into_iter().map(Box::new).collect(),
+                    predicate_explain_steps,
                     sequence_steps,
                 ))));
             }
@@ -212,38 +203,32 @@ pub(crate) async fn explain_query_plan(
                         process_response_as,
                         ..
                     } = ndc_query_execution;
-                    let mut predicate_explain_steps = vec![];
-                    predicate::explain_query_predicate_node(
-                        &expose_internal_errors,
-                        http_context,
-                        &execution_tree.query_execution_plan.query_node,
-                        &mut predicate_explain_steps,
-                    )
-                    .await?;
 
-                    let resolved_execution_plan = execution_tree
-                        .query_execution_plan
-                        .resolve(&resolve_context)
-                        .await
-                        .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+                    let remote_join_executions = execution_tree.remote_join_executions.clone();
 
-                    let data_connector = resolved_execution_plan.data_connector.clone();
-                    let ndc_request = execute::make_ndc_query_request(resolved_execution_plan)
-                        .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+                    let (ndc_request, data_connector, predicate_explain_steps) =
+                        construct_ndc_query(
+                            execution_tree.query_execution_plan,
+                            execution_tree.remote_predicates,
+                            expose_internal_errors,
+                            http_context,
+                            alias.to_string(),
+                            &process_response_as,
+                        )
+                        .await?;
 
                     let sequence_steps = get_execution_steps(
                         expose_internal_errors,
                         http_context,
-                        &resolve_context,
-                        alias.clone(),
+                        alias.to_string(),
                         &process_response_as,
-                        execution_tree.remote_join_executions,
+                        remote_join_executions,
                         types::NDCRequest::Query(ndc_request),
                         &data_connector,
                     )
                     .await?;
                     parallel_steps.push(Box::new(types::Step::Sequence(prepend_vec_to_nonempty(
-                        predicate_explain_steps.into_iter().map(Box::new).collect(),
+                        predicate_explain_steps,
                         sequence_steps,
                     ))));
                 }
@@ -288,7 +273,7 @@ pub(crate) async fn explain_query_plan(
 pub(crate) async fn explain_mutation_plan(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
-    mutation_plan: plan::MutationPlan<'_, '_>,
+    mutation_plan: MutationPlan<'_, '_>,
 ) -> Result<types::Step, execute::RequestError> {
     let mut root_steps = vec![];
 
@@ -300,25 +285,11 @@ pub(crate) async fn explain_mutation_plan(
 
     for (_, mutation_group) in mutation_plan.nodes {
         for (alias, ndc_mutation_execution) in mutation_group {
-            let mut predicate_explain_steps = vec![];
-            predicate::explain_query_predicate_nested_field(
-                &expose_internal_errors,
-                http_context,
-                ndc_mutation_execution
-                    .execution_node
-                    .procedure_fields
-                    .as_ref(),
-                &mut predicate_explain_steps,
-            )
-            .await?;
+            // we don't have remote predicates on mutations
+            // so there won't be any steps here
+            let predicate_explain_steps = vec![];
 
-            let resolve_context =
-                ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
-            let resolved_execution_plan = ndc_mutation_execution
-                .execution_node
-                .resolve(&resolve_context)
-                .await
-                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+            let resolved_execution_plan = ndc_mutation_execution.mutation_execution.execution_node;
 
             let mutation_request = execute::make_ndc_mutation_request(resolved_execution_plan)
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
@@ -326,12 +297,13 @@ pub(crate) async fn explain_mutation_plan(
             let sequence_steps = get_execution_steps(
                 expose_internal_errors,
                 http_context,
-                &resolve_context,
-                alias,
-                &ndc_mutation_execution.process_response_as,
-                ndc_mutation_execution.join_locations,
+                alias.to_string(),
+                &ndc_mutation_execution
+                    .mutation_execution
+                    .process_response_as,
+                ndc_mutation_execution.mutation_execution.join_locations,
                 types::NDCRequest::Mutation(mutation_request),
-                &ndc_mutation_execution.data_connector,
+                &ndc_mutation_execution.mutation_execution.data_connector,
             )
             .await?;
             let field_steps = prepend_vec_to_nonempty(
@@ -354,13 +326,13 @@ pub(crate) async fn explain_mutation_plan(
     }
 }
 
-async fn get_execution_steps<'s>(
+#[async_recursion]
+async fn get_execution_steps(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
-    resolve_context: &ResolveFilterExpressionContext<'_>,
-    alias: gql::ast::common::Alias,
+    alias: String,
     process_response_as: &ProcessResponseAs,
-    join_locations: JoinLocations<'s>,
+    join_locations: JoinLocations,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
 ) -> Result<NonEmpty<Box<types::Step>>, execute::RequestError> {
@@ -400,18 +372,125 @@ async fn get_execution_steps<'s>(
             })))
         }
     };
-    if let Some(join_steps) = get_join_steps(
-        expose_internal_errors,
-        join_locations,
-        http_context,
-        resolve_context,
-    )
-    .await?
+
+    if let Some(join_steps) =
+        get_join_steps(expose_internal_errors, join_locations, http_context).await?
     {
         sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
     };
     Ok(sequence_steps)
+}
+
+#[async_recursion]
+async fn get_remote_predicate_steps(
+    expose_internal_errors: ExposeInternalErrors,
+    remote_predicates: PredicateQueryTrees,
+    http_context: &HttpContext,
+    alias: String,
+    process_response_as: &ProcessResponseAs,
+    filter_expressions: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
+) -> Result<Vec<Box<types::Step>>, execute::RequestError> {
+    let mut steps = vec![];
+    for (_uuid, remote_predicate) in remote_predicates.0 {
+        if !remote_predicate.children.0.is_empty() {
+            let child_steps = get_remote_predicate_steps(
+                expose_internal_errors,
+                remote_predicate.children,
+                http_context,
+                alias.clone(),
+                process_response_as,
+                filter_expressions,
+            )
+            .await?;
+            steps.extend(child_steps);
+        }
+        let data_connector = remote_predicate
+            .query
+            .query_execution_plan
+            .data_connector
+            .clone();
+
+        // traverse `QueryExecutionPlan`, adding results of remote predicates
+        let query_execution_plan_with_predicates =
+            execute::replace_predicates_in_query_execution_plan(
+                remote_predicate.query.query_execution_plan,
+                filter_expressions,
+            )
+            .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+
+        let ndc_request = execute::make_ndc_query_request(query_execution_plan_with_predicates)
+            .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+
+        let sequence_steps = get_execution_steps(
+            expose_internal_errors,
+            http_context,
+            remote_predicate.target_model_name.to_string(),
+            process_response_as,
+            remote_predicate.query.remote_join_executions,
+            types::NDCRequest::Query(ndc_request),
+            &data_connector,
+        )
+        .await?;
+        steps.extend(sequence_steps);
+    }
+
+    Ok(steps)
+}
+
+// construct a query, running (and explaining) any remote predicates along the way
+async fn construct_ndc_query(
+    query_execution_plan: QueryExecutionPlan,
+    remote_predicates: PredicateQueryTrees,
+    expose_internal_errors: ExposeInternalErrors,
+    http_context: &HttpContext,
+    alias: String,
+    process_response_as: &ProcessResponseAs,
+) -> Result<
+    (
+        execute::ndc::NdcQueryRequest,
+        Arc<DataConnectorLink>,
+        Vec<Box<types::Step>>,
+    ),
+    execute::RequestError,
+> {
+    // to ensure the downstream queries are realistic, we actually
+    // run the remote predicates so that we can include their results
+    // in the following queries
+    let filter_expressions = execute::execute_remote_predicates(
+        &remote_predicates,
+        http_context,
+        "execute_remote_predicate",
+        "execute_remote_predicate",
+        process_response_as,
+        None,
+    )
+    .await
+    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+
+    // OK, need to replace in here too
+    let predicate_explain_steps = get_remote_predicate_steps(
+        expose_internal_errors,
+        remote_predicates,
+        http_context,
+        alias,
+        process_response_as,
+        &filter_expressions,
+    )
+    .await?;
+
+    // traverse `QueryExecutionPlan`, adding results of remote predicates
+    let query_execution_plan_with_predicates = execute::replace_predicates_in_query_execution_plan(
+        query_execution_plan,
+        &filter_expressions,
+    )
+    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+
+    let data_connector = query_execution_plan_with_predicates.data_connector.clone();
+    let ndc_request = execute::make_ndc_query_request(query_execution_plan_with_predicates)
+        .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+
+    Ok((ndc_request, data_connector, predicate_explain_steps))
 }
 
 /// Get the join steps for a given join location. This should be used to get the join steps for a remote relationship.
@@ -421,21 +500,17 @@ async fn get_execution_steps<'s>(
 #[async_recursion]
 async fn get_join_steps(
     expose_internal_errors: ExposeInternalErrors,
-    join_locations: JoinLocations<'async_recursion>,
+    join_locations: JoinLocations,
     http_context: &HttpContext,
-    resolve_context: &ResolveFilterExpressionContext,
 ) -> Result<Option<NonEmpty<Box<types::Step>>>, execute::RequestError> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
         if let JoinNode::Remote(remote_join) = location.join_node {
-            let mut resolved_execution_plan = remote_join
-                .target_ndc_execution
-                .resolve(resolve_context)
-                .await
-                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+            let mut resolved_execution_plan = remote_join.target_ndc_execution;
 
             resolved_execution_plan.variables = Some(vec![]);
+
             let target_data_connector = resolved_execution_plan.data_connector.clone();
             let query_request = execute::make_ndc_query_request(resolved_execution_plan)
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
@@ -449,6 +524,7 @@ async fn get_join_steps(
                 &target_data_connector,
             )
             .await;
+
             sequence_steps.push(Box::new(types::Step::ForEach(
                 // We don't support ndc_explain for for-each steps yet
                 match remote_join.remote_join_type {
@@ -469,13 +545,8 @@ async fn get_join_steps(
                 },
             )));
         };
-        if let Some(rest_join_steps) = get_join_steps(
-            expose_internal_errors,
-            location.rest,
-            http_context,
-            resolve_context,
-        )
-        .await?
+        if let Some(rest_join_steps) =
+            get_join_steps(expose_internal_errors, location.rest, http_context).await?
         {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));

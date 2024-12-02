@@ -16,6 +16,7 @@ use plan_types::{
     NDCSubscriptionExecution, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan,
     RemotePredicateKey, ResolvedFilterExpression,
 };
+pub use remote_predicates::replace_predicates_in_query_execution_plan;
 use std::collections::BTreeMap;
 
 // run ndc query, do any joins, and process result
@@ -45,7 +46,7 @@ pub async fn resolve_ndc_query_execution(
 
 // run a PredicateQueryTree, turning it into a `ResolvedFilterExpression`
 #[async_recursion]
-async fn execute_remote_predicates(
+pub async fn execute_remote_predicates(
     remote_predicates: &PredicateQueryTrees,
     http_context: &HttpContext,
     field_span_attribute: &str,
@@ -131,11 +132,10 @@ async fn execute_execution_tree<'s>(
     filter_expressions.extend(child_filter_expressions.clone());
 
     // traverse `QueryExecutionPlan`, adding results of remote predicates
-    let query_execution_plan_with_predicates =
-        remote_predicates::replace_predicates_in_query_execution_plan(
-            execution_tree.query_execution_plan,
-            &filter_expressions,
-        )?;
+    let query_execution_plan_with_predicates = replace_predicates_in_query_execution_plan(
+        execution_tree.query_execution_plan,
+        &filter_expressions,
+    )?;
 
     // create our `main` NDC request
     let response_rowsets = execute_ndc_query(

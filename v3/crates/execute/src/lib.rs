@@ -7,9 +7,11 @@ mod query_usage;
 mod remote_joins;
 
 // we explicitly export things used by other crates
+// we should comment all these out and see what is even used anymore
 pub use error::{FieldError, QueryUsageAnalyzeError, RequestError};
 pub use execute::{
-    make_ndc_mutation_request, make_ndc_query_request, resolve_ndc_mutation_execution,
+    execute_remote_predicates, make_ndc_mutation_request, make_ndc_query_request,
+    replace_predicates_in_query_execution_plan, resolve_ndc_mutation_execution,
     resolve_ndc_query_execution, resolve_ndc_subscription_execution,
 };
 pub use ndc::fetch_from_data_connector;

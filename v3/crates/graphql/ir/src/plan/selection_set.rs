@@ -268,6 +268,7 @@ pub(crate) fn plan_selection_set(
                     remote_predicates: command_remote_predicates,
                 } = commands::plan_query_execution(ir, unique_number)?;
 
+                // we push remote predicates to the outer list
                 remote_predicates.0.extend(command_remote_predicates.0);
 
                 let rj_info = RemoteJoin {

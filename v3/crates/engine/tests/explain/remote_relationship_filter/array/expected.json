@@ -267,6 +267,52 @@
           {
             "type": "modelSelect",
             "value": {
+              "modelName": "AlbumsRemote (in subgraph default)",
+              "ndcRequest": {
+                "type": "query",
+                "value": {
+                  "version": "v0.1.x",
+                  "collection": "Album",
+                  "query": {
+                    "fields": {
+                      "AlbumId": {
+                        "type": "column",
+                        "column": "AlbumId",
+                        "fields": null
+                      }
+                    },
+                    "predicate": {
+                      "type": "binary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "AlbumId",
+                        "path": []
+                      },
+                      "operator": "_eq",
+                      "value": {
+                        "type": "scalar",
+                        "value": 3
+                      }
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {}
+                }
+              },
+              "ndcExplain": {
+                "type": "response",
+                "value": {
+                  "version": "v0.1.x",
+                  "details": {
+                    "explain": "<redacted>"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "modelSelect",
+            "value": {
               "modelName": "AlbumAnd",
               "ndcRequest": {
                 "type": "query",
@@ -739,6 +785,52 @@
                       "column": {
                         "type": "column",
                         "name": "Title",
+                        "path": []
+                      },
+                      "operator": "_ilike",
+                      "value": {
+                        "type": "scalar",
+                        "value": "%Rock%"
+                      }
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {}
+                }
+              },
+              "ndcExplain": {
+                "type": "response",
+                "value": {
+                  "version": "v0.1.x",
+                  "details": {
+                    "explain": "<redacted>"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "modelSelect",
+            "value": {
+              "modelName": "TracksRemote (in subgraph default)",
+              "ndcRequest": {
+                "type": "query",
+                "value": {
+                  "version": "v0.1.x",
+                  "collection": "Track",
+                  "query": {
+                    "fields": {
+                      "AlbumId": {
+                        "type": "column",
+                        "column": "AlbumId",
+                        "fields": null
+                      }
+                    },
+                    "predicate": {
+                      "type": "binary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "Name",
                         "path": []
                       },
                       "operator": "_ilike",
@@ -1286,467 +1378,518 @@
         ]
       },
       {
-        "type": "modelSelect",
-        "value": {
-          "modelName": "ArtistAlbumAndTrackNested",
-          "ndcRequest": {
-            "type": "query",
+        "type": "sequence",
+        "value": [
+          {
+            "type": "modelSelect",
             "value": {
-              "version": "v0.1.x",
-              "collection": "Artist",
-              "query": {
-                "fields": {
-                  "Name": {
-                    "type": "column",
-                    "column": "Name",
-                    "fields": null
-                  }
-                },
-                "predicate": {
-                  "type": "exists",
-                  "in_collection": {
-                    "type": "related",
-                    "relationship": "default___Artist__Albums",
-                    "arguments": {}
-                  },
-                  "predicate": {
-                    "type": "and",
-                    "expressions": [
-                      {
-                        "type": "binary_comparison_operator",
-                        "column": {
-                          "type": "column",
-                          "name": "Title",
-                          "path": []
-                        },
-                        "operator": "_ilike",
-                        "value": {
-                          "type": "scalar",
-                          "value": "%Rock%"
-                        }
+              "modelName": "TracksRemote (in subgraph default)",
+              "ndcRequest": {
+                "type": "query",
+                "value": {
+                  "version": "v0.1.x",
+                  "collection": "Track",
+                  "query": {
+                    "fields": {
+                      "AlbumId": {
+                        "type": "column",
+                        "column": "AlbumId",
+                        "fields": null
+                      }
+                    },
+                    "predicate": {
+                      "type": "binary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "Name",
+                        "path": []
                       },
-                      {
-                        "type": "or",
+                      "operator": "_ilike",
+                      "value": {
+                        "type": "scalar",
+                        "value": "%Rock%"
+                      }
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {}
+                }
+              },
+              "ndcExplain": {
+                "type": "response",
+                "value": {
+                  "version": "v0.1.x",
+                  "details": {
+                    "explain": "<redacted>"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "modelSelect",
+            "value": {
+              "modelName": "ArtistAlbumAndTrackNested",
+              "ndcRequest": {
+                "type": "query",
+                "value": {
+                  "version": "v0.1.x",
+                  "collection": "Artist",
+                  "query": {
+                    "fields": {
+                      "Name": {
+                        "type": "column",
+                        "column": "Name",
+                        "fields": null
+                      }
+                    },
+                    "predicate": {
+                      "type": "exists",
+                      "in_collection": {
+                        "type": "related",
+                        "relationship": "default___Artist__Albums",
+                        "arguments": {}
+                      },
+                      "predicate": {
+                        "type": "and",
                         "expressions": [
                           {
                             "type": "binary_comparison_operator",
                             "column": {
                               "type": "column",
-                              "name": "AlbumId",
+                              "name": "Title",
                               "path": []
                             },
-                            "operator": "_eq",
+                            "operator": "_ilike",
                             "value": {
                               "type": "scalar",
-                              "value": 1
+                              "value": "%Rock%"
                             }
                           },
                           {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 4
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 12
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 37
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 39
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 42
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 67
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 89
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 90
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 125
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 126
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 131
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 136
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 137
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 141
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 185
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 186
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 190
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 192
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 198
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 201
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 202
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 205
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 211
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 215
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 217
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 218
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 243
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 257
-                            }
-                          },
-                          {
-                            "type": "binary_comparison_operator",
-                            "column": {
-                              "type": "column",
-                              "name": "AlbumId",
-                              "path": []
-                            },
-                            "operator": "_eq",
-                            "value": {
-                              "type": "scalar",
-                              "value": 258
-                            }
+                            "type": "or",
+                            "expressions": [
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 1
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 4
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 12
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 37
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 39
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 42
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 67
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 89
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 90
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 125
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 126
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 131
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 136
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 137
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 141
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 185
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 186
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 190
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 192
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 198
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 201
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 202
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 205
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 211
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 215
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 217
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 218
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 243
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 257
+                                }
+                              },
+                              {
+                                "type": "binary_comparison_operator",
+                                "column": {
+                                  "type": "column",
+                                  "name": "AlbumId",
+                                  "path": []
+                                },
+                                "operator": "_eq",
+                                "value": {
+                                  "type": "scalar",
+                                  "value": 258
+                                }
+                              }
+                            ]
                           }
                         ]
                       }
-                    ]
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {
+                    "default___Artist__Albums": {
+                      "column_mapping": {
+                        "ArtistId": "ArtistId"
+                      },
+                      "relationship_type": "array",
+                      "target_collection": "Album",
+                      "arguments": {}
+                    }
                   }
                 }
               },
-              "arguments": {},
-              "collection_relationships": {
-                "default___Artist__Albums": {
-                  "column_mapping": {
-                    "ArtistId": "ArtistId"
-                  },
-                  "relationship_type": "array",
-                  "target_collection": "Album",
-                  "arguments": {}
+              "ndcExplain": {
+                "type": "response",
+                "value": {
+                  "version": "v0.1.x",
+                  "details": {
+                    "explain": "<redacted>"
+                  }
                 }
               }
             }
-          },
-          "ndcExplain": {
-            "type": "response",
-            "value": {
-              "version": "v0.1.x",
-              "details": {
-                "explain": "<redacted>"
-              }
-            }
           }
-        }
+        ]
       }
     ]
   }

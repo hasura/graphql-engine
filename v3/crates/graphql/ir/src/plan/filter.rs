@@ -153,7 +153,7 @@ pub fn plan_expression<'a>(
         }
         plan_types::Expression::RelationshipRemoteComparison {
             relationship: _,
-            target_model_name: _,
+            target_model_name,
             target_model_source,
             ndc_column_mapping,
             predicate,
@@ -172,6 +172,7 @@ pub fn plan_expression<'a>(
 
             let predicate_query_tree = PredicateQueryTree {
                 ndc_column_mapping: ndc_column_mapping.clone(),
+                target_model_name: (*target_model_name).clone(),
                 query: ExecutionTree {
                     query_execution_plan,
                     remote_predicates: PredicateQueryTrees::new(),

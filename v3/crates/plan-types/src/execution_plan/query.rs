@@ -2,7 +2,10 @@ use super::{aggregates, arguments, field, filter, order_by, relationships};
 use crate::NdcFieldAlias;
 use crate::{ExecutionTree, NdcRelationshipName, RelationshipColumnMapping, VariableName};
 use indexmap::IndexMap;
-use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
+use metadata_resolve::Qualified;
+use open_dds::{
+    data_connector::CollectionName, models::ModelName, types::DataConnectorArgumentName,
+};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -28,6 +31,7 @@ pub struct QueryExecutionPlan {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PredicateQueryTree {
     pub ndc_column_mapping: Vec<RelationshipColumnMapping>,
+    pub target_model_name: Qualified<ModelName>,
     pub query: ExecutionTree,
     pub children: PredicateQueryTrees,
 }

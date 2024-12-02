@@ -109,21 +109,6 @@ pub fn build_request_plan<'n, 's, 'ir>(
     Ok(plan)
 }
 
-/// Build a plan to execute the request
-/// uses old code in `execute` which we'll soon delete
-pub fn build_request_plan_with_old<'n, 's, 'ir>(
-    ir: &'ir graphql_ir::IR<'n, 's>,
-) -> Result<execute::RequestPlan<'n, 's, 'ir>, execute::PlanError> {
-    let tracer = tracing_util::global_tracer();
-    let plan = tracer.in_span(
-        "plan",
-        "Construct a plan to execute the request",
-        SpanVisibility::Internal,
-        || execute::generate_request_plan(ir),
-    )?;
-    Ok(plan)
-}
-
 pub fn generate_ir<'n, 's>(
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
