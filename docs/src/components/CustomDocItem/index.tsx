@@ -4,9 +4,11 @@ import GraphQLWithHasuraBanner from '@site/src/components/GraphQLWithHasuraBanne
 import CustomFooter from '@site/src/components/CustomFooter';
 import styles from './styles.module.scss';
 import { Redirect } from '@docusaurus/router';
-import { AiChatBot } from "@site/src/components/AiChatBot/AiChatBot";
+import { AiChatBot } from '@site/src/components/AiChatBot/AiChatBot';
 import BrowserOnly from '@docusaurus/BrowserOnly';
-import { NewVersionModal } from "@site/src/components/NewVersionModal/NewVersionModal";
+import { NewVersionModal } from '@site/src/components/NewVersionModal/NewVersionModal';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 const CustomDocItem = props => {
   useEffect(() => {
     // This function is adds <wbr> tags to code blocks within a table
@@ -56,13 +58,13 @@ const CustomDocItem = props => {
   // redirect them to the index if they attempt to directly navigate to a path with
   // _heading_ in it
   if (props.location.pathname.includes('_heading_')) {
-    return <Redirect to="/docs/2.0/index/" />;
+    return <Redirect to={useBaseUrl('/index/')} />;
   }
 
   return (
     <div
       className={
-        props.location.pathname === `/docs/2.0/index/`
+        props.location.pathname === useBaseUrl('/index/')
           ? `custom_doc_item_wrapper custom_doc_item_wrapper-x-wide`
           : `custom_doc_item_wrapper ${styles['custom_doc_item_wrapper']}`
       }
@@ -70,19 +72,13 @@ const CustomDocItem = props => {
       <ActualDocItem {...props} />
       <div
         className={
-          props.location.pathname === `/docs/2.0/index/` || props.location.pathname.includes('overview')
+          props.location.pathname === useBaseUrl('/index/') || props.location.pathname.includes('overview')
             ? `custom_doc_item_footer-x-wide`
             : styles['custom_doc_item_footer']
         }
       >
-        {/*<PageHelpful />*/}
-        <GraphQLWithHasuraBanner />
-        <BrowserOnly fallback={<div>Loading...</div>}>
-          {() => <AiChatBot/>}
-        </BrowserOnly>
-        <BrowserOnly fallback={<div>Loading...</div>}>
-          {() => <NewVersionModal/>}
-        </BrowserOnly>
+        <BrowserOnly fallback={<div>Loading...</div>}>{() => <AiChatBot style={{}} />}</BrowserOnly>
+        <BrowserOnly fallback={<div>Loading...</div>}>{() => <NewVersionModal />}</BrowserOnly>
         <CustomFooter />
       </div>
     </div>

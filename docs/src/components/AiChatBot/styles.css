@@ -179,7 +179,7 @@
   cursor: pointer;
 }
 
-.chat-popup .bad-response-form .thumbs-down-button {
+.chat-popup #bad-response-form .thumbs-down-button {
   background-color: transparent;
   border: none;
 }
