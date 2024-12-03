@@ -294,7 +294,7 @@ func getMatchingFilesAndDirs(fs afero.Fs, parentDir string, matcher func(string)
 
 func isHasuraCLIGeneratedMigration(dirPath string) (bool, error) {
 	var op errors.Op = "scripts.isHasuraCLIGeneratedMigration"
-	const regex = `^([0-9]{13})_(.*)$`
+	const regex = `^([0-9]{13,14})_(.*)$`
 	match, err := regexp.MatchString(regex, filepath.Base(dirPath))
 	if err != nil {
 		return match, errors.E(op, err)
