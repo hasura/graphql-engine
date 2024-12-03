@@ -184,7 +184,14 @@ where
                 command_plan,
                 output_object_type_name,
                 extract_response_from: _,
-            } = command::from_command(command_selection, metadata, session, request_headers)?;
+            } = command::from_command(
+                command_selection,
+                metadata,
+                session,
+                http_context,
+                request_headers,
+                unique_number,
+            )?;
             match command_plan {
                 command::CommandPlan::Function(ndc_function) => {
                     let query_execution_plan = command::execute_plan_from_function(&ndc_function);
