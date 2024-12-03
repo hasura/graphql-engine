@@ -82,7 +82,7 @@ pub fn get_argument_presets_for_model(
             build_annotations_from_input_object_type_permissions(
                 &mut field_path,
                 &arg_info.argument_type,
-                &ndc_argument_name,
+                ndc_argument_name.as_ref(),
                 object_types,
                 &model_source.type_mappings,
                 &mut role_presets_map,
@@ -155,7 +155,7 @@ pub fn get_argument_presets_for_command(
             build_annotations_from_input_object_type_permissions(
                 &mut field_path,
                 &arg_info.argument_type,
-                &ndc_argument_name,
+                ndc_argument_name.as_ref(),
                 object_types,
                 &command_source.type_mappings,
                 &mut role_presets_map,
@@ -176,7 +176,7 @@ pub fn get_argument_presets_for_command(
 fn build_annotations_from_input_object_type_permissions<'a>(
     field_path: &mut [DataConnectorColumnName],
     type_reference: &'a QualifiedTypeReference,
-    ndc_argument_name: &Option<DataConnectorArgumentName>,
+    ndc_argument_name: Option<&DataConnectorArgumentName>,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -274,7 +274,7 @@ fn build_preset_map_from_input_object_type_permission(
     field_mappings: Option<&BTreeMap<FieldName, object_types::FieldMapping>>,
     type_reference: &QualifiedTypeReference,
     field_path: &[DataConnectorColumnName],
-    ndc_argument_name: &Option<DataConnectorArgumentName>,
+    ndc_argument_name: Option<&DataConnectorArgumentName>,
     object_type: &Qualified<CustomTypeName>,
 ) -> Result<
     BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
@@ -300,7 +300,7 @@ fn build_preset_map_from_input_object_type_permission(
             new_field_path.push(ndc_field);
 
             let key = ArgumentNameAndPath {
-                ndc_argument_name: ndc_argument_name.clone(),
+                ndc_argument_name: ndc_argument_name.cloned(),
                 field_path: new_field_path,
             };
 

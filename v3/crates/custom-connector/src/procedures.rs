@@ -30,7 +30,7 @@ pub(crate) fn get_procedures() -> Vec<ndc_models::ProcedureInfo> {
 pub(crate) fn execute_procedure(
     name: &ndc_models::ProcedureName,
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
-    fields: &Option<ndc_models::NestedField>,
+    fields: Option<&ndc_models::NestedField>,
     collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {

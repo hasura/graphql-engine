@@ -86,7 +86,7 @@ pub fn get_order_by_expression_input_field(
         &order_by_expression_info.order_by_type_name,
         &order_by_expression_info.order_by_field_name,
         &order_by_expression_info.order_by_expression_identifier,
-        &None,
+        None,
     )
 }
 
@@ -97,7 +97,7 @@ fn get_order_by_expression_object_input_field(
     order_by_type_name: &ast::TypeName,
     order_by_field_name: &ast::Name,
     order_by_expression_identifier: &Qualified<OrderByExpressionIdentifier>,
-    deprecated: &Option<Deprecated>,
+    deprecated: Option<&Deprecated>,
 ) -> gql_schema::InputField<GDS> {
     gql_schema::InputField::new(
         order_by_field_name.clone(),
@@ -245,7 +245,7 @@ pub fn build_model_order_by_input_schema(
                     graphql_type_name,
                     &graphql_field_name,
                     order_by_expression_identifier,
-                    &field_definition.deprecated,
+                    field_definition.deprecated.as_ref(),
                 );
                 builder.conditional_namespaced(input_field, field_permissions)
             }

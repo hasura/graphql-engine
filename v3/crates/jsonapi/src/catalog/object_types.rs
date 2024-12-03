@@ -21,7 +21,7 @@ pub fn build_object_type(
     let output_permissions_for_role = object_type
         .type_output_permissions
         .get(role)
-        .ok_or_else(|| ObjectTypeWarning::NoObjectTypePermission {})?;
+        .ok_or(ObjectTypeWarning::NoObjectTypePermission {})?;
 
     let mut type_fields = IndexMap::new();
 

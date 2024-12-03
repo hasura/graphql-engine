@@ -65,7 +65,7 @@ pub struct ResultSelectionSet<'s> {
     pub fields: IndexMap<NdcFieldAlias, FieldSelection<'s>>,
 }
 
-impl<'s> ResultSelectionSet<'s> {
+impl ResultSelectionSet<'_> {
     /// Check if the field is found in existing fields. Returns the alias of the field.
     pub fn contains(&self, other_field: &metadata_resolve::FieldMapping) -> Option<NdcFieldAlias> {
         self.fields.iter().find_map(|(alias, field)| match field {

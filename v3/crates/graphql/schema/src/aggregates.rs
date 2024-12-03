@@ -156,8 +156,8 @@ fn add_aggregatable_fields(
                 builder,
                 field_aggregate_expression,
             )?),
-            BTreeMap::new(),                              // Arguments
-            mk_deprecation_status(&field_def.deprecated), // Use the field's deprecated status; if the field is deprecated the aggregation of it should be too
+            BTreeMap::new(),                                      // Arguments
+            mk_deprecation_status(field_def.deprecated.as_ref()), // Use the field's deprecated status; if the field is deprecated the aggregation of it should be too
         );
 
         // Only allow access to aggregations of the field if the type permissions allow it
@@ -209,7 +209,7 @@ fn add_count_aggregation_fields(
                 )),
                 TypeContainer::named_non_null(gql_schema::RegisteredTypeName::int()),
                 BTreeMap::new(), // Arguments
-                mk_deprecation_status(&None),
+                mk_deprecation_status(None),
             );
 
             // All roles can use the count aggregation
@@ -244,7 +244,7 @@ fn add_count_aggregation_fields(
                 )),
                 TypeContainer::named_non_null(gql_schema::RegisteredTypeName::int()),
                 BTreeMap::new(), // Arguments
-                mk_deprecation_status(&None),
+                mk_deprecation_status(None),
             );
 
             // All roles can use the count distinct aggregation
@@ -291,7 +291,7 @@ fn add_aggregation_functions(
             )),
             output_type::get_output_type(gds, builder, &aggregatable_function_info.return_type)?,
             BTreeMap::new(), // Arguments
-            mk_deprecation_status(&None),
+            mk_deprecation_status(None),
         );
 
         // All roles can access all functions

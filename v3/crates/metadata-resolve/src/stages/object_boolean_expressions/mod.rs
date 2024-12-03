@@ -249,7 +249,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         scalars,
         type_mapping,
         &object_type_representation.object_type.fields,
-        &object_boolean_expression.graphql,
+        object_boolean_expression.graphql.as_ref(),
         flags,
     )?;
 
@@ -283,7 +283,7 @@ pub fn resolve_scalar_fields(
     scalars: &data_connector_scalar_types::DataConnectorScalars,
     type_mappings: &object_types::TypeMapping,
     fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,
-    graphql: &Option<open_dds::types::ObjectBooleanExpressionTypeGraphQlConfiguration>,
+    graphql: Option<&open_dds::types::ObjectBooleanExpressionTypeGraphQlConfiguration>,
     flags: &open_dds::flags::Flags,
 ) -> Result<
     BTreeMap<FieldName, boolean_expressions::ComparisonExpressionInfo>,
@@ -362,11 +362,8 @@ pub fn resolve_boolean_expression_graphql_config(
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
 
-    let filter_graphql_config = graphql_config
-        .query
-        .filter_input_config
-        .as_ref()
-        .ok_or_else(|| {
+    let filter_graphql_config =
+        graphql_config.query.filter_input_config.as_ref().ok_or({
             graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig
         })?;
 

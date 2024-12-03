@@ -46,7 +46,7 @@ enum VariableValue<'q, 's, S: schema::SchemaContext> {
     None,
 }
 
-impl<'q, 's, S: schema::SchemaContext> VariableValue<'q, 's, S> {
+impl<'s, S: schema::SchemaContext> VariableValue<'_, 's, S> {
     #[allow(clippy::match_same_arms)] // lifetimes are different
     pub fn into_json(self) -> serde_json::Value {
         match self {

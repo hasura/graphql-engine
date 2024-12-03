@@ -67,7 +67,10 @@ impl TraceableError for ResponseError {
 
 /// Implement `Traceable` for `TraceableHttpResponse` so that it can be used in spans.
 impl<T> Traceable for TraceableHttpResponse<T> {
-    type ErrorType<'a> = ResponseError where T: 'a;
+    type ErrorType<'a>
+        = ResponseError
+    where
+        T: 'a;
 
     fn get_error(&self) -> Option<Self::ErrorType<'_>> {
         // If the response status is either client or server error, return an error.

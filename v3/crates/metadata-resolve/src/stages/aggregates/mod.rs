@@ -113,7 +113,7 @@ fn resolve_aggregate_expression(
         graphql_config,
         aggregate_expression_name,
         &operand,
-        &aggregate_expression.graphql,
+        aggregate_expression.graphql.as_ref(),
         issues,
     )?;
 
@@ -121,8 +121,8 @@ fn resolve_aggregate_expression(
         name: aggregate_expression_name.clone(),
         operand,
         graphql,
-        count: resolve_aggregate_count(&aggregate_expression.count),
-        count_distinct: resolve_aggregate_count(&aggregate_expression.count_distinct),
+        count: resolve_aggregate_count(aggregate_expression.count.as_ref()),
+        count_distinct: resolve_aggregate_count(aggregate_expression.count_distinct.as_ref()),
         description: aggregate_expression.description.clone(),
     })
 }
@@ -613,8 +613,8 @@ fn resolve_aggregate_expression_graphql_config(
     graphql_config: &graphql_config::GraphqlConfig,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     aggregate_operand: &AggregateOperand,
-    aggregate_expression_graphql_definition: &Option<
-        open_dds::aggregates::AggregateExpressionGraphQlDefinition,
+    aggregate_expression_graphql_definition: Option<
+        &open_dds::aggregates::AggregateExpressionGraphQlDefinition,
     >,
     issues: &mut Vec<AggregateExpressionIssue>,
 ) -> Result<Option<AggregateExpressionGraphqlConfig>, AggregateExpressionError> {
@@ -716,7 +716,7 @@ fn resolve_aggregate_expression_graphql_config(
 }
 
 fn resolve_aggregate_count(
-    aggregate_count_definition: &Option<open_dds::aggregates::AggregateCountDefinition>,
+    aggregate_count_definition: Option<&open_dds::aggregates::AggregateCountDefinition>,
 ) -> AggregateCountDefinition {
     if let Some(aggregate_count_definition) = aggregate_count_definition {
         AggregateCountDefinition {

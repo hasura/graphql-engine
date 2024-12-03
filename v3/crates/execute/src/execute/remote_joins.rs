@@ -83,7 +83,6 @@ use async_recursion::async_recursion;
 
 /// Execute remote joins. As an entry-point it assumes the response is available
 /// for the top-level query, and executes further remote joins recursively.
-
 #[async_recursion]
 pub async fn execute_join_locations(
     http_context: &HttpContext,

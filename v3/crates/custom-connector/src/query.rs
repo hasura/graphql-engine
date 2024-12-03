@@ -110,7 +110,7 @@ fn execute_query(
         variables,
         state,
         collection,
-        &query.order_by,
+        query.order_by.as_ref(),
     )?;
 
     let filtered: Vec<Row> = (match &query.predicate {
@@ -438,7 +438,7 @@ fn sort(
     variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
     state: &AppState,
     collection: Vec<Row>,
-    order_by: &Option<ndc_models::OrderBy>,
+    order_by: Option<&ndc_models::OrderBy>,
 ) -> Result<Vec<Row>> {
     match order_by {
         None => Ok(collection),
@@ -546,7 +546,7 @@ fn eval_order_by_element(
             item,
             path,
             name,
-            field_path,
+            field_path.as_ref(),
         ),
         ndc_models::OrderByTarget::Aggregate { aggregate, path } => match aggregate {
             ndc_models::Aggregate::ColumnCount {
@@ -668,7 +668,7 @@ fn eval_order_by_column(
     item: &Row,
     path: &[ndc_models::PathElement],
     name: &ndc_models::FieldName,
-    field_path: &Option<Vec<ndc_models::FieldName>>,
+    field_path: Option<&Vec<ndc_models::FieldName>>,
 ) -> Result<serde_json::Value> {
     let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
     if rows.len() > 1 {
@@ -721,7 +721,7 @@ fn eval_path(
             relationship,
             &path_element.arguments,
             &result,
-            &path_element.predicate,
+            path_element.predicate.as_deref(),
         )?;
     }
 
@@ -735,7 +735,7 @@ fn eval_path_element(
     relationship: &ndc_models::Relationship,
     arguments: &BTreeMap<ndc_models::ArgumentName, ndc_models::RelationshipArgument>,
     source: &[Row],
-    predicate: &Option<Box<ndc_models::Expression>>,
+    predicate: Option<&ndc_models::Expression>,
 ) -> Result<Vec<Row>> {
     let mut matching_rows: Vec<Row> = vec![];
 
@@ -1057,9 +1057,10 @@ fn eval_in_collection(
                 relationship,
                 arguments,
                 &source,
-                &Some(Box::new(ndc_models::Expression::And {
+                Some(Box::new(ndc_models::Expression::And {
                     expressions: vec![],
-                })),
+                }))
+                .as_deref(),
             )
         }
         ndc_models::ExistsInCollection::Unrelated {
@@ -1099,7 +1100,7 @@ fn eval_comparison_target(
             name,
             arguments: _,
             field_path,
-        } => Ok(eval_column_field_path(item, name, field_path)?),
+        } => Ok(eval_column_field_path(item, name, field_path.as_ref())?),
         ndc_models::ComparisonTarget::Aggregate {
             aggregate: _,
             path: _,
@@ -1116,7 +1117,7 @@ fn eval_comparison_target(
 fn eval_column_field_path(
     row: &Row,
     column_name: &ndc_models::FieldName,
-    field_path: &Option<Vec<ndc_models::FieldName>>,
+    field_path: Option<&Vec<ndc_models::FieldName>>,
 ) -> Result<serde_json::Value> {
     let column_value = eval_column(row, column_name)?;
     Ok(match field_path {
@@ -1159,7 +1160,7 @@ fn eval_comparison_value(
             let rows = eval_path(collection_relationships, variables, state, path, item)?;
             let mut values = vec![];
             for row in &rows {
-                let value = eval_column_field_path(row, name, field_path)?;
+                let value = eval_column_field_path(row, name, field_path.as_ref())?;
                 values.push(value);
             }
             Ok(values)
@@ -1319,7 +1320,7 @@ fn eval_field(
                 relationship,
                 arguments,
                 &source,
-                &Some(Box::new(ndc_models::Expression::And {
+                Some(&Box::new(ndc_models::Expression::And {
                     expressions: vec![],
                 })),
             )?;

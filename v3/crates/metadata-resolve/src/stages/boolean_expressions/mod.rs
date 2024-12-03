@@ -103,7 +103,7 @@ pub fn resolve(
                     boolean_expression_object_operand,
                     &boolean_expression_type.logical_operators,
                     subgraph,
-                    &boolean_expression_type.graphql,
+                    boolean_expression_type.graphql.as_ref(),
                     object_types,
                     &boolean_expression_scalar_types,
                     &raw_boolean_expression_types,

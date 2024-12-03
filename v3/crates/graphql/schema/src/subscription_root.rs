@@ -127,7 +127,7 @@ fn select_one_field(
             )),
             ast::TypeContainer::named_null(output_typename),
             arguments,
-            mk_deprecation_status(&subscription.deprecated),
+            mk_deprecation_status(subscription.deprecated.as_ref()),
         ),
         field_annotations,
     );
@@ -178,7 +178,7 @@ fn select_many_field(
             )),
             field_type,
             arguments,
-            mk_deprecation_status(&subscription.deprecated),
+            mk_deprecation_status(subscription.deprecated.as_ref()),
         ),
         get_select_permissions_namespace_annotations(model)?,
     );
@@ -238,7 +238,7 @@ fn select_aggregate_field(
             )),
             ast::TypeContainer::named_null(output_typename),
             arguments,
-            mk_deprecation_status(&subscription.deprecated),
+            mk_deprecation_status(subscription.deprecated.as_ref()),
         ),
         field_permissions,
     );

@@ -604,7 +604,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     &remove_object_relationships(object_types),
                                     scalar_types,
                                     &mut source_type_mappings,
-                                    &None,
+                                    None,
                                 )
                                 .map_err(|error| {
                                     Error::from(TypePredicateError::TypeMappingCollectionError {

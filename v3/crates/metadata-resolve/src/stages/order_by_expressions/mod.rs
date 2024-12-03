@@ -62,8 +62,8 @@ pub fn resolve(
                     subgraph,
                     &order_by_expression.name,
                     scalar_operand,
-                    &order_by_expression.graphql,
-                    &order_by_expression.description,
+                    order_by_expression.graphql.as_ref(),
+                    order_by_expression.description.as_ref(),
                     &mut graphql_types,
                 )
                 .map_err(|error| Error::OrderByExpressionError {
@@ -92,8 +92,8 @@ pub fn resolve(
                     &order_by_expression_names_and_types,
                     &order_by_expression.name,
                     object_operand,
-                    &order_by_expression.graphql,
-                    &order_by_expression.description,
+                    order_by_expression.graphql.as_ref(),
+                    order_by_expression.description.as_ref(),
                     relationships,
                     &mut graphql_types,
                 )
@@ -124,10 +124,10 @@ fn resolve_scalar_order_by_expression(
     subgraph: &SubgraphName,
     order_by_expression_name: &order_by_expression::OrderByExpressionName,
     scalar_operand: &open_dds::order_by_expression::OrderByExpressionScalarOperand,
-    order_by_expression_graphql: &Option<
-        order_by_expression::OrderByExpressionGraphQlConfiguration,
+    order_by_expression_graphql: Option<
+        &order_by_expression::OrderByExpressionGraphQlConfiguration,
     >,
-    description: &Option<String>,
+    description: Option<&String>,
     graphql_types: &mut BTreeSet<ast::TypeName>,
 ) -> Result<ScalarOrderByExpression, OrderByExpressionError> {
     // because we essentially enforce all orderable fields have 'allow all', we don't actually
@@ -153,13 +153,13 @@ fn resolve_scalar_order_by_expression(
         identifier,
         enable_order_by_directions: resolved_enable_order_by_directions,
         graphql: resolve_graphql(order_by_expression_graphql, graphql_types)?,
-        description: description.clone(),
+        description: description.cloned(),
     })
 }
 
 fn resolve_graphql(
-    order_by_expression_graphql: &Option<
-        order_by_expression::OrderByExpressionGraphQlConfiguration,
+    order_by_expression_graphql: Option<
+        &order_by_expression::OrderByExpressionGraphQlConfiguration,
     >,
     graphql_types: &mut BTreeSet<ast::TypeName>,
 ) -> Result<Option<OrderByExpressionGraphqlConfig>, OrderByExpressionError> {
@@ -186,10 +186,10 @@ fn resolve_object_order_by_expression(
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, TypeName>,
     order_by_expression_name: &order_by_expression::OrderByExpressionName,
     object_operand: &order_by_expression::OrderByExpressionObjectOperand,
-    order_by_expression_graphql: &Option<
-        order_by_expression::OrderByExpressionGraphQlConfiguration,
+    order_by_expression_graphql: Option<
+        &order_by_expression::OrderByExpressionGraphQlConfiguration,
     >,
-    description: &Option<String>,
+    description: Option<&String>,
     relationships: &relationships::Relationships,
     graphql_types: &mut BTreeSet<ast::TypeName>,
 ) -> Result<ObjectOrderByExpression, OrderByExpressionError> {
@@ -230,7 +230,7 @@ fn resolve_object_order_by_expression(
         orderable_fields,
         orderable_relationships: OrderableRelationships::ModelV2(orderable_relationships),
         graphql: resolve_graphql(order_by_expression_graphql, graphql_types)?,
-        description: description.clone(),
+        description: description.cloned(),
     })
 }
 

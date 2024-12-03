@@ -50,9 +50,9 @@ pub(crate) fn get_select_filter_predicate<'s>(
 /// of the field call. If there are no annotations, this is fine,
 /// but if unexpected ones are found an error will be thrown.
 pub(crate) fn get_argument_presets(
-    namespaced_info: &'_ Option<graphql_schema::NamespaceAnnotation>,
+    namespaced_info: Option<&'_ graphql_schema::NamespaceAnnotation>,
 ) -> Result<Option<&'_ metadata_resolve::ArgumentPresets>, error::Error> {
-    match namespaced_info.as_ref() {
+    match namespaced_info {
         None => Ok(None), // no annotation is fine...
         Some(annotation) => match annotation {
             graphql_schema::NamespaceAnnotation::Command(argument_presets)

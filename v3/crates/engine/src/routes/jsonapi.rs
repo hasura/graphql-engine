@@ -49,7 +49,10 @@ impl IntoResponse for JsonApiSchemaResponse {
 
 /// Implement traceable for GraphQL Response
 impl Traceable for JsonApiSchemaResponse {
-    type ErrorType<'a> = Infallible where Self: 'a;
+    type ErrorType<'a>
+        = Infallible
+    where
+        Self: 'a;
 
     fn get_error(&self) -> Option<Self::ErrorType<'_>> {
         None

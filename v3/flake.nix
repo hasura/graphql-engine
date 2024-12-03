@@ -171,6 +171,7 @@
               pkgs.moreutils
               pkgs.nixpkgs-fmt
               pkgs.nodejs_22
+              pkgs.git
 
               # Rust
               pkgs.bacon

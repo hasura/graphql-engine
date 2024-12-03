@@ -131,7 +131,7 @@ impl TypeRegistry {
 
         for (object_type_name, object_type) in &metadata.object_types {
             let struct_type = struct_type(
-                &default_schema,
+                default_schema.as_ref(),
                 metadata,
                 &custom_scalars,
                 object_type_name,
@@ -273,10 +273,10 @@ pub struct StructTypeName(pub String);
 
 impl StructTypeName {
     fn new(
-        default_schema: &Option<SubgraphName>,
+        default_schema: Option<&SubgraphName>,
         object_type_name: &Qualified<CustomTypeName>,
     ) -> Self {
-        let name = if Some(&object_type_name.subgraph) == default_schema.as_ref() {
+        let name = if Some(&object_type_name.subgraph) == default_schema {
             object_type_name.name.to_string()
         } else {
             format!("{}_{}", object_type_name.subgraph, object_type_name.name)
@@ -336,7 +336,7 @@ pub enum UnsupportedObject {
 type Struct = Result<StructType, UnsupportedObject>;
 
 fn struct_type(
-    default_schema: &Option<SubgraphName>,
+    default_schema: Option<&SubgraphName>,
     metadata: &resolved::Metadata,
     custom_scalars: &BTreeMap<Qualified<CustomTypeName>, Scalar>,
     object_type_name: &Qualified<CustomTypeName>,
@@ -489,7 +489,7 @@ fn ndc_representation_to_datatype(
 /// Converts an opendd type to an arrow type.
 #[allow(clippy::match_same_arms)]
 fn to_arrow_type(
-    default_schema: &Option<SubgraphName>,
+    default_schema: Option<&SubgraphName>,
     metadata: &resolved::Metadata,
     custom_scalars: &BTreeMap<Qualified<CustomTypeName>, Scalar>,
     ty: &resolved::QualifiedBaseType,

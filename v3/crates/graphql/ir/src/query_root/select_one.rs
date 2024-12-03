@@ -103,7 +103,7 @@ pub fn select_one_generate_ir<'n, 's>(
         model_arguments.insert(ndc_arg_name, ndc_val);
     }
 
-    let argument_presets = permissions::get_argument_presets(field_call.info.namespaced)?;
+    let argument_presets = permissions::get_argument_presets(field_call.info.namespaced.as_ref())?;
     // add any preset arguments from model permissions
     model_arguments = arguments::process_argument_presets(
         &model_source.data_connector,
