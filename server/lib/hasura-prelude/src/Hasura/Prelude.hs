@@ -28,6 +28,7 @@ module Hasura.Prelude
 
     -- * Either
     onLeft,
+    onLeft_,
     onLeftM,
     mapLeft,
     liftEitherM,
@@ -250,6 +251,10 @@ hoistMaybe = MaybeT . pure
 -- applicative action to the 'Left' value.
 onLeft :: (Applicative m) => Either e a -> (e -> m a) -> m a
 onLeft e f = either f pure e
+
+-- | Similar to 'onLeft', but ignores the 'Right' value.
+onLeft_ :: (Applicative m) => Either e a -> (e -> m ()) -> m ()
+onLeft_ e f = either f (const $ pure ()) e
 
 -- | Similar to 'onLeft', but accepts a monadic action on its LHS.
 onLeftM :: (Monad m) => m (Either e a) -> (e -> m a) -> m a
