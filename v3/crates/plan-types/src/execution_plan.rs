@@ -4,7 +4,6 @@ mod arguments;
 mod field;
 mod filter;
 mod mutation;
-mod order_by;
 mod query;
 mod relationships;
 mod remote_joins;
@@ -16,7 +15,6 @@ pub use arguments::{Argument, MutationArgument};
 pub use field::{Field, NestedArray, NestedField, NestedObject};
 pub use filter::ResolvedFilterExpression;
 pub use mutation::MutationExecutionPlan;
-pub use order_by::{OrderByDirection, OrderByElement, OrderByTarget};
 pub use query::{
     FieldsSelection, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
     RemotePredicateKey, UniqueNumber,

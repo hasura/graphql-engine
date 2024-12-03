@@ -3,6 +3,7 @@ mod commands;
 mod error;
 mod filter;
 mod model_selection;
+mod order_by;
 mod relationships;
 mod selection_set;
 mod types;

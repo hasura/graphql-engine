@@ -97,7 +97,11 @@ pub fn generate_model_relationship_ir<'s>(
                                 )?);
                             }
                             ModelInputAnnotation::ModelOrderByExpression => {
-                                order_by = Some(build_ndc_order_by(argument, usage_counts)?);
+                                order_by = Some(build_ndc_order_by(
+                                    argument,
+                                    session_variables,
+                                    usage_counts,
+                                )?);
                             }
                             _ => {
                                 return Err(error::InternalEngineError::UnexpectedAnnotation {

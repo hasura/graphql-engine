@@ -209,10 +209,7 @@ pub fn model_target_to_ndc_query(
         filter,
         limit,
         offset,
-        order_by: graphql_ir::ResolvedOrderBy {
-            order_by_elements,
-            relationships: BTreeMap::new(),
-        },
+        order_by: order_by_elements,
     };
 
     Ok(query)

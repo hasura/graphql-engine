@@ -90,7 +90,7 @@ fn make_query(query_node: QueryNodeNew) -> Result<ndc_models_v01::Query, FieldEr
     Ok(ndc_models_v01::Query {
         limit: query_node.limit,
         offset: query_node.offset,
-        order_by: query_node.order_by.map(make_order_by),
+        order_by: query_node.order_by.map(make_order_by).transpose()?,
         predicate: ndc_predicate,
         aggregates: query_node.aggregates.map(make_aggregates),
         fields: ndc_fields,
@@ -422,22 +422,28 @@ fn make_relationship(relationship: Relationship) -> ndc_models_v01::Relationship
     }
 }
 
-fn make_order_by(order_by_elements: Vec<OrderByElement>) -> ndc_models_v01::OrderBy {
-    ndc_models_v01::OrderBy {
+fn make_order_by(
+    order_by_elements: Vec<OrderByElement<ResolvedFilterExpression>>,
+) -> Result<ndc_models_v01::OrderBy, FieldError> {
+    Ok(ndc_models_v01::OrderBy {
         elements: order_by_elements
             .into_iter()
-            .map(|element| ndc_models_v01::OrderByElement {
-                order_direction: match element.order_direction {
-                    OrderByDirection::Asc => ndc_models_v01::OrderDirection::Asc,
-                    OrderByDirection::Desc => ndc_models_v01::OrderDirection::Desc,
-                },
-                target: make_order_by_target(element.target),
+            .map(|element| {
+                Ok(ndc_models_v01::OrderByElement {
+                    order_direction: match element.order_direction {
+                        OrderByDirection::Asc => ndc_models_v01::OrderDirection::Asc,
+                        OrderByDirection::Desc => ndc_models_v01::OrderDirection::Desc,
+                    },
+                    target: make_order_by_target(element.target)?,
+                })
             })
-            .collect(),
-    }
+            .collect::<Result<Vec<_>, FieldError>>()?,
+    })
 }
 
-fn make_order_by_target(target: OrderByTarget) -> ndc_models_v01::OrderByTarget {
+fn make_order_by_target(
+    target: OrderByTarget<ResolvedFilterExpression>,
+) -> Result<ndc_models_v01::OrderByTarget, FieldError> {
     match target {
         OrderByTarget::Column {
             name,
@@ -453,42 +459,37 @@ fn make_order_by_target(target: OrderByTarget) -> ndc_models_v01::OrderByTarget 
             // which has a relationship column called `Comments` which has a non-relationship column
             // called `text`, you'll have to provide the following paths to access the `text` column:
             // ["UserPosts", "PostsComments"]
-            for path in relationship_path {
+            for path_element in relationship_path {
                 order_by_element_path.push(ndc_models_v01::PathElement {
-                    relationship: ndc_models_v01::RelationshipName::from(path.0.as_str()),
+                    relationship: ndc_models_v01::RelationshipName::from(
+                        path_element.relationship_name.as_str(),
+                    ),
                     arguments: BTreeMap::new(),
-                    // 'AND' predicate indicates that the column can be accessed
-                    // by joining all the relationships paths provided
-                    predicate: Some(Box::new(ndc_models_v01::Expression::And {
-                        // TODO(naveen): Add expressions here, when we support sorting with predicates.
-                        //
-                        // There are two types of sorting:
-                        //     1. Sorting without predicates
-                        //     2. Sorting with predicates
-                        //
-                        // In the 1st sort, we sort all the elements of the results either in ascending
-                        // or descing order based on the order_by argument.
-                        //
-                        // In the 2nd sort, we want fetch the entire result but only sort a subset
-                        // of result and put those sorted set either at the beginning or at the end of the
-                        // result.
-                        //
-                        // Currently we only support the 1st type of sort. Hence we don't have any expressions/predicate.
-                        expressions: Vec::new(),
-                    })),
+                    predicate: match path_element.filter_predicate {
+                        Some(predicate) => Some(Box::new(make_expression(predicate)?)),
+                        // We convert all None predicates into an always true predicate to work
+                        // around a bug in the postgres connector
+                        None => Some(Box::new(ndc_models_v01::Expression::And {
+                            expressions: vec![],
+                        })),
+                    },
                 });
             }
 
-            ndc_models_v01::OrderByTarget::Column {
+            Ok(ndc_models_v01::OrderByTarget::Column {
                 name: ndc_models_v01::FieldName::new(name.into_inner()),
                 path: order_by_element_path,
-                field_path: field_path.map(|field_path| {
-                    field_path
-                        .iter()
-                        .map(|name| ndc_models_v01::FieldName::from(name.as_str()))
-                        .collect()
-                }),
-            }
+                field_path: if field_path.is_empty() {
+                    None
+                } else {
+                    Some(
+                        field_path
+                            .iter()
+                            .map(|name| ndc_models_v01::FieldName::from(name.as_str()))
+                            .collect(),
+                    )
+                },
+            })
         }
     }
 }

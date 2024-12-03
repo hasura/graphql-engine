@@ -3,19 +3,25 @@
     "data": {
       "Track": [
         {
+          "TrackId": 3503,
           "Album": {
+            "AlbumId": 347,
             "ArtistId": 275,
             "Title": "Koyaanisqatsi (Soundtrack from the Motion Picture)"
           }
         },
         {
+          "TrackId": 3502,
           "Album": {
+            "AlbumId": 346,
             "ArtistId": 274,
             "Title": "Mozart: Chamber Music"
           }
         },
         {
+          "TrackId": 3501,
           "Album": {
+            "AlbumId": 345,
             "ArtistId": 273,
             "Title": "Monteverdi: L'Orfeo"
           }
@@ -23,19 +29,29 @@
       ],
       "TrackOrderByWithoutRelationshipField": [
         {
-          "Name": "Koyaanisqatsi"
+          "Name": "Koyaanisqatsi",
+          "Album": {
+            "AlbumId": 347
+          }
         },
         {
-          "Name": "Quintet for Horn, Violin, 2 Violas, and Cello in E Flat Major, K. 407/386c: III. Allegro"
+          "Name": "Quintet for Horn, Violin, 2 Violas, and Cello in E Flat Major, K. 407/386c: III. Allegro",
+          "Album": {
+            "AlbumId": 346
+          }
         },
         {
-          "Name": "L'orfeo, Act 3, Sinfonia (Orchestra)"
+          "Name": "L'orfeo, Act 3, Sinfonia (Orchestra)",
+          "Album": {
+            "AlbumId": 345
+          }
         }
       ],
       "TrackOrderByWithFilter": [
         {
           "TrackId": 5,
           "Album": {
+            "AlbumId": 3,
             "Artist": {
               "ArtistId": 2,
               "Name": "Accept"
@@ -45,6 +61,7 @@
         {
           "TrackId": 4,
           "Album": {
+            "AlbumId": 3,
             "Artist": {
               "ArtistId": 2,
               "Name": "Accept"
@@ -54,6 +71,7 @@
         {
           "TrackId": 3,
           "Album": {
+            "AlbumId": 3,
             "Artist": {
               "ArtistId": 2,
               "Name": "Accept"
@@ -63,6 +81,7 @@
         {
           "TrackId": 2,
           "Album": {
+            "AlbumId": 2,
             "Artist": {
               "ArtistId": 2,
               "Name": "Accept"
@@ -76,19 +95,21 @@
     "data": {
       "Track": [
         {
+          "TrackId": 3502,
+          "Album": null
+        },
+        {
+          "TrackId": 3503,
           "Album": {
+            "AlbumId": 347,
             "ArtistId": 275,
             "Title": "Koyaanisqatsi (Soundtrack from the Motion Picture)"
           }
         },
         {
+          "TrackId": 3501,
           "Album": {
-            "ArtistId": 274,
-            "Title": "Mozart: Chamber Music"
-          }
-        },
-        {
-          "Album": {
+            "AlbumId": 345,
             "ArtistId": 273,
             "Title": "Monteverdi: L'Orfeo"
           }
@@ -96,19 +117,27 @@
       ],
       "TrackOrderByWithoutRelationshipField": [
         {
-          "Name": "Koyaanisqatsi"
+          "Name": "Quintet for Horn, Violin, 2 Violas, and Cello in E Flat Major, K. 407/386c: III. Allegro",
+          "Album": null
         },
         {
-          "Name": "Quintet for Horn, Violin, 2 Violas, and Cello in E Flat Major, K. 407/386c: III. Allegro"
+          "Name": "Koyaanisqatsi",
+          "Album": {
+            "AlbumId": 347
+          }
         },
         {
-          "Name": "L'orfeo, Act 3, Sinfonia (Orchestra)"
+          "Name": "L'orfeo, Act 3, Sinfonia (Orchestra)",
+          "Album": {
+            "AlbumId": 345
+          }
         }
       ],
       "TrackOrderByWithFilter": [
         {
           "TrackId": 5,
           "Album": {
+            "AlbumId": 3,
             "Artist": {
               "ArtistId": 2,
               "Name": "Accept"
@@ -118,6 +147,7 @@
         {
           "TrackId": 4,
           "Album": {
+            "AlbumId": 3,
             "Artist": {
               "ArtistId": 2,
               "Name": "Accept"
@@ -127,6 +157,7 @@
         {
           "TrackId": 3,
           "Album": {
+            "AlbumId": 3,
             "Artist": {
               "ArtistId": 2,
               "Name": "Accept"
@@ -136,6 +167,7 @@
         {
           "TrackId": 2,
           "Album": {
+            "AlbumId": 2,
             "Artist": {
               "ArtistId": 2,
               "Name": "Accept"

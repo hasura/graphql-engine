@@ -14,6 +14,8 @@
   would have been silently dropped.
 - Row filters configured in `ModelPermissions` are now correctly applied when
   referencing the model across a relationship in a filter predicate.
+- Row filters configured in `ModelPermissions` are now correctly applied when
+  referencing the model across a relationship is order by expressions.
 
 ### Changed
 

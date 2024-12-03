@@ -1,31 +1,34 @@
 use std::collections::BTreeMap;
+use std::ops::Deref;
 
 use crate::model_tracking::count_model;
 use graphql_schema::OrderByRelationshipAnnotation;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
+use hasura_authn_core::SessionVariables;
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
 use open_dds::data_connector::DataConnectorColumnName;
 use plan_types::{
-    LocalModelRelationshipInfo, NdcRelationshipName, OrderByDirection, OrderByElement,
-    OrderByTarget, UsagesCounts,
+    Expression, LocalModelRelationshipInfo, NdcRelationshipName, OrderByDirection, OrderByElement,
+    OrderByTarget, RelationshipPathElement, UsagesCounts,
 };
 use serde::Serialize;
 
-use crate::error;
+use crate::{error, permissions};
 use graphql_schema::GDS;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
-pub struct ResolvedOrderBy<'s> {
-    pub order_by_elements: Vec<OrderByElement>,
+pub struct OrderBy<'s> {
+    pub order_by_elements: Vec<OrderByElement<Expression<'s>>>,
     // relationships that were used in the order_by expression. This is helpful
-    // for collecting relatinships and sending collection_relationships
+    // for collecting relationships and sending collection_relationships
     pub relationships: BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
 }
 
 pub fn build_ndc_order_by<'s>(
     args_field: &InputField<'s, GDS>,
+    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
-) -> Result<ResolvedOrderBy<'s>, error::Error> {
+) -> Result<OrderBy<'s>, error::Error> {
     match &args_field.value {
         normalized_ast::Value::List(arguments) => {
             let mut order_by_elements = Vec::new();
@@ -41,18 +44,17 @@ pub fn build_ndc_order_by<'s>(
                         if arguments.len() == 1 {
                             let argument = arguments
                                     .first()
-                                    .ok_or(error::InternalEngineError::InternalGeneric {
+                                    .ok_or_else(|| error::InternalEngineError::InternalGeneric {
                                         description: "unexpected: could not find the first key-value pair of arguments"
                                             .into(),
                                     })?
                                     .1;
-                            let field_paths = Vec::new();
-                            let relationship_paths = Vec::new();
                             let order_by_element = build_ndc_order_by_element(
                                 argument,
-                                field_paths,
-                                relationship_paths,
+                                &[],
+                                &[],
                                 &mut relationships,
+                                session_variables,
                                 usage_counts,
                             )?;
                             order_by_elements.extend(order_by_element);
@@ -65,7 +67,7 @@ pub fn build_ndc_order_by<'s>(
                     })?,
                 }
             }
-            Ok(ResolvedOrderBy {
+            Ok(OrderBy {
                 order_by_elements,
                 relationships,
             })
@@ -100,15 +102,16 @@ pub fn build_ndc_order_by<'s>(
 
 pub fn build_ndc_order_by_element<'s>(
     argument: &InputField<'s, GDS>,
-    mut field_paths: Vec<DataConnectorColumnName>,
+    column_path: &[&'s DataConnectorColumnName],
     // The path to access the relationship column. If the column is a
     // non-relationship column, this will be empty. The paths contains
     // the names of relationships (in order) that needs to be traversed
     // to access the column.
-    mut relationship_paths: Vec<NdcRelationshipName>,
+    relationship_path: &[&RelationshipPathElement<Expression<'s>>],
     relationships: &mut BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
+    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
-) -> Result<Vec<OrderByElement>, error::Error> {
+) -> Result<Vec<OrderByElement<Expression<'s>>>, error::Error> {
     match argument.info.generic {
         // The column that we want to use for ordering. If the column happens to be
         // a relationship column, we'll have to join all the paths to specify NDC,
@@ -128,28 +131,23 @@ pub fn build_ndc_order_by_element<'s>(
                 }
             };
 
-            let (name, field_path) = if field_paths.is_empty() {
-                (ndc_column.clone(), vec![])
-            } else {
-                let mut field_path = field_paths[1..].to_vec();
-                field_path.push(ndc_column.clone());
-                (field_paths[0].clone(), field_path)
-            };
-
             let order_element = OrderByElement {
                 order_direction: match order_direction {
                     graphql_schema::ModelOrderByDirection::Asc => OrderByDirection::Asc,
                     graphql_schema::ModelOrderByDirection::Desc => OrderByDirection::Desc,
                 },
-                // TODO(naveen): When aggregates are supported, extend this to support other ndc_models::OrderByTarget
                 target: OrderByTarget::Column {
-                    name,
-                    field_path: if field_path.is_empty() {
-                        None
-                    } else {
-                        Some(field_path)
-                    },
-                    relationship_path: relationship_paths,
+                    relationship_path: relationship_path.iter().copied().cloned().collect(),
+                    // The column name is the root column
+                    name: column_path.first().map_or(ndc_column, Deref::deref).clone(),
+                    // The field path is the nesting path inside the root column, if any
+                    field_path: column_path
+                        .iter()
+                        .copied()
+                        .chain([ndc_column])
+                        .skip(1)
+                        .cloned()
+                        .collect(),
                 },
             };
 
@@ -196,15 +194,34 @@ pub fn build_ndc_order_by_element<'s>(
             let argument_value_map = argument.value.as_object()?;
             let mut order_by_elements = Vec::new();
 
-            // Add the current relationship to the relationship paths.
-            relationship_paths.push(ndc_relationship_name);
+            let filter_permission = permissions::get_select_filter_predicate(&argument.info)?;
+            let filter_predicate = permissions::build_model_permissions_filter_predicate(
+                &target_source.model.data_connector,
+                &target_source.model.type_mappings,
+                filter_permission,
+                session_variables,
+                usage_counts,
+            )?;
+
+            // Add the current relationship to the relationship path.
+            let relationship_path_element = RelationshipPathElement {
+                field_path: column_path.iter().copied().cloned().collect(),
+                relationship_name: ndc_relationship_name,
+                filter_predicate,
+            };
+            let new_relationship_path = relationship_path
+                .iter()
+                .copied()
+                .chain([&relationship_path_element])
+                .collect::<Vec<_>>();
 
             for argument in argument_value_map.values() {
                 let order_by_element = build_ndc_order_by_element(
                     argument,
-                    field_paths.clone(),
-                    relationship_paths.clone(),
+                    &[], // Field path resets as we pass through a relationship
+                    &new_relationship_path,
                     relationships,
+                    session_variables,
                     usage_counts,
                 )?;
                 order_by_elements.extend(order_by_element);
@@ -214,7 +231,12 @@ pub fn build_ndc_order_by_element<'s>(
         Annotation::Input(InputAnnotation::Model(
             graphql_schema::ModelInputAnnotation::ModelOrderByNestedExpression { ndc_column },
         )) => {
-            field_paths.push(ndc_column.clone());
+            let new_column_path = column_path
+                .iter()
+                .copied()
+                .chain([ndc_column])
+                .collect::<Vec<_>>();
+
             let argument_list = argument.value.as_list()?;
             let mut order_by_elements = Vec::new();
             for argument in argument_list {
@@ -222,9 +244,10 @@ pub fn build_ndc_order_by_element<'s>(
                 for argument in argument_value_map.values() {
                     let order_by_element = build_ndc_order_by_element(
                         argument,
-                        field_paths.clone(),
-                        relationship_paths.clone(),
+                        &new_column_path,
+                        relationship_path,
                         relationships,
+                        session_variables,
                         usage_counts,
                     )?;
                     order_by_elements.extend(order_by_element);

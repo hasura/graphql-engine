@@ -4,6 +4,7 @@ use super::column::{to_resolved_column, ResolvedColumn};
 use super::types::PlanError;
 use metadata_resolve::{Qualified, TypeMapping};
 use open_dds::{query::OrderByElement, types::CustomTypeName};
+use plan_types::ResolvedFilterExpression;
 
 pub fn to_resolved_order_by_element(
     metadata: &metadata_resolve::Metadata,
@@ -11,7 +12,7 @@ pub fn to_resolved_order_by_element(
     type_name: &Qualified<CustomTypeName>,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     element: &OrderByElement,
-) -> Result<plan_types::OrderByElement, PlanError> {
+) -> Result<plan_types::OrderByElement<ResolvedFilterExpression>, PlanError> {
     match &element.operand {
         open_dds::query::Operand::Field(operand) => {
             let ResolvedColumn {
@@ -28,11 +29,7 @@ pub fn to_resolved_order_by_element(
 
             let target = plan_types::OrderByTarget::Column {
                 name: column_name,
-                field_path: if field_path.is_empty() {
-                    None
-                } else {
-                    Some(field_path)
-                },
+                field_path,
                 relationship_path: vec![],
             };
 

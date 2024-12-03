@@ -101,7 +101,11 @@ pub fn select_many_generate_ir<'n, 's>(
                     })?,
                 },
                 ModelInputAnnotation::ModelOrderByExpression => {
-                    order_by = Some(build_ndc_order_by(argument, &mut usage_counts)?);
+                    order_by = Some(build_ndc_order_by(
+                        argument,
+                        session_variables,
+                        &mut usage_counts,
+                    )?);
                 }
                 _ => {
                     return Err(error::InternalEngineError::UnexpectedAnnotation {

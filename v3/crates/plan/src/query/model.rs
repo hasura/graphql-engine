@@ -196,10 +196,10 @@ pub fn ndc_query_to_query_execution_plan(
     };
 
     // only send an ordering if there are actually elements
-    let order_by = if query.order_by.order_by_elements.is_empty() {
+    let order_by = if query.order_by.is_empty() {
         None
     } else {
-        Some(query.order_by.order_by_elements.clone())
+        Some(query.order_by.clone())
     };
 
     QueryExecutionPlan {

@@ -150,5 +150,5 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json"] }
 transitive = "0.5"
 url = { version = "2", features = ["serde"] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 zstd = { version = "0.13" }
