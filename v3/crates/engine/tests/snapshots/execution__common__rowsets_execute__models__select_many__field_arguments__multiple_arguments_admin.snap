@@ -1,24 +1,26 @@
 ---
 source: crates/engine/tests/common.rs
-expression: rowsets
+expression: results
 ---
 {
-  "Ok": [
-    {
-      "rows": [
-        {
-          "id": 1,
-          "name": "Queen Mary University of London"
-        },
-        {
-          "id": 2,
-          "name": "Chalmers University of Technology"
-        },
-        {
-          "id": 3,
-          "name": "University of Nowhere"
-        }
-      ]
-    }
-  ]
+  "InstitutionMany": {
+    "Ok": [
+      {
+        "rows": [
+          {
+            "id": 1,
+            "name": "Queen Mary University of London"
+          },
+          {
+            "id": 2,
+            "name": "Chalmers University of Technology"
+          },
+          {
+            "id": 3,
+            "name": "University of Nowhere"
+          }
+        ]
+      }
+    ]
+  }
 }
