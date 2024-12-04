@@ -33,7 +33,6 @@ pub fn build_execution_plan(
         command_selection,
         metadata,
         session,
-        http_context,
         request_headers,
         unique_number,
     )

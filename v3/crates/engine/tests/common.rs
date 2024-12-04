@@ -887,7 +887,6 @@ pub async fn open_dd_pipeline_test(
                     &query_ir,
                     metadata,
                     &Arc::new(session.clone()),
-                    http_context,
                     request_headers,
                 );
 

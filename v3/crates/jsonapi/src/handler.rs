@@ -100,9 +100,8 @@ async fn query_engine_execute(
     http_context: &Arc<HttpContext>,
     request_headers: &HeaderMap,
 ) -> Result<QueryResult, RequestError> {
-    let execution_plan =
-        plan::plan_query_request(query_ir, metadata, session, http_context, request_headers)
-            .map_err(RequestError::PlanError)?;
+    let execution_plan = plan::plan_query_request(query_ir, metadata, session, request_headers)
+        .map_err(RequestError::PlanError)?;
     match execution_plan {
         plan::ExecutionPlan::Queries(queries) => match queries.first() {
             Some((_alias, query_execution)) => {

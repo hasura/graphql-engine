@@ -421,7 +421,6 @@ impl ModelQuery {
             &self.model_selection,
             metadata,
             session,
-            http_context,
             request_headers,
             unique_number,
         )

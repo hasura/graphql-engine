@@ -8,7 +8,6 @@ license.workspace = true
 bench = false
 
 [dependencies]
-engine-types = { path = "../engine-types" }
 graphql-ir = { path = "../graphql/ir" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 metadata-resolve = {path = "../metadata-resolve" }

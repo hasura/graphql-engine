@@ -1,4 +1,3 @@
-use engine_types::HttpContext;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -39,7 +38,6 @@ pub fn from_command(
     command_selection: &CommandSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<FromCommand, PlanError> {
@@ -82,7 +80,6 @@ pub fn from_command(
     let ndc_fields = field_selection::resolve_field_selection(
         metadata,
         session,
-        http_context,
         request_headers,
         output_object_type_name,
         output_object_type,

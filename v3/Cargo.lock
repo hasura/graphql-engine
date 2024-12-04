@@ -4146,7 +4146,6 @@ name = "plan"
 version = "3.0.0"
 dependencies = [
  "derive_more",
- "engine-types",
  "graphql-ir",
  "hasura-authn-core",
  "indexmap 2.7.0",

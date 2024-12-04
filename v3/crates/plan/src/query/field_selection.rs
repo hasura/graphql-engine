@@ -1,5 +1,4 @@
 use crate::types::PlanError;
-use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
@@ -19,7 +18,6 @@ use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject, U
 pub fn resolve_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
@@ -42,7 +40,6 @@ pub fn resolve_field_selection(
             ObjectSubSelection::Field(field_selection) => from_field_selection(
                 metadata,
                 session,
-                http_context,
                 request_headers,
                 type_mappings,
                 data_connector,
@@ -58,7 +55,6 @@ pub fn resolve_field_selection(
                     relationship_selection,
                     metadata,
                     session,
-                    http_context,
                     request_headers,
                     object_type_name,
                     object_type,
@@ -82,7 +78,6 @@ pub fn resolve_field_selection(
 fn from_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -137,7 +132,6 @@ fn from_field_selection(
     let fields = resolve_nested_field_selection(
         metadata,
         session,
-        http_context,
         request_headers,
         type_mappings,
         data_connector,
@@ -158,7 +152,6 @@ fn from_field_selection(
 fn resolve_nested_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -201,7 +194,6 @@ fn resolve_nested_field_selection(
             let resolved_nested_selection = resolve_field_selection(
                 metadata,
                 session,
-                http_context,
                 request_headers,
                 field_type_name,
                 nested_object_type,
@@ -241,7 +233,6 @@ fn from_relationship_selection(
     relationship_selection: &RelationshipSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
@@ -345,7 +336,6 @@ fn from_relationship_selection(
         &relationship_target_model_selection,
         metadata,
         session,
-        http_context,
         request_headers,
         unique_number,
     )?;
