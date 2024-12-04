@@ -4,8 +4,9 @@ use std::net;
 use std::path::PathBuf;
 
 use engine::{
+    get_base_routes, get_cors_layer, get_jsonapi_route, get_metadata_routes, get_sql_route,
     internal_flags::{resolve_unstable_features, UnstableFeature},
-    EngineRouter, StartupError, VERSION,
+    StartupError, VERSION,
 };
 use engine_types::ExposeInternalErrors;
 use tracing_util::{add_event_on_active_span, set_attribute_on_active_span, SpanVisibility};
@@ -128,23 +129,23 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     )
     .map_err(StartupError::ReadSchema)?;
 
-    let mut engine_router = EngineRouter::new(state.clone());
+    let mut app = get_base_routes(state.clone());
 
     if server.enable_sql_interface {
-        engine_router.add_sql_route(state.clone());
+        app = app.merge(get_sql_route(state.clone()));
     }
 
-    engine_router.add_jsonapi_route(state.clone());
+    app = app.merge(get_jsonapi_route(state.clone()));
 
     // If `--introspection-metadata` is specified we also serve the file indicated on `/metadata`
     // and its hash on `/metadata-hash`.
     if let Some(path) = &server.introspection_metadata {
-        engine_router.add_metadata_routes(path).await?;
+        app = app.merge(get_metadata_routes(path).await?);
     }
 
     // If `--enable-cors` is specified, we add a CORS layer to the app.
     if server.enable_cors {
-        engine_router.add_cors_layer(&server.cors_allow_origin);
+        app = app.layer(get_cors_layer(&server.cors_allow_origin));
     }
 
     let address = net::SocketAddr::new(server.host, server.port);
@@ -161,7 +162,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     // run it with hyper on `addr`
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
 
-    axum::serve(listener, engine_router.into_make_service())
+    axum::serve(listener, app.into_make_service())
         .with_graceful_shutdown(axum_ext::shutdown_signal_with_handler(|| async move {
             state
                 .graphql_websocket_server
