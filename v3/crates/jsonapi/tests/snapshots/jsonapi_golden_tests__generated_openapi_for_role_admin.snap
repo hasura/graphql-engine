@@ -585,6 +585,31 @@ expression: generated_openapi
                                       }
                                     }
                                   }
+                                },
+                                "AuthorFromCommand": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_commandAuthor"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
                                 }
                               }
                             }
@@ -655,6 +680,38 @@ expression: generated_openapi
                                       }
                                     }
                                   }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_commandAuthor"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "first_name": {
+                                      "type": "string"
+                                    },
+                                    "id": {
+                                      "type": "integer"
+                                    },
+                                    "last_name": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
                                 }
                               }
                             }
@@ -1112,6 +1169,31 @@ expression: generated_openapi
                                             "_type": {
                                               "enum": [
                                                 "default_Author"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "AuthorFromCommand": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_commandAuthor"
                                               ]
                                             },
                                             "id": {
