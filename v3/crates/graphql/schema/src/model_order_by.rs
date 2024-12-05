@@ -1,6 +1,7 @@
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
+use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::models::ModelName;
 use open_dds::relationships::{RelationshipName, RelationshipType};
 use open_dds::types::{CustomTypeName, Deprecated};
@@ -79,37 +80,71 @@ pub fn get_order_by_expression_input_field(
     model_name: Qualified<ModelName>,
     order_by_expression_info: &metadata_resolve::ModelOrderByExpression,
 ) -> gql_schema::InputField<GDS> {
-    get_order_by_expression_object_input_field(
-        builder,
-        model_name,
-        types::ModelInputAnnotation::ModelOrderByExpression,
-        &order_by_expression_info.order_by_type_name,
-        &order_by_expression_info.order_by_field_name,
-        &order_by_expression_info.order_by_expression_identifier,
+    gql_schema::InputField::new(
+        order_by_expression_info.order_by_field_name.clone(),
         None,
+        types::Annotation::Input(types::InputAnnotation::Model(
+            types::ModelInputAnnotation::ModelOrderByExpression,
+        )),
+        ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
+            builder.register_type(types::TypeId::ModelOrderByExpression {
+                model_name,
+                order_by_expression_identifier: order_by_expression_info
+                    .order_by_expression_identifier
+                    .clone(),
+                graphql_type_name: order_by_expression_info.order_by_type_name.clone(),
+            }),
+        )),
+        None,
+        gql_schema::DeprecationStatus::NotDeprecated,
     )
 }
 
-fn get_order_by_expression_object_input_field(
+fn get_order_by_expression_nested_object_input_field(
+    gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
+    ndc_column: DataConnectorColumnName,
     model_name: Qualified<ModelName>,
-    model_input_annotation: ModelInputAnnotation,
     order_by_type_name: &ast::TypeName,
     order_by_field_name: &ast::Name,
     order_by_expression_identifier: &Qualified<OrderByExpressionIdentifier>,
     deprecated: Option<&Deprecated>,
 ) -> gql_schema::InputField<GDS> {
+    let raw_field_type = builder.register_type(types::TypeId::ModelOrderByExpression {
+        model_name,
+        order_by_expression_identifier: order_by_expression_identifier.clone(),
+        graphql_type_name: order_by_type_name.clone(),
+    });
+
+    // The type of the field should just be a nullable version of the raw field type, but this was implemented
+    // incorrectly as a list of the raw field type originally, so we need to maintain that incorrect form behind
+    // a flag for backwards compatibility.
+    let field_type = match gds
+        .metadata
+        .graphql_config
+        .multiple_order_by_input_object_fields
+    {
+        metadata_resolve::MultipleOrderByInputObjectFields::Disallow => {
+            ast::TypeContainer::named_null(raw_field_type)
+        }
+        metadata_resolve::MultipleOrderByInputObjectFields::Allow => {
+            ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(raw_field_type))
+        }
+    };
+
     gql_schema::InputField::new(
         order_by_field_name.clone(),
         None,
-        types::Annotation::Input(types::InputAnnotation::Model(model_input_annotation)),
-        ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(builder.register_type(
-            types::TypeId::ModelOrderByExpression {
-                model_name,
-                order_by_expression_identifier: order_by_expression_identifier.clone(),
-                graphql_type_name: order_by_type_name.clone(),
+        types::Annotation::Input(types::InputAnnotation::Model(
+            ModelInputAnnotation::ModelOrderByNestedExpression {
+                ndc_column,
+                multiple_input_properties: gds
+                    .metadata
+                    .graphql_config
+                    .multiple_order_by_input_object_fields,
             },
-        ))),
+        )),
+        field_type,
         None,
         mk_deprecation_status(deprecated),
     )
@@ -238,10 +273,11 @@ pub fn build_model_order_by_input_schema(
                     .ok_or_else(|| Error::InternalNoOrderByGraphqlConfigOrderByExpression {
                         order_by_expression_identifier: order_by_expression_identifier.clone(),
                     })?;
-                let input_field = get_order_by_expression_object_input_field(
+                let input_field = get_order_by_expression_nested_object_input_field(
+                    gds,
                     builder,
+                    ndc_column,
                     model_name.clone(),
-                    ModelInputAnnotation::ModelOrderByNestedExpression { ndc_column },
                     graphql_type_name,
                     &graphql_field_name,
                     order_by_expression_identifier,
@@ -361,6 +397,10 @@ fn build_all_relationships(
                                 source_data_connector: model_source.data_connector.clone(),
                                 source_type_mappings: model_source.type_mappings.clone(),
                                 deprecated: relationship.deprecated.clone(),
+                                multiple_input_properties: gds
+                                    .metadata
+                                    .graphql_config
+                                    .multiple_order_by_input_object_fields,
                             };
 
                             fields.insert(
@@ -532,6 +572,10 @@ fn build_orderable_relationships(
                                 source_data_connector: model_source.data_connector.clone(),
                                 source_type_mappings: model_source.type_mappings.clone(),
                                 deprecated: relationship.deprecated.clone(),
+                                multiple_input_properties: gds
+                                    .metadata
+                                    .graphql_config
+                                    .multiple_order_by_input_object_fields,
                             };
 
                             fields.insert(

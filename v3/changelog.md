@@ -6,6 +6,23 @@
 
 ### Fixed
 
+- GraphQL queries with `order_by` arguments that contain multiple properties set
+  on one input object now properly return an error. For example
+  `order_by: { location: { city: Asc, country: Asc } }` is no longer allowed.
+  This is because the order of input object fields in GraphQL is not defined, so
+  it is unclear whether ordering should be first by city or first by country.
+  Instead, write this query like so:
+  `order_by: [{ location: { city: Asc } }, { location: { country: Asc } }]`.
+
+  Additionally, ordering by nested fields using an nested array is no longer
+  allowed (for example:
+  `order_by: { location: [{ city: Asc }, { country: Asc }] }`). Instead, write
+  this query like so:
+  `order_by: [{ location: { city: Asc } }, { location: { country: Asc } }]`.
+
+  These fixes are only enabled if your `CompatibilityConfig` date is set to
+  `2024-12-10` or newer.
+
 ### Changed
 
 ## [v2024.12.04]

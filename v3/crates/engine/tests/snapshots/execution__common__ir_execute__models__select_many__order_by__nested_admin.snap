@@ -28,11 +28,9 @@ V1(
                             ): Literal(
                                 Array [
                                     Object {
-                                        "location": Array [
-                                            Object {
-                                                "city": String("Asc"),
-                                            },
-                                        ],
+                                        "location": Object {
+                                            "city": String("Asc"),
+                                        },
                                     },
                                 ],
                             ),
@@ -140,11 +138,9 @@ V1(
                             ): Literal(
                                 Array [
                                     Object {
-                                        "location": Array [
-                                            Object {
-                                                "city": String("Desc"),
-                                            },
-                                        ],
+                                        "location": Object {
+                                            "city": String("Desc"),
+                                        },
                                     },
                                 ],
                             ),

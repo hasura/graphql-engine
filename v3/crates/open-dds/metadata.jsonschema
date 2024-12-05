@@ -3502,6 +3502,10 @@
         "disallow_duplicate_names_in_boolean_expressions": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_multiple_input_object_fields_in_graphql_order_by": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3549,7 +3553,8 @@
                 "require_unique_model_graphql_names": false,
                 "disallow_object_boolean_expression_type": false,
                 "logical_operators_in_scalar_boolean_expressions": false,
-                "disallow_duplicate_names_in_boolean_expressions": false
+                "disallow_duplicate_names_in_boolean_expressions": false,
+                "disallow_multiple_input_object_fields_in_graphql_order_by": false
               },
               "allOf": [
                 {
@@ -3608,7 +3613,8 @@
                 "require_unique_model_graphql_names": false,
                 "disallow_object_boolean_expression_type": false,
                 "logical_operators_in_scalar_boolean_expressions": false,
-                "disallow_duplicate_names_in_boolean_expressions": false
+                "disallow_duplicate_names_in_boolean_expressions": false,
+                "disallow_multiple_input_object_fields_in_graphql_order_by": false
               },
               "allOf": [
                 {
@@ -3657,7 +3663,8 @@
                 "require_unique_model_graphql_names": false,
                 "disallow_object_boolean_expression_type": false,
                 "logical_operators_in_scalar_boolean_expressions": false,
-                "disallow_duplicate_names_in_boolean_expressions": false
+                "disallow_duplicate_names_in_boolean_expressions": false,
+                "disallow_multiple_input_object_fields_in_graphql_order_by": false
               },
               "allOf": [
                 {

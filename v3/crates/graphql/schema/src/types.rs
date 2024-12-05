@@ -218,6 +218,7 @@ pub enum ModelInputAnnotation {
     ModelOrderByExpression,
     ModelOrderByNestedExpression {
         ndc_column: DataConnectorColumnName,
+        multiple_input_properties: metadata_resolve::MultipleOrderByInputObjectFields,
     },
     ModelOrderByArgument {
         field_name: types::FieldName,

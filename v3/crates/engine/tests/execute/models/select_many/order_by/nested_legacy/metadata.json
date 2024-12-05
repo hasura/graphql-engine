@@ -355,6 +355,6 @@
     "disallow_object_boolean_expression_type": false,
     "logical_operators_in_scalar_boolean_expressions": true,
     "disallow_duplicate_names_in_boolean_expressions": true,
-    "disallow_multiple_input_object_fields_in_graphql_order_by": true
+    "disallow_multiple_input_object_fields_in_graphql_order_by": false
   }
 }

@@ -255,6 +255,17 @@ fn test_model_select_many_order_by_nested() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_model_select_many_order_by_nested_legacy() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/nested_legacy";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+    )
+}
+
+#[test]
 fn test_model_select_many_order_by_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
@@ -297,8 +308,21 @@ fn test_model_select_many_order_by_multiple_columns() -> anyhow::Result<()> {
 
 #[test]
 fn test_model_select_many_order_by_multiple_columns_validation_check() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/order_by/order_by_validation_check";
+    let test_path_string = "execute/models/select_many/order_by/multiple_columns_validation_check";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+    )
+}
+
+#[test]
+fn test_model_select_many_order_by_multiple_nested_columns_validation_check() -> anyhow::Result<()>
+{
+    let test_path_string =
+        "execute/models/select_many/order_by/multiple_nested_columns_validation_check";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
