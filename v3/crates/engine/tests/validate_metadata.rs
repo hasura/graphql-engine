@@ -68,7 +68,7 @@ fn test_relationship_mapping_unknown_target_field() -> anyhow::Result<()> {
 
     assert_eq!(
         gds.unwrap_err().to_string(),
-        "metadata is not consistent: target field author_id in field mapping for relationship author on type Article (in subgraph default) to model Authors (in subgraph default) is unknown."
+        "metadata is not consistent: target field id_unknown_field in field mapping for relationship author on type Article (in subgraph default) to model Authors (in subgraph default) is unknown."
     );
     Ok(())
 }

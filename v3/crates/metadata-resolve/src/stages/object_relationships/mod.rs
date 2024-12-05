@@ -268,7 +268,7 @@ fn resolve_relationship_mappings_model(
                     relationship_name: relationship.name.clone(),
                     source_type: source_type_name.clone(),
                     model_name: target_model.name.clone(),
-                    field_name: resolved_relationship_source_mapping.field_name.clone(),
+                    field_name: resolved_relationship_target_mapping.field_name.clone(),
                 },
             });
         }

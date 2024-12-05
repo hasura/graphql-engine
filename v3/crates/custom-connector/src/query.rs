@@ -191,25 +191,22 @@ fn eval_row(
     Ok(row)
 }
 
-fn eval_aggregate(
-    aggregate: &ndc_models::Aggregate,
-    paginated: &[BTreeMap<ndc_models::FieldName, serde_json::Value>],
-) -> Result<serde_json::Value> {
+fn eval_aggregate(aggregate: &ndc_models::Aggregate, rows: &[Row]) -> Result<serde_json::Value> {
     match aggregate {
-        ndc_models::Aggregate::StarCount {} => Ok(serde_json::Value::from(paginated.len())),
+        ndc_models::Aggregate::StarCount {} => Ok(serde_json::Value::from(rows.len())),
         ndc_models::Aggregate::ColumnCount {
             column,
             arguments: _,
             field_path,
             distinct,
         } => {
-            let values = paginated
+            let values = rows
                 .iter()
                 .map(|row| {
                     let column_value = row.get(column).ok_or((
                         StatusCode::BAD_REQUEST,
                         Json(ndc_models::ErrorResponse {
-                            message: "invalid column name".into(),
+                            message: format!("invalid column name '{column}' during aggregation"),
                             details: serde_json::Value::Null,
                         }),
                     ))?;
@@ -256,13 +253,13 @@ fn eval_aggregate(
             field_path,
             function,
         } => {
-            let values = paginated
+            let values = rows
                 .iter()
                 .map(|row| {
                     let column_value = row.get(column).ok_or((
                         StatusCode::BAD_REQUEST,
                         Json(ndc_models::ErrorResponse {
-                            message: "invalid column name".into(),
+                            message: format!("invalid column name '{column}' during aggregation"),
                             details: serde_json::Value::Null,
                         }),
                     ))?;
@@ -548,117 +545,11 @@ fn eval_order_by_element(
             name,
             field_path.as_ref(),
         ),
-        ndc_models::OrderByTarget::Aggregate { aggregate, path } => match aggregate {
-            ndc_models::Aggregate::ColumnCount {
-                column,
-                arguments: _,
-                field_path: _,
-                distinct,
-            } => eval_order_by_column_count_aggregate(
-                collection_relationships,
-                variables,
-                state,
-                item,
-                path,
-                column,
-                *distinct,
-            ),
-            ndc_models::Aggregate::SingleColumn {
-                column,
-                arguments: _,
-                field_path: _,
-                function,
-            } => eval_order_by_single_column_aggregate(
-                collection_relationships,
-                variables,
-                state,
-                item,
-                path,
-                column,
-                function,
-            ),
-            ndc_models::Aggregate::StarCount {} => eval_order_by_star_count_aggregate(
-                collection_relationships,
-                variables,
-                state,
-                item,
-                path,
-            ),
-        },
+        ndc_models::OrderByTarget::Aggregate { aggregate, path } => {
+            let rows = eval_path(collection_relationships, variables, state, path, item)?;
+            eval_aggregate(aggregate, &rows)
+        }
     }
-}
-
-fn eval_order_by_star_count_aggregate(
-    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
-    variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
-    state: &AppState,
-    item: &Row,
-    path: &[ndc_models::PathElement],
-) -> Result<serde_json::Value> {
-    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
-    Ok(rows.len().into())
-}
-
-fn eval_order_by_column_count_aggregate(
-    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
-    variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
-    state: &AppState,
-    item: &Row,
-    path: &[ndc_models::PathElement],
-    column: &ndc_models::FieldName,
-    distinct: bool,
-) -> Result<serde_json::Value> {
-    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
-    let values = rows
-        .iter()
-        .map(|row| {
-            row.get(column).ok_or((
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "invalid column name".into(),
-                    details: serde_json::Value::Null,
-                }),
-            ))
-        })
-        .collect::<Result<Vec<_>>>()?;
-    let non_null_value_count = if distinct {
-        values
-            .iter()
-            .filter(|column_value| !column_value.is_null())
-            .collect::<HashSet<_>>()
-            .len()
-    } else {
-        values
-            .iter()
-            .filter(|column_value| !column_value.is_null())
-            .count()
-    };
-    Ok(serde_json::Value::from(non_null_value_count))
-}
-
-fn eval_order_by_single_column_aggregate(
-    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
-    variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
-    state: &AppState,
-    item: &Row,
-    path: &[ndc_models::PathElement],
-    column: &ndc_models::FieldName,
-    function: &ndc_models::AggregateFunctionName,
-) -> Result<serde_json::Value> {
-    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
-    let values = rows
-        .iter()
-        .map(|row| {
-            row.get(column).ok_or((
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "invalid column name".into(),
-                    details: serde_json::Value::Null,
-                }),
-            ))
-        })
-        .collect::<Result<Vec<_>>>()?;
-    eval_aggregate_function(function, &values)
 }
 
 fn eval_order_by_column(
@@ -721,6 +612,7 @@ fn eval_path(
             relationship,
             &path_element.arguments,
             &result,
+            path_element.field_path.as_deref(),
             path_element.predicate.as_deref(),
         )?;
     }
@@ -735,6 +627,7 @@ fn eval_path_element(
     relationship: &ndc_models::Relationship,
     arguments: &BTreeMap<ndc_models::ArgumentName, ndc_models::RelationshipArgument>,
     source: &[Row],
+    field_path: Option<&[ndc_models::FieldName]>,
     predicate: Option<&ndc_models::Expression>,
 ) -> Result<Vec<Row>> {
     let mut matching_rows: Vec<Row> = vec![];
@@ -757,13 +650,17 @@ fn eval_path_element(
     // single array relationship, so there should be no double counting.
 
     for src_row in source {
+        let Some(src_row) = eval_row_field_path(field_path, src_row)? else {
+            continue;
+        };
+
         let mut all_arguments = BTreeMap::new();
 
         for (argument_name, argument_value) in &relationship.arguments {
             if all_arguments
                 .insert(
                     argument_name.clone(),
-                    eval_relationship_argument(variables, src_row, argument_value)?,
+                    eval_relationship_argument(variables, &src_row, argument_value)?,
                 )
                 .is_some()
             {
@@ -781,7 +678,7 @@ fn eval_path_element(
             if all_arguments
                 .insert(
                     argument_name.clone(),
-                    eval_relationship_argument(variables, src_row, argument_value)?,
+                    eval_relationship_argument(variables, &src_row, argument_value)?,
                 )
                 .is_some()
             {
@@ -800,7 +697,7 @@ fn eval_path_element(
 
         for tgt_row in &target {
             if let Some(predicate) = predicate {
-                if eval_column_mapping(relationship, src_row, tgt_row)?
+                if eval_column_mapping(relationship, &src_row, tgt_row)?
                     && eval_expression(
                         collection_relationships,
                         variables,
@@ -812,13 +709,56 @@ fn eval_path_element(
                 {
                     matching_rows.push(tgt_row.clone());
                 }
-            } else if eval_column_mapping(relationship, src_row, tgt_row)? {
+            } else if eval_column_mapping(relationship, &src_row, tgt_row)? {
                 matching_rows.push(tgt_row.clone());
             }
         }
     }
 
     Ok(matching_rows)
+}
+
+fn eval_row_field_path(
+    field_path: Option<&[ndc_models::FieldName]>,
+    row: &Row,
+) -> Result<Option<Row>> {
+    if let Some(field_path) = field_path {
+        field_path
+            .iter()
+            .try_fold(Some(row.clone()), |row, field_name| {
+                if let Some(mut row) = row {
+                    row.remove(field_name.as_str())
+                        .ok_or_else(|| {
+                            (
+                                StatusCode::BAD_REQUEST,
+                                Json(ndc_models::ErrorResponse {
+                                    message: "invalid row field path".into(),
+                                    details: serde_json::Value::Null,
+                                }),
+                            )
+                        })
+                        .and_then(|value| {
+                            if value.is_null() {
+                                Ok(None)
+                            } else {
+                                serde_json::from_value(value).map(Some).map_err(|e| {
+                                    (
+                                        StatusCode::BAD_REQUEST,
+                                        Json(ndc_models::ErrorResponse {
+                                            message: format!("Expected object when navigating row field path: {e}"),
+                                            details: serde_json::Value::Null,
+                                        }),
+                                    )
+                                })
+                            }
+                        })
+                } else {
+                    Ok(None)
+                }
+            })
+    } else {
+        Ok(Some(row.clone()))
+    }
 }
 
 fn eval_argument(
@@ -1029,7 +969,7 @@ fn eval_in_collection(
     match in_collection {
         ndc_models::ExistsInCollection::Related {
             relationship,
-            field_path: _,
+            field_path,
             arguments,
         } => {
             if !state.enable_relationship_support {
@@ -1057,6 +997,7 @@ fn eval_in_collection(
                 relationship,
                 arguments,
                 &source,
+                field_path.as_deref(),
                 Some(Box::new(ndc_models::Expression::And {
                     expressions: vec![],
                 }))
@@ -1136,7 +1077,7 @@ fn eval_column(row: &Row, column_name: &ndc_models::FieldName) -> Result<serde_j
     row.get(column_name).cloned().ok_or((
         StatusCode::BAD_REQUEST,
         Json(ndc_models::ErrorResponse {
-            message: "invalid column name".into(),
+            message: format!("invalid column name: {column_name}"),
             details: serde_json::Value::Null,
         }),
     ))
@@ -1320,6 +1261,7 @@ fn eval_field(
                 relationship,
                 arguments,
                 &source,
+                None,
                 Some(&Box::new(ndc_models::Expression::And {
                     expressions: vec![],
                 })),

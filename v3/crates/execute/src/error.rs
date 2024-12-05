@@ -9,7 +9,7 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
-use crate::ndc::client as ndc_client;
+use crate::{execute, ndc::client as ndc_client};
 
 use graphql_schema::Annotation;
 
@@ -115,6 +115,9 @@ pub enum FieldInternalError {
     #[error("failed to serialise an Expression to JSON: {0}")]
     ExpressionSerializationError(serde_json::Error),
 
+    #[error("ndc compatibility error: {0}")]
+    NdcV01CompatibilityError(#[from] execute::NdcV01CompatibilityError),
+
     #[error("internal error: {description}")]
     InternalGeneric { description: String },
 }
@@ -142,7 +145,8 @@ impl TraceableError for FieldInternalError {
             | Self::InternalGeneric { .. }
             | Self::NormalizedAstError(_)
             | Self::ExpressionSerializationError(_)
-            | Self::IntrospectionError(_) => ErrorVisibility::Internal,
+            | Self::IntrospectionError(_)
+            | Self::NdcV01CompatibilityError(_) => ErrorVisibility::Internal,
         }
     }
 }

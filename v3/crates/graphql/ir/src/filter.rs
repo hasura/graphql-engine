@@ -438,15 +438,6 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
     mappings: &'s Vec<metadata_resolve::RelationshipModelMapping>,
     relationship_predicate: Expression<'s>,
 ) -> Result<Expression<'s>, error::Error> {
-    if !column_path.is_empty() {
-        return Err(
-            error::InternalDeveloperError::NestedObjectRelationshipInPredicate {
-                relationship_name: relationship_name.clone(),
-            }
-            .into(),
-        );
-    }
-
     // Determine whether the relationship is local or remote
     match get_relationship_predicate_execution_strategy(
         data_connector_link,
@@ -468,6 +459,7 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
             };
 
             Ok(Expression::RelationshipLocalComparison {
+                field_path: column_path.iter().copied().cloned().collect(),
                 relationship: ndc_relationship_name,
                 predicate: Box::new(relationship_predicate),
                 info: local_model_relationship_info,

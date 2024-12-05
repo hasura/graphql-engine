@@ -200,6 +200,56 @@
                     },
                     "foreign_keys": {}
                   },
+                  "city": {
+                    "description": "A city",
+                    "fields": {
+                      "name": {
+                        "description": "The city's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "country": {
+                    "description": "A country",
+                    "fields": {
+                      "area_km2": {
+                        "description": "The country's area size in square kilometers",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "cities": {
+                        "description": "The cities in the country",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "city"
+                          }
+                        }
+                      },
+                      "id": {
+                        "description": "The country's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "The country's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
                   "genre": {
                     "description": "A movie genre",
                     "fields": {
@@ -440,6 +490,13 @@
                               "name": "Int"
                             }
                           }
+                        }
+                      },
+                      "country_id": {
+                        "description": "The location's country ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
                         }
                       }
                     },
@@ -800,6 +857,17 @@
                     "type": "movie",
                     "uniqueness_constraints": {
                       "MovieByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "name": "countries",
+                    "description": "A collection of countries",
+                    "arguments": {},
+                    "type": "country",
+                    "uniqueness_constraints": {
+                      "CountryByID": {
                         "unique_columns": ["id"]
                       }
                     }

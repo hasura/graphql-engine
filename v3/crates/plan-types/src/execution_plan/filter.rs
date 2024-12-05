@@ -20,6 +20,7 @@ pub enum ResolvedFilterExpression {
         predicate: Box<ResolvedFilterExpression>,
     },
     LocalRelationshipComparison {
+        field_path: Vec<DataConnectorColumnName>,
         relationship: NdcRelationshipName,
         predicate: Box<ResolvedFilterExpression>,
     },

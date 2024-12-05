@@ -267,13 +267,19 @@ pub fn make_expression(
             },
         }),
         ResolvedFilterExpression::LocalRelationshipComparison {
+            field_path,
             relationship,
             predicate,
         } => {
             let ndc_expression = make_expression(*predicate)?;
             Ok(ndc_models_v02::Expression::Exists {
                 in_collection: ndc_models_v02::ExistsInCollection::Related {
-                    field_path: None,
+                    field_path: Some(
+                        field_path
+                            .into_iter()
+                            .map(|f| ndc_models_v02::FieldName::new(f.into_inner()))
+                            .collect(),
+                    ),
                     relationship: ndc_models_v02::RelationshipName::from(relationship.as_str()),
                     arguments: BTreeMap::new(),
                 },

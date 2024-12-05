@@ -22,10 +22,12 @@ let
         isGraphqlFile = path: _type: builtins.match ".*graphql" path != null;
         isHtmlFile = path: _type: builtins.match ".*html" path != null;
         isJsonFile = path: _type: builtins.match ".*json" path != null;
+        isJsonLinesFile = path: _type: builtins.match ".*jsonl" path != null;
         isSourceFile = path: type:
           isGraphqlFile path type
           || isHtmlFile path type
           || isJsonFile path type
+          || isJsonLinesFile path type
           || craneLib.filterCargoSources path type;
       in
       lib.cleanSourceWith { src = craneLib.path ./..; filter = isSourceFile; };

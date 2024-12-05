@@ -81,13 +81,25 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                 }
             }
 
-            // This nested object field should not contain any relationship comparisons
-            if !leaf_boolean_expression
-                .fields
-                .relationship_fields
-                .is_empty()
+            // If the connector does not support nested relationships in filtering then
+            // this nested object field should not contain any relationship comparisons
+            let supports_nested_relationships_in_filtering = data_connector
+                .capabilities
+                .supports_relationships
+                .as_ref()
+                .is_some_and(|r| {
+                    r.supports_nested_relationships
+                        .as_ref()
+                        .is_some_and(|n| n.supports_nested_in_filtering)
+                });
+            if !supports_nested_relationships_in_filtering
+                && !leaf_boolean_expression
+                    .fields
+                    .relationship_fields
+                    .is_empty()
             {
-                return Err(Error::from(boolean_expressions::BooleanExpressionError::NestedObjectFieldContainsRelationshipComparison {
+                return Err(Error::from(boolean_expressions::BooleanExpressionError::DataConnectorDoesNotSupportNestedRelationshipFiltering {
+                    data_connector_name: data_connector.name.clone(),
                     parent_boolean_expression_type_name: object_boolean_expression_type.name.clone(),
                     field_name: field_name.clone(),
                     nested_boolean_expression_type_name: object_comparison_expression_info.object_type_name.clone(),

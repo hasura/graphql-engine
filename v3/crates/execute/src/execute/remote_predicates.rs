@@ -249,9 +249,11 @@ fn replace_predicates_in_filter_expression(
             )?),
         },
         ResolvedFilterExpression::LocalRelationshipComparison {
+            field_path,
             relationship,
             predicate,
         } => ResolvedFilterExpression::LocalRelationshipComparison {
+            field_path,
             relationship,
             predicate: Box::new(replace_predicates_in_filter_expression(
                 *predicate, predicates,

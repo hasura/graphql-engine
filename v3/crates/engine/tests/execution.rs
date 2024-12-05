@@ -857,6 +857,26 @@ fn test_model_select_many_where_no_capability_object_relationship_nested() -> an
 }
 
 #[test]
+fn test_model_select_many_where_nested_relationships() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/where/nested_relationships",
+        &[],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, it does not support nested relationships in predicates
+            // (
+            //     NdcVersion::V01,
+            //     vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            // ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
+#[test]
 fn test_model_select_many_object_type_input_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/object_type_input_arguments";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";

@@ -1,0 +1,15 @@
+query MyQuery {
+  InstitutionMany(
+    where: { location: { country_object: { area_km2: { _eq: 244376 } } } }
+  ) {
+    name
+    location {
+      country_id
+      country_object {
+        country_id
+        name
+        area_km2
+      }
+    }
+  }
+}
