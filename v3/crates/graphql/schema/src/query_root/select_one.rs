@@ -67,7 +67,7 @@ pub(crate) fn select_one_field(
             )),
             ast::TypeContainer::named_null(output_typename),
             arguments,
-            mk_deprecation_status(&select_unique.deprecated),
+            mk_deprecation_status(select_unique.deprecated.as_ref()),
         ),
         field_annotations,
     );

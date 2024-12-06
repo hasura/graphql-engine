@@ -43,7 +43,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression_operand: &BooleanExpressionObjectOperand,
     logical_operators: &BooleanExpressionLogicalOperators,
     subgraph: &SubgraphName,
-    graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
+    graphql: Option<&BooleanExpressionTypeGraphQlConfiguration>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -283,7 +283,7 @@ fn resolve_comparable_fields(
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
-    graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
+    graphql: Option<&BooleanExpressionTypeGraphQlConfiguration>,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     flags: &open_dds::flags::Flags,
     issues: &mut Vec<BooleanExpressionIssue>,

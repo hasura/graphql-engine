@@ -1,5 +1,5 @@
 # This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
-FROM rust:1.82.0
+FROM rust:1.83.0
 
 WORKDIR app
 

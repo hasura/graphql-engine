@@ -70,6 +70,9 @@ impl ExtensionPlanner for NDCPushDownPlanner {
         physical_inputs: &[Arc<dyn ExecutionPlan>],
         _session_state: &SessionState,
     ) -> Result<Option<Arc<dyn ExecutionPlan>>> {
+        // this will need to be threaded throughout entire query
+        // if we want to support remote predicates in `sql`
+        let mut unique_number = plan_types::UniqueNumber::new();
         if let Some(model_query) = node.as_any().downcast_ref::<model::ModelQuery>() {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
@@ -78,6 +81,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 &self.http_context,
                 &self.metadata,
                 &self.request_headers,
+                &mut unique_number,
             )?;
             Ok(Some(Arc::new(ndc_pushdown)))
         } else if let Some(command_query) = node.as_any().downcast_ref::<command::CommandQuery>() {
@@ -91,6 +95,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 &command_query.command_selection,
                 &command_query.schema,
                 &command_query.output,
+                &mut unique_number,
             )
             .map(Some)
         } else if let Some(model_aggregate) = node.as_any().downcast_ref::<model::ModelAggregate>()

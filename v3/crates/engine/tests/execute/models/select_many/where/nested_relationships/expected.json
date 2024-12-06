@@ -1,0 +1,24 @@
+[
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "name": "Queen Mary University of London",
+          "location": {
+            "country_id": 1,
+            "country_object": {
+              "country_id": 1,
+              "name": "UK",
+              "area_km2": 244376
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "InstitutionMany": []
+    }
+  }
+]

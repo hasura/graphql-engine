@@ -39,7 +39,7 @@ pub fn generate_ir<'n, 's>(
                         } => {
                             let ir = generate_model_rootfield_ir(
                                 &type_name,
-                                source,
+                                source.as_ref(),
                                 data_type,
                                 kind,
                                 field,
@@ -72,7 +72,7 @@ pub fn generate_ir<'n, 's>(
 #[allow(clippy::too_many_arguments)]
 fn generate_model_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
-    source: &'s Option<Arc<metadata_resolve::ModelSource>>,
+    source: Option<&'s Arc<metadata_resolve::ModelSource>>,
     data_type: &metadata_resolve::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,

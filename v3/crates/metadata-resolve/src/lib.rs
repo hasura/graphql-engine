@@ -34,7 +34,7 @@ pub use stages::boolean_expressions::{
     ScalarBooleanExpressionGraphqlConfig,
 };
 pub use stages::data_connectors::{ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset};
-pub use stages::graphql_config::GlobalGraphqlConfig;
+pub use stages::graphql_config::{GlobalGraphqlConfig, MultipleOrderByInputObjectFields};
 pub use stages::model_permissions::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
     UnaryComparisonOperator,

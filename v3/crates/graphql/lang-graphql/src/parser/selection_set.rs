@@ -12,7 +12,7 @@ use crate::{
 };
 use recursion_limit_macro::limit_recursion;
 
-impl<'a> Parser<'a> {
+impl Parser<'_> {
     pub fn parse_type_condition(&mut self) -> super::Result<Spanning<TypeCondition>> {
         let on = self.parse_keyword(&super::Keyword::On)?;
         let type_name = self.parse_name()?;

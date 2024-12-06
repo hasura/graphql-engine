@@ -15,7 +15,8 @@ use crate::helpers::types::mk_name;
 pub use error::GraphqlConfigError;
 pub use types::{
     AggregateGraphqlConfig, FilterInputGraphqlConfig, FilterInputOperatorNames,
-    GlobalGraphqlConfig, GraphqlConfig, OrderByInputGraphqlConfig, QueryGraphqlConfig,
+    GlobalGraphqlConfig, GraphqlConfig, MultipleOrderByInputObjectFields,
+    OrderByInputGraphqlConfig, QueryGraphqlConfig,
 };
 
 /// Resolve and validate the GraphQL configuration.
@@ -209,6 +210,13 @@ pub fn resolve_graphql_config(
                         .bypass_relation_comparisons_ndc_capability,
                     propagate_boolean_expression_deprecation_status: flags
                         .propagate_boolean_expression_deprecation_status,
+                    multiple_order_by_input_object_fields: if flags
+                        .disallow_multiple_input_object_fields_in_graphql_order_by
+                    {
+                        MultipleOrderByInputObjectFields::Disallow
+                    } else {
+                        MultipleOrderByInputObjectFields::Allow
+                    },
                 },
             })
         }

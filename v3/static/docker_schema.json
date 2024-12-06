@@ -11022,6 +11022,78 @@
           }
         },
         {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "int4_order_by",
+            "operand": {
+              "scalar": {
+                "orderedType": "int4",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "int4_order_by"
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "String_order_by",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "String_order_by"
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "varchar_order_by",
+            "operand": {
+              "scalar": {
+                "orderedType": "varchar",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "varchar_order_by"
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "numeric_order_by",
+            "operand": {
+              "scalar": {
+                "orderedType": "numeric",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "numeric_order_by"
+            }
+          }
+        },
+        {
           "kind": "TypePermissions",
           "version": "v1",
           "definition": {
@@ -13268,6 +13340,60 @@
           }
         },
         {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "Track_order_by",
+            "operand": {
+              "object": {
+                "orderedType": "Track",
+                "orderableFields": [
+                  {
+                    "fieldName": "AlbumId",
+                    "orderByExpression": "int4_order_by"
+                  },
+                  {
+                    "fieldName": "Bytes",
+                    "orderByExpression": "int4_order_by"
+                  },
+                  {
+                    "fieldName": "Composer",
+                    "orderByExpression": "varchar_order_by"
+                  },
+                  {
+                    "fieldName": "GenreId",
+                    "orderByExpression": "int4_order_by"
+                  },
+                  {
+                    "fieldName": "MediaTypeId",
+                    "orderByExpression": "int4_order_by"
+                  },
+                  {
+                    "fieldName": "Milliseconds",
+                    "orderByExpression": "int4_order_by"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "orderByExpression": "varchar_order_by"
+                  },
+                  {
+                    "fieldName": "TrackId",
+                    "orderByExpression": "int4_order_by"
+                  },
+                  {
+                    "fieldName": "UnitPrice",
+                    "orderByExpression": "numeric_order_by"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "Track_order_by"
+            }
+          }
+        },
+        {
           "kind": "Model",
           "version": "v1",
           "definition": {
@@ -14009,7 +14135,7 @@
         },
         {
           "kind": "Model",
-          "version": "v1",
+          "version": "v2",
           "definition": {
             "name": "Institution",
             "objectType": "Institution",
@@ -14018,44 +14144,7 @@
               "collection": "institution"
             },
             "filterExpressionType": "Institution_bool_exp",
-            "orderableFields": [
-              {
-                "fieldName": "departments",
-                "orderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "id",
-                "orderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "location",
-                "orderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "name",
-                "orderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "songs",
-                "orderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "staff",
-                "orderByDirections": {
-                  "enableAll": true
-                }
-              }
-            ],
+            "orderByExpression": "Institution_order_by",
             "graphql": {
               "selectMany": {
                 "queryRootField": "Institution"
@@ -14066,10 +14155,43 @@
                   "uniqueIdentifier": ["id"]
                 }
               ],
-              "orderByExpressionType": "Institution_order_by",
               "aggregate": {
                 "queryRootField": "InstitutionAggregate"
               }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "Institution_order_by",
+            "operand": {
+              "object": {
+                "orderedType": "Institution",
+                "orderableFields": [
+                  {
+                    "fieldName": "id",
+                    "orderByExpression": "int4_order_by"
+                  },
+                  {
+                    "fieldName": "name",
+                    "orderByExpression": "String_order_by"
+                  },
+                  {
+                    "fieldName": "location",
+                    "orderByExpression": "Location_order_by"
+                  },
+                  {
+                    "fieldName": "songs",
+                    "orderByExpression": "InstitutionSongs_order_by"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "Institution_order_by"
             }
           }
         },
@@ -14200,6 +14322,32 @@
           }
         },
         {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "Location_order_by",
+            "operand": {
+              "object": {
+                "orderedType": "Location",
+                "orderableFields": [
+                  {
+                    "fieldName": "city",
+                    "orderByExpression": "String_order_by"
+                  },
+                  {
+                    "fieldName": "country",
+                    "orderByExpression": "Country_order_by"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "Location_order_by"
+            }
+          }
+        },
+        {
           "kind": "ObjectType",
           "version": "v1",
           "definition": {
@@ -14239,6 +14387,32 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "Country_order_by",
+            "operand": {
+              "object": {
+                "orderedType": "Country",
+                "orderableFields": [
+                  {
+                    "fieldName": "continent",
+                    "orderByExpression": "String_order_by"
+                  },
+                  {
+                    "fieldName": "name",
+                    "orderByExpression": "String_order_by"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "Country_order_by"
+            }
           }
         },
         {
@@ -14296,6 +14470,41 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "InstitutionSongs_order_by",
+            "operand": {
+              "object": {
+                "orderedType": "InstitutionSongs",
+                "orderableFields": [
+                  {
+                    "fieldName": "primaryAnthemTrackId",
+                    "orderByExpression": "int4_order_by"
+                  },
+                  {
+                    "fieldName": "secondaryAnthemTrackId",
+                    "orderByExpression": "int4_order_by"
+                  }
+                ],
+                "orderableRelationships": [
+                  {
+                    "relationshipName": "primaryAnthemTrack",
+                    "orderByExpression": "Track_order_by"
+                  },
+                  {
+                    "relationshipName": "secondaryAnthemTrack",
+                    "orderByExpression": "Track_order_by"
+                  }
+                ]
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "InstitutionSongs_order_by"
+            }
           }
         },
         {
@@ -15632,6 +15841,8 @@
     "disallow_array_field_compared_with_scalar_boolean_type": true,
     "allow_boolean_expression_fields_without_graphql": true,
     "require_unique_model_graphql_names": true,
-    "logical_operators_in_scalar_boolean_expressions": true
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true,
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true
   }
 }

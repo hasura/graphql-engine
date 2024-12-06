@@ -67,7 +67,7 @@ pub fn query_root_schema(
             ) {
                 let command_field_name = command_graphql_api.root_field_name.clone();
                 let deprecation_status =
-                    super::mk_deprecation_status(&command_graphql_api.deprecated);
+                    super::mk_deprecation_status(command_graphql_api.deprecated.as_ref());
                 let (field_name, field) = commands::function_command_field(
                     gds,
                     builder,

@@ -7,7 +7,6 @@ use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve::{Metadata, Qualified};
 use open_dds::query::{Aggregate, AggregationFunction, ModelSelection, ModelTarget, Operand};
@@ -109,7 +108,6 @@ pub fn from_model_selection(
     model_selection: &ModelSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<(Qualified<CustomTypeName>, NDCQuery, FieldsSelection), PlanError> {
@@ -144,11 +142,11 @@ pub fn from_model_selection(
     let ndc_fields = field_selection::resolve_field_selection(
         metadata,
         session,
-        http_context,
         request_headers,
         &model.model.data_type,
         model_object_type,
-        model_source,
+        &model_source.type_mappings,
+        &model_source.data_connector,
         &model_selection.selection,
         &mut relationships,
         unique_number,

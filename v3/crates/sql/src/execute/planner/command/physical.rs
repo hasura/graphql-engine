@@ -1,4 +1,5 @@
 use datafusion::{common::DFSchemaRef, error::Result, physical_plan::ExecutionPlan};
+use plan_types::UniqueNumber;
 use std::sync::Arc;
 
 use hasura_authn_core::Session;
@@ -22,13 +23,20 @@ pub fn build_execution_plan(
     // schema of the output of the command selection
     schema: &DFSchemaRef,
     output: &CommandOutput,
+    unique_number: &mut UniqueNumber,
 ) -> Result<Arc<dyn ExecutionPlan>> {
     let FromCommand {
         command_plan,
         extract_response_from,
         ..
-    } = from_command(command_selection, metadata, session, request_headers)
-        .map_err(from_plan_error)?;
+    } = from_command(
+        command_selection,
+        metadata,
+        session,
+        request_headers,
+        unique_number,
+    )
+    .map_err(from_plan_error)?;
 
     match command_plan {
         CommandPlan::Function(function) => {

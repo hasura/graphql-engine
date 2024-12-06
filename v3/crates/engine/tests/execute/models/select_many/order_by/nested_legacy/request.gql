@@ -1,0 +1,12 @@
+query MyQuery {
+  # Ordering by two nested properties in one input object is normally disallowed.
+  # This is a legacy test to ensure that this is still 'supported' when the
+  # disallow_multiple_input_object_fields_in_graphql_order_by is disabled.
+  InstitutionMany(order_by: { location: { country: Asc, city: Asc } }) {
+    id
+    location {
+      country
+      city
+    }
+  }
+}

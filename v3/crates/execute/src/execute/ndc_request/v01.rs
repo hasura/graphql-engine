@@ -12,6 +12,12 @@ use plan_types::{
     RelationshipArgument, ResolvedFilterExpression, VariableName,
 };
 
+#[derive(Debug, thiserror::Error)]
+pub enum NdcV01CompatibilityError {
+    #[error("Nested relationships in expressions are not supported in NDC v0.1.x")]
+    NestedRelationshipsInExpressionsNotSupported,
+}
+
 pub fn make_query_request(
     query_execution_plan: QueryExecutionPlan,
 ) -> Result<ndc_models_v01::QueryRequest, FieldError> {
@@ -258,9 +264,18 @@ fn make_expression(
             },
         }),
         ResolvedFilterExpression::LocalRelationshipComparison {
+            field_path,
             relationship,
             predicate,
         } => {
+            if !field_path.is_empty() {
+                return Err(FieldError::InternalError(
+                    FieldInternalError::NdcV01CompatibilityError(
+                        NdcV01CompatibilityError::NestedRelationshipsInExpressionsNotSupported,
+                    ),
+                ));
+            }
+
             let ndc_expression = make_expression(*predicate)?;
             Ok(ndc_models_v01::Expression::Exists {
                 in_collection: ndc_models_v01::ExistsInCollection::Related {

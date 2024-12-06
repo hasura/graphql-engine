@@ -55,7 +55,9 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
                 Some(ndc_models::RelationshipCapabilities {
                     relation_comparisons: Some(ndc_models::LeafCapability {}),
                     order_by_aggregate: Some(ndc_models::LeafCapability {}),
-                    nested: None,
+                    nested: Some(ndc_models::NestedRelationshipCapabilities {
+                        array: Some(ndc_models::LeafCapability {}),
+                    }),
                 })
             } else {
                 None

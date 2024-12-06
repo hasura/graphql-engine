@@ -38,7 +38,7 @@ fn execute_mutation_operation(
         } => procedures::execute_procedure(
             name,
             arguments,
-            fields,
+            fields.as_ref(),
             collection_relationships,
             &mut state,
         )

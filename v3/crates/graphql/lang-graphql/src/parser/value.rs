@@ -11,7 +11,7 @@ use recursion_limit_macro::limit_recursion;
 
 use super::Parser;
 
-impl<'a> Parser<'a> {
+impl Parser<'_> {
     fn parse_number(&mut self) -> super::Result<Spanning<lexer::number::NumberToken>> {
         static EXPECTED: &[super::ExpectedToken] = &[super::ExpectedToken::Number];
         self.parse_token(EXPECTED, |token| {

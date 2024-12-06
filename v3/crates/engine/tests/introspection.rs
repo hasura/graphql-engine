@@ -256,6 +256,20 @@ fn test_introspect_model_select_many_order_by_with_model_v2() -> anyhow::Result<
     common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
 }
 
+#[test]
+fn test_introspect_model_select_many_order_by_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/nested";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
+fn test_introspect_model_select_many_order_by_nested_legacy() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/nested_legacy";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
+}
+
 // Tests for subscriptions
 
 // Tests subscription schema generation with introspection queries

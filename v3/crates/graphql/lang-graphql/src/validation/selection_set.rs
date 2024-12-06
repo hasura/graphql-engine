@@ -177,7 +177,7 @@ where
             type_name,
             &canonical_field.info.generic.name,
             &canonical_field.info.generic.arguments,
-            &canonical_field.field.arguments,
+            canonical_field.field.arguments.as_ref(),
         )?;
         let canonical_field_type = &canonical_field.info.generic.field_type;
         if canonical_field_type != alias_type {
@@ -208,7 +208,7 @@ where
                 type_name,
                 &field.info.generic.name,
                 &field.info.generic.arguments,
-                &field.field.arguments,
+                field.field.arguments.as_ref(),
             )?;
             if arguments != this_arguments {
                 return Err(Error::FieldsConflictDifferingArguments {
@@ -265,7 +265,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
     type_name: &ast::TypeName,
     field_name: &ast::Name,
     arguments_schema: &'s BTreeMap<ast::Name, schema::Namespaced<S, schema::InputField<S>>>,
-    arguments: &'q Option<Spanning<Vec<executable::Argument>>>,
+    arguments: Option<&'q Spanning<Vec<executable::Argument>>>,
 ) -> Result<IndexMap<ast::Name, normalized::InputField<'s, S>>> {
     let mut arguments_map = HashMap::new();
     if let Some(arguments) = arguments {

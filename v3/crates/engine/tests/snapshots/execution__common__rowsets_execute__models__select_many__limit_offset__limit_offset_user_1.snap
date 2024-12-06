@@ -1,11 +1,46 @@
 ---
 source: crates/engine/tests/common.rs
-expression: rowsets
+expression: results
 ---
 {
-  "Ok": [
-    {
-      "rows": []
-    }
-  ]
+  "AuthorManyWithLimit0Offset0": {
+    "Ok": [
+      {
+        "rows": []
+      }
+    ]
+  },
+  "AuthorManyWithLimit1Offset0": {
+    "Ok": [
+      {
+        "rows": [
+          {
+            "author_id": 1,
+            "first_name": "Peter"
+          }
+        ]
+      }
+    ]
+  },
+  "AuthorManyWithLimit1Offset1": {
+    "Ok": [
+      {
+        "rows": []
+      }
+    ]
+  },
+  "AuthorManyWithLimit2Offset1": {
+    "Ok": [
+      {
+        "rows": []
+      }
+    ]
+  },
+  "AuthorManyWithLimit2Offset2": {
+    "Ok": [
+      {
+        "rows": []
+      }
+    ]
+  }
 }

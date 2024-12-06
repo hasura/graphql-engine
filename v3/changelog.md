@@ -4,6 +4,31 @@
 
 ### Added
 
+### Fixed
+
+- GraphQL queries with `order_by` arguments that contain multiple properties set
+  on one input object now properly return an error. For example
+  `order_by: { location: { city: Asc, country: Asc } }` is no longer allowed.
+  This is because the order of input object fields in GraphQL is not defined, so
+  it is unclear whether ordering should be first by city or first by country.
+  Instead, write this query like so:
+  `order_by: [{ location: { city: Asc } }, { location: { country: Asc } }]`.
+
+  Additionally, ordering by nested fields using an nested array is no longer
+  allowed (for example:
+  `order_by: { location: [{ city: Asc }, { country: Asc }] }`). Instead, write
+  this query like so:
+  `order_by: [{ location: { city: Asc } }, { location: { country: Asc } }]`.
+
+  These fixes are only enabled if your `CompatibilityConfig` date is set to
+  `2024-12-10` or newer.
+
+### Changed
+
+## [v2024.12.04]
+
+### Added
+
 - Added support for the sparse fieldset parameter for nested field types in
   JSON:API.
 
@@ -16,8 +41,6 @@
   referencing the model across a relationship in a filter predicate.
 - Row filters configured in `ModelPermissions` are now correctly applied when
   referencing the model across a relationship is order by expressions.
-
-### Changed
 
 ## [v2024.11.25]
 
@@ -858,7 +881,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.25...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.12.03...HEAD
+[v2024.12.03]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.03
 [v2024.11.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.25
 [v2024.11.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.18
 [v2024.11.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.13

@@ -2,6 +2,8 @@ use ndc_models;
 use std::collections::BTreeMap;
 
 pub mod actor;
+pub mod city;
+pub mod country;
 pub mod genre;
 pub mod institution;
 pub mod location;
@@ -87,6 +89,8 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
 pub(crate) fn object_types() -> BTreeMap<ndc_models::ObjectTypeName, ndc_models::ObjectType> {
     BTreeMap::from_iter([
         ("actor".into(), actor::definition()),
+        ("city".into(), city::definition()),
+        ("country".into(), country::definition()),
         ("movie".into(), movie::definition()),
         ("genre".into(), genre::definition()),
         ("name_query".into(), name_query::definition()),

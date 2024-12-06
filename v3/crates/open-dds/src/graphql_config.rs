@@ -11,7 +11,6 @@ use crate::types::{GraphQlFieldName, GraphQlTypeName};
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
 #[opendd(as_versioned_with_definition, json_schema(title = "GraphqlConfig"))]
-
 /// GraphqlConfig object tells us two things:
 ///
 /// 1. How the Graphql schema should look like for the features (`where`, `order_by` etc) Hasura provides

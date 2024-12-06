@@ -1,5 +1,4 @@
 use crate::types::PlanError;
-use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
@@ -19,19 +18,17 @@ use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject, U
 pub fn resolve_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
-    model_source: &Arc<metadata_resolve::ModelSource>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     selection: &IndexMap<Alias, ObjectSubSelection>,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<IndexMap<NdcFieldAlias, Field>, PlanError> {
-    let metadata_resolve::TypeMapping::Object { field_mappings, .. } = model_source
-        .type_mappings
-        .get(object_type_name)
-        .ok_or_else(|| {
+    let metadata_resolve::TypeMapping::Object { field_mappings, .. } =
+        type_mappings.get(object_type_name).ok_or_else(|| {
             PlanError::Internal(format!(
                 "couldn't fetch type_mapping of type {object_type_name}",
             ))
@@ -43,9 +40,9 @@ pub fn resolve_field_selection(
             ObjectSubSelection::Field(field_selection) => from_field_selection(
                 metadata,
                 session,
-                http_context,
                 request_headers,
-                model_source,
+                type_mappings,
+                data_connector,
                 field_selection,
                 field_mappings,
                 object_type_name,
@@ -58,11 +55,11 @@ pub fn resolve_field_selection(
                     relationship_selection,
                     metadata,
                     session,
-                    http_context,
                     request_headers,
                     object_type_name,
                     object_type,
-                    model_source,
+                    type_mappings,
+                    data_connector,
                     relationships,
                     unique_number,
                 )?
@@ -81,9 +78,9 @@ pub fn resolve_field_selection(
 fn from_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
-    model_source: &Arc<metadata_resolve::ModelSource>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     field_selection: &ObjectFieldSelection,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     object_type_name: &Qualified<CustomTypeName>,
@@ -135,9 +132,9 @@ fn from_field_selection(
     let fields = resolve_nested_field_selection(
         metadata,
         session,
-        http_context,
         request_headers,
-        model_source,
+        type_mappings,
+        data_connector,
         field_selection,
         field_type,
         relationships,
@@ -155,9 +152,9 @@ fn from_field_selection(
 fn resolve_nested_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
-    model_source: &Arc<metadata_resolve::ModelSource>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     field_selection: &ObjectFieldSelection,
     field_type: &QualifiedTypeReference,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
@@ -171,7 +168,7 @@ fn resolve_nested_field_selection(
                 session,
                 &field_selection.target.field_name,
                 field_type,
-                &model_source.type_mappings,
+                type_mappings,
             )
         }
         Some(nested_selection) => {
@@ -197,11 +194,11 @@ fn resolve_nested_field_selection(
             let resolved_nested_selection = resolve_field_selection(
                 metadata,
                 session,
-                http_context,
                 request_headers,
                 field_type_name,
                 nested_object_type,
-                model_source,
+                type_mappings,
+                data_connector,
                 nested_selection,
                 relationships,
                 unique_number,
@@ -236,11 +233,11 @@ fn from_relationship_selection(
     relationship_selection: &RelationshipSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
-    model_source: &Arc<metadata_resolve::ModelSource>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<Field, PlanError> {
@@ -277,7 +274,7 @@ fn from_relationship_selection(
         })?;
 
     // Reject remote relationships
-    if target_model_source.data_connector.name != model_source.data_connector.name {
+    if target_model_source.data_connector.name != data_connector.name {
         return Err(PlanError::Relationship(format!(
             "Remote relationships are not supported: {}",
             &target.relationship_name
@@ -301,8 +298,8 @@ fn from_relationship_selection(
         relationship_name: &target.relationship_name,
         relationship_type: &model_relationship_target.relationship_type,
         source_type: object_type_name,
-        source_data_connector: &model_source.data_connector,
-        source_type_mappings: &model_source.type_mappings,
+        source_data_connector: data_connector,
+        source_type_mappings: type_mappings,
         target_source: &target_source,
         target_type: &model_relationship_target.target_typename,
         mappings: &model_relationship_target.mappings,
@@ -339,7 +336,6 @@ fn from_relationship_selection(
         &relationship_target_model_selection,
         metadata,
         session,
-        http_context,
         request_headers,
         unique_number,
     )?;
@@ -367,7 +363,7 @@ fn from_relationship_selection(
     Ok(ndc_field)
 }
 
-pub fn ndc_nested_field_selection_for(
+fn ndc_nested_field_selection_for(
     metadata: &Metadata,
     session: &Arc<Session>,
     column_name: &FieldName,

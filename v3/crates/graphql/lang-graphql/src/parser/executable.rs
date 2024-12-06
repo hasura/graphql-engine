@@ -11,7 +11,7 @@ use crate::{
 };
 use recursion_limit_macro::limit_recursion;
 
-impl<'a> Parser<'a> {
+impl Parser<'_> {
     fn parse_base_type(&mut self) -> super::Result<Spanning<BaseType>> {
         static EXPECTED_TOKENS: &[super::ExpectedToken] = &[
             super::ExpectedToken::Name,

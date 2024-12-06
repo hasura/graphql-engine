@@ -1,17 +1,32 @@
 ---
 source: crates/engine/tests/common.rs
-expression: rowsets
+expression: results
 ---
 {
-  "Ok": [
-    {
-      "rows": [
-        {
-          "actor_id": 6,
-          "movie_id": 4,
-          "name": "Morgan Freeman"
-        }
-      ]
-    }
-  ]
+  "ActorsByMovieMany": {
+    "Ok": [
+      {
+        "rows": [
+          {
+            "actor_id": 6,
+            "movie_id": 4,
+            "name": "Morgan Freeman"
+          }
+        ]
+      }
+    ]
+  },
+  "noargs": {
+    "Ok": [
+      {
+        "rows": [
+          {
+            "actor_id": 6,
+            "movie_id": 4,
+            "name": "Morgan Freeman"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -5,13 +5,12 @@ use graphql_schema::GDS;
 use hasura_authn_core::{
     Identity, JsonSessionVariableValue, Role, Session, SessionError, SessionVariableValue,
 };
+use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
-use plan_types::{
-    ExecutionTree, JoinLocations, NDCQueryExecution, PredicateQueryTrees, ProcessResponseAs,
-};
+use plan_types::{NDCQueryExecution, ProcessResponseAs};
 use pretty_assertions::assert_eq;
 use serde_json as json;
 use sql::catalog::CatalogSerializable;
@@ -888,39 +887,42 @@ pub async fn open_dd_pipeline_test(
                     &query_ir,
                     metadata,
                     &Arc::new(session.clone()),
-                    http_context,
                     request_headers,
                 );
 
                 match plan_result {
-                    Ok((execution_plan, _)) => match execution_plan {
-                        plan::SingleNodeExecutionPlan::Mutation(_) => {
+                    Ok(execution_plan) => match execution_plan {
+                        plan::ExecutionPlan::Mutation(_) => {
                             todo!("Executing mutations in OpenDD IR pipeline tests not implemented yet")
                         }
-                        plan::SingleNodeExecutionPlan::Query(query_execution_plan) => {
-                            let ndc_query_execution = NDCQueryExecution {
-                                execution_span_attribute: "Engine GraphQL OpenDD pipeline tests",
-                                execution_tree: ExecutionTree {
-                                    remote_predicates: PredicateQueryTrees::new(),
-                                    query_execution_plan,
-                                    remote_join_executions: JoinLocations::new(),
-                                },
-                                field_span_attribute: "Engine GraphQL OpenDD pipeline tests".into(),
-                                process_response_as: ProcessResponseAs::Array {
-                                    is_nullable: false,
-                                },
-                            };
-                            let rowsets = execute::resolve_ndc_query_execution(
-                                http_context,
-                                ndc_query_execution,
-                                None,
-                            )
-                            .await
-                            .map_err(|e| e.to_string());
+                        plan::ExecutionPlan::Queries(queries) => {
+                            // this should probably happen in `execute`
+                            let mut results = IndexMap::new();
+
+                            for (alias, query_execution) in queries {
+                                let ndc_query_execution = NDCQueryExecution {
+                                    execution_span_attribute:
+                                        "Engine GraphQL OpenDD pipeline tests",
+                                    execution_tree: query_execution.execution_tree,
+                                    field_span_attribute: "Engine GraphQL OpenDD pipeline tests"
+                                        .into(),
+                                    process_response_as: ProcessResponseAs::Array {
+                                        is_nullable: false,
+                                    },
+                                };
+                                let rowsets = execute::resolve_ndc_query_execution(
+                                    http_context,
+                                    ndc_query_execution,
+                                    None,
+                                )
+                                .await
+                                .map_err(|e| e.to_string());
+                                results.insert(alias, rowsets);
+                            }
 
                             insta::assert_json_snapshot!(
                                 format!("rowsets_{test_path_string}_{}", session.role),
-                                rowsets
+                                results
                             );
                         }
                     },

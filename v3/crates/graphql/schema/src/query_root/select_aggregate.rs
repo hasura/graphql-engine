@@ -63,7 +63,7 @@ pub(crate) fn select_aggregate_field(
             )),
             ast::TypeContainer::named_null(output_typename),
             arguments,
-            mk_deprecation_status(&select_aggregate.deprecated),
+            mk_deprecation_status(select_aggregate.deprecated.as_ref()),
         ),
         field_permissions,
     );

@@ -135,6 +135,7 @@ pub fn plan_expression<'a>(
             })
         }
         plan_types::Expression::RelationshipLocalComparison {
+            field_path,
             relationship,
             predicate,
             info,
@@ -147,6 +148,7 @@ pub fn plan_expression<'a>(
             );
 
             Ok(ResolvedFilterExpression::LocalRelationshipComparison {
+                field_path: field_path.clone(),
                 relationship: relationship.clone(),
                 predicate: Box::new(relationship_filter),
             })

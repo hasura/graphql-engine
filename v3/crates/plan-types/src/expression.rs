@@ -32,6 +32,7 @@ pub enum Expression<'s> {
     /// This is basically, local relationships having the `relation_comparisons`
     /// NDC capability.
     RelationshipLocalComparison {
+        field_path: Vec<DataConnectorColumnName>,
         relationship: NdcRelationshipName,
         predicate: Box<Expression<'s>>,
         info: LocalModelRelationshipInfo<'s>,

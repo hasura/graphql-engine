@@ -5,6 +5,7 @@ use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use metadata_resolve::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ModelExpressionType, Qualified,
+    QualifiedTypeReference,
 };
 use open_dds::{
     data_connector::DataConnectorName,
@@ -64,7 +65,9 @@ pub enum RelationshipTarget {
         relationship_type: RelationshipType,
     },
     ModelAggregate(Qualified<CustomTypeName>),
-    Command, // command targets are not supported for now
+    Command {
+        type_reference: QualifiedTypeReference,
+    },
 }
 
 impl State {

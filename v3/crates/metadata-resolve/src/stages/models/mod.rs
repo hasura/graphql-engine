@@ -126,7 +126,7 @@ pub fn resolve(
                     &Qualified::new(subgraph.clone(), aggregate_expression_name.clone()),
                     &qualified_model_name,
                     &resolved_model.data_type,
-                    &resolved_model.source,
+                    resolved_model.source.as_ref(),
                     aggregate_expressions,
                     object_types,
                 )

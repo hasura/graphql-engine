@@ -139,7 +139,8 @@ pub fn generate_aggregate_model_selection_ir<'s>(
         usage_counts,
     )?;
 
-    let model_argument_presets = permissions::get_argument_presets(field_call.info.namespaced)?;
+    let model_argument_presets =
+        permissions::get_argument_presets(field_call.info.namespaced.as_ref())?;
 
     arguments.model_arguments = arguments::process_argument_presets(
         &model_source.data_connector,

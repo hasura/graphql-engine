@@ -231,7 +231,7 @@ pub fn resolve_command_source(
             object_types,
             scalar_types,
             &mut type_mappings,
-            &special_case,
+            special_case.as_ref(),
         )
         .map_err(|error| CommandsError::CommandTypeMappingCollectionError {
             command_name: command.name.clone(),

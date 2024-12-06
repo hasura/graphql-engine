@@ -16,7 +16,7 @@ pub fn resolve_aggregate_expression(
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     model_name: &Qualified<ModelName>,
     model_object_type_name: &Qualified<CustomTypeName>,
-    model_source: &Option<Arc<models::ModelSource>>,
+    model_source: Option<&Arc<models::ModelSource>>,
     aggregate_expressions: &BTreeMap<
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,

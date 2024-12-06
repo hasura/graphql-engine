@@ -62,7 +62,7 @@ fn get_relay_node_namespace_typename_mappings<'s>(
 }
 
 /// Generate the NDC IR for the node root field.
-
+///
 /// This function, decodes the value of the `id`
 /// argument and then looks the `typename` up in the
 /// `typename_mappings`. A successful lookup will yield the

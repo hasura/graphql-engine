@@ -203,7 +203,7 @@ impl gql_schema::SchemaContext for GDS {
                 graphql_type_name,
                 operators,
                 operator_mapping,
-                is_null_operator_name,
+                is_null_operator_name.as_ref(),
                 logical_operators,
             ),
             types::TypeId::ModelOrderByExpression {
@@ -462,7 +462,7 @@ pub fn mk_typename(name: &str) -> Result<ast::TypeName, Error> {
 }
 
 pub(crate) fn mk_deprecation_status(
-    deprecated: &Option<Deprecated>,
+    deprecated: Option<&Deprecated>,
 ) -> gql_schema::DeprecationStatus {
     match deprecated {
         Some(Deprecated { reason }) => gql_schema::DeprecationStatus::Deprecated {

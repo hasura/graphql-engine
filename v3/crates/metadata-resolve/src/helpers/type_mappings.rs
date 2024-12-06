@@ -60,7 +60,7 @@ pub(crate) fn collect_type_mapping_for_source(
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
-    special_case: &Option<SpecialCaseTypeMapping>,
+    special_case: Option<&SpecialCaseTypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
     match object_types.get(mapping_to_collect.type_name).ok() {
         Some(object_type_representation) => {
@@ -157,7 +157,7 @@ fn handle_special_case_type_mapping<'a>(
     mapping_to_collect: &TypeMappingToCollect,
     data_connector_name: &Qualified<DataConnectorName>,
     object_type_representation: &'a type_permissions::ObjectTypeWithPermissions,
-    special_case: &Option<SpecialCaseTypeMapping>,
+    special_case: Option<&SpecialCaseTypeMapping>,
 ) -> Result<&'a object_types::TypeMapping, TypeMappingCollectionError> {
     if let Some(SpecialCaseTypeMapping {
         response_config,

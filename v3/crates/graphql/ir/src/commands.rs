@@ -108,7 +108,8 @@ pub fn generate_command_info<'n, 's>(
         command_arguments.insert(ndc_arg_name, ndc_val);
     }
 
-    let command_argument_presets = permissions::get_argument_presets(field_call.info.namespaced)?;
+    let command_argument_presets =
+        permissions::get_argument_presets(field_call.info.namespaced.as_ref())?;
 
     // preset arguments from permissions presets (both command permission argument
     // presets and input field presets)

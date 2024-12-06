@@ -415,18 +415,14 @@ impl ModelQuery {
         http_context: &Arc<HttpContext>,
         metadata: &metadata_resolve::Metadata,
         request_headers: &reqwest::header::HeaderMap,
+        unique_number: &mut UniqueNumber,
     ) -> Result<NDCQueryPushDown> {
-        // this will need to be threaded throughout entire query
-        // if we want to support remote predicates in `sql`
-        let mut unique_number = UniqueNumber::new();
-
         let (_, query, ndc_fields) = from_model_selection(
             &self.model_selection,
             metadata,
             session,
-            http_context,
             request_headers,
-            &mut unique_number,
+            unique_number,
         )
         .map_err(from_plan_error)?;
 

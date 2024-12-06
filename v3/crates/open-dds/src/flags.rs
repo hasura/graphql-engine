@@ -56,6 +56,12 @@ pub struct Flags {
 
     #[opendd(default, rename = "disallow_duplicate_names_in_boolean_expressions")]
     pub disallow_duplicate_names_in_boolean_expressions: bool,
+
+    #[opendd(
+        default,
+        rename = "disallow_multiple_input_object_fields_in_graphql_order_by"
+    )]
+    pub disallow_multiple_input_object_fields_in_graphql_order_by: bool,
 }
 
 impl Flags {
@@ -77,6 +83,7 @@ impl Flags {
             disallow_object_boolean_expression_type: false,
             logical_operators_in_scalar_boolean_expressions: false,
             disallow_duplicate_names_in_boolean_expressions: false,
+            disallow_multiple_input_object_fields_in_graphql_order_by: false,
         }
     }
 

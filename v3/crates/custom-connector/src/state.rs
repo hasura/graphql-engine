@@ -6,14 +6,16 @@ pub type Row = BTreeMap<ndc_models::FieldName, serde_json::Value>;
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub actors: BTreeMap<i32, Row>,
+    pub countries: BTreeMap<i32, Row>,
     pub institutions: BTreeMap<i32, Row>,
     pub movies: BTreeMap<i32, Row>,
     pub enable_relationship_support: bool,
 }
 
-const ACTORS_JSON: &str = include_str!("../data/actors.json");
-const INSTITUTIONS_JSON: &str = include_str!("../data/institutions.json");
-const MOVIES_JSON: &str = include_str!("../data/movies.json");
+const ACTORS_JSON: &str = include_str!("../data/actors.jsonl");
+const INSTITUTIONS_JSON: &str = include_str!("../data/institutions.jsonl");
+const MOVIES_JSON: &str = include_str!("../data/movies.jsonl");
+const COUNTRIES_JSON: &str = include_str!("../data/countries.jsonl");
 
 fn read_json_lines(json: &str) -> anyhow::Result<BTreeMap<i32, Row>> {
     let lines = json.lines();
@@ -37,10 +39,12 @@ pub fn init_app_state() -> anyhow::Result<AppState> {
     let enable_relationship_support =
         env::var_os("ENABLE_RELATIONSHIP_SUPPORT") == Some("1".into());
     let actors = read_json_lines(ACTORS_JSON)?;
+    let countries = read_json_lines(COUNTRIES_JSON)?;
     let institutions = read_json_lines(INSTITUTIONS_JSON)?;
     let movies = read_json_lines(MOVIES_JSON)?;
     Ok(AppState {
         actors,
+        countries,
         institutions,
         movies,
         enable_relationship_support,

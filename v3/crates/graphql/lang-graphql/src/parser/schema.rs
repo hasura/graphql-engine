@@ -5,7 +5,7 @@ use crate::{
 };
 
 fn get_start_position<T, U>(
-    first_token: &Option<Spanning<T>>,
+    first_token: Option<&Spanning<T>>,
     second_token: &Spanning<U>,
 ) -> SourcePosition {
     if let Some(first_token) = first_token {
@@ -26,7 +26,7 @@ fn get_end_position<T, U>(
     }
 }
 
-impl<'a> Parser<'a> {
+impl Parser<'_> {
     /// @ Name Arguments
     fn parse_const_directive(&mut self) -> super::Result<Spanning<ConstDirective>> {
         let start_position = self.parse_punctuation(lexer::Punctuation::At)?.start;
@@ -51,8 +51,10 @@ impl<'a> Parser<'a> {
         &mut self,
         description: Option<Spanning<String>>,
     ) -> super::Result<Spanning<SchemaDefinition>> {
-        let start_position =
-            get_start_position(&description, &self.parse_keyword(&super::Keyword::Schema)?);
+        let start_position = get_start_position(
+            description.as_ref(),
+            &self.parse_keyword(&super::Keyword::Schema)?,
+        );
         let directives = self.parse_const_directives()?;
         let operation_types = self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,
@@ -84,8 +86,10 @@ impl<'a> Parser<'a> {
         &mut self,
         description: Option<Spanning<String>>,
     ) -> super::Result<Spanning<ScalarTypeDefinition>> {
-        let start_position =
-            get_start_position(&description, &self.parse_keyword(&super::Keyword::Scalar)?);
+        let start_position = get_start_position(
+            description.as_ref(),
+            &self.parse_keyword(&super::Keyword::Scalar)?,
+        );
         let name = self.parse_name()?;
         let directives = self.parse_const_directives()?;
         Ok(Spanning::start_end(
@@ -136,7 +140,7 @@ impl<'a> Parser<'a> {
         let directives = self.parse_const_directives()?;
 
         Ok(Spanning::start_end(
-            get_start_position(&description, &name),
+            get_start_position(description.as_ref(), &name),
             *end_position,
             InputValueDefinition {
                 description,
@@ -156,7 +160,7 @@ impl<'a> Parser<'a> {
         let field_type = self.parse_type()?;
         let directives = self.parse_const_directives()?;
         Ok(Spanning::start_end(
-            get_start_position(&description, &name),
+            get_start_position(description.as_ref(), &name),
             get_end_position(&field_type, &directives),
             FieldDefinition {
                 description,
@@ -229,8 +233,10 @@ impl<'a> Parser<'a> {
         &mut self,
         description: Option<Spanning<String>>,
     ) -> super::Result<Spanning<ObjectTypeDefinition>> {
-        let start_position =
-            get_start_position(&description, &self.parse_keyword(&super::Keyword::Type)?);
+        let start_position = get_start_position(
+            description.as_ref(),
+            &self.parse_keyword(&super::Keyword::Type)?,
+        );
         let name = self.parse_name()?;
         let implements = self.parse_implements()?;
         let directives = self.parse_const_directives()?;
@@ -254,7 +260,7 @@ impl<'a> Parser<'a> {
         description: Option<Spanning<String>>,
     ) -> super::Result<Spanning<InterfaceTypeDefinition>> {
         let start_position = get_start_position(
-            &description,
+            description.as_ref(),
             &self.parse_keyword(&super::Keyword::Interface)?,
         );
         let name = self.parse_name()?;
@@ -326,8 +332,10 @@ impl<'a> Parser<'a> {
         &mut self,
         description: Option<Spanning<String>>,
     ) -> super::Result<Spanning<UnionTypeDefinition>> {
-        let start_position =
-            get_start_position(&description, &self.parse_keyword(&super::Keyword::Union)?);
+        let start_position = get_start_position(
+            description.as_ref(),
+            &self.parse_keyword(&super::Keyword::Union)?,
+        );
         let name = self.parse_name()?;
         let directives = self.parse_const_directives()?;
         let members = self.parse_union_members()?;
@@ -351,8 +359,10 @@ impl<'a> Parser<'a> {
         &mut self,
         description: Option<Spanning<String>>,
     ) -> super::Result<Spanning<EnumTypeDefinition>> {
-        let start_position =
-            get_start_position(&description, &self.parse_keyword(&super::Keyword::Enum)?);
+        let start_position = get_start_position(
+            description.as_ref(),
+            &self.parse_keyword(&super::Keyword::Enum)?,
+        );
         let name = self.parse_name()?;
         let directives = self.parse_const_directives()?;
         let values = self.parse_nonempty_delimited_list(
@@ -363,7 +373,7 @@ impl<'a> Parser<'a> {
                 let value = s.parse_name()?;
                 let directives = s.parse_const_directives()?;
                 Ok(Spanning::start_end(
-                    get_start_position(&description, &value),
+                    get_start_position(description.as_ref(), &value),
                     get_end_position(&value, &directives),
                     EnumValueDefinition {
                         description,
@@ -390,8 +400,10 @@ impl<'a> Parser<'a> {
         &mut self,
         description: Option<Spanning<String>>,
     ) -> super::Result<Spanning<InputObjectTypeDefinition>> {
-        let start_position =
-            get_start_position(&description, &self.parse_keyword(&super::Keyword::Input)?);
+        let start_position = get_start_position(
+            description.as_ref(),
+            &self.parse_keyword(&super::Keyword::Input)?,
+        );
         let name = self.parse_name()?;
         let directives = self.parse_const_directives()?;
         let fields = self.parse_nonempty_delimited_list(
