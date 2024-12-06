@@ -38,6 +38,10 @@ pub enum TypeMappingCollectionError {
         data_connector: Qualified<DataConnectorName>,
         ndc_type_name: DataConnectorObjectType,
     },
+
+    #[error("Cannot return a predicate type from a command")]
+    PredicateAsResponseType,
+
     #[error("Internal Error: Unknown type {type_name:} when collecting type mappings")]
     InternalUnknownType {
         type_name: Qualified<CustomTypeName>,
@@ -176,7 +180,10 @@ fn handle_special_case_type_mapping<'a>(
                 .get(response_config.result_field.as_str())
                 .unwrap()
                 .r#type;
-            let ndc_object_type_name = unwrap_ndc_object_type_name(ndc_object_type);
+
+            // get the type found in `response` field, and look up it's type mappings too
+            let ndc_object_type_name = unwrap_ndc_object_type_name(ndc_object_type)?;
+
             object_type_representation
                 .type_mappings
                 .get(data_connector_name, ndc_object_type_name.as_str())
@@ -207,14 +214,17 @@ fn handle_special_case_type_mapping<'a>(
     }
 }
 
-fn unwrap_ndc_object_type_name(ndc_type: &ndc_models::Type) -> &ndc_models::TypeName {
+fn unwrap_ndc_object_type_name(
+    ndc_type: &ndc_models::Type,
+) -> Result<&ndc_models::TypeName, TypeMappingCollectionError> {
     match ndc_type {
-        ndc_models::Type::Named { name } => name,
+        ndc_models::Type::Named { name } => Ok(name),
         ndc_models::Type::Nullable { underlying_type } => {
             unwrap_ndc_object_type_name(underlying_type)
         }
-        ndc_models::Type::Array { .. } | ndc_models::Type::Predicate { .. } => {
-            panic!("unexpected ndc type; only object is supported")
+        ndc_models::Type::Array { element_type } => unwrap_ndc_object_type_name(element_type),
+        ndc_models::Type::Predicate { .. } => {
+            Err(TypeMappingCollectionError::PredicateAsResponseType)
         }
     }
 }

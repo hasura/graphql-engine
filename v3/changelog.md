@@ -6,6 +6,9 @@
 
 ### Fixed
 
+- Fixed a bug where commands with array return types would not build when header
+  forwarding was in effect.
+
 - GraphQL queries with `order_by` arguments that contain multiple properties set
   on one input object now properly return an error. For example
   `order_by: { location: { city: Asc, country: Asc } }` is no longer allowed.
