@@ -15,7 +15,7 @@ Create ``sql`` files required for a migration.
 
 ## Synopsis
 
-As you make changes to your database's schema, Hasura tracks these changes via migrations. This command creates a ``sql`` file that contains the changes you made that can then be applied to a database.
+As you make changes to your database's schema, Hasura tracks these changes via migrations. This command creates a ``up.sql`` file that contains all the changes you made that can then be applied to recreate the entire database(s) schema. It is not able to track only the difference to a previous migration. 
 
 ```bash
 hasura migrate create [migration-name] [flags]
