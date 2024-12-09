@@ -62,6 +62,7 @@ input_file: crates/metadata-resolve/tests/passing/supergraph/no_subgraphs/metada
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],
+            pre_route_plugins: [],
         },
         roles: {},
     },

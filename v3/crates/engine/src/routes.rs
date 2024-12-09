@@ -18,7 +18,8 @@ use tower_http::trace::TraceLayer;
 
 use crate::{
     authentication_middleware, build_cors_layer, explain_request_tracing_middleware,
-    graphql_request_tracing_middleware, plugins_middleware, EngineState, StartupError,
+    graphql_request_tracing_middleware, middleware::pre_route_request_tracing_middleware,
+    plugins_middleware, EngineState, StartupError,
 };
 
 use super::types::RequestType;
@@ -75,10 +76,19 @@ pub fn get_base_routes(state: EngineState) -> Router {
         // BEFORE THE `explain_request_tracing_middleware`*
         // Refer to it for more details.
         .layer(TraceLayer::new_for_http())
-        .with_state(state);
+        .with_state(state.clone());
 
     let health_route = Router::new().route("/health", get(handle_health));
 
+    let pre_route_router = Router::new()
+        .route("/*path", get(pre_route_handler))
+        .layer(axum::middleware::from_fn(
+            pre_route_request_tracing_middleware,
+        ))
+        .with_state(state);
+
+    // Note: In axum, route registration order doesn't matter. More specific routes are matched first, so the
+    // pre_route_router (being the most generic) will always be matched last irrespective of the order of registration.
     Router::new()
         // serve graphiql at root
         .route("/", get(graphiql))
@@ -90,6 +100,8 @@ pub fn get_base_routes(state: EngineState) -> Router {
         .merge(explain_route)
         // The '/health' route
         .merge(health_route)
+        // The '/*path' route
+        .merge(pre_route_router)
         // Set request payload limit to 10 MB
         .layer(DefaultBodyLimit::max(10 * MB))
 }
@@ -127,4 +139,22 @@ async fn handle_health() -> reqwest::StatusCode {
 
 async fn graphiql() -> Html<&'static str> {
     Html(include_str!("index.html"))
+}
+
+async fn pre_route_handler(
+    method: reqwest::Method,
+    uri: axum::http::Uri,
+    headers: axum::http::header::HeaderMap,
+    axum::extract::RawQuery(raw_query): axum::extract::RawQuery,
+    axum::extract::State(state): axum::extract::State<EngineState>,
+) -> impl axum::response::IntoResponse {
+    pre_route_plugin::execute::pre_route_handler(
+        method,
+        uri,
+        headers,
+        &state.plugin_configs.pre_route_plugins,
+        &state.http_context.client,
+        raw_query,
+    )
+    .await
 }

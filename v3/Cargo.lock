@@ -1826,6 +1826,7 @@ dependencies = [
  "plan-types",
  "pre-parse-plugin",
  "pre-response-plugin",
+ "pre-route-plugin",
  "pretty_assertions",
  "reqwest",
  "serde",
@@ -4254,6 +4255,20 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
+ "tracing-util",
+]
+
+[[package]]
+name = "pre-route-plugin"
+version = "3.0.0"
+dependencies = [
+ "axum",
+ "open-dds",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
  "tracing-util",
 ]
 

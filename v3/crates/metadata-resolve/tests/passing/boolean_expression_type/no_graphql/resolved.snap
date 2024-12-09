@@ -507,6 +507,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],
+            pre_route_plugins: [],
         },
         roles: {
             Role(

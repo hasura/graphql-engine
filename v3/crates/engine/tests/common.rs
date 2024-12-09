@@ -743,6 +743,7 @@ async fn run_query_graphql_ws(
         plugin_configs: Arc::new(LifecyclePluginConfigs {
             pre_parse_plugins: Vec::new(),
             pre_response_plugins: Vec::new(),
+            pre_route_plugins: Vec::new(),
         }),
         metrics: graphql_ws::NoOpWebSocketMetrics,
     };

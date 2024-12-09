@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::EngineState;
 use crate::VERSION;
 use axum::{
@@ -187,4 +189,31 @@ pub async fn plugins_middleware(
     let recreated_response =
         axum::response::Response::from_parts(parts, axum::body::Body::from(response_bytes));
     Ok(recreated_response)
+}
+
+/// Middleware to start tracing of the `/*path` request.
+/// This middleware must be active for the entire duration
+/// of the request i.e. this middleware should be the
+/// entry point and the exit point of the pre-route request.
+pub async fn pre_route_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
+) -> axum::response::Response {
+    let tracer = tracing_util::global_tracer();
+    let path = request.uri().to_string();
+    tracer
+        .in_span_async_with_parent_context(
+            Cow::from(path.clone()),
+            path.clone(),
+            SpanVisibility::User,
+            &request.headers().clone(),
+            || {
+                Box::pin(async move {
+                    let response = next.run(request).await;
+                    TraceableHttpResponse::new(response, Cow::from(path))
+                })
+            },
+        )
+        .await
+        .response
 }

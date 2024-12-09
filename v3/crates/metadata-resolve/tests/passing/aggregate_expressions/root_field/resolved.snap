@@ -2721,6 +2721,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],
+            pre_route_plugins: [],
         },
         roles: {},
     },

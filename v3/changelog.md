@@ -4,6 +4,44 @@
 
 ### Added
 
+#### Pre-route Engine Plugins
+
+Add support for pre-route engine plugins. Engine now supports calling a HTTP
+webhook in pre-route execution step. This can be used to add a bunch of
+functionalities to the DDN, such as a restify middleware, etc.
+
+The following is an example of the OpenDD metadata for the plugins:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  pre: route
+  name: restified_endpoints
+  url:
+    value: http://localhost:5001/restified
+  config:
+    match: "/v1/restified"
+    request:
+      method: GET
+      headers:
+        forward:
+          - Authorization
+      rawRequest:
+        path: {}
+        query: {}
+        method: {}
+```
+
+The pre-route plugin hook's request can be customized using the
+`LifecyclePluginHook` metadata object. Currently we support the following
+customizations:
+
+- forwarding/additional headers
+- adding/removing path information
+- adding/removing query information
+- adding/removing method information
+
 ### Fixed
 
 - Fixed a bug where commands with array return types would not build when header

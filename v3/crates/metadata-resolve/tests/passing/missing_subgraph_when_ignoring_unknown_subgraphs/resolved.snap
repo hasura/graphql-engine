@@ -1067,6 +1067,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],
+            pre_route_plugins: [],
         },
         roles: {
             Role(

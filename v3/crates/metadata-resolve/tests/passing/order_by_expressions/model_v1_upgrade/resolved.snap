@@ -539,6 +539,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],
+            pre_route_plugins: [],
         },
         roles: {},
     },

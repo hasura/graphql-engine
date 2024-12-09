@@ -332,7 +332,12 @@ pub fn resolve(
     let scalar_types_with_representations =
         scalar_type_representations::resolve(&data_connector_scalars, &scalar_types);
 
-    let plugin_configs = plugins::resolve(&metadata_accessor);
+    let (plugin_configs, plugin_warnings) = plugins::resolve(
+        &metadata_accessor,
+        &configuration.unstable_features.enable_pre_route_plugins,
+    );
+
+    all_issues.extend(plugin_warnings);
 
     let all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_issues)?;
 

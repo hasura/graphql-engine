@@ -2140,6 +2140,46 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "title": "LifecyclePreRoutePluginHook",
+          "description": "Definition of a lifecycle plugin hook for the pre-route stage.",
+          "type": "object",
+          "required": [
+            "config",
+            "name",
+            "pre",
+            "url"
+          ],
+          "properties": {
+            "pre": {
+              "type": "string",
+              "enum": [
+                "route"
+              ]
+            },
+            "name": {
+              "description": "The name of the lifecycle plugin hook.",
+              "type": "string"
+            },
+            "url": {
+              "description": "The URL to access the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/EnvironmentValue"
+                }
+              ]
+            },
+            "config": {
+              "description": "Configuration for the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LifecyclePreRoutePluginHookConfig"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },
@@ -2274,6 +2314,66 @@
               "type": "null"
             }
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreRoutePluginHookConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreRoutePluginHookConfig",
+      "title": "LifecyclePreRoutePluginHookConfig",
+      "description": "Configuration for a lifecycle plugin hook.",
+      "type": "object",
+      "required": [
+        "matchPath",
+        "request"
+      ],
+      "properties": {
+        "matchPath": {
+          "description": "Regex to match the request path",
+          "type": "string"
+        },
+        "request": {
+          "description": "Configuration for the request to the lifecycle plugin hook.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreRoutePluginHookConfigRequest"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreRoutePluginHookConfigRequest": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreRoutePluginHookConfigRequest",
+      "title": "LifecyclePreRoutePluginHookConfigRequest",
+      "description": "Configuration for a lifecycle plugin hook request.",
+      "type": "object",
+      "required": [
+        "method",
+        "rawRequest"
+      ],
+      "properties": {
+        "headers": {
+          "description": "Configuration for the headers.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LifecyclePluginHookHeadersConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "description": "Configuration for the method.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestMethod"
+            }
+          ]
+        },
+        "rawRequest": {
+          "$ref": "#/definitions/PreRouteRequestConfig"
         }
       },
       "additionalProperties": false
@@ -5171,6 +5271,48 @@
       },
       "additionalProperties": false
     },
+    "PreRouteRequestConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/PreRouteRequestConfig",
+      "title": "PreRouteRequestConfig",
+      "description": "Configuration for the raw request.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "Configuration for the path",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "description": "Configuration for the method",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "query": {
+          "description": "Configuration for the query",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "ProcedureName": {
       "$id": "https://hasura.io/jsonschemas/metadata/ProcedureName",
       "title": "ProcedureName",
@@ -5625,6 +5767,16 @@
         }
       },
       "additionalProperties": false
+    },
+    "RequestMethod": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RequestMethod",
+      "title": "RequestMethod",
+      "description": "Method to match the request path",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST"
+      ]
     },
     "ResponseHeaders": {
       "$id": "https://hasura.io/jsonschemas/metadata/ResponseHeaders",
