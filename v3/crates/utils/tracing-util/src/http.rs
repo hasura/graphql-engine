@@ -27,6 +27,7 @@
 //! ```
 
 use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
+use std::borrow::Cow;
 
 /// Wrapper around `http::Response<T>` that is traceable in spans.
 ///
@@ -36,16 +37,16 @@ use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
 /// let response: Response = "hello world!".into_response();
 /// tracing_util::TraceableHttpResponse::new(response, "/create_user");
 /// ```
-pub struct TraceableHttpResponse<T> {
+pub struct TraceableHttpResponse<T, N: Into<Cow<'static, str>>> {
     /// The HTTP response.
     pub response: http::Response<T>,
     /// Path of the request that generated this response.
-    pub path: &'static str,
+    pub path: N,
 }
 
-impl<T> TraceableHttpResponse<T> {
+impl<T, N: Into<Cow<'static, str>>> TraceableHttpResponse<T, N> {
     /// Creates a new `TraceableHttpResponse`.
-    pub fn new(response: http::Response<T>, path: &'static str) -> Self {
+    pub fn new(response: http::Response<T>, path: N) -> Self {
         Self { response, path }
     }
 }
@@ -66,11 +67,14 @@ impl TraceableError for ResponseError {
 }
 
 /// Implement `Traceable` for `TraceableHttpResponse` so that it can be used in spans.
-impl<T> Traceable for TraceableHttpResponse<T> {
+impl<T, N: Into<Cow<'static, str>> + derive_more::Display> Traceable
+    for TraceableHttpResponse<T, N>
+{
     type ErrorType<'a>
         = ResponseError
     where
-        T: 'a;
+        T: 'a,
+        N: 'a;
 
     fn get_error(&self) -> Option<Self::ErrorType<'_>> {
         // If the response status is either client or server error, return an error.
