@@ -108,6 +108,7 @@ fn test_get_failing_requests() {
 }
 
 #[test]
+#[allow(clippy::dbg_macro)]
 fn test_openapi_generation() {
     let TestEnvironment {
         jsonapi_catalog,

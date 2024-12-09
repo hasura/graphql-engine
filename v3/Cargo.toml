@@ -35,6 +35,7 @@ pedantic = { level = "warn", priority = -1 }
 # ban printing to stdout and stderr
 print_stdout = "warn"
 print_stderr = "warn"
+dbg_macro = "warn"
 # unstable warnings; we might need to suppress them
 redundant_clone = "warn"
 # disable this warning until
