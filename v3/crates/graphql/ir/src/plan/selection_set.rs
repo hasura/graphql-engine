@@ -10,6 +10,7 @@ use indexmap::IndexMap;
 use metadata_resolve::data_connectors::NdcVersion;
 use metadata_resolve::FieldMapping;
 use open_dds::data_connector::DataConnectorColumnName;
+use plan::process_model_relationship_definition;
 use plan_types::{
     ExecutionTree, Field, JoinLocations, JoinNode, Location, LocationKind, NestedArray,
     NestedField, NestedObject, PredicateQueryTrees, RemoteJoin, RemoteJoinType, SourceFieldAlias,
@@ -125,7 +126,13 @@ pub(crate) fn plan_selection_set(
                 // collect local model relationship
                 relationships.insert(
                     name.clone(),
-                    relationships::process_model_relationship_definition(relationship_info)?,
+                    process_model_relationship_definition(relationship_info).map_err(
+                        |plan_error| {
+                            error::Error::Internal(error::InternalError::InternalGeneric {
+                                description: plan_error.to_string(),
+                            })
+                        },
+                    )?,
                 );
                 let Plan {
                     inner: relationship_query,

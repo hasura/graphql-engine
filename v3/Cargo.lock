@@ -2233,6 +2233,7 @@ dependencies = [
  "ndc-models 0.2.0",
  "nonempty",
  "open-dds",
+ "plan",
  "plan-types",
  "reqwest",
  "serde",
@@ -4137,14 +4138,16 @@ name = "plan"
 version = "3.0.0"
 dependencies = [
  "derive_more",
- "graphql-ir",
  "hasura-authn-core",
  "indexmap 2.7.0",
  "metadata-resolve",
+ "nonempty",
  "open-dds",
  "plan-types",
  "reqwest",
+ "serde",
  "serde_json",
+ "thiserror",
 ]
 
 [[package]]

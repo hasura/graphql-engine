@@ -1,4 +1,7 @@
 //! IR for the 'model_selection' type - selecting fields from a model
+use super::{aggregates, arguments, filter, order_by, permissions, selection_set};
+use crate::error;
+use graphql_schema::GDS;
 use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation,
 };
@@ -6,21 +9,18 @@ use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
+use metadata_resolve::Qualified;
 use metadata_resolve::QualifiedTypeName;
 use open_dds::{
     data_connector::CollectionName,
     types::{CustomTypeName, DataConnectorArgumentName},
 };
+use plan::UnresolvedArgument;
+use plan::{count_model, process_argument_presets};
+use plan_types::{Expression, UsagesCounts};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::sync::Arc;
-
-use super::{aggregates, arguments, filter, order_by, permissions, selection_set};
-use crate::error;
-use crate::model_tracking::count_model;
-use graphql_schema::GDS;
-use metadata_resolve::Qualified;
-use plan_types::{Expression, UsagesCounts};
 
 /// IR fragment for any 'select' operation on a model
 #[derive(Debug, Serialize)]
@@ -32,7 +32,7 @@ pub struct ModelSelection<'s> {
     pub collection: &'s CollectionName,
 
     // Arguments for the NDC collection
-    pub arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
 
     // The boolean expression that would fetch a single row from this model
     pub filter_clause: filter::FilterExpression<'s>,
@@ -54,7 +54,7 @@ pub struct ModelSelection<'s> {
 }
 
 struct ModelSelectAggregateArguments<'s> {
-    model_arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    model_arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     filter_input_arguments: FilterInputArguments<'s>,
 }
 
@@ -71,7 +71,7 @@ pub fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     query_filter: filter::QueryFilter<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,
@@ -142,7 +142,7 @@ pub fn generate_aggregate_model_selection_ir<'s>(
     let model_argument_presets =
         permissions::get_argument_presets(field_call.info.namespaced.as_ref())?;
 
-    arguments.model_arguments = arguments::process_argument_presets(
+    arguments.model_arguments = process_argument_presets(
         &model_source.data_connector,
         &model_source.type_mappings,
         model_argument_presets,
@@ -367,7 +367,7 @@ fn model_aggregate_selection_ir<'s>(
     aggregate_selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     query_filter: filter::QueryFilter<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,

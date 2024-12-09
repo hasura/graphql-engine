@@ -6,7 +6,6 @@ use crate::arguments;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
-use crate::model_tracking::count_model;
 use crate::permissions;
 /// Generates the IR for a 'select_one' operation
 // TODO: Remove once TypeMapping has more than one variant
@@ -15,6 +14,7 @@ use lang_graphql::{ast::common as ast, normalized_ast};
 use metadata_resolve;
 use metadata_resolve::Qualified;
 use open_dds;
+use plan::{count_model, process_argument_presets};
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
@@ -105,7 +105,7 @@ pub fn select_one_generate_ir<'n, 's>(
 
     let argument_presets = permissions::get_argument_presets(field_call.info.namespaced.as_ref())?;
     // add any preset arguments from model permissions
-    model_arguments = arguments::process_argument_presets(
+    model_arguments = process_argument_presets(
         &model_source.data_connector,
         &model_source.type_mappings,
         argument_presets,

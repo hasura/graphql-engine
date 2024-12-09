@@ -8,7 +8,6 @@ license.workspace = true
 bench = false
 
 [dependencies]
-graphql-ir = { path = "../graphql/ir" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
@@ -16,8 +15,11 @@ plan-types = { path = "../plan-types" }
 
 derive_more = { workspace = true }
 indexmap = { workspace = true }
+nonempty = { workspace = true }
 reqwest = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
+thiserror = { workspace = true }
 
 [lints]
 workspace = true

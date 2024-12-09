@@ -1,4 +1,7 @@
+use super::arguments::{process_argument_presets, UnresolvedArgument};
 use super::boolean_expression;
+use super::filter::plan_expression;
+use super::permissions::process_model_predicate;
 use super::types::NDCQuery;
 use crate::filter::to_resolved_filter_expr;
 use crate::order_by::to_resolved_order_by_element;
@@ -21,7 +24,7 @@ fn resolve_filter_expression(
 ) -> Result<(ResolvedFilterExpression, PredicateQueryTrees), PlanError> {
     let mut remote_predicates = plan_types::PredicateQueryTrees::new();
 
-    let resolved_filter_expression = graphql_ir::plan_expression(
+    let resolved_filter_expression = plan_expression(
         filter_ir,
         relationships,
         &mut remote_predicates,
@@ -63,7 +66,7 @@ pub fn model_target_to_ndc_query(
     let permission_filter = match &model_select_permission.filter {
         FilterPermission::AllowAll => Ok::<_, PlanError>(None),
         FilterPermission::Filter(filter) => {
-            let filter_ir = graphql_ir::process_model_predicate(
+            let filter_ir = process_model_predicate(
                 &model_source.data_connector,
                 &model_source.type_mappings,
                 filter,
@@ -95,9 +98,9 @@ pub fn model_target_to_ndc_query(
                         &model.model.data_type,
                     )?;
 
-                graphql_ir::Argument::BooleanExpression { predicate }
+                UnresolvedArgument::BooleanExpression { predicate }
             }
-            open_dds::query::Value::Literal(value) => graphql_ir::Argument::Literal {
+            open_dds::query::Value::Literal(value) => UnresolvedArgument::Literal {
                 value: value.clone(),
             },
         };
@@ -107,7 +110,7 @@ pub fn model_target_to_ndc_query(
     let argument_presets_for_role = model.argument_presets.get(&session.role).unwrap();
 
     // add any preset arguments from model permissions
-    let arguments_with_presets = graphql_ir::process_argument_presets(
+    let arguments_with_presets = process_argument_presets(
         &model_source.data_connector,
         &model_source.type_mappings,
         Some(argument_presets_for_role),
@@ -125,7 +128,7 @@ pub fn model_target_to_ndc_query(
     let mut resolved_arguments = BTreeMap::new();
     for (argument_name, argument_value) in &arguments_with_presets {
         let resolved_argument_value = match argument_value {
-            graphql_ir::Argument::BooleanExpression { predicate } => {
+            UnresolvedArgument::BooleanExpression { predicate } => {
                 let (resolved_filter_expression, _remote_predicates) =
                     resolve_filter_expression(predicate, &mut relationships, unique_number)?;
 
@@ -133,7 +136,7 @@ pub fn model_target_to_ndc_query(
                     predicate: resolved_filter_expression,
                 }
             }
-            graphql_ir::Argument::Literal { value } => Argument::Literal {
+            UnresolvedArgument::Literal { value } => Argument::Literal {
                 value: value.clone(),
             },
         };

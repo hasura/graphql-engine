@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
 use std::ops::Deref;
 
-use crate::model_tracking::count_model;
 use graphql_schema::OrderByRelationshipAnnotation;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField, Value};
 use open_dds::data_connector::DataConnectorColumnName;
+use plan::count_model;
 use plan_types::{
     Expression, LocalModelRelationshipInfo, NdcRelationshipName, OrderByDirection, OrderByElement,
     OrderByTarget, RelationshipPathElement, UsagesCounts,

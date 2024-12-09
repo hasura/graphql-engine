@@ -19,14 +19,14 @@ use super::{
     selection_set::FieldSelection,
 };
 
-use crate::model_tracking::count_model;
-use crate::{error, model_tracking::count_command};
+use crate::error;
 use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, CommandTargetSource,
     InputAnnotation, ModelAggregateRelationshipAnnotation, ModelInputAnnotation,
     ModelRelationshipAnnotation, GDS,
 };
 use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
+use plan::{count_command, count_model};
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison,
     LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts, VariableName,

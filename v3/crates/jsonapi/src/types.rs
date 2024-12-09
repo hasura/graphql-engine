@@ -67,10 +67,11 @@ impl RequestError {
             RequestError::InternalError(InternalError::EmptyQuerySet) => {
                 serde_json::json!({"error": "Internal error"})
             }
-            RequestError::PlanError(
-                plan::PlanError::Internal(msg) | plan::PlanError::Relationship(msg),
-            ) => {
+            RequestError::PlanError(plan::PlanError::Internal(msg)) => {
                 serde_json::json!({"error": msg })
+            }
+            RequestError::PlanError(plan::PlanError::Relationship(_error)) => {
+                serde_json::json!({"error": "Internal error" })
             }
             RequestError::PlanError(plan::PlanError::External(_err)) => {
                 serde_json::json!({"error": "Internal error" })

@@ -15,13 +15,13 @@ use crate::arguments;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
-use crate::model_tracking::count_model;
 use crate::order_by::build_ndc_order_by;
 use crate::permissions;
 use graphql_schema::GDS;
 use graphql_schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use metadata_resolve;
 use metadata_resolve::Qualified;
+use plan::{count_model, process_argument_presets};
 use plan_types::UsagesCounts;
 
 /// IR for the 'select_many' operation on a model
@@ -142,7 +142,7 @@ pub fn select_many_generate_ir<'n, 's>(
     };
 
     // add any preset arguments from model permissions
-    model_arguments = arguments::process_argument_presets(
+    model_arguments = process_argument_presets(
         &model_source.data_connector,
         &model_source.type_mappings,
         argument_presets,

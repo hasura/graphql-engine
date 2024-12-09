@@ -12,7 +12,6 @@ use crate::{
     SubscriptionRootField, IR,
 };
 pub use error::Error;
-pub use filter::plan_expression;
 use graphql_schema::{GDSRoleNamespaceGetter, GDS};
 use indexmap::IndexMap;
 use lang_graphql as gql;
@@ -20,7 +19,6 @@ use plan_types::{
     ExecutionTree, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
     ProcessResponseAs, QueryExecutionPlan, UniqueNumber,
 };
-pub use relationships::process_model_relationship_definition;
 pub use types::{
     ApolloFederationSelect, MutationPlan, MutationSelect, NodeQueryPlan, Plan, QueryPlan,
     RequestPlan, SubscriptionSelect,

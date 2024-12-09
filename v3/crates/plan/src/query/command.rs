@@ -1,11 +1,9 @@
-use indexmap::IndexMap;
-use std::collections::BTreeMap;
-use std::sync::Arc;
-
+use super::arguments::process_connector_link_presets;
 use super::field_selection;
 use crate::PlanError;
 use crate::{NDCFunction, NDCProcedure};
 use hasura_authn_core::Session;
+use indexmap::IndexMap;
 use metadata_resolve::{
     unwrap_custom_type_name, Metadata, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference,
@@ -21,6 +19,8 @@ use plan_types::{
     NestedField, NestedObject, QueryExecutionPlan, QueryNodeNew,
 };
 use plan_types::{UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME};
+use std::collections::BTreeMap;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum CommandPlan {
@@ -132,7 +132,7 @@ pub fn from_command(
     }
 
     // preset arguments from `DataConnectorLink` argument presets
-    for (argument_name, value) in graphql_ir::process_connector_link_presets(
+    for (argument_name, value) in process_connector_link_presets(
         &command_source.data_connector_link_argument_presets,
         &session.variables,
         request_headers,

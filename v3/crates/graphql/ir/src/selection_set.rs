@@ -18,6 +18,7 @@ use crate::error;
 use crate::global_id;
 use graphql_schema::TypeKind;
 use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
+use plan::UnresolvedArgument;
 use plan_types::{LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts};
 
 #[derive(Debug, Serialize)]
@@ -31,7 +32,7 @@ pub enum FieldSelection<'s> {
     Column {
         column: DataConnectorColumnName,
         nested_selection: Option<NestedSelection<'s>>,
-        arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+        arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     },
     ModelRelationshipLocal {
         query: ModelSelection<'s>,
@@ -264,7 +265,7 @@ pub fn generate_selection_set_ir<'s>(
                             .map(Some),
                         }?;
                         if let Some(argument_value) = argument_value {
-                            let argument = arguments::Argument::Literal {
+                            let argument = UnresolvedArgument::Literal {
                                 value: argument_value,
                             };
                             // If argument name is not found in the mapping, use the open_dd argument name as the ndc argument name

@@ -1,18 +1,28 @@
+mod arguments;
 mod boolean_expression;
 mod command;
 pub mod field_selection;
+mod filter;
 mod model;
 pub mod model_target;
+mod permissions;
+mod relationships;
 mod types;
 use crate::types::PlanError;
+pub use arguments::{process_argument_presets, UnresolvedArgument};
 pub use command::{
     execute_plan_from_function, execute_plan_from_procedure, from_command, CommandPlan, FromCommand,
+};
+pub use filter::{
+    build_relationship_comparison_expression, get_field_mapping_of_field_name, plan_expression,
 };
 use indexmap::IndexMap;
 pub use model::{
     from_model_aggregate_selection, from_model_selection, ndc_query_to_query_execution_plan,
     ModelAggregateSelection,
 };
+pub use permissions::process_model_predicate;
+pub use relationships::process_model_relationship_definition;
 use std::sync::Arc;
 pub use types::{NDCFunction, NDCProcedure, NDCQuery, QueryContext};
 

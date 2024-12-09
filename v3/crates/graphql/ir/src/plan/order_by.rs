@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
-use super::relationships::process_model_relationship_definition;
-use super::{error as plan_error, filter::plan_expression};
+use super::error as plan_error;
 use crate::order_by::OrderBy;
+use plan::{plan_expression, process_model_relationship_definition};
 use plan_types::{self, NdcRelationshipName, PredicateQueryTrees, Relationship, UniqueNumber};
 
 pub fn plan_order_by(
@@ -21,7 +21,11 @@ pub fn plan_order_by(
     for (relationship, info) in &order_by.relationships {
         relationships.insert(
             relationship.clone(),
-            process_model_relationship_definition(info)?,
+            process_model_relationship_definition(info).map_err(|plan_error| {
+                plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
+                    description: plan_error.to_string(),
+                })
+            })?,
         );
     }
 
@@ -72,6 +76,13 @@ fn plan_order_by_target(
                                     remote_predicates,
                                     unique_number,
                                 )
+                                .map_err(|plan_error| {
+                                    plan_error::Error::Internal(
+                                        plan_error::InternalError::InternalGeneric {
+                                            description: plan_error.to_string(),
+                                        },
+                                    )
+                                })
                             })
                             .transpose()?,
                     })

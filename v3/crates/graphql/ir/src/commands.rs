@@ -22,12 +22,13 @@ use super::selection_set::FieldSelection;
 use super::selection_set::NestedSelection;
 use super::selection_set::ResultSelectionSet;
 use crate::error;
-use crate::model_tracking::count_command;
 use crate::permissions;
 use graphql_schema::CommandSourceDetail;
 use graphql_schema::TypeKind;
 use graphql_schema::GDS;
 use metadata_resolve::{Qualified, QualifiedTypeReference};
+use plan::UnresolvedArgument;
+use plan::{count_command, process_argument_presets};
 use plan_types::NdcFieldAlias;
 use plan_types::UsagesCounts;
 
@@ -44,7 +45,7 @@ pub struct CommandInfo<'s> {
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 
     /// Arguments for the NDC table
-    pub arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
 
     /// IR for the command result selection set
     pub selection: Option<selection_set::NestedSelection<'s>>,
@@ -113,7 +114,7 @@ pub fn generate_command_info<'n, 's>(
 
     // preset arguments from permissions presets (both command permission argument
     // presets and input field presets)
-    command_arguments = arguments::process_argument_presets(
+    command_arguments = process_argument_presets(
         &command_source.data_connector,
         &command_source.type_mappings,
         command_argument_presets,

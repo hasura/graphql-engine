@@ -1,10 +1,10 @@
-use crate::types::PlanError;
+use crate::types::{PlanError, RelationshipError};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use graphql_ir::process_model_relationship_definition;
+use super::relationships::process_model_relationship_definition;
 use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
     query::{
@@ -258,10 +258,10 @@ fn from_relationship_selection(
     let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
         &relationship_field.target
     else {
-        return Err(PlanError::Relationship(format!(
+        return Err(PlanError::Relationship(RelationshipError::Other(format!(
             "Expecting Model as a relationship target for {}",
             target.relationship_name,
-        )));
+        ))));
     };
     let target_model_name = &model_relationship_target.model_name;
     let target_model = metadata.models.get(target_model_name).ok_or_else(|| {
@@ -275,10 +275,10 @@ fn from_relationship_selection(
 
     // Reject remote relationships
     if target_model_source.data_connector.name != data_connector.name {
-        return Err(PlanError::Relationship(format!(
+        return Err(PlanError::Relationship(RelationshipError::Other(format!(
             "Remote relationships are not supported: {}",
             &target.relationship_name
-        )));
+        ))));
     }
 
     let target_source = metadata_resolve::ModelTargetSource {
@@ -287,10 +287,10 @@ fn from_relationship_selection(
             .target_capabilities
             .as_ref()
             .ok_or_else(|| {
-                PlanError::Relationship(format!(
+                PlanError::Relationship(RelationshipError::Other(format!(
                     "Relationship capabilities not found for relationship {} in data connector {}",
                     &target.relationship_name, &target_model_source.data_connector.name,
-                ))
+                )))
             })?
             .clone(),
     };
