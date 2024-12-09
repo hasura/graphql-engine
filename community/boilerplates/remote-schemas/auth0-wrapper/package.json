@@ -7,7 +7,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "apollo-server": "^2.9.0",
+    "apollo-server": "^3.13.0",
     "graphql": "^14.5.3",
     "graphql-tools": "^4.0.5",
     "node-fetch": "^2.6.0"
