@@ -87,33 +87,6 @@ pub async fn explain_request_tracing_middleware(
         .response
 }
 
-/// Middleware to start tracing of the `/v1/sql` request.
-/// This middleware must be active for the entire duration
-/// of the request i.e. this middleware should be the
-/// entry point and the exit point of the SQL request.
-pub async fn sql_request_tracing_middleware(
-    request: Request<Body>,
-    next: Next,
-) -> axum::response::Response {
-    let tracer = tracing_util::global_tracer();
-    let path = "/v1/sql";
-    tracer
-        .in_span_async_with_parent_context(
-            path,
-            path,
-            SpanVisibility::User,
-            &request.headers().clone(),
-            || {
-                Box::pin(async move {
-                    let response = next.run(request).await;
-                    TraceableHttpResponse::new(response, path)
-                })
-            },
-        )
-        .await
-        .response
-}
-
 /// This middleware authenticates the incoming GraphQL request according to the
 /// authentication configuration present in the `auth_config` of `EngineState`. The
 /// result of the authentication is `hasura-authn-core::Identity`, which is then

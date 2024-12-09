@@ -1,5 +1,3 @@
-mod sql;
-pub use sql::handle_sql_request;
 mod graphql;
 pub use graphql::{handle_explain_request, handle_request, handle_websocket_request};
 mod jsonapi;
@@ -20,8 +18,7 @@ use tower_http::trace::TraceLayer;
 
 use crate::{
     authentication_middleware, build_cors_layer, explain_request_tracing_middleware,
-    graphql_request_tracing_middleware, plugins_middleware, sql_request_tracing_middleware,
-    EngineState, StartupError,
+    graphql_request_tracing_middleware, plugins_middleware, EngineState, StartupError,
 };
 
 use super::types::RequestType;
@@ -113,24 +110,6 @@ pub async fn get_metadata_routes(
         .route("/metadata", get(|| async { file_contents }))
         .route("/metadata-hash", get(|| async { base64_hash }));
     Ok(metadata_routes)
-}
-
-pub fn get_sql_route(state: EngineState) -> Router {
-    Router::new()
-        .route("/v1/sql", post(handle_sql_request))
-        .layer(axum::middleware::from_fn(
-            hasura_authn_core::resolve_session,
-        ))
-        .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
-            authentication_middleware,
-        ))
-        .layer(axum::middleware::from_fn(sql_request_tracing_middleware))
-        // *PLEASE DO NOT ADD ANY MIDDLEWARE
-        // BEFORE THE `explain_request_tracing_middleware`*
-        // Refer to it for more details.
-        .layer(TraceLayer::new_for_http())
-        .with_state(state)
 }
 
 pub fn get_jsonapi_route(state: EngineState) -> Router {

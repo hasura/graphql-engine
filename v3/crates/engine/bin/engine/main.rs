@@ -4,7 +4,7 @@ use std::net;
 use std::path::PathBuf;
 
 use engine::{
-    get_base_routes, get_cors_layer, get_jsonapi_route, get_metadata_routes, get_sql_route,
+    get_base_routes, get_cors_layer, get_jsonapi_route, get_metadata_routes,
     internal_flags::{resolve_unstable_features, UnstableFeature},
     StartupError, VERSION,
 };
@@ -38,9 +38,6 @@ struct ServerOptions {
     /// The port on which the server listens.
     #[arg(long, value_name = "PORT", env = "PORT", default_value_t = DEFAULT_PORT)]
     port: u16,
-    /// Enables the '/v1/sql' endpoint
-    #[arg(long, env = "ENABLE_SQL_INTERFACE")]
-    enable_sql_interface: bool,
     /// Enable CORS. Support preflight request and include related headers in responses.
     #[arg(long, env = "ENABLE_CORS")]
     enable_cors: bool,
@@ -124,16 +121,11 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
-        server.enable_sql_interface,
         &metadata_resolve_configuration,
     )
     .map_err(StartupError::ReadSchema)?;
 
     let mut app = get_base_routes(state.clone());
-
-    if server.enable_sql_interface {
-        app = app.merge(get_sql_route(state.clone()));
-    }
 
     app = app.merge(get_jsonapi_route(state.clone()));
 
