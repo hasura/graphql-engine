@@ -33,7 +33,7 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
     let mut issues = vec![];
     for command in commands.values() {
@@ -92,7 +92,7 @@ pub fn validate_arguments_with_source(
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
     let mut issues = vec![];
 

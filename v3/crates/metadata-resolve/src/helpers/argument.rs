@@ -253,7 +253,7 @@ pub fn get_argument_mappings<'a>(
 /// type to validate it against to ensure the fields it refers to
 /// exist etc
 pub(crate) fn resolve_value_expression_for_argument(
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     argument_name: &open_dds::arguments::ArgumentName,
     value_expression: &open_dds::permissions::ValueExpressionOrPredicate,
     argument_type: &QualifiedTypeReference,
@@ -281,7 +281,7 @@ pub(crate) fn resolve_value_expression_for_argument(
             Ok::<ValueExpressionOrPredicate, Error>(ValueExpressionOrPredicate::SessionVariable(
                 hasura_authn_core::SessionVariableReference {
                     name: session_variable.clone(),
-                    passed_as_json: flags.json_session_variables,
+                    passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
                 },
             ))
         }

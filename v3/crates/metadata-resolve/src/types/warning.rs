@@ -38,7 +38,7 @@ pub enum Warning {
 }
 
 impl ShouldBeAnError for Warning {
-    fn should_be_an_error(&self, flags: &flags::Flags) -> bool {
+    fn should_be_an_error(&self, flags: &flags::OpenDdFlags) -> bool {
         match self {
             Warning::DataConnectorIssue(issue) => issue.should_be_an_error(flags),
             Warning::BooleanExpressionIssue(issue) => issue.should_be_an_error(flags),

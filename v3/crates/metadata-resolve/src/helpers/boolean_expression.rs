@@ -29,7 +29,7 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
         object_relationships::ObjectTypeWithRelationships,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
     // collect any issues found whilst resolving
     let mut issues = vec![];

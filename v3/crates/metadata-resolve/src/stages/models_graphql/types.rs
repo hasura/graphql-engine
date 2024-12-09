@@ -151,11 +151,11 @@ pub enum ModelGraphqlIssue {
 }
 
 impl ShouldBeAnError for ModelGraphqlIssue {
-    fn should_be_an_error(&self, flags: &open_dds::flags::Flags) -> bool {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
         match self {
             ModelGraphqlIssue::MissingAggregateFilterInputFieldNameInGraphqlConfig { .. } => false,
             ModelGraphqlIssue::DuplicateRootField { .. } => {
-                flags.require_unique_model_graphql_names
+                flags.contains(open_dds::flags::Flag::RequireUniqueModelGraphqlNames)
             }
         }
     }

@@ -27,8 +27,6 @@ impl<T> QualifiedObject<T> {
     }
 }
 
-const DEFAULT_FLAGS: flags::Flags = flags::Flags::new();
-
 pub struct MetadataAccessor {
     pub subgraphs: HashSet<SubgraphName>,
     pub data_connectors: Vec<QualifiedObject<data_connector::DataConnectorLinkV1>>,
@@ -46,7 +44,7 @@ pub struct MetadataAccessor {
     pub relationships: Vec<QualifiedObject<relationships::RelationshipV1>>,
     pub commands: Vec<QualifiedObject<commands::CommandV1>>,
     pub command_permissions: Vec<QualifiedObject<permissions::CommandPermissionsV1>>,
-    pub flags: flags::Flags,
+    pub flags: flags::OpenDdFlags,
     // `graphql_config` is a vector because we want to do some validation depending on the presence of the object
     pub graphql_config: Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
     pub plugins: Vec<QualifiedObject<plugins::LifecyclePluginHookV1>>,
@@ -234,7 +232,7 @@ impl MetadataAccessor {
         }
     }
 
-    fn new_empty(flags: Option<flags::Flags>) -> MetadataAccessor {
+    fn new_empty(flags: Option<flags::OpenDdFlags>) -> MetadataAccessor {
         MetadataAccessor {
             subgraphs: HashSet::new(),
             data_connectors: vec![],
@@ -251,7 +249,7 @@ impl MetadataAccessor {
             relationships: vec![],
             commands: vec![],
             command_permissions: vec![],
-            flags: flags.unwrap_or(DEFAULT_FLAGS),
+            flags: flags.unwrap_or_default(),
             graphql_config: vec![],
             plugins: vec![],
         }

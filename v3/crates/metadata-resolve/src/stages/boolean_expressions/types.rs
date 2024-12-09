@@ -48,18 +48,19 @@ pub enum BooleanExpressionIssue {
 }
 
 impl ShouldBeAnError for BooleanExpressionIssue {
-    fn should_be_an_error(&self, flags: &open_dds::flags::Flags) -> bool {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
         match self {
             BooleanExpressionIssue::NoNestedArrayFilteringCapabilitiesDefined { .. } => {
-                flags.require_nested_array_filtering_capability
+                flags.contains(open_dds::flags::Flag::RequireNestedArrayFilteringCapability)
             }
             BooleanExpressionIssue::BooleanExpressionArrayFieldComparedWithScalarType {
                 ..
-            } => flags.disallow_array_field_compared_with_scalar_boolean_type,
+            } => flags
+                .contains(open_dds::flags::Flag::DisallowArrayFieldComparedWithScalarBooleanType),
             BooleanExpressionIssue::DuplicateComparableFieldFound { .. }
             | BooleanExpressionIssue::DuplicateComparableRelationshipFound { .. }
             | BooleanExpressionIssue::GraphqlFieldNameConflict { .. } => {
-                flags.disallow_duplicate_names_in_boolean_expressions
+                flags.contains(open_dds::flags::Flag::DisallowDuplicateNamesInBooleanExpressions)
             }
         }
     }
@@ -126,9 +127,11 @@ impl ResolvedObjectBooleanExpressionType {
     // or b) flag is passed that allows us to expose it to other frontends
     pub fn get_fields(
         &self,
-        flags: &open_dds::flags::Flags,
+        flags: &open_dds::flags::OpenDdFlags,
     ) -> Option<&ResolvedObjectBooleanExpressionTypeFields> {
-        if self.graphql.is_some() || flags.allow_boolean_expression_fields_without_graphql {
+        if self.graphql.is_some()
+            || flags.contains(open_dds::flags::Flag::AllowBooleanExpressionFieldsWithoutGraphql)
+        {
             Some(&self.fields)
         } else {
             None

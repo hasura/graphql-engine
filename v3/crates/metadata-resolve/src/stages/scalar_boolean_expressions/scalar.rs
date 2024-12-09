@@ -27,7 +27,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     object_types: &object_types::ObjectTypesWithTypeMappings,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     graphql_types: &mut BTreeSet<ast::TypeName>,
     issues: &mut Vec<ScalarBooleanExpressionTypeIssue>,
 ) -> Result<ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionTypeError> {
@@ -125,21 +125,22 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
 
     store_new_graphql_type(graphql_types, graphql_type.as_ref())?;
 
-    let logical_operators = if flags.logical_operators_in_scalar_boolean_expressions {
-        resolve_logical_operators(boolean_expression, graphql_config, issues, || {
-            ScalarBooleanExpressionTypeIssue::MissingLogicalOperatorNamesInGraphqlConfig {
-                type_name: boolean_expression_type_name.clone(),
-            }
-        })
-    } else {
-        issues.push(
-            ScalarBooleanExpressionTypeIssue::LogicalOperatorsUnavailable {
-                type_name: boolean_expression_type_name.clone(),
-            },
-        );
+    let logical_operators =
+        if flags.contains(open_dds::flags::Flag::LogicalOperatorsInScalarBooleanExpressions) {
+            resolve_logical_operators(boolean_expression, graphql_config, issues, || {
+                ScalarBooleanExpressionTypeIssue::MissingLogicalOperatorNamesInGraphqlConfig {
+                    type_name: boolean_expression_type_name.clone(),
+                }
+            })
+        } else {
+            issues.push(
+                ScalarBooleanExpressionTypeIssue::LogicalOperatorsUnavailable {
+                    type_name: boolean_expression_type_name.clone(),
+                },
+            );
 
-        LogicalOperators::Exclude
-    };
+            LogicalOperators::Exclude
+        };
 
     let is_null_operator = resolve_is_null_operator(
         boolean_expression,

@@ -33,7 +33,7 @@ use ref_cast::RefCast;
 use std::collections::BTreeMap;
 
 fn resolve_model_predicate_with_model(
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     model_predicate: &open_dds::permissions::ModelPredicate,
     model: &models::Model,
     subgraph: &SubgraphName,
@@ -140,7 +140,7 @@ pub fn get_model_source_argument<'a>(
 }
 
 pub fn resolve_model_select_permissions(
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     model: &models::Model,
     subgraph: &SubgraphName,
     model_permissions: &ModelPermissionsV1,
@@ -274,7 +274,7 @@ pub fn resolve_model_select_permissions(
 }
 
 pub(crate) fn resolve_model_predicate_with_type(
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     model_predicate: &open_dds::permissions::ModelPredicate,
     type_name: &Qualified<CustomTypeName>,
     object_type_representation: &object_relationships::ObjectTypeWithRelationships,
@@ -393,7 +393,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                 open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
                     ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
                         name: session_variable.clone(),
-                        passed_as_json: flags.json_session_variables,
+                        passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
                     })
                 }
             };
@@ -762,7 +762,7 @@ fn lookup_relationship_in_boolean_expression(
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &open_dds::relationships::RelationshipName,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<Option<boolean_expressions::ResolvedObjectBooleanExpressionTypeFields>, Error> {
     // lookup relationship in boolean expression type's
     // comparable relationships

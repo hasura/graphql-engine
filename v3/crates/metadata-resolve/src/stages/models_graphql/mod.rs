@@ -46,7 +46,6 @@ pub fn resolve(
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     track_root_fields: &mut TrackGraphQLRootFields,
     graphql_config: &graphql_config::GraphqlConfig,
-    flags: &open_dds::flags::Flags,
 ) -> Result<ModelsWithGraphqlOutput, Error> {
     let mut output = ModelsWithGraphqlOutput {
         models_with_graphql: IndexMap::new(),
@@ -78,7 +77,7 @@ pub fn resolve(
                         boolean_expression_types,
                         object_types,
                         models,
-                        flags,
+                        &metadata_accessor.flags,
                     )?;
 
                 output

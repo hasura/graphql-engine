@@ -237,8 +237,11 @@ pub enum MetadataWithVersion {
 #[opendd(json_schema(rename = "OpenDdMetadataV1"))]
 pub struct MetadataV1 {
     pub namespaces: Vec<NamespacedObjects>,
-    #[opendd(default, json_schema(default_exp = "flags::Flags::default_json()"))]
-    pub flags: flags::Flags,
+    #[opendd(
+        default,
+        json_schema(default_exp = "serde_json::to_value(flags::OpenDdFlags::default()).unwrap()")
+    )]
+    pub flags: flags::OpenDdFlags,
 }
 
 /// A collection of objects that are related to each other.
@@ -256,8 +259,11 @@ pub struct MetadataV2 {
     pub supergraph: Supergraph,
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub subgraphs: Vec<Subgraph>,
-    #[opendd(default, json_schema(default_exp = "flags::Flags::default_json()"))]
-    pub flags: flags::Flags,
+    #[opendd(
+        default,
+        json_schema(default_exp = "serde_json::to_value(flags::OpenDdFlags::default()).unwrap()")
+    )]
+    pub flags: flags::OpenDdFlags,
 }
 
 /// The v3 metadata.
@@ -266,8 +272,11 @@ pub struct MetadataV2 {
 pub struct MetadataV3 {
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub subgraphs: Vec<Subgraph>,
-    #[opendd(default, json_schema(default_exp = "flags::Flags::default_json()"))]
-    pub flags: flags::Flags,
+    #[opendd(
+        default,
+        json_schema(default_exp = "serde_json::to_value(flags::OpenDdFlags::default()).unwrap()")
+    )]
+    pub flags: flags::OpenDdFlags,
 }
 
 #[derive(

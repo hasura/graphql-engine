@@ -47,7 +47,7 @@ pub struct NamedDataConnectorIssue {
 }
 
 impl ShouldBeAnError for NamedDataConnectorIssue {
-    fn should_be_an_error(&self, flags: &flags::Flags) -> bool {
+    fn should_be_an_error(&self, flags: &flags::OpenDdFlags) -> bool {
         self.issue.should_be_an_error(flags)
     }
 }
@@ -63,9 +63,11 @@ pub enum DataConnectorIssue {
     },
 }
 impl ShouldBeAnError for DataConnectorIssue {
-    fn should_be_an_error(&self, flags: &flags::Flags) -> bool {
+    fn should_be_an_error(&self, flags: &flags::OpenDdFlags) -> bool {
         match self {
-            DataConnectorIssue::InvalidNdcV01Version { .. } => flags.require_valid_ndc_v01_version,
+            DataConnectorIssue::InvalidNdcV01Version { .. } => {
+                flags.contains(flags::Flag::RequireValidNdcV01Version)
+            }
         }
     }
 }

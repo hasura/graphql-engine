@@ -348,7 +348,7 @@ pub enum Error {
 }
 
 pub trait ShouldBeAnError {
-    fn should_be_an_error(&self, flags: &flags::Flags) -> bool;
+    fn should_be_an_error(&self, flags: &flags::OpenDdFlags) -> bool;
 }
 
 // A small utility type which exists for the sole purpose of displaying a vector with a certain

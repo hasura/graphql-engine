@@ -42,7 +42,6 @@ pub fn resolve(
     graphql_config: &graphql_config::GraphqlConfig,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     relationships: &relationships::Relationships,
-    flags: &open_dds::flags::Flags,
 ) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
     let mut issues = Vec::new();
@@ -112,7 +111,7 @@ pub fn resolve(
                     &object_boolean_expression_type_names,
                     graphql_config,
                     &mut graphql_types,
-                    flags,
+                    &metadata_accessor.flags,
                 )?;
 
             issues.extend(boolean_expression_issues);

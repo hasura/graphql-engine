@@ -27,7 +27,7 @@ pub(crate) fn resolve_filter_expression_type(
         object_relationships::ObjectTypeWithRelationships,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<
     (
         ModelExpressionType,
