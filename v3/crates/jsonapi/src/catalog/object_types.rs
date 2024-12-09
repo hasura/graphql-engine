@@ -21,7 +21,7 @@ pub fn build_object_type(
     let output_permissions_for_role = object_type
         .type_output_permissions
         .get(role)
-        .ok_or_else(|| ObjectTypeWarning::NoObjectTypePermission {})?;
+        .ok_or(ObjectTypeWarning::NoObjectTypePermission {})?;
 
     let mut type_fields = IndexMap::new();
 
@@ -55,7 +55,9 @@ pub fn build_object_type(
                 let target_type = model_aggregate.target_typename.clone();
                 RelationshipTarget::ModelAggregate(target_type)
             }
-            metadata_resolve::RelationshipTarget::Command(_) => RelationshipTarget::Command,
+            metadata_resolve::RelationshipTarget::Command(command) => RelationshipTarget::Command {
+                type_reference: command.target_type.clone(),
+            },
         };
         type_relationships.insert(relationship_field.relationship_name.clone(), target);
     }

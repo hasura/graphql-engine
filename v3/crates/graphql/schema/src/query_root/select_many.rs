@@ -79,7 +79,7 @@ pub(crate) fn select_many_field(
             )),
             field_type,
             arguments,
-            mk_deprecation_status(&select_many.deprecated),
+            mk_deprecation_status(select_many.deprecated.as_ref()),
         ),
         permissions::get_select_permissions_namespace_annotations(model)?,
     );

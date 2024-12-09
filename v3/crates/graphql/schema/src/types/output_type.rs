@@ -233,7 +233,7 @@ fn object_type_fields(
                 }),
                 get_output_type(gds, builder, &field_definition.field_type)?,
                 field_arguments,
-                mk_deprecation_status(&field_definition.deprecated),
+                mk_deprecation_status(field_definition.deprecated.as_ref()),
             );
             // if output permissions are defined for this type, we conditionally
             // include fields
@@ -375,7 +375,7 @@ fn command_relationship_field(
             )),
             relationship_output_type,
             arguments,
-            mk_deprecation_status(&relationship.deprecated),
+            mk_deprecation_status(relationship.deprecated.as_ref()),
         ),
         permissions::get_command_relationship_namespace_annotations(
             command,
@@ -448,7 +448,7 @@ fn model_relationship_field(
             )),
             relationship_output_type,
             arguments,
-            mk_deprecation_status(&relationship.deprecated),
+            mk_deprecation_status(relationship.deprecated.as_ref()),
         ),
         permissions::get_model_relationship_namespace_annotations(
             model,
@@ -519,7 +519,7 @@ fn model_aggregate_relationship_field(
             )),
             ast::TypeContainer::named_non_null(aggregate_select_output_type),
             arguments,
-            mk_deprecation_status(&relationship.deprecated),
+            mk_deprecation_status(relationship.deprecated.as_ref()),
         ),
         permissions::get_model_relationship_namespace_annotations(
             model,

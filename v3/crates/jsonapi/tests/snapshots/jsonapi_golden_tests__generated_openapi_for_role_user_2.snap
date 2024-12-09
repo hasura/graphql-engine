@@ -143,6 +143,31 @@ expression: generated_openapi
                                       }
                                     }
                                   }
+                                },
+                                "AuthorFromCommand": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_commandAuthor"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
                                 }
                               }
                             }

@@ -68,6 +68,7 @@ pub struct OrderByRelationshipAnnotation {
     pub target_model_name: Qualified<ModelName>,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
     pub deprecated: Option<Deprecated>,
+    pub multiple_input_properties: metadata_resolve::MultipleOrderByInputObjectFields,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

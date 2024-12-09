@@ -51,7 +51,7 @@ pub fn resolve(
     // The graphql config represents the shape of the Hasura features in the graphql schema,
     // and which features should be enabled or disabled. We check this structure is valid.
     let graphql_config =
-        graphql_config::resolve(&metadata_accessor.graphql_config, metadata_accessor.flags)
+        graphql_config::resolve(&metadata_accessor.graphql_config, &metadata_accessor.flags)
             .map_err(Error::from)?;
 
     // Fetch and check schema information for all our data connectors
@@ -169,7 +169,6 @@ pub fn resolve(
         &graphql_config,
         &object_types_with_permissions,
         &relationships,
-        &metadata_accessor.flags,
     )
     .map_err(Error::from)?;
 
@@ -199,7 +198,6 @@ pub fn resolve(
         &object_types_with_permissions,
         graphql_types,
         &graphql_config,
-        &metadata_accessor.flags,
     )
     .map_err(Error::from)?;
 
@@ -289,7 +287,6 @@ pub fn resolve(
         &graphql_types,
         &mut track_root_fields,
         &graphql_config,
-        &metadata_accessor.flags,
     )?;
 
     all_issues.extend(issues);
@@ -315,7 +312,6 @@ pub fn resolve(
         &models_with_graphql,
         &object_boolean_expression_types,
         &boolean_expression_types,
-        &metadata_accessor.flags,
     )?;
 
     // calculate any preset arguments for these models
@@ -336,7 +332,12 @@ pub fn resolve(
     let scalar_types_with_representations =
         scalar_type_representations::resolve(&data_connector_scalars, &scalar_types);
 
-    let plugin_configs = plugins::resolve(&metadata_accessor);
+    let (plugin_configs, plugin_warnings) = plugins::resolve(
+        &metadata_accessor,
+        &configuration.unstable_features.enable_pre_route_plugins,
+    );
+
+    all_issues.extend(plugin_warnings);
 
     let all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_issues)?;
 
@@ -359,7 +360,7 @@ pub fn resolve(
 }
 
 fn warnings_as_errors_by_compatibility(
-    flags: &flags::Flags,
+    flags: &flags::OpenDdFlags,
     all_issues: Vec<Warning>,
 ) -> Result<Vec<Warning>, Error> {
     let (warnings_that_are_errors, remaining_warnings): (Vec<Warning>, Vec<Warning>) = all_issues

@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 mod filter;
 mod include;
 use crate::catalog::{Model, ObjectType, RelationshipTarget, Type};
-use metadata_resolve::Qualified;
+use metadata_resolve::{unwrap_custom_type_name, Qualified};
 use std::collections::BTreeMap;
 
 #[derive(Debug, derive_more::Display, Serialize, Deserialize)]
@@ -268,10 +268,19 @@ fn resolve_include_relationships(
                 RelationshipTarget::ModelAggregate(model_type) => {
                     (model_type, RelationshipType::Object)
                 }
-                RelationshipTarget::Command => {
-                    return Err(RequestError::BadRequest(
-                        "Command relationship is not supported".to_string(),
-                    ));
+                RelationshipTarget::Command { type_reference } => {
+                    match unwrap_custom_type_name(type_reference) {
+                        Some(object_type) => (
+                            object_type,
+                            crate::type_reference_to_relationship_type(type_reference),
+                        ),
+                        None => {
+                            return Err(RequestError::BadRequest(
+                                "Command relationship with built-in output type not supported yet"
+                                    .to_string(),
+                            ));
+                        }
+                    }
                 }
             };
             let mut nested_relationships = RelationshipTree::default();

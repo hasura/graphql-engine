@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 
 const DATE_FORMAT: &str = "%Y-%m-%d";
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 /// The date to use for determining the default metadata semantics and Hasura behavior.
 pub struct CompatibilityDate(pub NaiveDate);
 

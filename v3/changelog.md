@@ -4,6 +4,72 @@
 
 ### Added
 
+#### Pre-route Engine Plugins
+
+Add support for pre-route engine plugins. Engine now supports calling a HTTP
+webhook in pre-route execution step. This can be used to add a bunch of
+functionalities to the DDN, such as a restify middleware, etc.
+
+The following is an example of the OpenDD metadata for the plugins:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  pre: route
+  name: restified_endpoints
+  url:
+    value: http://localhost:5001/restified
+  config:
+    match: "/v1/restified"
+    request:
+      method: GET
+      headers:
+        forward:
+          - Authorization
+      rawRequest:
+        path: {}
+        query: {}
+        method: {}
+```
+
+The pre-route plugin hook's request can be customized using the
+`LifecyclePluginHook` metadata object. Currently we support the following
+customizations:
+
+- forwarding/additional headers
+- adding/removing path information
+- adding/removing query information
+- adding/removing method information
+
+### Fixed
+
+- Fixed a bug where commands with array return types would not build when header
+  forwarding was in effect.
+
+- GraphQL queries with `order_by` arguments that contain multiple properties set
+  on one input object now properly return an error. For example
+  `order_by: { location: { city: Asc, country: Asc } }` is no longer allowed.
+  This is because the order of input object fields in GraphQL is not defined, so
+  it is unclear whether ordering should be first by city or first by country.
+  Instead, write this query like so:
+  `order_by: [{ location: { city: Asc } }, { location: { country: Asc } }]`.
+
+  Additionally, ordering by nested fields using an nested array is no longer
+  allowed (for example:
+  `order_by: { location: [{ city: Asc }, { country: Asc }] }`). Instead, write
+  this query like so:
+  `order_by: [{ location: { city: Asc } }, { location: { country: Asc } }]`.
+
+  These fixes are only enabled if your `CompatibilityConfig` date is set to
+  `2024-12-10` or newer.
+
+### Changed
+
+## [v2024.12.04]
+
+### Added
+
 - Added support for the sparse fieldset parameter for nested field types in
   JSON:API.
 
@@ -14,8 +80,8 @@
   would have been silently dropped.
 - Row filters configured in `ModelPermissions` are now correctly applied when
   referencing the model across a relationship in a filter predicate.
-
-### Changed
+- Row filters configured in `ModelPermissions` are now correctly applied when
+  referencing the model across a relationship is order by expressions.
 
 ## [v2024.11.25]
 
@@ -856,7 +922,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.25...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.12.03...HEAD
+[v2024.12.03]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.03
 [v2024.11.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.25
 [v2024.11.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.18
 [v2024.11.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.13

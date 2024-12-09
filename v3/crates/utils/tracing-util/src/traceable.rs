@@ -56,7 +56,10 @@ impl<T> From<T> for Successful<T> {
 }
 
 impl<T> Traceable for Successful<T> {
-    type ErrorType<'a> = Infallible where Self: 'a;
+    type ErrorType<'a>
+        = Infallible
+    where
+        Self: 'a;
 
     fn get_error(&self) -> Option<Self::ErrorType<'_>> {
         None
@@ -76,7 +79,7 @@ impl<E: std::fmt::Display> std::fmt::Display for ResultError<'_, E> {
     }
 }
 
-impl<'e, E: TraceableError> TraceableError for ResultError<'e, E> {
+impl<E: TraceableError> TraceableError for ResultError<'_, E> {
     fn visibility(&self) -> ErrorVisibility {
         self.error.visibility()
     }
@@ -86,8 +89,11 @@ impl<R, E> Traceable for Result<R, E>
 where
     E: TraceableError,
 {
-    type ErrorType<'a> = ResultError<'a, E>
-        where R: 'a, E: 'a;
+    type ErrorType<'a>
+        = ResultError<'a, E>
+    where
+        R: 'a,
+        E: 'a;
 
     fn get_error(&self) -> Option<ResultError<'_, E>> {
         self.as_ref().err().map(|e| ResultError { error: e })

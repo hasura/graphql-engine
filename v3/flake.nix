@@ -53,6 +53,9 @@
           "engine" = {
             ExposedPorts = { "3000/tcp" = { }; };
           };
+          "ddn-engine-local-dev" = {
+            ExposedPorts = { "3000/tcp" = { }; };
+          };
           "custom-connector" = {
             ExposedPorts = { "8102/tcp" = { }; };
           };
@@ -64,7 +67,8 @@
         # for adding extra packages inside the Docker container
         dockerExtraContents = {
           "engine" = [ pkgs.cacert ]; # so local dev can use SSH
-          "multitenant-engine" = [ pkgs.bash pkgs.coreutils ]; # to run sleep in a healthcheck, we should remove this soon
+          "ddn-engine-local-dev" = [ pkgs.cacert ]; # so local dev can use SSH
+          "multitenant-engine" = [ pkgs.cacert pkgs.bash pkgs.coreutils ]; # to run sleep in a healthcheck, we should remove this soon
           "artifact-server" = [ pkgs.curl pkgs.bash ]; # to run healthcheck, we should remove this soon
         };
       in
@@ -171,6 +175,7 @@
               pkgs.moreutils
               pkgs.nixpkgs-fmt
               pkgs.nodejs_22
+              pkgs.git
 
               # Rust
               pkgs.bacon

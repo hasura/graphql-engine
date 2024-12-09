@@ -268,7 +268,7 @@ fn resolve_relationship_mappings_model(
                     relationship_name: relationship.name.clone(),
                     source_type: source_type_name.clone(),
                     model_name: target_model.name.clone(),
-                    field_name: resolved_relationship_source_mapping.field_name.clone(),
+                    field_name: resolved_relationship_target_mapping.field_name.clone(),
                 },
             });
         }
@@ -466,7 +466,7 @@ fn resolve_aggregate_relationship_field(
     model_relationship_target: &open_dds::relationships::ModelRelationshipTarget,
     resolved_target_model: &models::Model,
     resolved_relationship_mappings: &[RelationshipModelMapping],
-    resolved_target_capabilities: &Option<RelationshipCapabilities>,
+    resolved_target_capabilities: Option<&RelationshipCapabilities>,
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
     aggregate_expressions: &BTreeMap<
@@ -500,7 +500,7 @@ fn resolve_aggregate_relationship_field(
                 ),
                 &resolved_target_model.name,
                 &resolved_target_model.data_type,
-                &resolved_target_model.source,
+                resolved_target_model.source.as_ref(),
                 aggregate_expressions,
                 object_types,
             )
@@ -548,7 +548,7 @@ fn resolve_aggregate_relationship_field(
                     aggregate_expression,
                     filter_input_field_name,
                 }),
-                target_capabilities: resolved_target_capabilities.clone(),
+                target_capabilities: resolved_target_capabilities.cloned(),
                 description: description.clone(),
                 deprecated: relationship.deprecated.clone(),
             })
@@ -615,7 +615,7 @@ fn resolve_model_relationship_fields(
         target_model,
         resolved_target_model,
         &mappings,
-        &target_capabilities,
+        target_capabilities.as_ref(),
         relationship,
         source_type_name,
         aggregate_expressions,

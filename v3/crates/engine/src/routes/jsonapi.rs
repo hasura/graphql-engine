@@ -49,7 +49,10 @@ impl IntoResponse for JsonApiSchemaResponse {
 
 /// Implement traceable for GraphQL Response
 impl Traceable for JsonApiSchemaResponse {
-    type ErrorType<'a> = Infallible where Self: 'a;
+    type ErrorType<'a>
+        = Infallible
+    where
+        Self: 'a;
 
     fn get_error(&self) -> Option<Self::ErrorType<'_>> {
         None
@@ -143,9 +146,9 @@ async fn handle_rest_request(
                                                                          // we tell the user, for
                                                                          // now default to nothing
             ),
-            jsonapi::RequestError::PlanError(plan::PlanError::Relationship(msg)) => (
-                axum::http::StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({"error": msg })),
+            jsonapi::RequestError::PlanError(plan::PlanError::Relationship(_error)) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "Internal error" })),
             ),
             jsonapi::RequestError::ExecuteError(field_error) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,

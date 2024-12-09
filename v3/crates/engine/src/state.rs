@@ -19,7 +19,6 @@ pub fn build_state(
     expose_internal_errors: ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
-    enable_sql_interface: bool,
     metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
 ) -> Result<EngineState, anyhow::Error> {
     // Auth Config
@@ -42,11 +41,6 @@ pub fn build_state(
         ndc_response_size_limit: None,
     };
     let plugin_configs = resolved_metadata.plugin_configs.clone();
-    let sql_context = if enable_sql_interface {
-        sql::catalog::Catalog::from_metadata(&resolved_metadata)
-    } else {
-        sql::catalog::Catalog::empty()
-    };
 
     let schema = graphql_schema::GDS {
         metadata: resolved_metadata.clone(),
@@ -62,7 +56,6 @@ pub fn build_state(
         jsonapi_catalog: Arc::new(jsonapi_catalog),
         resolved_metadata,
         auth_config: Arc::new(auth_config),
-        sql_context: sql_context.into(),
         plugin_configs: Arc::new(plugin_configs),
         graphql_websocket_server: Arc::new(graphql_ws::WebSocketServer::new()),
     };

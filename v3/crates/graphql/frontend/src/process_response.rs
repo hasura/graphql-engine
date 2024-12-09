@@ -89,7 +89,7 @@ where
 fn process_single_query_response_row<T>(
     mut row: T,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<IndexMap<ast::Alias, json::Value>, execute::FieldError>
 where
     T: KeyValueResponse,
@@ -241,7 +241,7 @@ where
 fn process_selection_set_as_list<T>(
     rows: Option<Vec<T>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, execute::FieldError>
 where
     T: KeyValueResponse,
@@ -259,7 +259,7 @@ where
 fn process_selection_set_as_object<T>(
     rows: Option<Vec<T>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<Option<IndexMap<ast::Alias, json::Value>>, execute::FieldError>
 where
     T: KeyValueResponse,
@@ -274,7 +274,7 @@ where
 pub fn process_field_selection_as_list(
     value: json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<json::Value, execute::FieldError> {
     if selection_set.fields.is_empty() || value.is_null() {
         // If selection set is empty we return the whole value without further processing.
@@ -294,7 +294,7 @@ pub fn process_field_selection_as_list(
 pub fn process_field_selection_as_object(
     value: json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<json::Value, execute::FieldError> {
     if selection_set.fields.is_empty() || value.is_null() {
         // If selection set is empty we return the whole value without further processing.
@@ -313,7 +313,7 @@ pub fn process_command_rows(
     rows: Option<Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue, RandomState>>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<Option<ProcessedResponse>, execute::FieldError> {
     match rows {
         None => Err(execute::NDCUnexpectedError::BadNDCResponse {
@@ -351,7 +351,7 @@ fn process_command_response_row(
     mut row: IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<ProcessedResponse, execute::FieldError> {
     let field_value_result = row
         .swap_remove(FUNCTION_IR_VALUE_COLUMN_NAME)
@@ -376,7 +376,7 @@ fn process_command_field_value(
     field_value_result: serde_json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<json::Value, execute::FieldError> {
     // When no selection set for commands, return back the value from the
     // connector without any processing.
@@ -517,7 +517,7 @@ pub fn process_response(
             let row_set = get_single_rowset(rows_sets)?;
             match process_response_as {
                 ProcessResponseAs::Array { .. } => {
-                    let result = process_selection_set_as_list(row_set.rows, selection_set, &None)?;
+                    let result = process_selection_set_as_list(row_set.rows, selection_set, None)?;
                     let response = json::to_value(result).map_err(execute::FieldError::from)?;
                     Ok(ProcessedResponse {
                         response,
@@ -526,7 +526,7 @@ pub fn process_response(
                 }
                 ProcessResponseAs::Object { .. } => {
                     let result =
-                        process_selection_set_as_object(row_set.rows, selection_set, &None)?;
+                        process_selection_set_as_object(row_set.rows, selection_set, None)?;
                     let response = json::to_value(result).map_err(execute::FieldError::from)?;
                     Ok(ProcessedResponse {
                         response,
@@ -543,7 +543,7 @@ pub fn process_response(
                         row_set.rows,
                         selection_set,
                         type_container,
-                        response_config,
+                        response_config.as_ref(),
                     )?;
                     match result {
                         None => Ok(ProcessedResponse {
@@ -570,7 +570,7 @@ pub fn process_command_mutation_response(
     mutation_result: ndc_models::MutationOperationResults,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<ProcessedResponse, execute::FieldError> {
     match mutation_result {
         ndc_models::MutationOperationResults::Procedure { result } => {
@@ -622,7 +622,7 @@ pub fn process_mutation_response(
                     mutation_results,
                     selection_set,
                     type_container,
-                    response_config,
+                    response_config.as_ref(),
                 ),
                 _ => Err(execute::FieldInternalError::InternalGeneric {
                     description: "Only commands are supported for mutations".to_string(),
@@ -647,7 +647,7 @@ pub(crate) fn get_single_rowset(
 /// to `DataConnectorLink.responseHeaders` config
 fn extract_response_headers_and_result(
     result: serde_json::Value,
-    response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
+    response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<ProcessedResponse, execute::FieldError> {
     if let Some(response_config) = response_config {
         match result {

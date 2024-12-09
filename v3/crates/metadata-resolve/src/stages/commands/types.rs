@@ -89,10 +89,10 @@ pub enum CommandsIssue {
 }
 
 impl ShouldBeAnError for CommandsIssue {
-    fn should_be_an_error(&self, flags: &open_dds::flags::Flags) -> bool {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
         match self {
             CommandsIssue::GraphQlRootFieldAlreadyInUse { .. } => {
-                flags.require_unique_command_graphql_names
+                flags.contains(open_dds::flags::Flag::RequireUniqueCommandGraphqlNames)
             }
             _ => false,
         }

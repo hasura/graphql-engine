@@ -36,7 +36,6 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    flags: &open_dds::flags::Flags,
 ) -> Result<IndexMap<Qualified<ModelName>, ModelWithPermissions>, Error> {
     let mut models_with_permissions: IndexMap<Qualified<ModelName>, ModelWithPermissions> = models
         .iter()
@@ -79,7 +78,7 @@ pub fn resolve(
                     .and_then(|filter| match filter {
                         models_graphql::ModelExpressionType::BooleanExpressionType(
                             boolean_expression_type,
-                        ) => boolean_expression_type.get_fields(flags),
+                        ) => boolean_expression_type.get_fields(&metadata_accessor.flags),
                         models_graphql::ModelExpressionType::ObjectBooleanExpressionType(_) => None,
                     });
 

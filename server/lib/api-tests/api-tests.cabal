@@ -232,6 +232,7 @@ library
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.OptimizePermissionFiltersSpec
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
+    Test.Regression.RemoteSchemaConflictingTypesSpec
     Test.Regression.RootExistElementAliasing9457Spec
     Test.Regression.SqlServerIdentifierQuotingSpec
     Test.Regression.SqlServerRemoteRelationshipRhs8712Spec

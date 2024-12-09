@@ -388,7 +388,9 @@ fn resolve_value_expression(
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
             ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
                 name: session_variable,
-                passed_as_json: metadata_accessor.flags.json_session_variables,
+                passed_as_json: metadata_accessor
+                    .flags
+                    .contains(open_dds::flags::Flag::JsonSessionVariables),
             })
         }
         open_dds::permissions::ValueExpression::Literal(json_value) => {

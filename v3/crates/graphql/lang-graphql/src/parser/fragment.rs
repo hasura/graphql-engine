@@ -1,7 +1,7 @@
 use super::Parser;
 use crate::ast::{executable::FragmentDefinition, spanning::Spanning};
 
-impl<'a> Parser<'a> {
+impl Parser<'_> {
     // https://spec.graphql.org/October2021/#sec-Language.Fragments
     pub fn parse_fragment(&mut self) -> super::Result<Spanning<FragmentDefinition>> {
         let start_position = self.parse_keyword(&super::Keyword::Fragment)?.start;

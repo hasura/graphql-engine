@@ -97,6 +97,11 @@ fn test_select_computed_fields() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_select_nested_field_permission_error() -> anyhow::Result<()> {
+    test_sql("sql/select/select_nested_field_permission_error")
+}
+
+#[test]
 fn test_filter_simple_equality() -> anyhow::Result<()> {
     test_sql("sql/filter/simple_equality")
 }

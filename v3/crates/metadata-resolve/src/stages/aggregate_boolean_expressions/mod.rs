@@ -306,8 +306,8 @@ fn resolve_scalar_aggregate_boolean_expression(
     // (eg. no aggregation function name that is the same as a logical operator)
     check_scalar_operand_graphql_name_conflicts(
         &aggregation_functions,
-        &count_aggregation,
-        &count_distinct_aggregation,
+        count_aggregation.as_ref(),
+        count_distinct_aggregation.as_ref(),
         &logical_operators,
     )?;
 
@@ -620,8 +620,8 @@ fn resolve_object_aggregate_boolean_expression(
     check_object_operand_graphql_name_conflicts(
         &comparable_fields,
         &comparable_relationships,
-        &count_aggregation,
-        &count_distinct_aggregation,
+        count_aggregation.as_ref(),
+        count_distinct_aggregation.as_ref(),
         &logical_operators,
     )?;
 
@@ -1025,8 +1025,8 @@ fn resolve_object_aggregate_filter_input(
 
 fn check_scalar_operand_graphql_name_conflicts(
     aggregation_functions: &[ComparableAggregationFunction],
-    count_aggregation: &Option<ComparableCountAggregation>,
-    count_distinct_aggregation: &Option<ComparableCountAggregation>,
+    count_aggregation: Option<&ComparableCountAggregation>,
+    count_distinct_aggregation: Option<&ComparableCountAggregation>,
     logical_operators: &LogicalOperators,
 ) -> Result<(), AggregateBooleanExpressionError> {
     // Uniqueness of these names is already guaranteed
@@ -1051,8 +1051,8 @@ fn check_scalar_operand_graphql_name_conflicts(
 fn check_object_operand_graphql_name_conflicts(
     aggregatable_fields: &[ComparableAggregatableField],
     aggregatable_relationships: &[ComparableAggregatableRelationship],
-    count_aggregation: &Option<ComparableCountAggregation>,
-    count_distinct_aggregation: &Option<ComparableCountAggregation>,
+    count_aggregation: Option<&ComparableCountAggregation>,
+    count_distinct_aggregation: Option<&ComparableCountAggregation>,
     logical_operators: &LogicalOperators,
 ) -> Result<(), AggregateBooleanExpressionError> {
     // Uniqueness of these names is already guaranteed
@@ -1082,8 +1082,8 @@ fn check_object_operand_graphql_name_conflicts(
 
 fn check_graphql_name_conflicts<'a>(
     mut used_names: BTreeMap<&'a str, NameSource>,
-    count_aggregation: &'a Option<ComparableCountAggregation>,
-    count_distinct_aggregation: &'a Option<ComparableCountAggregation>,
+    count_aggregation: Option<&'a ComparableCountAggregation>,
+    count_distinct_aggregation: Option<&'a ComparableCountAggregation>,
     logical_operators: &'a LogicalOperators,
 ) -> Result<(), AggregateBooleanExpressionError> {
     // The count aggregate names

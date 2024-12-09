@@ -17,13 +17,6 @@ use plan_types::{NDCMutationExecution, NDCQueryExecution};
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility};
 pub use types::{ExecuteQueryResult, RootFieldResult};
 
-/// This is where the GraphQL execution will live
-/// We'll use the `execute` crate for running queries etc
-/// but resolve stuff like type names and Apollo / Relay stuff here
-/// Things here are incomplete, and being moved over / fixed as we go.
-
-/// Does not currently include subscriptions
-
 /// Given an entire plan for a query, produce a result. We do this by executing all the singular
 /// root fields of the query in parallel, and joining the results back together.
 pub async fn execute_query_plan<'n, 's, 'ir>(

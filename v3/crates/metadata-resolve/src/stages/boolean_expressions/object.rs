@@ -43,7 +43,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression_operand: &BooleanExpressionObjectOperand,
     logical_operators: &BooleanExpressionLogicalOperators,
     subgraph: &SubgraphName,
-    graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
+    graphql: Option<&BooleanExpressionTypeGraphQlConfiguration>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -55,7 +55,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression_type_names: &BTreeSet<Qualified<CustomTypeName>>,
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut BTreeSet<ast::TypeName>,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<
     (
         ResolvedObjectBooleanExpressionType,
@@ -283,9 +283,9 @@ fn resolve_comparable_fields(
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
-    graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
+    graphql: Option<&BooleanExpressionTypeGraphQlConfiguration>,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     issues: &mut Vec<BooleanExpressionIssue>,
 ) -> Result<ComparableFieldsOutput, BooleanExpressionError> {
     let mut resolved_comparable_fields = BTreeMap::new();
@@ -383,7 +383,9 @@ fn resolve_comparable_fields(
     // doing this validation when there is no graphql configuration is a breaking change, so we
     // only do it if the flag allows it
 
-    if graphql.is_some() || flags.allow_boolean_expression_fields_without_graphql {
+    if graphql.is_some()
+        || flags.contains(open_dds::flags::Flag::AllowBooleanExpressionFieldsWithoutGraphql)
+    {
         for (comparable_field_name, (comparable_field_kind, comparable_field_type_name)) in
             &resolved_comparable_fields
         {

@@ -18,18 +18,18 @@ pub enum ExecutableDefinition {
     Fragment(FragmentDefinition),
 }
 
-/// The operations of a GraphQL document.
-///
-/// There is either one anonymous operation or many named operations.
-/// FIXME: I think we should use this? Then move the
-///        lang-graphql/tests/query_testdata/ok/0001_empty test from 'ok' to 'err
-// #[derive(Debug, Clone)]
-// pub enum DocumentOperations {
-//     /// The document contains a single anonymous operation.
-//     Single(Spanning<OperationDefinition>),
-//     /// The document contains many named operations.
-//     Multiple(HashMap<Name, Spanning<OperationDefinition>>),
-// }
+// /// The operations of a GraphQL document.
+// ///
+// /// There is either one anonymous operation or many named operations.
+// /// FIXME: I think we should use this? Then move the
+// ///        lang-graphql/tests/query_testdata/ok/0001_empty test from 'ok' to 'err
+// // #[derive(Debug, Clone)]
+// // pub enum DocumentOperations {
+// //     /// The document contains a single anonymous operation.
+// //     Single(Spanning<OperationDefinition>),
+// //     /// The document contains many named operations.
+// //     Multiple(HashMap<Name, Spanning<OperationDefinition>>),
+// // }
 
 pub type Argument = Spanning<KeyValue<Value>>;
 

@@ -74,12 +74,12 @@ pub fn resolve<'s>(
 }
 
 fn mk_relationship<'s>(
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     known_subgraphs: &HashSet<SubgraphName>,
     relationship: &'s RelationshipV1,
 ) -> Relationship<'s> {
     // If we have allowed the usage of unknown subgraphs...
-    if flags.allow_partial_supergraph {
+    if flags.contains(open_dds::flags::Flag::AllowPartialSupergraph) {
         let subgraph = helpers::relationship::get_target_subgraph(relationship);
 
         // ...and the subgraph is unknown

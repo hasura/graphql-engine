@@ -8,14 +8,11 @@ use open_dds::{
     types::{CustomTypeName, DataConnectorArgumentName},
 };
 use plan_types::{
-    Argument, Field, NdcFieldAlias, NdcRelationshipName, NestedField, Relationship,
+    Argument, Field, NdcFieldAlias, NdcRelationshipName, NestedField, OrderByElement, Relationship,
     ResolvedFilterExpression,
 };
 
 use indexmap::IndexMap;
-
-// these types aren't really GraphQL specific and should move some where more general
-use graphql_ir::ResolvedOrderBy;
 
 // additional query context which is helpful when processing the response afterwards
 pub struct QueryContext {
@@ -28,7 +25,7 @@ pub struct NDCQuery {
     pub collection_name: CollectionName,
     pub arguments: BTreeMap<DataConnectorArgumentName, Argument>,
     pub filter: Option<ResolvedFilterExpression>,
-    pub order_by: ResolvedOrderBy<'static>,
+    pub order_by: Vec<OrderByElement<ResolvedFilterExpression>>,
     pub limit: Option<u32>,
     pub offset: Option<u32>,
     pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,

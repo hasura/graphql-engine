@@ -9,9 +9,9 @@ mod types;
 pub use cors::build_cors_layer;
 pub use middleware::{
     authentication_middleware, explain_request_tracing_middleware,
-    graphql_request_tracing_middleware, plugins_middleware, sql_request_tracing_middleware,
+    graphql_request_tracing_middleware, plugins_middleware,
 };
-pub use routes::EngineRouter;
+pub use routes::{get_base_routes, get_cors_layer, get_jsonapi_route, get_metadata_routes};
 pub use state::build_state;
 pub use types::{EngineState, RequestType, StartupError};
 

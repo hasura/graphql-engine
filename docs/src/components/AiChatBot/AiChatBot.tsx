@@ -332,8 +332,7 @@ export function AiChatBot({ style }) {
                   </div>
                   {messages.length > 3 && !isResponding && (
                     <form
-                      id="bad-response-form"
-                      className="bad-response-form"
+                      id={'bad-response-form'}
                       onSubmit={e => {
                         e.preventDefault();
                         handleBadBotResponse();
@@ -341,8 +340,8 @@ export function AiChatBot({ style }) {
                     >
                       <div className={'flex'}>
                         <button
-                          className="thumbs-down-button"
                           type="button"
+                          className="thumbs-down-button"
                           onClick={() => {
                             setBadResponse({
                               responseText: null,
@@ -358,13 +357,14 @@ export function AiChatBot({ style }) {
                           <div className="bad-response-container">
                             <textarea
                               rows={4}
+                              className={'w-full bg-none text-gray-700 placeholder-gray-500'}
                               onChange={e =>
                                 setBadResponse(prevState => ({ ...prevState, responseText: e.target.value }))
                               }
                               placeholder={'Sorry about that. Please tell us how we can improve.'}
                             ></textarea>
-                            <button className="feedback-submit-button" type={'submit'}>
-                              Submit Feedback
+                            <button type={'submit'} className={'feedback-submit-button'}>
+                              Submit
                             </button>
                           </div>
                         )}

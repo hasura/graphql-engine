@@ -9,7 +9,7 @@ use tracing_util::{ErrorVisibility, Traceable, TraceableError};
 /// A simple wrapper around a reference of GraphQL errors
 pub struct GraphQLErrors<'a>(pub &'a nonempty::NonEmpty<gql::http::GraphQLError>);
 
-impl<'a> std::fmt::Display for GraphQLErrors<'a> {
+impl std::fmt::Display for GraphQLErrors<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let messages = self
             .0
@@ -21,7 +21,7 @@ impl<'a> std::fmt::Display for GraphQLErrors<'a> {
 }
 
 /// Implement traceable error for GraphQL Errors
-impl<'a> TraceableError for GraphQLErrors<'a> {
+impl TraceableError for GraphQLErrors<'_> {
     fn visibility(&self) -> ErrorVisibility {
         // Traces related to GraphQL errors are always visible to the user
         ErrorVisibility::User

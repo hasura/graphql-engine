@@ -3,14 +3,10 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
 use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
-use open_dds::models::ModelName;
-use open_dds::relationships::{RelationshipName, RelationshipType};
 use serde::Serialize;
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::ops::Deref;
 
-use crate::model_tracking::count_model;
 use crate::{error, permissions};
 use graphql_schema::{self};
 use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind};
@@ -20,12 +16,11 @@ use graphql_schema::{
 use graphql_schema::{LogicalOperatorField, GDS};
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
-    types::{CustomTypeName, FieldName},
+    types::CustomTypeName,
 };
+use plan::count_model;
 use plan_types::{
-    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison,
-    LocalModelRelationshipInfo, NdcRelationshipName, RelationshipColumnMapping, SourceNdcColumn,
-    UsagesCounts,
+    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
 
 /// Filter expression to be applied on a model/command selection set
@@ -147,8 +142,11 @@ fn resolve_object_boolean_expression<'s>(
                     object_field_kind,
                     deprecated: _,
                 } => {
-                    let FieldMapping { column, .. } =
-                        get_field_mapping_of_field_name(type_mappings, object_type, field_name)?;
+                    let FieldMapping { column, .. } = plan::get_field_mapping_of_field_name(
+                        type_mappings,
+                        object_type,
+                        field_name,
+                    )?;
 
                     let field_value = field.value.as_object()?;
 
@@ -239,7 +237,7 @@ fn resolve_object_boolean_expression<'s>(
                     };
 
                     // build and return relationshp comparison expression
-                    build_relationship_comparison_expression(
+                    plan::build_relationship_comparison_expression(
                         type_mappings,
                         column_path,
                         data_connector_link,
@@ -387,152 +385,6 @@ fn extract_scalar_boolean_expression_field_annotation(
     }
 }
 
-/// Defines strategies for executing relationship predicates.
-enum RelationshipPredicateExecutionStrategy {
-    /// Pushes predicate resolution to the NDC (Data Connector).
-    /// This is feasible only if the data connector supports the 'relation_comparisons' capability
-    /// and is used when both source and target connectors are the same (local relationship).
-    NDCPushdown,
-
-    /// Resolves predicates within the Engine itself.
-    /// This approach is used when dealing with remote relationships or if the data connector lacks
-    /// the 'relation_comparisons' capability. The Engine queries field values from the target model
-    /// and constructs the necessary comparison expressions.
-    InEngine,
-}
-
-/// Determines the strategy for executing relationship predicates based on the connectors and their capabilities.
-fn get_relationship_predicate_execution_strategy(
-    source_connector: &DataConnectorLink,
-    target_connector: &DataConnectorLink,
-    target_source_relationship_capabilities: &metadata_resolve::RelationshipCapabilities,
-) -> RelationshipPredicateExecutionStrategy {
-    // It's a local relationship if the source and target connectors are the same and
-    // the connector supports relationships.
-    if target_connector.name == source_connector.name
-        && target_source_relationship_capabilities
-            .supports_relationships
-            .as_ref()
-            .is_some_and(|r| r.supports_relation_comparisons)
-    {
-        RelationshipPredicateExecutionStrategy::NDCPushdown
-    } else {
-        RelationshipPredicateExecutionStrategy::InEngine
-    }
-}
-
-/// Build a relationship comparison expression from a relationship predicate.
-/// This is used for for both query and permission filter predicates.
-/// Corresponding inner predicates need to be resolved prior to this function call
-/// and passed as `relationship_predicate`.
-pub(crate) fn build_relationship_comparison_expression<'s>(
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    column_path: &[&'s DataConnectorColumnName],
-    data_connector_link: &'s DataConnectorLink,
-    relationship_name: &'s RelationshipName,
-    relationship_type: &'s RelationshipType,
-    source_type: &'s Qualified<CustomTypeName>,
-    target_model_name: &'s Qualified<ModelName>,
-    target_source: &'s metadata_resolve::ModelTargetSource,
-    target_type: &'s Qualified<CustomTypeName>,
-    mappings: &'s Vec<metadata_resolve::RelationshipModelMapping>,
-    relationship_predicate: Expression<'s>,
-) -> Result<Expression<'s>, error::Error> {
-    if !column_path.is_empty() {
-        return Err(
-            error::InternalDeveloperError::NestedObjectRelationshipInPredicate {
-                relationship_name: relationship_name.clone(),
-            }
-            .into(),
-        );
-    }
-
-    // Determine whether the relationship is local or remote
-    match get_relationship_predicate_execution_strategy(
-        data_connector_link,
-        &target_source.model.data_connector,
-        &target_source.capabilities,
-    ) {
-        RelationshipPredicateExecutionStrategy::NDCPushdown => {
-            let ndc_relationship_name = NdcRelationshipName::new(source_type, relationship_name);
-
-            let local_model_relationship_info = LocalModelRelationshipInfo {
-                relationship_name,
-                relationship_type,
-                source_type,
-                source_data_connector: data_connector_link,
-                source_type_mappings: type_mappings,
-                target_source,
-                target_type,
-                mappings,
-            };
-
-            Ok(Expression::RelationshipLocalComparison {
-                relationship: ndc_relationship_name,
-                predicate: Box::new(relationship_predicate),
-                info: local_model_relationship_info,
-            })
-        }
-
-        RelationshipPredicateExecutionStrategy::InEngine => {
-            // Build a NDC column mapping out of the relationship mappings.
-            // This mapping is later used to build the local field comparison expressions
-            // using values fetched from remote source
-            let mut ndc_column_mapping = Vec::new();
-            for relationship_mapping in mappings {
-                let source_field = &relationship_mapping.source_field.field_name;
-                let FieldMapping {
-                    column: source_column,
-                    comparison_operators,
-                    ..
-                } = get_field_mapping_of_field_name(type_mappings, source_type, source_field)?;
-
-                let equal_operators = comparison_operators
-                    .as_ref()
-                    .map(|ops| Cow::Borrowed(&ops.equality_operators))
-                    .unwrap_or_default();
-
-                let eq_operator = equal_operators.first().ok_or_else(|| {
-                    error::InternalEngineError::InternalGeneric {
-                        description: format!(
-                            "Cannot use relationship '{relationship_name}' \
-                             in filter predicate. NDC column {source_column} (used by \
-                             source field '{source_field}') needs to implement an EQUAL comparison operator"
-                        ),
-                    }
-                })?;
-
-                let source_ndc_column = SourceNdcColumn {
-                    column: source_column.clone(),
-                    field_path: column_path.iter().copied().cloned().collect(),
-                    eq_operator: eq_operator.clone(),
-                };
-
-                let target_ndc_column = &relationship_mapping
-                    .target_ndc_column
-                    .as_ref()
-                    .ok_or_else(|| error::InternalEngineError::InternalGeneric {
-                        description: "Target NDC column not found".to_string(),
-                    })?
-                    .column;
-
-                ndc_column_mapping.push(RelationshipColumnMapping {
-                    source_ndc_column,
-                    target_ndc_column: target_ndc_column.clone(),
-                });
-            }
-
-            Ok(Expression::RelationshipRemoteComparison {
-                relationship: relationship_name.clone(),
-                target_model_name,
-                target_model_source: target_source.model.clone(),
-                ndc_column_mapping,
-                predicate: Box::new(relationship_predicate),
-            })
-        }
-    }
-}
-
 /// Resolve `_is_null` GraphQL boolean operator
 fn build_is_null_expression<'s>(
     column_path: &[&DataConnectorColumnName],
@@ -592,25 +444,4 @@ fn build_binary_comparison_expression<'s>(
             value: value.as_json(),
         },
     })
-}
-
-/// get column name for field name
-fn get_field_mapping_of_field_name<'a>(
-    type_mappings: &'a BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    type_name: &Qualified<CustomTypeName>,
-    field_name: &FieldName,
-) -> Result<&'a metadata_resolve::FieldMapping, error::Error> {
-    let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
-        error::InternalDeveloperError::TypeMappingNotFound {
-            type_name: type_name.clone(),
-        }
-    })?;
-    match type_mapping {
-        metadata_resolve::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
-            .get(field_name)
-            .ok_or_else(|| error::InternalDeveloperError::FieldMappingNotFound {
-                type_name: type_name.clone(),
-                field_name: field_name.clone(),
-            })?),
-    }
 }

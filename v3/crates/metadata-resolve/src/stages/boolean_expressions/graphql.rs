@@ -47,11 +47,8 @@ pub(crate) fn resolve_object_boolean_graphql(
 
     let mut object_fields = BTreeMap::new();
 
-    let filter_graphql_config = graphql_config
-        .query
-        .filter_input_config
-        .as_ref()
-        .ok_or_else(|| {
+    let filter_graphql_config =
+        graphql_config.query.filter_input_config.as_ref().ok_or({
             graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig
         })?;
 

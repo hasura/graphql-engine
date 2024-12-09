@@ -184,7 +184,7 @@ pub enum UnTaggedQualifiedTypeName {
 #[allow(dead_code)]
 /// not using this now, but feel we'll need to again
 pub fn serialize_optional_qualified_btreemap<T, V, S>(
-    optional_map: &Option<BTreeMap<Qualified<T>, V>>,
+    optional_map: Option<&BTreeMap<Qualified<T>, V>>,
     s: S,
 ) -> Result<S::Ok, S::Error>
 where

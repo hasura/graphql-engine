@@ -4,6 +4,6 @@
   },
   {
     "x-hasura-role": "user",
-    "x-hasura-user-id": "2"
+    "x-hasura-album-id": 346
   }
 ]

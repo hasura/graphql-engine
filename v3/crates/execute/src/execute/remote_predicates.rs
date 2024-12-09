@@ -1,8 +1,8 @@
 use crate::error::{FieldError, FieldInternalError, FilterPredicateError};
 use indexmap::{IndexMap, IndexSet};
 use plan_types::{
-    Argument, Field, FieldsSelection, NestedArray, NestedField, NestedObject, QueryExecutionPlan,
-    QueryNodeNew, RemotePredicateKey, ResolvedFilterExpression,
+    Argument, Field, FieldsSelection, NestedArray, NestedField, NestedObject, OrderByElement,
+    OrderByTarget, QueryExecutionPlan, QueryNodeNew, RemotePredicateKey, ResolvedFilterExpression,
 };
 use std::collections::BTreeMap;
 
@@ -67,12 +67,57 @@ fn replace_predicates_in_query_node(
             .transpose()?,
         limit: query_node.limit,
         offset: query_node.offset,
-        order_by: query_node.order_by,
+        order_by: query_node
+            .order_by
+            .map(|order_by| {
+                order_by
+                    .into_iter()
+                    .map(|order_by_element| {
+                        Ok(OrderByElement {
+                            order_direction: order_by_element.order_direction,
+                            target: replace_predicates_in_order_by_target(
+                                order_by_element.target,
+                                predicates,
+                            )?,
+                        })
+                    })
+                    .collect::<Result<Vec<_>, FilterPredicateError>>()
+            })
+            .transpose()?,
         predicate: query_node
             .predicate
             .map(|predicate| replace_predicates_in_filter_expression(predicate, predicates))
             .transpose()?,
     })
+}
+
+fn replace_predicates_in_order_by_target(
+    order_by_target: OrderByTarget<ResolvedFilterExpression>,
+    predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
+) -> Result<OrderByTarget<ResolvedFilterExpression>, FilterPredicateError> {
+    match order_by_target {
+        OrderByTarget::Column {
+            relationship_path,
+            name,
+            field_path,
+        } => Ok(OrderByTarget::Column {
+            relationship_path: relationship_path
+                .into_iter()
+                .map(|relationship_path_element| {
+                    Ok(plan_types::RelationshipPathElement {
+                        field_path: relationship_path_element.field_path,
+                        relationship_name: relationship_path_element.relationship_name,
+                        filter_predicate: relationship_path_element
+                            .filter_predicate
+                            .map(|pred| replace_predicates_in_filter_expression(pred, predicates))
+                            .transpose()?,
+                    })
+                })
+                .collect::<Result<Vec<_>, FilterPredicateError>>()?,
+            name,
+            field_path,
+        }),
+    }
 }
 
 fn replace_predicates_in_nested_field(
@@ -204,9 +249,11 @@ fn replace_predicates_in_filter_expression(
             )?),
         },
         ResolvedFilterExpression::LocalRelationshipComparison {
+            field_path,
             relationship,
             predicate,
         } => ResolvedFilterExpression::LocalRelationshipComparison {
+            field_path,
             relationship,
             predicate: Box::new(replace_predicates_in_filter_expression(
                 *predicate, predicates,

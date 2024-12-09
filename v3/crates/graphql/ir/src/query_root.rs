@@ -66,7 +66,7 @@ pub fn generate_ir<'n, 's>(
                         } => {
                             let ir = generate_model_rootfield_ir(
                                 &type_name,
-                                source,
+                                source.as_ref(),
                                 data_type,
                                 kind,
                                 field,
@@ -87,8 +87,8 @@ pub fn generate_ir<'n, 's>(
                             let ir = generate_command_rootfield_ir(
                                 name,
                                 &type_name,
-                                function_name,
-                                source,
+                                function_name.as_ref(),
+                                source.as_ref(),
                                 result_type,
                                 result_base_type_kind,
                                 field,
@@ -177,7 +177,7 @@ fn generate_type_field_ir<'n, 's>(
 #[allow(clippy::too_many_arguments)]
 pub fn generate_model_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
-    source: &'s Option<Arc<metadata_resolve::ModelSource>>,
+    source: Option<&'s Arc<metadata_resolve::ModelSource>>,
     data_type: &metadata_resolve::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
@@ -237,8 +237,8 @@ pub fn generate_model_rootfield_ir<'n, 's>(
 fn generate_command_rootfield_ir<'n, 's>(
     name: &'s metadata_resolve::Qualified<CommandName>,
     type_name: &ast::TypeName,
-    function_name: &'s Option<open_dds::commands::FunctionName>,
-    source: &'s Option<CommandSourceDetail>,
+    function_name: Option<&'s open_dds::commands::FunctionName>,
+    source: Option<&'s CommandSourceDetail>,
     result_type: &'s metadata_resolve::QualifiedTypeReference,
     result_base_type_kind: &'s TypeKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,

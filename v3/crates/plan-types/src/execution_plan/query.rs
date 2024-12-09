@@ -1,5 +1,6 @@
-use super::{aggregates, arguments, field, filter, order_by, relationships};
+use super::{aggregates, arguments, field, filter, relationships};
 use crate::NdcFieldAlias;
+use crate::OrderByElement;
 use crate::{ExecutionTree, NdcRelationshipName, RelationshipColumnMapping, VariableName};
 use indexmap::IndexMap;
 use metadata_resolve::Qualified;
@@ -87,14 +88,14 @@ impl Default for UniqueNumber {
 }
 
 /// Query plan for fetching data
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueryNodeNew {
     /// Optionally limit to N results
     pub limit: Option<u32>,
     /// Optionally offset from the Nth result
     pub offset: Option<u32>,
     /// Optionally sort results
-    pub order_by: Option<Vec<order_by::OrderByElement>>,
+    pub order_by: Option<Vec<OrderByElement<filter::ResolvedFilterExpression>>>,
     /// Optionally filter results
     pub predicate: Option<filter::ResolvedFilterExpression>,
     /// Aggregate fields of the query
@@ -106,17 +107,4 @@ pub struct QueryNodeNew {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FieldsSelection {
     pub fields: IndexMap<NdcFieldAlias, field::Field>,
-}
-
-// FIXME: remove this; this is probably inaccurate.
-// https://github.com/indexmap-rs/indexmap/issues/155
-// Probably use ordermap (ref: https://github.com/indexmap-rs/indexmap/issues/67#issuecomment-2189801441)
-impl std::hash::Hash for FieldsSelection {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        for (k, _v) in &self.fields {
-            k.hash(state);
-            // FIXME!!
-            // v.hash(state);
-        }
-    }
 }

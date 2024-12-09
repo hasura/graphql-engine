@@ -1,4 +1,4 @@
 [toolchain]
-channel = "1.82.0"
+channel = "1.83.0"
 profile = "default"  # see https://rust-lang.github.io/rustup/concepts/profiles.html
 components = ["llvm-tools-preview", "rust-analyzer", "rust-src"]  # see https://rust-lang.github.io/rustup/concepts/components.html

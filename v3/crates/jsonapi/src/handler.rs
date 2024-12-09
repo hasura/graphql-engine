@@ -7,11 +7,8 @@ use crate::catalog::{Catalog, Model, State};
 use axum::http::{HeaderMap, Method, Uri};
 use engine_types::HttpContext;
 use hasura_authn_core::Session;
-use indexmap::IndexMap;
 use metadata_resolve::Metadata;
-use plan_types::{
-    ExecutionTree, JoinLocations, NDCQueryExecution, PredicateQueryTrees, ProcessResponseAs,
-};
+use plan_types::{NDCQueryExecution, ProcessResponseAs};
 use tracing_util::SpanVisibility;
 
 #[allow(clippy::unused_async)]
@@ -103,34 +100,30 @@ async fn query_engine_execute(
     http_context: &Arc<HttpContext>,
     request_headers: &HeaderMap,
 ) -> Result<QueryResult, RequestError> {
-    let (query_execution_plan, query_context) =
-        plan::plan_query_request(query_ir, metadata, session, http_context, request_headers)
-            .map_err(RequestError::PlanError)?;
-    match query_execution_plan {
-        plan::SingleNodeExecutionPlan::Query(query_execution_plan) => {
-            let ndc_query_execution = NDCQueryExecution {
-                execution_span_attribute: "REST",
-                execution_tree: ExecutionTree {
-                    remote_predicates: PredicateQueryTrees::new(),
-                    query_execution_plan,
-                    remote_join_executions: JoinLocations {
-                        locations: IndexMap::new(),
-                    },
-                },
-                field_span_attribute: "REST".into(),
-                process_response_as: ProcessResponseAs::Array { is_nullable: false },
-            };
-            let rowsets =
-                execute::resolve_ndc_query_execution(http_context, ndc_query_execution, None)
-                    .await
-                    .map_err(RequestError::ExecuteError)?;
+    let execution_plan = plan::plan_query_request(query_ir, metadata, session, request_headers)
+        .map_err(RequestError::PlanError)?;
+    match execution_plan {
+        plan::ExecutionPlan::Queries(queries) => match queries.first() {
+            Some((_alias, query_execution)) => {
+                let ndc_query_execution = NDCQueryExecution {
+                    execution_span_attribute: "REST",
+                    execution_tree: query_execution.execution_tree.clone(),
+                    field_span_attribute: "REST".into(),
+                    process_response_as: ProcessResponseAs::Array { is_nullable: false },
+                };
+                let rowsets =
+                    execute::resolve_ndc_query_execution(http_context, ndc_query_execution, None)
+                        .await
+                        .map_err(RequestError::ExecuteError)?;
 
-            Ok(QueryResult {
-                rowsets,
-                type_name: query_context.type_name,
-            })
-        }
-        plan::SingleNodeExecutionPlan::Mutation(_) => {
+                Ok(QueryResult {
+                    rowsets,
+                    type_name: query_execution.query_context.type_name.clone(),
+                })
+            }
+            None => todo!("handle empty query result in JSONAPI"),
+        },
+        plan::ExecutionPlan::Mutation(_) => {
             todo!("Executing mutations not implemented in JSONAPI yet")
         }
     }

@@ -26,7 +26,7 @@ pub fn build_model(
         .model
         .source
         .as_ref()
-        .ok_or_else(|| ModelWarning::NoModelSource)?;
+        .ok_or(ModelWarning::NoModelSource)?;
 
     let data_connector_name = model_source.data_connector.name.clone();
 

@@ -395,7 +395,15 @@
               {
                 "role": "user",
                 "select": {
-                  "filter": null
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "AlbumId",
+                      "operator": "_neq",
+                      "value": {
+                        "sessionVariable": "x-hasura-album-id"
+                      }
+                    }
+                  }
                 }
               }
             ]
@@ -741,8 +749,38 @@
               "comparisonExpressionTypeName": "Int_comparison"
             }
           }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "varchar",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_comparison"
+            }
+          }
         }
       ]
     }
-  ]
+  ],
+  "flags": {
+    "require_graphql_config": false,
+    "require_valid_ndc_v01_version": true,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true,
+    "require_unique_command_graphql_names": true,
+    "allow_partial_supergraph": false,
+    "json_session_variables": true,
+    "disallow_array_field_compared_with_scalar_boolean_type": true,
+    "allow_boolean_expression_fields_without_graphql": true,
+    "require_unique_model_graphql_names": true,
+    "disallow_object_boolean_expression_type": false,
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true,
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true
+  }
 }

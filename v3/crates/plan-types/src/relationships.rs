@@ -1,10 +1,13 @@
 use metadata_resolve::{self, serialize_qualified_btreemap, Qualified};
 use open_dds::{
+    data_connector::DataConnectorColumnName,
     relationships::{RelationshipName, RelationshipType},
     types::CustomTypeName,
 };
 use serde::Serialize;
 use std::collections::BTreeMap;
+
+use crate::NdcRelationshipName;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct LocalModelRelationshipInfo<'s> {
@@ -18,4 +21,11 @@ pub struct LocalModelRelationshipInfo<'s> {
     pub target_source: &'s metadata_resolve::ModelTargetSource,
     pub target_type: &'s Qualified<CustomTypeName>,
     pub mappings: &'s Vec<metadata_resolve::RelationshipModelMapping>,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct RelationshipPathElement<TExpression> {
+    pub field_path: Vec<DataConnectorColumnName>,
+    pub relationship_name: NdcRelationshipName,
+    pub filter_predicate: Option<TExpression>,
 }

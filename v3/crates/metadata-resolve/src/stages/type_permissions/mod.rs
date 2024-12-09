@@ -99,7 +99,7 @@ pub fn resolve_output_type_permission(
 }
 
 pub(crate) fn resolve_input_type_permission(
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
 ) -> Result<BTreeMap<Role, TypeInputPermission>, TypeInputPermissionError> {
@@ -144,7 +144,8 @@ pub(crate) fn resolve_input_type_permission(
                         ValueExpressionOrPredicate::SessionVariable(
                             hasura_authn_core::SessionVariableReference {
                                 name: session_variable.clone(),
-                                passed_as_json: flags.json_session_variables,
+                                passed_as_json: flags
+                                    .contains(open_dds::flags::Flag::JsonSessionVariables),
                             },
                         )
                     }

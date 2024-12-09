@@ -1,26 +1,26 @@
-use indexmap::IndexMap;
-use std::collections::BTreeMap;
-use std::sync::Arc;
-
+use super::arguments::process_connector_link_presets;
 use super::field_selection;
 use crate::PlanError;
 use crate::{NDCFunction, NDCProcedure};
 use hasura_authn_core::Session;
+use indexmap::IndexMap;
 use metadata_resolve::{
     unwrap_custom_type_name, Metadata, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference,
 };
-use open_dds::query::{CommandSelection, ObjectSubSelection};
+use open_dds::query::CommandSelection;
 use open_dds::{
     commands::DataConnectorCommand,
     data_connector::{CollectionName, DataConnectorColumnName},
     types::CustomTypeName,
 };
-use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{
     Argument, Field, MutationArgument, MutationExecutionPlan, NdcFieldAlias, NestedArray,
     NestedField, NestedObject, QueryExecutionPlan, QueryNodeNew,
 };
+use plan_types::{UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME};
+use std::collections::BTreeMap;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum CommandPlan {
@@ -39,6 +39,7 @@ pub fn from_command(
     metadata: &Metadata,
     session: &Arc<Session>,
     request_headers: &reqwest::header::HeaderMap,
+    unique_number: &mut UniqueNumber,
 ) -> Result<FromCommand, PlanError> {
     let command_target = &command_selection.target;
     let qualified_command_name = metadata_resolve::Qualified::new(
@@ -61,15 +62,6 @@ pub fn from_command(
 
     let output_object_type_name = unwrap_custom_type_name(&command.command.output_type).unwrap();
 
-    let metadata_resolve::TypeMapping::Object { field_mappings, .. } = command_source
-            .type_mappings
-            .get(output_object_type_name)
-            .ok_or_else(|| {
-                PlanError::Internal(format!(
-                    "couldn't fetch type_mapping of type {output_object_type_name} for command {qualified_command_name}",
-                ))
-            })?;
-
     let output_object_type = metadata
         .object_types
         .get(output_object_type_name)
@@ -79,75 +71,24 @@ pub fn from_command(
             ))
         })?;
 
-    let type_permissions = output_object_type
-        .type_output_permissions
-        .get(&session.role)
-        .ok_or_else(|| {
-            PlanError::Permission(format!(
-                "role {} does not have permission to select any fields of command {}",
-                session.role, qualified_command_name
-            ))
-        })?;
+    let mut relationships = BTreeMap::new();
+    let command_selection_set = match &command_selection.selection {
+        Some(selection_set) => selection_set,
+        None => &IndexMap::new(),
+    };
 
-    let mut ndc_fields = IndexMap::new();
-
-    for (field_alias, object_sub_selection) in command_selection.selection.iter().flatten() {
-        let ObjectSubSelection::Field(field_selection) = object_sub_selection else {
-            return Err(PlanError::Internal(
-                "only normal field selections are supported in NDCPushDownPlanner.".to_string(),
-            ));
-        };
-        if !type_permissions
-            .allowed_fields
-            .contains(&field_selection.target.field_name)
-        {
-            return Err(PlanError::Permission(format!(
-                "role {} does not have permission to select the field {} from type {} of command {}",
-                session.role,
-                field_selection.target.field_name,
-                &output_object_type_name,
-                qualified_command_name
-            )));
-        }
-
-        let field_mapping = field_mappings
-            .get(&field_selection.target.field_name)
-            // .map(|field_mapping| field_mapping.column.clone())
-            .ok_or_else(|| {
-                PlanError::Internal(format!(
-                    "couldn't fetch field mapping of field {} in type {} for command {}",
-                    field_selection.target.field_name,
-                    output_object_type_name,
-                    qualified_command_name
-                ))
-            })?;
-
-        let field_type = &output_object_type
-            .object_type
-            .fields
-            .get(&field_selection.target.field_name)
-            .ok_or_else(|| {
-                PlanError::Internal(format!(
-                    "could not look up type of field {}",
-                    field_selection.target.field_name
-                ))
-            })?
-            .field_type;
-
-        let fields = field_selection::ndc_nested_field_selection_for(
-            metadata,
-            field_type,
-            &command_source.type_mappings,
-        )?;
-
-        let ndc_field = Field::Column {
-            column: field_mapping.column.clone(),
-            fields,
-            arguments: BTreeMap::new(),
-        };
-
-        ndc_fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_field);
-    }
+    let ndc_fields = field_selection::resolve_field_selection(
+        metadata,
+        session,
+        request_headers,
+        output_object_type_name,
+        output_object_type,
+        &command_source.type_mappings,
+        &command_source.data_connector,
+        command_selection_set,
+        &mut relationships,
+        unique_number,
+    )?;
 
     let (ndc_fields, extract_response_from) = match &command_source.data_connector.response_config {
         // if the data connector has 'responseHeaders' configured, we'll need to wrap the ndc fields
@@ -191,7 +132,7 @@ pub fn from_command(
     }
 
     // preset arguments from `DataConnectorLink` argument presets
-    for (argument_name, value) in graphql_ir::process_connector_link_presets(
+    for (argument_name, value) in process_connector_link_presets(
         &command_source.data_connector_link_argument_presets,
         &session.variables,
         request_headers,
@@ -213,14 +154,14 @@ pub fn from_command(
             arguments: ndc_arguments,
             data_connector: command_source.data_connector.clone(),
             fields: wrap_function_ndc_fields(&output_shape, ndc_fields),
-            collection_relationships: BTreeMap::new(),
+            collection_relationships: relationships,
         }),
         DataConnectorCommand::Procedure(procedure_name) => CommandPlan::Procedure(NDCProcedure {
             procedure_name: procedure_name.clone(),
             arguments: ndc_arguments,
             data_connector: command_source.data_connector.clone(),
             fields: Some(wrap_procedure_ndc_fields(&output_shape, ndc_fields)),
-            collection_relationships: BTreeMap::new(),
+            collection_relationships: relationships,
         }),
     };
 

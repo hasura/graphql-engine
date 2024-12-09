@@ -84,6 +84,7 @@ pub(crate) async fn start_websocket_server_expiry(
     let plugin_configs = metadata_resolve::LifecyclePluginConfigs {
         pre_parse_plugins: Vec::new(),
         pre_response_plugins: Vec::new(),
+        pre_route_plugins: Vec::new(),
     };
     let context = Context {
         connection_expiry: expiry,

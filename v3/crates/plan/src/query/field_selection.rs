@@ -1,11 +1,10 @@
-use crate::types::PlanError;
-use engine_types::HttpContext;
+use crate::types::{PlanError, RelationshipError};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use graphql_ir::process_model_relationship_definition;
+use super::relationships::process_model_relationship_definition;
 use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
     query::{
@@ -19,19 +18,17 @@ use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject, U
 pub fn resolve_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
-    model_source: &Arc<metadata_resolve::ModelSource>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     selection: &IndexMap<Alias, ObjectSubSelection>,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<IndexMap<NdcFieldAlias, Field>, PlanError> {
-    let metadata_resolve::TypeMapping::Object { field_mappings, .. } = model_source
-        .type_mappings
-        .get(object_type_name)
-        .ok_or_else(|| {
+    let metadata_resolve::TypeMapping::Object { field_mappings, .. } =
+        type_mappings.get(object_type_name).ok_or_else(|| {
             PlanError::Internal(format!(
                 "couldn't fetch type_mapping of type {object_type_name}",
             ))
@@ -43,9 +40,9 @@ pub fn resolve_field_selection(
             ObjectSubSelection::Field(field_selection) => from_field_selection(
                 metadata,
                 session,
-                http_context,
                 request_headers,
-                model_source,
+                type_mappings,
+                data_connector,
                 field_selection,
                 field_mappings,
                 object_type_name,
@@ -58,11 +55,11 @@ pub fn resolve_field_selection(
                     relationship_selection,
                     metadata,
                     session,
-                    http_context,
                     request_headers,
                     object_type_name,
                     object_type,
-                    model_source,
+                    type_mappings,
+                    data_connector,
                     relationships,
                     unique_number,
                 )?
@@ -81,9 +78,9 @@ pub fn resolve_field_selection(
 fn from_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
-    model_source: &Arc<metadata_resolve::ModelSource>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     field_selection: &ObjectFieldSelection,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     object_type_name: &Qualified<CustomTypeName>,
@@ -135,9 +132,9 @@ fn from_field_selection(
     let fields = resolve_nested_field_selection(
         metadata,
         session,
-        http_context,
         request_headers,
-        model_source,
+        type_mappings,
+        data_connector,
         field_selection,
         field_type,
         relationships,
@@ -155,9 +152,9 @@ fn from_field_selection(
 fn resolve_nested_field_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
-    model_source: &Arc<metadata_resolve::ModelSource>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     field_selection: &ObjectFieldSelection,
     field_type: &QualifiedTypeReference,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
@@ -166,7 +163,13 @@ fn resolve_nested_field_selection(
     match &field_selection.selection {
         None => {
             // Nested selection not found. Fallback to selecting all accessible nested fields.
-            ndc_nested_field_selection_for(metadata, field_type, &model_source.type_mappings)
+            ndc_nested_field_selection_for(
+                metadata,
+                session,
+                &field_selection.target.field_name,
+                field_type,
+                type_mappings,
+            )
         }
         Some(nested_selection) => {
             // Get the underlying object type
@@ -191,11 +194,11 @@ fn resolve_nested_field_selection(
             let resolved_nested_selection = resolve_field_selection(
                 metadata,
                 session,
-                http_context,
                 request_headers,
                 field_type_name,
                 nested_object_type,
-                model_source,
+                type_mappings,
+                data_connector,
                 nested_selection,
                 relationships,
                 unique_number,
@@ -230,11 +233,11 @@ fn from_relationship_selection(
     relationship_selection: &RelationshipSelection,
     metadata: &Metadata,
     session: &Arc<Session>,
-    http_context: &Arc<HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
-    model_source: &Arc<metadata_resolve::ModelSource>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<Field, PlanError> {
@@ -255,10 +258,10 @@ fn from_relationship_selection(
     let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
         &relationship_field.target
     else {
-        return Err(PlanError::Relationship(format!(
+        return Err(PlanError::Relationship(RelationshipError::Other(format!(
             "Expecting Model as a relationship target for {}",
             target.relationship_name,
-        )));
+        ))));
     };
     let target_model_name = &model_relationship_target.model_name;
     let target_model = metadata.models.get(target_model_name).ok_or_else(|| {
@@ -271,11 +274,11 @@ fn from_relationship_selection(
         })?;
 
     // Reject remote relationships
-    if target_model_source.data_connector.name != model_source.data_connector.name {
-        return Err(PlanError::Relationship(format!(
+    if target_model_source.data_connector.name != data_connector.name {
+        return Err(PlanError::Relationship(RelationshipError::Other(format!(
             "Remote relationships are not supported: {}",
             &target.relationship_name
-        )));
+        ))));
     }
 
     let target_source = metadata_resolve::ModelTargetSource {
@@ -284,10 +287,10 @@ fn from_relationship_selection(
             .target_capabilities
             .as_ref()
             .ok_or_else(|| {
-                PlanError::Relationship(format!(
+                PlanError::Relationship(RelationshipError::Other(format!(
                     "Relationship capabilities not found for relationship {} in data connector {}",
                     &target.relationship_name, &target_model_source.data_connector.name,
-                ))
+                )))
             })?
             .clone(),
     };
@@ -295,8 +298,8 @@ fn from_relationship_selection(
         relationship_name: &target.relationship_name,
         relationship_type: &model_relationship_target.relationship_type,
         source_type: object_type_name,
-        source_data_connector: &model_source.data_connector,
-        source_type_mappings: &model_source.type_mappings,
+        source_data_connector: data_connector,
+        source_type_mappings: type_mappings,
         target_source: &target_source,
         target_type: &model_relationship_target.target_typename,
         mappings: &model_relationship_target.mappings,
@@ -333,7 +336,6 @@ fn from_relationship_selection(
         &relationship_target_model_selection,
         metadata,
         session,
-        http_context,
         request_headers,
         unique_number,
     )?;
@@ -361,8 +363,10 @@ fn from_relationship_selection(
     Ok(ndc_field)
 }
 
-pub fn ndc_nested_field_selection_for(
+fn ndc_nested_field_selection_for(
     metadata: &Metadata,
+    session: &Arc<Session>,
+    column_name: &FieldName,
     column_type: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
 ) -> Result<Option<NestedField>, PlanError> {
@@ -380,25 +384,41 @@ pub fn ndc_nested_field_selection_for(
                         PlanError::Internal(format!("can't find mapping object for type: {name}"))
                     })?;
 
+                    let type_output_permissions = object_type
+                        .type_output_permissions
+                        .get(&session.role)
+                        .ok_or_else(|| {
+                            PlanError::Permission(format!(
+                                "cannot select nested field {column_name}; role {} does not have permission to select any fields of type {}",
+                                session.role, name,
+                            ))
+                        })?;
+
                     let mut fields = IndexMap::new();
 
                     for (field_name, field_mapping) in field_mappings {
-                        let field_def = object_type.object_type.fields.get(field_name).ok_or_else(|| PlanError::Internal(format!(
-                            "can't find object field definition for field {field_name} in type: {name}"
-                        )))?;
-                        let nested_fields: Option<NestedField> = ndc_nested_field_selection_for(
-                            metadata,
-                            &field_def.field_type,
-                            type_mappings,
-                        )?;
-                        fields.insert(
-                            NdcFieldAlias::from(field_name.as_str()),
-                            Field::Column {
-                                column: field_mapping.column.clone(),
-                                fields: nested_fields,
-                                arguments: BTreeMap::new(),
-                            },
-                        );
+                        // Only include field if the role has access to it.
+                        if type_output_permissions.allowed_fields.contains(field_name) {
+                            let field_def = object_type.object_type.fields.get(field_name).ok_or_else(|| PlanError::Internal(format!(
+                                "can't find object field definition for field {field_name} in type: {name}"
+                            )))?;
+                            let nested_fields: Option<NestedField> =
+                                ndc_nested_field_selection_for(
+                                    metadata,
+                                    session,
+                                    field_name,
+                                    &field_def.field_type,
+                                    type_mappings,
+                                )?;
+                            fields.insert(
+                                NdcFieldAlias::from(field_name.as_str()),
+                                Field::Column {
+                                    column: field_mapping.column.clone(),
+                                    fields: nested_fields,
+                                    arguments: BTreeMap::new(),
+                                },
+                            );
+                        }
                     }
 
                     return Ok(Some(NestedField::Object(NestedObject { fields })));
@@ -411,8 +431,13 @@ pub fn ndc_nested_field_selection_for(
             metadata_resolve::QualifiedTypeName::Inbuilt(_) => Ok(None),
         },
         metadata_resolve::QualifiedBaseType::List(list_type) => {
-            let fields =
-                ndc_nested_field_selection_for(metadata, list_type.as_ref(), type_mappings)?;
+            let fields = ndc_nested_field_selection_for(
+                metadata,
+                session,
+                column_name,
+                list_type.as_ref(),
+                type_mappings,
+            )?;
 
             Ok(fields.map(|fields| {
                 NestedField::Array(NestedArray {

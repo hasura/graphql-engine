@@ -1,8 +1,8 @@
-use super::filter;
 use open_dds::types::DataConnectorArgumentName;
 use std::collections::BTreeMap;
 
 use super::error as plan_error;
+use plan::{plan_expression, UnresolvedArgument};
 use plan_types::{
     Argument, MutationArgument, NdcRelationshipName, PredicateQueryTrees, Relationship,
     UniqueNumber,
@@ -10,24 +10,29 @@ use plan_types::{
 
 /// Generate the argument plan from IR argument
 pub fn plan_argument(
-    ir_argument: &crate::Argument<'_>,
+    ir_argument: &UnresolvedArgument<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<(Argument, PredicateQueryTrees), plan_error::Error> {
     let mut remote_predicates = PredicateQueryTrees::new();
     let argument = match ir_argument {
-        crate::Argument::Literal { value } => {
+        UnresolvedArgument::Literal { value } => {
             Ok::<Argument, plan_error::Error>(Argument::Literal {
                 value: value.clone(),
             })
         }
-        crate::Argument::BooleanExpression { predicate } => {
-            let expression = filter::plan_expression(
+        UnresolvedArgument::BooleanExpression { predicate } => {
+            let expression = plan_expression(
                 predicate,
                 relationships,
                 &mut remote_predicates,
                 unique_number,
-            )?;
+            )
+            .map_err(|plan_error| {
+                plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
+                    description: plan_error.to_string(),
+                })
+            })?;
 
             Ok(Argument::BooleanExpression {
                 predicate: expression,
@@ -41,25 +46,30 @@ pub fn plan_argument(
 /// Generate the argument plan from IR argument
 #[allow(clippy::unnecessary_wraps)]
 pub fn plan_mutation_argument(
-    ir_argument: &crate::Argument<'_>,
+    ir_argument: &UnresolvedArgument<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<MutationArgument, plan_error::Error> {
     let mut remote_predicates = PredicateQueryTrees::new();
 
     let argument = match ir_argument {
-        crate::Argument::Literal { value } => {
+        UnresolvedArgument::Literal { value } => {
             Ok::<MutationArgument, plan_error::Error>(MutationArgument::Literal {
                 value: value.clone(),
             })
         }
-        crate::Argument::BooleanExpression { predicate } => {
-            let expression = super::filter::plan_expression(
+        UnresolvedArgument::BooleanExpression { predicate } => {
+            let expression = plan_expression(
                 predicate,
                 relationships,
                 &mut remote_predicates,
                 unique_number,
-            )?;
+            )
+            .map_err(|plan_error| {
+                plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
+                    description: plan_error.to_string(),
+                })
+            })?;
 
             Ok(MutationArgument::BooleanExpression {
                 predicate: expression,
@@ -71,7 +81,7 @@ pub fn plan_mutation_argument(
 }
 
 pub fn plan_arguments(
-    arguments: &BTreeMap<DataConnectorArgumentName, crate::Argument<'_>>,
+    arguments: &BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'_>>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<
@@ -97,7 +107,7 @@ pub fn plan_arguments(
 }
 
 pub fn plan_mutation_arguments(
-    arguments: &BTreeMap<DataConnectorArgumentName, crate::Argument<'_>>,
+    arguments: &BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'_>>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<BTreeMap<DataConnectorArgumentName, MutationArgument>, plan_error::Error> {

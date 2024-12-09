@@ -5,7 +5,6 @@ use open_dds::{
     arguments::ArgumentName,
     data_connector::{DataConnectorColumnName, DataConnectorName},
     relationships::RelationshipName,
-    session_variables::SessionVariableName,
     types::{CustomTypeName, FieldName},
 };
 use serde_json as json;
@@ -15,6 +14,21 @@ use transitive::Transitive;
 
 use graphql_schema::{Annotation, NamespaceAnnotation};
 use metadata_resolve::{Qualified, QualifiedTypeName};
+
+impl From<plan::InternalError> for Error {
+    fn from(plan_internal_error: plan::InternalError) -> Error {
+        match plan_internal_error {
+            plan::InternalError::Engine(engine_error) => Error::Internal(InternalError::Engine(
+                InternalEngineError::PlanInternalEngineError(engine_error),
+            )),
+            plan::InternalError::Developer(developer_error) => {
+                Error::Internal(InternalError::Developer(
+                    InternalDeveloperError::PlanInternalDeveloperError(developer_error),
+                ))
+            }
+        }
+    }
+}
 
 #[allow(clippy::duplicated_attributes)] // suppress spurious warnings from Clippy
 #[derive(Error, Debug, Transitive)]
@@ -117,43 +131,10 @@ pub enum InternalDeveloperError {
         argument_name: ast::Name,
     },
 
-    #[error("Required session variable not found in the request: {session_variable}")]
-    MissingSessionVariable {
-        session_variable: SessionVariableName,
-    },
-
-    #[error("The session variables {session_variable} is not encoded as a string. JSON-typed session variables are not supported unless you update your compatibility date")]
-    VariableJsonNotSupported {
-        session_variable: SessionVariableName,
-    },
-
-    #[error("Session variable {session_variable} value is of an unexpected type. Expected: {expected}, but found: {found}")]
-    VariableTypeCast {
-        session_variable: SessionVariableName,
-        expected: String,
-        found: String,
-    },
-
-    #[error("Typecasting session variable {session_variable} to an array is not supported. Update your compatibility date to enable JSON session variables")]
-    VariableArrayTypeCastNotSupported {
-        session_variable: SessionVariableName,
-    },
-
-    #[error("Expected session variable {session_variable} to be a valid JSON value, but encountered a JSON parsing error: {parse_error}")]
-    VariableExpectedJson {
-        session_variable: SessionVariableName,
-        parse_error: serde_json::Error,
-    },
-
     #[error("Mapping for the {mapping_kind} typename {type_name:} not found")]
     TypenameMappingNotFound {
         type_name: ast::TypeName,
         mapping_kind: &'static str,
-    },
-
-    #[error("Type mapping not found for the type name {type_name:}")]
-    TypeMappingNotFound {
-        type_name: Qualified<CustomTypeName>,
     },
 
     #[error("Field mapping not found for the field {field_name:} of type {type_name:}")]
@@ -165,21 +146,11 @@ pub enum InternalDeveloperError {
     #[error("{0}")]
     RelationshipFieldMappingError(#[from] metadata_resolve::RelationshipFieldMappingError),
 
-    #[error("Field mapping not found for the field {field_name:} of type {type_name:} while executing the relationship {relationship_name:}")]
-    FieldMappingNotFoundForRelationship {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-        field_name: FieldName,
-    },
-
     #[error("Argument mapping not found for the argument {argument_name:} while executing the relationship {relationship_name:}")]
     ArgumentMappingNotFoundForRelationship {
         relationship_name: RelationshipName,
         argument_name: ArgumentName,
     },
-
-    #[error("Could not convert the provided header value to string as it contains non-visible ASCII characters")]
-    IllegalCharactersInHeaderValue,
 
     #[error("The aggregation function {aggregation_function} operating over the {aggregate_operand_type} type is missing a data connector mapping for {data_connector_name}")]
     DataConnectorAggregationFunctionNotFound {
@@ -200,8 +171,8 @@ pub enum InternalDeveloperError {
         aggregation_function: AggregationFunctionName,
     },
 
-    #[error("The relationship '{relationship_name}' is from a nested object and cannot be used in a predicate")]
-    NestedObjectRelationshipInPredicate { relationship_name: RelationshipName },
+    #[error("{0}")]
+    PlanInternalDeveloperError(plan::InternalDeveloperError),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -229,11 +200,11 @@ pub enum InternalEngineError {
     // namespace annotation while building the metadata.
     ExpectedNamespaceAnnotationNotFound { namespace_annotation_type: String },
 
-    #[error("internal error during execution of argument presets: {description}")]
-    ArgumentPresetExecution { description: String },
-
     #[error("Subscription is restricted by select permission")]
     SubscriptionNotAllowed,
+
+    #[error("{0}")]
+    PlanInternalEngineError(plan::InternalEngineError),
 
     #[error("internal error: {description}")]
     InternalGeneric { description: String },

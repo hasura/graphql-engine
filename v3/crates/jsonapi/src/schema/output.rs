@@ -4,7 +4,7 @@ use crate::schema::{
     array_schema, bool_schema, enum_schema, float_schema, int_schema, json_schema, object_schema,
     string_schema,
 };
-use metadata_resolve::Qualified;
+use metadata_resolve::{unwrap_custom_type_name, Qualified};
 use oas3::spec::{ObjectOrReference, ObjectSchema};
 use open_dds::relationships::RelationshipType;
 use open_dds::types::CustomTypeName;
@@ -101,7 +101,15 @@ fn jsonapi_relationships_property(object_type: &ObjectType) -> Option<ObjectSche
             RelationshipTarget::ModelAggregate(object_type) => {
                 (object_type, &RelationshipType::Object)
             }
-            RelationshipTarget::Command => continue, // Not considering command targets now.
+            RelationshipTarget::Command { type_reference } => {
+                match unwrap_custom_type_name(type_reference) {
+                    Some(type_name) => (
+                        type_name,
+                        &crate::type_reference_to_relationship_type(type_reference),
+                    ),
+                    None => continue, // Skip command relationships with built-in output types
+                }
+            }
         };
         let relationship_object_schema = {
             let mut relationship_object_properties = BTreeMap::new();
@@ -201,7 +209,12 @@ fn jsonapi_included_schema(
                 relationship_type: _,
             }
             | RelationshipTarget::ModelAggregate(object_type) => object_type,
-            RelationshipTarget::Command => continue, // Not considering command targets now.
+            RelationshipTarget::Command { type_reference } => {
+                match unwrap_custom_type_name(type_reference) {
+                    Some(type_name) => type_name,
+                    None => continue, // Skip command relationships with built-in output types
+                }
+            }
         };
         // Omit the relationship field if the role lacks permission to access the relationship type.
         if let Some(relationship_object_type) = object_types.get(type_name) {

@@ -3,6 +3,7 @@
 use super::arguments;
 use super::error;
 use super::filter;
+use super::order_by;
 use super::relationships;
 use super::selection_set;
 use crate::plan::Plan;
@@ -45,10 +46,22 @@ pub(crate) fn plan_query_node(
 
     remote_predicates.0.extend(filter_remote_predicates.0);
 
+    let (order_by, order_by_remote_predicates) = ir
+        .order_by
+        .as_ref()
+        .map(|order_by| order_by::plan_order_by(order_by, relationships, unique_number))
+        .transpose()?
+        .map_or_else(
+            || (None, PredicateQueryTrees::new()),
+            |(order_by, predicate)| (Some(order_by), predicate),
+        );
+
+    remote_predicates.0.extend(order_by_remote_predicates.0);
+
     let query_node = QueryNodeNew {
         limit: ir.limit,
         offset: ir.offset,
-        order_by: ir.order_by.as_ref().map(|o| o.order_by_elements.clone()),
+        order_by,
         predicate,
         aggregates: ir.aggregate_selection.clone(),
         fields: query_fields.map(|fields| FieldsSelection { fields }),

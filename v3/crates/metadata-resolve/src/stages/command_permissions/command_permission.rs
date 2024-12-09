@@ -38,7 +38,7 @@ fn get_command_source_argument<'a>(
 }
 
 pub fn resolve_command_permissions(
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
     command: &commands::Command,
     permissions: &CommandPermissionsV1,
     object_types: &BTreeMap<

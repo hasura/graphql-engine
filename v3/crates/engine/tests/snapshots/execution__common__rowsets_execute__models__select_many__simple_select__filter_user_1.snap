@@ -1,17 +1,19 @@
 ---
 source: crates/engine/tests/common.rs
-expression: rowsets
+expression: results
 ---
 {
-  "Ok": [
-    {
-      "rows": [
-        {
-          "author_id": 2,
-          "first_name": "John",
-          "last_name": "Hughes"
-        }
-      ]
-    }
-  ]
+  "AuthorMany": {
+    "Ok": [
+      {
+        "rows": [
+          {
+            "author_id": 2,
+            "first_name": "John",
+            "last_name": "Hughes"
+          }
+        ]
+      }
+    ]
+  }
 }

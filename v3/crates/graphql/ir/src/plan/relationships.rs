@@ -8,9 +8,8 @@ use std::collections::BTreeMap;
 use super::error;
 use crate::LocalCommandRelationshipInfo;
 use crate::ModelSelection;
-use plan_types::{
-    LocalModelRelationshipInfo, NdcRelationshipName, Relationship, RelationshipArgument,
-};
+use plan::process_model_relationship_definition;
+use plan_types::{NdcRelationshipName, Relationship, RelationshipArgument};
 
 /// collect relationships from OrderBy IR component containing relationships.
 pub(crate) fn collect_relationships_from_order_by(
@@ -20,70 +19,16 @@ pub(crate) fn collect_relationships_from_order_by(
     // from order by clause
     if let Some(order_by) = &ir.order_by {
         for (name, relationship) in &order_by.relationships {
-            let result = process_model_relationship_definition(relationship)?;
+            let result =
+                process_model_relationship_definition(relationship).map_err(|plan_error| {
+                    error::Error::Internal(error::InternalError::InternalGeneric {
+                        description: plan_error.to_string(),
+                    })
+                })?;
             relationships.insert(name.clone(), result);
         }
     };
     Ok(())
-}
-
-pub fn process_model_relationship_definition(
-    relationship_info: &LocalModelRelationshipInfo,
-) -> Result<Relationship, error::Error> {
-    let &LocalModelRelationshipInfo {
-        relationship_name,
-        relationship_type,
-        source_type,
-        source_data_connector: _,
-        source_type_mappings,
-        target_source,
-        target_type: _,
-        mappings,
-    } = relationship_info;
-
-    let mut column_mapping = BTreeMap::new();
-    for metadata_resolve::RelationshipModelMapping {
-        source_field: source_field_path,
-        target_field: _,
-        target_ndc_column,
-    } in mappings
-    {
-        let target_column =
-            target_ndc_column
-                .as_ref()
-                .ok_or_else(|| error::InternalError::InternalGeneric {
-                    description: format!(
-                        "No column mapping for relationship {relationship_name} on {source_type}"
-                    ),
-                })?;
-
-        let source_column = metadata_resolve::get_field_mapping_of_field_name(
-            source_type_mappings,
-            source_type,
-            relationship_name,
-            &source_field_path.field_name,
-        )
-        .map_err(|e| error::InternalError::InternalGeneric {
-            description: e.to_string(),
-        })?;
-
-        if column_mapping
-            .insert(source_column.column, target_column.column.clone())
-            .is_some()
-        {
-            Err(error::InternalError::MappingExistsInRelationship {
-                source_column: source_field_path.field_name.clone(),
-                relationship_name: relationship_name.clone(),
-            })?;
-        }
-    }
-    let relationship = Relationship {
-        column_mapping,
-        relationship_type: relationship_type.clone(),
-        target_collection: target_source.model.collection.clone(),
-        arguments: BTreeMap::new(),
-    };
-    Ok(relationship)
 }
 
 pub(crate) fn process_command_relationship_definition(

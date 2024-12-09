@@ -36,7 +36,6 @@ pub fn resolve(
     object_types: &type_permissions::ObjectTypesWithPermissions,
     mut graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-    flags: &open_dds::flags::Flags,
 ) -> Result<ObjectBooleanExpressionsOutput, boolean_expressions::BooleanExpressionError> {
     let mut object_boolean_expression_types = BTreeMap::new();
     let mut issues = vec![];
@@ -55,7 +54,7 @@ pub fn resolve(
             object_types,
             &mut graphql_types,
             graphql_config,
-            flags,
+            &metadata_accessor.flags,
         )?;
 
         // tell user that this metadata type is old news and we'd rather they used
@@ -96,7 +95,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_types: &type_permissions::ObjectTypesWithPermissions,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-    flags: &open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<ObjectBooleanExpressionType, boolean_expressions::BooleanExpressionError> {
     // name of the boolean expression
     let qualified_name = Qualified::new(subgraph.clone(), object_boolean_expression.name.clone());
@@ -249,7 +248,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         scalars,
         type_mapping,
         &object_type_representation.object_type.fields,
-        &object_boolean_expression.graphql,
+        object_boolean_expression.graphql.as_ref(),
         flags,
     )?;
 
@@ -283,15 +282,17 @@ pub fn resolve_scalar_fields(
     scalars: &data_connector_scalar_types::DataConnectorScalars,
     type_mappings: &object_types::TypeMapping,
     fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,
-    graphql: &Option<open_dds::types::ObjectBooleanExpressionTypeGraphQlConfiguration>,
-    flags: &open_dds::flags::Flags,
+    graphql: Option<&open_dds::types::ObjectBooleanExpressionTypeGraphQlConfiguration>,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<
     BTreeMap<FieldName, boolean_expressions::ComparisonExpressionInfo>,
     boolean_expressions::BooleanExpressionError,
 > {
     let mut scalar_fields = BTreeMap::new();
 
-    if graphql.is_some() || flags.allow_boolean_expression_fields_without_graphql {
+    if graphql.is_some()
+        || flags.contains(open_dds::flags::Flag::AllowBooleanExpressionFieldsWithoutGraphql)
+    {
         let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
 
         for (field_name, field_mapping) in field_mappings {
@@ -307,7 +308,8 @@ pub fn resolve_scalar_fields(
                 scalars,
             ) {
                 if scalar_type_info.comparison_expression_name.is_some()
-                    || flags.allow_boolean_expression_fields_without_graphql
+                    || flags
+                        .contains(open_dds::flags::Flag::AllowBooleanExpressionFieldsWithoutGraphql)
                 {
                     let mut operators = BTreeMap::new();
                     for (op_name, op_definition) in
@@ -362,11 +364,8 @@ pub fn resolve_boolean_expression_graphql_config(
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
 
-    let filter_graphql_config = graphql_config
-        .query
-        .filter_input_config
-        .as_ref()
-        .ok_or_else(|| {
+    let filter_graphql_config =
+        graphql_config.query.filter_input_config.as_ref().ok_or({
             graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig
         })?;
 

@@ -72,7 +72,7 @@ pub enum ScalarBooleanExpressionTypeIssue {
 }
 
 impl ShouldBeAnError for ScalarBooleanExpressionTypeIssue {
-    fn should_be_an_error(&self, flags: &flags::Flags) -> bool {
+    fn should_be_an_error(&self, flags: &flags::OpenDdFlags) -> bool {
         match self {
             ScalarBooleanExpressionTypeIssue::MissingLogicalOperatorNamesInGraphqlConfig {
                 ..
@@ -83,7 +83,7 @@ impl ShouldBeAnError for ScalarBooleanExpressionTypeIssue {
             | ScalarBooleanExpressionTypeIssue::LogicalOperatorsUnavailable { .. } => false,
             ScalarBooleanExpressionTypeIssue::GraphqlFieldNameConflict { .. }
             | ScalarBooleanExpressionTypeIssue::DuplicateComparableOperatorFound { .. } => {
-                flags.disallow_duplicate_names_in_boolean_expressions
+                flags.contains(flags::Flag::DisallowDuplicateNamesInBooleanExpressions)
             }
         }
     }

@@ -68,7 +68,7 @@ impl<S: SchemaContext> Object<S> {
             None
         } else {
             Some(with_description(
-                &self.description,
+                self.description.as_ref(),
                 format!(
                     "type {}{} {}",
                     &self.name,
@@ -100,7 +100,7 @@ impl<S: SchemaContext> InputObject<S> {
             .filter_map(|(field_name, field)| {
                 namespaced_getter.get(field).map(|(data, _)| {
                     with_description(
-                        &data.description,
+                        data.description.as_ref(),
                         format_field_with_type::<S, NSGet>(
                             field_name,
                             &BTreeMap::new(),
@@ -116,7 +116,7 @@ impl<S: SchemaContext> InputObject<S> {
             None
         } else {
             Some(with_description(
-                &self.description,
+                self.description.as_ref(),
                 format!(
                     "input {}{} {}",
                     &self.name,
@@ -136,7 +136,7 @@ impl Scalar {
     /// ```
     fn generate_sdl(&self) -> String {
         with_description(
-            &self.description,
+            self.description.as_ref(),
             format!(
                 "scalar {}{}",
                 &self.name,
@@ -168,7 +168,7 @@ impl<S: SchemaContext> Enum<S> {
             .filter_map(|enum_val| {
                 namespaced_getter.get(enum_val).map(|(data, _)| {
                     with_description(
-                        &data.description,
+                        data.description.as_ref(),
                         format!(
                             "{} {}",
                             data.value,
@@ -182,7 +182,7 @@ impl<S: SchemaContext> Enum<S> {
             None
         } else {
             Some(with_description(
-                &self.description,
+                self.description.as_ref(),
                 format!(
                     "enum {}{} {}",
                     self.name,
@@ -220,7 +220,7 @@ impl<S: SchemaContext> Union<S> {
             None
         } else {
             Some(with_description(
-                &self.description,
+                self.description.as_ref(),
                 format!(
                     "union {}{} = {}",
                     self.name,
@@ -250,7 +250,7 @@ impl<S: SchemaContext> Interface<S> {
             None
         } else {
             Some(with_description(
-                &self.description,
+                self.description.as_ref(),
                 format!(
                     "interface {}{} {}",
                     &self.name,
@@ -347,7 +347,7 @@ fn get_schema_sdl<S: SchemaContext, NSGet: NamespacedGetter<S>>(
 }
 
 /// Generate SDL for description. Descriptions are just wrapped in 3 double quotes.
-fn generate_description_sdl(description: &Option<String>) -> String {
+fn generate_description_sdl(description: Option<&String>) -> String {
     description
         .as_ref()
         .map(|d| format!("\"\"\"{d}\"\"\""))
@@ -406,7 +406,7 @@ fn generate_fields_sdl<S: SchemaContext, NSGet: NamespacedGetter<S>>(
         if !field_name.as_str().starts_with("__") {
             if let Some((data, _)) = namespaced_getter.get(field) {
                 fields_sdl.push(with_description(
-                    &data.description,
+                    data.description.as_ref(),
                     format_field_with_type(
                         field_name,
                         &data.arguments,
@@ -530,7 +530,7 @@ fn generate_arguments_sdl<S: SchemaContext, NSGet: NamespacedGetter<S>>(
         .join(",\n")
 }
 
-fn with_description(description: &Option<String>, sdl: String) -> String {
+fn with_description(description: Option<&String>, sdl: String) -> String {
     if description.is_some() {
         format!("{}\n{}", generate_description_sdl(description), sdl)
     } else {
