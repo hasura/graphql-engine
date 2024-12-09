@@ -2,10 +2,10 @@ original issue: https://github.com/hasura/graphql-engine/pull/4110
 
 ## Allow disabling query root fields
 
-Currently when a select permission is defined for a role on a table, we
+Currently, when a select permission is defined for a role on a table, we
 automatically generate 3 fields for the table (`<table>`, `<table_by_pk>`,
 `<table_aggregate>`) in `query_root` and likewise in `subscription_root`.  This
-should be customisable to allow some of the patterns as discussed below.
+should be customisable to allow some patterns as discussed below.
 
 ### Motivation
 
@@ -60,7 +60,7 @@ the permission on the table, only `<table>_by_pk` should be exposed in
 
 ## Allow disabling subscription fields
 
-Currently we do not provide a fine grained control on subscriptions that are exposed - if a select permission is defined on a table, the live queries on that table are exposed through `subscription_root`. (Note: the discussion of `query_root` customisability also applies to `subscription_root`).
+Currently, we do not provide a fine-grained control on subscriptions that are exposed - if a select permission is defined on a table, the live queries on that table are exposed through `subscription_root`. (Note: the discussion of `query_root` customisability also applies to `subscription_root`).
 
 ### Proposed solution
 
