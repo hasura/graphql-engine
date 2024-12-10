@@ -756,6 +756,7 @@ async fn run_query_graphql_ws(
     // graphl_ws crate needs a parent span context for linking purposes.
     // Traces are not considered in tests
     let result = graphql_ws::execute_query_internal(
+        "127.0.0.1:8080".parse().unwrap(),
         operation_id.clone(),
         session.clone(),
         request_headers.clone(),

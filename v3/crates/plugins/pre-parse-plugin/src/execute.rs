@@ -4,6 +4,7 @@ use axum::{
     http::{HeaderMap, HeaderName, StatusCode},
     response::IntoResponse,
 };
+use reqwest::header::HeaderValue;
 use serde::Serialize;
 
 use hasura_authn_core::Session;
@@ -143,6 +144,7 @@ pub struct PreExecutePluginRequestBody {
 }
 
 fn build_request(
+    client_address: std::net::SocketAddr,
     http_client: &reqwest::Client,
     config: &LifecyclePreParsePluginHook,
     client_headers: &HeaderMap,
@@ -170,8 +172,14 @@ fn build_request(
                 headers.insert(header_name, header_value.clone());
             }
         }
+
         pre_plugin_headers.extend(headers);
     }
+
+    if let Ok(header_value) = HeaderValue::from_str(&client_address.ip().to_string()) {
+        pre_plugin_headers.insert("X-Forwarded-For", header_value);
+    }
+
     let mut request_builder = http_client
         .post(config.url.value.clone())
         .headers(pre_plugin_headers);
@@ -200,6 +208,7 @@ fn build_request(
 }
 
 pub async fn execute_plugin(
+    client_address: std::net::SocketAddr,
     http_client: &reqwest::Client,
     config: &LifecyclePreParsePluginHook,
     client_headers: &HeaderMap,
@@ -214,9 +223,15 @@ pub async fn execute_plugin(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let http_request_builder =
-                        build_request(http_client, config, client_headers, session, raw_request)
-                            .map_err(|err| Error::BuildRequestError(config.name.clone(), err))?;
+                    let http_request_builder = build_request(
+                        client_address,
+                        http_client,
+                        config,
+                        client_headers,
+                        session,
+                        raw_request,
+                    )
+                    .map_err(|err| Error::BuildRequestError(config.name.clone(), err))?;
                     let req = http_request_builder.build().map_err(Error::ReqwestError)?;
                     http_client.execute(req).await.map_err(|e| {
                         Error::ErrorWhileMakingHTTPRequestToTheHook(config.name.clone(), e)
@@ -252,6 +267,7 @@ pub async fn execute_plugin(
 }
 
 pub async fn pre_parse_plugins_handler(
+    client_address: std::net::SocketAddr,
     pre_parse_plugins_config: &nonempty::NonEmpty<LifecyclePreParsePluginHook>,
     http_client: &reqwest::Client,
     session: Session,
@@ -270,6 +286,7 @@ pub async fn pre_parse_plugins_handler(
             || {
                 Box::pin(async {
                     execute_pre_parse_plugins(
+                        client_address,
                         pre_parse_plugins_config,
                         http_client,
                         &session,
@@ -302,6 +319,7 @@ pub async fn pre_parse_plugins_handler(
 /// Execute all the pre-parse plugins in sequence.
 /// If any plugin returns an error, the execution stops and the error is returned.
 pub async fn execute_pre_parse_plugins(
+    client_address: std::net::SocketAddr,
     pre_parse_plugins_config: &nonempty::NonEmpty<LifecyclePreParsePluginHook>,
     http_client: &reqwest::Client,
     session: &Session,
@@ -323,6 +341,7 @@ pub async fn execute_pre_parse_plugins(
                             plugin_config.name.clone(),
                         );
                         let plugin_response = execute_plugin(
+                            client_address,
                             http_client,
                             plugin_config,
                             headers_map,

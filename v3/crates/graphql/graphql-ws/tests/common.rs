@@ -3,7 +3,7 @@ use engine_types::{ExposeInternalErrors, HttpContext};
 use futures_util::{SinkExt, StreamExt};
 use graphql_ws::Context;
 use graphql_ws::GRAPHQL_WS_PROTOCOL;
-use std::{path::PathBuf, sync::Arc};
+use std::{net, path::PathBuf, sync::Arc};
 use tokio::{net::TcpStream, task::JoinHandle};
 use tokio_tungstenite::{
     connect_async,
@@ -39,7 +39,7 @@ pub(crate) async fn ws_handler(
     let context = state.context.clone();
     state
         .ws_server
-        .upgrade_and_handle_websocket(ws, &headers, context)
+        .upgrade_and_handle_websocket("127.0.0.1:8080".parse().unwrap(), ws, &headers, context)
         .into_response()
 }
 
@@ -108,9 +108,12 @@ pub(crate) async fn start_websocket_server_expiry(
             .route("/ws", get(ws_handler))
             .with_state(Arc::new(state));
 
-        axum::serve(listener, app.into_make_service())
-            .await
-            .unwrap();
+        axum::serve(
+            listener,
+            app.into_make_service_with_connect_info::<net::SocketAddr>(),
+        )
+        .await
+        .unwrap();
     });
 
     let url = format!("ws://{addr}/ws");

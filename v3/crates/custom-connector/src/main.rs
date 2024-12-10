@@ -34,9 +34,12 @@ async fn main() -> anyhow::Result<()> {
     let socket_addr = net::SocketAddr::new(host, port);
     let listener = tokio::net::TcpListener::bind(socket_addr).await.unwrap();
 
-    axum::serve(listener, app.into_make_service())
-        .with_graceful_shutdown(axum_ext::shutdown_signal())
-        .await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(axum_ext::shutdown_signal())
+    .await?;
     Ok(())
 }
 

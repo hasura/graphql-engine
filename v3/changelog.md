@@ -4,6 +4,10 @@
 
 ### Added
 
+- Plugins will now receive the `X-FORWARDED-FOR` header, which contains the IP
+  address of the client who made the request. This allows for the implementation
+  of plugins such as IP allow lists and per-user traffic control.
+
 #### Pre-route Engine Plugins
 
 Add support for pre-route engine plugins. Engine now supports calling a HTTP

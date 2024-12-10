@@ -154,15 +154,18 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     // run it with hyper on `addr`
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
 
-    axum::serve(listener, app.into_make_service())
-        .with_graceful_shutdown(axum_ext::shutdown_signal_with_handler(|| async move {
-            state
-                .graphql_websocket_server
-                .shutdown("Shutting server down")
-                .await;
-        }))
-        .await
-        .unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(axum_ext::shutdown_signal_with_handler(|| async move {
+        state
+            .graphql_websocket_server
+            .shutdown("Shutting server down")
+            .await;
+    }))
+    .await
+    .unwrap();
 
     Ok(())
 }

@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use crate::EngineState;
 use crate::VERSION;
 use axum::{
-    extract::State,
+    extract::{ConnectInfo, State},
     http::{HeaderMap, Request},
     middleware::Next,
     response::IntoResponse,
@@ -121,6 +121,7 @@ pub async fn authentication_middleware<'a>(
 }
 
 pub async fn plugins_middleware(
+    ConnectInfo(client_address): ConnectInfo<std::net::SocketAddr>,
     State(engine_state): State<EngineState>,
     Extension(session): Extension<Session>,
     headers_map: HeaderMap,
@@ -147,6 +148,7 @@ pub async fn plugins_middleware(
             }
             Some(pre_parse_plugins) => {
                 let response = pre_parse_plugins_handler(
+                    client_address,
                     &pre_parse_plugins,
                     &engine_state.http_context.client,
                     session.clone(),
@@ -178,6 +180,7 @@ pub async fn plugins_middleware(
         nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_response_plugins)
     {
         pre_response_plugins_handler(
+            client_address,
             &pre_response_plugins,
             &engine_state.http_context.client,
             session,

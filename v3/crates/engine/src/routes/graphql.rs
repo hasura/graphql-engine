@@ -1,4 +1,8 @@
-use axum::{extract::State, response::IntoResponse, Extension, Json};
+use axum::{
+    extract::{ConnectInfo, State},
+    response::IntoResponse,
+    Extension, Json,
+};
 use futures_util::FutureExt;
 
 use crate::EngineState;
@@ -81,6 +85,7 @@ pub async fn handle_explain_request(
 }
 
 pub async fn handle_websocket_request(
+    ConnectInfo(client_address): ConnectInfo<std::net::SocketAddr>,
     headers: axum::http::header::HeaderMap,
     State(engine_state): State<EngineState>,
     ws: axum::extract::ws::WebSocketUpgrade,
@@ -99,5 +104,5 @@ pub async fn handle_websocket_request(
 
     engine_state
         .graphql_websocket_server
-        .upgrade_and_handle_websocket(ws, &headers, context)
+        .upgrade_and_handle_websocket(client_address, ws, &headers, context)
 }

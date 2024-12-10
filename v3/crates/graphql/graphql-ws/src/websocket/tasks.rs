@@ -84,6 +84,7 @@ pub(crate) async fn wait_until_expiry<M>(
 /// Handles incoming WebSocket messages from the client.
 /// This task runs indefinitely until the connection is closed or an error occurs.
 pub(crate) async fn process_incoming_message<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     connection: types::Connection<M>,
     mut websocket_receiver: futures_util::stream::SplitStream<ws::WebSocket>,
     parent_span_link: tracing_util::SpanLink,
@@ -112,6 +113,7 @@ pub(crate) async fn process_incoming_message<M: WebSocketMetrics>(
                             // Handle other WebSocket messages
                             Ok(ParsedClientMessage::Protocol(client_message)) => {
                                 protocol::handle_graphql_ws_message(
+                                    client_address,
                                     connection.clone(),
                                     client_message,
                                 )

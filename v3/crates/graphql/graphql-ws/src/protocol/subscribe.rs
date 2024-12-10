@@ -32,6 +32,7 @@ impl tracing_util::TraceableError for Error {
 /// Handles the subscription message from the client.
 /// It either starts a new poller or sends a close message if the poller with given operation_id already exists.
 pub async fn handle_subscribe<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     connection: ws::Connection<M>,
     operation_id: OperationId,
     payload: lang_graphql::http::RawRequest,
@@ -67,6 +68,7 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
                                 ) {
                                     Some(pre_parse_plugins) => {
                                         pre_parse_plugin::execute_pre_parse_plugins(
+                                            client_address,
                                             &pre_parse_plugins,
                                             &connection.context.http_context.client,
                                             session,
@@ -85,6 +87,7 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
                                         let current_span_link =
                                             tracing_util::SpanLink::from_current_span();
                                         let poller = start_poller(
+                                            client_address,
                                             operation_id.clone(),
                                             session.clone(),
                                             headers.clone(),
@@ -155,6 +158,7 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
 
 /// Starts a new poller to handle GraphQL operations (queries, mutations, subscriptions).
 fn start_poller<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,
@@ -171,6 +175,7 @@ fn start_poller<M: WebSocketMetrics>(
         Box::pin(async move {
             // Executes the GraphQL request and handles any errors.
             execute_query(
+                client_address,
                 operation_id.clone(),
                 session,
                 headers,
@@ -185,6 +190,7 @@ fn start_poller<M: WebSocketMetrics>(
 
 /// Executes the GraphQL request, handling queries, mutations, and subscriptions.
 async fn execute_query<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,
@@ -211,6 +217,7 @@ async fn execute_query<M: WebSocketMetrics>(
                 graphql_frontend::set_request_metadata_attributes(&raw_request, &session);
                 Box::pin(async {
                     execute_query_internal(
+                        client_address,
                         operation_id.clone(),
                         session,
                         headers,
@@ -255,6 +262,7 @@ pub async fn send_request_error<M: WebSocketMetrics>(
 
 // Exported for testing purpose
 pub async fn execute_query_internal<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,
@@ -287,6 +295,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
                 graphql_frontend::set_usage_attributes(&normalized_request, &ir);
                 Box::pin(async {
                     execute(
+                        client_address,
                         operation_id,
                         connection,
                         session,
@@ -305,6 +314,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
 }
 
 async fn execute<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     operation_id: OperationId,
     connection: &ws::Connection<M>,
     session: Session,
@@ -322,6 +332,7 @@ async fn execute<M: WebSocketMetrics>(
                 graphql_frontend::execute_mutation_plan(http_context, mutation_plan, project_id)
                     .await;
             send_single_result_operation_response(
+                client_address,
                 operation_id,
                 &raw_request,
                 session,
@@ -337,6 +348,7 @@ async fn execute<M: WebSocketMetrics>(
             let execute_query_result =
                 graphql_frontend::execute_query_plan(http_context, query_plan, project_id).await;
             send_single_result_operation_response(
+                client_address,
                 operation_id,
                 &raw_request,
                 session,
@@ -414,6 +426,7 @@ async fn execute<M: WebSocketMetrics>(
                                         // Send the response
                                         let stop_subscription =
                                             send_subscription_operation_response(
+                                                client_address,
                                                 &mut response_hash,
                                                 operation_id.clone(),
                                                 &raw_request,
@@ -555,6 +568,7 @@ impl GraphQLResponse {
 /// Sends a single result (query or mutation) along with a completion message.
 /// If there are errors, they are sent before the complete message.
 async fn send_single_result_operation_response<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     operation_id: OperationId,
     raw_request: &lang_graphql::http::RawRequest,
     session: Session,
@@ -566,7 +580,14 @@ async fn send_single_result_operation_response<M: WebSocketMetrics>(
     let graphql_response =
         graphql_frontend::GraphQLResponse::from_result(result, expose_internal_errors).inner();
     // Execute pre-response plugins
-    run_pre_response_plugins(raw_request, session, headers, &graphql_response, connection);
+    run_pre_response_plugins(
+        client_address,
+        raw_request,
+        session,
+        headers,
+        &graphql_response,
+        connection,
+    );
     // Send the ok response and a complete message.
     match GraphQLResponse::new(graphql_response) {
         GraphQLResponse::Ok(response) => {
@@ -583,6 +604,7 @@ async fn send_single_result_operation_response<M: WebSocketMetrics>(
 
 /// Sends a subscription operation response.
 async fn send_subscription_operation_response<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     response_hash: &mut ResponseHash,
     operation_id: OperationId,
     raw_request: &lang_graphql::http::RawRequest,
@@ -595,6 +617,7 @@ async fn send_subscription_operation_response<M: WebSocketMetrics>(
     if !response_hash.matches(&response) {
         // Execute pre-response plugins before sending the response
         run_pre_response_plugins(
+            client_address,
             raw_request,
             session.clone(),
             headers.clone(),
@@ -627,6 +650,7 @@ impl tracing_util::TraceableError for ExecutePreResponsePluginsError {
 }
 
 fn run_pre_response_plugins<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     raw_request: &lang_graphql::http::RawRequest,
     session: Session,
     headers: http::HeaderMap,
@@ -655,6 +679,7 @@ fn run_pre_response_plugins<M: WebSocketMetrics>(
                         span_link: tracing_util::SpanLink::from_current_span(),
                     };
                 pre_response_plugin::execute_pre_response_plugins_in_task(
+                    client_address,
                     pre_response_plugins,
                     connection.context.http_context.client.clone(),
                     session,

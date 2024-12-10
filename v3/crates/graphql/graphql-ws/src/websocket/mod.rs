@@ -46,6 +46,7 @@ impl<M> WebSocketServer<M> {
     /// Validates the WebSocket protocol and upgrades the connection if valid.
     pub fn upgrade_and_handle_websocket(
         &self,
+        client_address: std::net::SocketAddr,
         ws_upgrade: ws::WebSocketUpgrade,
         headers: &HeaderMap,
         context: types::Context<M>,
@@ -86,6 +87,7 @@ impl<M> WebSocketServer<M> {
                         .protocols(vec![protocol::GRAPHQL_WS_PROTOCOL])
                         .on_upgrade(move |socket| {
                             start_websocket_session(
+                                client_address,
                                 socket,
                                 websocket_id_cloned,
                                 context,
@@ -155,6 +157,7 @@ impl IntoResponse for WebSocketError {
 /// Handles the WebSocket connection by splitting it into sender and receiver.
 /// Manages incoming and outgoing messages and initializes a connection.
 async fn start_websocket_session<M: WebSocketMetrics>(
+    client_address: std::net::SocketAddr,
     socket: ws::WebSocket,
     websocket_id: types::WebSocketId,
     context: types::Context<M>,
@@ -215,6 +218,7 @@ async fn start_websocket_session<M: WebSocketMetrics>(
 
                     // Spawn a task to handle incoming messages
                     let incoming_task = tokio::spawn(tasks::process_incoming_message(
+                        client_address,
                         connection.clone(),
                         websocket_receiver,
                         this_span_link,
