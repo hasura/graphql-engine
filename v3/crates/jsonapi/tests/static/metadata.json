@@ -2261,6 +2261,18 @@
                 "output": {
                   "allowedFields": ["author_id", "first_name"]
                 }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["author_id", "last_name"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["author_id"]
+                }
               }
             ]
           }
@@ -2557,6 +2569,12 @@
                 "role": "admin",
                 "output": {
                   "allowedFields": ["ArtistId", "Name"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["Name"]
                 }
               }
             ]
@@ -4245,6 +4263,17 @@
                     "UnitPrice"
                   ]
                 }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": [
+                    "AlbumId",
+                    "Name",
+                    "TrackId",
+                    "Milliseconds"
+                  ]
+                }
               }
             ]
           }
@@ -5052,6 +5081,12 @@
                 "role": "user_1",
                 "output": {
                   "allowedFields": ["id", "first_name", "last_name"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["id"]
                 }
               }
             ]

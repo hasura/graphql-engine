@@ -173,6 +173,99 @@ expression: generated_openapi
                             }
                           }
                         }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Author"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "author_id": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "articles": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Article"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_commandAuthor"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        }
                       }
                     }
                   }
@@ -193,6 +286,22 @@ expression: generated_openapi
             },
             "title": {
               "type": "string"
+            }
+          }
+        },
+        "default_Author": {
+          "type": "object",
+          "properties": {
+            "author_id": {
+              "type": "object"
+            }
+          }
+        },
+        "default_commandAuthor": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
             }
           }
         }

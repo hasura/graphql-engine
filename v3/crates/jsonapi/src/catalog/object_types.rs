@@ -3,8 +3,8 @@ use crate::types::ObjectTypeWarning;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use metadata_resolve::{
-    ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeName,
-    QualifiedTypeReference, ScalarTypeRepresentation,
+    unwrap_custom_type_name, ObjectTypeWithRelationships, Qualified, QualifiedBaseType,
+    QualifiedTypeName, QualifiedTypeReference, ScalarTypeRepresentation,
 };
 use open_dds::types::{CustomTypeName, InbuiltType};
 use std::collections::BTreeMap;
@@ -46,26 +46,68 @@ pub fn build_object_type(
     // Relationships
     let mut type_relationships = IndexMap::new();
     for (_, relationship_field) in &object_type.relationship_fields {
-        let target = match &relationship_field.target {
-            metadata_resolve::RelationshipTarget::Model(model) => RelationshipTarget::Model {
-                object_type: model.target_typename.clone(),
-                relationship_type: model.relationship_type.clone(),
-            },
-            metadata_resolve::RelationshipTarget::ModelAggregate(model_aggregate) => {
-                let target_type = model_aggregate.target_typename.clone();
-                RelationshipTarget::ModelAggregate(target_type)
+        // Only track the relationship if its output type is accessible to the role.
+        let mut target = None;
+        match &relationship_field.target {
+            metadata_resolve::RelationshipTarget::Model(model) => {
+                if object_type_permission_access(role, &model.target_typename, object_types) {
+                    target = Some(RelationshipTarget::Model {
+                        object_type: model.target_typename.clone(),
+                        relationship_type: model.relationship_type.clone(),
+                    });
+                }
             }
-            metadata_resolve::RelationshipTarget::Command(command) => RelationshipTarget::Command {
-                type_reference: command.target_type.clone(),
-            },
+            metadata_resolve::RelationshipTarget::ModelAggregate(model_aggregate) => {
+                if object_type_permission_access(
+                    role,
+                    &model_aggregate.target_typename,
+                    object_types,
+                ) {
+                    target = Some(RelationshipTarget::ModelAggregate(
+                        model_aggregate.target_typename.clone(),
+                    ));
+                }
+            }
+            metadata_resolve::RelationshipTarget::Command(command) => {
+                let track_this_relationship = if let Some(target_object_type) =
+                    unwrap_custom_type_name(&command.target_type)
+                {
+                    // For command relationship of a custom type, check if type exists.
+                    object_type_permission_access(role, target_object_type, object_types)
+                } else {
+                    // The output type of this command relationship is not a custom type; it is a built-in type (scalar).
+                    // Track it.
+                    true
+                };
+                if track_this_relationship {
+                    target = Some(RelationshipTarget::Command {
+                        type_reference: command.target_type.clone(),
+                    });
+                }
+            }
         };
-        type_relationships.insert(relationship_field.relationship_name.clone(), target);
+        if let Some(target) = target {
+            type_relationships.insert(relationship_field.relationship_name.clone(), target);
+        }
     }
 
     Ok(ObjectType {
         type_fields,
         type_relationships,
     })
+}
+
+// Check if object_type is accessible to given role
+fn object_type_permission_access(
+    role: &Role,
+    type_name: &Qualified<CustomTypeName>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+) -> bool {
+    let mut accessible = false;
+    if let Some(object_type) = object_types.get(type_name) {
+        accessible = object_type.type_output_permissions.contains_key(role);
+    }
+    accessible
 }
 
 // turn an OpenDD type into a type representation

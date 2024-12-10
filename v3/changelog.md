@@ -44,6 +44,10 @@ customizations:
 
 ### Fixed
 
+- Fixed the `include` query parameter and `included` response field in JSON:API
+  OpenAPI schema generation. These now honor type permissions for the role in
+  relationship fields.
+
 - Fixed a bug where commands with array return types would not build when header
   forwarding was in effect.
 

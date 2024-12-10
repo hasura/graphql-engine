@@ -176,6 +176,138 @@ expression: generated_openapi
                             }
                           }
                         }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Artist"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Name": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Albums": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Album"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Track"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "AlbumId": {
+                                      "type": "object"
+                                    },
+                                    "Milliseconds": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Album": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Album"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
                       }
                     }
                   }
@@ -363,6 +495,68 @@ expression: generated_openapi
                               "properties": {
                                 "_type": {
                                   "enum": [
+                                    "default_Author"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "author_id": {
+                                      "type": "object"
+                                    },
+                                    "last_name": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "articles": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Article"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
                                     "default_commandAuthor"
                                   ]
                                 },
@@ -417,6 +611,42 @@ expression: generated_openapi
               "type": "integer"
             },
             "author_id": {
+              "type": "object"
+            }
+          }
+        },
+        "default_Artist": {
+          "type": "object",
+          "properties": {
+            "Name": {
+              "type": "object"
+            }
+          }
+        },
+        "default_Author": {
+          "type": "object",
+          "properties": {
+            "author_id": {
+              "type": "object"
+            },
+            "last_name": {
+              "type": "string"
+            }
+          }
+        },
+        "default_Track": {
+          "type": "object",
+          "properties": {
+            "AlbumId": {
+              "type": "object"
+            },
+            "Milliseconds": {
+              "type": "object"
+            },
+            "Name": {
+              "type": "object"
+            },
+            "TrackId": {
               "type": "object"
             }
           }
