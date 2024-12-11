@@ -34,7 +34,7 @@ run-local-with-shell:
     cargo run --bin custom-connector | ts "custom-connector:" &
     OTLP_ENDPOINT=http://localhost:4317 \
       cargo run --bin dev-auth-webhook | ts "dev-auth-webhook:" &
-    RUST_LOG=DEBUG cargo run --bin engine -- \
+    RUST_LOG=DEBUG cargo run --bin ddn-engine-local-dev -- \
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path static/auth/auth_config.json \
     --metadata-path static/sample-schema.json \
@@ -57,7 +57,7 @@ start-engine:
     METADATA_PATH=static/docker_schema.json \
       AUTHN_CONFIG_PATH=static/auth/auth_config.json \
       OTLP_ENDPOINT=http://localhost:4317 \
-      cargo run --bin engine
+      cargo run --bin ddn-engine-local-dev
 
 # pull / build all docker deps
 docker-refresh: stop-docker
@@ -89,7 +89,7 @@ watch: start-docker-test-deps start-docker-run-deps
     cargo watch -i "**/*.snap.new" \
      -x 'nextest run --no-fail-fast' \
      -x 'clippy --no-deps' \
-     -x 'run --bin engine -- \
+     -x 'run --bin ddn-engine-local-dev -- \
       --otlp-endpoint http://localhost:4317 \
       --authn-config-path static/auth/auth_config.json \
       --metadata-path static/sample-schema.json \
@@ -180,7 +180,7 @@ reorder-json-in-test-metadata: && fix-format
 
 # run the engine using schema from tests
 run METADATA_PATH="static/sample-schema.json": start-docker-test-deps start-docker-run-deps
-    RUST_LOG=DEBUG cargo run --bin engine -- \
+    RUST_LOG=DEBUG cargo run --bin ddn-engine-local-dev -- \
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path static/auth/auth_config.json \
     --metadata-path {{ METADATA_PATH }} \
