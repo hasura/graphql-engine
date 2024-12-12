@@ -180,6 +180,7 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 This document is available in the following translations:
 
-- [French 🇫🇷](translations/CONTRIBUTING.french.md)
+- [French :fr:](translations/CONTRIBUTING.french.md)
+- [Hindi :india:](translations/CONTRIBUTING.hindi.md)
 
 (Credits: Some sections are adapted from https://github.com/PostgREST/postgrest/blob/master/.github/CONTRIBUTING.md)
