@@ -4,6 +4,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "db",
             "schema": {
@@ -1023,9 +1025,7 @@
                 "value": "http://localhost:8080"
               }
             }
-          },
-          "kind": "DataConnectorLink",
-          "version": "v1"
+          }
         }
       ]
     },
@@ -1033,6 +1033,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "graphql": {
               "selectMany": {
@@ -1071,11 +1073,11 @@
               "collection": "Track",
               "dataConnectorName": "db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "track",
             "permissions": [
@@ -1092,11 +1094,11 @@
                 }
               }
             ]
-          },
-          "kind": "ModelPermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "arguments": [],
             "filterExpressionType": "institution_boolexp",
@@ -1151,11 +1153,11 @@
               "collection": "institution",
               "dataConnectorName": "db"
             }
-          },
-          "kind": "Model",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "institutions",
             "permissions": [
@@ -1172,11 +1174,11 @@
                 }
               }
             ]
-          },
-          "kind": "ModelPermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "Institution_boolexp"
@@ -1208,11 +1210,11 @@
                 "type": "institution"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "InstitutionSongs_boolexp"
@@ -1249,11 +1251,11 @@
                 "type": "institution_songs"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "Track_boolexp"
@@ -1285,11 +1287,11 @@
                 "type": "track"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "Int_boolexp"
@@ -1328,11 +1330,11 @@
                 "type": "Int"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
           "definition": {
             "graphql": {
               "typeName": "String_boolexp"
@@ -1364,11 +1366,11 @@
                 "type": "String"
               }
             }
-          },
-          "kind": "BooleanExpressionType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -1411,11 +1413,11 @@
               "typeName": "Track"
             },
             "name": "track"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -1432,11 +1434,11 @@
               }
             ],
             "typeName": "track"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -1506,11 +1508,11 @@
               "typeName": "Institution"
             },
             "name": "institution"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -1541,11 +1543,11 @@
               }
             ],
             "typeName": "institution"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -1597,11 +1599,11 @@
               "typeName": "StaffMember"
             },
             "name": "staff_member"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -1628,11 +1630,11 @@
               }
             ],
             "typeName": "staff_member"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -1675,11 +1677,11 @@
               "typeName": "Location"
             },
             "name": "location"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -1696,11 +1698,11 @@
               }
             ],
             "typeName": "location"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "dataConnectorTypeMapping": [
               {
@@ -1734,11 +1736,11 @@
               "typeName": "InstitutionSongs"
             },
             "name": "institution_songs"
-          },
-          "kind": "ObjectType",
-          "version": "v1"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "permissions": [
               {
@@ -1761,11 +1763,11 @@
               }
             ],
             "typeName": "institution_songs"
-          },
-          "kind": "TypePermissions",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "mapping": [
               {
@@ -1793,11 +1795,11 @@
                 "relationshipType": "Object"
               }
             }
-          },
-          "kind": "Relationship",
-          "version": "v1"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "mapping": [
               {
@@ -1825,9 +1827,7 @@
                 "relationshipType": "Object"
               }
             }
-          },
-          "kind": "Relationship",
-          "version": "v1"
+          }
         }
       ]
     }

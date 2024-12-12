@@ -35,12 +35,12 @@
 .closeIcon {
     position: absolute;
     top: 25px;
-    left: 25px;
+    right: 25px;
     cursor: pointer;
 }
 
 .monstaImage {
-
+    margin-top: 1.5rem;
 }
 
 .aboveHeadline {

@@ -156,9 +156,10 @@ resolveActionExecution ::
   IR.AnnActionExecution Void ->
   ActionExecContext ->
   Maybe GQLQueryText ->
+  IncludeInternalErrors ->
   HeaderPrecedence ->
   ActionExecution
-resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText headerPrecedence =
+resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText includeInternalErrors headerPrecedence =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
@@ -186,6 +187,7 @@ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics
           _aaeTimeOut
           _aaeRequestTransform
           _aaeResponseTransform
+          includeInternalErrors
           headerPrecedence
 
 throwUnexpected :: (MonadError QErr m) => Text -> m ()
@@ -382,9 +384,10 @@ resolveAsyncActionQuery userInfo annAction responseErrorsConfig =
                       IR.AsyncId -> mkAnnFldFromPGCol idColumn
                       IR.AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
                       IR.AsyncErrors ->
-                        if (shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig)
-                          then RS.mkAnnColumnField (fst errorsColumn) (ColumnScalar (snd errorsColumn)) NoRedaction Nothing
-                          else
+                        case shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig of
+                          IncludeInternalErrors ->
+                            RS.mkAnnColumnField (fst errorsColumn) (ColumnScalar (snd errorsColumn)) NoRedaction Nothing
+                          HideInternalErrors ->
                             RS.mkAnnColumnField
                               (fst errorsColumn)
                               (ColumnScalar (snd errorsColumn))
@@ -418,7 +421,9 @@ resolveAsyncActionQuery userInfo annAction responseErrorsConfig =
     mkQErrFromErrorValue :: J.Value -> QErr
     mkQErrFromErrorValue actionLogResponseError =
       let internal = ExtraInternal <$> (actionLogResponseError ^? key "internal")
-          internal' = if shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig then internal else Nothing
+          internal' = case shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig of
+            IncludeInternalErrors -> internal
+            HideInternalErrors -> Nothing
           errorMessageText = fromMaybe "internal: error in parsing the action log" $ actionLogResponseError ^? key "error" . _String
           codeMaybe = actionLogResponseError ^? key "code" . _String
           code = maybe Unexpected ActionWebhookCode codeMaybe
@@ -490,9 +495,10 @@ asyncActionsProcessor ::
   STM.TVar (Set LockedActionEventId) ->
   Maybe GH.GQLQueryText ->
   Int ->
+  IncludeInternalErrors ->
   IO HeaderPrecedence ->
   m (Forever m)
-asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText fetchBatchSize getHeaderPrecedence =
+asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText fetchBatchSize includeInternalErrors getHeaderPrecedence =
   return
     $ Forever ()
     $ const
@@ -573,6 +579,7 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
                   timeout
                   metadataRequestTransform
                   metadataResponseTransform
+                  includeInternalErrors
                   headerPrecedence
             resE <-
               setActionStatus actionId $ case eitherRes of
@@ -605,6 +612,7 @@ callWebhook ::
   Timeout ->
   Maybe RequestTransform ->
   Maybe MetadataResponseTransform ->
+  IncludeInternalErrors ->
   HeaderPrecedence ->
   m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook
@@ -624,6 +632,7 @@ callWebhook
   timeoutSeconds
   metadataRequestTransform
   metadataResponseTransform
+  includeInternalErrors
   headerPrecedence = do
     resolvedConfHeaders <- makeHeadersFromConf env confHeaders
     let clientHeaders = if forwardClientHeaders then mkClientHeadersForward ignoredClientHeaders reqHeaders else mempty
@@ -684,9 +693,9 @@ callWebhook
 
     case httpResponse of
       Left e ->
-        throw500WithDetail "http exception when calling webhook"
-          $ J.toJSON
-          $ ActionInternalError (getHttpExceptionJson (ShowErrorInfo True) $ HttpException e) requestInfo Nothing
+        let msg = "http exception when calling webhook"
+         in throwInternalError msg includeInternalErrors
+              $ ActionInternalError (getHttpExceptionJson (ShowErrorInfo True) $ HttpException e) requestInfo Nothing
       Right responseWreq -> do
         -- TODO(SOLOMON): Remove 'wreq'
         let responseBody = responseWreq ^. Wreq.responseBody
@@ -722,23 +731,34 @@ callWebhook
             (pmActionBytesReceived prometheusMetrics)
             responseBodySize
         logger :: (L.Logger L.Hasura) <- asks getter
-        L.unLoggerTracing logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName actionType
+        L.unLoggerTracing logger
+          $ ActionHandlerLog
+            req
+            transformedReq
+            requestBodySize
+            transformedReqSize
+            responseBodySize
+            actionName
+            actionType
 
         case J.eitherDecode transformedResponseBody of
           Left e -> do
             let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody
-            throw500WithDetail "not a valid json response from webhook"
-              $ J.toJSON
-              $ ActionInternalError (J.toJSON $ "invalid JSON: " <> e) requestInfo
-              $ Just responseInfo
+                msg = "not a valid json response from webhook"
+             in throwInternalError msg includeInternalErrors
+                  $ ActionInternalError (J.toJSON $ "invalid JSON: " <> e) requestInfo
+                  $ Just responseInfo
           Right responseValue -> do
             let responseInfo = mkResponseInfo responseValue
                 addInternalToErr e =
-                  let actionInternalError =
-                        J.toJSON
-                          $ ActionInternalError (J.String "unexpected response") requestInfo
-                          $ Just responseInfo
-                   in e {qeInternal = Just $ ExtraInternal actionInternalError}
+                  case includeInternalErrors of
+                    HideInternalErrors -> e
+                    IncludeInternalErrors ->
+                      let actionInternalError =
+                            J.toJSON
+                              $ ActionInternalError (J.String "unexpected response") requestInfo
+                              $ Just responseInfo
+                       in e {qeInternal = Just $ ExtraInternal actionInternalError}
 
             if
               | HTTP.statusIsSuccessful responseStatus -> do
@@ -757,10 +777,19 @@ callWebhook
                         J.toJSON
                           $ "expecting 2xx or 4xx status code, but found "
                           ++ show (HTTP.statusCode responseStatus)
-                  throw500WithDetail "internal error"
-                    $ J.toJSON
-                    $ ActionInternalError err requestInfo
-                    $ Just responseInfo
+                      msg = "internal error"
+                   in throwInternalError msg includeInternalErrors
+                        $ ActionInternalError err requestInfo
+                        $ Just responseInfo
+
+throwInternalError :: (MonadError QErr m) => Text -> IncludeInternalErrors -> ActionInternalError -> m a
+throwInternalError msg includeInternalErrors actionInternalError =
+  case includeInternalErrors of
+    HideInternalErrors -> throwError (internalError msg)
+    IncludeInternalErrors ->
+      throw500WithDetail msg
+        $ J.toJSON
+        $ actionInternalError
 
 processOutputSelectionSet ::
   TF.ArgumentExp v ->

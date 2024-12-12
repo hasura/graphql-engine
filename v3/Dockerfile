@@ -1,7 +1,7 @@
 # This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
-FROM rust:1.80.1 as chef
+FROM rust:1.83.0 AS chef
 
-WORKDIR app
+WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -18,6 +18,9 @@ ENV PATH="$PATH:$CARGO_HOME/bin"
 ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
 # Building with build.rs requires the Git context to be available across volumes.
 ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+# This Dockerfile is only for local development, we don't need to stamp it with
+# a version
+ENV RELEASE_VERSION=dev
 
 # Install Rust tools.
 COPY rust-toolchain.toml .
@@ -44,20 +47,15 @@ COPY --from=planner /app/recipe.json recipe.json
 COPY --from=planner /app/.cargo/config.toml /app/.cargo/config.toml
 
 # Build dependencies - this is the caching Docker layer!
-RUN cargo chef cook --release --all-targets --recipe-path recipe.json
-
-###
-# Builds the application
-FROM builder AS built
+RUN cargo chef cook --release --bin engine --recipe-path recipe.json
 
 # Copy files
 COPY .cargo ./.cargo
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
-COPY .git ./.git
 
 # Build the app
-RUN cargo build --release --all-targets
+RUN cargo build --release --bin engine
 
 ###
 # Ship the app in an image with `curl` and very little else
@@ -69,5 +67,5 @@ RUN set -ex; \
     apt-get install --assume-yes curl
 
 # Install the engine
-COPY --from=built /app/target/release/engine /usr/local/bin
+COPY --from=builder /app/target/release/engine /usr/local/bin
 ENTRYPOINT ["engine"]

@@ -5,6 +5,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Albums",
             "permissions": [
@@ -21,11 +23,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Tracks",
             "permissions": [
@@ -42,11 +44,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Artists",
             "permissions": [
@@ -138,9 +140,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         }
       ]
     }

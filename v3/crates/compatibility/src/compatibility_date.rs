@@ -1,8 +1,12 @@
+use std::collections::BTreeSet;
+
 use chrono::NaiveDate;
+use open_dds::flags::Flag;
+use strum::IntoEnumIterator;
 
 const DATE_FORMAT: &str = "%Y-%m-%d";
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 /// The date to use for determining the default metadata semantics and Hasura behavior.
 pub struct CompatibilityDate(pub NaiveDate);
 
@@ -43,11 +47,101 @@ impl schemars::JsonSchema for CompatibilityDate {
     }
 
     fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        schemars::schema::SchemaObject {
+        let any_date_schema = schemars::schema::SchemaObject {
+            metadata: Some(Box::new(schemars::schema::Metadata {
+                description: Some("Any date".to_owned()),
+                ..Default::default()
+            })),
             instance_type: Some(schemars::schema::InstanceType::String.into()),
             format: Some("date".to_string()),
             ..Default::default()
         }
+        .into();
+
+        let known_compatibility_dates = Flag::iter()
+            .filter_map(get_compatibility_date_for_flag)
+            .collect::<BTreeSet<CompatibilityDate>>();
+
+        let known_compatibility_dates_schema = schemars::schema::SchemaObject {
+            metadata: Some(Box::new(schemars::schema::Metadata {
+                description: Some("Known compatibility dates".to_owned()),
+                ..Default::default()
+            })),
+            instance_type: Some(schemars::schema::InstanceType::String.into()),
+            enum_values: Some(
+                known_compatibility_dates
+                    .into_iter()
+                    .map(|date| serde_json::Value::String(date.to_string()))
+                    .collect(),
+            ),
+            ..Default::default()
+        }
+        .into();
+
+        schemars::schema::SchemaObject {
+            metadata: Some(Box::new(schemars::schema::Metadata {
+                id: Some(format!(
+                    "https://hasura.io/jsonschemas/metadata/{}",
+                    Self::schema_name()
+                )),
+                title: Some(Self::schema_name()),
+                description: Some("Any backwards incompatible changes made to Hasura DDN after this date won't impact the metadata".to_owned()),
+                ..Default::default()
+            })),
+            subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
+                any_of: Some(vec![
+                    known_compatibility_dates_schema,
+                    any_date_schema,
+                ]),
+                ..Default::default()
+            })),
+            ..Default::default()
+        }
         .into()
+    }
+}
+
+pub const OLDEST_COMPATIBILITY_DATE: CompatibilityDate = new_compatibility_date(2023, 10, 9);
+
+pub const fn new_compatibility_date(year: i32, month: u32, day: u32) -> CompatibilityDate {
+    CompatibilityDate(match NaiveDate::from_ymd_opt(year, month, day) {
+        // Need to match instead of unwrap because unwrap is still unstable as const
+        Some(date) => date,
+        None => panic!("Invalid date"),
+    })
+}
+
+// Adding a flag? Don't forget to add it to the docs: https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/
+pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> {
+    match flag {
+        Flag::RequireGraphqlConfig => Some(new_compatibility_date(2024, 6, 30)),
+        Flag::BypassRelationComparisonsNdcCapability => Some(new_compatibility_date(2024, 9, 3)),
+        Flag::RequireNestedArrayFilteringCapability => Some(new_compatibility_date(2024, 9, 18)),
+        Flag::DisallowScalarTypeNamesConflictingWithInbuiltTypes
+        | Flag::PropagateBooleanExpressionDeprecationStatus => {
+            Some(new_compatibility_date(2024, 9, 26))
+        }
+        Flag::RequireUniqueCommandGraphqlNames => Some(new_compatibility_date(2024, 10, 7)),
+        Flag::AllowPartialSupergraph => None, // This is not triggered by compatibility date, instead it is set by the build settings (ie. using a /partial endpoint)
+        Flag::JsonSessionVariables => Some(new_compatibility_date(2024, 10, 16)),
+        Flag::DisallowArrayFieldComparedWithScalarBooleanType => {
+            Some(new_compatibility_date(2024, 10, 31))
+        }
+        Flag::AllowBooleanExpressionFieldsWithoutGraphql => {
+            Some(new_compatibility_date(2024, 11, 13))
+        }
+        Flag::RequireValidNdcV01Version | Flag::RequireUniqueModelGraphqlNames => {
+            Some(new_compatibility_date(2024, 11, 15))
+        }
+        Flag::DisallowObjectBooleanExpressionType => Some(new_compatibility_date(2024, 11, 18)),
+        Flag::LogicalOperatorsInScalarBooleanExpressions => {
+            Some(new_compatibility_date(2024, 11, 26))
+        }
+        Flag::DisallowDuplicateNamesInBooleanExpressions => {
+            Some(new_compatibility_date(2024, 12, 5))
+        }
+        Flag::DisallowMultipleInputObjectFieldsInGraphqlOrderBy => {
+            Some(new_compatibility_date(2024, 12, 10))
+        }
     }
 }

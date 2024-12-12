@@ -59,6 +59,8 @@ import Language.Haskell.TH.Quote (QuasiQuoter (..))
 import Language.Haskell.TH.Syntax (Exp, Q, lift, qAddDependentFile, runIO)
 import System.Metrics.Distribution (Distribution)
 import System.Metrics.Distribution qualified as EKG.Distribution
+import System.Metrics.Prometheus.Counter (Counter)
+import System.Metrics.Prometheus.Counter qualified as Counter
 import System.Metrics.Prometheus.Histogram (Histogram)
 import System.Metrics.Prometheus.Histogram qualified as Histogram
 import Prelude
@@ -92,7 +94,9 @@ data PGPoolMetrics = PGPoolMetrics
   { -- | time taken to establish and initialise a PostgreSQL connection
     _pgConnAcquireLatencyMetric :: !Histogram,
     -- | time taken to acquire a connection from the pool
-    _poolWaitTimeMetric :: !Histogram
+    _poolWaitTimeMetric :: !Histogram,
+    -- | total number of PostgreSQL errors
+    _pgErrorTotalMetric :: !Counter
   }
 
 getInUseConnections :: PGPool -> IO Int
@@ -129,6 +133,7 @@ initPGPoolMetrics :: IO PGPoolMetrics
 initPGPoolMetrics = do
   _pgConnAcquireLatencyMetric <- Histogram.new histogramBuckets
   _poolWaitTimeMetric <- Histogram.new histogramBuckets
+  _pgErrorTotalMetric <- Counter.new
   pure PGPoolMetrics {..}
   where
     histogramBuckets = [0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100]
@@ -151,7 +156,7 @@ initPGPool ci context cp logger = do
     retryP = mkPGRetryPolicy $ ciRetries ci
     creator stats metrics = do
       createdAt <- getCurrentTime
-      pqConn <- initPQConn ci logger
+      pqConn <- (initPQConn ci logger) `Exc.onException` (Counter.inc (_pgErrorTotalMetric metrics))
       connAcquiredAt <- getCurrentTime
       let connAcquiredMicroseconds = realToFrac (1000000 * diffUTCTime connAcquiredAt createdAt)
           connAcquiredSeconds = realToFrac $ diffUTCTime connAcquiredAt createdAt

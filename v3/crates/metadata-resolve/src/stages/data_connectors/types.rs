@@ -12,6 +12,7 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
+use open_dds::accessor::MetadataAccessor;
 use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::types::DataConnectorArgumentName;
 use open_dds::{
@@ -22,6 +23,7 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use strum_macros::EnumIter;
 
 pub struct DataConnectorsOutput<'a> {
@@ -54,20 +56,18 @@ pub struct DataConnectorContext<'a> {
     pub url: &'a data_connector::DataConnectorUrl,
     pub headers: IndexMap<String, String>,
     pub schema: DataConnectorSchema,
-    pub capabilities: ndc_models::Capabilities,
-    pub supported_ndc_version: NdcVersion,
+    pub capabilities: DataConnectorCapabilities,
     pub argument_presets: Vec<ArgumentPreset>,
     pub response_headers: Option<CommandsResponseConfig>,
 }
 
 impl<'a> DataConnectorContext<'a> {
     pub fn new(
+        metadata_accessor: &MetadataAccessor,
         data_connector: &'a data_connector::DataConnectorLinkV1,
         unstable_features: &UnstableFeatures,
     ) -> Result<(Self, Vec<DataConnectorIssue>), DataConnectorError> {
-        let (resolved_schema, capabilities, supported_ndc_version, issues) = match &data_connector
-            .schema
-        {
+        let (resolved_schema, capabilities, issues) = match &data_connector.schema {
             VersionedSchemaAndCapabilities::V01(schema_and_capabilities) => {
                 let issues = validate_ndc_version(
                     NdcVersion::V01,
@@ -77,10 +77,9 @@ impl<'a> DataConnectorContext<'a> {
                     DataConnectorSchema::new(ndc_migration::v02::migrate_schema_response_from_v01(
                         schema_and_capabilities.schema.clone(),
                     ));
-                let capabilities = ndc_migration::v02::migrate_capabilities_from_v01(
-                    schema_and_capabilities.capabilities.capabilities.clone(),
-                );
-                (schema, capabilities, NdcVersion::V01, issues)
+                let capabilities =
+                    mk_ndc_01_capabilities(&schema_and_capabilities.capabilities.capabilities);
+                (schema, capabilities, issues)
             }
             VersionedSchemaAndCapabilities::V02(schema_and_capabilities) => {
                 let issues = validate_ndc_version(
@@ -88,12 +87,15 @@ impl<'a> DataConnectorContext<'a> {
                     &schema_and_capabilities.capabilities.version,
                 )?;
                 let schema = DataConnectorSchema::new(schema_and_capabilities.schema.clone());
-                let capabilities = schema_and_capabilities.capabilities.capabilities.clone();
-                (schema, capabilities, NdcVersion::V02, issues)
+                let capabilities =
+                    mk_ndc_02_capabilities(&schema_and_capabilities.capabilities.capabilities);
+                (schema, capabilities, issues)
             }
         };
 
-        if !unstable_features.enable_ndc_v02_support && supported_ndc_version == NdcVersion::V02 {
+        if !unstable_features.enable_ndc_v02_support
+            && capabilities.supported_ndc_version == NdcVersion::V02
+        {
             return Err(DataConnectorError::NdcV02DataConnectorNotSupported);
         }
 
@@ -101,7 +103,8 @@ impl<'a> DataConnectorContext<'a> {
             .argument_presets
             .iter()
             .map(|argument_preset| -> Result<_, DataConnectorError> {
-                let header_presets = HttpHeadersPreset::new(&argument_preset.value.http_headers)?;
+                let header_presets =
+                    HttpHeadersPreset::new(metadata_accessor, &argument_preset.value.http_headers)?;
                 Ok(ArgumentPreset {
                     name: argument_preset.argument.clone(),
                     value: ArgumentPresetValue {
@@ -130,7 +133,6 @@ impl<'a> DataConnectorContext<'a> {
                 .collect(),
             schema: resolved_schema,
             capabilities,
-            supported_ndc_version,
             argument_presets,
             response_headers,
         };
@@ -245,7 +247,7 @@ pub struct DataConnectorLink {
     /// HTTP response headers configuration that is forwarded from a NDC
     /// function/procedure to the client.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub response_config: Option<CommandsResponseConfig>,
+    pub response_config: Option<Arc<CommandsResponseConfig>>,
     pub capabilities: DataConnectorCapabilities,
 }
 
@@ -292,29 +294,12 @@ impl DataConnectorLink {
                 data_connector_name: name.clone(),
                 error: to_error(e),
             })?;
-        let capabilities = DataConnectorCapabilities {
-            supported_ndc_version: context.supported_ndc_version,
-            supports_explaining_queries: context.capabilities.query.explain.is_some(),
-            supports_explaining_mutations: context.capabilities.mutation.explain.is_some(),
-            supports_nested_object_filtering: context
-                .capabilities
-                .query
-                .nested_fields
-                .filter_by
-                .is_some(),
-            supports_nested_object_aggregations: context
-                .capabilities
-                .query
-                .nested_fields
-                .aggregates
-                .is_some(),
-        };
         Ok(Self {
             name,
             url,
             headers,
-            capabilities,
-            response_config: context.response_headers.clone(),
+            capabilities: context.capabilities.clone(),
+            response_config: context.response_headers.clone().map(Arc::new),
         })
     }
 }
@@ -369,6 +354,7 @@ pub struct HttpHeadersPreset {
 
 impl HttpHeadersPreset {
     fn new(
+        metadata_accessor: &MetadataAccessor,
         headers_preset: &open_dds::data_connector::HttpHeadersPreset,
     ) -> Result<Self, DataConnectorError> {
         let forward = headers_preset
@@ -382,7 +368,7 @@ impl HttpHeadersPreset {
             .iter()
             .map(|(header_name, header_val)| {
                 let key = SerializableHeaderName::new(header_name.to_string()).map_err(to_error)?;
-                let val = resolve_value_expression(header_val.clone());
+                let val = resolve_value_expression(metadata_accessor, header_val.clone());
                 Ok((key, val))
             })
             .collect::<Result<IndexMap<_, _>, DataConnectorError>>()?;
@@ -395,11 +381,17 @@ impl HttpHeadersPreset {
 }
 
 fn resolve_value_expression(
+    metadata_accessor: &MetadataAccessor,
     value_expression_input: open_dds::permissions::ValueExpression,
 ) -> ValueExpression {
     match value_expression_input {
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            ValueExpression::SessionVariable(session_variable)
+            ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
+                name: session_variable,
+                passed_as_json: metadata_accessor
+                    .flags
+                    .contains(open_dds::flags::Flag::JsonSessionVariables),
+            })
         }
         open_dds::permissions::ValueExpression::Literal(json_value) => {
             ValueExpression::Literal(json_value)
@@ -448,21 +440,158 @@ impl CommandsResponseConfig {
 #[allow(clippy::struct_excessive_bools)]
 pub struct DataConnectorCapabilities {
     pub supported_ndc_version: NdcVersion,
+
+    /// Whether not explaining queries is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_explaining_queries: bool,
+
+    /// Whether not explaining mutations is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_explaining_mutations: bool,
+
+    /// Whether not filtering by nested object fields is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_nested_object_filtering: bool,
+
+    /// Whether not filtering using 'exists' over nested object arrays is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_nested_array_filtering: bool,
+
+    /// Whether or not aggregates are supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_aggregates: Option<DataConnectorAggregateCapabilities>,
+
+    /// Whether or not query variables are supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_query_variables: bool,
+
+    /// Whether or not relationships are supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_relationships: Option<DataConnectorRelationshipCapabilities>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorAggregateCapabilities {
+    /// Whether not aggregating over nested object fields is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_nested_object_aggregations: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorRelationshipCapabilities {
+    /// Whether or not filters can compare a column against another column that is across a relationship
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_relation_comparisons: bool,
+
+    /// Whether or not relationships can start from or end with columns in nested objects. Implies support in field selection.
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_nested_relationships: Option<DataConnectorNestedRelationshipCapabilities>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorNestedRelationshipCapabilities {
+    /// Whether or not relationships can start from columns inside nested objects inside nested arrays
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_nested_array_selection: bool,
+
+    /// Whether or not nested relationships can be used in filtering
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_nested_in_filtering: bool,
+
+    /// Whether or not nested relationships can be used in ordering
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_nested_in_ordering: bool,
+}
+
+fn mk_ndc_01_capabilities(
+    capabilities: &ndc_models_v01::Capabilities,
+) -> DataConnectorCapabilities {
+    DataConnectorCapabilities {
+        supported_ndc_version: NdcVersion::V01,
+        supports_explaining_queries: capabilities.query.explain.is_some(),
+        supports_explaining_mutations: capabilities.mutation.explain.is_some(),
+        supports_nested_object_filtering: capabilities.query.nested_fields.filter_by.is_some(),
+        supports_nested_array_filtering: capabilities.query.exists.nested_collections.is_some(),
+        supports_aggregates: capabilities.query.aggregates.as_ref().map(|_agg| {
+            DataConnectorAggregateCapabilities {
+                supports_nested_object_aggregations: capabilities
+                    .query
+                    .nested_fields
+                    .aggregates
+                    .is_some(),
+            }
+        }),
+        supports_query_variables: capabilities.query.variables.is_some(),
+        supports_relationships: capabilities.relationships.as_ref().map(|rel| {
+            DataConnectorRelationshipCapabilities {
+                supports_relation_comparisons: rel.relation_comparisons.is_some(),
+                // Selection of nested relationships is assumed supported in NDC 0.1.x
+                supports_nested_relationships: Some(DataConnectorNestedRelationshipCapabilities {
+                    supports_nested_array_selection: true,
+                    // Selection of nested filtering/ordering is not supported in NDC 0.1.x
+                    supports_nested_in_filtering: false,
+                    supports_nested_in_ordering: false,
+                }),
+            }
+        }),
+    }
+}
+
+fn mk_ndc_02_capabilities(capabilities: &ndc_models::Capabilities) -> DataConnectorCapabilities {
+    DataConnectorCapabilities {
+        supported_ndc_version: NdcVersion::V02,
+        supports_explaining_queries: capabilities.query.explain.is_some(),
+        supports_explaining_mutations: capabilities.mutation.explain.is_some(),
+        supports_nested_object_filtering: capabilities.query.nested_fields.filter_by.is_some(),
+        supports_nested_array_filtering: capabilities.query.exists.nested_collections.is_some(),
+        supports_aggregates: capabilities.query.aggregates.as_ref().map(|_agg| {
+            DataConnectorAggregateCapabilities {
+                supports_nested_object_aggregations: capabilities
+                    .query
+                    .nested_fields
+                    .aggregates
+                    .is_some(),
+            }
+        }),
+        supports_query_variables: capabilities.query.variables.is_some(),
+        supports_relationships: capabilities.relationships.as_ref().map(|rel| {
+            DataConnectorRelationshipCapabilities {
+                supports_relation_comparisons: rel.relation_comparisons.is_some(),
+                supports_nested_relationships: rel.nested.as_ref().map(|n| {
+                    DataConnectorNestedRelationshipCapabilities {
+                        supports_nested_array_selection: n.array.is_some(),
+                        supports_nested_in_filtering: true,
+                        supports_nested_in_ordering: true,
+                    }
+                }),
+            }
+        }),
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use ndc_models;
-    use open_dds::data_connector::DataConnectorLinkV1;
+    use open_dds::{accessor::MetadataAccessor, data_connector::DataConnectorLinkV1, Metadata};
     use strum::IntoEnumIterator;
 
     use crate::{
         configuration::UnstableFeatures,
-        data_connectors::{error::DataConnectorIssue, types::NdcVersion},
+        data_connectors::{
+            error::DataConnectorIssue, types::NdcVersion, DataConnectorCapabilities,
+        },
         stages::data_connectors::types::DataConnectorContext,
     };
 
@@ -503,25 +632,33 @@ mod tests {
                         }
                     }
                 }
-            ))
+            ), jsonpath::JSONPath::new())
             .unwrap();
 
-        let explicit_capabilities: ndc_models::Capabilities =
-            serde_json::from_value(serde_json::json!(
-                { "query": { "nested_fields": {}, "exists": { "unrelated": {} } }, "mutation": {} }
-            ))
-            .unwrap();
+        let data_connector_capabilities = DataConnectorCapabilities {
+            supported_ndc_version: NdcVersion::V01,
+            supports_explaining_queries: false,
+            supports_explaining_mutations: false,
+            supports_nested_object_filtering: false,
+            supports_nested_array_filtering: false,
+            supports_aggregates: None,
+            supports_query_variables: false,
+            supports_relationships: None,
+        };
 
         // With explicit capabilities specified, we should use them
         let unstable_features = UnstableFeatures {
             enable_ndc_v02_support: true,
             ..Default::default()
         };
-        let (context, issues) =
-            DataConnectorContext::new(&data_connector_with_capabilities, &unstable_features)
-                .unwrap();
-        assert_eq!(context.capabilities, explicit_capabilities);
-        assert_eq!(context.supported_ndc_version, NdcVersion::V01);
+        let metadata_accessor = MetadataAccessor::new(Metadata::WithoutNamespaces(vec![]));
+        let (context, issues) = DataConnectorContext::new(
+            &metadata_accessor,
+            &data_connector_with_capabilities,
+            &unstable_features,
+        )
+        .unwrap();
+        assert_eq!(context.capabilities, data_connector_capabilities);
         assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
     }
 
@@ -544,25 +681,33 @@ mod tests {
                         }
                     }
                 }
-            ))
+            ), jsonpath::JSONPath::new())
             .unwrap();
 
-        let explicit_capabilities: ndc_models::Capabilities =
-            serde_json::from_value(serde_json::json!(
-                { "query": { "nested_fields": {}, "exists": {} }, "mutation": {} }
-            ))
-            .unwrap();
+        let data_connector_capabilities = DataConnectorCapabilities {
+            supported_ndc_version: NdcVersion::V02,
+            supports_explaining_queries: false,
+            supports_explaining_mutations: false,
+            supports_nested_object_filtering: false,
+            supports_nested_array_filtering: false,
+            supports_aggregates: None,
+            supports_query_variables: false,
+            supports_relationships: None,
+        };
 
         // With explicit capabilities specified, we should use them
         let unstable_features = UnstableFeatures {
             enable_ndc_v02_support: true,
             ..Default::default()
         };
-        let (context, issues) =
-            DataConnectorContext::new(&data_connector_with_capabilities, &unstable_features)
-                .unwrap();
-        assert_eq!(context.capabilities, explicit_capabilities);
-        assert_eq!(context.supported_ndc_version, NdcVersion::V02);
+        let metadata_accessor = MetadataAccessor::new(Metadata::WithoutNamespaces(vec![]));
+        let (context, issues) = DataConnectorContext::new(
+            &metadata_accessor,
+            &data_connector_with_capabilities,
+            &unstable_features,
+        )
+        .unwrap();
+        assert_eq!(context.capabilities, data_connector_capabilities);
         assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
     }
 

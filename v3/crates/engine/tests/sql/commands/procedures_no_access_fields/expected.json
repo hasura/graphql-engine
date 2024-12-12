@@ -1,3 +1,3 @@
 {
-  "error": "error in data fusion: Error during planning: role user does not have permission to select the field movie_id from type actor (in subgraph default) of command uppercase_actor_name_by_id (in subgraph default)"
+  "error": "error in data fusion: Error during planning: role user does not have permission to select the field movie_id from type actor (in subgraph default)"
 }

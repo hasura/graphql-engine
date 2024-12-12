@@ -124,12 +124,27 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 
 :::
 
+:::caution AWS Load Balancer Timeout
+
+For AWS users deploying Hasura behind a load balancer, note that the HTTP server used by Hasura has a fixed 30-second
+keep-alive timeout. If your load balancer's idle timeout exceeds 30 seconds, it might cause intermittent
+`502 Bad Gateway` errors as the load balancer could attempt to reuse connections that have already been closed by
+Hasura.
+
+**Workaround**: Set the idle timeout of your load balancer to be less than 30 seconds (e.g., 29 seconds) to prevent this
+issue. This solution has been verified for AWS environments, but no equivalent workaround has been confirmed for GCP or
+Azure.
+
+:::
 
 ### Step 4: Set up a license key
 
-If you don't have a license key, you can skip this step and proceed with this guide to set up Hasura. Once you have the Hasura up and running, you can sign up for a [free 30 day Enterprise Edition trial](/enterprise/try-hasura-enterprise-edition.mdx) from the Hasura console.
+If you don't have a license key, you can skip this step and proceed with this guide to set up Hasura. Once you have the
+Hasura up and running, you can sign up for a
+[free 30 day Enterprise Edition trial](/enterprise/try-hasura-enterprise-edition.mdx) from the Hasura console.
 
-If you have been provided a license key by the Hasura team, add it as an environment variable to Hasura. Edit `hasura-fargate-task.json` and set the license key as the value for HASURA_GRAPHQL_EE_LICENSE_KEY environment variable.
+If you have been provided a license key by the Hasura team, add it as an environment variable to Hasura. Edit
+`hasura-fargate-task.json` and set the license key as the value for HASURA_GRAPHQL_EE_LICENSE_KEY environment variable.
 
 ```json {20-23}
 ---

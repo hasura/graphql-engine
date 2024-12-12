@@ -137,7 +137,6 @@
             ]
           }
         },
-
         {
           "kind": "TypePermissions",
           "version": "v1",
@@ -153,7 +152,6 @@
             ]
           }
         },
-
         {
           "kind": "ObjectType",
           "version": "v1",

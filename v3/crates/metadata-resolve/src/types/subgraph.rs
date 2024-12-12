@@ -11,8 +11,19 @@ use serde_json;
     Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq, Hash, Eq, PartialOrd, Ord,
 )]
 pub struct Qualified<T: Display> {
+    #[serde(default = "subgraph_default")]
+    #[serde(skip_serializing_if = "is_subgraph_default")]
     pub subgraph: SubgraphName,
     pub name: T,
+}
+
+fn subgraph_default() -> SubgraphName {
+    SubgraphName::new_inline_static("default")
+}
+
+fn is_subgraph_default(x: &SubgraphName) -> bool {
+    static D: SubgraphName = SubgraphName::new_inline_static("default");
+    *x == D
 }
 
 impl<T: Display> Display for Qualified<T> {
@@ -38,9 +49,11 @@ impl<T: Display> Qualified<T> {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, JsonSchema)]
 pub struct QualifiedTypeReference {
     pub underlying_type: QualifiedBaseType,
+    #[serde(default = "serde_ext::ser_default::<bool>")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub nullable: bool,
 }
 
@@ -88,7 +101,7 @@ pub struct ArgumentInfo {
     pub argument_kind: ArgumentKind,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, JsonSchema)]
 pub enum QualifiedBaseType {
     Named(QualifiedTypeName),
     List(Box<QualifiedTypeReference>),
@@ -120,7 +133,7 @@ impl QualifiedBaseType {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, JsonSchema)]
 pub enum QualifiedTypeName {
     Inbuilt(InbuiltType),
     Custom(Qualified<CustomTypeName>),
@@ -148,12 +161,30 @@ impl QualifiedTypeName {
             QualifiedTypeName::Custom(custom_type) => custom_type.fmt_and_return_qualifier(f),
         }
     }
+
+    pub fn to_untagged(&self) -> UnTaggedQualifiedTypeName {
+        match self {
+            QualifiedTypeName::Inbuilt(inbuilt_type) => {
+                UnTaggedQualifiedTypeName::Inbuilt(inbuilt_type.clone())
+            }
+            QualifiedTypeName::Custom(custom_type) => {
+                UnTaggedQualifiedTypeName::Custom(custom_type.clone())
+            }
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, JsonSchema)]
+#[serde(untagged)]
+pub enum UnTaggedQualifiedTypeName {
+    Inbuilt(InbuiltType),
+    Custom(Qualified<CustomTypeName>),
 }
 
 #[allow(dead_code)]
 /// not using this now, but feel we'll need to again
 pub fn serialize_optional_qualified_btreemap<T, V, S>(
-    optional_map: &Option<BTreeMap<Qualified<T>, V>>,
+    optional_map: Option<&BTreeMap<Qualified<T>, V>>,
     s: S,
 ) -> Result<S::Ok, S::Error>
 where

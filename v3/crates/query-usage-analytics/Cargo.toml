@@ -11,7 +11,7 @@ bench = false
 open-dds = { path = "../open-dds" }
 metadata-resolve = { path = "../metadata-resolve" }
 
-schemars = { workspace = true, features = ["preserve_order"] }
+schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

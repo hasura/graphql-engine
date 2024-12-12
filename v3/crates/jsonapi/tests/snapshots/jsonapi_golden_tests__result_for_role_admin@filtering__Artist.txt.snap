@@ -1,0 +1,37 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/filtering/Artist.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_Artist",
+                    id: "1",
+                    attributes: {
+                        "Name": String("Aerosmith"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "2",
+                    attributes: {
+                        "Name": String("Queen"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: None,
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

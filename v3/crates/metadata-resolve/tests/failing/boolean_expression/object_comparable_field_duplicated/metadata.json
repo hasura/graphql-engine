@@ -1,0 +1,127 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "institution_bool_exp",
+            "operand": {
+              "object": {
+                "type": "institution",
+                "comparableFields": [
+                  {
+                    "fieldName": "id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "InstitutionBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "institution",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Institution"
+            },
+            "dataConnectorTypeMapping": []
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_Comparison_Exp"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true
+  }
+}

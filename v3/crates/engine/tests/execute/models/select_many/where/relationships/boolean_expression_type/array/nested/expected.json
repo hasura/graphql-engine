@@ -6,6 +6,7 @@
           "AlbumId": 3,
           "Tracks": [
             {
+              "TrackId": 3,
               "TrackAlbums": [
                 {
                   "AlbumId": 3,
@@ -14,6 +15,7 @@
               ]
             },
             {
+              "TrackId": 4,
               "TrackAlbums": [
                 {
                   "AlbumId": 3,
@@ -22,6 +24,7 @@
               ]
             },
             {
+              "TrackId": 5,
               "TrackAlbums": [
                 {
                   "AlbumId": 3,
@@ -116,15 +119,374 @@
       ],
       "ArtistAlbumAndTrackNotNested": [
         {
-          "Name": "AC/DC"
+          "ArtistId": 1,
+          "Name": "AC/DC",
+          "Albums": [
+            {
+              "AlbumId": 1,
+              "Title": "For Those About To Rock We Salute You",
+              "Tracks": [
+                {
+                  "TrackId": 1,
+                  "Name": "For Those About To Rock (We Salute You)"
+                },
+                {
+                  "TrackId": 6,
+                  "Name": "Put The Finger On You"
+                },
+                {
+                  "TrackId": 7,
+                  "Name": "Let's Get It Up"
+                },
+                {
+                  "TrackId": 8,
+                  "Name": "Inject The Venom"
+                },
+                {
+                  "TrackId": 9,
+                  "Name": "Snowballed"
+                },
+                {
+                  "TrackId": 10,
+                  "Name": "Evil Walks"
+                },
+                {
+                  "TrackId": 11,
+                  "Name": "C.O.D."
+                },
+                {
+                  "TrackId": 12,
+                  "Name": "Breaking The Rules"
+                },
+                {
+                  "TrackId": 13,
+                  "Name": "Night Of The Long Knives"
+                },
+                {
+                  "TrackId": 14,
+                  "Name": "Spellbound"
+                }
+              ]
+            },
+            {
+              "AlbumId": 4,
+              "Title": "Let There Be Rock",
+              "Tracks": [
+                {
+                  "TrackId": 15,
+                  "Name": "Go Down"
+                },
+                {
+                  "TrackId": 16,
+                  "Name": "Dog Eat Dog"
+                },
+                {
+                  "TrackId": 17,
+                  "Name": "Let There Be Rock"
+                },
+                {
+                  "TrackId": 18,
+                  "Name": "Bad Boy Boogie"
+                },
+                {
+                  "TrackId": 19,
+                  "Name": "Problem Child"
+                },
+                {
+                  "TrackId": 20,
+                  "Name": "Overdose"
+                },
+                {
+                  "TrackId": 21,
+                  "Name": "Hell Ain't A Bad Place To Be"
+                },
+                {
+                  "TrackId": 22,
+                  "Name": "Whole Lotta Rosie"
+                }
+              ]
+            }
+          ]
         },
         {
-          "Name": "The Rolling Stones"
+          "ArtistId": 142,
+          "Name": "The Rolling Stones",
+          "Albums": [
+            {
+              "AlbumId": 216,
+              "Title": "Hot Rocks, 1964-1971 (Disc 1)",
+              "Tracks": [
+                {
+                  "TrackId": 2664,
+                  "Name": "Time Is On My Side"
+                },
+                {
+                  "TrackId": 2665,
+                  "Name": "Heart Of Stone"
+                },
+                {
+                  "TrackId": 2666,
+                  "Name": "Play With Fire"
+                },
+                {
+                  "TrackId": 2667,
+                  "Name": "Satisfaction"
+                },
+                {
+                  "TrackId": 2668,
+                  "Name": "As Tears Go By"
+                },
+                {
+                  "TrackId": 2669,
+                  "Name": "Get Off Of My Cloud"
+                },
+                {
+                  "TrackId": 2670,
+                  "Name": "Mother's Little Helper"
+                },
+                {
+                  "TrackId": 2671,
+                  "Name": "19th Nervous Breakdown"
+                },
+                {
+                  "TrackId": 2672,
+                  "Name": "Paint It Black"
+                },
+                {
+                  "TrackId": 2673,
+                  "Name": "Under My Thumb"
+                },
+                {
+                  "TrackId": 2674,
+                  "Name": "Ruby Tuesday"
+                },
+                {
+                  "TrackId": 2675,
+                  "Name": "Let's Spend The Night Together"
+                }
+              ]
+            },
+            {
+              "AlbumId": 217,
+              "Title": "No Security",
+              "Tracks": [
+                {
+                  "TrackId": 2676,
+                  "Name": "Intro"
+                },
+                {
+                  "TrackId": 2677,
+                  "Name": "You Got Me Rocking"
+                },
+                {
+                  "TrackId": 2678,
+                  "Name": "Gimmie Shelters"
+                },
+                {
+                  "TrackId": 2679,
+                  "Name": "Flip The Switch"
+                },
+                {
+                  "TrackId": 2680,
+                  "Name": "Memory Motel"
+                },
+                {
+                  "TrackId": 2681,
+                  "Name": "Corinna"
+                },
+                {
+                  "TrackId": 2682,
+                  "Name": "Saint Of Me"
+                },
+                {
+                  "TrackId": 2683,
+                  "Name": "Wainting On A Friend"
+                },
+                {
+                  "TrackId": 2684,
+                  "Name": "Sister Morphine"
+                },
+                {
+                  "TrackId": 2685,
+                  "Name": "Live With Me"
+                },
+                {
+                  "TrackId": 2686,
+                  "Name": "Respectable"
+                },
+                {
+                  "TrackId": 2687,
+                  "Name": "Thief In The Night"
+                },
+                {
+                  "TrackId": 2688,
+                  "Name": "The Last Time"
+                },
+                {
+                  "TrackId": 2689,
+                  "Name": "Out Of Control"
+                }
+              ]
+            },
+            {
+              "AlbumId": 218,
+              "Title": "Voodoo Lounge",
+              "Tracks": [
+                {
+                  "TrackId": 2690,
+                  "Name": "Love Is Strong"
+                },
+                {
+                  "TrackId": 2691,
+                  "Name": "You Got Me Rocking"
+                },
+                {
+                  "TrackId": 2692,
+                  "Name": "Sparks Will Fly"
+                },
+                {
+                  "TrackId": 2693,
+                  "Name": "The Worst"
+                },
+                {
+                  "TrackId": 2694,
+                  "Name": "New Faces"
+                },
+                {
+                  "TrackId": 2695,
+                  "Name": "Moon Is Up"
+                },
+                {
+                  "TrackId": 2696,
+                  "Name": "Out Of Tears"
+                },
+                {
+                  "TrackId": 2697,
+                  "Name": "I Go Wild"
+                },
+                {
+                  "TrackId": 2698,
+                  "Name": "Brand New Car"
+                },
+                {
+                  "TrackId": 2699,
+                  "Name": "Sweethearts Together"
+                },
+                {
+                  "TrackId": 2700,
+                  "Name": "Suck On The Jugular"
+                },
+                {
+                  "TrackId": 2701,
+                  "Name": "Blinded By Rainbows"
+                },
+                {
+                  "TrackId": 2702,
+                  "Name": "Baby Break It Down"
+                },
+                {
+                  "TrackId": 2703,
+                  "Name": "Thru And Thru"
+                },
+                {
+                  "TrackId": 2704,
+                  "Name": "Mean Disposition"
+                }
+              ]
+            }
+          ]
         }
       ],
       "ArtistAlbumAndTrackNested": [
         {
-          "Name": "AC/DC"
+          "ArtistId": 1,
+          "Name": "AC/DC",
+          "Albums": [
+            {
+              "AlbumId": 1,
+              "Title": "For Those About To Rock We Salute You",
+              "Tracks": [
+                {
+                  "TrackId": 1,
+                  "Name": "For Those About To Rock (We Salute You)"
+                },
+                {
+                  "TrackId": 6,
+                  "Name": "Put The Finger On You"
+                },
+                {
+                  "TrackId": 7,
+                  "Name": "Let's Get It Up"
+                },
+                {
+                  "TrackId": 8,
+                  "Name": "Inject The Venom"
+                },
+                {
+                  "TrackId": 9,
+                  "Name": "Snowballed"
+                },
+                {
+                  "TrackId": 10,
+                  "Name": "Evil Walks"
+                },
+                {
+                  "TrackId": 11,
+                  "Name": "C.O.D."
+                },
+                {
+                  "TrackId": 12,
+                  "Name": "Breaking The Rules"
+                },
+                {
+                  "TrackId": 13,
+                  "Name": "Night Of The Long Knives"
+                },
+                {
+                  "TrackId": 14,
+                  "Name": "Spellbound"
+                }
+              ]
+            },
+            {
+              "AlbumId": 4,
+              "Title": "Let There Be Rock",
+              "Tracks": [
+                {
+                  "TrackId": 15,
+                  "Name": "Go Down"
+                },
+                {
+                  "TrackId": 16,
+                  "Name": "Dog Eat Dog"
+                },
+                {
+                  "TrackId": 17,
+                  "Name": "Let There Be Rock"
+                },
+                {
+                  "TrackId": 18,
+                  "Name": "Bad Boy Boogie"
+                },
+                {
+                  "TrackId": 19,
+                  "Name": "Problem Child"
+                },
+                {
+                  "TrackId": 20,
+                  "Name": "Overdose"
+                },
+                {
+                  "TrackId": 21,
+                  "Name": "Hell Ain't A Bad Place To Be"
+                },
+                {
+                  "TrackId": 22,
+                  "Name": "Whole Lotta Rosie"
+                }
+              ]
+            }
+          ]
         }
       ]
     }
@@ -136,22 +498,7 @@
           "AlbumId": 3,
           "Tracks": [
             {
-              "TrackAlbums": [
-                {
-                  "AlbumId": 3,
-                  "Title": "Restless and Wild"
-                }
-              ]
-            },
-            {
-              "TrackAlbums": [
-                {
-                  "AlbumId": 3,
-                  "Title": "Restless and Wild"
-                }
-              ]
-            },
-            {
+              "TrackId": 4,
               "TrackAlbums": [
                 {
                   "AlbumId": 3,
@@ -167,25 +514,7 @@
           "AlbumId": 3,
           "Tracks": [
             {
-              "TrackId": 3,
-              "TrackAlbums": [
-                {
-                  "AlbumId": 3,
-                  "Title": "Restless and Wild"
-                }
-              ]
-            },
-            {
               "TrackId": 4,
-              "TrackAlbums": [
-                {
-                  "AlbumId": 3,
-                  "Title": "Restless and Wild"
-                }
-              ]
-            },
-            {
-              "TrackId": 5,
               "TrackAlbums": [
                 {
                   "AlbumId": 3,
@@ -199,30 +528,11 @@
       "AlbumOr": [
         {
           "AlbumId": 2,
-          "Tracks": [
-            {
-              "TrackId": 2,
-              "TrackAlbums": [
-                {
-                  "AlbumId": 2,
-                  "Title": "Balls to the Wall"
-                }
-              ]
-            }
-          ]
+          "Tracks": []
         },
         {
           "AlbumId": 3,
           "Tracks": [
-            {
-              "TrackId": 3,
-              "TrackAlbums": [
-                {
-                  "AlbumId": 3,
-                  "Title": "Restless and Wild"
-                }
-              ]
-            },
             {
               "TrackId": 4,
               "TrackAlbums": [
@@ -231,32 +541,12 @@
                   "Title": "Restless and Wild"
                 }
               ]
-            },
-            {
-              "TrackId": 5,
-              "TrackAlbums": [
-                {
-                  "AlbumId": 3,
-                  "Title": "Restless and Wild"
-                }
-              ]
             }
           ]
         }
       ],
-      "ArtistAlbumAndTrackNotNested": [
-        {
-          "Name": "AC/DC"
-        },
-        {
-          "Name": "The Rolling Stones"
-        }
-      ],
-      "ArtistAlbumAndTrackNested": [
-        {
-          "Name": "AC/DC"
-        }
-      ]
+      "ArtistAlbumAndTrackNotNested": [],
+      "ArtistAlbumAndTrackNested": []
     }
   }
 ]

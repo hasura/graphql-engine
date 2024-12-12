@@ -5,6 +5,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::{any::Any, sync::Arc};
+use thiserror::Error;
 
 use metadata_resolve as resolved;
 use open_dds::arguments::ArgumentName;
@@ -12,7 +13,9 @@ use open_dds::commands::CommandName;
 use open_dds::identifier::SubgraphName;
 
 use super::model::WithSession;
-use super::types::{NormalizedType, StructType, StructTypeName, TypeRegistry};
+use super::types::{
+    NormalizedType, StructType, StructTypeName, TypeRegistry, UnsupportedObject, UnsupportedType,
+};
 use crate::execute::planner::command::{CommandOutput, CommandQuery};
 use crate::execute::planner::scalar::{parse_datafusion_literal, parse_struct_literal};
 
@@ -43,7 +46,7 @@ impl ArgumentInfo {
     fn from_resolved(
         type_registry: &TypeRegistry,
         argument: &resolved::ArgumentInfo,
-    ) -> Option<Self> {
+    ) -> Result<Self, UnsupportedType> {
         // TODO, ArgumentInfo doesn't have the underlying scalar representation
         let (argument_type_normalized, argument_type) =
             type_registry.get_datafusion_type(&argument.argument_type.underlying_type)?;
@@ -53,7 +56,7 @@ impl ArgumentInfo {
             is_nullable: argument.argument_type.nullable,
             description: argument.description.clone(),
         };
-        Some(argument_info)
+        Ok(argument_info)
     }
 }
 
@@ -75,6 +78,19 @@ pub(crate) struct Command {
     pub output_type: CommandOutput,
 }
 
+// These return types are not supported
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Error)]
+pub enum UnsupportedReturnType {
+    #[error("scalar return types are not supported")]
+    Scalar,
+    #[error("object type not supported: {0}")]
+    ObjectNotSupported(UnsupportedObject),
+    #[error("sist of scalar types as return type is not supported")]
+    ListOfScalars,
+    #[error("nested lists are not supported as return type")]
+    ListOfLists,
+}
+
 // The conversion is as follows:
 // 1. If the types is a list of objects, then it would be a table of those entities.
 // 2. If the type is an object, it would be a table that returns a single row.
@@ -86,29 +102,46 @@ pub(crate) struct Command {
 fn return_type<'r>(
     registry: &'r TypeRegistry,
     output_type: &resolved::QualifiedTypeReference,
-) -> Option<(
-    // datafusion's table schema
-    &'r StructType,
-    // the expected output
-    CommandOutput,
-)> {
+) -> Result<
+    (
+        // datafusion's table schema
+        &'r StructType,
+        // the expected output
+        CommandOutput,
+    ),
+    UnsupportedReturnType,
+> {
     match &output_type.underlying_type {
         resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Inbuilt(_)) => {
-            None
+            Err(UnsupportedReturnType::Scalar)
             // scalar_type_to_table_schema(&data_type)
         }
         resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(custom_type)) => {
-            registry
+            let object = registry
                 .get_object(custom_type)
-                .map(|object| (object, CommandOutput::Object(custom_type.clone())))
+                .ok_or(UnsupportedReturnType::Scalar)?
+                .as_ref()
+                .map_err(|unsupported_object| {
+                    UnsupportedReturnType::ObjectNotSupported(unsupported_object.clone())
+                })?;
+
+            Ok((object, CommandOutput::Object(custom_type.clone())))
         }
         resolved::QualifiedBaseType::List(element_type) => match &element_type.underlying_type {
             resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(
                 custom_type,
-            )) => registry
-                .get_object(custom_type)
-                .map(|object| (object, CommandOutput::ListOfObjects(custom_type.clone()))),
-            _ => None,
+            )) => {
+                let object = registry
+                    .get_object(custom_type)
+                    .ok_or(UnsupportedReturnType::ListOfScalars)?
+                    .as_ref()
+                    .map_err(|unsupported_object| {
+                        UnsupportedReturnType::ObjectNotSupported(unsupported_object.clone())
+                    })?;
+
+                Ok((object, CommandOutput::ListOfObjects(custom_type.clone())))
+            }
+            _ => Err(UnsupportedReturnType::ListOfLists),
         },
     }
 }
@@ -123,6 +156,22 @@ fn return_type<'r>(
 //     // TODO
 //     None
 // }
+//
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Error)]
+pub enum UnsupportedCommand {
+    #[error("Command has argument presets defined")]
+    ArgumentPresetsDefined,
+    #[error("Return type not supported: {type_} (reason: {reason})")]
+    ReturnTypeNotSupported {
+        type_: resolved::QualifiedTypeReference,
+        reason: UnsupportedReturnType,
+    },
+    #[error("Argument not supported: {argument} (reason: {reason:?})")]
+    ArgumentNotSupported {
+        argument: ArgumentName,
+        reason: UnsupportedType,
+    },
+}
 
 impl Command {
     // this returns None if any of the following is true
@@ -131,30 +180,40 @@ impl Command {
     // 3. if any of the arguments to the command cannot be converted to datafusion's types
     pub fn from_resolved_command(
         type_registry: &TypeRegistry,
-        command: &resolved::CommandWithPermissions,
-    ) -> Option<Self> {
+        command: &resolved::CommandWithArgumentPresets,
+    ) -> Result<Self, UnsupportedCommand> {
         let argument_presets_defined = command
             .permissions
             .values()
             .any(|permission| !permission.argument_presets.is_empty());
 
         if argument_presets_defined {
-            return None;
+            return Err(UnsupportedCommand::ArgumentPresetsDefined);
         }
 
         let (struct_type, command_output) =
-            return_type(type_registry, &command.command.output_type)?;
+            return_type(type_registry, &command.command.output_type).map_err(|reason| {
+                UnsupportedCommand::ReturnTypeNotSupported {
+                    type_: command.command.output_type.clone(),
+                    reason,
+                }
+            })?;
 
-        let arguments = command
-            .command
-            .arguments
-            .iter()
-            .map(|(argument_name, argument)| {
-                let argument_info = ArgumentInfo::from_resolved(type_registry, argument)?;
-                Some((argument_name.clone(), argument_info))
-            })
-            // this returns None if any of the arguments cannot be converted
-            .collect::<Option<IndexMap<_, _>>>()?;
+        let arguments =
+            command
+                .command
+                .arguments
+                .iter()
+                .map(|(argument_name, argument)| {
+                    let argument_info = ArgumentInfo::from_resolved(type_registry, argument)
+                        .map_err(|reason| UnsupportedCommand::ArgumentNotSupported {
+                            argument: argument_name.clone(),
+                            reason,
+                        })?;
+                    Ok((argument_name.clone(), argument_info))
+                })
+                // this returns None if any of the arguments cannot be converted
+                .collect::<Result<IndexMap<_, _>, _>>()?;
 
         let command = Command {
             subgraph: command.command.name.subgraph.clone(),
@@ -165,7 +224,7 @@ impl Command {
             schema: struct_type.schema.clone(),
             output_type: command_output,
         };
-        Some(command)
+        Ok(command)
     }
 }
 
@@ -195,9 +254,16 @@ fn call_struct_convention(
 ) -> datafusion::Result<BTreeMap<ArgumentName, serde_json::Value>> {
     match (argument_infos.len(), exprs.len()) {
         (0, 0) => Ok(BTreeMap::new()), // No arguments expected or provided
-        (_, 0) => Err(datafusion::DataFusionError::Plan(
-            "Expected arguments, but none were provided".to_string(),
-        )),
+        (_, 0) => {
+            // if all the arguments are nullable
+            if argument_infos.values().all(|argument| argument.is_nullable) {
+                Ok(BTreeMap::new())
+            } else {
+                Err(datafusion::DataFusionError::Plan(
+                    "Expected arguments, but none were provided".to_string(),
+                ))
+            }
+        }
         (0, _) => Err(datafusion::DataFusionError::Plan(
             "No arguments expected, but some were provided".to_string(),
         )),
@@ -394,5 +460,359 @@ impl datafusion::TableProvider for CommandInvocation {
         )?;
         let logical_plan = self.to_logical_plan(Arc::new(qualified_projected_schema))?;
         state.create_physical_plan(&logical_plan).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::catalog::types::NormalizedTypeNamed;
+
+    use self::datafusion::*;
+    use super::*;
+    use ::datafusion::arrow::array::Array;
+    use ::datafusion::{
+        arrow::{
+            array::{ArrayRef, Int32Array, RecordBatch, StringArray},
+            datatypes::Schema,
+        },
+        physical_plan::memory::MemoryExec,
+        prelude::*,
+    };
+    use open_dds::identifier;
+    use std::sync::Arc;
+
+    #[derive(Clone, Debug)]
+    struct TestCommand {
+        name: String,
+        arguments: IndexMap<ArgumentName, ArgumentInfo>,
+    }
+    impl TableFunctionImpl for TestCommand {
+        fn call(&self, args: &[Expr]) -> Result<Arc<dyn TableProvider>> {
+            let arg_values = call_struct_convention(&self.arguments, args)?;
+
+            let schema = Arc::new(Schema::new(
+                self.arguments
+                    .iter()
+                    .map(|(name, info)| {
+                        Field::new(
+                            name.to_string(),
+                            info.argument_type.clone(),
+                            info.is_nullable,
+                        )
+                    })
+                    .collect::<Vec<_>>(),
+            ));
+
+            let null_value = serde_json::Value::Null;
+
+            let columns: Vec<ArrayRef> = self
+                .arguments
+                .iter()
+                .map(|(name, info)| {
+                    let value = arg_values.get(name).unwrap_or(&null_value);
+                    match &info.argument_type {
+                        DataType::Int32 => {
+                            let arr = match value {
+                                serde_json::Value::Number(n) => {
+                                    vec![Some(i32::try_from(n.as_i64().unwrap()).unwrap())]
+                                }
+                                serde_json::Value::Null => {
+                                    vec![None]
+                                }
+                                _ => vec![Some(0)],
+                            };
+                            Arc::new(Int32Array::from(arr)) as ArrayRef
+                        }
+                        DataType::Utf8 => {
+                            let arr = match value {
+                                serde_json::Value::String(s) => vec![Some(s.as_str())],
+
+                                serde_json::Value::Null => {
+                                    vec![None]
+                                }
+                                _ => vec![Some("")],
+                            };
+                            Arc::new(StringArray::from(arr)) as ArrayRef
+                        }
+                        _ => unimplemented!("Unsupported data type: {:?}", info.argument_type),
+                    }
+                })
+                .collect();
+
+            let batch = if columns.is_empty() {
+                RecordBatch::new_empty(schema.clone())
+            } else {
+                RecordBatch::try_new(schema.clone(), columns)?
+            };
+
+            let exec = MemoryExec::try_new(&[vec![batch]], schema.clone(), None)?;
+
+            Ok(Arc::new(TestCommandTableProvider {
+                schema,
+                exec: Arc::new(exec),
+            }))
+        }
+    }
+
+    struct TestCommandTableProvider {
+        schema: Arc<Schema>,
+        exec: Arc<MemoryExec>,
+    }
+
+    #[async_trait::async_trait]
+    impl TableProvider for TestCommandTableProvider {
+        fn as_any(&self) -> &dyn std::any::Any {
+            self
+        }
+
+        fn schema(&self) -> SchemaRef {
+            self.schema.clone()
+        }
+
+        fn table_type(&self) -> TableType {
+            TableType::Base
+        }
+
+        async fn scan(
+            &self,
+            _state: &dyn Session,
+            _projection: Option<&Vec<usize>>,
+            _filters: &[Expr],
+            _limit: Option<usize>,
+        ) -> Result<Arc<dyn ExecutionPlan>> {
+            Ok(self.exec.clone())
+        }
+    }
+
+    fn normalized_type(ty: DataType) -> NormalizedType {
+        NormalizedType::Named(NormalizedTypeNamed::Scalar(ty))
+    }
+
+    async fn setup_and_run_query(command: TestCommand, query: &str) -> Result<Vec<RecordBatch>> {
+        let name = command.name.clone();
+        let ctx = SessionContext::new();
+        ctx.register_udtf(&name, Arc::new(command));
+        let df = ctx.sql(query).await?;
+        df.collect().await
+    }
+
+    #[tokio::test]
+    async fn test_non_nullable_args() -> Result<()> {
+        let command = TestCommand {
+            name: "test_non_nullable".to_string(),
+            arguments: IndexMap::from([
+                (
+                    ArgumentName::from(identifier!("arg1")),
+                    ArgumentInfo {
+                        argument_type: DataType::Int32,
+                        is_nullable: false,
+                        description: None,
+                        argument_type_normalized: normalized_type(DataType::Int32),
+                    },
+                ),
+                (
+                    ArgumentName::from(identifier!("arg2")),
+                    ArgumentInfo {
+                        argument_type: DataType::Utf8,
+                        is_nullable: false,
+                        description: None,
+                        argument_type_normalized: normalized_type(DataType::Utf8),
+                    },
+                ),
+            ]),
+        };
+
+        let results = setup_and_run_query(
+            command,
+            "SELECT * FROM test_non_nullable(STRUCT(42 as arg1, 'hello' as arg2))",
+        )
+        .await?;
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_columns(), 2);
+        assert_eq!(
+            results[0]
+                .column(0)
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .unwrap()
+                .value(0),
+            42
+        );
+        assert_eq!(
+            results[0]
+                .column(1)
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .unwrap()
+                .value(0),
+            "hello"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_nullable_args() -> Result<()> {
+        let command = TestCommand {
+            name: "test_nullable".to_string(),
+            arguments: IndexMap::from([
+                (
+                    ArgumentName::from(identifier!("arg1")),
+                    ArgumentInfo {
+                        argument_type: DataType::Int32,
+                        is_nullable: true,
+                        description: None,
+                        argument_type_normalized: normalized_type(DataType::Int32),
+                    },
+                ),
+                (
+                    ArgumentName::from(identifier!("arg2")),
+                    ArgumentInfo {
+                        argument_type: DataType::Utf8,
+                        is_nullable: true,
+                        description: None,
+                        argument_type_normalized: normalized_type(DataType::Utf8),
+                    },
+                ),
+            ]),
+        };
+
+        let results = setup_and_run_query(
+            command,
+            "SELECT * FROM test_nullable(STRUCT(NULL as arg1, NULL as arg2))",
+        )
+        .await?;
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_columns(), 2);
+        assert!(results[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap()
+            .is_null(0));
+        assert!(results[0]
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .is_null(0));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_mixed_nullability() -> Result<()> {
+        let command = TestCommand {
+            name: "test_mixed".to_string(),
+            arguments: IndexMap::from([
+                (
+                    ArgumentName::from(identifier!("arg1")),
+                    ArgumentInfo {
+                        argument_type: DataType::Int32,
+                        is_nullable: false,
+                        description: None,
+                        argument_type_normalized: normalized_type(DataType::Int32),
+                    },
+                ),
+                (
+                    ArgumentName::from(identifier!("arg2")),
+                    ArgumentInfo {
+                        argument_type: DataType::Utf8,
+                        is_nullable: true,
+                        description: None,
+                        argument_type_normalized: normalized_type(DataType::Utf8),
+                    },
+                ),
+            ]),
+        };
+
+        let results = setup_and_run_query(
+            command,
+            "SELECT * FROM test_mixed(STRUCT(42 as arg1, NULL as arg2))",
+        )
+        .await?;
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_columns(), 2);
+        assert_eq!(
+            results[0]
+                .column(0)
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .unwrap()
+                .value(0),
+            42
+        );
+        assert!(results[0]
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .is_null(0));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_all_nullable_no_args() -> Result<()> {
+        let command = TestCommand {
+            name: "test_all_nullable".to_string(),
+            arguments: IndexMap::from([
+                (
+                    ArgumentName::from(identifier!("arg1")),
+                    ArgumentInfo {
+                        argument_type: DataType::Int32,
+                        is_nullable: true,
+                        description: None,
+                        argument_type_normalized: normalized_type(DataType::Int32),
+                    },
+                ),
+                (
+                    ArgumentName::from(identifier!("arg2")),
+                    ArgumentInfo {
+                        argument_type: DataType::Utf8,
+                        is_nullable: true,
+                        description: None,
+                        argument_type_normalized: normalized_type(DataType::Utf8),
+                    },
+                ),
+            ]),
+        };
+
+        let results = setup_and_run_query(command, "SELECT * FROM test_all_nullable()").await?;
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_columns(), 2);
+        assert!(results[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap()
+            .is_null(0));
+        assert!(results[0]
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .is_null(0));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_no_args() -> Result<()> {
+        let command = TestCommand {
+            name: "test_no_args".to_string(),
+            arguments: IndexMap::new(),
+        };
+
+        let results = setup_and_run_query(command, "SELECT * FROM test_no_args()").await?;
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_columns(), 0);
+
+        Ok(())
     }
 }

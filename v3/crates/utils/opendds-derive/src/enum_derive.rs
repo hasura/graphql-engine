@@ -63,7 +63,7 @@ pub fn impl_opendd_enum(impl_style: EnumImplStyle, variants: &[EnumVariant<'_>])
                         serde::de::Unexpected::Other("not an object"),
                         &"object",
                     ),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 })
             }
         };
@@ -90,7 +90,7 @@ fn impl_read_tag_value_str(
             let __tag_value = __object_map.remove(#tag)
             .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
                 error: serde::de::Error::missing_field(#tag),
-                path: open_dds::traits::JSONPath::new(),
+                path: jsonpath::JSONPath::new(),
             })?;
             let __tag_value_str = __tag_value
                 .as_str()
@@ -99,7 +99,7 @@ fn impl_read_tag_value_str(
                         serde::de::Unexpected::Other("not a string"),
                         &"string",
                     ),
-                    path: open_dds::traits::JSONPath::new_key(#tag),
+                    path: jsonpath::JSONPath::new_key(#tag),
                 })?;
         }
     }
@@ -126,7 +126,7 @@ fn impl_read_tag_value_str(
                         serde::de::Unexpected::Other("found empty object"),
                         &#expected_variants_error,
                     ),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 }
             )?;
             if let Some(_) = __object_map_iter.next() {
@@ -135,7 +135,7 @@ fn impl_read_tag_value_str(
                         serde::de::Unexpected::Other("found multiple object properties"),
                         &#expected_variants_error,
                     ),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 });
             }
             let __tag_value_str = __tag_value_string.as_str();
@@ -147,7 +147,7 @@ fn impl_read_tag_value_str(
                             serde::de::Unexpected::Other("not an object"),
                             &"object",
                         ),
-                        path: open_dds::traits::JSONPath::new_key(__tag_value_str),
+                        path: jsonpath::JSONPath::new_key(__tag_value_str),
                     })
                 }
             };
@@ -178,7 +178,7 @@ fn impl_deserialize_as_untagged<'a>(variants: &'a [EnumVariant<'a>]) -> proc_mac
                     __tag_value_str,
                 __known_variants.join(", ")
             )),
-            path: open_dds::traits::JSONPath::new_key("kind"),
+            path: jsonpath::JSONPath::new_key("kind"),
         })
     }
 }
@@ -194,7 +194,7 @@ fn gen_variant_match_if_exp<'a>(variant: &'a EnumVariant<'a>) -> proc_macro2::To
             // Inserting it again to fecilitate deserialize into internal enums
             __object_map.insert("kind".to_string(), serde_json::json!(__tag_value_str));
             return Ok(Self::#variant_name(
-                open_dds::traits::OpenDd::deserialize(serde_json::Value::Object(__object_map))?,
+                open_dds::traits::OpenDd::deserialize(serde_json::Value::Object(__object_map), path)?,
             ));
         }
     }
@@ -238,13 +238,10 @@ fn generate_enum_variants(
         let variant_name_str = variant_name_string.as_str();
         let parsed_variant = match tag_type {
             EnumTagType::Internal {..} | EnumTagType::External => quote! {
-                open_dds::traits::OpenDd::deserialize(#deserialize_from)?
+                open_dds::traits::OpenDd::deserialize(#deserialize_from, path)?
             },
             EnumTagType::Adjacent {tag:_, content} => quote! {
-                open_dds::traits::OpenDd::deserialize(#deserialize_from).map_err(|e| open_dds::traits::OpenDdDeserializeError {
-                    path: e.path.prepend_key(#content.to_string()),
-                    error: e.error,
-                })?
+                open_dds::traits::deserialize_key(#deserialize_from, path, #content.to_string())?
             },
         };
 
@@ -277,7 +274,7 @@ fn gen_deserialize_from(tag_type: &EnumTagType) -> proc_macro2::TokenStream {
         EnumTagType::Adjacent { tag: _, content } => quote! {
             __object_map.remove(#content).ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
                 error: serde::de::Error::missing_field(#content),
-                path: open_dds::traits::JSONPath::new(),
+                path: jsonpath::JSONPath::new(),
             })?
         },
     }
@@ -290,9 +287,9 @@ fn unexpected_variant_error(
     let known_variants = known_variants.join(", ");
 
     let path_exp = if let Some(tag) = tag {
-        quote! { open_dds::traits::JSONPath::new_key(#tag) }
+        quote! { jsonpath::JSONPath::new_key(#tag) }
     } else {
-        quote! { open_dds::traits::JSONPath::new() }
+        quote! { jsonpath::JSONPath::new() }
     };
 
     quote! {
@@ -516,15 +513,7 @@ fn build_variant_json_schema_metadata(
             }
         })
         .unwrap_or_default();
-    let example_expr = json_schema_opts
-        .example
-        .as_ref()
-        .map(|example| {
-            quote! {
-                metadata.examples = [#example()].to_vec();
-            }
-        })
-        .unwrap_or_default();
+    let example_expr = helpers::set_metadata_examples(&json_schema_opts.examples);
     quote! {
         {
             let mut metadata = schemars::schema::Metadata::default();

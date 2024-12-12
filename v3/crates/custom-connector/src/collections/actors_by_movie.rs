@@ -21,7 +21,6 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
                 description: None,
             },
         )]),
-        foreign_keys: BTreeMap::new(),
         uniqueness_constraints: BTreeMap::new(),
     }
 }

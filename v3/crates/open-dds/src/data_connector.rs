@@ -79,25 +79,25 @@ impl DataConnectorLink {
 fn ndc_capabilities_response_v01_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.4/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.6/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
 }
 
 fn ndc_schema_response_v01_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.4/ndc-models/tests/json_schema/schema_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.6/ndc-models/tests/json_schema/schema_response.jsonschema".into())
 }
 
 fn ndc_capabilities_response_v02_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0-rc.0/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0-rc.2/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
 }
 
 fn ndc_schema_response_v02_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0-rc.0/ndc-models/tests/json_schema/schema_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0-rc.2/ndc-models/tests/json_schema/schema_response.jsonschema".into())
 }
 
 /// Versioned schema and capabilities for a data connector.
@@ -154,10 +154,51 @@ mod tests {
 
     #[test]
     fn test_upgrade() {
-        let v1: DataConnectorLink = crate::traits::OpenDd::deserialize(serde_json::json!(
-            {
-                "version": "v1",
-                "definition": {
+        let v1: DataConnectorLink = crate::traits::OpenDd::deserialize(
+            serde_json::json!(
+                {
+                    "version": "v1",
+                    "definition": {
+                        "name": "foo",
+                        "url": {
+                            "singleUrl": {
+                                "value": "http://foo"
+                            }
+                        },
+                        "headers": {
+                            "Authorization": {
+                                "value": "Bearer: abc"
+                            }
+                        },
+                        "schema": {
+                            "version": "v0.1",
+                            "capabilities": {
+                                "version": "0.1.3",
+                                "capabilities": {
+                                    "query": {
+                                        "nested_fields": {}
+                                    },
+                                    "mutation": {}
+                                }
+                            },
+                            "schema": {
+                                "scalar_types": {},
+                                "object_types": {},
+                                "collections": [],
+                                "functions": [],
+                                "procedures": []
+                            }
+                        }
+                    }
+                }
+            ),
+            jsonpath::JSONPath::new(),
+        )
+        .unwrap();
+
+        let upgraded: DataConnectorLinkV1 = crate::traits::OpenDd::deserialize(
+            serde_json::json!(
+                {
                     "name": "foo",
                     "url": {
                         "singleUrl": {
@@ -175,7 +216,7 @@ mod tests {
                             "version": "0.1.3",
                             "capabilities": {
                                 "query": {
-                                    "nested_fields": {}
+                                  "nested_fields": {}
                                 },
                                 "mutation": {}
                             }
@@ -189,44 +230,9 @@ mod tests {
                         }
                     }
                 }
-            }
-        ))
-        .unwrap();
-
-        let upgraded: DataConnectorLinkV1 = crate::traits::OpenDd::deserialize(serde_json::json!(
-            {
-                "name": "foo",
-                "url": {
-                    "singleUrl": {
-                        "value": "http://foo"
-                    }
-                },
-                "headers": {
-                    "Authorization": {
-                        "value": "Bearer: abc"
-                    }
-                },
-                "schema": {
-                    "version": "v0.1",
-                    "capabilities": {
-                        "version": "0.1.3",
-                        "capabilities": {
-                            "query": {
-                              "nested_fields": {}
-                            },
-                            "mutation": {}
-                        }
-                    },
-                    "schema": {
-                        "scalar_types": {},
-                        "object_types": {},
-                        "collections": [],
-                        "functions": [],
-                        "procedures": []
-                    }
-                }
-            }
-        ))
+            ),
+            jsonpath::JSONPath::new(),
+        )
         .unwrap();
 
         assert_eq!(v1.upgrade(), upgraded);

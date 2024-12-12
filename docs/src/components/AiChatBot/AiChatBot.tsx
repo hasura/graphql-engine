@@ -5,24 +5,17 @@ import './styles.css';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { CloseIcon, RespondingIconGray, SparklesIcon } from '@site/src/components/AiChatBot/icons';
 import { useLocalStorage } from 'usehooks-ts';
-import profilePic from '@site/static/img/docs-bot-profile-pic.webp';
+// @ts-ignore
+import profilePic from './docs-bot-profile-pic.webp';
 import { v4 as uuidv4 } from 'uuid';
+import ThumbsDown from './thumbs-down.svg';
+import { BadBotResponse, BotWebsocketEvent, WebsocketPayload } from '@site/src/components/AiChatBot/types';
 
 interface Message {
   userMessage: string;
   botResponse: string;
+  id?: string;
 }
-
-interface Query {
-  previousMessages: Message[];
-  currentUserInput: string;
-}
-
-// Websocket Event data types (stringified)
-// {  type: "loading", message: "Processing your request..." }
-// {  type: "responsePart", message: "...part of response..." }
-// {  type: "error", message: "error description" }
-// {  type: "endOfStream", message: "End of stream..." }
 
 const initialMessages: Message[] = [
   {
@@ -51,10 +44,13 @@ export function AiChatBot({ style }) {
   // Manage the text input
   const [input, setInput] = useState<string>('');
   // Manage the message thread ID
-  const [messageThreadId, setMessageThreadId] = useLocalStorage<String>(
+  const [messageThreadId, setMessageThreadId] = useLocalStorage<string>(
     `hasuraV${customFields.hasuraVersion}ThreadId`,
     uuidv4()
   );
+  // Manage the responseQuality
+  const [badResponse, setBadResponse] = useState<BadBotResponse | null>(null);
+
   // Manage the historical messages
   const [messages, setMessages] = useLocalStorage<Message[]>(
     `hasuraV${customFields.hasuraVersion}BotMessages`,
@@ -83,7 +79,8 @@ export function AiChatBot({ style }) {
 
   const sanitizeInput = (input: string): string => {
     const sanitized = DOMPurify.sanitize(input.trim());
-    return sanitized.replace(/&/g, '&amp;')
+    return sanitized
+      .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
@@ -104,7 +101,7 @@ export function AiChatBot({ style }) {
         behavior: 'smooth',
       });
     }
-  }, [currentMessage.botResponse]);
+  }, [currentMessage.botResponse, badResponse]);
 
   // Detect if user scrolls up and disable auto-scrolling
   const handleScroll = e => {
@@ -125,8 +122,6 @@ export function AiChatBot({ style }) {
 
     const queryDevToken = process.env.NODE_ENV === 'development' && DEV_TOKEN ? `&devToken=${DEV_TOKEN}` : '';
 
-    console.log('process.env.NODE_ENV', process.env.NODE_ENV);
-
     const connectWebSocket = () => {
       websocket = new WebSocket(
         encodeURI(`${docsBotEndpointURL}?version=${hasuraVersion}&userId=${storedUserID}${queryDevToken}`)
@@ -138,11 +133,13 @@ export function AiChatBot({ style }) {
         clearTimeout(reconnectInterval);
       };
 
+      // Handle incoming messages
       websocket.onmessage = event => {
-        let response = { type: '', message: '' };
+        let response: BotWebsocketEvent;
 
         try {
-          response = JSON.parse(event.data) as { type: string; message: string };
+          response = JSON.parse(event.data) as { type: BotWebsocketEvent['type']; message: string };
+          // TODO check if this is the correct type
         } catch (e) {
           console.error('error parsing websocket message', e);
         }
@@ -213,11 +210,41 @@ export function AiChatBot({ style }) {
     }
 
     if (ws) {
-      const toSend = JSON.stringify({ previousMessages: messages, currentUserInput: input, messageThreadId });
-      setCurrentMessage({ userMessage: sanitizedInput, botResponse: '' });
+      const messageId = uuidv4();
+      setCurrentMessage({ userMessage: sanitizedInput, botResponse: '', id: messageId });
       setInput('');
-      ws.send(toSend);
+      const chatPayload: WebsocketPayload = {
+        payloadType: 'chatMessage',
+        chatMessage: {
+          previousMessages: messages,
+          currentUserInput: sanitizedInput,
+          messageId,
+          messageThreadId,
+        },
+        responseQuality: null,
+      };
+      ws.send(JSON.stringify(chatPayload));
       setIsResponding(true);
+    }
+  };
+
+  const handleBadBotResponse = async () => {
+    if (badResponse) {
+      console.log('responseQuality', badResponse);
+      // TODO SANITIZE AND VALIDATE RESPONSE QUALITY!!!
+      if (ws) {
+        const badBotResponsePayload: WebsocketPayload = {
+          payloadType: 'badBotResponse',
+          badBotResponse: {
+            messageId: badResponse.messageId,
+            responseText: badResponse.responseText,
+          },
+          chatMessage: null,
+        };
+
+        ws.send(JSON.stringify(badBotResponsePayload));
+      }
+      setBadResponse(null);
     }
   };
 
@@ -229,7 +256,7 @@ export function AiChatBot({ style }) {
             a: {
               props: {
                 target: '_blank',
-                rel: 'noopener noreferrer'
+                rel: 'noopener noreferrer',
               },
             },
           },
@@ -246,22 +273,16 @@ export function AiChatBot({ style }) {
     window.location.href.endsWith('/overview/');
 
   return (
-    <div className={'chat-popup'}>
-      <div className={isOnOverviewOrIndex ? 'chat-popup-index-and-overviews' : 'chat-popup-other-pages'}>
-        {isOpen ? (
-          <></>
-        ) : (
-          <button className="open-chat-button" onClick={() => setIsOpen(!isOpen)}>
-            {SparklesIcon} Hasura Docs AI Chat
-          </button>
-        )}
-        {isOpen && (
-          <div className={isOnOverviewOrIndex ? '' : 'absolute -bottom-11 w-full min-w-[500px] right-[10px]'}>
-            {isOpen && (
-              <button className="close-chat-button" onClick={() => setIsOpen(!isOpen)}>
-                {CloseIcon} Close Chat
-              </button>
-            )}
+    <div className="chat-popup">
+      <button className="open-chat-button" onClick={() => setIsOpen(true)}>
+        {SparklesIcon} Docs Assistant
+      </button>
+      {isOpen && (
+        <div className="modal-overlay" onClick={() => setIsOpen(false)}>
+          <div onClick={e => e.stopPropagation()}>
+            <button className="close-chat-button" onClick={() => setIsOpen(false)}>
+              {CloseIcon} Close Chat
+            </button>
             <div className="chat-window">
               <div className="info-bar">
                 <div className={'bot-name-pic-container'}>
@@ -272,7 +293,7 @@ export function AiChatBot({ style }) {
                   className="clear-button"
                   onClick={() => {
                     setMessages(initialMessages);
-                    setCurrentMessage({ userMessage: '', botResponse: '' });
+                    setCurrentMessage({ userMessage: '', botResponse: '', id: '' });
                     setMessageThreadId(uuidv4());
                   }}
                 >
@@ -284,16 +305,12 @@ export function AiChatBot({ style }) {
                   <div key={index}>
                     {msg.userMessage && (
                       <div className="user-message-container">
-                        <div className="formatted-text message user-message">
-                          {renderMessage(msg.userMessage)}
-                        </div>
+                        <div className="formatted-text message user-message">{renderMessage(msg.userMessage)}</div>
                       </div>
                     )}
                     {msg.botResponse && (
                       <div className="bot-message-container">
-                        <div className="formatted-text message bot-message">
-                          {renderMessage(msg.botResponse)}
-                        </div>
+                        <div className="formatted-text message bot-message">{renderMessage(msg.botResponse)}</div>
                       </div>
                     )}
                   </div>
@@ -313,12 +330,54 @@ export function AiChatBot({ style }) {
                       </div>
                     )}
                   </div>
+                  {messages.length > 3 && !isResponding && (
+                    <form
+                      id={'bad-response-form'}
+                      onSubmit={e => {
+                        e.preventDefault();
+                        handleBadBotResponse();
+                      }}
+                    >
+                      <div className={'flex'}>
+                        <button
+                          type="button"
+                          className="thumbs-down-button"
+                          onClick={() => {
+                            setBadResponse({
+                              responseText: null,
+                              messageId: messages.at(-1).id ?? '',
+                            });
+                          }}
+                        >
+                          <ThumbsDown className={'mb-4'} />
+                        </button>
+                      </div>
+                      <div>
+                        {badResponse !== null && (
+                          <div className="bad-response-container">
+                            <textarea
+                              rows={4}
+                              className={'w-full bg-none text-gray-700 placeholder-gray-500'}
+                              onChange={e =>
+                                setBadResponse(prevState => ({ ...prevState, responseText: e.target.value }))
+                              }
+                              placeholder={'Sorry about that. Please tell us how we can improve.'}
+                            ></textarea>
+                            <button type={'submit'} className={'feedback-submit-button'}>
+                              Submit
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </form>
+                  )}
                   <div className="responding-div">{isResponding ? RespondingIconGray : null}</div>
                 </div>
               </div>
               {/* Handles scrolling to the end */}
               {/*<div ref={messagesEndRef} />*/}
               <form
+                id={'chat-form'}
                 className="input-container"
                 onSubmit={e => {
                   e.preventDefault();
@@ -338,8 +397,8 @@ export function AiChatBot({ style }) {
               </form>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

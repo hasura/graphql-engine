@@ -93,19 +93,28 @@
               "scalar": {
                 "type": "Int",
                 "comparisonOperators": [
-                  { "name": "fancy_equals_operator", "argumentType": "Int!" }
+                  {
+                    "name": "fancy_equals_operator",
+                    "argumentType": "Int!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "custom",
                     "dataConnectorScalarType": "Int",
-                    "operatorMapping": { "fancy_equals_operator": "_eq" }
+                    "operatorMapping": {
+                      "fancy_equals_operator": "_eq"
+                    }
                   }
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Int_Comparison_Exp"
             }
@@ -120,19 +129,28 @@
               "scalar": {
                 "type": "String",
                 "comparisonOperators": [
-                  { "name": "equals", "argumentType": "String!" }
+                  {
+                    "name": "equals",
+                    "argumentType": "String!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "custom",
                     "dataConnectorScalarType": "String",
-                    "operatorMapping": { "fancy_equals_operator": "_eq" }
+                    "operatorMapping": {
+                      "fancy_equals_operator": "_eq"
+                    }
                   }
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "String_Comparison_Exp"
             }
@@ -163,8 +181,12 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Actor_bool_exp"
             }

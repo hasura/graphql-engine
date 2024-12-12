@@ -1,0 +1,15 @@
+[package]
+name = "jsonpath"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+serde = { workspace = true }
+serde_path_to_error = { workspace = true }
+
+[lints]
+workspace = true

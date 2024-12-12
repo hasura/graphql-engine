@@ -18,16 +18,23 @@ pub fn schemas(this: &Schema, that: &Schema) -> bool {
 /// An equality comparison of two schema objects that doesn't check the metadata's title or
 /// description. See `metadatas`.
 pub fn schema_objects(this: &SchemaObject, that: &SchemaObject) -> bool {
-    eq_option_box_with(&this.metadata, &that.metadata, metadatas)
-        && this.instance_type == that.instance_type
+    eq_option_with(
+        this.metadata.as_deref(),
+        that.metadata.as_deref(),
+        metadatas,
+    ) && this.instance_type == that.instance_type
         && this.format == that.format
         && this.enum_values == that.enum_values
         && this.const_value == that.const_value
-        && eq_option_box_with(&this.subschemas, &that.subschemas, subschemas)
+        && eq_option_with(
+            this.subschemas.as_deref(),
+            that.subschemas.as_deref(),
+            subschemas,
+        )
         && this.number == that.number
         && this.string == that.string
-        && eq_option_box_with(&this.array, &that.array, arrays)
-        && eq_option_box_with(&this.object, &that.object, objects)
+        && eq_option_with(this.array.as_deref(), that.array.as_deref(), arrays)
+        && eq_option_with(this.object.as_deref(), that.object.as_deref(), objects)
         && this.reference == that.reference
         && this.extensions == that.extensions
 }
@@ -59,13 +66,28 @@ pub fn metadatas(this: &Metadata, that: &Metadata) -> bool {
 /// An equality comparison of two subschemas that doesn't check the metadata's title or
 /// description. See `metadatas`.
 pub fn subschemas(this: &SubschemaValidation, that: &SubschemaValidation) -> bool {
-    eq_option_with(&this.all_of, &that.all_of, |x, y| vec_of_schemas(x, y))
-        && eq_option_with(&this.any_of, &that.any_of, |x, y| vec_of_schemas(x, y))
-        && eq_option_with(&this.one_of, &that.one_of, |x, y| vec_of_schemas(x, y))
-        && eq_option_box_with(&this.not, &that.not, schemas)
-        && eq_option_box_with(&this.if_schema, &that.if_schema, schemas)
-        && eq_option_box_with(&this.then_schema, &that.then_schema, schemas)
-        && eq_option_box_with(&this.else_schema, &that.else_schema, schemas)
+    eq_option_with(this.all_of.as_ref(), that.all_of.as_ref(), |x, y| {
+        vec_of_schemas(x, y)
+    }) && eq_option_with(this.any_of.as_ref(), that.any_of.as_ref(), |x, y| {
+        vec_of_schemas(x, y)
+    }) && eq_option_with(this.one_of.as_ref(), that.one_of.as_ref(), |x, y| {
+        vec_of_schemas(x, y)
+    }) && eq_option_with(this.not.as_deref(), that.not.as_deref(), schemas)
+        && eq_option_with(
+            this.if_schema.as_deref(),
+            that.if_schema.as_deref(),
+            schemas,
+        )
+        && eq_option_with(
+            this.then_schema.as_deref(),
+            that.then_schema.as_deref(),
+            schemas,
+        )
+        && eq_option_with(
+            this.else_schema.as_deref(),
+            that.else_schema.as_deref(),
+            schemas,
+        )
 }
 
 /// An equality comparison of two vectors of schemas that doesn't check the metadata's title or
@@ -77,12 +99,18 @@ pub fn vec_of_schemas(this: &[Schema], that: &[Schema]) -> bool {
 /// An equality comparison of two array validations that doesn't check the metadata's title or
 /// description. See `metadatas`.
 pub fn arrays(this: &ArrayValidation, that: &ArrayValidation) -> bool {
-    eq_option_with(&this.items, &that.items, single_or_vec_schemas)
-        && eq_option_box_with(&this.additional_items, &that.additional_items, schemas)
-        && this.max_items == that.max_items
+    eq_option_with(
+        this.items.as_ref(),
+        that.items.as_ref(),
+        single_or_vec_schemas,
+    ) && eq_option_with(
+        this.additional_items.as_deref(),
+        that.additional_items.as_deref(),
+        schemas,
+    ) && this.max_items == that.max_items
         && this.min_items == that.min_items
         && this.unique_items == that.unique_items
-        && eq_option_box_with(&this.contains, &that.contains, schemas)
+        && eq_option_with(this.contains.as_deref(), that.contains.as_deref(), schemas)
 }
 
 /// An equality comparison of two single-or-vectors-of schemas that doesn't check the metadata's
@@ -103,12 +131,16 @@ pub fn objects(this: &ObjectValidation, that: &ObjectValidation) -> bool {
         && this.required == that.required
         && this.properties == that.properties
         && schema_maps(&this.pattern_properties, &that.pattern_properties)
-        && eq_option_box_with(
-            &this.additional_properties,
-            &that.additional_properties,
+        && eq_option_with(
+            this.additional_properties.as_deref(),
+            that.additional_properties.as_deref(),
             schemas,
         )
-        && eq_option_box_with(&this.property_names, &that.property_names, schemas)
+        && eq_option_with(
+            this.property_names.as_deref(),
+            that.property_names.as_deref(),
+            schemas,
+        )
 }
 
 /// An equality comparison of two maps of schemas that doesn't check the metadata's title or
@@ -131,21 +163,12 @@ pub fn schema_maps(this: &Map<String, Schema>, that: &Map<String, Schema>) -> bo
 
 /// A helper for comparing constrained equality on two `Option` values.
 pub fn eq_option_with<T: PartialEq, F: FnOnce(&T, &T) -> bool>(
-    this: &Option<T>,
-    that: &Option<T>,
+    this: Option<&T>,
+    that: Option<&T>,
     with: F,
 ) -> bool {
     match (this, that) {
         (Some(x), Some(y)) => with(x, y),
         _ => this == that,
     }
-}
-
-/// A helper for comparing constrained equality on two boxed `Option` values.
-pub fn eq_option_box_with<T: PartialEq, F: FnOnce(&T, &T) -> bool>(
-    this: &Option<Box<T>>,
-    that: &Option<Box<T>>,
-    with: F,
-) -> bool {
-    eq_option_with(this, that, |x, y| with(x, y))
 }

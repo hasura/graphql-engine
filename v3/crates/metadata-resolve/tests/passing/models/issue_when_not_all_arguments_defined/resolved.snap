@@ -93,15 +93,6 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             },
                         },
                     },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "test",
-                            ),
-                        ): {
-                            String,
-                        },
-                    },
                 },
             },
         },
@@ -126,6 +117,18 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                 description: Some(
                     "Headers map",
                 ),
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "myconnector",
+                            ),
+                        ),
+                    }: JSON,
+                },
             },
         },
         models: {
@@ -138,8 +141,24 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                         "collection_with_args",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                1,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -278,7 +297,25 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
-                                    supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             collection: CollectionName(
@@ -417,6 +454,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                         description: None,
                     },
                 },
+                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
@@ -501,9 +539,11 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "default",
@@ -515,7 +555,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -545,9 +585,23 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "collection_with_args",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "test",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -566,7 +620,8 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                     ),
                 },
             },
-        ),
+            scalars: {},
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -597,9 +652,15 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
             ),
             enable_apollo_federation_fields: false,
             bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
         },
-        pre_parse_plugins: [],
-        roles: [],
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {},
     },
     [
         ModelIssue(

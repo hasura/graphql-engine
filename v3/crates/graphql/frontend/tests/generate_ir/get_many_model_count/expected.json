@@ -1,0 +1,1728 @@
+{
+  "Query": {
+    "getLatestArticle": {
+      "FunctionBasedCommand": {
+        "selection_set": {
+          "fields": {
+            "article": {
+              "alias": "article",
+              "field_calls": [
+                [
+                  [],
+                  {
+                    "name": "article",
+                    "info": {
+                      "generic": {
+                        "Output": {
+                          "RelationshipToModel": {
+                            "source_type": {
+                              "name": "commandArticle"
+                            },
+                            "relationship_name": "article",
+                            "model_name": {
+                              "name": "Articles"
+                            },
+                            "target_source": {
+                              "model": {
+                                "data_connector": {
+                                  "name": {
+                                    "name": "db"
+                                  },
+                                  "url": {
+                                    "singleUrl": "http://localhost:8080/"
+                                  },
+                                  "headers": {
+                                    "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                  },
+                                  "capabilities": {
+                                    "supported_ndc_version": "V01",
+                                    "supports_explaining_queries": true,
+                                    "supports_nested_object_filtering": true,
+                                    "supports_aggregates": {},
+                                    "supports_query_variables": true,
+                                    "supports_relationships": {
+                                      "supports_relation_comparisons": true,
+                                      "supports_nested_relationships": {
+                                        "supports_nested_array_selection": true
+                                      }
+                                    }
+                                  }
+                                },
+                                "collection": "article",
+                                "collection_type": "article",
+                                "type_mappings": {
+                                  "{\"name\":\"article\"}": {
+                                    "Object": {
+                                      "ndc_object_type_name": "article",
+                                      "field_mappings": {
+                                        "article_id": {
+                                          "column": "id",
+                                          "column_type": {
+                                            "type": "named",
+                                            "name": "int4"
+                                          },
+                                          "column_type_representation": {
+                                            "type": "json"
+                                          },
+                                          "comparison_operators": {
+                                            "equality_operators": ["_eq"],
+                                            "other_operators": [
+                                              "_gt",
+                                              "_gte",
+                                              "_lt",
+                                              "_lte",
+                                              "_neq"
+                                            ]
+                                          }
+                                        },
+                                        "author_id": {
+                                          "column": "author_id",
+                                          "column_type": {
+                                            "type": "named",
+                                            "name": "int4"
+                                          },
+                                          "column_type_representation": {
+                                            "type": "json"
+                                          },
+                                          "comparison_operators": {
+                                            "equality_operators": ["_eq"],
+                                            "other_operators": [
+                                              "_gt",
+                                              "_gte",
+                                              "_lt",
+                                              "_lte",
+                                              "_neq"
+                                            ]
+                                          }
+                                        },
+                                        "title": {
+                                          "column": "title",
+                                          "column_type": {
+                                            "type": "named",
+                                            "name": "varchar"
+                                          },
+                                          "column_type_representation": {
+                                            "type": "json"
+                                          },
+                                          "comparison_operators": {
+                                            "equality_operators": ["_eq"],
+                                            "other_operators": [
+                                              "_gt",
+                                              "_gte",
+                                              "_ilike",
+                                              "_iregex",
+                                              "_like",
+                                              "_lt",
+                                              "_lte",
+                                              "_neq",
+                                              "_nilike",
+                                              "_niregex",
+                                              "_nlike",
+                                              "_nregex",
+                                              "_regex",
+                                              "st_coveredby",
+                                              "st_covers",
+                                              "st_intersects",
+                                              "st_relatematch",
+                                              "starts_with",
+                                              "ts_match_tt"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "argument_mappings": {},
+                                "data_connector_link_argument_presets": {},
+                                "source_arguments": {}
+                              },
+                              "capabilities": {
+                                "foreach": null,
+                                "supports_relationships": {
+                                  "supports_relation_comparisons": true,
+                                  "supports_nested_relationships": {
+                                    "supports_nested_array_selection": true
+                                  }
+                                }
+                              }
+                            },
+                            "target_type": {
+                              "name": "article"
+                            },
+                            "relationship_type": "Object",
+                            "mappings": [
+                              {
+                                "source_field": {
+                                  "fieldName": "article_id"
+                                },
+                                "target_field": {
+                                  "fieldName": "article_id"
+                                },
+                                "target_ndc_column": {
+                                  "column": "id",
+                                  "equal_operator": "_eq"
+                                }
+                              }
+                            ],
+                            "deprecated": null
+                          }
+                        }
+                      },
+                      "namespaced": {
+                        "Model": {
+                          "filter": "AllowAll",
+                          "argument_presets": {
+                            "argument_presets": {}
+                          },
+                          "allow_subscriptions": false
+                        }
+                      }
+                    },
+                    "arguments": {}
+                  }
+                ]
+              ],
+              "selection_set": {
+                "fields": {
+                  "Author": {
+                    "alias": "Author",
+                    "field_calls": [
+                      [
+                        [],
+                        {
+                          "name": "Author",
+                          "info": {
+                            "generic": {
+                              "Output": {
+                                "RelationshipToModel": {
+                                  "source_type": {
+                                    "name": "article"
+                                  },
+                                  "relationship_name": "Author",
+                                  "model_name": {
+                                    "name": "Authors"
+                                  },
+                                  "target_source": {
+                                    "model": {
+                                      "data_connector": {
+                                        "name": {
+                                          "name": "db"
+                                        },
+                                        "url": {
+                                          "singleUrl": "http://localhost:8080/"
+                                        },
+                                        "headers": {
+                                          "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                        },
+                                        "capabilities": {
+                                          "supported_ndc_version": "V01",
+                                          "supports_explaining_queries": true,
+                                          "supports_nested_object_filtering": true,
+                                          "supports_aggregates": {},
+                                          "supports_query_variables": true,
+                                          "supports_relationships": {
+                                            "supports_relation_comparisons": true,
+                                            "supports_nested_relationships": {
+                                              "supports_nested_array_selection": true
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "collection": "author",
+                                      "collection_type": "author",
+                                      "type_mappings": {
+                                        "{\"name\":\"author\"}": {
+                                          "Object": {
+                                            "ndc_object_type_name": "author",
+                                            "field_mappings": {
+                                              "author_id": {
+                                                "column": "id",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "int8"
+                                                },
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq"
+                                                  ]
+                                                }
+                                              },
+                                              "first_name": {
+                                                "column": "first_name",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "varchar"
+                                                },
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_ilike",
+                                                    "_iregex",
+                                                    "_like",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq",
+                                                    "_nilike",
+                                                    "_niregex",
+                                                    "_nlike",
+                                                    "_nregex",
+                                                    "_regex",
+                                                    "st_coveredby",
+                                                    "st_covers",
+                                                    "st_intersects",
+                                                    "st_relatematch",
+                                                    "starts_with",
+                                                    "ts_match_tt"
+                                                  ]
+                                                }
+                                              },
+                                              "last_name": {
+                                                "column": "last_name",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "varchar"
+                                                },
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_ilike",
+                                                    "_iregex",
+                                                    "_like",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq",
+                                                    "_nilike",
+                                                    "_niregex",
+                                                    "_nlike",
+                                                    "_nregex",
+                                                    "_regex",
+                                                    "st_coveredby",
+                                                    "st_covers",
+                                                    "st_intersects",
+                                                    "st_relatematch",
+                                                    "starts_with",
+                                                    "ts_match_tt"
+                                                  ]
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "argument_mappings": {},
+                                      "data_connector_link_argument_presets": {},
+                                      "source_arguments": {}
+                                    },
+                                    "capabilities": {
+                                      "foreach": null,
+                                      "supports_relationships": {
+                                        "supports_relation_comparisons": true,
+                                        "supports_nested_relationships": {
+                                          "supports_nested_array_selection": true
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "target_type": {
+                                    "name": "author"
+                                  },
+                                  "relationship_type": "Object",
+                                  "mappings": [
+                                    {
+                                      "source_field": {
+                                        "fieldName": "author_id"
+                                      },
+                                      "target_field": {
+                                        "fieldName": "author_id"
+                                      },
+                                      "target_ndc_column": {
+                                        "column": "id",
+                                        "equal_operator": "_eq"
+                                      }
+                                    }
+                                  ],
+                                  "deprecated": null
+                                }
+                              }
+                            },
+                            "namespaced": {
+                              "Model": {
+                                "filter": "AllowAll",
+                                "argument_presets": {
+                                  "argument_presets": {}
+                                },
+                                "allow_subscriptions": false
+                              }
+                            }
+                          },
+                          "arguments": {}
+                        }
+                      ]
+                    ],
+                    "selection_set": {
+                      "fields": {
+                        "Articles": {
+                          "alias": "Articles",
+                          "field_calls": [
+                            [
+                              [],
+                              {
+                                "name": "Articles",
+                                "info": {
+                                  "generic": {
+                                    "Output": {
+                                      "RelationshipToModel": {
+                                        "source_type": {
+                                          "name": "author"
+                                        },
+                                        "relationship_name": "Articles",
+                                        "model_name": {
+                                          "name": "Articles"
+                                        },
+                                        "target_source": {
+                                          "model": {
+                                            "data_connector": {
+                                              "name": {
+                                                "name": "db"
+                                              },
+                                              "url": {
+                                                "singleUrl": "http://localhost:8080/"
+                                              },
+                                              "headers": {
+                                                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                              },
+                                              "capabilities": {
+                                                "supported_ndc_version": "V01",
+                                                "supports_explaining_queries": true,
+                                                "supports_nested_object_filtering": true,
+                                                "supports_aggregates": {},
+                                                "supports_query_variables": true,
+                                                "supports_relationships": {
+                                                  "supports_relation_comparisons": true,
+                                                  "supports_nested_relationships": {
+                                                    "supports_nested_array_selection": true
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "collection": "article",
+                                            "collection_type": "article",
+                                            "type_mappings": {
+                                              "{\"name\":\"article\"}": {
+                                                "Object": {
+                                                  "ndc_object_type_name": "article",
+                                                  "field_mappings": {
+                                                    "article_id": {
+                                                      "column": "id",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "int4"
+                                                      },
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq"
+                                                        ]
+                                                      }
+                                                    },
+                                                    "author_id": {
+                                                      "column": "author_id",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "int4"
+                                                      },
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq"
+                                                        ]
+                                                      }
+                                                    },
+                                                    "title": {
+                                                      "column": "title",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "varchar"
+                                                      },
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_ilike",
+                                                          "_iregex",
+                                                          "_like",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq",
+                                                          "_nilike",
+                                                          "_niregex",
+                                                          "_nlike",
+                                                          "_nregex",
+                                                          "_regex",
+                                                          "st_coveredby",
+                                                          "st_covers",
+                                                          "st_intersects",
+                                                          "st_relatematch",
+                                                          "starts_with",
+                                                          "ts_match_tt"
+                                                        ]
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "argument_mappings": {},
+                                            "data_connector_link_argument_presets": {},
+                                            "source_arguments": {}
+                                          },
+                                          "capabilities": {
+                                            "foreach": null,
+                                            "supports_relationships": {
+                                              "supports_relation_comparisons": true,
+                                              "supports_nested_relationships": {
+                                                "supports_nested_array_selection": true
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "target_type": {
+                                          "name": "article"
+                                        },
+                                        "relationship_type": "Array",
+                                        "mappings": [
+                                          {
+                                            "source_field": {
+                                              "fieldName": "author_id"
+                                            },
+                                            "target_field": {
+                                              "fieldName": "author_id"
+                                            },
+                                            "target_ndc_column": {
+                                              "column": "author_id",
+                                              "equal_operator": "_eq"
+                                            }
+                                          }
+                                        ],
+                                        "deprecated": null
+                                      }
+                                    }
+                                  },
+                                  "namespaced": {
+                                    "Model": {
+                                      "filter": "AllowAll",
+                                      "argument_presets": {
+                                        "argument_presets": {}
+                                      },
+                                      "allow_subscriptions": false
+                                    }
+                                  }
+                                },
+                                "arguments": {}
+                              }
+                            ]
+                          ],
+                          "selection_set": {
+                            "fields": {
+                              "id": {
+                                "alias": "id",
+                                "field_calls": [
+                                  [
+                                    [],
+                                    {
+                                      "name": "id",
+                                      "info": {
+                                        "generic": {
+                                          "Output": {
+                                            "GlobalIDField": {
+                                              "global_id_fields": ["article_id"]
+                                            }
+                                          }
+                                        },
+                                        "namespaced": null
+                                      },
+                                      "arguments": {}
+                                    }
+                                  ]
+                                ],
+                                "selection_set": {
+                                  "fields": {},
+                                  "type_name": null
+                                },
+                                "type_container": {
+                                  "base": {
+                                    "Named": "ID"
+                                  },
+                                  "nullable": false
+                                }
+                              },
+                              "title": {
+                                "alias": "title",
+                                "field_calls": [
+                                  [
+                                    [],
+                                    {
+                                      "name": "title",
+                                      "info": {
+                                        "generic": {
+                                          "Output": {
+                                            "Field": {
+                                              "name": "title",
+                                              "field_type": {
+                                                "underlying_type": {
+                                                  "Named": {
+                                                    "Inbuilt": "String"
+                                                  }
+                                                }
+                                              },
+                                              "field_base_type_kind": "Scalar",
+                                              "parent_type": {
+                                                "name": "article"
+                                              },
+                                              "argument_types": {},
+                                              "deprecated": null
+                                            }
+                                          }
+                                        },
+                                        "namespaced": null
+                                      },
+                                      "arguments": {}
+                                    }
+                                  ]
+                                ],
+                                "selection_set": {
+                                  "fields": {},
+                                  "type_name": null
+                                },
+                                "type_container": {
+                                  "base": {
+                                    "Named": "String"
+                                  },
+                                  "nullable": false
+                                }
+                              }
+                            },
+                            "type_name": "Article"
+                          },
+                          "type_container": {
+                            "base": {
+                              "List": {
+                                "base": {
+                                  "Named": "Article"
+                                },
+                                "nullable": false
+                              }
+                            },
+                            "nullable": true
+                          }
+                        }
+                      },
+                      "type_name": "Author"
+                    },
+                    "type_container": {
+                      "base": {
+                        "Named": "Author"
+                      },
+                      "nullable": true
+                    }
+                  }
+                },
+                "type_name": "Article"
+              },
+              "type_container": {
+                "base": {
+                  "Named": "Article"
+                },
+                "nullable": true
+              }
+            }
+          },
+          "type_name": "CommandArticle"
+        },
+        "ir": {
+          "command_info": {
+            "command_name": {
+              "name": "get_latest_article"
+            },
+            "field_name": "getLatestArticle",
+            "data_connector": {
+              "name": {
+                "name": "db"
+              },
+              "url": {
+                "singleUrl": "http://localhost:8080/"
+              },
+              "headers": {
+                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+              },
+              "capabilities": {
+                "supported_ndc_version": "V01",
+                "supports_explaining_queries": true,
+                "supports_nested_object_filtering": true,
+                "supports_aggregates": {},
+                "supports_query_variables": true,
+                "supports_relationships": {
+                  "supports_relation_comparisons": true,
+                  "supports_nested_relationships": {
+                    "supports_nested_array_selection": true
+                  }
+                }
+              }
+            },
+            "arguments": {},
+            "selection": {
+              "Object": {
+                "fields": {
+                  "article": {
+                    "ModelRelationshipLocal": {
+                      "query": {
+                        "data_connector": {
+                          "name": {
+                            "name": "db"
+                          },
+                          "url": {
+                            "singleUrl": "http://localhost:8080/"
+                          },
+                          "headers": {
+                            "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                          },
+                          "capabilities": {
+                            "supported_ndc_version": "V01",
+                            "supports_explaining_queries": true,
+                            "supports_nested_object_filtering": true,
+                            "supports_aggregates": {},
+                            "supports_query_variables": true,
+                            "supports_relationships": {
+                              "supports_relation_comparisons": true,
+                              "supports_nested_relationships": {
+                                "supports_nested_array_selection": true
+                              }
+                            }
+                          }
+                        },
+                        "collection": "article",
+                        "arguments": {},
+                        "filter_clause": {
+                          "query_filter": {
+                            "where_clause": null,
+                            "additional_filter": null
+                          },
+                          "permission_filter": null,
+                          "relationship_join_filter": null
+                        },
+                        "limit": null,
+                        "offset": null,
+                        "order_by": null,
+                        "selection": {
+                          "fields": {
+                            "Author": {
+                              "ModelRelationshipLocal": {
+                                "query": {
+                                  "data_connector": {
+                                    "name": {
+                                      "name": "db"
+                                    },
+                                    "url": {
+                                      "singleUrl": "http://localhost:8080/"
+                                    },
+                                    "headers": {
+                                      "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                    },
+                                    "capabilities": {
+                                      "supported_ndc_version": "V01",
+                                      "supports_explaining_queries": true,
+                                      "supports_nested_object_filtering": true,
+                                      "supports_aggregates": {},
+                                      "supports_query_variables": true,
+                                      "supports_relationships": {
+                                        "supports_relation_comparisons": true,
+                                        "supports_nested_relationships": {
+                                          "supports_nested_array_selection": true
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "collection": "author",
+                                  "arguments": {},
+                                  "filter_clause": {
+                                    "query_filter": {
+                                      "where_clause": null,
+                                      "additional_filter": null
+                                    },
+                                    "permission_filter": null,
+                                    "relationship_join_filter": null
+                                  },
+                                  "limit": null,
+                                  "offset": null,
+                                  "order_by": null,
+                                  "selection": {
+                                    "fields": {
+                                      "Articles": {
+                                        "ModelRelationshipLocal": {
+                                          "query": {
+                                            "data_connector": {
+                                              "name": {
+                                                "name": "db"
+                                              },
+                                              "url": {
+                                                "singleUrl": "http://localhost:8080/"
+                                              },
+                                              "headers": {
+                                                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                              },
+                                              "capabilities": {
+                                                "supported_ndc_version": "V01",
+                                                "supports_explaining_queries": true,
+                                                "supports_nested_object_filtering": true,
+                                                "supports_aggregates": {},
+                                                "supports_query_variables": true,
+                                                "supports_relationships": {
+                                                  "supports_relation_comparisons": true,
+                                                  "supports_nested_relationships": {
+                                                    "supports_nested_array_selection": true
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "collection": "article",
+                                            "arguments": {},
+                                            "filter_clause": {
+                                              "query_filter": {
+                                                "where_clause": null,
+                                                "additional_filter": null
+                                              },
+                                              "permission_filter": null,
+                                              "relationship_join_filter": null
+                                            },
+                                            "limit": null,
+                                            "offset": null,
+                                            "order_by": null,
+                                            "selection": {
+                                              "fields": {
+                                                "hasura_global_id_col_id_article_id": {
+                                                  "Column": {
+                                                    "column": "id",
+                                                    "nested_selection": null,
+                                                    "arguments": {}
+                                                  }
+                                                },
+                                                "title": {
+                                                  "Column": {
+                                                    "column": "title",
+                                                    "nested_selection": null,
+                                                    "arguments": {}
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "aggregate_selection": null
+                                          },
+                                          "name": "default___author__Articles",
+                                          "relationship_info": {
+                                            "relationship_name": "Articles",
+                                            "relationship_type": "Array",
+                                            "source_type": {
+                                              "name": "author"
+                                            },
+                                            "source_data_connector": {
+                                              "name": {
+                                                "name": "db"
+                                              },
+                                              "url": {
+                                                "singleUrl": "http://localhost:8080/"
+                                              },
+                                              "headers": {
+                                                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                              },
+                                              "capabilities": {
+                                                "supported_ndc_version": "V01",
+                                                "supports_explaining_queries": true,
+                                                "supports_nested_object_filtering": true,
+                                                "supports_aggregates": {},
+                                                "supports_query_variables": true,
+                                                "supports_relationships": {
+                                                  "supports_relation_comparisons": true,
+                                                  "supports_nested_relationships": {
+                                                    "supports_nested_array_selection": true
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "source_type_mappings": {
+                                              "{\"name\":\"author\"}": {
+                                                "Object": {
+                                                  "ndc_object_type_name": "author",
+                                                  "field_mappings": {
+                                                    "author_id": {
+                                                      "column": "id",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "int8"
+                                                      },
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq"
+                                                        ]
+                                                      }
+                                                    },
+                                                    "first_name": {
+                                                      "column": "first_name",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "varchar"
+                                                      },
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_ilike",
+                                                          "_iregex",
+                                                          "_like",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq",
+                                                          "_nilike",
+                                                          "_niregex",
+                                                          "_nlike",
+                                                          "_nregex",
+                                                          "_regex",
+                                                          "st_coveredby",
+                                                          "st_covers",
+                                                          "st_intersects",
+                                                          "st_relatematch",
+                                                          "starts_with",
+                                                          "ts_match_tt"
+                                                        ]
+                                                      }
+                                                    },
+                                                    "last_name": {
+                                                      "column": "last_name",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "varchar"
+                                                      },
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_ilike",
+                                                          "_iregex",
+                                                          "_like",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq",
+                                                          "_nilike",
+                                                          "_niregex",
+                                                          "_nlike",
+                                                          "_nregex",
+                                                          "_regex",
+                                                          "st_coveredby",
+                                                          "st_covers",
+                                                          "st_intersects",
+                                                          "st_relatematch",
+                                                          "starts_with",
+                                                          "ts_match_tt"
+                                                        ]
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "target_source": {
+                                              "model": {
+                                                "data_connector": {
+                                                  "name": {
+                                                    "name": "db"
+                                                  },
+                                                  "url": {
+                                                    "singleUrl": "http://localhost:8080/"
+                                                  },
+                                                  "headers": {
+                                                    "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                                  },
+                                                  "capabilities": {
+                                                    "supported_ndc_version": "V01",
+                                                    "supports_explaining_queries": true,
+                                                    "supports_nested_object_filtering": true,
+                                                    "supports_aggregates": {},
+                                                    "supports_query_variables": true,
+                                                    "supports_relationships": {
+                                                      "supports_relation_comparisons": true,
+                                                      "supports_nested_relationships": {
+                                                        "supports_nested_array_selection": true
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "collection": "article",
+                                                "collection_type": "article",
+                                                "type_mappings": {
+                                                  "{\"name\":\"article\"}": {
+                                                    "Object": {
+                                                      "ndc_object_type_name": "article",
+                                                      "field_mappings": {
+                                                        "article_id": {
+                                                          "column": "id",
+                                                          "column_type": {
+                                                            "type": "named",
+                                                            "name": "int4"
+                                                          },
+                                                          "column_type_representation": {
+                                                            "type": "json"
+                                                          },
+                                                          "comparison_operators": {
+                                                            "equality_operators": [
+                                                              "_eq"
+                                                            ],
+                                                            "other_operators": [
+                                                              "_gt",
+                                                              "_gte",
+                                                              "_lt",
+                                                              "_lte",
+                                                              "_neq"
+                                                            ]
+                                                          }
+                                                        },
+                                                        "author_id": {
+                                                          "column": "author_id",
+                                                          "column_type": {
+                                                            "type": "named",
+                                                            "name": "int4"
+                                                          },
+                                                          "column_type_representation": {
+                                                            "type": "json"
+                                                          },
+                                                          "comparison_operators": {
+                                                            "equality_operators": [
+                                                              "_eq"
+                                                            ],
+                                                            "other_operators": [
+                                                              "_gt",
+                                                              "_gte",
+                                                              "_lt",
+                                                              "_lte",
+                                                              "_neq"
+                                                            ]
+                                                          }
+                                                        },
+                                                        "title": {
+                                                          "column": "title",
+                                                          "column_type": {
+                                                            "type": "named",
+                                                            "name": "varchar"
+                                                          },
+                                                          "column_type_representation": {
+                                                            "type": "json"
+                                                          },
+                                                          "comparison_operators": {
+                                                            "equality_operators": [
+                                                              "_eq"
+                                                            ],
+                                                            "other_operators": [
+                                                              "_gt",
+                                                              "_gte",
+                                                              "_ilike",
+                                                              "_iregex",
+                                                              "_like",
+                                                              "_lt",
+                                                              "_lte",
+                                                              "_neq",
+                                                              "_nilike",
+                                                              "_niregex",
+                                                              "_nlike",
+                                                              "_nregex",
+                                                              "_regex",
+                                                              "st_coveredby",
+                                                              "st_covers",
+                                                              "st_intersects",
+                                                              "st_relatematch",
+                                                              "starts_with",
+                                                              "ts_match_tt"
+                                                            ]
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "argument_mappings": {},
+                                                "data_connector_link_argument_presets": {},
+                                                "source_arguments": {}
+                                              },
+                                              "capabilities": {
+                                                "foreach": null,
+                                                "supports_relationships": {
+                                                  "supports_relation_comparisons": true,
+                                                  "supports_nested_relationships": {
+                                                    "supports_nested_array_selection": true
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "target_type": {
+                                              "name": "article"
+                                            },
+                                            "mappings": [
+                                              {
+                                                "source_field": {
+                                                  "fieldName": "author_id"
+                                                },
+                                                "target_field": {
+                                                  "fieldName": "author_id"
+                                                },
+                                                "target_ndc_column": {
+                                                  "column": "author_id",
+                                                  "equal_operator": "_eq"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "aggregate_selection": null
+                                },
+                                "name": "default___article__Author",
+                                "relationship_info": {
+                                  "relationship_name": "Author",
+                                  "relationship_type": "Object",
+                                  "source_type": {
+                                    "name": "article"
+                                  },
+                                  "source_data_connector": {
+                                    "name": {
+                                      "name": "db"
+                                    },
+                                    "url": {
+                                      "singleUrl": "http://localhost:8080/"
+                                    },
+                                    "headers": {
+                                      "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                    },
+                                    "capabilities": {
+                                      "supported_ndc_version": "V01",
+                                      "supports_explaining_queries": true,
+                                      "supports_nested_object_filtering": true,
+                                      "supports_aggregates": {},
+                                      "supports_query_variables": true,
+                                      "supports_relationships": {
+                                        "supports_relation_comparisons": true,
+                                        "supports_nested_relationships": {
+                                          "supports_nested_array_selection": true
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "source_type_mappings": {
+                                    "{\"name\":\"article\"}": {
+                                      "Object": {
+                                        "ndc_object_type_name": "article",
+                                        "field_mappings": {
+                                          "article_id": {
+                                            "column": "id",
+                                            "column_type": {
+                                              "type": "named",
+                                              "name": "int4"
+                                            },
+                                            "column_type_representation": {
+                                              "type": "json"
+                                            },
+                                            "comparison_operators": {
+                                              "equality_operators": ["_eq"],
+                                              "other_operators": [
+                                                "_gt",
+                                                "_gte",
+                                                "_lt",
+                                                "_lte",
+                                                "_neq"
+                                              ]
+                                            }
+                                          },
+                                          "author_id": {
+                                            "column": "author_id",
+                                            "column_type": {
+                                              "type": "named",
+                                              "name": "int4"
+                                            },
+                                            "column_type_representation": {
+                                              "type": "json"
+                                            },
+                                            "comparison_operators": {
+                                              "equality_operators": ["_eq"],
+                                              "other_operators": [
+                                                "_gt",
+                                                "_gte",
+                                                "_lt",
+                                                "_lte",
+                                                "_neq"
+                                              ]
+                                            }
+                                          },
+                                          "title": {
+                                            "column": "title",
+                                            "column_type": {
+                                              "type": "named",
+                                              "name": "varchar"
+                                            },
+                                            "column_type_representation": {
+                                              "type": "json"
+                                            },
+                                            "comparison_operators": {
+                                              "equality_operators": ["_eq"],
+                                              "other_operators": [
+                                                "_gt",
+                                                "_gte",
+                                                "_ilike",
+                                                "_iregex",
+                                                "_like",
+                                                "_lt",
+                                                "_lte",
+                                                "_neq",
+                                                "_nilike",
+                                                "_niregex",
+                                                "_nlike",
+                                                "_nregex",
+                                                "_regex",
+                                                "st_coveredby",
+                                                "st_covers",
+                                                "st_intersects",
+                                                "st_relatematch",
+                                                "starts_with",
+                                                "ts_match_tt"
+                                              ]
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "target_source": {
+                                    "model": {
+                                      "data_connector": {
+                                        "name": {
+                                          "name": "db"
+                                        },
+                                        "url": {
+                                          "singleUrl": "http://localhost:8080/"
+                                        },
+                                        "headers": {
+                                          "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                        },
+                                        "capabilities": {
+                                          "supported_ndc_version": "V01",
+                                          "supports_explaining_queries": true,
+                                          "supports_nested_object_filtering": true,
+                                          "supports_aggregates": {},
+                                          "supports_query_variables": true,
+                                          "supports_relationships": {
+                                            "supports_relation_comparisons": true,
+                                            "supports_nested_relationships": {
+                                              "supports_nested_array_selection": true
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "collection": "author",
+                                      "collection_type": "author",
+                                      "type_mappings": {
+                                        "{\"name\":\"author\"}": {
+                                          "Object": {
+                                            "ndc_object_type_name": "author",
+                                            "field_mappings": {
+                                              "author_id": {
+                                                "column": "id",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "int8"
+                                                },
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq"
+                                                  ]
+                                                }
+                                              },
+                                              "first_name": {
+                                                "column": "first_name",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "varchar"
+                                                },
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_ilike",
+                                                    "_iregex",
+                                                    "_like",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq",
+                                                    "_nilike",
+                                                    "_niregex",
+                                                    "_nlike",
+                                                    "_nregex",
+                                                    "_regex",
+                                                    "st_coveredby",
+                                                    "st_covers",
+                                                    "st_intersects",
+                                                    "st_relatematch",
+                                                    "starts_with",
+                                                    "ts_match_tt"
+                                                  ]
+                                                }
+                                              },
+                                              "last_name": {
+                                                "column": "last_name",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "varchar"
+                                                },
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_ilike",
+                                                    "_iregex",
+                                                    "_like",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq",
+                                                    "_nilike",
+                                                    "_niregex",
+                                                    "_nlike",
+                                                    "_nregex",
+                                                    "_regex",
+                                                    "st_coveredby",
+                                                    "st_covers",
+                                                    "st_intersects",
+                                                    "st_relatematch",
+                                                    "starts_with",
+                                                    "ts_match_tt"
+                                                  ]
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "argument_mappings": {},
+                                      "data_connector_link_argument_presets": {},
+                                      "source_arguments": {}
+                                    },
+                                    "capabilities": {
+                                      "foreach": null,
+                                      "supports_relationships": {
+                                        "supports_relation_comparisons": true,
+                                        "supports_nested_relationships": {
+                                          "supports_nested_array_selection": true
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "target_type": {
+                                    "name": "author"
+                                  },
+                                  "mappings": [
+                                    {
+                                      "source_field": {
+                                        "fieldName": "author_id"
+                                      },
+                                      "target_field": {
+                                        "fieldName": "author_id"
+                                      },
+                                      "target_ndc_column": {
+                                        "column": "id",
+                                        "equal_operator": "_eq"
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "aggregate_selection": null
+                      },
+                      "name": "default___commandArticle__article",
+                      "relationship_info": {
+                        "relationship_name": "article",
+                        "relationship_type": "Object",
+                        "source_type": {
+                          "name": "commandArticle"
+                        },
+                        "source_data_connector": {
+                          "name": {
+                            "name": "db"
+                          },
+                          "url": {
+                            "singleUrl": "http://localhost:8080/"
+                          },
+                          "headers": {
+                            "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                          },
+                          "capabilities": {
+                            "supported_ndc_version": "V01",
+                            "supports_explaining_queries": true,
+                            "supports_nested_object_filtering": true,
+                            "supports_aggregates": {},
+                            "supports_query_variables": true,
+                            "supports_relationships": {
+                              "supports_relation_comparisons": true,
+                              "supports_nested_relationships": {
+                                "supports_nested_array_selection": true
+                              }
+                            }
+                          }
+                        },
+                        "source_type_mappings": {
+                          "{\"name\":\"commandArticle\"}": {
+                            "Object": {
+                              "ndc_object_type_name": "article",
+                              "field_mappings": {
+                                "article_id": {
+                                  "column": "id",
+                                  "column_type": {
+                                    "type": "named",
+                                    "name": "int4"
+                                  },
+                                  "column_type_representation": {
+                                    "type": "json"
+                                  },
+                                  "comparison_operators": {
+                                    "equality_operators": ["_eq"],
+                                    "other_operators": [
+                                      "_gt",
+                                      "_gte",
+                                      "_lt",
+                                      "_lte",
+                                      "_neq"
+                                    ]
+                                  }
+                                },
+                                "author_id": {
+                                  "column": "author_id",
+                                  "column_type": {
+                                    "type": "named",
+                                    "name": "int4"
+                                  },
+                                  "column_type_representation": {
+                                    "type": "json"
+                                  },
+                                  "comparison_operators": {
+                                    "equality_operators": ["_eq"],
+                                    "other_operators": [
+                                      "_gt",
+                                      "_gte",
+                                      "_lt",
+                                      "_lte",
+                                      "_neq"
+                                    ]
+                                  }
+                                },
+                                "title": {
+                                  "column": "title",
+                                  "column_type": {
+                                    "type": "named",
+                                    "name": "varchar"
+                                  },
+                                  "column_type_representation": {
+                                    "type": "json"
+                                  },
+                                  "comparison_operators": {
+                                    "equality_operators": ["_eq"],
+                                    "other_operators": [
+                                      "_gt",
+                                      "_gte",
+                                      "_ilike",
+                                      "_iregex",
+                                      "_like",
+                                      "_lt",
+                                      "_lte",
+                                      "_neq",
+                                      "_nilike",
+                                      "_niregex",
+                                      "_nlike",
+                                      "_nregex",
+                                      "_regex",
+                                      "st_coveredby",
+                                      "st_covers",
+                                      "st_intersects",
+                                      "st_relatematch",
+                                      "starts_with",
+                                      "ts_match_tt"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "target_source": {
+                          "model": {
+                            "data_connector": {
+                              "name": {
+                                "name": "db"
+                              },
+                              "url": {
+                                "singleUrl": "http://localhost:8080/"
+                              },
+                              "headers": {
+                                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                              },
+                              "capabilities": {
+                                "supported_ndc_version": "V01",
+                                "supports_explaining_queries": true,
+                                "supports_nested_object_filtering": true,
+                                "supports_aggregates": {},
+                                "supports_query_variables": true,
+                                "supports_relationships": {
+                                  "supports_relation_comparisons": true,
+                                  "supports_nested_relationships": {
+                                    "supports_nested_array_selection": true
+                                  }
+                                }
+                              }
+                            },
+                            "collection": "article",
+                            "collection_type": "article",
+                            "type_mappings": {
+                              "{\"name\":\"article\"}": {
+                                "Object": {
+                                  "ndc_object_type_name": "article",
+                                  "field_mappings": {
+                                    "article_id": {
+                                      "column": "id",
+                                      "column_type": {
+                                        "type": "named",
+                                        "name": "int4"
+                                      },
+                                      "column_type_representation": {
+                                        "type": "json"
+                                      },
+                                      "comparison_operators": {
+                                        "equality_operators": ["_eq"],
+                                        "other_operators": [
+                                          "_gt",
+                                          "_gte",
+                                          "_lt",
+                                          "_lte",
+                                          "_neq"
+                                        ]
+                                      }
+                                    },
+                                    "author_id": {
+                                      "column": "author_id",
+                                      "column_type": {
+                                        "type": "named",
+                                        "name": "int4"
+                                      },
+                                      "column_type_representation": {
+                                        "type": "json"
+                                      },
+                                      "comparison_operators": {
+                                        "equality_operators": ["_eq"],
+                                        "other_operators": [
+                                          "_gt",
+                                          "_gte",
+                                          "_lt",
+                                          "_lte",
+                                          "_neq"
+                                        ]
+                                      }
+                                    },
+                                    "title": {
+                                      "column": "title",
+                                      "column_type": {
+                                        "type": "named",
+                                        "name": "varchar"
+                                      },
+                                      "column_type_representation": {
+                                        "type": "json"
+                                      },
+                                      "comparison_operators": {
+                                        "equality_operators": ["_eq"],
+                                        "other_operators": [
+                                          "_gt",
+                                          "_gte",
+                                          "_ilike",
+                                          "_iregex",
+                                          "_like",
+                                          "_lt",
+                                          "_lte",
+                                          "_neq",
+                                          "_nilike",
+                                          "_niregex",
+                                          "_nlike",
+                                          "_nregex",
+                                          "_regex",
+                                          "st_coveredby",
+                                          "st_covers",
+                                          "st_intersects",
+                                          "st_relatematch",
+                                          "starts_with",
+                                          "ts_match_tt"
+                                        ]
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "argument_mappings": {},
+                            "data_connector_link_argument_presets": {},
+                            "source_arguments": {}
+                          },
+                          "capabilities": {
+                            "foreach": null,
+                            "supports_relationships": {
+                              "supports_relation_comparisons": true,
+                              "supports_nested_relationships": {
+                                "supports_nested_array_selection": true
+                              }
+                            }
+                          }
+                        },
+                        "target_type": {
+                          "name": "article"
+                        },
+                        "mappings": [
+                          {
+                            "source_field": {
+                              "fieldName": "article_id"
+                            },
+                            "target_field": {
+                              "fieldName": "article_id"
+                            },
+                            "target_ndc_column": {
+                              "column": "id",
+                              "equal_operator": "_eq"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "type_container": {
+              "base": {
+                "Named": "CommandArticle"
+              },
+              "nullable": true
+            },
+            "usage_counts": {
+              "models_used": [
+                {
+                  "model": {
+                    "name": "Articles"
+                  },
+                  "count": 2
+                },
+                {
+                  "model": {
+                    "name": "Authors"
+                  },
+                  "count": 1
+                }
+              ],
+              "commands_used": [
+                {
+                  "command": {
+                    "name": "get_latest_article"
+                  },
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "function_name": "latest_article",
+          "variable_arguments": {}
+        }
+      }
+    }
+  }
+}

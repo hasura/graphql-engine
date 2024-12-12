@@ -1,19 +1,17 @@
 use std::sync::Arc;
 
-use open_dds::plugins::LifecyclePluginHookPreParse;
-
 #[derive(Debug, thiserror::Error)]
 pub enum BuildError {
     #[error("invalid metadata: {0}")]
-    InvalidMetadata(#[from] metadata_resolve::Error),
+    InvalidMetadata(#[from] metadata_resolve::WithContext<metadata_resolve::Error>),
     #[error("unable to build schema: {0}")]
-    UnableToBuildSchema(#[from] schema::Error),
+    UnableToBuildSchema(#[from] graphql_schema::Error),
 }
 
 /// The response from the build_schema function
 pub struct BuildSchemaResponse {
-    pub gds_schema: lang_graphql::schema::Schema<schema::GDS>,
-    pub pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
+    pub gds_schema: lang_graphql::schema::Schema<graphql_schema::GDS>,
+    pub plugin_configs: metadata_resolve::LifecyclePluginConfigs,
     pub warnings: Vec<metadata_resolve::Warning>,
 }
 
@@ -24,13 +22,13 @@ pub fn build_schema(
 ) -> Result<BuildSchemaResponse, BuildError> {
     let (resolved_metadata, warnings) =
         metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
-    let pre_parse_plugins = resolved_metadata.pre_parse_plugins.clone();
-    let gds = schema::GDS {
+    let plugin_configs = resolved_metadata.plugin_configs.clone();
+    let gds = graphql_schema::GDS {
         metadata: Arc::new(resolved_metadata),
     };
     Ok(BuildSchemaResponse {
         gds_schema: gds.build_schema()?,
-        pre_parse_plugins,
+        plugin_configs,
         warnings,
     })
 }

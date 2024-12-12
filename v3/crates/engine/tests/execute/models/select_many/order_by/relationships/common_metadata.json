@@ -5,6 +5,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Album",
             "fields": [
@@ -47,11 +49,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ObjectType"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Track",
             "fields": [
@@ -94,9 +96,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ObjectType"
+          }
         },
         {
           "kind": "DataConnectorScalarRepresentation",
@@ -154,6 +154,8 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v2",
           "definition": {
             "name": "Albums",
             "objectType": "Album",
@@ -174,45 +176,71 @@
             },
             "filterExpressionType": "album_bool_exp",
             "orderByExpression": "album_order_by"
-          },
-          "version": "v2",
-          "kind": "Model"
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "IntOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "Int",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
         },
         {
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
             "name": "album_order_by",
-            "orderedType": "Album",
-            "orderableFields": [
-              {
-                "fieldName": "AlbumId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Title",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "ArtistId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "Album",
+                "orderableFields": [
+                  {
+                    "fieldName": "AlbumId",
+                    "orderByExpression": "IntOrderByExpression"
+                  },
+                  {
+                    "fieldName": "Title",
+                    "orderByExpression": "StringOrderByExpression"
+                  },
+                  {
+                    "fieldName": "ArtistId",
+                    "orderByExpression": "IntOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": [
+                  {
+                    "relationshipName": "Tracks"
+                  },
+                  {
+                    "relationshipName": "Artist",
+                    "orderByExpression": "artist_order_by"
+                  }
+                ]
               }
-            ],
-            "orderableRelationships": [
-              {
-                "relationshipName": "Tracks"
-              },
-              {
-                "relationshipName": "Artist",
-                "orderByExpression": "artist_order_by"
-              }
-            ],
+            },
             "graphql": {
               "expressionTypeName": "Album_Order_By"
             }
@@ -252,6 +280,8 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v2",
           "definition": {
             "name": "Tracks",
             "objectType": "Track",
@@ -272,47 +302,45 @@
             },
             "filterExpressionType": "track_bool_exp",
             "orderByExpression": "track_order_by"
-          },
-          "version": "v2",
-          "kind": "Model"
+          }
         },
         {
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
             "name": "track_order_by",
-            "orderedType": "Track",
-            "orderableFields": [
-              {
-                "fieldName": "TrackId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "AlbumId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "Track",
+                "orderableFields": [
+                  {
+                    "fieldName": "TrackId",
+                    "orderByExpression": "IntOrderByExpression"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "orderByExpression": "StringOrderByExpression"
+                  },
+                  {
+                    "fieldName": "AlbumId",
+                    "orderByExpression": "IntOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": [
+                  {
+                    "relationshipName": "Album"
+                  }
+                ]
               }
-            ],
-            "orderableRelationships": [
-              {
-                "relationshipName": "Album"
-              }
-            ],
+            },
             "graphql": {
               "expressionTypeName": "Track_Order_By"
             }
           }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "typeName": "Album",
             "permissions": [
@@ -329,11 +357,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "TypePermissions"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "typeName": "Track",
             "permissions": [
@@ -350,11 +378,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "TypePermissions"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Albums",
             "permissions": [
@@ -367,15 +395,23 @@
               {
                 "role": "user",
                 "select": {
-                  "filter": null
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "AlbumId",
+                      "operator": "_neq",
+                      "value": {
+                        "sessionVariable": "x-hasura-album-id"
+                      }
+                    }
+                  }
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Tracks",
             "permissions": [
@@ -392,11 +428,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "Album",
             "name": "Tracks",
@@ -424,11 +460,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "Track",
             "name": "Album",
@@ -456,11 +492,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "Track",
             "name": "TrackAlbums",
@@ -488,11 +524,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Artist",
             "fields": [
@@ -526,9 +562,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ObjectType"
+          }
         },
         {
           "kind": "ObjectBooleanExpressionType",
@@ -558,6 +592,8 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v2",
           "definition": {
             "name": "Artists",
             "objectType": "Artist",
@@ -578,25 +614,25 @@
             },
             "orderByExpression": "artist_order_by_limited",
             "filterExpressionType": "artist_bool_exp"
-          },
-          "version": "v2",
-          "kind": "Model"
+          }
         },
         {
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
             "name": "artist_order_by_limited",
-            "orderedType": "Artist",
-            "orderableFields": [
-              {
-                "fieldName": "Name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "Artist",
+                "orderableFields": [
+                  {
+                    "fieldName": "Name",
+                    "orderByExpression": "StringOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "Artist_Order_By_Limited"
             }
@@ -607,28 +643,30 @@
           "version": "v1",
           "definition": {
             "name": "artist_order_by",
-            "orderedType": "Artist",
-            "orderableFields": [
-              {
-                "fieldName": "ArtistId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "Artist",
+                "orderableFields": [
+                  {
+                    "fieldName": "ArtistId",
+                    "orderByExpression": "IntOrderByExpression"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "orderByExpression": "StringOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "Artist_Order_By"
             }
           }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Artists",
             "permissions": [
@@ -645,11 +683,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "typeName": "Artist",
             "permissions": [
@@ -666,11 +704,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "TypePermissions"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "Album",
             "name": "Artist",
@@ -698,9 +736,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         },
         {
           "kind": "DataConnectorScalarRepresentation",
@@ -713,8 +749,38 @@
               "comparisonExpressionTypeName": "Int_comparison"
             }
           }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "varchar",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_comparison"
+            }
+          }
         }
       ]
     }
-  ]
+  ],
+  "flags": {
+    "require_graphql_config": false,
+    "require_valid_ndc_v01_version": true,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true,
+    "require_unique_command_graphql_names": true,
+    "allow_partial_supergraph": false,
+    "json_session_variables": true,
+    "disallow_array_field_compared_with_scalar_boolean_type": true,
+    "allow_boolean_expression_fields_without_graphql": true,
+    "require_unique_model_graphql_names": true,
+    "disallow_object_boolean_expression_type": false,
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true,
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true
+  }
 }

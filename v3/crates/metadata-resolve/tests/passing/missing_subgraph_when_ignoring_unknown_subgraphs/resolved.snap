@@ -177,7 +177,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                 "int4",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -220,7 +222,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                 "int4",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -263,7 +267,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                 "varchar",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -339,7 +345,6 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             },
                         },
                     },
-                    scalar_representations: {},
                 },
             },
         },
@@ -354,8 +359,24 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         "Articles",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                4,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "article_namespace",
@@ -480,7 +501,25 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: false,
                                     supports_nested_object_filtering: true,
-                                    supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             collection: CollectionName(
@@ -517,7 +556,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                     "int4",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -560,7 +601,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                     "int4",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -603,7 +646,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                     "varchar",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -741,6 +786,23 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         description: None,
                     },
                 },
+                argument_presets: {
+                    Role(
+                        "admin",
+                    ): ArgumentPresets {
+                        argument_presets: {},
+                    },
+                    Role(
+                        "user1",
+                    ): ArgumentPresets {
+                        argument_presets: {},
+                    },
+                    Role(
+                        "user2",
+                    ): ArgumentPresets {
+                        argument_presets: {},
+                    },
+                },
                 select_permissions: {
                     Role(
                         "admin",
@@ -784,9 +846,12 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                     nullable: false,
                                 },
                                 value: SessionVariable(
-                                    SessionVariable(
-                                        "x-hasura-user-id",
-                                    ),
+                                    SessionVariableReference {
+                                        name: SessionVariableName(
+                                            "x-hasura-user-id",
+                                        ),
+                                        passed_as_json: false,
+                                    },
                                 ),
                                 deprecated: None,
                             },
@@ -841,9 +906,11 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "article_namespace",
@@ -855,7 +922,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "article_namespace",
@@ -885,9 +952,23 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Articles",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "article_id",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -896,9 +977,23 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Articles",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "author_id",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -907,9 +1002,23 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Articles",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "title",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -920,7 +1029,8 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                     ),
                 },
             },
-        ),
+            scalars: {},
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -951,9 +1061,15 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             ),
             enable_apollo_federation_fields: false,
             bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
         },
-        pre_parse_plugins: [],
-        roles: [
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {
             Role(
                 "admin",
             ),
@@ -963,16 +1079,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             Role(
                 "user2",
             ),
-            Role(
-                "admin",
-            ),
-            Role(
-                "user1",
-            ),
-            Role(
-                "user2",
-            ),
-        ],
+        },
     },
     [],
 )

@@ -515,7 +515,7 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
 
     getCohortOperations cohorts = \case
       Left e ->
-        let resp = throwError $ GQExecError [encodeGQLErr False e]
+        let resp = throwError $ GQExecError [encodeGQLErr HideInternalErrors e]
          in [(resp, cohortId, Nothing, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = HashMap.fromList cohorts

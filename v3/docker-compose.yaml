@@ -1,28 +1,28 @@
-# this Docker Compose file is used for local testing
+# this Docker Compose file loads `v3-engine` along with an `ndc-postgres`
+# connector and a sample `postgres` database
+# run it with `docker compose up`, then access Graphiql at localhost:3000
+# or view traces in Jaeger at localhost:4002
 
 services:
   engine:
     build:
       dockerfile: Dockerfile
-    entrypoint:
-      - ./bin/engine
     environment:
-      - METADATA_PATH
-      - AUTHN_CONFIG_PATH
+      - METADATA_PATH=app/docker_schema.json
+      - AUTHN_CONFIG_PATH=app/auth_config.json
       - OTLP_ENDPOINT=http://jaeger:4317
     ports:
-      # Binding to localhost:3001 avoids conflict with dev_setup
-      - 3001:3000
+      - 3000:3000
     depends_on:
-      reference_agent:
-        condition: service_started
       jaeger:
         condition: service_started
       auth_hook:
         condition: service_started
+    extra_hosts:
+      - local.hasura.dev=host-gateway
     volumes:
       - ./static/auth/auth_config.json:/app/auth_config.json
-      - ./crates/engine/tests/schema.json:/app/crates/engine/tests/schema.json
+      - ./static/docker_schema.json:/app/docker_schema.json
       - ./crates/open-dds/examples/reference.json:/app/crates/open-dds/examples/reference.json
 
   postgres:
@@ -33,7 +33,7 @@ services:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
     ports:
-      - 64001:5432
+      - 5432:5432
     environment:
       POSTGRES_PASSWORD: "password"
     volumes:
@@ -61,19 +61,16 @@ services:
       timeout: 1s
       retries: 5
 
-  reference_agent:
-    build: https://github.com/hasura/ndc-spec.git#v0.1.3
-    ports:
-      - 8102:8100
-
   auth_hook:
     build:
       dockerfile: dev-auth-webhook.Dockerfile
     environment:
-      OTLP_ENDPOINT: "http://jaeger:4317"
+      OTLP_ENDPOINT: "http://local.hasura.dev:4317"
       RUST_LOG: debug
     ports:
       - "3050:3050"
+    extra_hosts:
+      - local.hasura.dev=host-gateway
     depends_on:
       jaeger:
         condition: service_started
@@ -98,12 +95,13 @@ services:
       COLLECTOR_ZIPKIN_HOST_PORT: "9411"
 
   postgres_connector:
-    image: ghcr.io/hasura/ndc-postgres:dev-main
+    image: ghcr.io/hasura/ndc-postgres:latest
     ports:
       - 8080:8080
     environment:
-      CONNECTION_URI: "postgresql://postgres:password@postgres"
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
+      HASURA_SERVICE_TOKEN_SECRET: super sekret
+      CONNECTION_URI: "postgresql://postgres:password@local.hasura.dev"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://local.hasura.dev:4317"
       OTEL_SERVICE_NAME: "ndc-postgres"
       RUST_LOG: info
     volumes:
@@ -111,61 +109,12 @@ services:
         source: ./crates/engine/tests/ndc-postgres-configuration
         target: /etc/connector
         read_only: true
+    extra_hosts:
+      - local.hasura.dev=host-gateway
     depends_on:
       postgres:
         condition: service_healthy
       jaeger:
-        condition: service_started
-
-  custom_connector:
-    build:
-      dockerfile: custom-connector.Dockerfile
-    entrypoint:
-      - ./bin/custom-connector
-    ports:
-      - 8102:8102
-    environment:
-      RUST_LOG: info
-    healthcheck:
-      test: curl -fsS http://localhost:8102/schema
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
-  custom_connector_ndc_v01:
-    # This is the v3-engine commit version before the custom connector got upgraded to ndc_models v0.2.0
-    image: ghcr.io/hasura/v3-custom-connector:bef8a750ca31b067952247ad348683a4faa843f5
-    ports:
-      - "8101:8101"
-    environment:
-      RUST_LOG: info
-
-  dev_setup:
-    build:
-      context: .
-      target: builder
-    volumes:
-      - ./crates/utils/tracing-util:/app/tracing-util
-      - ./crates/lang-graphql:/app/lang-graphql
-      - ./crates/open-dds:/app/open-dds
-      - ./crates/engine:/app/engine
-      - ./crates/auth/hasura-authn-core:/app/hasura-authn-core
-      - ./crates/auth/hasura-authn-webhook:/app/hasura-authn-webhook
-    ports:
-      - 3000:3000
-    depends_on:
-      jaeger:
-        condition: service_started
-      auth_hook:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      postgres_connector:
-        condition: service_healthy
-      custom_connector:
-        condition: service_healthy
-      custom_connector_ndc_v01:
         condition: service_started
 
 volumes:

@@ -1,0 +1,47 @@
+[package]
+name = "graphql-frontend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[[bench]]
+name = "generate_ir"
+harness = false
+
+[dependencies]
+engine-types = { path = "../../engine-types" }
+execute = { path = "../../execute" }
+futures-ext = { path = "../../utils/futures-ext" }
+graphql-schema = { path = "../schema" }
+graphql-ir = { path = "../ir" }
+hasura-authn-core = { path = "../../auth/hasura-authn-core" }
+json-ext = { path = "../../utils/json-ext" }
+lang-graphql = { path = "../lang-graphql" }
+open-dds = { path = "../../open-dds" }
+plan-types = { path = "../../plan-types" }
+query-usage-analytics = { path = "../../query-usage-analytics" }
+tracing-util = { path = "../../utils/tracing-util" }
+metadata-resolve = {path = "../../metadata-resolve" }
+
+async-recursion = { workspace = true }
+axum = { workspace = true }
+base64 = { workspace = true }
+futures-util = { workspace = true }
+indexmap = { workspace = true }
+ndc-models = { workspace = true }
+ndc-models-v01 = { workspace = true }
+nonempty = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+goldenfile = { workspace = true }
+
+[lints]
+workspace = true

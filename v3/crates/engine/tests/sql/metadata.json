@@ -1,5 +1,8 @@
 {
   "version": "v2",
+  "flags": {
+    "allow_boolean_expression_fields_without_graphql": true
+  },
   "subgraphs": [
     {
       "name": "default",
@@ -82,6 +85,194 @@
           }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "timestamp_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Timestamp",
+                "comparisonOperators": [
+                  {
+                    "name": "_gt",
+                    "argumentType": "Timestamp"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "timestamp",
+                    "operatorMapping": {
+                      "_gt": "_gt"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "String"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "text",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "int4",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "location_bool_exp",
+            "operand": {
+              "object": {
+                "type": "location",
+                "comparableFields": [
+                  {
+                    "fieldName": "city",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "institution_bool_exp",
+            "operand": {
+              "object": {
+                "type": "institution",
+                "comparableFields": [
+                  {
+                    "fieldName": "id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "location",
+                    "booleanExpressionType": "location_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "author_bool_exp",
+            "operand": {
+              "object": {
+                "type": "author",
+                "comparableFields": [
+                  {
+                    "fieldName": "author_id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "first_name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "last_name",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
+        },
+        {
           "kind": "Model",
           "version": "v1",
           "definition": {
@@ -91,6 +282,7 @@
               "dataConnectorName": "db",
               "collection": "author"
             },
+            "filterExpressionType": "author_bool_exp",
             "graphql": {
               "selectUniques": [
                 {
@@ -645,13 +837,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": ["first_name", "last_name", "specialities"]
-                }
-              },
-              {
-                "role": "user",
-                "output": {
-                  "allowedFields": ["first_name", "last_name", "specialities"]
+                  "allowedFields": ["first_name", "specialities"]
                 }
               }
             ]
@@ -669,6 +855,7 @@
               "collection": "institution",
               "argumentMapping": {}
             },
+            "filterExpressionType": "institution_bool_exp",
             "graphql": {
               "selectUniques": [],
               "selectMany": {
@@ -717,6 +904,12 @@
             "permissions": [
               {
                 "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
                 "select": {
                   "filter": null
                 }
@@ -816,6 +1009,7 @@
                 }
               }
             ],
+            "filterExpressionType": "invoice_bool_exp",
             "graphql": {
               "selectMany": {
                 "queryRootField": "app_invoice"
@@ -1016,6 +1210,31 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "invoice_bool_exp",
+            "operand": {
+              "object": {
+                "type": "Invoice",
+                "comparableFields": [
+                  {
+                    "fieldName": "invoiceDate",
+                    "booleanExpressionType": "timestamp_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
           }
         },
         {
@@ -11531,7 +11750,10 @@
                   "query": {
                     "aggregates": {},
                     "variables": {},
-                    "explain": {}
+                    "explain": {},
+                    "nested_fields": {
+                      "filter_by": {}
+                    }
                   },
                   "mutation": {
                     "transactional": {},

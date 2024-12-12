@@ -70,6 +70,31 @@
             "Medicine and Dentistry"
           ]
         }
+      ],
+      "match_two_nested_fields": [
+        {
+          "id": 1,
+          "songs": {
+            "primaryAnthemTrackId": 2270,
+            "secondaryAnthemTrackId": 2271
+          }
+        }
+      ],
+      "nested_logical_operators": [
+        {
+          "id": 1,
+          "songs": {
+            "primaryAnthemTrackId": 2270,
+            "secondaryAnthemTrackId": 2271
+          }
+        },
+        {
+          "id": 2,
+          "songs": {
+            "primaryAnthemTrackId": 3421,
+            "secondaryAnthemTrackId": null
+          }
+        }
       ]
     }
   },

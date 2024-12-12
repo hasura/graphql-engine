@@ -6,7 +6,7 @@ use open_dds::{data_connector::DataConnectorName, models::ModelName, types::Cust
 
 use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, models_graphql,
-    object_boolean_expressions, relationships, scalar_types,
+    object_boolean_expressions, object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -38,9 +38,13 @@ fn get_command_source_argument<'a>(
 }
 
 pub fn resolve_command_permissions(
+    flags: &open_dds::flags::OpenDdFlags,
     command: &commands::Command,
     permissions: &CommandPermissionsV1,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -51,7 +55,7 @@ pub fn resolve_command_permissions(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     subgraph: &SubgraphName,
 ) -> Result<BTreeMap<Role, CommandPermission>, Error> {
@@ -94,6 +98,7 @@ pub fn resolve_command_permissions(
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
                     let value_expression = resolve_value_expression_for_argument(
+                        flags,
                         &argument_preset.argument,
                         &argument_preset.value,
                         &argument.argument_type,

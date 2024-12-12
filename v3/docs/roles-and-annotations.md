@@ -24,7 +24,7 @@ The `engine` itself uses the `GDS` type, and so we can use the following
 annotations:
 
 ```rust
-impl gql_schema::SchemaContext for GDS {
+impl gql_graphql_schema::SchemaContext for GDS {
     type Namespace = Role;
     type GenericNodeInfo = types::Annotation;
     type NamespacedNodeInfo = Option<types::NamespaceAnnotation>;

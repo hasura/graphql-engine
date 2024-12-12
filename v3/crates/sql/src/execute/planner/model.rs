@@ -6,7 +6,7 @@ use datafusion::{
     arrow::{
         array::RecordBatch, datatypes::SchemaRef, error::ArrowError, json::reader as arrow_json,
     },
-    common::{internal_err, plan_err, DFSchemaRef},
+    common::DFSchemaRef,
     error::{DataFusionError, Result},
     logical_expr::{Expr, LogicalPlan, UserDefinedLogicalNodeCore},
     physical_expr::EquivalenceProperties,
@@ -19,39 +19,31 @@ use datafusion::{
 use futures::TryFutureExt;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
-use metadata_resolve::{FilterPermission, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
     arguments::ArgumentName,
     models::OrderByDirection,
     query::{Aggregate, AggregationFunction, Alias, Operand, OrderByElement},
-    types::{DataConnectorArgumentName, FieldName},
+    types::FieldName,
 };
 use open_dds::{
     identifier::Identifier,
     query::{
         ModelSelection, ModelTarget, ObjectFieldSelection, ObjectFieldTarget, ObjectSubSelection,
     },
-    types::CustomTypeName,
 };
 use serde::Serialize;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
-use execute::{
-    ndc::NdcQueryResponse,
-    plan::{
-        self,
-        field::{NestedArray, NestedField},
-        Argument, Relationship, ResolvedField, ResolvedFilterExpression,
-        ResolvedQueryExecutionPlan, ResolvedQueryNode,
-    },
-    HttpContext,
-};
-use ir::{AggregateFieldSelection, NdcFieldAlias, NdcRelationshipName, ResolvedOrderBy};
-use open_dds::data_connector::CollectionName;
-
+use super::common::from_plan_error;
 use crate::catalog::model::filter;
+use engine_types::HttpContext;
+use execute::ndc::NdcQueryResponse;
+use plan_types::{AggregateFieldSelection, FieldsSelection, NdcFieldAlias, UniqueNumber};
 
-use super::common::to_resolved_column;
+use plan::{
+    from_model_aggregate_selection, from_model_selection, ndc_query_to_query_execution_plan,
+    NDCQuery,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ExecutionPlanError {
@@ -82,79 +74,26 @@ pub(crate) struct ModelAggregate {
 }
 
 impl ModelAggregate {
-    pub(crate) async fn to_physical_node(
+    pub(crate) fn to_physical_node(
         &self,
         session: &Arc<Session>,
-        http_context: &Arc<execute::HttpContext>,
+        http_context: &Arc<HttpContext>,
         metadata: &metadata_resolve::Metadata,
+        request_headers: &reqwest::header::HeaderMap,
     ) -> Result<NDCAggregatePushdown> {
-        let model_target = &self.model_target;
-        let qualified_model_name = metadata_resolve::Qualified::new(
-            model_target.subgraph.clone(),
-            model_target.model_name.clone(),
-        );
+        // this will need to be threaded throughout entire query
+        // if we want to support remote predicates in `sql`
+        let mut unique_number = UniqueNumber::new();
 
-        let model = metadata.models.get(&qualified_model_name).ok_or_else(|| {
-            DataFusionError::Internal(format!(
-                "model {qualified_model_name} not found in metadata"
-            ))
-        })?;
-
-        let model_source = model.model.source.as_ref().ok_or_else(|| {
-            DataFusionError::Internal(format!("model {qualified_model_name} has no source"))
-        })?;
-
-        let model_object_type = metadata
-            .object_types
-            .get(&model.model.data_type)
-            .ok_or_else(|| {
-                DataFusionError::Internal(format!(
-                    "object type {} not found in metadata",
-                    model.model.data_type
-                ))
-            })?;
-
-        let mut fields = IndexMap::new();
-
-        for (field_alias, aggregate) in &self.selection {
-            let column_path = match aggregate.operand.as_ref() {
-                None => Ok(vec![]),
-                Some(Operand::Field(operand)) => {
-                    let column = to_resolved_column(
-                        metadata,
-                        &model_source.type_mappings,
-                        &model.model.data_type,
-                        model_object_type,
-                        operand,
-                    )?;
-                    Ok([vec![column.column_name], column.field_path].concat())
-                }
-                Some(_) => internal_err!("unsupported aggregate operand"),
-            }?;
-
-            let ndc_aggregate = match aggregate.function {
-                AggregationFunction::Count {} => Ok(AggregateFieldSelection::Count { column_path }),
-                AggregationFunction::CountDistinct {} => {
-                    Ok(AggregateFieldSelection::CountDistinct { column_path })
-                }
-                AggregationFunction::Custom { .. } => {
-                    internal_err!("custom aggregate functions are not supported")
-                }
-            }?;
-
-            fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_aggregate);
-        }
-
-        let query = model_target_to_ndc_query(
+        let plan::ModelAggregateSelection { query, fields, .. } = from_model_aggregate_selection(
             &self.model_target,
-            session,
-            http_context,
+            &self.selection,
             metadata,
-            model,
-            model_source,
-            model_object_type,
+            session,
+            request_headers,
+            &mut unique_number,
         )
-        .await?;
+        .map_err(from_plan_error)?;
 
         Ok(NDCAggregatePushdown::new(
             query,
@@ -163,143 +102,6 @@ impl ModelAggregate {
             self.schema.inner().clone(),
         ))
     }
-}
-
-pub(crate) async fn model_target_to_ndc_query(
-    model_target: &ModelTarget,
-    session: &Session,
-    http_context: &HttpContext,
-    metadata: &metadata_resolve::Metadata,
-    // The following are things we could compute, but we have them on hand
-    // at all call sites anyway:
-    model: &metadata_resolve::ModelWithPermissions,
-    model_source: &metadata_resolve::ModelSource,
-    model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
-) -> datafusion::error::Result<NDCQuery> {
-    let qualified_model_name = metadata_resolve::Qualified::new(
-        model_target.subgraph.clone(),
-        model_target.model_name.clone(),
-    );
-
-    let model_select_permission = model.select_permissions.get(&session.role).ok_or_else(|| {
-        DataFusionError::Plan(format!(
-            "role {} does not have select permission for model {}",
-            session.role, qualified_model_name
-        ))
-    })?;
-
-    let mut usage_counts = ir::UsagesCounts::default();
-    let mut relationships: BTreeMap<ir::NdcRelationshipName, execute::plan::Relationship> =
-        BTreeMap::new();
-
-    let permission_filter = match &model_select_permission.filter {
-        FilterPermission::AllowAll => Ok::<_, DataFusionError>(None),
-        FilterPermission::Filter(filter) => {
-            let filter_ir = ir::process_model_predicate(
-                &model_source.data_connector,
-                &model_source.type_mappings,
-                filter,
-                &session.variables,
-                &mut usage_counts,
-            )
-            .map_err(|e| {
-                DataFusionError::Internal(format!("error when processing model predicate: {e}"))
-            })?;
-
-            let filter_plan = execute::plan::plan_expression(&filter_ir, &mut relationships)
-                .map_err(|e| {
-                    DataFusionError::Internal(format!(
-                        "error constructing permission filter plan: {e}"
-                    ))
-                })?;
-            // TODO: this thing has to change, need to be pushed into the
-            // execution plan. We shouldn't be running this in the planning phase
-            let filter = execute::plan::resolve_expression(filter_plan, &http_context.clone())
-                .await
-                .map_err(|e| {
-                    DataFusionError::Internal(format!(
-                        "error resolving permission filter plan: {e}"
-                    ))
-                })?;
-            Ok(Some(filter))
-        }
-    }?;
-
-    let mut ndc_arguments = BTreeMap::new();
-    for (argument_name, argument_value) in &model_target.arguments {
-        let ndc_argument_name = model_source.argument_mappings.get(argument_name).ok_or_else(|| DataFusionError::Internal(format!("couldn't fetch argument mapping for argument {argument_name} of model {qualified_model_name}")))?;
-        let ndc_argument_value = match argument_value {
-            open_dds::query::Value::BooleanExpression(_) => {
-                return internal_err!("unexpected boolean expression as value for argument {argument_name} of model {qualified_model_name}");
-            }
-            open_dds::query::Value::Literal(value) => value,
-        };
-        ndc_arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
-    }
-
-    let model_filter = model_target
-        .filter
-        .as_ref()
-        .map(|expr| {
-            super::filter::to_resolved_filter_expr(
-                metadata,
-                &model_source.type_mappings,
-                &model.model.data_type,
-                model_object_type,
-                expr,
-            )
-        })
-        .transpose()?;
-
-    let filter = match (model_filter, permission_filter) {
-        (None, filter) | (filter, None) => filter,
-        (Some(filter), Some(permission_filter)) => Some(ResolvedFilterExpression::mk_and(vec![
-            filter,
-            permission_filter,
-        ])),
-    };
-
-    let order_by_elements = model_target
-        .order_by
-        .iter()
-        .map(|element| {
-            super::order_by::to_resolved_order_by_element(
-                metadata,
-                &model_source.type_mappings,
-                &model.model.data_type,
-                model_object_type,
-                element,
-            )
-        })
-        .collect::<datafusion::error::Result<Vec<_>>>()?;
-
-    let limit = model_target
-        .limit
-        .map(u32::try_from)
-        .transpose()
-        .map_err(|_| DataFusionError::Internal("limit out of range".into()))?;
-
-    let offset: Option<u32> = model_target
-        .offset
-        .map(u32::try_from)
-        .transpose()
-        .map_err(|_| DataFusionError::Internal("offset out of range".into()))?;
-
-    let query = NDCQuery {
-        arguments: ndc_arguments,
-        collection_name: model_source.collection.clone(),
-        collection_relationships: relationships,
-        data_connector: Arc::new(model_source.data_connector.clone()),
-        filter,
-        limit,
-        offset,
-        order_by: ir::ResolvedOrderBy {
-            order_by_elements,
-            relationships: BTreeMap::new(),
-        },
-    };
-
-    Ok(query)
 }
 
 impl Hash for ModelAggregate {
@@ -607,125 +409,22 @@ fn to_aggregate(aggregate: &Expr) -> datafusion::error::Result<Option<Aggregate>
 }
 
 impl ModelQuery {
-    pub(super) async fn to_physical_node(
+    pub(super) fn to_physical_node(
         &self,
         session: &Arc<Session>,
-        http_context: &Arc<execute::HttpContext>,
+        http_context: &Arc<HttpContext>,
         metadata: &metadata_resolve::Metadata,
+        request_headers: &reqwest::header::HeaderMap,
+        unique_number: &mut UniqueNumber,
     ) -> Result<NDCQueryPushDown> {
-        let model_target = &self.model_selection.target;
-        let qualified_model_name = metadata_resolve::Qualified::new(
-            model_target.subgraph.clone(),
-            model_target.model_name.clone(),
-        );
-
-        let model = metadata.models.get(&qualified_model_name).ok_or_else(|| {
-            DataFusionError::Internal(format!(
-                "model {qualified_model_name} not found in metadata"
-            ))
-        })?;
-
-        let model_source = model.model.source.as_ref().ok_or_else(|| {
-            DataFusionError::Internal(format!("model {qualified_model_name} has no source"))
-        })?;
-
-        let metadata_resolve::TypeMapping::Object { field_mappings, .. } = model_source
-            .type_mappings
-            .get(&model.model.data_type)
-            .ok_or_else(|| {
-                DataFusionError::Internal(format!(
-                    "couldn't fetch type_mapping of type {} for model {}",
-                    model.model.data_type, qualified_model_name
-                ))
-            })?;
-
-        let model_object_type = metadata
-            .object_types
-            .get(&model.model.data_type)
-            .ok_or_else(|| {
-                DataFusionError::Internal(format!(
-                    "object type {} not found in metadata",
-                    model.model.data_type
-                ))
-            })?;
-
-        let type_permissions = model_object_type
-            .type_output_permissions
-            .get(&session.role)
-            .ok_or_else(|| {
-                DataFusionError::Plan(format!(
-                    "role {} does not have permission to select any fields of model {}",
-                    session.role, qualified_model_name
-                ))
-            })?;
-
-        let mut ndc_fields = IndexMap::new();
-
-        for (field_alias, object_sub_selection) in &self.model_selection.selection {
-            let ObjectSubSelection::Field(field_selection) = object_sub_selection else {
-                return internal_err!(
-                    "only normal field selections are supported in NDCPushDownPlanner."
-                );
-            };
-            if !type_permissions
-                .allowed_fields
-                .contains(&field_selection.target.field_name)
-            {
-                return plan_err!(
-                "role {} does not have permission to select the field {} from type {} of model {}",
-                    session.role,
-                    field_selection.target.field_name,
-                    model.model.data_type,
-                    qualified_model_name
-                );
-            }
-
-            let field_mapping = field_mappings
-                .get(&field_selection.target.field_name)
-                // .map(|field_mapping| field_mapping.column.clone())
-                .ok_or_else(|| {
-                    DataFusionError::Internal(format!(
-                        "couldn't fetch field mapping of field {} in type {} for model {}",
-                        field_selection.target.field_name,
-                        model.model.data_type,
-                        qualified_model_name
-                    ))
-                })?;
-
-            let field_type = &model_object_type
-                .object_type
-                .fields
-                .get(&field_selection.target.field_name)
-                .ok_or_else(|| {
-                    DataFusionError::Internal(format!(
-                        "could not look up type of field {}",
-                        field_selection.target.field_name
-                    ))
-                })?
-                .field_type;
-
-            let fields =
-                ndc_nested_field_selection_for(metadata, field_type, &model_source.type_mappings)?;
-
-            let ndc_field = ResolvedField::Column {
-                column: field_mapping.column.clone(),
-                fields,
-                arguments: BTreeMap::new(),
-            };
-
-            ndc_fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_field);
-        }
-
-        let query = model_target_to_ndc_query(
-            model_target,
-            session,
-            http_context,
+        let (_, query, ndc_fields) = from_model_selection(
+            &self.model_selection,
             metadata,
-            model,
-            model_source,
-            model_object_type,
+            session,
+            request_headers,
+            unique_number,
         )
-        .await?;
+        .map_err(from_plan_error)?;
 
         let ndc_pushdown = NDCQueryPushDown::new(
             http_context.clone(),
@@ -735,71 +434,6 @@ impl ModelQuery {
         );
 
         Ok(ndc_pushdown)
-    }
-}
-
-pub(super) fn ndc_nested_field_selection_for(
-    metadata: &metadata_resolve::Metadata,
-    column_type: &QualifiedTypeReference,
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<Option<NestedField<ResolvedFilterExpression>>> {
-    match &column_type.underlying_type {
-        metadata_resolve::QualifiedBaseType::Named(name) => match name {
-            metadata_resolve::QualifiedTypeName::Custom(name) => {
-                if let Some(_scalar_type) = metadata.scalar_types.get(name) {
-                    return Ok(None);
-                }
-                if let Some(object_type) = metadata.object_types.get(name) {
-                    let TypeMapping::Object {
-                        ndc_object_type_name: _,
-                        field_mappings,
-                    } = type_mappings.get(name).ok_or_else(|| {
-                        DataFusionError::Internal(format!(
-                            "can't find mapping object for type: {name}"
-                        ))
-                    })?;
-
-                    let mut fields = IndexMap::new();
-
-                    for (field_name, field_mapping) in field_mappings {
-                        let field_def = object_type.object_type.fields.get(field_name).ok_or_else(|| DataFusionError::Internal(format!(
-                            "can't find object field definition for field {field_name} in type: {name}"
-                        )))?;
-                        let nested_fields: Option<NestedField<ResolvedFilterExpression>> =
-                            ndc_nested_field_selection_for(
-                                metadata,
-                                &field_def.field_type,
-                                type_mappings,
-                            )?;
-                        fields.insert(
-                            NdcFieldAlias::from(field_name.as_str()),
-                            ResolvedField::Column {
-                                column: field_mapping.column.clone(),
-                                fields: nested_fields,
-                                arguments: BTreeMap::new(),
-                            },
-                        );
-                    }
-
-                    return Ok(Some(NestedField::Object(
-                        execute::plan::field::NestedObject { fields },
-                    )));
-                }
-
-                internal_err!("named type was neither a scalar nor an object: {}", name)
-            }
-            metadata_resolve::QualifiedTypeName::Inbuilt(_) => Ok(None),
-        },
-        metadata_resolve::QualifiedBaseType::List(list_type) => {
-            let fields =
-                ndc_nested_field_selection_for(metadata, list_type.as_ref(), type_mappings)?;
-
-            Ok(fields.map(|fields| {
-                NestedField::Array(NestedArray {
-                    fields: Box::new(fields),
-                })
-            }))
-        }
     }
 }
 
@@ -970,36 +604,15 @@ impl ExecutionPlan for NDCAggregatePushdown {
 
         let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
-        let query_execution_plan = ResolvedQueryExecutionPlan {
-            query_node: ResolvedQueryNode {
-                fields: None,
-                aggregates: Some(ir::AggregateSelectionSet {
-                    fields: self.fields.clone(),
-                }),
-                limit: self.query.limit,
-                offset: self.query.offset,
-                order_by: Some(self.query.order_by.order_by_elements.clone()),
-                predicate: self.query.filter.clone(),
+        let query_execution_plan = ndc_query_to_query_execution_plan(
+            &self.query,
+            &FieldsSelection {
+                fields: IndexMap::new(),
             },
-            collection: self.query.collection_name.clone(),
-            arguments: self
-                .query
-                .arguments
-                .iter()
-                .map(|(argument, value)| {
-                    (
-                        argument.clone(),
-                        Argument::Literal {
-                            value: value.clone(),
-                        },
-                    )
-                })
-                .collect(),
-            collection_relationships: self.query.collection_relationships.clone(),
-            variables: None,
-            data_connector: &self.query.data_connector,
-        };
-        let query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
+            &self.fields,
+        );
+
+        let query_request = execute::make_ndc_query_request(query_execution_plan)
             .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
 
         let fut = fetch_aggregates_from_data_connector(
@@ -1021,31 +634,19 @@ impl ExecutionPlan for NDCAggregatePushdown {
 
 #[derive(Debug, Clone)]
 pub(crate) struct NDCQueryPushDown {
-    http_context: Arc<execute::HttpContext>,
-    fields: IndexMap<NdcFieldAlias, ResolvedField>,
+    http_context: Arc<HttpContext>,
+    fields: FieldsSelection,
     query: NDCQuery,
     projected_schema: SchemaRef,
     cache: PlanProperties,
     metrics: ExecutionPlanMetricsSet,
 }
 
-#[derive(Debug, Clone)]
-pub(crate) struct NDCQuery {
-    collection_name: CollectionName,
-    arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-    filter: Option<ResolvedFilterExpression>,
-    order_by: ResolvedOrderBy<'static>,
-    limit: Option<u32>,
-    offset: Option<u32>,
-    collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
-    data_connector: Arc<metadata_resolve::DataConnectorLink>,
-}
-
 impl NDCQueryPushDown {
     pub(crate) fn new(
         http_context: Arc<HttpContext>,
         schema: SchemaRef,
-        fields: IndexMap<NdcFieldAlias, ResolvedField>,
+        fields: FieldsSelection,
         query: NDCQuery,
     ) -> Self {
         let cache = Self::compute_properties(schema.clone());
@@ -1119,39 +720,10 @@ impl ExecutionPlan for NDCQueryPushDown {
 
         let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
-        let query_execution_plan = ResolvedQueryExecutionPlan {
-            query_node: ResolvedQueryNode {
-                fields: Some(
-                    self.fields
-                        .iter()
-                        .map(|(field_name, field)| (field_name.clone(), field.clone()))
-                        .collect(),
-                ),
-                aggregates: None,
-                limit: self.query.limit,
-                offset: self.query.offset,
-                order_by: Some(self.query.order_by.order_by_elements.clone()),
-                predicate: self.query.filter.clone(),
-            },
-            collection: self.query.collection_name.clone(),
-            arguments: self
-                .query
-                .arguments
-                .iter()
-                .map(|(argument, value)| {
-                    (
-                        argument.clone(),
-                        Argument::Literal {
-                            value: value.clone(),
-                        },
-                    )
-                })
-                .collect(),
-            collection_relationships: self.query.collection_relationships.clone(),
-            variables: None,
-            data_connector: &self.query.data_connector,
-        };
-        let query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
+        let query_execution_plan =
+            ndc_query_to_query_execution_plan(&self.query, &self.fields, &IndexMap::new());
+
+        let query_request = execute::make_ndc_query_request(query_execution_plan)
             .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
 
         let fut = fetch_from_data_connector(

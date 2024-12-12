@@ -32,10 +32,14 @@ async fn main() -> anyhow::Result<()> {
     let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
     let port = 8102;
     let socket_addr = net::SocketAddr::new(host, port);
-    axum::Server::bind(&socket_addr)
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(axum_ext::shutdown_signal())
-        .await?;
+    let listener = tokio::net::TcpListener::bind(socket_addr).await.unwrap();
+
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(axum_ext::shutdown_signal())
+    .await?;
     Ok(())
 }
 
@@ -43,8 +47,10 @@ async fn get_healthz() -> StatusCode {
     StatusCode::NO_CONTENT
 }
 
-async fn get_capabilities() -> Json<ndc_models::CapabilitiesResponse> {
-    Json(custom_connector::schema::get_capabilities())
+async fn get_capabilities(
+    State(state): State<Arc<AppState>>,
+) -> Json<ndc_models::CapabilitiesResponse> {
+    Json(custom_connector::schema::get_capabilities(state.borrow()))
 }
 
 async fn get_schema() -> Json<ndc_models::SchemaResponse> {

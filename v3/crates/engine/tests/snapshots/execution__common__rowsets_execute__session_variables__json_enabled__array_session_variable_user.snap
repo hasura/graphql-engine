@@ -1,0 +1,17 @@
+---
+source: crates/engine/tests/common.rs
+expression: results
+---
+{
+  "AuthorMany": {
+    "Ok": [
+      {
+        "rows": [
+          {
+            "author_id": 1
+          }
+        ]
+      }
+    ]
+  }
+}

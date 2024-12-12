@@ -8,7 +8,7 @@ use crate::{
     commands::CommandName,
     models::ModelName,
     relationships::RelationshipName,
-    session_variables::SessionVariable,
+    session_variables::SessionVariableName,
     traits,
     types::{CustomTypeName, FieldName, OperatorName},
 };
@@ -188,7 +188,11 @@ pub struct FieldPreset {
 #[serde(rename_all = "camelCase")]
 #[opendd(
     as_versioned_with_definition,
-    json_schema(title = "ModelPermissions", example = "ModelPermissions::example")
+    json_schema(
+        title = "ModelPermissions",
+        example = "ModelPermissions::field_comparison_example",
+        example = "ModelPermissions::relationship_comparison_example"
+    )
 )]
 /// Definition of permissions for an OpenDD model.
 pub enum ModelPermissions {
@@ -196,7 +200,7 @@ pub enum ModelPermissions {
 }
 
 impl ModelPermissions {
-    fn example() -> serde_json::Value {
+    fn field_comparison_example() -> serde_json::Value {
         serde_json::json!(
             {
                 "kind": "ModelPermissions",
@@ -219,6 +223,45 @@ impl ModelPermissions {
                                         "operator": "_eq",
                                         "value": {
                                             "sessionVariable": "x-hasura-user-id"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        )
+    }
+
+    fn relationship_comparison_example() -> serde_json::Value {
+        serde_json::json!(
+            {
+                "kind": "ModelPermissions",
+                "version": "v1",
+                "definition": {
+                    "modelName": "Articles",
+                    "permissions": [
+                        {
+                            "role": "admin",
+                            "select": {
+                                "filter": null
+                            }
+                        },
+                        {
+                            "role": "user",
+                            "select": {
+                                "filter": {
+                                    "relationship": {
+                                        "name": "author",
+                                        "predicate": {
+                                            "fieldComparison": {
+                                                "field": "id",
+                                                "operator": "_eq",
+                                                "value": {
+                                                    "sessionVariable": "x-hasura-user-id"
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -299,12 +342,8 @@ pub struct SelectPermission {
     /// Preset values for arguments for this role
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub argument_presets: Vec<ArgumentPreset>,
-    /// Whether to allow subscriptions for this role.
-    #[opendd(
-        hidden = true,
-        default,
-        json_schema(default_exp = "serde_json::json!(false)")
-    )]
+    /// Whether the role is allowed to subscribe to the root fields of this model.
+    #[opendd(default, json_schema(default_exp = "serde_json::json!(false)"))]
     pub allow_subscriptions: bool,
 }
 
@@ -319,14 +358,17 @@ pub enum NullableModelPredicate {
 }
 
 impl traits::OpenDd for NullableModelPredicate {
-    fn deserialize(json: serde_json::Value) -> Result<Self, traits::OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, traits::OpenDdDeserializeError> {
         if json.is_null() {
             Ok(NullableModelPredicate::Null(()))
         } else {
             Ok(NullableModelPredicate::NotNull(
                 serde_path_to_error::deserialize(json).map_err(|e| {
                     traits::OpenDdDeserializeError {
-                        path: traits::JSONPath::from_serde_path(e.path()),
+                        path: jsonpath::JSONPath::from_serde_path(e.path()),
                         error: e.into_inner(),
                     }
                 })?,
@@ -483,7 +525,10 @@ pub struct RelationshipPredicate {
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "ModelPredicate")]
-#[schemars(example = "ModelPredicate::example")]
+#[schemars(example = "ModelPredicate::field_comparison_example")]
+#[schemars(example = "ModelPredicate::relationship_comparison_example")]
+#[schemars(example = "ModelPredicate::and_comparisons_example")]
+#[schemars(example = "ModelPredicate::not_comparison_example")]
 #[serde(deny_unknown_fields)]
 /// A predicate that can be used to restrict the objects returned when querying a model.
 pub enum ModelPredicate {
@@ -506,7 +551,7 @@ pub enum ModelPredicate {
 }
 
 impl ModelPredicate {
-    fn example() -> Self {
+    fn field_comparison_example() -> Self {
         serde_json::from_str(
             r#"
             {
@@ -519,6 +564,71 @@ impl ModelPredicate {
                 }
             }
         "#,
+        )
+        .unwrap()
+    }
+
+    fn relationship_comparison_example() -> Self {
+        serde_json::from_str(
+            r#"{
+            "relationship": {
+                "name": "author",
+                "predicate": {
+                    "fieldComparison": {
+                        "field": "id",
+                        "operator": "_eq",
+                        "value": {
+                            "sessionVariable": "x-hasura-user-id"
+                        }
+                    }
+                }
+            }
+        }"#,
+        )
+        .unwrap()
+    }
+
+    fn and_comparisons_example() -> Self {
+        serde_json::from_str(
+            r#"{
+            "and": [
+                {
+                    "fieldComparison": {
+                        "field": "author_id",
+                        "operator": "_eq",
+                        "value": {
+                            "sessionVariable": "x-hasura-user-id"
+                        }
+                    }
+                },
+                {
+                    "fieldComparison": {
+                        "field": "title",
+                        "operator": "_eq",
+                        "value": {
+                            "literal": "Hello World"
+                        }
+                    }
+                }
+            ]
+        }"#,
+        )
+        .unwrap()
+    }
+
+    fn not_comparison_example() -> Self {
+        serde_json::from_str(
+            r#"{
+            "not": {
+                "fieldComparison": {
+                    "field": "author_id",
+                    "operator": "_eq",
+                    "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                    }
+                }
+            }
+        }"#,
         )
         .unwrap()
     }
@@ -535,7 +645,7 @@ pub enum ValueExpression {
     #[schemars(title = "Literal")]
     Literal(JsonValue),
     #[schemars(title = "SessionVariable")]
-    SessionVariable(SessionVariable),
+    SessionVariable(SessionVariableName),
 }
 
 #[derive(
@@ -549,7 +659,7 @@ pub enum ValueExpressionOrPredicate {
     #[schemars(title = "Literal")]
     Literal(JsonValue),
     #[schemars(title = "SessionVariable")]
-    SessionVariable(SessionVariable),
+    SessionVariable(SessionVariableName),
     #[schemars(title = "BooleanExpression")]
     BooleanExpression(Box<ModelPredicate>),
 }

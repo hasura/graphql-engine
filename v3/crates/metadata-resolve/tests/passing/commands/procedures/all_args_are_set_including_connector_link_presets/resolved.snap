@@ -27,6 +27,18 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                 description: Some(
                     "Headers map",
                 ),
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "myconnector",
+                            ),
+                        ),
+                    }: JSON,
+                },
             },
         },
         models: {},
@@ -40,7 +52,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                         "procedure_with_args",
                     ),
                 ),
-            }: CommandWithPermissions {
+            }: CommandWithArgumentPresets {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -159,7 +171,25 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
-                                    supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             source: Procedure(
@@ -233,16 +263,20 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                     description: None,
                 },
                 permissions: {},
+                argument_presets: {},
             },
         },
         object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {},
-        ),
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+            scalars: {},
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -273,9 +307,15 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
             ),
             enable_apollo_federation_fields: false,
             bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
         },
-        pre_parse_plugins: [],
-        roles: [],
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {},
     },
     [],
 )

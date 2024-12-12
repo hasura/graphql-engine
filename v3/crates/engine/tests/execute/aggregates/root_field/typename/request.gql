@@ -1,0 +1,22 @@
+query {
+  Invoice_aggregate {
+    __typename
+    _count
+    InvoiceDate {
+      __typename
+      _count
+    }
+    CustomerId {
+      __typename
+      _count
+    }
+    Total {
+      __typename
+      _count
+    }
+    BillingCountry {
+      __typename
+      _count
+    }
+  }
+}

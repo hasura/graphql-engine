@@ -34,7 +34,7 @@ run-local-with-shell:
     cargo run --bin custom-connector | ts "custom-connector:" &
     OTLP_ENDPOINT=http://localhost:4317 \
       cargo run --bin dev-auth-webhook | ts "dev-auth-webhook:" &
-    RUST_LOG=DEBUG cargo run --bin engine -- \
+    RUST_LOG=DEBUG cargo run --bin ddn-engine-local-dev -- \
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path static/auth/auth_config.json \
     --metadata-path static/sample-schema.json \
@@ -44,17 +44,27 @@ run-local-with-shell:
 # start all the docker deps for running tests (not engine)
 start-docker-test-deps:
     # start connectors and wait for health
-    docker compose -f ci.docker-compose.yaml up --wait postgres postgres_connector custom_connector custom_connector_ndc_v01
+    docker compose -f ci.docker-compose.yaml up --wait auth_hook postgres postgres_connector custom_connector custom_connector_no_relationships custom_connector_ndc_v01
 
 # start all the docker run time deps for the engine
 start-docker-run-deps:
     # start auth_hook and jaeger
-    docker compose up --wait auth_hook jaeger
+    docker compose up --wait jaeger
+
+# starts engine locally using dependencies from docker compose
+start-engine:
+    docker compose up --wait postgres postgres_connector auth_hook jaeger
+    METADATA_PATH=static/docker_schema.json \
+      AUTHN_CONFIG_PATH=static/auth/auth_config.json \
+      OTLP_ENDPOINT=http://localhost:4317 \
+      cargo run --bin ddn-engine-local-dev
 
 # pull / build all docker deps
-docker-refresh:
+docker-refresh: stop-docker
     docker compose -f ci.docker-compose.yaml pull postgres_connector
     docker compose -f ci.docker-compose.yaml build custom_connector
+
+alias refresh-docker := docker-refresh
 
 # stop all the docker deps
 stop-docker:
@@ -77,13 +87,12 @@ test *ARGS: start-docker-test-deps
 watch: start-docker-test-deps start-docker-run-deps
     RUST_LOG=DEBUG \
     cargo watch -i "**/*.snap.new" \
-     -x test \
+     -x 'nextest run --no-fail-fast' \
      -x 'clippy --no-deps' \
-     -x 'run --bin engine -- \
+     -x 'run --bin ddn-engine-local-dev -- \
       --otlp-endpoint http://localhost:4317 \
       --authn-config-path static/auth/auth_config.json \
       --metadata-path static/sample-schema.json \
-      --unstable-feature enable-subscriptions \
       --expose-internal-errors'
 
 # check the code is fine
@@ -97,18 +106,23 @@ machete:
 
 # update golden tests
 update-golden-files: start-docker-test-deps
-    UPDATE_GOLDENFILES=1 cargo test
+    UPDATE_GOLDENFILES=1 just test
     just fix-format
 
 update-custom-connector-schema-in-test-metadata:
-    docker compose -f ci.docker-compose.yaml up --build --wait custom_connector
+    docker compose -f ci.docker-compose.yaml up --build --wait custom_connector custom_connector_no_relationships
 
     just update-schema-in-test-metadata "8102" "v0.2"
+    just update-schema-in-test-metadata "8103" "v0.2"
+
+    docker compose -f ci.docker-compose.yaml down
 
 update-postgres-schema-in-test-metadata:
     docker compose -f ci.docker-compose.yaml up --build --wait postgres postgres_connector
 
     just update-schema-in-test-metadata "8080" "v0.1"
+
+    docker compose -f ci.docker-compose.yaml down
 
 update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
     #!/usr/bin/env bash
@@ -141,13 +155,34 @@ update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
       fi
     done
 
-    docker compose -f ci.docker-compose.yaml down
+# ensures metadata objects in test json have their properties ordered as kind, version, then definition
+reorder-json-in-test-metadata: && fix-format
+    #!/usr/bin/env bash
+    set -e
+
+    # Should only be folders that contain json metadata tests
+    test_directories=(./crates/engine/tests/execute ./crates/metadata-resolve/tests)
+
+    find "${test_directories[@]}" -name '*.json' -print0 |
+    while IFS= read -r -d '' file; do
+      # Check if the file actually contains metadata
+      if jq -e '(. | type == "object") and has("subgraphs") and (.subgraphs | length > 0) and (.subgraphs[] | has("objects") and (.objects | length > 0))' "$file" >/dev/null; then
+
+        # Reformat each metadata object so that kind, version, and definition properties come first
+        jq '.subgraphs[].objects |= map({ kind: .kind, version: .version, definition: .definition } + .)' $file \
+        | sponge $file
+
+        echo "Updated $file"
+      else
+        echo "Skipping $file: Does not appear to be a metadata file"
+      fi
+    done
 
 # run the engine using schema from tests
 run METADATA_PATH="static/sample-schema.json": start-docker-test-deps start-docker-run-deps
-    RUST_LOG=DEBUG cargo run --bin engine -- \
+    RUST_LOG=DEBUG cargo run --bin ddn-engine-local-dev -- \
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path static/auth/auth_config.json \
     --metadata-path {{ METADATA_PATH }} \
-    --unstable-feature enable-subscriptions \
-    --expose-internal-errors
+    --expose-internal-errors \
+    --export-traces-stdout

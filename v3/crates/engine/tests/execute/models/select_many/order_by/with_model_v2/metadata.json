@@ -77,28 +77,26 @@
           "version": "v1",
           "definition": {
             "name": "AuthorOrderByExpression",
-            "orderedType": "author",
-            "orderableFields": [
-              {
-                "fieldName": "author_id",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "first_name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "last_name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "author",
+                "orderableFields": [
+                  {
+                    "fieldName": "author_id",
+                    "orderByExpression": "IntOrderByExpression"
+                  },
+                  {
+                    "fieldName": "first_name",
+                    "orderByExpression": "StringOrderByExpression"
+                  },
+                  {
+                    "fieldName": "last_name",
+                    "orderByExpression": "StringOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "AuthorOrderBy"
             }
@@ -260,29 +258,57 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
-            "name": "ArticleOrderByExpression",
-            "orderedType": "article",
-            "orderableFields": [
-              {
-                "fieldName": "article_id",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "author_id",
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
                 "enableOrderByDirections": {
                   "enableAll": true
                 }
               }
-            ],
-            "orderableRelationships": [],
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "IntOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "Int",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "ArticleOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "article",
+                "orderableFields": [
+                  {
+                    "fieldName": "article_id",
+                    "orderByExpression": "IntOrderByExpression"
+                  },
+                  {
+                    "fieldName": "title",
+                    "orderByExpression": "StringOrderByExpression"
+                  },
+                  {
+                    "fieldName": "author_id",
+                    "orderByExpression": "IntOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
             "graphql": {
               "expressionTypeName": "ArticlesOrderBy"
             }

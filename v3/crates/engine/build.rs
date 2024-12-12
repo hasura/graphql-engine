@@ -1,3 +1,6 @@
+// This is copy/pasted into MBS so we can avoid pulling in the entire engine crate. If you want to
+// update this script, please update the other one too.
+
 fn main() -> Result<(), String> {
     // Ensure that we rebuild if the version is specified.
     println!("cargo:rerun-if-env-changed=RELEASE_VERSION");

@@ -1,6 +1,6 @@
 use ndc_models;
 
-use crate::{collections, functions, procedures, types};
+use crate::{collections, functions, procedures, state::AppState, types};
 
 pub fn get_schema() -> ndc_models::SchemaResponse {
     ndc_models::SchemaResponse {
@@ -12,16 +12,14 @@ pub fn get_schema() -> ndc_models::SchemaResponse {
         capabilities: Some(ndc_models::CapabilitySchemaInfo {
             query: Some(ndc_models::QueryCapabilitiesSchemaInfo {
                 aggregates: Some(ndc_models::AggregateCapabilitiesSchemaInfo {
-                    filter_by: Some(ndc_models::AggregateFilterByCapabilitiesSchemaInfo {
-                        count_scalar_type: "Int".to_owned(),
-                    }),
+                    count_scalar_type: "Int".to_owned(),
                 }),
             }),
         }),
     }
 }
 
-pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
+pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
     ndc_models::CapabilitiesResponse {
         version: ndc_models::VERSION.to_owned(),
         capabilities: ndc_models::Capabilities {
@@ -38,7 +36,9 @@ pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
                 variables: Some(ndc_models::LeafCapability {}),
                 nested_fields: ndc_models::NestedFieldCapabilities {
                     aggregates: Some(ndc_models::LeafCapability {}),
-                    filter_by: Some(ndc_models::LeafCapability {}),
+                    filter_by: Some(ndc_models::NestedFieldFilterByCapabilities {
+                        nested_arrays: None,
+                    }),
                     order_by: Some(ndc_models::LeafCapability {}),
                     nested_collections: None,
                 },
@@ -46,12 +46,20 @@ pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
                     named_scopes: None,
                     unrelated: Some(ndc_models::LeafCapability {}),
                     nested_collections: None,
+                    nested_scalar_collections: None,
                 },
             },
-            relationships: Some(ndc_models::RelationshipCapabilities {
-                relation_comparisons: Some(ndc_models::LeafCapability {}),
-                order_by_aggregate: Some(ndc_models::LeafCapability {}),
-            }),
+            relationships: if state.enable_relationship_support {
+                Some(ndc_models::RelationshipCapabilities {
+                    relation_comparisons: Some(ndc_models::LeafCapability {}),
+                    order_by_aggregate: Some(ndc_models::LeafCapability {}),
+                    nested: Some(ndc_models::NestedRelationshipCapabilities {
+                        array: Some(ndc_models::LeafCapability {}),
+                    }),
+                })
+            } else {
+                None
+            },
         },
     }
 }

@@ -2,21 +2,27 @@ mod helpers;
 pub mod types;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
-    object_types, type_permissions,
+    object_types,
+    scalar_boolean_expressions::{LogicalOperators, LogicalOperatorsGraphqlConfig},
+    type_permissions,
 };
 pub use helpers::resolve_ndc_type;
 use open_dds::identifier::SubgraphName;
 
+use crate::helpers::ndc_validation::unwrap_nullable_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::types::subgraph::Qualified;
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
-use open_dds::{data_connector::DataConnectorName, types::OperatorName};
+use open_dds::{
+    data_connector::DataConnectorName,
+    types::{FieldName, OperatorName},
+};
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionGraphqlConfig,
-    ObjectBooleanExpressionType, ObjectBooleanExpressionWarning, ObjectBooleanExpressionsOutput,
+    ObjectBooleanExpressionIssue, ObjectBooleanExpressionType, ObjectBooleanExpressionsOutput,
 };
 
 /// resolve object boolean expression types
@@ -25,16 +31,17 @@ pub fn resolve(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     mut graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionsOutput, boolean_expressions::BooleanExpressionError> {
     let mut object_boolean_expression_types = BTreeMap::new();
-    let mut warnings = vec![];
+    let mut issues = vec![];
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: object_boolean_expression_type,
     } in &metadata_accessor.object_boolean_expression_types
@@ -47,12 +54,13 @@ pub fn resolve(
             object_types,
             &mut graphql_types,
             graphql_config,
+            &metadata_accessor.flags,
         )?;
 
         // tell user that this metadata type is old news and we'd rather they used
         // `BooleanExpressionType`
-        warnings.push(
-            ObjectBooleanExpressionWarning::PleaseUpgradeToBooleanExpression {
+        issues.push(
+            ObjectBooleanExpressionIssue::PleaseUpgradeToBooleanExpression {
                 name: resolved_boolean_expression.name.clone(),
             },
         );
@@ -71,7 +79,7 @@ pub fn resolve(
     Ok(ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
-        warnings,
+        issues,
     })
 }
 
@@ -82,11 +90,12 @@ pub(crate) fn resolve_object_boolean_expression_type(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<ObjectBooleanExpressionType, boolean_expressions::BooleanExpressionError> {
     // name of the boolean expression
     let qualified_name = Qualified::new(subgraph.clone(), object_boolean_expression.name.clone());
@@ -195,6 +204,24 @@ pub(crate) fn resolve_object_boolean_expression_type(
         object_boolean_expression.data_connector_name.clone(),
     );
 
+    let type_mapping = object_type_representation
+        .type_mappings
+        .get(
+            &data_connector_name,
+            &object_boolean_expression.data_connector_object_type,
+        )
+        .unwrap();
+
+    let scalars =
+                data_connector_scalars
+                    .get(&data_connector_name)
+                    .ok_or(
+                        boolean_expressions::BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
+                            object_boolean_expression_type ,
+                            data_connector: data_connector_name.clone(),
+                        }
+                    )?;
+
     // validate graphql config
     let boolean_expression_graphql_config = object_boolean_expression
         .graphql
@@ -205,28 +232,8 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
             store_new_graphql_type(existing_graphql_types, Some(&graphql_type_name))?;
 
-            let type_mapping = object_type_representation
-                .type_mappings
-                .get(
-                    &data_connector_name,
-                    &object_boolean_expression.data_connector_object_type,
-                )
-                .unwrap();
-
-            let scalars =
-                data_connector_scalars
-                    .get(&data_connector_name)
-                    .ok_or(
-                        boolean_expressions::BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
-                            object_boolean_expression_type: object_boolean_expression_type.clone(),
-                            data_connector: data_connector_name.clone(),
-                        }
-                    )?;
-
             resolve_boolean_expression_graphql_config(
-                &data_connector_name,
                 graphql_type_name,
-                subgraph,
                 scalars,
                 type_mapping,
                 graphql_config,
@@ -234,6 +241,16 @@ pub(crate) fn resolve_object_boolean_expression_type(
             )
         })
         .transpose()?;
+
+    let scalar_fields = resolve_scalar_fields(
+        &data_connector_name,
+        subgraph,
+        scalars,
+        type_mapping,
+        &object_type_representation.object_type.fields,
+        object_boolean_expression.graphql.as_ref(),
+        flags,
+    )?;
 
     let data_connector_link =
         data_connectors::DataConnectorLink::new(data_connector_name, data_connector_context)
@@ -246,6 +263,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
     let resolved_boolean_expression = ObjectBooleanExpressionType {
         name: qualified_name.clone(),
+        scalar_fields,
         object_type: qualified_object_type_name.clone(),
         data_connector: ObjectBooleanExpressionDataConnector {
             object_type: object_boolean_expression.data_connector_object_type.clone(),
@@ -258,11 +276,86 @@ pub(crate) fn resolve_object_boolean_expression_type(
 }
 
 // record filter expression info
-pub fn resolve_boolean_expression_graphql_config(
+pub fn resolve_scalar_fields(
     data_connector_name: &Qualified<open_dds::data_connector::DataConnectorName>,
-    where_type_name: ast::TypeName,
     subgraph: &SubgraphName,
-    scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    scalars: &data_connector_scalar_types::DataConnectorScalars,
+    type_mappings: &object_types::TypeMapping,
+    fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,
+    graphql: Option<&open_dds::types::ObjectBooleanExpressionTypeGraphQlConfiguration>,
+    flags: &open_dds::flags::OpenDdFlags,
+) -> Result<
+    BTreeMap<FieldName, boolean_expressions::ComparisonExpressionInfo>,
+    boolean_expressions::BooleanExpressionError,
+> {
+    let mut scalar_fields = BTreeMap::new();
+
+    if graphql.is_some()
+        || flags.contains(open_dds::flags::Flag::AllowBooleanExpressionFieldsWithoutGraphql)
+    {
+        let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
+
+        for (field_name, field_mapping) in field_mappings {
+            // fields with field arguments are not allowed in boolean expressions
+            if let Some(field_definition) = fields.get(field_name) {
+                if !field_definition.field_arguments.is_empty() {
+                    continue;
+                }
+            }
+            // Generate comparison expression for fields mapped to simple scalar type
+            if let Some(scalar_type_info) = data_connector_scalar_types::get_simple_scalar(
+                field_mapping.column_type.clone(),
+                scalars,
+            ) {
+                if scalar_type_info.comparison_expression_name.is_some()
+                    || flags
+                        .contains(open_dds::flags::Flag::AllowBooleanExpressionFieldsWithoutGraphql)
+                {
+                    let mut operators = BTreeMap::new();
+                    for (op_name, op_definition) in
+                        &scalar_type_info.scalar_type.comparison_operators
+                    {
+                        let operator_name = OperatorName::from(op_name.as_str());
+                        operators.insert(
+                            operator_name,
+                            resolve_ndc_type(
+                                data_connector_name,
+                                &get_argument_type(op_definition, &field_mapping.column_type),
+                                scalars,
+                                subgraph,
+                            )?,
+                        );
+                    }
+
+                    let mut operator_mapping = BTreeMap::new();
+                    operator_mapping.insert(
+                        data_connector_name.clone(),
+                        boolean_expressions::OperatorMapping::new(),
+                    );
+
+                    // Register scalar comparison field only if it contains non-zero operators.
+                    if !operators.is_empty() {
+                        scalar_fields.insert(
+                            field_name.clone(),
+                            boolean_expressions::ComparisonExpressionInfo {
+                                object_type_name: None,
+                                operator_mapping,
+                                operators,
+                                logical_operators: LogicalOperators::Exclude,
+                            },
+                        );
+                    };
+                }
+            }
+        }
+    }
+    Ok(scalar_fields)
+}
+
+// record filter expression info
+pub fn resolve_boolean_expression_graphql_config(
+    where_type_name: ast::TypeName,
+    scalars: &data_connector_scalar_types::DataConnectorScalars,
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
     fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,
@@ -271,11 +364,8 @@ pub fn resolve_boolean_expression_graphql_config(
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
 
-    let filter_graphql_config = graphql_config
-        .query
-        .filter_input_config
-        .as_ref()
-        .ok_or_else(|| {
+    let filter_graphql_config =
+        graphql_config.query.filter_input_config.as_ref().ok_or({
             graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig
         })?;
 
@@ -292,32 +382,12 @@ pub fn resolve_boolean_expression_graphql_config(
             scalars,
         ) {
             if let Some(graphql_type_name) = &scalar_type_info.comparison_expression_name.clone() {
-                let mut operators = BTreeMap::new();
-                for (op_name, op_definition) in &scalar_type_info.scalar_type.comparison_operators {
-                    let operator_name = OperatorName::from(op_name.as_str());
-                    operators.insert(
-                        operator_name,
-                        resolve_ndc_type(
-                            data_connector_name,
-                            &get_argument_type(op_definition, &field_mapping.column_type),
-                            scalars,
-                            subgraph,
-                        )?,
-                    );
-                }
-
-                let mut operator_mapping = BTreeMap::new();
-                operator_mapping.insert(data_connector_name.clone(), BTreeMap::new());
-
                 // Register scalar comparison field only if it contains non-zero operators.
-                if !operators.is_empty() {
+                if !scalar_type_info.scalar_type.comparison_operators.is_empty() {
                     scalar_fields.insert(
                         field_name.clone(),
-                        boolean_expressions::ComparisonExpressionInfo {
-                            object_type_name: None,
+                        boolean_expressions::ScalarBooleanExpressionGraphqlConfig {
                             type_name: graphql_type_name.clone(),
-                            operator_mapping,
-                            operators,
                             is_null_operator_name: Some(
                                 filter_graphql_config.operator_names.is_null.clone(),
                             ),
@@ -333,19 +403,13 @@ pub fn resolve_boolean_expression_graphql_config(
         scalar_fields,
         field_config: (boolean_expressions::BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
-            and_operator_name: filter_graphql_config.operator_names.and.clone(),
-            or_operator_name: filter_graphql_config.operator_names.or.clone(),
-            not_operator_name: filter_graphql_config.operator_names.not.clone(),
+            logical_operators: LogicalOperatorsGraphqlConfig {
+                and_operator_name: filter_graphql_config.operator_names.and.clone(),
+                or_operator_name: filter_graphql_config.operator_names.or.clone(),
+                not_operator_name: filter_graphql_config.operator_names.not.clone(),
+            },
         }),
     })
-}
-
-fn unwrap_nullable(field_type: &ndc_models::Type) -> &ndc_models::Type {
-    if let ndc_models::Type::Nullable { underlying_type } = field_type {
-        unwrap_nullable(underlying_type)
-    } else {
-        field_type
-    }
 }
 
 fn get_argument_type(
@@ -353,9 +417,21 @@ fn get_argument_type(
     field_type: &ndc_models::Type,
 ) -> ndc_models::Type {
     match op_definition {
-        ndc_models::ComparisonOperatorDefinition::Equal => unwrap_nullable(field_type).clone(),
+        ndc_models::ComparisonOperatorDefinition::Equal
+        | ndc_models::ComparisonOperatorDefinition::LessThan
+        | ndc_models::ComparisonOperatorDefinition::LessThanOrEqual
+        | ndc_models::ComparisonOperatorDefinition::GreaterThan
+        | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual
+        | ndc_models::ComparisonOperatorDefinition::Contains
+        | ndc_models::ComparisonOperatorDefinition::ContainsInsensitive
+        | ndc_models::ComparisonOperatorDefinition::StartsWith
+        | ndc_models::ComparisonOperatorDefinition::StartsWithInsensitive
+        | ndc_models::ComparisonOperatorDefinition::EndsWith
+        | ndc_models::ComparisonOperatorDefinition::EndsWithInsensitive => {
+            unwrap_nullable_type(field_type).clone()
+        }
         ndc_models::ComparisonOperatorDefinition::In => ndc_models::Type::Array {
-            element_type: Box::new(unwrap_nullable(field_type).clone()),
+            element_type: Box::new(unwrap_nullable_type(field_type).clone()),
         },
         ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => argument_type.clone(),
     }

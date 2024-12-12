@@ -29,7 +29,7 @@ query:
         }
       }
     }
-    
+
     fragment FullType on __Type {
       kind
       name
@@ -62,7 +62,7 @@ query:
         ...TypeRef
       }
     }
-    
+
     fragment InputValue on __InputValue {
     name
     description
@@ -71,7 +71,7 @@ query:
     }
     defaultValue
     }
-    
+
     fragment TypeRef on __Type {
       kind
       name

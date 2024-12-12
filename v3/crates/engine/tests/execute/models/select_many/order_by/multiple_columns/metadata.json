@@ -109,6 +109,8 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "name": "Tracks",
             "objectType": "Track",
@@ -149,9 +151,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Model"
+          }
         },
         {
           "kind": "TypePermissions",

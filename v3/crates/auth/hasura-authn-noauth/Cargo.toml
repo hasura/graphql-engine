@@ -10,7 +10,7 @@ bench = false
 [dependencies]
 hasura-authn-core = { path = "../hasura-authn-core" }
 
-schemars = { workspace = true, features = ["smol_str", "url"] }
+schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

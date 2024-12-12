@@ -12,6 +12,7 @@ use crate::types::subgraph::Qualified;
 
 use crate::helpers::typecheck;
 use crate::stages::object_types;
+use crate::ValueExpressionOrPredicate;
 
 /// resolve type permissions
 pub fn resolve(
@@ -33,6 +34,7 @@ pub fn resolve(
 
     // resolve type permissions
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: output_type_permission,
     } in &metadata_accessor.type_permissions
@@ -53,6 +55,7 @@ pub fn resolve(
                     output_type_permission,
                 )?;
                 object_type.type_input_permissions = resolve_input_type_permission(
+                    &metadata_accessor.flags,
                     &object_type.object_type,
                     output_type_permission,
                 )?;
@@ -96,6 +99,7 @@ pub fn resolve_output_type_permission(
 }
 
 pub(crate) fn resolve_input_type_permission(
+    flags: &open_dds::flags::OpenDdFlags,
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
 ) -> Result<BTreeMap<Role, TypeInputPermission>, TypeInputPermissionError> {
@@ -132,10 +136,24 @@ pub(crate) fn resolve_input_type_permission(
                         );
                     }
                 };
+                let resolved_value = match &value {
+                    open_dds::permissions::ValueExpression::Literal(literal) => {
+                        ValueExpressionOrPredicate::Literal(literal.clone())
+                    }
+                    open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
+                        ValueExpressionOrPredicate::SessionVariable(
+                            hasura_authn_core::SessionVariableReference {
+                                name: session_variable.clone(),
+                                passed_as_json: flags
+                                    .contains(open_dds::flags::Flag::JsonSessionVariables),
+                            },
+                        )
+                    }
+                };
                 resolved_field_presets.insert(
                     field_name.clone(),
                     FieldPresetInfo {
-                        value: value.clone(),
+                        value: resolved_value,
                         deprecated: field_definition.deprecated.clone(),
                     },
                 );

@@ -135,6 +135,8 @@
           }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "commandActor",
             "name": "getMovieFromActor",
@@ -159,9 +161,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         }
       ]
     }

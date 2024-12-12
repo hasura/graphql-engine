@@ -31,25 +31,57 @@
           }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "MyRelationship",
+            "sourceType": "RowType",
+            "target": {
+              "model": {
+                "name": "Foo",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": []
+          }
+        },
+        {
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
-            "name": "MyOrderByExpression",
-            "orderedType": "RowType",
-            "orderableFields": [
-              {
-                "fieldName": "test",
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
                 "enableOrderByDirections": {
                   "enableAll": true
                 }
               }
-            ],
-            "orderableRelationships": [
-              {
-                "relationshipName": "MyRelationship",
-                "orderByExpression": "Foo"
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "MyOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "RowType",
+                "orderableFields": [
+                  {
+                    "fieldName": "test",
+                    "orderByExpression": "StringOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": [
+                  {
+                    "relationshipName": "MyRelationship",
+                    "orderByExpression": "Foo"
+                  }
+                ]
               }
-            ],
+            },
             "graphql": {
               "expressionTypeName": "mycollection_order_by"
             },

@@ -4,7 +4,6 @@ use schemars::schema::{
 };
 use schemars::schema::{InstanceType, SingleOrVec};
 use serde_json;
-use serde_path_to_error;
 use smol_str::SmolStr;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
@@ -22,7 +21,10 @@ mod macros;
 /// See the README.md in `opendds-derive` crate for more details.
 /// Refs: <https://github.com/serde-rs/serde/issues/1183>, <https://github.com/serde-rs/serde/issues/1495>
 pub trait OpenDd: Sized {
-    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError>;
+    fn deserialize(
+        json: serde_json::Value,
+        path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError>;
 
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema;
 
@@ -33,16 +35,42 @@ pub trait OpenDd: Sized {
     }
 }
 
+pub fn deserialize_key<T: OpenDd>(
+    json: serde_json::Value,
+    path: jsonpath::JSONPath,
+    key: String,
+) -> Result<T, OpenDdDeserializeError> {
+    OpenDd::deserialize(json, path.append_key(key.clone())).map_err(|e| OpenDdDeserializeError {
+        error: e.error,
+        path: e.path.prepend_key(key),
+    })
+}
+
+pub fn deserialize_index<T: OpenDd>(
+    json: serde_json::Value,
+    path: jsonpath::JSONPath,
+    index: usize,
+) -> Result<T, OpenDdDeserializeError> {
+    OpenDd::deserialize(json, path.append_index(index)).map_err(|e| OpenDdDeserializeError {
+        error: e.error,
+        path: e.path.prepend_index(index),
+    })
+}
+
 impl_OpenDd_default_for!(String);
 impl_OpenDd_default_for!(SmolStr);
 impl_OpenDd_default_for!(bool);
 impl_OpenDd_default_for!(i32);
 impl_OpenDd_default_for!(u32);
+impl_OpenDd_default_for!(u64);
 impl_OpenDd_default_for!(());
 
 impl<T: OpenDd> OpenDd for Box<T> {
-    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
-        T::deserialize(json).map(Box::new)
+    fn deserialize(
+        json: serde_json::Value,
+        path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError> {
+        T::deserialize(json, path).map(Box::new)
     }
 
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
@@ -55,10 +83,13 @@ impl<T: OpenDd> OpenDd for Box<T> {
 }
 
 impl<T: OpenDd> OpenDd for Option<T> {
-    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError> {
         match json {
             serde_json::Value::Null => Ok(None),
-            _ => Ok(Some(T::deserialize(json)?)),
+            _ => Ok(Some(T::deserialize(json, path)?)),
         }
     }
 
@@ -189,91 +220,13 @@ pub fn gen_root_schema_for<T: OpenDd>(
     root_schema
 }
 
-/// Represents a single element in a JSON path.
-#[derive(Debug)]
-pub enum JSONPathElement {
-    Key(String),
-    Index(usize),
-}
-
-/// Represents a JSON path.
-#[derive(Debug)]
-pub struct JSONPath(pub Vec<JSONPathElement>);
-
-impl Default for JSONPath {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl std::fmt::Display for JSONPath {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let elems = self
-            .0
-            .iter()
-            .map(|element| match element {
-                JSONPathElement::Key(key) => format!(".{key}"),
-                JSONPathElement::Index(index) => format!("[{index}]"),
-            })
-            .collect::<Vec<String>>();
-        let mut path = vec!["$".to_string()];
-        path.extend(elems);
-        write!(f, "{}", path.join(""))
-    }
-}
-
-impl JSONPath {
-    pub fn new() -> Self {
-        JSONPath(Vec::new())
-    }
-
-    pub fn new_key(key: &str) -> Self {
-        JSONPath(vec![JSONPathElement::Key(key.to_string())])
-    }
-
-    pub fn new_index(index: usize) -> Self {
-        JSONPath(vec![JSONPathElement::Index(index)])
-    }
-
-    pub fn prepend_key(self, key: String) -> Self {
-        let mut new_path = vec![JSONPathElement::Key(key)];
-        new_path.extend(self.0);
-        JSONPath(new_path)
-    }
-
-    pub fn prepend_index(self, index: usize) -> Self {
-        let mut new_path = vec![JSONPathElement::Index(index)];
-        new_path.extend(self.0);
-        JSONPath(new_path)
-    }
-
-    pub fn from_serde_path(path: &serde_path_to_error::Path) -> Self {
-        JSONPath(
-            path.iter()
-                .filter_map(|segment| match segment {
-                    serde_path_to_error::Segment::Seq { index } => {
-                        Some(JSONPathElement::Index(*index))
-                    }
-                    serde_path_to_error::Segment::Map { key } => {
-                        Some(JSONPathElement::Key(key.to_string()))
-                    }
-                    serde_path_to_error::Segment::Enum { variant } => {
-                        Some(JSONPathElement::Key(variant.to_string()))
-                    }
-                    serde_path_to_error::Segment::Unknown => None,
-                })
-                .collect(),
-        )
-    }
-}
-
 /// Error type for deserializing OpenDd types from JSON values.
 #[derive(Debug, thiserror::Error)]
 #[error("{error} at path {path}")]
 pub struct OpenDdDeserializeError {
     #[source]
     pub error: serde_json::Error,
-    pub path: JSONPath,
+    pub path: jsonpath::JSONPath,
 }
 
 #[cfg(test)]
@@ -307,7 +260,10 @@ mod tests {
             name: "Foo".to_string(),
             age: 25,
         });
-        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+        assert_eq!(
+            expected,
+            traits::OpenDd::deserialize(json, jsonpath::JSONPath::new()).unwrap()
+        );
     }
 
     #[test]
@@ -332,7 +288,10 @@ mod tests {
             name: "Foo".to_string(),
             age: 25,
         });
-        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+        assert_eq!(
+            expected,
+            traits::OpenDd::deserialize(json, jsonpath::JSONPath::new()).unwrap()
+        );
     }
 
     #[test]
@@ -355,7 +314,7 @@ mod tests {
         });
         assert_eq!(
             "unknown variant `MyStruct`, expected `MyVariant`".to_string(),
-            <MyEnum as traits::OpenDd>::deserialize(json)
+            <MyEnum as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
                 .unwrap_err()
                 .error
                 .to_string()
@@ -384,7 +343,7 @@ mod tests {
         });
         assert_eq!(
             "$.definition".to_string(),
-            <MyEnum as traits::OpenDd>::deserialize(json)
+            <MyEnum as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
                 .unwrap_err()
                 .path
                 .to_string()
@@ -444,7 +403,10 @@ mod tests {
             first: "First".to_string(),
             second: "Second".to_string(),
         }));
-        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+        assert_eq!(
+            expected,
+            traits::OpenDd::deserialize(json, jsonpath::JSONPath::new()).unwrap()
+        );
     }
 
     #[test]
@@ -454,7 +416,8 @@ mod tests {
             "first": "First",
             "second": "Second"
         });
-        let err = <MyEnumUntagged as traits::OpenDd>::deserialize(json).unwrap_err();
+        let err = <MyEnumUntagged as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
+            .unwrap_err();
         assert_eq!("missing field `third`", err.error.to_string());
     }
 
@@ -465,7 +428,8 @@ mod tests {
             "first": "First",
             "second": "Second"
         });
-        let err = <MyEnumUntagged as traits::OpenDd>::deserialize(json).unwrap_err();
+        let err = <MyEnumUntagged as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
+            .unwrap_err();
         assert_eq!(
             "unexpected value: `Random` expecting First, Second, Third",
             err.error.to_string()
@@ -550,7 +514,10 @@ mod tests {
             ],
         };
 
-        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+        assert_eq!(
+            expected,
+            traits::OpenDd::deserialize(json, jsonpath::JSONPath::new()).unwrap()
+        );
     }
 
     #[test]
@@ -576,7 +543,7 @@ mod tests {
         });
         assert_eq!(
             "missing field `superGraphName`",
-            <Metadata as traits::OpenDd>::deserialize(json)
+            <Metadata as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
                 .unwrap_err()
                 .error
                 .to_string()
@@ -609,7 +576,7 @@ mod tests {
 
         assert_eq!(
             "$.subgraphs[1].kind",
-            <Metadata as traits::OpenDd>::deserialize(json)
+            <Metadata as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
                 .unwrap_err()
                 .path
                 .to_string()
@@ -626,7 +593,7 @@ mod tests {
 
         assert_eq!(
             "unexpected keys: unknownFieldTwo, unknownFieldOne; expecting: subGraphOneName",
-            <SubGraphKindOne as traits::OpenDd>::deserialize(json)
+            <SubGraphKindOne as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
                 .unwrap_err()
                 .error
                 .to_string(),
@@ -861,7 +828,10 @@ mod tests {
             prop_1: true,
             prop_2: "testing".to_owned(),
         });
-        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+        assert_eq!(
+            expected,
+            traits::OpenDd::deserialize(json, jsonpath::JSONPath::new()).unwrap()
+        );
     }
 
     #[test]
@@ -876,7 +846,10 @@ mod tests {
             prop_x: "testing".to_owned(),
             prop_y: "abcd".to_owned(),
         });
-        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+        assert_eq!(
+            expected,
+            traits::OpenDd::deserialize(json, jsonpath::JSONPath::new()).unwrap()
+        );
     }
 
     #[test]
@@ -891,7 +864,9 @@ mod tests {
                 "prop2": "testing"
             }
         });
-        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        let err =
+            <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
+                .unwrap_err();
         assert_eq!(
             "invalid type: found multiple object properties, expected object with only one of the following properties: variantOne, variantTwo".to_string(),
             err
@@ -904,7 +879,9 @@ mod tests {
     #[test]
     fn test_externally_tagged_enum_empty_object_error() {
         let json = serde_json::json!({});
-        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        let err =
+            <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
+                .unwrap_err();
         assert_eq!(
             "invalid type: found empty object, expected object with only one of the following properties: variantOne, variantTwo".to_string(),
             err.error.to_string()
@@ -917,7 +894,9 @@ mod tests {
         let json = serde_json::json!({
             "variantOne": "wrong"
         });
-        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        let err =
+            <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
+                .unwrap_err();
         assert_eq!(
             "invalid type: not an object, expected object".to_string(),
             err.error.to_string()
@@ -933,7 +912,9 @@ mod tests {
                 "propB": 123,
             }
         });
-        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        let err =
+            <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
+                .unwrap_err();
         assert_eq!(
             "unknown variant `variantUnknown`, expected `variantOne, variantTwo`".to_string(),
             err.error.to_string()

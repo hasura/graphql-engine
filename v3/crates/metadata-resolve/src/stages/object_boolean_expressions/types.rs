@@ -1,5 +1,5 @@
 use crate::stages::{boolean_expressions, data_connectors};
-
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::Qualified;
 use std::collections::BTreeMap;
 
@@ -16,7 +16,7 @@ pub struct ObjectBooleanExpressionsOutput {
     pub object_boolean_expression_types:
         BTreeMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
     pub graphql_types: BTreeSet<ast::TypeName>,
-    pub warnings: Vec<ObjectBooleanExpressionWarning>,
+    pub issues: Vec<ObjectBooleanExpressionIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -30,6 +30,7 @@ pub struct ObjectBooleanExpressionDataConnector {
 pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
+    pub scalar_fields: BTreeMap<FieldName, boolean_expressions::ComparisonExpressionInfo>,
     pub graphql: Option<ObjectBooleanExpressionGraphqlConfig>,
     pub data_connector: ObjectBooleanExpressionDataConnector,
 }
@@ -37,12 +38,23 @@ pub struct ObjectBooleanExpressionType {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectBooleanExpressionGraphqlConfig {
     pub type_name: ast::TypeName,
-    pub scalar_fields: BTreeMap<FieldName, boolean_expressions::ComparisonExpressionInfo>,
+    pub scalar_fields:
+        BTreeMap<FieldName, boolean_expressions::ScalarBooleanExpressionGraphqlConfig>,
     pub field_config: boolean_expressions::BooleanExpressionGraphqlFieldConfig,
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum ObjectBooleanExpressionWarning {
-    #[error("ObjectBooleanExpressionType is deprecated in favour of BooleanExpressionType. Please consider upgrading {name:}.")]
+pub enum ObjectBooleanExpressionIssue {
+    #[error("ObjectBooleanExpressionType is deprecated. Please consider upgrading {name:} to a BooleanExpressionType. https://hasura.io/docs/3.0/cli/commands/ddn_codemod_upgrade-object-boolean-expression-types/")]
     PleaseUpgradeToBooleanExpression { name: Qualified<CustomTypeName> },
+}
+
+impl ShouldBeAnError for ObjectBooleanExpressionIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            ObjectBooleanExpressionIssue::PleaseUpgradeToBooleanExpression { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowObjectBooleanExpressionType)
+            }
+        }
+    }
 }

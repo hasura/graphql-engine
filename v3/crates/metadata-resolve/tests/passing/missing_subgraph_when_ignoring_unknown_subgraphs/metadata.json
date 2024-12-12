@@ -2060,5 +2060,8 @@
         }
       ]
     }
-  ]
+  ],
+  "flags": {
+    "allow_partial_supergraph": true
+  }
 }

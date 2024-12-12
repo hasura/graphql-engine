@@ -25,7 +25,6 @@
             "representation": "Int"
           }
         },
-
         {
           "kind": "TypePermissions",
           "version": "v1",

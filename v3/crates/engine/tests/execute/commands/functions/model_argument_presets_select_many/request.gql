@@ -4,4 +4,9 @@ query MyQuery {
     movie_id
     name
   }
+  noargs: ActorsByMovieMany {
+    actor_id
+    movie_id
+    name
+  }
 }

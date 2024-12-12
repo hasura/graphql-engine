@@ -1,11 +1,16 @@
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
-use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
-use execute::{execute_query_internal, generate_ir, HttpContext};
+use engine_types::{ExposeInternalErrors, HttpContext};
+use graphql_frontend::{
+    execute_mutation_plan, execute_query_internal, execute_query_plan, generate_ir,
+    ExecuteQueryResult, RootFieldResult,
+};
+use graphql_ir::{generate_request_plan, RequestPlan};
+use graphql_schema::GDS;
 use hasura_authn_core::Identity;
+use indexmap::IndexMap;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;
-use schema::GDS;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -50,8 +55,10 @@ pub fn bench_execute(
     let metadata_path = test_path.join("metadata.json");
     let metadata = merge_with_common_metadata(&metadata_path, &common_metadata_path);
 
-    let gds = GDS::new_with_default_flags(open_dds::traits::OpenDd::deserialize(metadata).unwrap())
-        .unwrap();
+    let gds = GDS::new_with_default_flags(
+        open_dds::traits::OpenDd::deserialize(metadata, jsonpath::JSONPath::new()).unwrap(),
+    )
+    .unwrap();
     let schema = GDS::build_schema(&gds).unwrap();
     let http_context = HttpContext {
         client: reqwest::Client::new(),
@@ -110,7 +117,7 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 gql::validation::normalize_request(
-                    &schema::GDSRoleNamespaceGetter {
+                    &graphql_schema::GDSRoleNamespaceGetter {
                         scope: session.role.clone(),
                     },
                     schema,
@@ -122,7 +129,7 @@ pub fn bench_execute(
     );
 
     let normalized_request = gql::validation::normalize_request(
-        &schema::GDSRoleNamespaceGetter {
+        &graphql_schema::GDSRoleNamespaceGetter {
             scope: session.role.clone(),
         },
         &schema,
@@ -160,11 +167,26 @@ pub fn bench_execute(
         |b, runtime| {
             b.to_async(*runtime).iter(|| async {
                 match generate_request_plan(&ir).unwrap() {
-                    execute::RequestPlan::QueryPlan(query_plan) => {
+                    RequestPlan::QueryPlan(query_plan) => {
                         execute_query_plan(&http_context, query_plan, None).await
                     }
-                    execute::RequestPlan::MutationPlan(mutation_plan) => {
+                    RequestPlan::MutationPlan(mutation_plan) => {
                         execute_mutation_plan(&http_context, mutation_plan, None).await
+                    }
+                    RequestPlan::SubscriptionPlan(alias, subscription_plan) => {
+                        // subscriptions are not supported
+                        let result = Err(execute::FieldError::SubscriptionsNotSupported);
+                        let root_field_result = RootFieldResult {
+                            is_nullable: subscription_plan
+                                .subscription_execution
+                                .process_response_as
+                                .is_nullable(),
+                            result,
+                            headers: None,
+                        };
+                        ExecuteQueryResult {
+                            root_fields: IndexMap::from([(alias, root_field_result)]),
+                        }
                     }
                 }
             });
@@ -178,7 +200,7 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 execute_query_internal(
-                    execute::ExposeInternalErrors::Expose,
+                    ExposeInternalErrors::Expose,
                     &http_context,
                     schema,
                     &session,

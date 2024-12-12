@@ -1,0 +1,2722 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_filter_input_field_name_in_graphql_config/metadata.json
+---
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Invoice",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "billingAddress",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingCity",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingCountry",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingPostalCode",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingState",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "customerId",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int4",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "invoiceDate",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Timestamp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "invoiceId",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int4",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "total",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Numeric",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "App_Invoice",
+                            ),
+                        ),
+                    ),
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "App_InvoiceInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "mypg",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "Invoice",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "Invoice",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "billingAddress",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "BillingAddress",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Named {
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
+                                            },
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "billingCity",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "BillingCity",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Named {
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
+                                            },
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "billingCountry",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "BillingCountry",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Named {
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
+                                            },
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "billingPostalCode",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "BillingPostalCode",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Named {
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
+                                            },
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "billingState",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "BillingState",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Named {
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
+                                            },
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "customerId",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "CustomerId",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "int4",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "invoiceDate",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "InvoiceDate",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "timestamp",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Timestamp,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "invoiceId",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "InvoiceId",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "int4",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "total",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "Total",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "numeric",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            BigDecimal,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        scalar_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Int4",
+                    ),
+                ),
+            }: ScalarTypeRepresentation {
+                graphql_type_name: Some(
+                    TypeName(
+                        Name(
+                            "App_Int4",
+                        ),
+                    ),
+                ),
+                description: None,
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "mypg",
+                            ),
+                        ),
+                    }: Int32,
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Int8",
+                    ),
+                ),
+            }: ScalarTypeRepresentation {
+                graphql_type_name: Some(
+                    TypeName(
+                        Name(
+                            "App_Int8",
+                        ),
+                    ),
+                ),
+                description: None,
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "mypg",
+                            ),
+                        ),
+                    }: JSON,
+                },
+            },
+        },
+        models: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: ModelName(
+                    Identifier(
+                        "Invoice",
+                    ),
+                ),
+            }: ModelWithArgumentPresets {
+                model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                0,
+                            ),
+                        ],
+                    ),
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: ModelName(
+                            Identifier(
+                                "Invoice",
+                            ),
+                        ),
+                    },
+                    data_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Invoice",
+                            ),
+                        ),
+                    },
+                    type_fields: {
+                        FieldName(
+                            Identifier(
+                                "billingAddress",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingCity",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingCountry",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingPostalCode",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingState",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "customerId",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int4",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "invoiceDate",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Timestamp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "invoiceId",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int4",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "total",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Numeric",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    arguments: {},
+                    source: Some(
+                        ModelSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "mypg",
+                                        ),
+                                    ),
+                                },
+                                url: ReadWriteUrls(
+                                    ResolvedReadWriteUrls {
+                                        read: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                        write: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                    },
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V01,
+                                    supports_explaining_queries: true,
+                                    supports_explaining_mutations: true,
+                                    supports_nested_object_filtering: false,
+                                    supports_nested_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                },
+                            },
+                            collection: CollectionName(
+                                "Invoice",
+                            ),
+                            collection_type: DataConnectorObjectType(
+                                "Invoice",
+                            ),
+                            type_mappings: {
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Invoice",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "Invoice",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "billingAddress",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "BillingAddress",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Named {
+                                                    name: TypeName(
+                                                        "varchar",
+                                                    ),
+                                                },
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "billingCity",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "BillingCity",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Named {
+                                                    name: TypeName(
+                                                        "varchar",
+                                                    ),
+                                                },
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "billingCountry",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "BillingCountry",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Named {
+                                                    name: TypeName(
+                                                        "varchar",
+                                                    ),
+                                                },
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "billingPostalCode",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "BillingPostalCode",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Named {
+                                                    name: TypeName(
+                                                        "varchar",
+                                                    ),
+                                                },
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "billingState",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "BillingState",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Named {
+                                                    name: TypeName(
+                                                        "varchar",
+                                                    ),
+                                                },
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "customerId",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "CustomerId",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "int4",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "invoiceDate",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "InvoiceDate",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "timestamp",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Timestamp,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "invoiceId",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "InvoiceId",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "int4",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "total",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "Total",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "numeric",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                BigDecimal,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                            },
+                            argument_mappings: {},
+                            data_connector_link_argument_presets: {},
+                            source_arguments: {},
+                        },
+                    ),
+                    global_id_source: None,
+                    apollo_federation_key_source: None,
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "Invoice",
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregate_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: AggregateExpressionName(
+                                Identifier(
+                                    "Invoice_aggregate_exp",
+                                ),
+                            ),
+                        },
+                    ),
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: Some(
+                            ModelGraphQlDefinitionV2 {
+                                select_uniques: [
+                                    SelectUniqueGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "app_invoiceByInvoiceId",
+                                        ),
+                                        unique_identifier: [
+                                            FieldName(
+                                                Identifier(
+                                                    "invoiceId",
+                                                ),
+                                            ),
+                                        ],
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ],
+                                select_many: Some(
+                                    SelectManyGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "app_invoice",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ),
+                                arguments_input_type: None,
+                                apollo_federation: None,
+                                filter_input_type_name: Some(
+                                    GraphQlTypeName(
+                                        "Invoice_filter_input",
+                                    ),
+                                ),
+                                aggregate: Some(
+                                    ModelAggregateGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "app_invoice_aggregate",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ),
+                            },
+                        ),
+                        description: None,
+                    },
+                },
+                argument_presets: {},
+                select_permissions: {},
+                filter_expression_type: None,
+                graphql_api: ModelGraphQlApi {
+                    arguments_input_config: None,
+                    select_uniques: [
+                        SelectUniqueGraphQlDefinition {
+                            query_root_field: Name(
+                                "app_invoiceByInvoiceId",
+                            ),
+                            unique_identifier: {
+                                FieldName(
+                                    Identifier(
+                                        "invoiceId",
+                                    ),
+                                ): UniqueIdentifierField {
+                                    field_type: QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "Int4",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                    ndc_column: Some(
+                                        NdcColumnForComparison {
+                                            column: DataConnectorColumnName(
+                                                "InvoiceId",
+                                            ),
+                                            equal_operator: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                        },
+                                    ),
+                                },
+                            },
+                            description: None,
+                            deprecated: None,
+                            subscription: None,
+                        },
+                    ],
+                    select_many: Some(
+                        SelectManyGraphQlDefinition {
+                            query_root_field: Name(
+                                "app_invoice",
+                            ),
+                            description: None,
+                            deprecated: None,
+                            subscription: None,
+                        },
+                    ),
+                    select_aggregate: None,
+                    order_by_expression: None,
+                    limit_field: Some(
+                        LimitFieldGraphqlConfig {
+                            field_name: Name(
+                                "limit",
+                            ),
+                        },
+                    ),
+                    offset_field: Some(
+                        OffsetFieldGraphqlConfig {
+                            field_name: Name(
+                                "offset",
+                            ),
+                        },
+                    ),
+                    filter_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "Invoice_filter_input",
+                            ),
+                        ),
+                    ),
+                },
+            },
+        },
+        commands: {},
+        object_boolean_expression_types: {},
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {},
+            scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
+        },
+        order_by_expressions: OrderByExpressions {
+            objects: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "Invoice",
+                            ),
+                        ),
+                    ),
+                }: ObjectOrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "Invoice",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Invoice",
+                            ),
+                        ),
+                    },
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "billingAddress",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingAddress",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "billingCity",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingCity",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "billingCountry",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingCountry",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "billingPostalCode",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingPostalCode",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "billingState",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingState",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "customerId",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "customerId",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "invoiceDate",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "invoiceDate",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "invoiceId",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "invoiceId",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "total",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "total",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                    },
+                    orderable_relationships: ModelV1AllowAll,
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model Invoice (in subgraph default)",
+                    ),
+                },
+            },
+            scalars: {},
+        },
+        aggregate_expressions: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: AggregateExpressionName(
+                    Identifier(
+                        "Int4_aggregate_exp",
+                    ),
+                ),
+            }: AggregateExpression {
+                name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: AggregateExpressionName(
+                        Identifier(
+                            "Int4_aggregate_exp",
+                        ),
+                    ),
+                },
+                operand: AggregateOperand {
+                    aggregated_type: Custom(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Int4",
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregatable_fields: [],
+                    aggregation_functions: [
+                        AggregationFunctionInfo {
+                            name: AggregationFunctionName(
+                                Identifier(
+                                    "_sum",
+                                ),
+                            ),
+                            description: None,
+                            return_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int8",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            data_connector_functions: [
+                                DataConnectorAggregationFunctionInfo {
+                                    data_connector_name: Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "mypg",
+                                            ),
+                                        ),
+                                    },
+                                    function_name: DataConnectorAggregationFunctionName(
+                                        "sum",
+                                    ),
+                                    operand_scalar_type: DataConnectorScalarType(
+                                        "int4",
+                                    ),
+                                },
+                            ],
+                        },
+                        AggregationFunctionInfo {
+                            name: AggregationFunctionName(
+                                Identifier(
+                                    "_min",
+                                ),
+                            ),
+                            description: None,
+                            return_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int4",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            data_connector_functions: [
+                                DataConnectorAggregationFunctionInfo {
+                                    data_connector_name: Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "mypg",
+                                            ),
+                                        ),
+                                    },
+                                    function_name: DataConnectorAggregationFunctionName(
+                                        "min",
+                                    ),
+                                    operand_scalar_type: DataConnectorScalarType(
+                                        "int4",
+                                    ),
+                                },
+                            ],
+                        },
+                        AggregationFunctionInfo {
+                            name: AggregationFunctionName(
+                                Identifier(
+                                    "_max",
+                                ),
+                            ),
+                            description: None,
+                            return_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int4",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            data_connector_functions: [
+                                DataConnectorAggregationFunctionInfo {
+                                    data_connector_name: Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "mypg",
+                                            ),
+                                        ),
+                                    },
+                                    function_name: DataConnectorAggregationFunctionName(
+                                        "max",
+                                    ),
+                                    operand_scalar_type: DataConnectorScalarType(
+                                        "int4",
+                                    ),
+                                },
+                            ],
+                        },
+                    ],
+                },
+                count: AggregateCountDefinition {
+                    enable: true,
+                    description: None,
+                },
+                count_distinct: AggregateCountDefinition {
+                    enable: true,
+                    description: None,
+                },
+                graphql: None,
+                description: None,
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: AggregateExpressionName(
+                    Identifier(
+                        "Invoice_aggregate_exp",
+                    ),
+                ),
+            }: AggregateExpression {
+                name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: AggregateExpressionName(
+                        Identifier(
+                            "Invoice_aggregate_exp",
+                        ),
+                    ),
+                },
+                operand: AggregateOperand {
+                    aggregated_type: Custom(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Invoice",
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregatable_fields: [
+                        AggregatableFieldInfo {
+                            field_name: FieldName(
+                                Identifier(
+                                    "invoiceId",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_expression: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: AggregateExpressionName(
+                                    Identifier(
+                                        "Int4_aggregate_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                    ],
+                    aggregation_functions: [],
+                },
+                count: AggregateCountDefinition {
+                    enable: false,
+                    description: None,
+                },
+                count_distinct: AggregateCountDefinition {
+                    enable: false,
+                    description: None,
+                },
+                graphql: None,
+                description: None,
+            },
+        },
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "OrderBy",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
+        },
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {},
+    },
+    [
+        ModelGraphqlIssue(
+            MissingAggregateFilterInputFieldNameInGraphqlConfig {
+                model_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: ModelName(
+                        Identifier(
+                            "Invoice",
+                        ),
+                    ),
+                },
+            },
+        ),
+    ],
+)

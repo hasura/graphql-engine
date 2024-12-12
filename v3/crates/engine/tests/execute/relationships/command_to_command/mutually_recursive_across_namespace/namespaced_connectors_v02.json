@@ -54,22 +54,10 @@
                     },
                     "aggregate_functions": {
                       "max": {
-                        "result_type": {
-                          "type": "nullable",
-                          "underlying_type": {
-                            "type": "named",
-                            "name": "Int"
-                          }
-                        }
+                        "type": "max"
                       },
                       "min": {
-                        "result_type": {
-                          "type": "nullable",
-                          "underlying_type": {
-                            "type": "named",
-                            "name": "Int"
-                          }
-                        }
+                        "type": "min"
                       }
                     },
                     "comparison_operators": {
@@ -84,22 +72,10 @@
                     },
                     "aggregate_functions": {
                       "max": {
-                        "result_type": {
-                          "type": "nullable",
-                          "underlying_type": {
-                            "type": "named",
-                            "name": "String"
-                          }
-                        }
+                        "type": "max"
                       },
                       "min": {
-                        "result_type": {
-                          "type": "nullable",
-                          "underlying_type": {
-                            "type": "named",
-                            "name": "String"
-                          }
-                        }
+                        "type": "min"
                       }
                     },
                     "comparison_operators": {
@@ -205,7 +181,58 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "city": {
+                    "description": "A city",
+                    "fields": {
+                      "name": {
+                        "description": "The city's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "country": {
+                    "description": "A country",
+                    "fields": {
+                      "area_km2": {
+                        "description": "The country's area size in square kilometers",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "cities": {
+                        "description": "The cities in the country",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "city"
+                          }
+                        }
+                      },
+                      "id": {
+                        "description": "The country's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "The country's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
                   },
                   "genre": {
                     "description": "A movie genre",
@@ -273,7 +300,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "institution": {
                     "description": "An institution",
@@ -358,7 +386,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "location": {
                     "description": "A location",
@@ -446,8 +475,16 @@
                             }
                           }
                         }
+                      },
+                      "country_id": {
+                        "description": "The location's country ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "login_response": {
                     "description": "Response to a login action",
@@ -466,7 +503,8 @@
                           "name": "Bool"
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "movie": {
                     "description": "A movie",
@@ -550,7 +588,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "name_query": {
                     "description": "parameters for querying by name",
@@ -635,7 +674,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "session_info": {
                     "description": "Session details",
@@ -654,7 +694,8 @@
                           "name": "String"
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "session_response": {
                     "description": "Response of session details",
@@ -673,11 +714,26 @@
                           "name": "session_info"
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "staff_member": {
                     "description": "A staff member",
                     "fields": {
+                      "favourite_artist_id": {
+                        "description": "The artist_id of the staff member's favourite artist",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "favourite_movie_id": {
+                        "description": "The movie_id of the staff member's favourite movie",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
                       "first_name": {
                         "description": "The staff member's first name",
                         "type": {
@@ -762,7 +818,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   }
                 },
                 "collections": [
@@ -775,8 +832,7 @@
                       "ActorByID": {
                         "unique_columns": ["id"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
                   },
                   {
                     "name": "movies",
@@ -787,8 +843,18 @@
                       "MovieByID": {
                         "unique_columns": ["id"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
+                  },
+                  {
+                    "name": "countries",
+                    "description": "A collection of countries",
+                    "arguments": {},
+                    "type": "country",
+                    "uniqueness_constraints": {
+                      "CountryByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
                   },
                   {
                     "name": "institutions",
@@ -799,8 +865,7 @@
                       "InstitutionByID": {
                         "unique_columns": ["id"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
                   },
                   {
                     "name": "actors_by_movie",
@@ -814,8 +879,7 @@
                       }
                     },
                     "type": "actor",
-                    "uniqueness_constraints": {},
-                    "foreign_keys": {}
+                    "uniqueness_constraints": {}
                   },
                   {
                     "name": "movies_by_actor_name",
@@ -837,8 +901,7 @@
                       }
                     },
                     "type": "movie",
-                    "uniqueness_constraints": {},
-                    "foreign_keys": {}
+                    "uniqueness_constraints": {}
                   }
                 ],
                 "functions": [
@@ -1265,9 +1328,7 @@
                 "capabilities": {
                   "query": {
                     "aggregates": {
-                      "filter_by": {
-                        "count_scalar_type": "Int"
-                      }
+                      "count_scalar_type": "Int"
                     }
                   }
                 }
@@ -1290,7 +1351,10 @@
                   "mutation": {},
                   "relationships": {
                     "relation_comparisons": {},
-                    "order_by_aggregate": {}
+                    "order_by_aggregate": {},
+                    "nested": {
+                      "array": {}
+                    }
                   }
                 }
               }
@@ -1352,22 +1416,10 @@
                     },
                     "aggregate_functions": {
                       "max": {
-                        "result_type": {
-                          "type": "nullable",
-                          "underlying_type": {
-                            "type": "named",
-                            "name": "Int"
-                          }
-                        }
+                        "type": "max"
                       },
                       "min": {
-                        "result_type": {
-                          "type": "nullable",
-                          "underlying_type": {
-                            "type": "named",
-                            "name": "Int"
-                          }
-                        }
+                        "type": "min"
                       }
                     },
                     "comparison_operators": {
@@ -1382,22 +1434,10 @@
                     },
                     "aggregate_functions": {
                       "max": {
-                        "result_type": {
-                          "type": "nullable",
-                          "underlying_type": {
-                            "type": "named",
-                            "name": "String"
-                          }
-                        }
+                        "type": "max"
                       },
                       "min": {
-                        "result_type": {
-                          "type": "nullable",
-                          "underlying_type": {
-                            "type": "named",
-                            "name": "String"
-                          }
-                        }
+                        "type": "min"
                       }
                     },
                     "comparison_operators": {
@@ -1503,7 +1543,58 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "city": {
+                    "description": "A city",
+                    "fields": {
+                      "name": {
+                        "description": "The city's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "country": {
+                    "description": "A country",
+                    "fields": {
+                      "area_km2": {
+                        "description": "The country's area size in square kilometers",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "cities": {
+                        "description": "The cities in the country",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "city"
+                          }
+                        }
+                      },
+                      "id": {
+                        "description": "The country's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "The country's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
                   },
                   "genre": {
                     "description": "A movie genre",
@@ -1571,7 +1662,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "institution": {
                     "description": "An institution",
@@ -1656,7 +1748,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "location": {
                     "description": "A location",
@@ -1744,8 +1837,16 @@
                             }
                           }
                         }
+                      },
+                      "country_id": {
+                        "description": "The location's country ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "login_response": {
                     "description": "Response to a login action",
@@ -1764,7 +1865,8 @@
                           "name": "Bool"
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "movie": {
                     "description": "A movie",
@@ -1848,7 +1950,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "name_query": {
                     "description": "parameters for querying by name",
@@ -1933,7 +2036,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "session_info": {
                     "description": "Session details",
@@ -1952,7 +2056,8 @@
                           "name": "String"
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "session_response": {
                     "description": "Response of session details",
@@ -1971,11 +2076,26 @@
                           "name": "session_info"
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "staff_member": {
                     "description": "A staff member",
                     "fields": {
+                      "favourite_artist_id": {
+                        "description": "The artist_id of the staff member's favourite artist",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "favourite_movie_id": {
+                        "description": "The movie_id of the staff member's favourite movie",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
                       "first_name": {
                         "description": "The staff member's first name",
                         "type": {
@@ -2060,7 +2180,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   }
                 },
                 "collections": [
@@ -2073,8 +2194,7 @@
                       "ActorByID": {
                         "unique_columns": ["id"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
                   },
                   {
                     "name": "movies",
@@ -2085,8 +2205,18 @@
                       "MovieByID": {
                         "unique_columns": ["id"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
+                  },
+                  {
+                    "name": "countries",
+                    "description": "A collection of countries",
+                    "arguments": {},
+                    "type": "country",
+                    "uniqueness_constraints": {
+                      "CountryByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
                   },
                   {
                     "name": "institutions",
@@ -2097,8 +2227,7 @@
                       "InstitutionByID": {
                         "unique_columns": ["id"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
                   },
                   {
                     "name": "actors_by_movie",
@@ -2112,8 +2241,7 @@
                       }
                     },
                     "type": "actor",
-                    "uniqueness_constraints": {},
-                    "foreign_keys": {}
+                    "uniqueness_constraints": {}
                   },
                   {
                     "name": "movies_by_actor_name",
@@ -2135,8 +2263,7 @@
                       }
                     },
                     "type": "movie",
-                    "uniqueness_constraints": {},
-                    "foreign_keys": {}
+                    "uniqueness_constraints": {}
                   }
                 ],
                 "functions": [
@@ -2563,9 +2690,7 @@
                 "capabilities": {
                   "query": {
                     "aggregates": {
-                      "filter_by": {
-                        "count_scalar_type": "Int"
-                      }
+                      "count_scalar_type": "Int"
                     }
                   }
                 }
@@ -2588,7 +2713,10 @@
                   "mutation": {},
                   "relationships": {
                     "relation_comparisons": {},
-                    "order_by_aggregate": {}
+                    "order_by_aggregate": {},
+                    "nested": {
+                      "array": {}
+                    }
                   }
                 }
               }

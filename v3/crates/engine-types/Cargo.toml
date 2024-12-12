@@ -1,0 +1,15 @@
+[package]
+name = "engine-types"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+reqwest = { workspace = true }
+serde = { workspace = true }
+
+[lints]
+workspace = true

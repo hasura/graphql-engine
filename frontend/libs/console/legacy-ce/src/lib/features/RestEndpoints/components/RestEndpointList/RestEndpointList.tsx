@@ -132,7 +132,7 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
   };
 
   const onClickEdit = (link: string) => () => {
-    browserHistory.push(`/api/rest/edit/${link}`);
+    browserHistory.push(`/api/rest/edit/${encodeURIComponent(link)}`);
   };
 
   const onSearchChange = debounce((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,7 +248,9 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
               <>
                 <Link
                   to={{
-                    pathname: `/api/rest/details/${endpoint.endpoint.name}`,
+                    pathname: `/api/rest/details/${encodeURIComponent(
+                      endpoint.endpoint.name
+                    )}`,
                     state: {
                       ...endpoint,
                       currentQuery: findQuery(

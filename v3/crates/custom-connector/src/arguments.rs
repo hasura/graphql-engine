@@ -328,7 +328,7 @@ where
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ndc_models::ErrorResponse {
-                    message: "argument '{argument_name}' is not an integer".into(),
+                    message: format!("argument '{argument_name}' is not an integer"),
                     details: serde_json::Value::Null,
                 }),
             )
@@ -338,7 +338,7 @@ where
             (
                 StatusCode::BAD_REQUEST,
                 Json(ndc_models::ErrorResponse {
-                    message: "argument '{argument_name}' is out of range".into(),
+                    message: format!("argument '{argument_name}' is out of range"),
                     details: serde_json::Value::Null,
                 }),
             )
@@ -370,7 +370,7 @@ where
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ndc_models::ErrorResponse {
-                    message: "argument '{argument_name}' is not an integer".into(),
+                    message: format!("argument '{argument_name}' is not an integer"),
                     details: serde_json::Value::Null,
                 }),
             )
@@ -402,7 +402,7 @@ where
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ndc_models::ErrorResponse {
-                    message: "argument '{argument_name}' is not an integer".into(),
+                    message: format!("argument '{argument_name}' is not an integer"),
                     details: serde_json::Value::Null,
                 }),
             )

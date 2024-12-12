@@ -3,6 +3,7 @@
     "data": {
       "Track": [
         {
+          "TrackId": 3,
           "AlbumId": 3,
           "Name": "Fast As a Shark",
           "Album": {
@@ -10,6 +11,7 @@
           }
         },
         {
+          "TrackId": 4,
           "AlbumId": 3,
           "Name": "Restless and Wild",
           "Album": {
@@ -17,6 +19,7 @@
           }
         },
         {
+          "TrackId": 5,
           "AlbumId": 3,
           "Name": "Princess of the Dawn",
           "Album": {
@@ -26,17 +29,21 @@
       ],
       "TrackWithoutRelationshipField": [
         {
+          "TrackId": 3,
           "Name": "Fast As a Shark"
         },
         {
+          "TrackId": 4,
           "Name": "Restless and Wild"
         },
         {
+          "TrackId": 5,
           "Name": "Princess of the Dawn"
         }
       ],
       "TrackAnd": [
         {
+          "TrackId": 3,
           "AlbumId": 3,
           "Name": "Fast As a Shark",
           "Album": {
@@ -44,6 +51,7 @@
           }
         },
         {
+          "TrackId": 4,
           "AlbumId": 3,
           "Name": "Restless and Wild",
           "Album": {
@@ -51,6 +59,7 @@
           }
         },
         {
+          "TrackId": 5,
           "AlbumId": 3,
           "Name": "Princess of the Dawn",
           "Album": {
@@ -60,6 +69,7 @@
       ],
       "TrackOr": [
         {
+          "TrackId": 2,
           "AlbumId": 2,
           "Name": "Balls to the Wall",
           "Album": {
@@ -67,6 +77,7 @@
           }
         },
         {
+          "TrackId": 3,
           "AlbumId": 3,
           "Name": "Fast As a Shark",
           "Album": {
@@ -74,6 +85,7 @@
           }
         },
         {
+          "TrackId": 4,
           "AlbumId": 3,
           "Name": "Restless and Wild",
           "Album": {
@@ -81,6 +93,7 @@
           }
         },
         {
+          "TrackId": 5,
           "AlbumId": 3,
           "Name": "Princess of the Dawn",
           "Album": {
@@ -94,22 +107,9 @@
     "data": {
       "Track": [
         {
-          "AlbumId": 3,
-          "Name": "Fast As a Shark",
-          "Album": {
-            "Title": "Restless and Wild"
-          }
-        },
-        {
+          "TrackId": 4,
           "AlbumId": 3,
           "Name": "Restless and Wild",
-          "Album": {
-            "Title": "Restless and Wild"
-          }
-        },
-        {
-          "AlbumId": 3,
-          "Name": "Princess of the Dawn",
           "Album": {
             "Title": "Restless and Wild"
           }
@@ -117,33 +117,15 @@
       ],
       "TrackWithoutRelationshipField": [
         {
-          "Name": "Fast As a Shark"
-        },
-        {
+          "TrackId": 4,
           "Name": "Restless and Wild"
-        },
-        {
-          "Name": "Princess of the Dawn"
         }
       ],
       "TrackAnd": [
         {
-          "AlbumId": 3,
-          "Name": "Fast As a Shark",
-          "Album": {
-            "Title": "Restless and Wild"
-          }
-        },
-        {
+          "TrackId": 4,
           "AlbumId": 3,
           "Name": "Restless and Wild",
-          "Album": {
-            "Title": "Restless and Wild"
-          }
-        },
-        {
-          "AlbumId": 3,
-          "Name": "Princess of the Dawn",
           "Album": {
             "Title": "Restless and Wild"
           }
@@ -151,29 +133,9 @@
       ],
       "TrackOr": [
         {
-          "AlbumId": 2,
-          "Name": "Balls to the Wall",
-          "Album": {
-            "Title": "Balls to the Wall"
-          }
-        },
-        {
-          "AlbumId": 3,
-          "Name": "Fast As a Shark",
-          "Album": {
-            "Title": "Restless and Wild"
-          }
-        },
-        {
+          "TrackId": 4,
           "AlbumId": 3,
           "Name": "Restless and Wild",
-          "Album": {
-            "Title": "Restless and Wild"
-          }
-        },
-        {
-          "AlbumId": 3,
-          "Name": "Princess of the Dawn",
           "Album": {
             "Title": "Restless and Wild"
           }

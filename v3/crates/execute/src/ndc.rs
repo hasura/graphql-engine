@@ -4,6 +4,7 @@ pub mod types;
 pub use types::*;
 
 use std::borrow::Cow;
+use std::sync::Arc;
 
 use axum::http::HeaderMap;
 
@@ -11,11 +12,7 @@ use lang_graphql::ast::common as ast;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
 use crate::error;
-use crate::{HttpContext, ProjectId};
-
-/// The column name used by NDC query response of functions
-/// <https://github.com/hasura/ndc-spec/blob/main/specification/src/specification/queries/functions.md?plain=1#L3>
-pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
+use engine_types::{HttpContext, ProjectId};
 
 /// Executes a NDC operation
 pub async fn execute_ndc_query<'n, 's>(
@@ -110,7 +107,7 @@ pub fn append_project_id_to_headers<'a>(
 pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_context: &HttpContext,
     query: &NdcMutationRequest,
-    data_connector: &metadata_resolve::DataConnectorLink,
+    data_connector: &Arc<metadata_resolve::DataConnectorLink>,
     execution_span_attribute: String,
     field_span_attribute: String,
     project_id: Option<&ProjectId>,

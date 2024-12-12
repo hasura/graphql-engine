@@ -1,6 +1,10 @@
+use std::sync::Arc;
+
 use crate::data_connectors::ArgumentPresetValue;
 use crate::helpers::argument::ArgumentMappingIssue;
+use crate::helpers::types::DuplicateRootFieldError;
 use crate::stages::{data_connectors, object_types};
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
     QualifiedTypeReference,
@@ -26,12 +30,14 @@ pub struct CommandsOutput {
 pub struct CommandGraphQlApi {
     pub root_field_kind: GraphQlRootFieldKind,
     pub root_field_name: ast::Name,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandSource {
-    pub data_connector: data_connectors::DataConnectorLink,
+    pub data_connector: Arc<data_connectors::DataConnectorLink>,
     pub source: DataConnectorCommand,
     // Is the output type of this command in OpenDD and NDC same. This can be
     // different in the case when `CommandsResponseConfig` is set
@@ -53,7 +59,9 @@ pub struct Command {
     pub output_type: QualifiedTypeReference,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: Option<CommandGraphQlApi>,
-    pub source: Option<CommandSource>,
+    pub source: Option<Arc<CommandSource>>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 
@@ -73,4 +81,20 @@ pub enum CommandsIssue {
         procedure_name: ProcedureName,
         issue: ArgumentMappingIssue,
     },
+    #[error("Cannot add the command {command_name:} to GraphQL schema: {error:}")]
+    GraphQlRootFieldAlreadyInUse {
+        command_name: Qualified<CommandName>,
+        error: DuplicateRootFieldError,
+    },
+}
+
+impl ShouldBeAnError for CommandsIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            CommandsIssue::GraphQlRootFieldAlreadyInUse { .. } => {
+                flags.contains(open_dds::flags::Flag::RequireUniqueCommandGraphqlNames)
+            }
+            _ => false,
+        }
+    }
 }

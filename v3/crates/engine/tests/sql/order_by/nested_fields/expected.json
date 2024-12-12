@@ -9,7 +9,7 @@
     "staff": [
       {
         "first_name": "John",
-        "last_name": "Hughes",
+        "last_name": null,
         "specialities": [
           "Computer Science",
           "Functional Programming",
@@ -18,7 +18,7 @@
       },
       {
         "first_name": "Koen",
-        "last_name": "Claessen",
+        "last_name": null,
         "specialities": [
           "Computer Science",
           "Functional Programming",
@@ -49,7 +49,7 @@
     "staff": [
       {
         "first_name": "Peter",
-        "last_name": "Landin",
+        "last_name": null,
         "specialities": ["Computer Science", "Education"]
       }
     ],

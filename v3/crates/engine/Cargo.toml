@@ -22,52 +22,63 @@ harness = false
 
 [dependencies]
 axum-ext = { path = "../utils/axum-ext" }
+engine-types = { path = "../engine-types" }
 execute = { path = "../execute" }
+graphql-frontend = { path = "../graphql/frontend" }
+graphql-schema = { path = "../graphql/schema" }
+graphql-ws = { path = "../graphql/graphql-ws" }
+hasura-authn = { path = "../auth/hasura-authn" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
-hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
 hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }
-hasura-authn-webhook = { path = "../auth/hasura-authn-webhook" }
-lang-graphql = { path = "../lang-graphql" }
+jsonapi = { path = "../jsonapi" }
+jsonpath = { path = "../utils/jsonpath" }
+lang-graphql = { path = "../graphql/lang-graphql" }
+metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
-opendds-derive = { path = "../utils/opendds-derive" }
-pre-execution-plugin = { path = "../plugins/pre-execution-plugin" }
-schema = { path = "../schema" }
+plan = { path = "../plan" }
+pre-parse-plugin = { path = "../plugins/pre-parse-plugin" }
+pre-response-plugin = { path = "../plugins/pre-response-plugin" }
+pre-route-plugin = { path = "../plugins/pre-route-plugin" }
 sql = { path = "../sql" }
 tracing-util = { path = "../utils/tracing-util" }
-metadata-resolve = {path = "../metadata-resolve" }
 
 anyhow = { workspace = true }
 axum = { workspace = true }
+axum-core = { workspace = true }
 base64 = { workspace = true }
-clap = { workspace = true, features = ["derive", "env"] }
+clap = { workspace = true }
 futures-util = {workspace = true}
+http-body-util = { workspace = true }
+indexmap = {workspace = true}
 json_value_merge = { workspace = true }
+jsonapi_library = { workspace =  true }
 mimalloc = { workspace = true }
 nonempty = { workspace = true }
-reqwest = { workspace = true, features = ["json", "multipart"] }
-schemars = { workspace = true, features = ["smol_str"] }
+oas3 = { workspace = true }
+reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-serde_path_to_error = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
+tokio = { workspace = true }
 tower = { workspace = true }
-tower-http = { workspace = true, features = ["trace", "cors", "fs"] }
+tower-http = { workspace = true }
 
-# Dependencies to build and run build.rs file
 [build-dependencies]
-build-data = { workspace = true } # To set short commit-sha at build time
+build-data = { workspace = true }
 
 [dev-dependencies]
-criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
+plan-types = { path = "../plan-types" }
+graphql-ir = { path = "../graphql/ir" }
+
+criterion = { workspace = true }
 goldenfile = { workspace = true }
+insta = { workspace = true }
 pretty_assertions = { workspace = true }
 tokio-test = { workspace = true }
 
 [package.metadata.cargo-machete]
 ignored = [
-  "build_data",          # cargo-machete ignores build dependencies
-  "serde_path_to_error", # used by opendds-derive
+  "build_data", "build-data"          # cargo-machete ignores build dependencies
 ]
 
 [lints]

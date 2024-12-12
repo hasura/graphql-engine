@@ -29,6 +29,14 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 },
             ),
             (
+                "country_id".into(),
+                ndc_models::ObjectField {
+                    description: Some("The location's country ID".into()),
+                    r#type: ndc_models::Type::Named { name: "Int".into() },
+                    arguments: BTreeMap::new(),
+                },
+            ),
+            (
                 "campuses".into(),
                 ndc_models::ObjectField {
                     description: Some("The location's campuses".into()),
@@ -41,5 +49,6 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 },
             ),
         ]),
+        foreign_keys: BTreeMap::new(),
     }
 }

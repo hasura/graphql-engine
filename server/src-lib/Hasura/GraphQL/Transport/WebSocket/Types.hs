@@ -24,6 +24,7 @@ import Hasura.Prelude
 import Hasura.Server.AppStateRef
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config (KeepAliveDelay (..))
+import Hasura.Server.Logging (LoggingSettings (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (ReadOnlyMode (..))
@@ -82,7 +83,8 @@ data WSServerEnv impl = WSServerEnv
     _wseKeepAliveDelay :: !KeepAliveDelay,
     _wseServerMetrics :: !ServerMetrics,
     _wsePrometheusMetrics :: !PrometheusMetrics,
-    _wseTraceSamplingPolicy :: !Tracing.SamplingPolicy
+    _wseTraceSamplingPolicy :: !Tracing.SamplingPolicy,
+    _wseLoggingSettings :: !LoggingSettings
   }
 
 data SubscriberType

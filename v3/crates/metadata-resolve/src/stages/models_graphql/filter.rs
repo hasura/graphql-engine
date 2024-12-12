@@ -2,7 +2,9 @@ use crate::types::error::Error;
 
 use super::types::ModelExpressionType;
 use crate::helpers::boolean_expression::validate_data_connector_with_object_boolean_expression_type;
-use crate::stages::{boolean_expressions, models, object_boolean_expressions, relationships};
+use crate::stages::{
+    boolean_expressions, models, object_boolean_expressions, object_relationships,
+};
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use open_dds::{models::ModelName, types::CustomTypeName};
@@ -20,9 +22,19 @@ pub(crate) fn resolve_filter_expression_type(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-) -> Result<ModelExpressionType, Error> {
+    flags: &open_dds::flags::OpenDdFlags,
+) -> Result<
+    (
+        ModelExpressionType,
+        Vec<boolean_expressions::BooleanExpressionIssue>,
+    ),
+    Error,
+> {
     match object_boolean_expression_types.get(boolean_expression_type_name) {
         Some(object_boolean_expression_type) => {
             // we're using an old ObjectBooleanExpressionType kind
@@ -67,8 +79,11 @@ pub(crate) fn resolve_filter_expression_type(
                 });
             }
 
-            Ok(ModelExpressionType::ObjectBooleanExpressionType(
-                object_boolean_expression_type.clone(),
+            Ok((
+                ModelExpressionType::ObjectBooleanExpressionType(
+                    object_boolean_expression_type.clone(),
+                ),
+                vec![],
             ))
         }
         None => {
@@ -79,18 +94,18 @@ pub(crate) fn resolve_filter_expression_type(
             {
                 Some(boolean_expression_object_type) => {
                     // we're using the new style of BooleanExpressionType
-                    validate_data_connector_with_object_boolean_expression_type(
+                    let data_connector_issues = validate_data_connector_with_object_boolean_expression_type(
                         &model_source.data_connector,
                         &model_source.type_mappings,
                         boolean_expression_object_type,
                         boolean_expression_types,
                         object_types,
                         models,
+    flags
                     )?;
-
-                    Ok(ModelExpressionType::BooleanExpressionType(
+                    Ok((ModelExpressionType::BooleanExpressionType(
                         boolean_expression_object_type.clone(),
-                    ))
+                    ),data_connector_issues))
                 }
                 None => Err(Error::from(
                     boolean_expressions::BooleanExpressionError::UnknownBooleanExpressionTypeInModel {

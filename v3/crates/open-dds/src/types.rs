@@ -28,6 +28,8 @@ use crate::{
     Debug,
     PartialEq,
     Eq,
+    PartialOrd,
+    Ord,
     JsonSchema,
     derive_more::Display,
     opendds_derive::OpenDd,
@@ -164,9 +166,9 @@ impl JsonSchema for TypeReference {
 
 #[derive(Hash, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 pub enum BaseType {
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     Named(TypeName),
-    #[display(fmt = "[{_0}]")]
+    #[display("[{_0}]")]
     List(Box<TypeReference>),
 }
 
@@ -210,7 +212,18 @@ impl<'de> Deserialize<'de> for BaseType {
 }
 
 #[derive(
-    Serialize, Deserialize, Hash, Clone, Debug, PartialEq, Eq, JsonSchema, derive_more::Display,
+    Serialize,
+    Deserialize,
+    Hash,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    JsonSchema,
+    strum_macros::EnumIter,
+    derive_more::Display,
 )]
 #[schemars(title = "InbuiltType")]
 /// An inbuilt primitive OpenDD type.

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::helpers::argument::{get_argument_mappings, ArgumentMappingResults};
 use crate::helpers::ndc_validation::{self};
 use crate::helpers::types::{object_type_exists, unwrap_custom_type_name};
@@ -229,7 +231,7 @@ pub fn resolve_command_source(
             object_types,
             scalar_types,
             &mut type_mappings,
-            &special_case,
+            special_case.as_ref(),
         )
         .map_err(|error| CommandsError::CommandTypeMappingCollectionError {
             command_name: command.name.clone(),
@@ -241,7 +243,8 @@ pub fn resolve_command_source(
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
             data_connector_context,
-        )?,
+        )
+        .map(Arc::new)?,
         source: command_source.data_connector_command.clone(),
         ndc_type_opendd_type_same: true,
         type_mappings,

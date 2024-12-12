@@ -11,26 +11,15 @@ use datafusion::{
     },
 };
 use futures::TryFutureExt;
-use indexmap::IndexMap;
 use metadata_resolve::Qualified;
+use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use serde::{Deserialize, Serialize};
-use std::{any::Any, collections::BTreeMap, sync::Arc};
+use std::{any::Any, sync::Arc};
 
-use execute::{
-    ndc::{NdcQueryResponse, FUNCTION_IR_VALUE_COLUMN_NAME},
-    plan::{
-        self,
-        field::{NestedArray, NestedField},
-        Argument, Relationship, ResolvedField, ResolvedQueryExecutionPlan, ResolvedQueryNode,
-    },
-    HttpContext,
-};
-use ir::{NdcFieldAlias, NdcRelationshipName};
-use open_dds::{
-    commands::FunctionName,
-    data_connector::{CollectionName, DataConnectorColumnName},
-    types::{CustomTypeName, DataConnectorArgumentName},
-};
+use engine_types::HttpContext;
+use execute::ndc::NdcQueryResponse;
+use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
+use plan::NDCFunction;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 #[derive(Debug, thiserror::Error)]
@@ -64,17 +53,13 @@ pub(crate) enum CommandOutput {
 // should come from engine's plan but we aren't there yet
 #[derive(Debug, Clone)]
 pub(crate) struct NDCFunctionPushDown {
-    http_context: Arc<execute::HttpContext>,
-    function_name: FunctionName,
-    arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-    fields: IndexMap<NdcFieldAlias, ResolvedField>,
-    collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
+    http_context: Arc<HttpContext>,
+    function: NDCFunction,
     // used to post process a command's output
     output: CommandOutput,
     //  The key from which the response has to be extracted if the command output is not the
     //  same as the ndc type. This happens with response config in a data connector link
     extract_response_from: Option<DataConnectorColumnName>,
-    data_connector: Arc<metadata_resolve::DataConnectorLink>,
     // the schema of the node's output
     projected_schema: SchemaRef,
     // some datafusion detail
@@ -82,41 +67,10 @@ pub(crate) struct NDCFunctionPushDown {
     metrics: ExecutionPlanMetricsSet,
 }
 
-fn wrap_ndc_fields(
-    command_output: &CommandOutput,
-    ndc_fields: IndexMap<NdcFieldAlias, ResolvedField>,
-) -> IndexMap<NdcFieldAlias, ResolvedField> {
-    let value_field = match command_output {
-        CommandOutput::Object(_) => {
-            NestedField::Object(plan::field::NestedObject { fields: ndc_fields })
-        }
-        CommandOutput::ListOfObjects(_) => {
-            let nested_fields =
-                NestedField::Object(plan::field::NestedObject { fields: ndc_fields });
-            NestedField::Array(NestedArray {
-                fields: Box::new(nested_fields),
-            })
-        }
-    };
-    IndexMap::from([(
-        NdcFieldAlias::from(FUNCTION_IR_VALUE_COLUMN_NAME),
-        execute::plan::field::Field::Column {
-            column: open_dds::data_connector::DataConnectorColumnName::from(
-                FUNCTION_IR_VALUE_COLUMN_NAME,
-            ),
-            fields: Some(value_field),
-            arguments: BTreeMap::new(),
-        },
-    )])
-}
-
 impl NDCFunctionPushDown {
     pub fn new(
-        http_context: Arc<execute::HttpContext>,
-        data_connector: Arc<metadata_resolve::DataConnectorLink>,
-        function_name: FunctionName,
-        arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-        ndc_fields: IndexMap<NdcFieldAlias, ResolvedField>,
+        function: NDCFunction,
+        http_context: Arc<HttpContext>,
         // schema of the output of the command selection
         schema: &DFSchemaRef,
         output: CommandOutput,
@@ -125,13 +79,9 @@ impl NDCFunctionPushDown {
         let metrics = ExecutionPlanMetricsSet::new();
         Self {
             http_context,
-            function_name,
-            arguments,
-            fields: wrap_ndc_fields(&output, ndc_fields),
-            collection_relationships: BTreeMap::new(),
+            function,
             output,
             extract_response_from,
-            data_connector,
             projected_schema: schema.inner().clone(),
             cache: Self::compute_properties(schema.inner().clone()),
             metrics,
@@ -197,45 +147,16 @@ impl ExecutionPlan for NDCFunctionPushDown {
 
         let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
-        let query_execution_plan = ResolvedQueryExecutionPlan {
-            query_node: ResolvedQueryNode {
-                fields: Some(
-                    self.fields
-                        .iter()
-                        .map(|(field_name, field)| (field_name.clone(), field.clone()))
-                        .collect(),
-                ),
-                aggregates: None,
-                limit: None,
-                offset: None,
-                order_by: None,
-                predicate: None,
-            },
-            collection: CollectionName::from(self.function_name.as_str()),
-            arguments: self
-                .arguments
-                .iter()
-                .map(|(argument, value)| {
-                    (
-                        argument.clone(),
-                        Argument::Literal {
-                            value: value.clone(),
-                        },
-                    )
-                })
-                .collect(),
-            collection_relationships: self.collection_relationships.clone(),
-            variables: None,
-            data_connector: &self.data_connector,
-        };
-        let query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
+        let query_execution_plan = plan::execute_plan_from_function(&self.function);
+
+        let query_request = execute::make_ndc_query_request(query_execution_plan)
             .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
 
         let fut = fetch_from_data_connector(
             self.projected_schema.clone(),
             self.http_context.clone(),
             query_request,
-            self.data_connector.clone(),
+            self.function.data_connector.clone(),
             self.output.clone(),
             self.extract_response_from.clone(),
             baseline_metrics,

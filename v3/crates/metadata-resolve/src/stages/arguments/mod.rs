@@ -2,13 +2,14 @@ use crate::helpers::boolean_expression::validate_data_connector_with_object_bool
 use crate::helpers::types::{get_type_representation, unwrap_custom_type_name, TypeRepresentation};
 use crate::stages::{
     boolean_expressions, commands, data_connectors, models, object_boolean_expressions,
-    relationships, scalar_types,
+    object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::{ArgumentInfo, Qualified};
 use indexmap::IndexMap;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::CommandName;
+use std::sync::Arc;
 
 use open_dds::{models::ModelName, types::CustomTypeName};
 
@@ -22,20 +23,25 @@ use super::object_types;
 pub fn resolve(
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<(), Error> {
+    flags: &open_dds::flags::OpenDdFlags,
+) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
+    let mut issues = vec![];
     for command in commands.values() {
         let data_connector_link = command.source.as_ref().map(|source| &source.data_connector);
         let type_mapping = command.source.as_ref().map(|source| &source.type_mappings);
 
         // check data source and arguments agree
-        validate_arguments_with_source(
+        issues.extend(validate_arguments_with_source(
             &command.arguments,
             data_connector_link,
             type_mapping,
@@ -44,7 +50,8 @@ pub fn resolve(
             object_boolean_expression_types,
             boolean_expression_types,
             models,
-        )?;
+            flags,
+        )?);
     }
 
     for model in models.values() {
@@ -52,7 +59,7 @@ pub fn resolve(
         let type_mapping = model.source.as_ref().map(|source| &source.type_mappings);
 
         // check data source and arguments agree
-        validate_arguments_with_source(
+        issues.extend(validate_arguments_with_source(
             &model.arguments,
             data_connector_link,
             type_mapping,
@@ -61,19 +68,23 @@ pub fn resolve(
             object_boolean_expression_types,
             boolean_expression_types,
             models,
-        )?;
+            flags,
+        )?);
     }
 
-    Ok(())
+    Ok(issues)
 }
 
 // resolve arguments. if the source is available we check it against any boolean
 // expressions used
 pub fn validate_arguments_with_source(
     arguments: &IndexMap<ArgumentName, ArgumentInfo>,
-    data_connector_link: Option<&data_connectors::DataConnectorLink>,
+    data_connector_link: Option<&Arc<data_connectors::DataConnectorLink>>,
     source_type_mapping: Option<&BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -81,7 +92,10 @@ pub fn validate_arguments_with_source(
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-) -> Result<(), Error> {
+    flags: &open_dds::flags::OpenDdFlags,
+) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
+    let mut issues = vec![];
+
     for argument_info in arguments.values() {
         // if our argument is a boolean expression type, we need to check it
         if let Some(custom_type_name) = unwrap_custom_type_name(&argument_info.argument_type) {
@@ -107,17 +121,20 @@ pub fn validate_arguments_with_source(
                 data_connector_link,
                 source_type_mapping,
             ) {
-                validate_data_connector_with_object_boolean_expression_type(
-                    data_connector_link,
-                    source_type_mapping,
-                    boolean_expression_type,
-                    boolean_expression_types,
-                    object_types,
-                    models,
-                )?;
+                let data_connector_issues =
+                    validate_data_connector_with_object_boolean_expression_type(
+                        data_connector_link,
+                        source_type_mapping,
+                        boolean_expression_type,
+                        boolean_expression_types,
+                        object_types,
+                        models,
+                        flags,
+                    )?;
+                issues.extend(data_connector_issues);
             }
         }
     }
 
-    Ok(())
+    Ok(issues)
 }

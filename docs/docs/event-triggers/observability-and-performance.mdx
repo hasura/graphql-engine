@@ -52,8 +52,9 @@ After receiving response from the webhook, the event's state is updated in the H
 
 <ProductBadge self ee />
 
-Hasura EE exposes a set of [Prometheus metrics](/observability/enterprise-edition/prometheus/metrics.mdx/#hasura-event-triggers-metrics)
-that can be used to monitor the Event Trigger system and help diagnose performance issues.
+Hasura EE exposes a set of
+[Prometheus metrics](/observability/enterprise-edition/prometheus/metrics.mdx/#hasura-event-triggers-metrics) that can
+be used to monitor the Event Trigger system and help diagnose performance issues.
 
 The following metrics can be used to monitor the performance of Hasura Event Triggers system:
 
@@ -121,10 +122,10 @@ To monitor saturation, you can use the following:
 ### Traffic
 
 Traffic for Event Triggers is the number of new events created in a given time frame (like 1000 events per minute).
-Events can be created even if mutations don't go through Hasura i.e. using some other client. Hence, Hasura doesn't
-give the number of events as metrics, but you can find this out by using metadata APIs like
-[pg_get_event_logs](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-get-event-logs). "Proxy"
-metrics for traffic are the number of mutations, number of events processed and number of events fetched per batch.
+Events can be created even if mutations don't go through Hasura i.e. using some other client. Hence, Hasura doesn't give
+the number of events as metrics, but you can find this out by using metadata APIs like
+[pg_get_event_logs](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-get-event-logs). "Proxy" metrics for
+traffic are the number of mutations, number of events processed and number of events fetched per batch.
 
 To monitor traffic, you can use the [`hasura_event_processed_total`](#event-processed-total) and the
 [`hasura_events_fetched_per_batch`](#events-fetched-per-batch) metrics.
@@ -168,6 +169,6 @@ Event Trigger processing can be tuned by few server settings as described below:
   - Increasing this will spawn more HTTP workers, thereby increasing the number of concurrent event deliveries to the
     webhook. This may also increase the memory and the CPU usage of the Hasura instance.
 - [`HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL`](/deployment/graphql-engine-flags/reference.mdx/#events-fetch-interval):
-  - The interval at which Hasura polls the database for new events. By default, 1 second.
+  - The interval at which Hasura polls the database for new events. By default, 1000 milliseconds (1 second).
   - Increasing this reduces frequency of the poll to the database reducing the load on it while increasing the latency
     of processing of event.

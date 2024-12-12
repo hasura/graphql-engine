@@ -15,7 +15,8 @@ use crate::helpers::types::mk_name;
 pub use error::GraphqlConfigError;
 pub use types::{
     AggregateGraphqlConfig, FilterInputGraphqlConfig, FilterInputOperatorNames,
-    GlobalGraphqlConfig, GraphqlConfig, OrderByInputGraphqlConfig, QueryGraphqlConfig,
+    GlobalGraphqlConfig, GraphqlConfig, MultipleOrderByInputObjectFields,
+    OrderByInputGraphqlConfig, QueryGraphqlConfig,
 };
 
 /// Resolve and validate the GraphQL configuration.
@@ -34,10 +35,10 @@ pub use types::{
 ///     * if the flag is not set, use the fallback object
 pub fn resolve(
     graphql_configs: &Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
-    flags: open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<GraphqlConfig, GraphqlConfigError> {
     if graphql_configs.is_empty() {
-        if flags.require_graphql_config {
+        if flags.contains(open_dds::flags::Flag::RequireGraphqlConfig) {
             return Err(GraphqlConfigError::MissingGraphqlConfig);
         }
         resolve_graphql_config(fallback_graphql_config(), flags)
@@ -56,7 +57,7 @@ pub fn resolve(
 /// For example, make sure all names are valid GraphQL names.
 pub fn resolve_graphql_config(
     graphql_config: &open_dds::graphql_config::GraphqlConfig,
-    flags: open_dds::flags::Flags,
+    flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<GraphqlConfig, GraphqlConfigError> {
     match graphql_config {
         open_dds::graphql_config::GraphqlConfig::V1(graphql_config_metadata) => {
@@ -206,7 +207,17 @@ pub fn resolve_graphql_config(
                     order_by_input,
                     enable_apollo_federation_fields,
                     bypass_relation_comparisons_ndc_capability: flags
-                        .bypass_relation_comparisons_ndc_capability,
+                        .contains(open_dds::flags::Flag::BypassRelationComparisonsNdcCapability),
+                    propagate_boolean_expression_deprecation_status: flags.contains(
+                        open_dds::flags::Flag::PropagateBooleanExpressionDeprecationStatus,
+                    ),
+                    multiple_order_by_input_object_fields: if flags.contains(
+                        open_dds::flags::Flag::DisallowMultipleInputObjectFieldsInGraphqlOrderBy,
+                    ) {
+                        MultipleOrderByInputObjectFields::Disallow
+                    } else {
+                        MultipleOrderByInputObjectFields::Allow
+                    },
                 },
             })
         }
@@ -260,7 +271,6 @@ fn fallback_graphql_config() -> &'static graphql_config::GraphqlConfig {
             mutation: graphql_config::MutationGraphqlConfig {
                 root_operation_type_name: GraphQlTypeName::from("Mutation"),
             },
-            // TODO: Subscriptions are still unsupported. No need to consider them for now.
             subscription: None,
             apollo_federation: None,
         })

@@ -1,6 +1,8 @@
 query MyQuery {
   Track(order_by: [{ Album: { ArtistId: Desc } }], limit: 3) {
+    TrackId
     Album {
+      AlbumId
       ArtistId
       Title
     }
@@ -10,6 +12,9 @@ query MyQuery {
     limit: 3
   ) {
     Name
+    Album {
+      AlbumId
+    }
   }
   TrackOrderByWithFilter: Track(
     order_by: [{ Album: { ArtistId: Asc } }, { TrackId: Desc }]
@@ -17,6 +22,7 @@ query MyQuery {
   ) {
     TrackId
     Album {
+      AlbumId
       Artist {
         ArtistId
         Name

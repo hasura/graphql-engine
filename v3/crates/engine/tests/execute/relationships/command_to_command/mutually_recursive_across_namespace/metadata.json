@@ -138,6 +138,8 @@
           }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "commandMovie",
             "name": "getActorsFromMovie",
@@ -163,9 +165,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         }
       ]
     },
@@ -342,6 +342,8 @@
           }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "commandActor",
             "name": "MovieFromActor",
@@ -367,9 +369,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         }
       ]
     }

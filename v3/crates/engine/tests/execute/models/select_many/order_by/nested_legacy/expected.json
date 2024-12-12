@@ -1,0 +1,26 @@
+[
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "id": 3,
+          "location": null
+        },
+        {
+          "id": 2,
+          "location": {
+            "country": "Sweden",
+            "city": "Gothenburg"
+          }
+        },
+        {
+          "id": 1,
+          "location": {
+            "country": "UK",
+            "city": "London"
+          }
+        }
+      ]
+    }
+  }
+]

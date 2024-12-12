@@ -1,0 +1,2126 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/object/missing_graphqlconfig_logical_operators_warning/metadata.json
+---
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Album",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "album_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The ID of the album",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "artist_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The ID of the album's artist",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The title of the album",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {
+                    Name(
+                        "artist",
+                    ): RelationshipField {
+                        field_name: Name(
+                            "artist",
+                        ),
+                        relationship_name: RelationshipName(
+                            Identifier(
+                                "artist",
+                            ),
+                        ),
+                        source: Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Album",
+                                ),
+                            ),
+                        },
+                        target: Model(
+                            ModelRelationshipTarget {
+                                model_name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: ModelName(
+                                        Identifier(
+                                            "Artists",
+                                        ),
+                                    ),
+                                },
+                                relationship_type: Object,
+                                target_typename: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Artist",
+                                        ),
+                                    ),
+                                },
+                                mappings: [
+                                    RelationshipModelMapping {
+                                        source_field: FieldAccess {
+                                            field_name: FieldName(
+                                                Identifier(
+                                                    "artist_id",
+                                                ),
+                                            ),
+                                        },
+                                        target_field: FieldAccess {
+                                            field_name: FieldName(
+                                                Identifier(
+                                                    "artist_id",
+                                                ),
+                                            ),
+                                        },
+                                        target_ndc_column: Some(
+                                            NdcColumnForComparison {
+                                                column: DataConnectorColumnName(
+                                                    "artist_id",
+                                                ),
+                                                equal_operator: DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                            },
+                                        ),
+                                    },
+                                ],
+                            },
+                        ),
+                        target_capabilities: Some(
+                            RelationshipCapabilities {
+                                foreach: (),
+                                supports_relationships: Some(
+                                    DataConnectorRelationshipCapabilities {
+                                        supports_relation_comparisons: false,
+                                        supports_nested_relationships: Some(
+                                            DataConnectorNestedRelationshipCapabilities {
+                                                supports_nested_array_selection: true,
+                                                supports_nested_in_filtering: false,
+                                                supports_nested_in_ordering: false,
+                                            },
+                                        ),
+                                    },
+                                ),
+                            },
+                        ),
+                        description: None,
+                        deprecated: None,
+                    },
+                },
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "dataconnector",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "Album",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "Album",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "album_id",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "album_id",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "Int",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "artist_id",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "artist_id",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "Int",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "title",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "title",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "String",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Artist",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "artist_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The ID of the artist",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The name of the artist",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "dataconnector",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "Artist",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "Artist",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "artist_id",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "artist_id",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "Int",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "name",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "name",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "String",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        scalar_types: {},
+        models: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: ModelName(
+                    Identifier(
+                        "Artists",
+                    ),
+                ),
+            }: ModelWithArgumentPresets {
+                model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                12,
+                            ),
+                        ],
+                    ),
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: ModelName(
+                            Identifier(
+                                "Artists",
+                            ),
+                        ),
+                    },
+                    data_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Artist",
+                            ),
+                        ),
+                    },
+                    type_fields: {
+                        FieldName(
+                            Identifier(
+                                "artist_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The ID of the artist",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The name of the artist",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    arguments: {},
+                    source: Some(
+                        ModelSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "dataconnector",
+                                        ),
+                                    ),
+                                },
+                                url: SingleUrl(
+                                    SerializableUrl(
+                                        Url {
+                                            scheme: "http",
+                                            cannot_be_a_base: false,
+                                            username: "",
+                                            password: None,
+                                            host: Some(
+                                                Domain(
+                                                    "localhost",
+                                                ),
+                                            ),
+                                            port: Some(
+                                                666,
+                                            ),
+                                            path: "/",
+                                            query: None,
+                                            fragment: None,
+                                        },
+                                    ),
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V01,
+                                    supports_explaining_queries: false,
+                                    supports_explaining_mutations: false,
+                                    supports_nested_object_filtering: false,
+                                    supports_nested_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                        },
+                                    ),
+                                    supports_query_variables: false,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: false,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                },
+                            },
+                            collection: CollectionName(
+                                "Artists",
+                            ),
+                            collection_type: DataConnectorObjectType(
+                                "Artist",
+                            ),
+                            type_mappings: {
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Artist",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "Artist",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "artist_id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "artist_id",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "name",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "String",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                            },
+                            argument_mappings: {},
+                            data_connector_link_argument_presets: {},
+                            source_arguments: {},
+                        },
+                    ),
+                    global_id_source: None,
+                    apollo_federation_key_source: None,
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "Artists",
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregate_expression: None,
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: None,
+                        description: None,
+                    },
+                },
+                argument_presets: {},
+                select_permissions: {},
+                filter_expression_type: None,
+                graphql_api: ModelGraphQlApi {
+                    arguments_input_config: None,
+                    select_uniques: [],
+                    select_many: None,
+                    select_aggregate: None,
+                    order_by_expression: None,
+                    limit_field: None,
+                    offset_field: None,
+                    filter_input_type_name: None,
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: ModelName(
+                    Identifier(
+                        "Albums",
+                    ),
+                ),
+            }: ModelWithArgumentPresets {
+                model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                13,
+                            ),
+                        ],
+                    ),
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: ModelName(
+                            Identifier(
+                                "Albums",
+                            ),
+                        ),
+                    },
+                    data_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Album",
+                            ),
+                        ),
+                    },
+                    type_fields: {
+                        FieldName(
+                            Identifier(
+                                "album_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The ID of the album",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "artist_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The ID of the album's artist",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: Some(
+                                "The title of the album",
+                            ),
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    arguments: {},
+                    source: Some(
+                        ModelSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "dataconnector",
+                                        ),
+                                    ),
+                                },
+                                url: SingleUrl(
+                                    SerializableUrl(
+                                        Url {
+                                            scheme: "http",
+                                            cannot_be_a_base: false,
+                                            username: "",
+                                            password: None,
+                                            host: Some(
+                                                Domain(
+                                                    "localhost",
+                                                ),
+                                            ),
+                                            port: Some(
+                                                666,
+                                            ),
+                                            path: "/",
+                                            query: None,
+                                            fragment: None,
+                                        },
+                                    ),
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V01,
+                                    supports_explaining_queries: false,
+                                    supports_explaining_mutations: false,
+                                    supports_nested_object_filtering: false,
+                                    supports_nested_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                        },
+                                    ),
+                                    supports_query_variables: false,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: false,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                },
+                            },
+                            collection: CollectionName(
+                                "Albums",
+                            ),
+                            collection_type: DataConnectorObjectType(
+                                "Album",
+                            ),
+                            type_mappings: {
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Album",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "Album",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "album_id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "album_id",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "artist_id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "artist_id",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "title",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "title",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "String",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                            },
+                            argument_mappings: {},
+                            data_connector_link_argument_presets: {},
+                            source_arguments: {},
+                        },
+                    ),
+                    global_id_source: None,
+                    apollo_federation_key_source: None,
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "Albums",
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregate_expression: None,
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: None,
+                        description: None,
+                    },
+                },
+                argument_presets: {},
+                select_permissions: {},
+                filter_expression_type: None,
+                graphql_api: ModelGraphQlApi {
+                    arguments_input_config: None,
+                    select_uniques: [],
+                    select_many: None,
+                    select_aggregate: None,
+                    order_by_expression: None,
+                    limit_field: None,
+                    offset_field: None,
+                    filter_input_type_name: None,
+                },
+            },
+        },
+        commands: {},
+        object_boolean_expression_types: {},
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {},
+            scalars: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                }: ResolvedScalarBooleanExpressionType {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Int_bool_exp",
+                            ),
+                        ),
+                    },
+                    operand_type: Inbuilt(
+                        Int,
+                    ),
+                    comparison_operators: {},
+                    data_connector_operator_mappings: {},
+                    graphql_name: Some(
+                        GraphQlTypeName(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                    logical_operators: Exclude,
+                    is_null_operator: Include {
+                        graphql: None,
+                    },
+                },
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_bool_exp",
+                        ),
+                    ),
+                }: ResolvedScalarBooleanExpressionType {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "String_bool_exp",
+                            ),
+                        ),
+                    },
+                    operand_type: Inbuilt(
+                        String,
+                    ),
+                    comparison_operators: {},
+                    data_connector_operator_mappings: {},
+                    graphql_name: Some(
+                        GraphQlTypeName(
+                            "String_bool_exp",
+                        ),
+                    ),
+                    logical_operators: Exclude,
+                    is_null_operator: Include {
+                        graphql: None,
+                    },
+                },
+            },
+            object_aggregates: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Album_aggregate_bool_exp",
+                        ),
+                    ),
+                }: ObjectAggregateBooleanExpression {
+                    operand_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Album",
+                            ),
+                        ),
+                    },
+                    aggregate_expression: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: AggregateExpressionName(
+                            Identifier(
+                                "Album_agg_exp",
+                            ),
+                        ),
+                    },
+                    comparable_fields: [
+                        ComparableAggregatableField {
+                            field_name: FieldName(
+                                Identifier(
+                                    "title",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_boolean_expression_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "String_aggregate_bool_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                    ],
+                    comparable_relationships: [
+                        ComparableAggregatableRelationship {
+                            relationship_name: RelationshipName(
+                                Identifier(
+                                    "artist",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_boolean_expression_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "Artist_aggregate_bool_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                    ],
+                    count_aggregation: Some(
+                        ComparableCountAggregation {
+                            boolean_expression_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "Int_bool_exp",
+                                    ),
+                                ),
+                            },
+                            graphql: Some(
+                                ComparableCountGraphqlConfig {
+                                    field_name: Name(
+                                        "_count",
+                                    ),
+                                },
+                            ),
+                        },
+                    ),
+                    count_distinct_aggregation: None,
+                    filter_input: Some(
+                        FromModel(
+                            FromModelFilterInputDefinition {
+                                model_name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: ModelName(
+                                        Identifier(
+                                            "Albums",
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                    ),
+                    logical_operators: Include {
+                        graphql: None,
+                    },
+                    graphql: Some(
+                        AggregateBooleanExpressionGraphqlConfig {
+                            type_name: TypeName(
+                                Name(
+                                    "Album_aggregate_bool_exp",
+                                ),
+                            ),
+                        },
+                    ),
+                    predicate_graphql: Some(
+                        AggregatePredicateGraphqlConfig {
+                            type_name: TypeName(
+                                Name(
+                                    "Album_aggregate_predicate_bool_exp",
+                                ),
+                            ),
+                        },
+                    ),
+                },
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Artist_aggregate_bool_exp",
+                        ),
+                    ),
+                }: ObjectAggregateBooleanExpression {
+                    operand_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Artist",
+                            ),
+                        ),
+                    },
+                    aggregate_expression: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: AggregateExpressionName(
+                            Identifier(
+                                "Artist_agg_exp",
+                            ),
+                        ),
+                    },
+                    comparable_fields: [
+                        ComparableAggregatableField {
+                            field_name: FieldName(
+                                Identifier(
+                                    "name",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_boolean_expression_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "String_aggregate_bool_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                    ],
+                    comparable_relationships: [],
+                    count_aggregation: Some(
+                        ComparableCountAggregation {
+                            boolean_expression_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "Int_bool_exp",
+                                    ),
+                                ),
+                            },
+                            graphql: Some(
+                                ComparableCountGraphqlConfig {
+                                    field_name: Name(
+                                        "_count",
+                                    ),
+                                },
+                            ),
+                        },
+                    ),
+                    count_distinct_aggregation: None,
+                    filter_input: Some(
+                        FromModel(
+                            FromModelFilterInputDefinition {
+                                model_name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: ModelName(
+                                        Identifier(
+                                            "Artists",
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                    ),
+                    logical_operators: Include {
+                        graphql: None,
+                    },
+                    graphql: Some(
+                        AggregateBooleanExpressionGraphqlConfig {
+                            type_name: TypeName(
+                                Name(
+                                    "Artist_aggregate_bool_exp",
+                                ),
+                            ),
+                        },
+                    ),
+                    predicate_graphql: Some(
+                        AggregatePredicateGraphqlConfig {
+                            type_name: TypeName(
+                                Name(
+                                    "Artist_aggregate_predicate_bool_exp",
+                                ),
+                            ),
+                        },
+                    ),
+                },
+            },
+            scalar_aggregates: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_aggregate_bool_exp",
+                        ),
+                    ),
+                }: ScalarAggregateBooleanExpression {
+                    operand_type: Inbuilt(
+                        String,
+                    ),
+                    aggregate_expression: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: AggregateExpressionName(
+                            Identifier(
+                                "String_agg_exp",
+                            ),
+                        ),
+                    },
+                    aggregation_functions: [
+                        ComparableAggregationFunction {
+                            aggregate_function_name: AggregationFunctionName(
+                                Identifier(
+                                    "_min",
+                                ),
+                            ),
+                            description: Some(
+                                "The lexicographically least string",
+                            ),
+                            boolean_expression_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "String_bool_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                    ],
+                    count_aggregation: Some(
+                        ComparableCountAggregation {
+                            boolean_expression_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "Int_bool_exp",
+                                    ),
+                                ),
+                            },
+                            graphql: Some(
+                                ComparableCountGraphqlConfig {
+                                    field_name: Name(
+                                        "_count",
+                                    ),
+                                },
+                            ),
+                        },
+                    ),
+                    count_distinct_aggregation: Some(
+                        ComparableCountAggregation {
+                            boolean_expression_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "Int_bool_exp",
+                                    ),
+                                ),
+                            },
+                            graphql: Some(
+                                ComparableCountGraphqlConfig {
+                                    field_name: Name(
+                                        "_count_distinct",
+                                    ),
+                                },
+                            ),
+                        },
+                    ),
+                    logical_operators: Include {
+                        graphql: None,
+                    },
+                    graphql: Some(
+                        AggregateBooleanExpressionGraphqlConfig {
+                            type_name: TypeName(
+                                Name(
+                                    "String_aggregate_bool_exp",
+                                ),
+                            ),
+                        },
+                    ),
+                },
+            },
+        },
+        order_by_expressions: OrderByExpressions {
+            objects: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "Albums",
+                            ),
+                        ),
+                    ),
+                }: ObjectOrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "Albums",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Album",
+                            ),
+                        ),
+                    },
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "album_id",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "album_id",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "artist_id",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "artist_id",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "title",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                    },
+                    orderable_relationships: ModelV1AllowAll,
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model Albums (in subgraph default)",
+                    ),
+                },
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "Artists",
+                            ),
+                        ),
+                    ),
+                }: ObjectOrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "Artists",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Artist",
+                            ),
+                        ),
+                    },
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "artist_id",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Artists",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "artist_id",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Artists",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                    },
+                    orderable_relationships: ModelV1AllowAll,
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model Artists (in subgraph default)",
+                    ),
+                },
+            },
+            scalars: {},
+        },
+        aggregate_expressions: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: AggregateExpressionName(
+                    Identifier(
+                        "Album_agg_exp",
+                    ),
+                ),
+            }: AggregateExpression {
+                name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: AggregateExpressionName(
+                        Identifier(
+                            "Album_agg_exp",
+                        ),
+                    ),
+                },
+                operand: AggregateOperand {
+                    aggregated_type: Custom(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Album",
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregatable_fields: [
+                        AggregatableFieldInfo {
+                            field_name: FieldName(
+                                Identifier(
+                                    "album_id",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_expression: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: AggregateExpressionName(
+                                    Identifier(
+                                        "Int_agg_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                        AggregatableFieldInfo {
+                            field_name: FieldName(
+                                Identifier(
+                                    "artist_id",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_expression: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: AggregateExpressionName(
+                                    Identifier(
+                                        "Int_agg_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                        AggregatableFieldInfo {
+                            field_name: FieldName(
+                                Identifier(
+                                    "title",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_expression: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: AggregateExpressionName(
+                                    Identifier(
+                                        "String_agg_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                    ],
+                    aggregation_functions: [],
+                },
+                count: AggregateCountDefinition {
+                    enable: true,
+                    description: None,
+                },
+                count_distinct: AggregateCountDefinition {
+                    enable: false,
+                    description: None,
+                },
+                graphql: None,
+                description: None,
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: AggregateExpressionName(
+                    Identifier(
+                        "Artist_agg_exp",
+                    ),
+                ),
+            }: AggregateExpression {
+                name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: AggregateExpressionName(
+                        Identifier(
+                            "Artist_agg_exp",
+                        ),
+                    ),
+                },
+                operand: AggregateOperand {
+                    aggregated_type: Custom(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Artist",
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregatable_fields: [
+                        AggregatableFieldInfo {
+                            field_name: FieldName(
+                                Identifier(
+                                    "artist_id",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_expression: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: AggregateExpressionName(
+                                    Identifier(
+                                        "Int_agg_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                        AggregatableFieldInfo {
+                            field_name: FieldName(
+                                Identifier(
+                                    "name",
+                                ),
+                            ),
+                            description: None,
+                            aggregate_expression: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: AggregateExpressionName(
+                                    Identifier(
+                                        "String_agg_exp",
+                                    ),
+                                ),
+                            },
+                        },
+                    ],
+                    aggregation_functions: [],
+                },
+                count: AggregateCountDefinition {
+                    enable: true,
+                    description: None,
+                },
+                count_distinct: AggregateCountDefinition {
+                    enable: false,
+                    description: None,
+                },
+                graphql: None,
+                description: None,
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: AggregateExpressionName(
+                    Identifier(
+                        "Int_agg_exp",
+                    ),
+                ),
+            }: AggregateExpression {
+                name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: AggregateExpressionName(
+                        Identifier(
+                            "Int_agg_exp",
+                        ),
+                    ),
+                },
+                operand: AggregateOperand {
+                    aggregated_type: Inbuilt(
+                        Int,
+                    ),
+                    aggregatable_fields: [],
+                    aggregation_functions: [
+                        AggregationFunctionInfo {
+                            name: AggregationFunctionName(
+                                Identifier(
+                                    "_min",
+                                ),
+                            ),
+                            description: Some(
+                                "The lexicographically least string",
+                            ),
+                            return_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            data_connector_functions: [],
+                        },
+                    ],
+                },
+                count: AggregateCountDefinition {
+                    enable: true,
+                    description: None,
+                },
+                count_distinct: AggregateCountDefinition {
+                    enable: true,
+                    description: None,
+                },
+                graphql: None,
+                description: None,
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: AggregateExpressionName(
+                    Identifier(
+                        "String_agg_exp",
+                    ),
+                ),
+            }: AggregateExpression {
+                name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: AggregateExpressionName(
+                        Identifier(
+                            "String_agg_exp",
+                        ),
+                    ),
+                },
+                operand: AggregateOperand {
+                    aggregated_type: Inbuilt(
+                        String,
+                    ),
+                    aggregatable_fields: [],
+                    aggregation_functions: [
+                        AggregationFunctionInfo {
+                            name: AggregationFunctionName(
+                                Identifier(
+                                    "_min",
+                                ),
+                            ),
+                            description: Some(
+                                "The lexicographically least string",
+                            ),
+                            return_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            data_connector_functions: [],
+                        },
+                    ],
+                },
+                count: AggregateCountDefinition {
+                    enable: true,
+                    description: None,
+                },
+                count_distinct: AggregateCountDefinition {
+                    enable: true,
+                    description: None,
+                },
+                graphql: None,
+                description: None,
+            },
+        },
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "OrderBy",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: true,
+            propagate_boolean_expression_deprecation_status: true,
+            multiple_order_by_input_object_fields: Allow,
+        },
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {},
+    },
+    [
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            MissingIsNullOperatorNameInGraphqlConfig {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        ScalarBooleanExpressionIssue(
+            MissingIsNullOperatorNameInGraphqlConfig {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        AggregateBooleanExpressionIssue(
+            NamedAggregateBooleanExpressionIssue {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Album_aggregate_bool_exp",
+                        ),
+                    ),
+                },
+                issue: MissingLogicalOperatorNamesInGraphqlConfig,
+            },
+        ),
+        AggregateBooleanExpressionIssue(
+            NamedAggregateBooleanExpressionIssue {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Artist_aggregate_bool_exp",
+                        ),
+                    ),
+                },
+                issue: MissingLogicalOperatorNamesInGraphqlConfig,
+            },
+        ),
+        AggregateBooleanExpressionIssue(
+            NamedAggregateBooleanExpressionIssue {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "String_aggregate_bool_exp",
+                        ),
+                    ),
+                },
+                issue: MissingLogicalOperatorNamesInGraphqlConfig,
+            },
+        ),
+    ],
+)

@@ -1,0 +1,57 @@
+[
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "name": "Queen Mary University of London",
+          "staff": [
+            {
+              "first_name": "Peter",
+              "last_name": "Landin",
+              "favourite_artist_id": 1,
+              "favourite_artist": {
+                "artist_id": 1,
+                "name": "AC/DC"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Chalmers University of Technology",
+          "staff": [
+            {
+              "first_name": "John",
+              "last_name": "Hughes",
+              "favourite_artist_id": 2,
+              "favourite_artist": {
+                "artist_id": 2,
+                "name": "Accept"
+              }
+            },
+            {
+              "first_name": "Koen",
+              "last_name": "Claessen",
+              "favourite_artist_id": 3,
+              "favourite_artist": {
+                "artist_id": 3,
+                "name": "Aerosmith"
+              }
+            }
+          ]
+        },
+        {
+          "name": "University of Nowhere",
+          "staff": null
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Artist: name"
+      }
+    ]
+  }
+]

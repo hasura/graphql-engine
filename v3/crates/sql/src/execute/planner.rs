@@ -1,12 +1,11 @@
 pub(crate) mod command;
 pub(crate) mod common;
-pub(crate) mod filter;
 pub(crate) mod model;
-pub(crate) mod order_by;
 pub(crate) mod scalar;
 
 use command::build_execution_plan;
 use hasura_authn_core::Session;
+use metadata_resolve as resolved;
 use std::sync::Arc;
 
 use datafusion::{
@@ -16,14 +15,15 @@ use datafusion::{
     physical_plan::ExecutionPlan,
     physical_planner::{DefaultPhysicalPlanner, ExtensionPlanner, PhysicalPlanner},
 };
+use engine_types::HttpContext;
 
 use async_trait::async_trait;
 
 pub(crate) struct OpenDDQueryPlanner {
     pub(crate) request_headers: Arc<reqwest::header::HeaderMap>,
     pub(crate) session: Arc<Session>,
-    pub(crate) http_context: Arc<execute::HttpContext>,
-    pub(crate) catalog: Arc<crate::catalog::Catalog>,
+    pub(crate) http_context: Arc<HttpContext>,
+    pub(crate) metadata: Arc<resolved::Metadata>,
 }
 
 #[async_trait]
@@ -41,7 +41,7 @@ impl QueryPlanner for OpenDDQueryPlanner {
                 request_headers: self.request_headers.clone(),
                 session: self.session.clone(),
                 http_context: self.http_context.clone(),
-                catalog: self.catalog.clone(),
+                metadata: self.metadata.clone(),
             })]);
         // Delegate most work of physical planning to the default physical planner
         physical_planner
@@ -53,8 +53,8 @@ impl QueryPlanner for OpenDDQueryPlanner {
 pub(crate) struct NDCPushDownPlanner {
     pub(crate) request_headers: Arc<reqwest::header::HeaderMap>,
     pub(crate) session: Arc<Session>,
-    pub(crate) http_context: Arc<execute::HttpContext>,
-    pub(crate) catalog: Arc<crate::catalog::Catalog>,
+    pub(crate) http_context: Arc<HttpContext>,
+    pub(crate) metadata: Arc<resolved::Metadata>,
 }
 
 impl NDCPushDownPlanner {}
@@ -70,24 +70,32 @@ impl ExtensionPlanner for NDCPushDownPlanner {
         physical_inputs: &[Arc<dyn ExecutionPlan>],
         _session_state: &SessionState,
     ) -> Result<Option<Arc<dyn ExecutionPlan>>> {
+        // this will need to be threaded throughout entire query
+        // if we want to support remote predicates in `sql`
+        let mut unique_number = plan_types::UniqueNumber::new();
         if let Some(model_query) = node.as_any().downcast_ref::<model::ModelQuery>() {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
-            let ndc_pushdown = model_query
-                .to_physical_node(&self.session, &self.http_context, &self.catalog.metadata)
-                .await?;
+            let ndc_pushdown = model_query.to_physical_node(
+                &self.session,
+                &self.http_context,
+                &self.metadata,
+                &self.request_headers,
+                &mut unique_number,
+            )?;
             Ok(Some(Arc::new(ndc_pushdown)))
         } else if let Some(command_query) = node.as_any().downcast_ref::<command::CommandQuery>() {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
             build_execution_plan(
                 &self.request_headers,
-                &self.catalog.metadata,
+                &self.metadata,
                 &self.http_context,
                 &self.session,
                 &command_query.command_selection,
                 &command_query.schema,
                 &command_query.output,
+                &mut unique_number,
             )
             .map(Some)
         } else if let Some(model_aggregate) = node.as_any().downcast_ref::<model::ModelAggregate>()
@@ -95,9 +103,12 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
 
-            let ndc_pushdown = model_aggregate
-                .to_physical_node(&self.session, &self.http_context, &self.catalog.metadata)
-                .await?;
+            let ndc_pushdown = model_aggregate.to_physical_node(
+                &self.session,
+                &self.http_context,
+                &self.metadata,
+                &self.request_headers,
+            )?;
 
             Ok(Some(Arc::new(ndc_pushdown)))
         } else {

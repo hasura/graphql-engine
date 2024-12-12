@@ -94,24 +94,6 @@
     "data": {
       "Track": [
         {
-          "TrackId": 2,
-          "Album": {
-            "Artist": {
-              "ArtistId": 2,
-              "Name": "Accept"
-            }
-          }
-        },
-        {
-          "TrackId": 3,
-          "Album": {
-            "Artist": {
-              "ArtistId": 2,
-              "Name": "Accept"
-            }
-          }
-        },
-        {
           "TrackId": 4,
           "Album": {
             "Artist": {
@@ -119,58 +101,12 @@
               "Name": "Accept"
             }
           }
-        },
-        {
-          "TrackId": 5,
-          "Album": {
-            "Artist": {
-              "ArtistId": 2,
-              "Name": "Accept"
-            }
-          }
         }
       ],
-      "TrackAnd": [
-        {
-          "TrackId": 3,
-          "Album": {
-            "Artist": {
-              "ArtistId": 2,
-              "Name": "Accept"
-            }
-          }
-        }
-      ],
+      "TrackAnd": [],
       "TrackOr": [
         {
-          "TrackId": 2,
-          "Album": {
-            "Artist": {
-              "ArtistId": 2,
-              "Name": "Accept"
-            }
-          }
-        },
-        {
-          "TrackId": 3,
-          "Album": {
-            "Artist": {
-              "ArtistId": 2,
-              "Name": "Accept"
-            }
-          }
-        },
-        {
           "TrackId": 4,
-          "Album": {
-            "Artist": {
-              "ArtistId": 2,
-              "Name": "Accept"
-            }
-          }
-        },
-        {
-          "TrackId": 5,
           "Album": {
             "Artist": {
               "ArtistId": 2,

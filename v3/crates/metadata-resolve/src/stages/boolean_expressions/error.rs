@@ -1,9 +1,10 @@
 use crate::helpers::type_mappings::TypeMappingCollectionError;
-use crate::stages::{data_connectors, graphql_config, scalar_boolean_expressions};
+use crate::stages::{data_connectors, graphql_config, relationships, scalar_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType},
     models::ModelName,
+    relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
 };
 
@@ -76,11 +77,9 @@ pub enum BooleanExpressionError {
         nested_type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error(
-        "The nested object field '{field_name}' within '{parent_boolean_expression_type_name}' cannot be used for comparison \
-         because its boolean expression type '{nested_boolean_expression_type_name}' involves a relationship comparison field."
-    )]
-    NestedObjectFieldContainsRelationshipComparison {
+    #[error("The data connector '{data_connector_name}' does not support filtering across nested relationships. The nested object field '{field_name}' within '{parent_boolean_expression_type_name}' references the boolean expression type '{nested_boolean_expression_type_name}' which has relationship comparisons, making them nested relationship comparisons.")]
+    DataConnectorDoesNotSupportNestedRelationshipFiltering {
+        data_connector_name: Qualified<DataConnectorName>,
         field_name: FieldName,
         parent_boolean_expression_type_name: Qualified<CustomTypeName>,
         nested_boolean_expression_type_name: Qualified<CustomTypeName>,
@@ -99,6 +98,14 @@ pub enum BooleanExpressionError {
     #[error("Field level comparison operator configuration is not fully supported yet. Please add all fields in filterable_fields.")]
     FieldLevelComparisonOperatorNeedsAllFields,
 
+    #[error(
+        "Target model {model_name:} not found, referenced in relationship {relationship_name:}"
+    )]
+    TargetModelNotFound {
+        relationship_name: RelationshipName,
+        model_name: Qualified<ModelName>,
+    },
+
     #[error("{0}")]
     GraphqlConfigError(#[from] graphql_config::GraphqlConfigError),
 
@@ -112,4 +119,7 @@ pub enum BooleanExpressionError {
         boolean_expression_name: Qualified<CustomTypeName>,
         data_connector_error: data_connectors::NamedDataConnectorError,
     },
+
+    #[error("{0}")]
+    RelationshipError(#[from] relationships::RelationshipError),
 }

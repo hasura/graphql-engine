@@ -1,6 +1,6 @@
 use crate::stages::{
-    boolean_expressions, graphql_config, object_boolean_expressions, relationships,
-    scalar_boolean_expressions, scalar_types,
+    boolean_expressions, graphql_config, object_boolean_expressions, object_relationships,
+    scalar_boolean_expressions,
 };
 use crate::types::error::Error;
 
@@ -40,11 +40,69 @@ pub fn store_new_graphql_type(
     Ok(())
 }
 
+/// Track the root fields of the GraphQL schema while resolving the metadata.
+/// This is used to ensure that the schema has unique root fields for Query, Mutation and Subscription.
+// NOTE: The `ast::Name` is cheap to clone, so storing them directly without references
+pub struct TrackGraphQLRootFields {
+    pub query: BTreeSet<ast::Name>,
+    pub mutation: BTreeSet<ast::Name>,
+    pub subscription: BTreeSet<ast::Name>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum DuplicateRootFieldError {
+    #[error("Cannot add query root field {0} as it already in use")]
+    Query(ast::Name),
+    #[error("Cannot add mutation root field {0} as it already in use")]
+    Mutation(ast::Name),
+    #[error("Cannot add subscription root field {0} as it already in use")]
+    Subscription(ast::Name),
+}
+
+impl TrackGraphQLRootFields {
+    pub fn new() -> Self {
+        Self {
+            query: BTreeSet::new(),
+            mutation: BTreeSet::new(),
+            subscription: BTreeSet::new(),
+        }
+    }
+    pub fn track_query_root_field(
+        &mut self,
+        name: &ast::Name,
+    ) -> Result<(), DuplicateRootFieldError> {
+        if !self.query.insert(name.clone()) {
+            return Err(DuplicateRootFieldError::Query(name.clone()));
+        }
+        Ok(())
+    }
+    pub fn track_mutation_root_field(
+        &mut self,
+        name: &ast::Name,
+    ) -> Result<(), DuplicateRootFieldError> {
+        if !self.mutation.insert(name.clone()) {
+            return Err(DuplicateRootFieldError::Mutation(name.clone()));
+        }
+        Ok(())
+    }
+
+    #[allow(dead_code)] // to be used later
+    pub fn track_subscription_root_field(
+        &mut self,
+        name: &ast::Name,
+    ) -> Result<(), DuplicateRootFieldError> {
+        if !self.subscription.insert(name.clone()) {
+            return Err(DuplicateRootFieldError::Subscription(name.clone()));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug)]
 /// we do not want to store our types like this, but occasionally it is useful
 /// for pattern matching
-pub enum TypeRepresentation<'a, ObjectType> {
-    Scalar(&'a scalar_types::ScalarTypeRepresentation),
+pub enum TypeRepresentation<'a, ObjectType, ScalarType> {
+    Scalar(&'a ScalarType),
     Object(&'a ObjectType),
     /// The old expression of boolean expression types
     BooleanExpression(&'a object_boolean_expressions::ObjectBooleanExpressionType),
@@ -56,16 +114,16 @@ pub enum TypeRepresentation<'a, ObjectType> {
 
 /// validate whether a given CustomTypeName exists within `object_types`, `scalar_types` or
 /// `object_boolean_expression_types`
-pub fn get_type_representation<'a, ObjectType>(
+pub fn get_type_representation<'a, ObjectType, ScalarType>(
     custom_type_name: &Qualified<CustomTypeName>,
     object_types: &'a BTreeMap<Qualified<CustomTypeName>, ObjectType>,
-    scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, ScalarType>,
     object_boolean_expression_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
-) -> Result<TypeRepresentation<'a, ObjectType>, Error> {
+) -> Result<TypeRepresentation<'a, ObjectType, ScalarType>, Error> {
     object_types
         .get(custom_type_name)
         .map(|object_type_representation| TypeRepresentation::Object(object_type_representation))
@@ -108,9 +166,9 @@ pub(crate) fn get_object_type_for_boolean_expression<'a>(
     boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
-        relationships::ObjectTypeWithRelationships,
+        object_relationships::ObjectTypeWithRelationships,
     >,
-) -> Result<&'a relationships::ObjectTypeWithRelationships, Error> {
+) -> Result<&'a object_relationships::ObjectTypeWithRelationships, Error> {
     object_types
         .get(&boolean_expression_type.object_type)
         .ok_or(Error::from(
@@ -124,9 +182,9 @@ pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
     object_boolean_expression_type: &object_boolean_expressions::ObjectBooleanExpressionType,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
-        relationships::ObjectTypeWithRelationships,
+        object_relationships::ObjectTypeWithRelationships,
     >,
-) -> Result<&'a relationships::ObjectTypeWithRelationships, Error> {
+) -> Result<&'a object_relationships::ObjectTypeWithRelationships, Error> {
     object_types
         .get(&object_boolean_expression_type.object_type)
         .ok_or(Error::from(

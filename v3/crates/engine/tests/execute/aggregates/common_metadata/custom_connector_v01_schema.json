@@ -5,6 +5,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "custom_connector",
             "url": {
@@ -1273,9 +1275,7 @@
                 }
               }
             }
-          },
-          "version": "v1",
-          "kind": "DataConnectorLink"
+          }
         }
       ]
     }

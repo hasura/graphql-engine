@@ -628,8 +628,8 @@ directiveSet =
         pure $ J.array . map printer . P.diArguments
       isRepeatable :: FieldParser n (P.DirectiveInfo -> J.Value)
       isRepeatable =
-        P.selection_ GName._isRepeatable Nothing P.string
-          $> const J.Null
+        P.selection_ GName._isRepeatable Nothing P.boolean
+          $> (J.Bool . P.diIsRepeatable)
    in applyPrinter
         <$> P.selectionSet
           GName.___Directive

@@ -1,9 +1,12 @@
+use crate::helpers::typecheck::TypecheckError;
 use crate::stages::{
-    aggregates::AggregateExpressionError, apollo, boolean_expressions, commands,
-    data_connector_scalar_types, data_connectors, graphql_config, models, object_types,
-    order_by_expressions, relay, scalar_boolean_expressions, type_permissions,
+    aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, argument_presets,
+    boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
+    models, object_types, order_by_expressions, relationships, relay, scalar_boolean_expressions,
+    scalar_types, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::flags;
 use open_dds::order_by_expression::OrderByExpressionName;
@@ -20,6 +23,44 @@ use std::fmt::Display;
 use crate::helpers::{
     ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
 };
+
+// Eventually, we'll just delete the `Raw` variant and this will become a regular struct when all
+// errors have all the relevant path information.
+#[derive(Debug, thiserror::Error)]
+pub enum WithContext<T> {
+    Raw(#[from] T),
+    Contextualised {
+        error: T,
+        context: error_context::Context,
+    },
+}
+
+impl<T> WithContext<T> {
+    pub fn context(&self) -> Option<error_context::Context> {
+        match self {
+            WithContext::Contextualised { context, .. } => Some(context.clone()),
+            WithContext::Raw(_) => None,
+        }
+    }
+
+    pub fn coerce<S: From<T>>(self) -> WithContext<S> {
+        match self {
+            WithContext::Raw(err) => WithContext::Raw(S::from(err)),
+            WithContext::Contextualised { error, context } => WithContext::Contextualised {
+                error: S::from(error),
+                context,
+            },
+        }
+    }
+}
+
+impl<T: Display> Display for WithContext<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            WithContext::Contextualised { error, .. } | WithContext::Raw(error) => error.fmt(f),
+        }
+    }
+}
 
 // TODO: This enum really needs structuring
 #[derive(Debug, thiserror::Error)]
@@ -180,9 +221,10 @@ pub enum Error {
     #[error("{0}")]
     DeserializationError(#[from] serde_json::Error),
     #[error(
-        "duplicate relationship {relationship_name:} associated with source type {type_name:}"
+        "duplicate relationship field {field_name} from {relationship_name} associated with source type {type_name}"
     )]
-    DuplicateRelationshipInSourceType {
+    DuplicateRelationshipFieldInSourceType {
+        field_name: ast::Name,
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
@@ -202,11 +244,6 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
         command_name: Qualified<CommandName>,
-    },
-    #[error("Source type {type_name:} referenced in the definition of relationship(s) {relationship_name:} is not defined ")]
-    RelationshipDefinedOnUnknownType {
-        relationship_name: RelationshipName,
-        type_name: Qualified<CustomTypeName>,
     },
     #[error("{reason:}")]
     NotSupported { reason: String },
@@ -250,7 +287,7 @@ pub enum Error {
         graphql_config_error: graphql_config::GraphqlConfigError,
     },
     #[error("{relationship_error:}")]
-    RelationshipError {
+    ObjectRelationshipError {
         relationship_error: RelationshipError,
     },
     #[error("Error in order by expression {order_by_expression_name}: {error}")]
@@ -264,6 +301,10 @@ pub enum Error {
     ScalarBooleanExpressionTypeError(
         #[from] scalar_boolean_expressions::ScalarBooleanExpressionTypeError,
     ),
+    #[error("{0}")]
+    AggregateBooleanExpressionError(
+        #[from] aggregate_boolean_expressions::NamedAggregateBooleanExpressionError,
+    ),
     #[error("{type_predicate_error:}")]
     TypePredicateError {
         type_predicate_error: TypePredicateError,
@@ -272,7 +313,8 @@ pub enum Error {
     DataConnectorError(#[from] data_connectors::NamedDataConnectorError),
     #[error("NDC validation error: {0}")]
     NDCValidationError(#[from] NDCValidationError),
-
+    #[error("{0}")]
+    ScalarTypesError(#[from] scalar_types::ScalarTypesError),
     #[error("{type_error:}")]
     TypeError { type_error: TypeError },
     #[error("{0}")]
@@ -289,23 +331,24 @@ pub enum Error {
     ModelsError(#[from] models::ModelsError),
     #[error("{0}")]
     CommandsError(#[from] commands::CommandsError),
-
+    #[error("{0}")]
+    RelationshipError(#[from] relationships::RelationshipError),
     #[error("{0}")]
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
     ),
+    #[error("{0}")]
+    ArgumentPresetError(#[from] argument_presets::ArgumentPresetError),
     #[error(
         "The following issues were raised but disallowed by compatibility configuration:\n\n{warnings_as_errors}"
     )]
     CompatibilityError {
         warnings_as_errors: SeparatedBy<crate::Warning>,
     },
-    #[error("Subscriptions are currently unstable. Please add 'subscriptions' to unstable features to enable them.")]
-    UnstableFeatureSubscriptions,
 }
 
 pub trait ShouldBeAnError {
-    fn should_be_an_error(&self, flags: &flags::Flags) -> bool;
+    fn should_be_an_error(&self, flags: &flags::OpenDdFlags) -> bool;
 }
 
 // A small utility type which exists for the sole purpose of displaying a vector with a certain
@@ -398,7 +441,7 @@ pub enum RelationshipError {
 
 impl From<RelationshipError> for Error {
     fn from(val: RelationshipError) -> Self {
-        Error::RelationshipError {
+        Error::ObjectRelationshipError {
             relationship_error: val,
         }
     }
@@ -529,10 +572,20 @@ pub enum TypeError {
     NoNamedTypeFound {
         qualified_type_reference: QualifiedTypeReference,
     },
+    #[error("type mismatch: {error:}")]
+    TypeCheckError { error: TypecheckError },
 }
 
 impl From<AggregateExpressionError> for Error {
     fn from(val: AggregateExpressionError) -> Self {
         Error::AggregateExpressionError(val)
+    }
+}
+
+impl From<TypecheckError> for Error {
+    fn from(type_error: TypecheckError) -> Self {
+        Error::TypeError {
+            type_error: TypeError::TypeCheckError { error: type_error },
+        }
     }
 }

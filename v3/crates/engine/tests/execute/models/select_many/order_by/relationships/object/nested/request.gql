@@ -1,8 +1,13 @@
 query MyQuery {
   Track(
-    order_by: [{ Album: { Artist: { ArtistId: Asc } } }, { AlbumId: Asc }]
+    order_by: [
+      { Album: { Artist: { ArtistId: Asc } } }
+      { AlbumId: Asc }
+      { TrackId: Asc }
+    ]
     limit: 15
   ) {
+    TrackId
     Album {
       AlbumId
       Artist {
@@ -12,10 +17,15 @@ query MyQuery {
     }
   }
   TrackOrderByWithFilter: Track(
-    order_by: [{ Album: { Artist: { ArtistId: Desc } } }, { AlbumId: Asc }]
+    order_by: [
+      { Album: { Artist: { ArtistId: Desc } } }
+      { AlbumId: Asc }
+      { TrackId: Asc }
+    ]
     where: { AlbumId: { _eq: 2 } }
     limit: 15
   ) {
+    TrackId
     Album {
       AlbumId
       Artist {

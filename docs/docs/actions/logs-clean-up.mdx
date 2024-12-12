@@ -14,18 +14,21 @@ keywords:
 
 ## Introduction
 
-Hasura stores action logs of [async Actions](/actions/async-actions.mdx) in a table
-in **the "hdb_catalog" schema of the Hasura Metadata database**.
+Hasura stores action logs of [async Actions](/actions/async-actions.mdx) in a table in **the "hdb_catalog" schema of the
+Hasura Metadata database**.
 
-As the table gets larger, you may want to prune it. You can use any of the following options to prune your logs depending on
-your need.
+As the table gets larger, you may want to prune it. You can use any of the following options to prune your logs
+depending on your need.
 
 :::caution Warning
 
 - Deleting logs is irreversible, so be careful with these Actions.
-- Deleting logs while subscriptions for the response might still be
-  open may result into the loss of data and `null` values been
-  returned.
+- Deleting logs while subscriptions for the response might still be open may result into the loss of data and `null`
+  values been returned.
+
+The steps described below are only accessible for self-hosted EE customers. For Cloud customers,
+[please reach out to support](https://support.hasura.io/hc/en-us/requests/new) for help in cleaning up async Action
+logs.
 
 :::
 
@@ -55,8 +58,8 @@ DELETE FROM hdb_catalog.hdb_action_log;
 
 ## Clearing data before a particular time period
 
-If you wish to keep recent data and only clear data before a particular time period
-you can add the following time clause to your query's where clause:
+If you wish to keep recent data and only clear data before a particular time period you can add the following time
+clause to your query's where clause:
 
 ```sql
 -- units can be 'minutes', 'hours', 'days', 'months', 'years'
@@ -69,10 +72,12 @@ For example: to delete all logs older than 3 months:
 DELETE FROM hdb_catalog.hdb_action_log WHERE created_at < NOW() - INTERVAL '3 months';
 ```
 
-See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html) for more details.
+See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html) for more
+details.
 
 :::info Additional Resources
 
-Introduction to Hasura Actions - [View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
+Introduction to Hasura Actions -
+[View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
 :::

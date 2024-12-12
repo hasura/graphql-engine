@@ -7,7 +7,6 @@
 
     crane = {
       url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     rust-overlay = {
@@ -54,12 +53,23 @@
           "engine" = {
             ExposedPorts = { "3000/tcp" = { }; };
           };
+          "ddn-engine-local-dev" = {
+            ExposedPorts = { "3000/tcp" = { }; };
+          };
           "custom-connector" = {
             ExposedPorts = { "8102/tcp" = { }; };
           };
           "dev-auth-webhook" = {
             ExposedPorts = { "3050/tcp" = { }; };
           };
+        };
+
+        # for adding extra packages inside the Docker container
+        dockerExtraContents = {
+          "engine" = [ pkgs.cacert ]; # so local dev can use SSH
+          "ddn-engine-local-dev" = [ pkgs.cacert ]; # so local dev can use SSH
+          "multitenant-engine" = [ pkgs.cacert pkgs.bash pkgs.coreutils ]; # to run sleep in a healthcheck, we should remove this soon
+          "artifact-server" = [ pkgs.curl pkgs.bash ]; # to run healthcheck, we should remove this soon
         };
       in
       {
@@ -121,6 +131,7 @@
                     architecture = dockerArchitectures.${targetSystem};
                     image-name = "build.internal/${binaryName}-${targetSystem}";
                     extraConfig = dockerConfig.${binaryName} or { };
+                    extraContents = dockerExtraContents.${binaryName} or [ ];
                   }
               else null;
           })
@@ -164,9 +175,11 @@
               pkgs.moreutils
               pkgs.nixpkgs-fmt
               pkgs.nodejs_22
+              pkgs.git
 
               # Rust
               pkgs.bacon
+              pkgs.cargo-audit
               pkgs.cargo-edit
               pkgs.cargo-expand
               pkgs.cargo-flamegraph

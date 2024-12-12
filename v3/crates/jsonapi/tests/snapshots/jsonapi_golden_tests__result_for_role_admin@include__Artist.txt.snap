@@ -1,0 +1,387 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/include/Artist.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_Artist",
+                    id: "1",
+                    attributes: {
+                        "ArtistId": Number(1),
+                        "Name": String("AC/DC"),
+                    },
+                    relationships: Some(
+                        {
+                            "Albums": Relationship {
+                                data: Some(
+                                    Multiple(
+                                        [
+                                            ResourceIdentifier {
+                                                _type: "default_Album",
+                                                id: "2",
+                                            },
+                                            ResourceIdentifier {
+                                                _type: "default_Album",
+                                                id: "13",
+                                            },
+                                        ],
+                                    ),
+                                ),
+                                links: None,
+                            },
+                        },
+                    ),
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: Some(
+        [
+            Resource {
+                _type: "default_Track",
+                id: "3",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("For Those About To Rock (We Salute You)"),
+                    "TrackId": Number(1),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "4",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("Put The Finger On You"),
+                    "TrackId": Number(6),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "5",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("Let's Get It Up"),
+                    "TrackId": Number(7),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "6",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("Inject The Venom"),
+                    "TrackId": Number(8),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "7",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("Snowballed"),
+                    "TrackId": Number(9),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "8",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("Evil Walks"),
+                    "TrackId": Number(10),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "9",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("C.O.D."),
+                    "TrackId": Number(11),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "10",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("Breaking The Rules"),
+                    "TrackId": Number(12),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "11",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("Night Of The Long Knives"),
+                    "TrackId": Number(13),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "12",
+                attributes: {
+                    "Composer": String("Angus Young, Malcolm Young, Brian Johnson"),
+                    "Name": String("Spellbound"),
+                    "TrackId": Number(14),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Album",
+                id: "2",
+                attributes: {
+                    "AlbumId": Number(1),
+                    "ArtistId": Number(1),
+                    "Title": String("For Those About To Rock We Salute You"),
+                },
+                relationships: Some(
+                    {
+                        "Tracks": Relationship {
+                            data: Some(
+                                Multiple(
+                                    [
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "3",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "4",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "5",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "6",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "7",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "8",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "9",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "10",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "11",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "12",
+                                        },
+                                    ],
+                                ),
+                            ),
+                            links: None,
+                        },
+                    },
+                ),
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "14",
+                attributes: {
+                    "Composer": String("AC/DC"),
+                    "Name": String("Go Down"),
+                    "TrackId": Number(15),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "15",
+                attributes: {
+                    "Composer": String("AC/DC"),
+                    "Name": String("Dog Eat Dog"),
+                    "TrackId": Number(16),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "16",
+                attributes: {
+                    "Composer": String("AC/DC"),
+                    "Name": String("Let There Be Rock"),
+                    "TrackId": Number(17),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "17",
+                attributes: {
+                    "Composer": String("AC/DC"),
+                    "Name": String("Bad Boy Boogie"),
+                    "TrackId": Number(18),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "18",
+                attributes: {
+                    "Composer": String("AC/DC"),
+                    "Name": String("Problem Child"),
+                    "TrackId": Number(19),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "19",
+                attributes: {
+                    "Composer": String("AC/DC"),
+                    "Name": String("Overdose"),
+                    "TrackId": Number(20),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "20",
+                attributes: {
+                    "Composer": String("AC/DC"),
+                    "Name": String("Hell Ain't A Bad Place To Be"),
+                    "TrackId": Number(21),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Track",
+                id: "21",
+                attributes: {
+                    "Composer": String("AC/DC"),
+                    "Name": String("Whole Lotta Rosie"),
+                    "TrackId": Number(22),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Album",
+                id: "13",
+                attributes: {
+                    "AlbumId": Number(4),
+                    "ArtistId": Number(1),
+                    "Title": String("Let There Be Rock"),
+                },
+                relationships: Some(
+                    {
+                        "Tracks": Relationship {
+                            data: Some(
+                                Multiple(
+                                    [
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "14",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "15",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "16",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "17",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "18",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "19",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "20",
+                                        },
+                                        ResourceIdentifier {
+                                            _type: "default_Track",
+                                            id: "21",
+                                        },
+                                    ],
+                                ),
+                            ),
+                            links: None,
+                        },
+                    },
+                ),
+                links: None,
+                meta: None,
+            },
+        ],
+    ),
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

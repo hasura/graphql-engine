@@ -351,8 +351,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         target_capabilities: Some(
                             RelationshipCapabilities {
                                 foreach: (),
-                                relationships: true,
-                                relationship_comparison: true,
+                                supports_relationships: Some(
+                                    DataConnectorRelationshipCapabilities {
+                                        supports_relation_comparisons: true,
+                                        supports_nested_relationships: Some(
+                                            DataConnectorNestedRelationshipCapabilities {
+                                                supports_nested_array_selection: true,
+                                                supports_nested_in_filtering: false,
+                                                supports_nested_in_ordering: false,
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                         description: None,
@@ -447,8 +457,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         target_capabilities: Some(
                             RelationshipCapabilities {
                                 foreach: (),
-                                relationships: true,
-                                relationship_comparison: true,
+                                supports_relationships: Some(
+                                    DataConnectorRelationshipCapabilities {
+                                        supports_relation_comparisons: true,
+                                        supports_nested_relationships: Some(
+                                            DataConnectorNestedRelationshipCapabilities {
+                                                supports_nested_array_selection: true,
+                                                supports_nested_in_filtering: false,
+                                                supports_nested_in_ordering: false,
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                         description: None,
@@ -1079,71 +1099,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             },
                         },
                     },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "billingAddress",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "billingCity",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "billingCountry",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "billingPostalCode",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "billingState",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "customerId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "invoiceDate",
-                            ),
-                        ): {
-                            Timestamp,
-                        },
-                        FieldName(
-                            Identifier(
-                                "invoiceId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "total",
-                            ),
-                        ): {
-                            BigDecimal,
-                        },
-                    },
                 },
             },
             Qualified {
@@ -1578,43 +1533,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             },
                         },
                     },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "invoiceId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "invoiceLineId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "quantity",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "trackId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "unitPrice",
-                            ),
-                        ): {
-                            BigDecimal,
-                        },
-                    },
                 },
             },
         },
@@ -1637,6 +1555,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     ),
                 ),
                 description: None,
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "mypg",
+                            ),
+                        ),
+                    }: Int32,
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -1656,6 +1586,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     ),
                 ),
                 description: None,
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "mypg",
+                            ),
+                        ),
+                    }: JSON,
+                },
             },
         },
         models: {
@@ -1668,8 +1610,24 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         "Invoice",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                0,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -1992,7 +1950,25 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
-                                    supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             collection: CollectionName(
@@ -2706,6 +2682,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         description: None,
                     },
                 },
+                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
@@ -2821,8 +2798,24 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         "InvoiceLine",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                1,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -3041,7 +3034,25 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
-                                    supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             collection: CollectionName(
@@ -3387,7 +3398,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 aggregate: Some(
                                     ModelAggregateGraphQlDefinition {
                                         query_root_field: GraphQlFieldName(
-                                            "app_invoice_aggregate",
+                                            "app_invoiceLine_aggregate",
                                         ),
                                         description: None,
                                         deprecated: None,
@@ -3399,6 +3410,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         description: None,
                     },
                 },
+                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
@@ -3461,7 +3473,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     select_aggregate: Some(
                         SelectAggregateGraphQlDefinition {
                             query_root_field: Name(
-                                "app_invoice_aggregate",
+                                "app_invoiceLine_aggregate",
                             ),
                             description: None,
                             deprecated: None,
@@ -3511,9 +3523,11 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "default",
@@ -3525,7 +3539,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -3555,9 +3569,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingAddress",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3566,9 +3594,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingCity",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3577,9 +3619,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingCountry",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3588,9 +3644,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingPostalCode",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3599,9 +3669,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "billingState",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3610,9 +3694,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "customerId",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3621,9 +3719,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "invoiceDate",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3632,9 +3744,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "invoiceId",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3643,9 +3769,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Invoice",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "total",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -3666,7 +3806,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -3696,9 +3836,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "InvoiceLine",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "invoiceId",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3707,9 +3861,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "InvoiceLine",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "invoiceLineId",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3718,9 +3886,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "InvoiceLine",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "quantity",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3729,9 +3911,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "InvoiceLine",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "trackId",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -3740,9 +3936,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "InvoiceLine",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "unitPrice",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -3753,7 +3963,8 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     ),
                 },
             },
-        ),
+            scalars: {},
+        },
         aggregate_expressions: {
             Qualified {
                 subgraph: SubgraphName(
@@ -4100,9 +4311,15 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
             ),
             enable_apollo_federation_fields: false,
             bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
         },
-        pre_parse_plugins: [],
-        roles: [],
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {},
     },
     [],
 )

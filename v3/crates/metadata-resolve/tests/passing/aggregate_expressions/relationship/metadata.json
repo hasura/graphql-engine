@@ -134,7 +134,7 @@
             "graphql": {
               "filterInputTypeName": "InvoiceLine_filter_input",
               "aggregate": {
-                "queryRootField": "app_invoice_aggregate"
+                "queryRootField": "app_invoiceLine_aggregate"
               },
               "selectMany": {
                 "queryRootField": "app_invoiceLine"

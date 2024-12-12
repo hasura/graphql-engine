@@ -1,0 +1,24 @@
+[package]
+name = "pre-response-plugin"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+
+hasura-authn-core = { path = "../../auth/hasura-authn-core" }
+lang-graphql = { path = "../../graphql/lang-graphql" }
+tracing-util = { path = "../../utils/tracing-util" }
+open-dds = { path = "../../open-dds" }
+
+axum = { workspace = true }
+futures-util = { workspace = true }
+nonempty = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+
+[lints]
+workspace = true

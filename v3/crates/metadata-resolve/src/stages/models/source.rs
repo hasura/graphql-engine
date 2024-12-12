@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::types::{Model, ModelSource, ModelsIssue};
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::identifier::SubgraphName;
@@ -29,7 +31,7 @@ pub(crate) fn resolve_model_source(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -38,31 +40,47 @@ pub(crate) fn resolve_model_source(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<(ModelSource, Vec<ModelsIssue>), ModelsError> {
+) -> Result<(ModelSource, Vec<ModelsIssue>), crate::WithContext<ModelsError>> {
     if model.source.is_some() {
-        return Err(ModelsError::DuplicateModelSourceDefinition {
+        Err(ModelsError::DuplicateModelSourceDefinition {
             model_name: model.name.clone(),
-        });
+        })?;
     }
-    let qualified_data_connector_name =
-        Qualified::new(subgraph.clone(), model_source.data_connector_name.clone());
+    let qualified_data_connector_name = Qualified::new(
+        subgraph.clone(),
+        model_source.data_connector_name.value.clone(),
+    );
 
     let data_connector_context = data_connectors
         .0
         .get(&qualified_data_connector_name)
-        .ok_or_else(|| ModelsError::UnknownModelDataConnector {
-            model_name: model.name.clone(),
-            data_connector: qualified_data_connector_name.clone(),
+        .ok_or_else(|| crate::WithContext::Contextualised {
+            error: ModelsError::UnknownModelDataConnector {
+                model_name: model.name.clone(),
+                data_connector: qualified_data_connector_name.clone(),
+            },
+            context: error_context::Context(vec![error_context::Step {
+                message: "Data connector name given here".to_string(),
+                path: model_source.data_connector_name.path.clone(),
+                subgraph: Some(subgraph.clone()),
+            }]),
         })?;
 
     let source_collection = data_connector_context
         .schema
         .collections
         .get(model_source.collection.as_str())
-        .ok_or_else(|| ModelsError::UnknownModelCollection {
-            model_name: model.name.clone(),
-            data_connector: qualified_data_connector_name.clone(),
-            collection: model_source.collection.clone(),
+        .ok_or_else(|| crate::WithContext::Contextualised {
+            error: ModelsError::UnknownModelCollection {
+                model_name: model.name.clone(),
+                data_connector: qualified_data_connector_name.clone(),
+                collection: model_source.collection.value.clone(),
+            },
+            context: error_context::Context(vec![error_context::Step {
+                message: "Collection name given here".to_string(),
+                path: model_source.collection.path.clone(),
+                subgraph: Some(subgraph.clone()),
+            }]),
         })?;
     let source_collection_type =
         DataConnectorObjectType::from(source_collection.collection_type.as_str());
@@ -93,7 +111,7 @@ pub(crate) fn resolve_model_source(
     .map_err(|err| ModelsError::ModelCollectionArgumentMappingError {
         data_connector_name: qualified_data_connector_name.clone(),
         model_name: model.name.clone(),
-        collection_name: model_source.collection.clone(),
+        collection_name: model_source.collection.value.clone(),
         error: err,
     })?;
 
@@ -102,7 +120,7 @@ pub(crate) fn resolve_model_source(
         .map(|issue| ModelsIssue::FunctionArgumentMappingIssue {
             data_connector_name: qualified_data_connector_name.clone(),
             model_name: model.name.clone(),
-            collection_name: model_source.collection.clone(),
+            collection_name: model_source.collection.value.clone(),
             issue,
         })
         .collect();
@@ -122,7 +140,7 @@ pub(crate) fn resolve_model_source(
             object_types,
             scalar_types,
             &mut type_mappings,
-            &None,
+            None,
         )
         .map_err(|error| ModelsError::ModelTypeMappingCollectionError {
             model_name: model.name.clone(),
@@ -134,8 +152,10 @@ pub(crate) fn resolve_model_source(
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
             data_connector_context,
-        )?,
-        collection: model_source.collection.clone(),
+        )
+        .map(Arc::new)
+        .map_err(ModelsError::from)?,
+        collection: model_source.collection.value.clone(),
         collection_type: source_collection_type,
         type_mappings,
         argument_mappings,
@@ -189,7 +209,8 @@ pub(crate) fn resolve_model_source(
         }
     }
 
-    ndc_validation::validate_ndc(&model.name, model, &data_connector_context.schema)?;
+    ndc_validation::validate_ndc(&model.name, model, &data_connector_context.schema)
+        .map_err(ModelsError::from)?;
     Ok((resolved_model_source, issues))
 }
 
