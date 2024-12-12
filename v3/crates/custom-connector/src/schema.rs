@@ -12,9 +12,7 @@ pub fn get_schema() -> ndc_models::SchemaResponse {
         capabilities: Some(ndc_models::CapabilitySchemaInfo {
             query: Some(ndc_models::QueryCapabilitiesSchemaInfo {
                 aggregates: Some(ndc_models::AggregateCapabilitiesSchemaInfo {
-                    filter_by: Some(ndc_models::AggregateFilterByCapabilitiesSchemaInfo {
-                        count_scalar_type: "Int".to_owned(),
-                    }),
+                    count_scalar_type: "Int".to_owned(),
                 }),
             }),
         }),

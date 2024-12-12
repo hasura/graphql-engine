@@ -211,6 +211,12 @@ pub(crate) fn get_comparison_operators(
             | ndc_models::ComparisonOperatorDefinition::LessThanOrEqual
             | ndc_models::ComparisonOperatorDefinition::GreaterThan
             | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual
+            | ndc_models::ComparisonOperatorDefinition::Contains
+            | ndc_models::ComparisonOperatorDefinition::ContainsInsensitive
+            | ndc_models::ComparisonOperatorDefinition::StartsWith
+            | ndc_models::ComparisonOperatorDefinition::StartsWithInsensitive
+            | ndc_models::ComparisonOperatorDefinition::EndsWith
+            | ndc_models::ComparisonOperatorDefinition::EndsWithInsensitive
             | ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {
                 comparison_operators
                     .other_operators

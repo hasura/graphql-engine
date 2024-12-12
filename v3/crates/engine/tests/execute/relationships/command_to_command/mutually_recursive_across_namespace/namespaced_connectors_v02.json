@@ -1328,9 +1328,7 @@
                 "capabilities": {
                   "query": {
                     "aggregates": {
-                      "filter_by": {
-                        "count_scalar_type": "Int"
-                      }
+                      "count_scalar_type": "Int"
                     }
                   }
                 }
@@ -2692,9 +2690,7 @@
                 "capabilities": {
                   "query": {
                     "aggregates": {
-                      "filter_by": {
-                        "count_scalar_type": "Int"
-                      }
+                      "count_scalar_type": "Int"
                     }
                   }
                 }

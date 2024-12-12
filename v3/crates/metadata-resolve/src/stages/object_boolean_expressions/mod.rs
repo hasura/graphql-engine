@@ -421,7 +421,13 @@ fn get_argument_type(
         | ndc_models::ComparisonOperatorDefinition::LessThan
         | ndc_models::ComparisonOperatorDefinition::LessThanOrEqual
         | ndc_models::ComparisonOperatorDefinition::GreaterThan
-        | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual => {
+        | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual
+        | ndc_models::ComparisonOperatorDefinition::Contains
+        | ndc_models::ComparisonOperatorDefinition::ContainsInsensitive
+        | ndc_models::ComparisonOperatorDefinition::StartsWith
+        | ndc_models::ComparisonOperatorDefinition::StartsWithInsensitive
+        | ndc_models::ComparisonOperatorDefinition::EndsWith
+        | ndc_models::ComparisonOperatorDefinition::EndsWithInsensitive => {
             unwrap_nullable_type(field_type).clone()
         }
         ndc_models::ComparisonOperatorDefinition::In => ndc_models::Type::Array {
