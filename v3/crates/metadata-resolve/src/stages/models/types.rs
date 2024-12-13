@@ -5,9 +5,11 @@ use crate::helpers::argument::ArgumentMappingIssue;
 use crate::helpers::types::NdcColumnForComparison;
 use crate::stages::order_by_expressions::{OrderByExpressionIdentifier, OrderByExpressions};
 use crate::stages::{data_connectors, object_types};
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
 };
+use crate::QualifiedTypeReference;
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -87,4 +89,46 @@ pub enum ModelsIssue {
         collection_name: CollectionName,
         issue: ArgumentMappingIssue,
     },
+    #[error("The orderable field '{field_name}' in model '{model_name}' is not a scalar field (type: {field_type}) and therefore cannot be used for ordering. Upgrade to version 2 Models and use OrderByExpressions to order by nested fields")]
+    ModelV1OrderableFieldIsNotAScalarField {
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+        field_type: QualifiedTypeReference,
+    },
+    #[error("The orderable field '{field_name}' in model '{model_name}' is an array type (type: {field_type}) and therefore cannot be used for ordering")]
+    ModelV1OrderableFieldIsAnArrayType {
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+        field_type: QualifiedTypeReference,
+    },
+    #[error("The order by expression '{order_by_expression_identifier}' used in model '{model_name}' contains a nested field '{nested_field_name}', however the data connector '{data_connector_name}' used in the model does not support ordering by nested fields")]
+    OrderByExpressionContainsUnsupportedNestedField {
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
+        model_name: Qualified<ModelName>,
+        nested_field_name: FieldName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("The data connector '{data_connector_name}' used in model '{model_name}' does not support ordering by nested relationships; the orderable relationship '{relationship_name}' from the OrderByExpression '{order_by_expression_identifier}' is nested")]
+    OrderByExpressionContainsUnsupportedNestedRelationship {
+        data_connector_name: Qualified<DataConnectorName>,
+        model_name: Qualified<ModelName>,
+        relationship_name: open_dds::relationships::RelationshipName,
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
+    },
+}
+
+impl ShouldBeAnError for ModelsIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            ModelsIssue::FunctionArgumentMappingIssue { .. } => false,
+            ModelsIssue::ModelV1OrderableFieldIsNotAScalarField { .. }
+            | ModelsIssue::ModelV1OrderableFieldIsAnArrayType { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowModelV1OrderingNonScalarFields)
+            }
+            ModelsIssue::OrderByExpressionContainsUnsupportedNestedField { .. }
+            | ModelsIssue::OrderByExpressionContainsUnsupportedNestedRelationship { .. } => {
+                flags.contains(open_dds::flags::Flag::RequireNestedSupportForOrderByExpressions)
+            }
+        }
+    }
 }

@@ -964,6 +964,66 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                     }: JSON,
                 },
             },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Numeric",
+                    ),
+                ),
+            }: ScalarTypeRepresentation {
+                graphql_type_name: Some(
+                    TypeName(
+                        Name(
+                            "App_Numeric",
+                        ),
+                    ),
+                ),
+                description: None,
+                representations: {},
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Timestamp",
+                    ),
+                ),
+            }: ScalarTypeRepresentation {
+                graphql_type_name: Some(
+                    TypeName(
+                        Name(
+                            "App_Timestamp",
+                        ),
+                    ),
+                ),
+                description: None,
+                representations: {},
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Varchar",
+                    ),
+                ),
+            }: ScalarTypeRepresentation {
+                graphql_type_name: Some(
+                    TypeName(
+                        Name(
+                            "App_Varchar",
+                        ),
+                    ),
+                ),
+                description: None,
+                representations: {},
+            },
         },
         models: {
             Qualified {
@@ -1315,6 +1375,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
+                                    supports_nested_object_ordering: false,
                                     supports_nested_array_filtering: false,
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {

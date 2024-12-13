@@ -349,6 +349,39 @@
           }
         },
         {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Varchar",
+            "graphql": {
+              "typeName": "App_Varchar"
+            },
+            "description": null
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Numeric",
+            "graphql": {
+              "typeName": "App_Numeric"
+            },
+            "description": null
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Timestamp",
+            "graphql": {
+              "typeName": "App_Timestamp"
+            },
+            "description": null
+          }
+        },
+        {
           "kind": "DataConnectorScalarRepresentation",
           "version": "v1",
           "definition": {

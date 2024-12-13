@@ -35,6 +35,23 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             deprecated: None,
                             field_arguments: {},
                         },
+                        FieldName(
+                            Identifier(
+                                "row_type_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
                     },
                     global_id_fields: [],
                     apollo_federation_config: None,
@@ -44,7 +61,102 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                 },
                 type_output_permissions: {},
                 type_input_permissions: {},
-                relationship_fields: {},
+                relationship_fields: {
+                    Name(
+                        "row_type",
+                    ): RelationshipField {
+                        field_name: Name(
+                            "row_type",
+                        ),
+                        relationship_name: RelationshipName(
+                            Identifier(
+                                "row_type",
+                            ),
+                        ),
+                        source: Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Foo",
+                                ),
+                            ),
+                        },
+                        target: Model(
+                            ModelRelationshipTarget {
+                                model_name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: ModelName(
+                                        Identifier(
+                                            "mymodel",
+                                        ),
+                                    ),
+                                },
+                                relationship_type: Object,
+                                target_typename: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "RowType",
+                                        ),
+                                    ),
+                                },
+                                mappings: [
+                                    RelationshipModelMapping {
+                                        source_field: FieldAccess {
+                                            field_name: FieldName(
+                                                Identifier(
+                                                    "row_type_id",
+                                                ),
+                                            ),
+                                        },
+                                        target_field: FieldAccess {
+                                            field_name: FieldName(
+                                                Identifier(
+                                                    "id",
+                                                ),
+                                            ),
+                                        },
+                                        target_ndc_column: Some(
+                                            NdcColumnForComparison {
+                                                column: DataConnectorColumnName(
+                                                    "id",
+                                                ),
+                                                equal_operator: DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                            },
+                                        ),
+                                    },
+                                ],
+                            },
+                        ),
+                        target_capabilities: Some(
+                            RelationshipCapabilities {
+                                foreach: (),
+                                supports_relationships: Some(
+                                    DataConnectorRelationshipCapabilities {
+                                        supports_relation_comparisons: true,
+                                        supports_nested_relationships: Some(
+                                            DataConnectorNestedRelationshipCapabilities {
+                                                supports_nested_array_selection: true,
+                                                supports_nested_in_filtering: true,
+                                                supports_nested_in_ordering: true,
+                                            },
+                                        ),
+                                    },
+                                ),
+                            },
+                        ),
+                        description: None,
+                        deprecated: None,
+                    },
+                },
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
                         Qualified {
@@ -89,6 +201,37 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                         ),
                                         argument_mappings: {},
                                     },
+                                    FieldName(
+                                        Identifier(
+                                            "row_type_id",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "row_type_id",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
                                 },
                             },
                         },
@@ -107,6 +250,23 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
             }: ObjectTypeWithRelationships {
                 object_type: ObjectTypeRepresentation {
                     fields: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
                         FieldName(
                             Identifier(
                                 "test",
@@ -162,6 +322,35 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                     "row_type",
                                 ),
                                 field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "id",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "id",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "Int",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
                                     FieldName(
                                         Identifier(
                                             "test",
@@ -236,6 +425,23 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                         ),
                     },
                     type_fields: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
                         FieldName(
                             Identifier(
                                 "test",
@@ -325,10 +531,11 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                 ),
                                 response_config: None,
                                 capabilities: DataConnectorCapabilities {
-                                    supported_ndc_version: V01,
+                                    supported_ndc_version: V02,
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
+                                    supports_nested_object_ordering: true,
                                     supports_nested_array_filtering: false,
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {
@@ -342,8 +549,8 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                             supports_nested_relationships: Some(
                                                 DataConnectorNestedRelationshipCapabilities {
                                                     supports_nested_array_selection: true,
-                                                    supports_nested_in_filtering: false,
-                                                    supports_nested_in_ordering: false,
+                                                    supports_nested_in_filtering: true,
+                                                    supports_nested_in_ordering: true,
                                                 },
                                             ),
                                         },
@@ -396,6 +603,37 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                             ),
                                             argument_mappings: {},
                                         },
+                                        FieldName(
+                                            Identifier(
+                                                "row_type_id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "row_type_id",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Named {
+                                                    name: TypeName(
+                                                        "Int",
+                                                    ),
+                                                },
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
                                     },
                                 },
                                 Qualified {
@@ -412,6 +650,35 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                         "row_type",
                                     ),
                                     field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "id",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
                                         FieldName(
                                             Identifier(
                                                 "test",
@@ -614,7 +881,26 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                         ),
                     },
                     orderable_relationships: ModelV2(
-                        {},
+                        {
+                            RelationshipName(
+                                Identifier(
+                                    "row_type",
+                                ),
+                            ): OrderableRelationship {
+                                order_by_expression: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
+                                        name: OrderByExpressionName(
+                                            Identifier(
+                                                "MyOrderByExpression",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                            },
+                        },
                     ),
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {

@@ -456,6 +456,11 @@ pub struct DataConnectorCapabilities {
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_nested_object_filtering: bool,
 
+    /// Whether not ordering by nested object fields is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_nested_object_ordering: bool,
+
     /// Whether not filtering using 'exists' over nested object arrays is supported
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
@@ -524,6 +529,7 @@ fn mk_ndc_01_capabilities(
         supports_explaining_queries: capabilities.query.explain.is_some(),
         supports_explaining_mutations: capabilities.mutation.explain.is_some(),
         supports_nested_object_filtering: capabilities.query.nested_fields.filter_by.is_some(),
+        supports_nested_object_ordering: capabilities.query.nested_fields.order_by.is_some(),
         supports_nested_array_filtering: capabilities.query.exists.nested_collections.is_some(),
         supports_aggregates: capabilities.query.aggregates.as_ref().map(|_agg| {
             DataConnectorAggregateCapabilities {
@@ -556,6 +562,7 @@ fn mk_ndc_02_capabilities(capabilities: &ndc_models::Capabilities) -> DataConnec
         supports_explaining_queries: capabilities.query.explain.is_some(),
         supports_explaining_mutations: capabilities.mutation.explain.is_some(),
         supports_nested_object_filtering: capabilities.query.nested_fields.filter_by.is_some(),
+        supports_nested_object_ordering: capabilities.query.nested_fields.order_by.is_some(),
         supports_nested_array_filtering: capabilities.query.exists.nested_collections.is_some(),
         supports_aggregates: capabilities.query.aggregates.as_ref().map(|_agg| {
             DataConnectorAggregateCapabilities {
@@ -640,6 +647,7 @@ mod tests {
             supports_explaining_queries: false,
             supports_explaining_mutations: false,
             supports_nested_object_filtering: false,
+            supports_nested_object_ordering: false,
             supports_nested_array_filtering: false,
             supports_aggregates: None,
             supports_query_variables: false,
@@ -689,6 +697,7 @@ mod tests {
             supports_explaining_queries: false,
             supports_explaining_mutations: false,
             supports_nested_object_filtering: false,
+            supports_nested_object_ordering: false,
             supports_nested_array_filtering: false,
             supports_aggregates: None,
             supports_query_variables: false,

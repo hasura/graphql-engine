@@ -1,0 +1,13 @@
+query MyQuery {
+  InstitutionMany(
+    order_by: [{ location: { location_country: { name: Desc } } }, { id: Desc }]
+  ) {
+    id
+    location {
+      location_country {
+        id
+        name
+      }
+    }
+  }
+}

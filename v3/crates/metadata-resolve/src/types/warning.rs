@@ -50,6 +50,7 @@ impl ShouldBeAnError for Warning {
             Warning::ModelGraphqlIssue(issue) => issue.should_be_an_error(flags),
             Warning::CommandIssue(issue) => issue.should_be_an_error(flags),
             Warning::ScalarBooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
+            Warning::ModelIssue(issue) => issue.should_be_an_error(flags),
             _ => false,
         }
     }

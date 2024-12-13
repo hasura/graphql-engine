@@ -14490,16 +14490,7 @@
                     "orderByExpression": "int4_order_by"
                   }
                 ],
-                "orderableRelationships": [
-                  {
-                    "relationshipName": "primaryAnthemTrack",
-                    "orderByExpression": "Track_order_by"
-                  },
-                  {
-                    "relationshipName": "secondaryAnthemTrack",
-                    "orderByExpression": "Track_order_by"
-                  }
-                ]
+                "orderableRelationships": []
               }
             },
             "graphql": {
@@ -15843,6 +15834,8 @@
     "require_unique_model_graphql_names": true,
     "logical_operators_in_scalar_boolean_expressions": true,
     "disallow_duplicate_names_in_boolean_expressions": true,
-    "disallow_multiple_input_object_fields_in_graphql_order_by": true
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true,
+    "require_nested_support_for_order_by_expressions": true,
+    "disallow_model_v1_ordering_non_scalar_fields": true
   }
 }

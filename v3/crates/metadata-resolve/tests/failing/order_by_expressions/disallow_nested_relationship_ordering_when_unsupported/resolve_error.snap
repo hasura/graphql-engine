@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/order_by_expressions/disallow_nested_relationship_ordering_when_unsupported/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+The data connector 'myconnector (in subgraph default)' used in model 'mymodel (in subgraph default)' does not support ordering by nested relationships; the orderable relationship 'row_type' from the OrderByExpression 'FooOrderByExpression (in subgraph default)' is nested

@@ -1,0 +1,55 @@
+[
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "id": 1,
+          "location": {
+            "location_country": {
+              "id": 1,
+              "name": "UK"
+            }
+          }
+        },
+        {
+          "id": 2,
+          "location": {
+            "location_country": {
+              "id": 2,
+              "name": "Sweden"
+            }
+          }
+        },
+        {
+          "id": 3,
+          "location": null
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "id": 2,
+          "location": {
+            "location_country": {
+              "id": 2,
+              "name": "Sweden"
+            }
+          }
+        },
+        {
+          "id": 3,
+          "location": null
+        },
+        {
+          "id": 1,
+          "location": {
+            "location_country": null
+          }
+        }
+      ]
+    }
+  }
+]

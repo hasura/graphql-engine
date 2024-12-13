@@ -255,6 +255,17 @@ fn test_model_select_many_order_by_nested() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_model_select_many_order_by_nested_relationships() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/nested_relationships";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
+#[test]
 fn test_model_select_many_order_by_nested_legacy() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/nested_legacy";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";

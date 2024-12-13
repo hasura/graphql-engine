@@ -8,7 +8,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
         object_types: {
             Qualified {
                 subgraph: SubgraphName(
-                    "__unknown_namespace",
+                    "default",
                 ),
                 name: CustomTypeName(
                     Identifier(
@@ -62,7 +62,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     Custom(
                                         Qualified {
                                             subgraph: SubgraphName(
-                                                "__unknown_namespace",
+                                                "default",
                                             ),
                                             name: CustomTypeName(
                                                 Identifier(
@@ -90,7 +90,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             Custom(
                                                 Qualified {
                                                     subgraph: SubgraphName(
-                                                        "__unknown_namespace",
+                                                        "default",
                                                     ),
                                                     name: CustomTypeName(
                                                         Identifier(
@@ -183,7 +183,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     mappings: {
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: DataConnectorName(
                                 Identifier(
@@ -339,7 +339,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             },
             Qualified {
                 subgraph: SubgraphName(
-                    "__unknown_namespace",
+                    "default",
                 ),
                 name: CustomTypeName(
                     Identifier(
@@ -447,7 +447,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     mappings: {
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: DataConnectorName(
                                 Identifier(
@@ -571,7 +571,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             },
             Qualified {
                 subgraph: SubgraphName(
-                    "__unknown_namespace",
+                    "default",
                 ),
                 name: CustomTypeName(
                     Identifier(
@@ -679,7 +679,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     mappings: {
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: DataConnectorName(
                                 Identifier(
@@ -806,7 +806,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
         models: {
             Qualified {
                 subgraph: SubgraphName(
-                    "__unknown_namespace",
+                    "default",
                 ),
                 name: ModelName(
                     Identifier(
@@ -817,6 +817,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 model: Model {
                     path: JSONPath(
                         [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
                             Index(
                                 10,
                             ),
@@ -824,7 +833,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     ),
                     name: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: ModelName(
                             Identifier(
@@ -834,7 +843,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     },
                     data_type: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -887,7 +896,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     Custom(
                                         Qualified {
                                             subgraph: SubgraphName(
-                                                "__unknown_namespace",
+                                                "default",
                                             ),
                                             name: CustomTypeName(
                                                 Identifier(
@@ -915,7 +924,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             Custom(
                                                 Qualified {
                                                     subgraph: SubgraphName(
-                                                        "__unknown_namespace",
+                                                        "default",
                                                     ),
                                                     name: CustomTypeName(
                                                         Identifier(
@@ -964,7 +973,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             data_connector: DataConnectorLink {
                                 name: Qualified {
                                     subgraph: SubgraphName(
-                                        "__unknown_namespace",
+                                        "default",
                                     ),
                                     name: DataConnectorName(
                                         Identifier(
@@ -1002,6 +1011,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: false,
                                     supports_nested_object_filtering: true,
+                                    supports_nested_object_ordering: true,
                                     supports_nested_array_filtering: false,
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {
@@ -1032,7 +1042,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             type_mappings: {
                                 Qualified {
                                     subgraph: SubgraphName(
-                                        "__unknown_namespace",
+                                        "default",
                                     ),
                                     name: CustomTypeName(
                                         Identifier(
@@ -1181,7 +1191,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 },
                                 Qualified {
                                     subgraph: SubgraphName(
-                                        "__unknown_namespace",
+                                        "default",
                                     ),
                                     name: CustomTypeName(
                                         Identifier(
@@ -1298,7 +1308,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 },
                                 Qualified {
                                     subgraph: SubgraphName(
-                                        "__unknown_namespace",
+                                        "default",
                                     ),
                                     name: CustomTypeName(
                                         Identifier(
@@ -1424,7 +1434,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     order_by_expression: Some(
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: FromModel(
                                 ModelName(
@@ -1516,7 +1526,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             objects: {
                 Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(
@@ -1526,7 +1536,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 }: ResolvedObjectBooleanExpressionType {
                     name: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -1536,7 +1546,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     },
                     object_type: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -1625,7 +1635,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             ): ObjectComparisonExpressionInfo {
                                 object_type_name: Qualified {
                                     subgraph: SubgraphName(
-                                        "__unknown_namespace",
+                                        "default",
                                     ),
                                     name: CustomTypeName(
                                         Identifier(
@@ -1635,7 +1645,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 },
                                 underlying_object_type_name: Qualified {
                                     subgraph: SubgraphName(
-                                        "__unknown_namespace",
+                                        "default",
                                     ),
                                     name: CustomTypeName(
                                         Identifier(
@@ -1655,7 +1665,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 object_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: CustomTypeName(
                                             Identifier(
@@ -1668,7 +1678,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 operator_mapping: {
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: DataConnectorName(
                                             Identifier(
@@ -1689,7 +1699,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 object_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: CustomTypeName(
                                             Identifier(
@@ -1702,7 +1712,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 operator_mapping: {
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: DataConnectorName(
                                             Identifier(
@@ -1722,7 +1732,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
                 Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(
@@ -1732,7 +1742,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 }: ResolvedObjectBooleanExpressionType {
                     name: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -1742,7 +1752,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     },
                     object_type: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -1821,7 +1831,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 object_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: CustomTypeName(
                                             Identifier(
@@ -1834,7 +1844,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 operator_mapping: {
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: DataConnectorName(
                                             Identifier(
@@ -1855,7 +1865,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 object_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: CustomTypeName(
                                             Identifier(
@@ -1868,7 +1878,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 operator_mapping: {
                                     Qualified {
                                         subgraph: SubgraphName(
-                                            "__unknown_namespace",
+                                            "default",
                                         ),
                                         name: DataConnectorName(
                                             Identifier(
@@ -1890,7 +1900,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             scalars: {
                 Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(
@@ -1900,7 +1910,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -1915,7 +1925,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     data_connector_operator_mappings: {
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: DataConnectorName(
                                 Identifier(
@@ -1952,7 +1962,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
                 Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(
@@ -1962,7 +1972,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -1977,7 +1987,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     data_connector_operator_mappings: {
                         Qualified {
                             subgraph: SubgraphName(
-                                "__unknown_namespace",
+                                "default",
                             ),
                             name: DataConnectorName(
                                 Identifier(
@@ -2020,7 +2030,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             objects: {
                 Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: FromModel(
                         ModelName(
@@ -2032,7 +2042,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: FromModel(
                             ModelName(
@@ -2044,7 +2054,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     },
                     ordered_type: Qualified {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         name: CustomTypeName(
                             Identifier(
@@ -2055,38 +2065,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     orderable_fields: {
                         FieldName(
                             Identifier(
-                                "departments",
-                            ),
-                        ): Scalar(
-                            OrderableScalarField {
-                                order_by_expression_identifier: Qualified {
-                                    subgraph: SubgraphName(
-                                        "__unknown_namespace",
-                                    ),
-                                    name: FromModelField(
-                                        ModelName(
-                                            Identifier(
-                                                "institutions",
-                                            ),
-                                        ),
-                                        FieldName(
-                                            Identifier(
-                                                "departments",
-                                            ),
-                                        ),
-                                    ),
-                                },
-                            },
-                        ),
-                        FieldName(
-                            Identifier(
                                 "id",
                             ),
                         ): Scalar(
                             OrderableScalarField {
                                 order_by_expression_identifier: Qualified {
                                     subgraph: SubgraphName(
-                                        "__unknown_namespace",
+                                        "default",
                                     ),
                                     name: FromModelField(
                                         ModelName(
@@ -2105,38 +2090,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                         ),
                         FieldName(
                             Identifier(
-                                "location",
-                            ),
-                        ): Scalar(
-                            OrderableScalarField {
-                                order_by_expression_identifier: Qualified {
-                                    subgraph: SubgraphName(
-                                        "__unknown_namespace",
-                                    ),
-                                    name: FromModelField(
-                                        ModelName(
-                                            Identifier(
-                                                "institutions",
-                                            ),
-                                        ),
-                                        FieldName(
-                                            Identifier(
-                                                "location",
-                                            ),
-                                        ),
-                                    ),
-                                },
-                            },
-                        ),
-                        FieldName(
-                            Identifier(
                                 "name",
                             ),
                         ): Scalar(
                             OrderableScalarField {
                                 order_by_expression_identifier: Qualified {
                                     subgraph: SubgraphName(
-                                        "__unknown_namespace",
+                                        "default",
                                     ),
                                     name: FromModelField(
                                         ModelName(
@@ -2153,36 +2113,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 },
                             },
                         ),
-                        FieldName(
-                            Identifier(
-                                "staff",
-                            ),
-                        ): Scalar(
-                            OrderableScalarField {
-                                order_by_expression_identifier: Qualified {
-                                    subgraph: SubgraphName(
-                                        "__unknown_namespace",
-                                    ),
-                                    name: FromModelField(
-                                        ModelName(
-                                            Identifier(
-                                                "institutions",
-                                            ),
-                                        ),
-                                        FieldName(
-                                            Identifier(
-                                                "staff",
-                                            ),
-                                        ),
-                                    ),
-                                },
-                            },
-                        ),
                     },
                     orderable_relationships: ModelV1AllowAll,
                     graphql: None,
                     description: Some(
-                        "OrderByExpression for Model institutions (in subgraph __unknown_namespace)",
+                        "OrderByExpression for Model institutions (in subgraph default)",
                     ),
                 },
             },
@@ -2237,7 +2172,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             LogicalOperatorsUnavailable {
                 type_name: Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(
@@ -2251,7 +2186,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             LogicalOperatorsUnavailable {
                 type_name: Qualified {
                     subgraph: SubgraphName(
-                        "__unknown_namespace",
+                        "default",
                     ),
                     name: CustomTypeName(
                         Identifier(

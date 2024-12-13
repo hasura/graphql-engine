@@ -114,6 +114,7 @@
                 "supported_ndc_version": "V01",
                 "supports_explaining_queries": true,
                 "supports_nested_object_filtering": true,
+                "supports_nested_object_ordering": true,
                 "supports_aggregates": {},
                 "supports_query_variables": true,
                 "supports_relationships": {

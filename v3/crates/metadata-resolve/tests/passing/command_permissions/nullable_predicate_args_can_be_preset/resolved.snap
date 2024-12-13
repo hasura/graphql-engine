@@ -372,6 +372,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
+                                    supports_nested_object_ordering: false,
                                     supports_nested_array_filtering: false,
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {

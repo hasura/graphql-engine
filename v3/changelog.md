@@ -34,6 +34,17 @@
   These fixes are only enabled if your `CompatibilityConfig` date is set to
   `2024-12-10` or newer.
 
+- Fixed a bug where `orderableFields` in a `Model` `v1` would allow you to
+  attempt to order by non-scalar fields. At runtime, queries would either fail
+  or produce unexpected results. Trying to use a non-scalar `orderableField`
+  will now result in a build error. However, it is recommended you upgrade to
+  `Model` `v2` and use `OrderByExpression` instead.
+
+- Fixed a bug where `OrderByExpression`s that incorporate nested fields and
+  nested relationships were allowed to be used with `Model`s that source from
+  data connectors that did not support ordering by nested fields and nested
+  relationships. Such a configuration will now result in a build error.
+
 ### Changed
 
 ## [v2024.12.04]

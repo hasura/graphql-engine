@@ -16,6 +16,9 @@ use plan_types::{
 pub enum NdcV01CompatibilityError {
     #[error("Nested relationships in expressions are not supported in NDC v0.1.x")]
     NestedRelationshipsInExpressionsNotSupported,
+
+    #[error("Nested relationships in order by targets are not supported in NDC v0.1.x")]
+    NestedRelationshipsInOrderByTargetsNotSupported,
 }
 
 pub fn make_query_request(
@@ -475,6 +478,14 @@ fn make_order_by_target(
             // called `text`, you'll have to provide the following paths to access the `text` column:
             // ["UserPosts", "PostsComments"]
             for path_element in relationship_path {
+                if !path_element.field_path.is_empty() {
+                    return Err(FieldError::InternalError(
+                        FieldInternalError::NdcV01CompatibilityError(
+                            NdcV01CompatibilityError::NestedRelationshipsInOrderByTargetsNotSupported,
+                        ),
+                    ));
+                }
+
                 order_by_element_path.push(ndc_models_v01::PathElement {
                     relationship: ndc_models_v01::RelationshipName::from(
                         path_element.relationship_name.as_str(),

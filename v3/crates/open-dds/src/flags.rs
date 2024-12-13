@@ -30,6 +30,8 @@ pub enum Flag {
     LogicalOperatorsInScalarBooleanExpressions,
     DisallowDuplicateNamesInBooleanExpressions,
     DisallowMultipleInputObjectFieldsInGraphqlOrderBy,
+    RequireNestedSupportForOrderByExpressions,
+    DisallowModelV1OrderingNonScalarFields,
 }
 
 impl Flag {
@@ -70,6 +72,12 @@ impl Flag {
             }
             Flag::DisallowMultipleInputObjectFieldsInGraphqlOrderBy => {
                 "disallow_multiple_input_object_fields_in_graphql_order_by"
+            }
+            Flag::RequireNestedSupportForOrderByExpressions => {
+                "require_nested_support_for_order_by_expressions"
+            }
+            Flag::DisallowModelV1OrderingNonScalarFields => {
+                "disallow_model_v1_ordering_non_scalar_fields"
             }
         }
     }

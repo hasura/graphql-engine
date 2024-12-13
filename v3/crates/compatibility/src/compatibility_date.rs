@@ -143,5 +143,9 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowMultipleInputObjectFieldsInGraphqlOrderBy => {
             Some(new_compatibility_date(2024, 12, 10))
         }
+        Flag::RequireNestedSupportForOrderByExpressions
+        | Flag::DisallowModelV1OrderingNonScalarFields => {
+            None // TODO: Must be set before we release
+        }
     }
 }

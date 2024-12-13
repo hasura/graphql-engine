@@ -300,10 +300,7 @@
                   },
                   "relationships": {
                     "relation_comparisons": {},
-                    "order_by_aggregate": {},
-                    "nested": {
-                      "array": {}
-                    }
+                    "order_by_aggregate": {}
                   }
                 }
               }

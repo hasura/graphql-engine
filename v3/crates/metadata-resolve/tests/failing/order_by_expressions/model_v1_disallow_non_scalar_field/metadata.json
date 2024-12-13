@@ -1,0 +1,200 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "RowType",
+            "fields": [
+              {
+                "name": "string_array",
+                "type": "[String!]!"
+              },
+              {
+                "name": "nested_object",
+                "type": "RowType"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "myconnector",
+                "dataConnectorObjectType": "row_type",
+                "fieldMapping": {
+                  "string_array": {
+                    "column": {
+                      "name": "string_array"
+                    }
+                  },
+                  "nested_object": {
+                    "column": {
+                      "name": "nested_object"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "mymodel",
+            "objectType": "RowType",
+            "arguments": [],
+            "orderableFields": [
+              {
+                "fieldName": "string_array",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "nested_object",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "dataConnectorName": "myconnector",
+              "collection": "mycollection",
+              "argumentMapping": {}
+            },
+            "graphql": {
+              "selectMany": {
+                "queryRootField": "mycollection"
+              },
+              "selectUniques": [],
+              "orderByExpressionType": "mycollection_order_by"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "myconnector",
+            "url": {
+              "readWriteUrls": {
+                "read": {
+                  "value": "http://local-dev.hasura.me:8080"
+                },
+                "write": {
+                  "value": "http://local-dev.hasura.me:8080"
+                }
+              }
+            },
+            "argumentPresets": [],
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  },
+                  "String": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  }
+                },
+                "object_types": {
+                  "row_type": {
+                    "fields": {
+                      "string_array": {
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "nested_object": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "row_type"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "mycollection",
+                    "arguments": {},
+                    "type": "row_type",
+                    "foreign_keys": {},
+                    "uniqueness_constraints": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "version": "0.1.0",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {}
+                  },
+                  "mutation": {
+                    "transactional": {},
+                    "explain": {}
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "myconnector_String_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "myconnector_Int_comparisonexp"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "disallow_model_v1_ordering_non_scalar_fields": true
+  }
+}

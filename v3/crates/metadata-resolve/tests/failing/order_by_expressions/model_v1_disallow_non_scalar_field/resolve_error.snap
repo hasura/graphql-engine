@@ -1,0 +1,9 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/order_by_expressions/model_v1_disallow_non_scalar_field/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+The orderable field 'string_array' in model 'mymodel (in subgraph default)' is an array type (type: [String!]!) and therefore cannot be used for ordering
+The orderable field 'nested_object' in model 'mymodel (in subgraph default)' is not a scalar field (type: RowType (in subgraph default)) and therefore cannot be used for ordering. Upgrade to version 2 Models and use OrderByExpressions to order by nested fields
