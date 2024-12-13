@@ -1,5 +1,20 @@
 [
   {
+    "function_name": "default_SearchArticles",
+    "return_type": "article",
+    "description": null,
+    "arguments": [
+      {
+        "name": "search_term",
+        "position": 0,
+        "argument_type": "STRING",
+        "argument_type_normalized": "STRING",
+        "is_nullable": false,
+        "description": null
+      }
+    ]
+  },
+  {
     "function_name": "get_actor_by_id",
     "return_type": "actor",
     "description": null,

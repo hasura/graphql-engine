@@ -485,6 +485,70 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "SearchArticles",
+            "objectType": "article",
+            "arguments": [
+              {
+                "name": "search_term",
+                "type": "String!"
+              }
+            ],
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "search_articles",
+              "argumentMapping": {
+                "search_term": "search_term"
+              }
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleById",
+                  "uniqueIdentifier": ["id"]
+                }
+              ]
+            },
+            "orderableFields": [
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "SearchArticles",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
           "kind": "ModelPermissions",
           "version": "v1",
           "definition": {
@@ -9727,6 +9791,24 @@
                   {
                     "name": "article",
                     "arguments": {},
+                    "type": "article",
+                    "uniqueness_constraints": {
+                      "article_pkey": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "search_articles",
+                    "arguments": {
+                      "search_term": {
+                        "type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      }
+                    },
                     "type": "article",
                     "uniqueness_constraints": {
                       "article_pkey": {

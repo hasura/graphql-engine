@@ -43,7 +43,7 @@ pub struct ArgumentInfo {
 }
 
 impl ArgumentInfo {
-    fn from_resolved(
+    pub(crate) fn from_resolved(
         type_registry: &TypeRegistry,
         argument: &resolved::ArgumentInfo,
     ) -> Result<Self, UnsupportedType> {
@@ -57,6 +57,35 @@ impl ArgumentInfo {
             description: argument.description.clone(),
         };
         Ok(argument_info)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub(crate) enum TableValuedFunction {
+    Command(Arc<Command>),
+    ModelWithArguments(Arc<super::model::Model>),
+}
+
+impl TableValuedFunction {
+    pub fn struct_type(&self) -> &StructTypeName {
+        match self {
+            TableValuedFunction::Command(command) => &command.struct_type,
+            TableValuedFunction::ModelWithArguments(model) => &model.struct_type,
+        }
+    }
+
+    pub fn description(&self) -> Option<&String> {
+        match self {
+            TableValuedFunction::Command(command) => command.description.as_ref(),
+            TableValuedFunction::ModelWithArguments(model) => model.description.as_ref(),
+        }
+    }
+
+    pub fn arguments(&self) -> &IndexMap<ArgumentName, ArgumentInfo> {
+        match self {
+            TableValuedFunction::Command(command) => &command.arguments,
+            TableValuedFunction::ModelWithArguments(model) => &model.arguments,
+        }
     }
 }
 
@@ -242,6 +271,24 @@ impl datafusion::TableFunctionImpl for WithSession<Command> {
         };
 
         Ok(Arc::new(CommandInvocation::new(
+            self.value.clone(),
+            arguments,
+        )))
+    }
+}
+
+impl datafusion::TableFunctionImpl for WithSession<super::model::Model> {
+    fn call(
+        &self,
+        exprs: &[datafusion::Expr],
+    ) -> datafusion::Result<Arc<dyn datafusion::TableProvider>> {
+        let arguments = if STRUCT_CALLING_CONVENTION {
+            call_struct_convention(&self.value.arguments, exprs)?
+        } else {
+            call_individual_args_convention(&self.value.arguments, exprs)?
+        };
+
+        Ok(Arc::new(super::model::ModelWithArgumentsInvocation::new(
             self.value.clone(),
             arguments,
         )))

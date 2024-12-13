@@ -17,6 +17,18 @@ COPY public.article (id, title, author_id) FROM stdin;
 5	Generalizing monads to arrows	2
 \.
 
+CREATE OR REPLACE FUNCTION public.search_articles(search_term text)
+RETURNS SETOF public.article 
+LANGUAGE plpgsql
+STABLE
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM public.article
+    WHERE title ILIKE '%' || search_term || '%';
+END;
+$$;
+
 CREATE TABLE author (
   id integer NOT NULL,
   first_name text,

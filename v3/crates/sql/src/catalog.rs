@@ -32,7 +32,7 @@ pub mod types;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CatalogSer<SG> {
     pub(crate) subgraphs: IndexMap<String, SG>,
-    pub(crate) table_valued_functions: IndexMap<String, Arc<command::Command>>,
+    pub(crate) table_valued_functions: IndexMap<String, command::TableValuedFunction>,
     pub(crate) introspection: Arc<introspection::IntrospectionSchemaProvider>,
     pub(crate) default_schema: Option<String>,
 }
@@ -102,20 +102,39 @@ impl Catalog {
         // process models
         let mut subgraphs = IndexMap::new();
         let mut unsupported_models = IndexMap::new();
+
+        // derive default schema
+        let default_schema = type_registry.default_schema().map(ToString::to_string);
+
+        // process commands
+        let mut table_valued_functions = IndexMap::new();
+        let mut unsupported_commands = IndexMap::new();
+
         for (model_name, model) in &metadata.models {
             match model::Model::from_resolved_model(&type_registry, model) {
                 Ok(table) => {
                     let schema_name = &model_name.subgraph;
                     let table_name = &model_name.name;
-                    let subgraph = subgraphs.entry(schema_name.to_string()).or_insert_with(|| {
-                        subgraph::Subgraph {
-                            metadata: metadata.clone(),
-                            tables: IndexMap::new(),
-                        }
-                    });
-                    subgraph
-                        .tables
-                        .insert(table_name.to_string(), Arc::new(table));
+
+                    if table.arguments.is_empty() {
+                        let subgraph =
+                            subgraphs.entry(schema_name.to_string()).or_insert_with(|| {
+                                subgraph::Subgraph {
+                                    metadata: metadata.clone(),
+                                    tables: IndexMap::new(),
+                                }
+                            });
+                        subgraph
+                            .tables
+                            .insert(table_name.to_string(), Arc::new(table));
+                    } else {
+                        let table_valued_function_name =
+                            format!("{}_{}", schema_name, table_name.as_str());
+                        table_valued_functions.insert(
+                            table_valued_function_name,
+                            command::TableValuedFunction::ModelWithArguments(Arc::new(table)),
+                        );
+                    }
                 }
                 Err(unsupported_model) => {
                     unsupported_models.insert(model_name.clone(), unsupported_model);
@@ -123,11 +142,6 @@ impl Catalog {
             }
         }
 
-        // derive default schema
-        let default_schema = type_registry.default_schema().map(ToString::to_string);
-        // process commands
-        let mut table_valued_functions = IndexMap::new();
-        let mut unsupported_commands = IndexMap::new();
         for (command_name, command) in &metadata.commands {
             match command::Command::from_resolved_command(&type_registry, command) {
                 Ok(command) => {
@@ -139,7 +153,10 @@ impl Catalog {
                         } else {
                             format!("{schema_name}_{command_name}")
                         };
-                    table_valued_functions.insert(table_valued_function_name, Arc::new(command));
+                    table_valued_functions.insert(
+                        table_valued_function_name,
+                        command::TableValuedFunction::Command(Arc::new(command)),
+                    );
                 }
                 Err(unsupported_command) => {
                     unsupported_commands.insert(command_name.clone(), unsupported_command);
@@ -252,11 +269,22 @@ impl Catalog {
             .build();
         let session_context = datafusion::SessionContext::new_with_state(session_state);
         for (function_name, function) in &self.table_valued_functions {
-            let function_impl = WithSession {
-                session: session.clone(),
-                value: function.clone(),
-            };
-            session_context.register_udtf(function_name, Arc::new(function_impl));
+            match function {
+                command::TableValuedFunction::Command(command) => {
+                    let function_impl = WithSession {
+                        session: session.clone(),
+                        value: command.clone(),
+                    };
+                    session_context.register_udtf(function_name, Arc::new(function_impl));
+                }
+                command::TableValuedFunction::ModelWithArguments(model) => {
+                    let function_impl = WithSession {
+                        session: session.clone(),
+                        value: model.clone(),
+                    };
+                    session_context.register_udtf(function_name, Arc::new(function_impl));
+                }
+            }
         }
         session_context.register_catalog(
             "default",

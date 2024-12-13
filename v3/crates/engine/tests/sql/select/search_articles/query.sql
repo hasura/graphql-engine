@@ -1,0 +1,1 @@
+SELECT * FROM default_SearchArticles(STRUCT('function' AS search_term));

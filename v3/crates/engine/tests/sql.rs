@@ -102,6 +102,11 @@ fn test_select_nested_field_permission_error() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_select_search_articles() -> anyhow::Result<()> {
+    test_sql("sql/select/search_articles")
+}
+
+#[test]
 fn test_filter_simple_equality() -> anyhow::Result<()> {
     test_sql("sql/filter/simple_equality")
 }

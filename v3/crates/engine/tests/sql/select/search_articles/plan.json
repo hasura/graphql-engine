@@ -1,0 +1,10 @@
+[
+  {
+    "plan_type": "logical_plan",
+    "plan": "TableScan: tmp_table projection=[author_id, id, title]"
+  },
+  {
+    "plan_type": "physical_plan",
+    "plan": "NDCQueryPushDown\n"
+  }
+]

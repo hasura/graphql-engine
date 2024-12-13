@@ -23,11 +23,11 @@ use thiserror::Error;
 use crate::catalog::model::filter::can_pushdown_filters;
 use crate::execute::planner::model::ModelQuery;
 
-use super::types::{StructTypeName, TypeRegistry, UnsupportedObject};
+use super::types::{StructTypeName, TypeRegistry, UnsupportedObject, UnsupportedType};
 
 mod datafusion {
     pub(super) use datafusion::{
-        arrow::datatypes::{DataType, SchemaRef},
+        arrow::datatypes::SchemaRef,
         catalog::Session,
         common::{DFSchema, DFSchemaRef},
         datasource::{function::TableFunctionImpl, TableProvider, TableType},
@@ -37,18 +37,17 @@ mod datafusion {
     };
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ArgumentInfo {
-    pub argument_type: datafusion::DataType,
-    pub description: Option<String>,
-}
-
 #[derive(Error, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum UnsupportedModel {
     #[error("return type {type_} not supported: {reason}")]
     ReturnTypeNotSupported {
         type_: Qualified<CustomTypeName>,
         reason: UnsupportedObject,
+    },
+    #[error("argument {argument} not supported: {reason}")]
+    ArgumentNotSupported {
+        argument: ArgumentName,
+        reason: UnsupportedType,
     },
     #[error("internal error: object type {0} not found in registry")]
     InternalNotFound(Qualified<CustomTypeName>),
@@ -61,7 +60,7 @@ pub struct Model {
 
     pub(crate) description: Option<String>,
 
-    pub(crate) arguments: IndexMap<ArgumentName, ArgumentInfo>,
+    pub(crate) arguments: IndexMap<ArgumentName, super::command::ArgumentInfo>,
 
     // The struct type of the model's object type
     pub(crate) struct_type: StructTypeName,
@@ -89,16 +88,103 @@ impl Model {
                     reason: unsupported_object.clone(),
                 },
             )?;
+
+        let arguments = model
+            .model
+            .arguments
+            .iter()
+            .map(|(argument_name, argument)| {
+                let argument_info =
+                    super::command::ArgumentInfo::from_resolved(type_registry, argument).map_err(
+                        |reason| UnsupportedModel::ArgumentNotSupported {
+                            argument: argument_name.clone(),
+                            reason,
+                        },
+                    )?;
+                Ok((argument_name.clone(), argument_info))
+            })
+            // this returns None if any of the arguments cannot be converted
+            .collect::<Result<IndexMap<_, _>, _>>()?;
+
         let model = Model {
             subgraph: model.model.name.subgraph.clone(),
             name: model.model.name.name.clone(),
             description: model.model.raw.description.clone(),
-            arguments: IndexMap::new(),
+            arguments,
             struct_type: object.name.clone(),
             schema: object.schema.clone(),
             data_type: model.model.data_type.clone(),
         };
         Ok(model)
+    }
+}
+
+/// This is an instatation of a model with concrete arguments. An instantiated model
+/// is a source of rows and can implement 'TableProvider'
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ModelWithArgumentsInvocation {
+    /// Metadata about the model
+    pub(crate) model: Arc<Model>,
+    /// Provided arguments
+    pub(crate) arguments: BTreeMap<ArgumentName, serde_json::Value>,
+}
+
+impl ModelWithArgumentsInvocation {
+    pub(crate) fn new(
+        model: Arc<Model>,
+        arguments: BTreeMap<ArgumentName, serde_json::Value>,
+    ) -> Self {
+        ModelWithArgumentsInvocation { model, arguments }
+    }
+    pub(crate) fn to_logical_plan(
+        &self,
+        projected_schema: datafusion::DFSchemaRef,
+        filters: &[datafusion::Expr],
+        limit: Option<usize>,
+    ) -> datafusion::Result<datafusion::LogicalPlan> {
+        let model_query_node = ModelQuery::new(
+            &self.model,
+            &self.arguments,
+            projected_schema,
+            filters,
+            limit,
+        )?;
+        let logical_plan = datafusion::LogicalPlan::Extension(datafusion::Extension {
+            node: Arc::new(model_query_node),
+        });
+        Ok(logical_plan)
+    }
+}
+
+#[async_trait]
+impl datafusion::TableProvider for ModelWithArgumentsInvocation {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn schema(&self) -> datafusion::SchemaRef {
+        self.model.schema.clone()
+    }
+
+    fn table_type(&self) -> datafusion::TableType {
+        datafusion::TableType::View
+    }
+
+    async fn scan(
+        &self,
+        state: &dyn datafusion::Session,
+        projection: Option<&Vec<usize>>,
+        filters: &[datafusion::Expr],
+        limit: Option<usize>,
+    ) -> datafusion::Result<Arc<dyn datafusion::ExecutionPlan>> {
+        let projected_schema = self.model.schema.project(projection.unwrap_or(&vec![]))?;
+        let qualified_projected_schema = datafusion::DFSchema::from_unqualified_fields(
+            projected_schema.fields,
+            projected_schema.metadata,
+        )?;
+        let logical_plan =
+            self.to_logical_plan(Arc::new(qualified_projected_schema), filters, limit)?;
+        state.create_physical_plan(&logical_plan).await
     }
 }
 

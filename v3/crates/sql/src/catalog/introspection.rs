@@ -61,7 +61,7 @@ impl Introspection {
         metadata: &resolved::Metadata,
         type_registry: &TypeRegistry,
         schemas: &IndexMap<String, crate::catalog::subgraph::Subgraph>,
-        functions: &IndexMap<String, Arc<super::command::Command>>,
+        functions: &IndexMap<String, super::command::TableValuedFunction>,
         unsupported_models: &IndexMap<Qualified<ModelName>, UnsupportedModel>,
         unsupported_commands: &IndexMap<Qualified<CommandName>, UnsupportedCommand>,
     ) -> Self {
@@ -163,12 +163,12 @@ impl Introspection {
         for (function_name, function) in functions {
             function_rows.push(TableValuedFunctionRow::new(
                 function_name.clone(),
-                function.struct_type.clone(),
-                function.description.clone(),
+                function.struct_type().clone(),
+                function.description().cloned(),
             ));
 
             #[allow(clippy::cast_possible_wrap)]
-            for (position, (argument_name, argument)) in function.arguments.iter().enumerate() {
+            for (position, (argument_name, argument)) in function.arguments().iter().enumerate() {
                 function_argument_rows.push(TableValuedFunctionArgumentRow::new(
                     function_name.clone(),
                     argument_name.to_string(),
