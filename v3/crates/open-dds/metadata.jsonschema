@@ -3625,6 +3625,10 @@
         "disallow_model_v1_ordering_non_scalar_fields": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_array_relationship_in_order_by": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

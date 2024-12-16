@@ -35,6 +35,7 @@ impl<'s> Relationships<'s> {
 
 static EMPTY_MAP: BTreeMap<RelationshipName, Relationship<'static>> = BTreeMap::new();
 
+#[derive(Debug)]
 pub enum Relationship<'s> {
     /// Relationship that targets something in a known subgraph
     Relationship(&'s RelationshipV1),

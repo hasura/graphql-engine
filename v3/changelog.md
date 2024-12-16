@@ -51,6 +51,10 @@
   data connectors that did not support ordering by nested fields and nested
   relationships. Such a configuration will now result in a build error.
 
+- Fixed a bug where `OrderByExpressions` could refer to array relationships in
+  an `orderableRelationship`. Such a configuration will now result in a build
+  error.
+
 ### Changed
 
 ## [v2024.12.04]

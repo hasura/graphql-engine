@@ -177,6 +177,7 @@ pub fn resolve(
     let order_by_expressions::OrderByExpressionsOutput {
         order_by_expressions,
         graphql_types,
+        issues,
     } = order_by_expressions::resolve(
         &metadata_accessor,
         &object_types_with_permissions,
@@ -184,6 +185,8 @@ pub fn resolve(
         &scalar_types,
         graphql_types,
     )?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Validate `ObjectBooleanExpressionType` metadata. This will soon be deprecated and subsumed
     // by `BooleanExpressionType`.

@@ -144,7 +144,8 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
             Some(new_compatibility_date(2024, 12, 10))
         }
         Flag::RequireNestedSupportForOrderByExpressions
-        | Flag::DisallowModelV1OrderingNonScalarFields => {
+        | Flag::DisallowModelV1OrderingNonScalarFields
+        | Flag::DisallowArrayRelationshipInOrderBy => {
             None // TODO: Must be set before we release
         }
     }

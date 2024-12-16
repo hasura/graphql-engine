@@ -1,15 +1,15 @@
+use crate::types::error::ShouldBeAnError;
+use lang_graphql::ast::common::{self as ast};
 use open_dds::{
     models::{EnableAllOrSpecific, ModelName, OrderByDirection},
     order_by_expression::OrderByExpressionName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
 };
+use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Display;
-
-use lang_graphql::ast::common::{self as ast};
-use serde::{Deserialize, Serialize};
 
 use crate::Qualified;
 
@@ -45,10 +45,11 @@ pub struct OrderByExpressions {
     pub scalars: BTreeMap<Qualified<OrderByExpressionIdentifier>, ScalarOrderByExpression>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct OrderByExpressionsOutput {
     pub order_by_expressions: OrderByExpressions,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<OrderByExpressionIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -106,4 +107,23 @@ pub struct OrderableRelationship {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct OrderByExpressionGraphqlConfig {
     pub expression_type_name: ast::TypeName,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum OrderByExpressionIssue {
+    #[error("Cannot order by array relationship {relationship_name} in order by expression {order_by_expression}")]
+    CannotOrderByAnArrayRelationship {
+        order_by_expression: Qualified<OrderByExpressionIdentifier>,
+        relationship_name: RelationshipName,
+    },
+}
+
+impl ShouldBeAnError for OrderByExpressionIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            OrderByExpressionIssue::CannotOrderByAnArrayRelationship { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowArrayRelationshipInOrderBy)
+            }
+        }
+    }
 }

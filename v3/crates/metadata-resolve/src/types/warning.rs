@@ -2,8 +2,8 @@ use open_dds::flags;
 
 use crate::stages::{
     aggregate_boolean_expressions, aggregates, boolean_expressions, commands, data_connectors,
-    models, models_graphql, object_boolean_expressions, plugins, scalar_boolean_expressions,
-    scalar_types,
+    models, models_graphql, object_boolean_expressions, order_by_expressions, plugins,
+    scalar_boolean_expressions, scalar_types,
 };
 
 use super::error::ShouldBeAnError;
@@ -20,6 +20,8 @@ pub enum Warning {
     ScalarBooleanExpressionIssue(
         #[from] scalar_boolean_expressions::ScalarBooleanExpressionTypeIssue,
     ),
+    #[error("{0}")]
+    OrderByExpressionIssue(#[from] order_by_expressions::OrderByExpressionIssue),
     #[error("{0}")]
     BooleanExpressionIssue(#[from] boolean_expressions::BooleanExpressionIssue),
     #[error("{0}")]
@@ -46,6 +48,7 @@ impl ShouldBeAnError for Warning {
             Warning::DataConnectorIssue(issue) => issue.should_be_an_error(flags),
             Warning::BooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ObjectBooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
+            Warning::OrderByExpressionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ScalarTypesIssue(issue) => issue.should_be_an_error(flags),
             Warning::ModelGraphqlIssue(issue) => issue.should_be_an_error(flags),
             Warning::CommandIssue(issue) => issue.should_be_an_error(flags),

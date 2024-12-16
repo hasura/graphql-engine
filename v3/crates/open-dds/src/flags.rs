@@ -32,6 +32,7 @@ pub enum Flag {
     DisallowMultipleInputObjectFieldsInGraphqlOrderBy,
     RequireNestedSupportForOrderByExpressions,
     DisallowModelV1OrderingNonScalarFields,
+    DisallowArrayRelationshipInOrderBy,
 }
 
 impl Flag {
@@ -79,6 +80,7 @@ impl Flag {
             Flag::DisallowModelV1OrderingNonScalarFields => {
                 "disallow_model_v1_ordering_non_scalar_fields"
             }
+            Flag::DisallowArrayRelationshipInOrderBy => "disallow_array_relationship_in_order_by",
         }
     }
 }
