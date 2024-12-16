@@ -216,6 +216,7 @@ impl<'de> Deserialize<'de> for BaseType {
     Deserialize,
     Hash,
     Clone,
+    Copy,
     Debug,
     PartialEq,
     Eq,

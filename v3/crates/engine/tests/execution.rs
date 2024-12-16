@@ -2040,7 +2040,7 @@ fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
     common::test_execution_expectation_for_multiple_ndc_versions(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/custom_connector_types.json",
+            "execute/aggregates/common_metadata/custom_connector_vBoth_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
         BTreeMap::from([
@@ -2048,6 +2048,26 @@ fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
                 NdcVersion::V01,
                 vec!["execute/aggregates/common_metadata/custom_connector_v01_schema.json"],
             ),
+            (
+                NdcVersion::V02,
+                vec!["execute/aggregates/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
+#[test]
+fn test_aggregates_root_field_custom_count_return_type() -> anyhow::Result<()> {
+    let test_path_string = "execute/aggregates/root_field/custom_count_return_type";
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        test_path_string,
+        &[
+            "execute/aggregates/common_metadata/custom_connector_v02_types.json",
+            "execute/aggregates/common_metadata/supergraph.json",
+        ],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, it does not support custom count return types
             (
                 NdcVersion::V02,
                 vec!["execute/aggregates/common_metadata/custom_connector_v02_schema.json"],

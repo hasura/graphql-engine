@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/count_return_type_on_scalar_operand_must_be_int_if_connector_type_is_unspecified/metadata.json
+---
+the aggregate expression 'Int4_aggregate_exp (in subgraph default)' used with model 'Invoice (in subgraph default)' must use the Int type for its count aggregate as the data connector 'mypg (in subgraph default)' does not specify a count type in its schema

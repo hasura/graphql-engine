@@ -2,12 +2,16 @@ use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::{
     DataConnectorName, DataConnectorObjectType, DataConnectorScalarType,
 };
+use open_dds::types::InbuiltType;
 use ref_cast::RefCast;
 use std::sync::Arc;
 
 use super::error::{ModelAggregateExpressionError, ModelsError};
-use crate::stages::{aggregates, data_connectors, models, object_types, type_permissions};
-use crate::types::subgraph::{Qualified, QualifiedTypeName};
+use crate::stages::{
+    aggregates, data_connector_scalar_types, data_connectors, models, object_types,
+    type_permissions,
+};
+use crate::types::subgraph::{mk_qualified_type_name, Qualified, QualifiedTypeName};
 use open_dds::{models::ModelName, types::CustomTypeName};
 
 use std::collections::BTreeMap;
@@ -22,6 +26,10 @@ pub fn resolve_aggregate_expression(
         aggregates::AggregateExpression,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
 ) -> Result<Qualified<AggregateExpressionName>, ModelsError> {
     let model_object_type = QualifiedTypeName::Custom(model_object_type_name.clone());
 
@@ -55,7 +63,7 @@ pub fn resolve_aggregate_expression(
     }
 
     // Check aggregate function mappings exist to the Model's source data connector
-    resolve_aggregate_expression_data_connector_mapping(
+    resolve_object_aggregate_expression_data_connector_mapping(
         aggregate_expression,
         model_name,
         model_object_type_name,
@@ -64,6 +72,7 @@ pub fn resolve_aggregate_expression(
         &model_source.data_connector.capabilities,
         aggregate_expressions,
         object_types,
+        data_connector_scalars,
     )?;
 
     // Check that the aggregate expression does not define count_distinct, as this is
@@ -81,7 +90,7 @@ pub fn resolve_aggregate_expression(
 }
 
 // ideally this would return `ModelAggregateExpressionError`
-fn resolve_aggregate_expression_data_connector_mapping(
+fn resolve_object_aggregate_expression_data_connector_mapping(
     aggregate_expression: &aggregates::AggregateExpression,
     model_name: &Qualified<ModelName>,
     object_type_name: &Qualified<CustomTypeName>,
@@ -93,6 +102,10 @@ fn resolve_aggregate_expression_data_connector_mapping(
         aggregates::AggregateExpression,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
 ) -> Result<(), ModelsError> {
     // Find the object type being aggregated and its field mapping
     let object_type = object_types
@@ -192,7 +205,7 @@ fn resolve_aggregate_expression_data_connector_mapping(
             }
 
             // Resolve the aggregate expression for the nested object field type
-            resolve_aggregate_expression_data_connector_mapping(
+            resolve_object_aggregate_expression_data_connector_mapping(
                 field_aggregate_expression,
                 model_name,
                 field_object_type_name,
@@ -201,32 +214,197 @@ fn resolve_aggregate_expression_data_connector_mapping(
                 data_connector_capabilities,
                 aggregate_expressions,
                 object_types,
+                data_connector_scalars,
             )?;
         }
         // If our field contains a scalar type
         else {
-            // Check that all aggregation functions over this scalar type
-            // have a data connector mapping to the data connector used by the model
-            let all_functions_have_a_data_connector_mapping = field_aggregate_expression
-                .operand
-                .aggregation_functions
-                .iter()
-                .all(|agg_fn| {
-                    agg_fn.data_connector_functions.iter().any(|dc_fn| {
-                        dc_fn.data_connector_name == *data_connector_name
-                            && dc_fn.operand_scalar_type.as_str()
-                                == data_connector_field_type.as_str()
-                    })
-                });
-            if !all_functions_have_a_data_connector_mapping {
-                return Err(ModelsError::from(ModelAggregateExpressionError::ModelAggregateExpressionDataConnectorMappingMissing {
+            resolve_scalar_aggregate_expression_data_connector_mapping(
+                field_aggregate_expression,
+                model_name,
+                data_connector_name,
+                data_connector_field_type,
+                data_connector_capabilities,
+                data_connector_scalars,
+            )?;
+        }
+    }
+
+    validate_count_aggregations(
+        aggregate_expression,
+        model_name,
+        data_connector_name,
+        data_connector_capabilities,
+        data_connector_scalars,
+    )?;
+
+    Ok(())
+}
+
+fn resolve_scalar_aggregate_expression_data_connector_mapping(
+    aggregate_expression: &aggregates::AggregateExpression,
+    model_name: &Qualified<ModelName>,
+    data_connector_name: &Qualified<DataConnectorName>,
+    data_connector_field_type: &ndc_models::TypeName,
+    data_connector_capabilities: &data_connectors::DataConnectorCapabilities,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars<'_>,
+    >,
+) -> Result<(), ModelsError> {
+    let all_functions_have_a_data_connector_mapping = aggregate_expression
+        .operand
+        .aggregation_functions
+        .iter()
+        .all(|agg_fn| {
+            agg_fn.data_connector_functions.iter().any(|dc_fn| {
+                dc_fn.data_connector_name == *data_connector_name
+                    && dc_fn.operand_scalar_type.as_str() == data_connector_field_type.as_str()
+            })
+        });
+    // Check that all aggregation functions over this scalar type
+    // have a data connector mapping to the data connector used by the model
+    if !all_functions_have_a_data_connector_mapping {
+        return Err(ModelsError::from(
+            ModelAggregateExpressionError::ModelAggregateExpressionDataConnectorMappingMissing {
+                model_name: model_name.clone(),
+                aggregate_expression: aggregate_expression.name.clone(),
+                data_connector_name: data_connector_name.clone(),
+                data_connector_operand_type: DataConnectorScalarType::from(
+                    data_connector_field_type.as_str(),
+                ),
+            },
+        ));
+    }
+
+    validate_count_aggregations(
+        aggregate_expression,
+        model_name,
+        data_connector_name,
+        data_connector_capabilities,
+        data_connector_scalars,
+    )?;
+
+    Ok(())
+}
+
+fn validate_count_aggregations(
+    aggregate_expression: &aggregates::AggregateExpression,
+    model_name: &Qualified<ModelName>,
+    data_connector_name: &Qualified<DataConnectorName>,
+    data_connector_capabilities: &data_connectors::DataConnectorCapabilities,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars<'_>,
+    >,
+) -> Result<(), ModelsError> {
+    let data_connector_scalars =
+        data_connector_scalars
+            .get(data_connector_name)
+            .ok_or_else(|| ModelsError::UnknownModelDataConnector {
+                model_name: model_name.clone(),
+                data_connector: data_connector_name.clone(),
+            })?;
+
+    let connector_count_scalar_type = data_connector_capabilities
+        .supports_aggregates
+        .as_ref()
+        .and_then(|t| t.aggregate_count_scalar_type.as_ref());
+
+    validate_count_scalar_type(
+        &aggregate_expression.count,
+        aggregates::CountAggregateType::Count,
+        connector_count_scalar_type,
+        &aggregate_expression.name,
+        model_name,
+        data_connector_name,
+        data_connector_scalars,
+    )?;
+
+    validate_count_scalar_type(
+        &aggregate_expression.count_distinct,
+        aggregates::CountAggregateType::CountDistinct,
+        connector_count_scalar_type,
+        &aggregate_expression.name,
+        model_name,
+        data_connector_name,
+        data_connector_scalars,
+    )?;
+
+    Ok(())
+}
+
+fn validate_count_scalar_type(
+    aggregate_expression_count: &aggregates::AggregateCountDefinition,
+    count_type: aggregates::CountAggregateType,
+    connector_count_scalar_type: Option<&DataConnectorScalarType>,
+    aggregate_expression_name: &Qualified<AggregateExpressionName>,
+    model_name: &Qualified<ModelName>,
+    data_connector_name: &Qualified<DataConnectorName>,
+    data_connector_scalars: &data_connector_scalar_types::DataConnectorScalars<'_>,
+) -> Result<(), ModelsError> {
+    match connector_count_scalar_type {
+        // If the data connector has declared a particular scalar type that will be returned
+        // from count aggregates ...
+        Some(connector_count_scalar_type) => {
+            // We only validate if the count is enabled or
+            // if the count type was explicitly specified (so we should check it anyway)
+            if aggregate_expression_count.enable
+                || !aggregate_expression_count.result_type_defaulted
+            {
+                // ... get the opendd scalar type that is mapped to that scalar type...
+                let expected_connector_count_return_type = data_connector_scalars
+                    .by_ndc_type
+                    .get(connector_count_scalar_type)
+                    .as_ref()
+                    .and_then(|info| info.representation.as_ref())
+                    .ok_or_else(|| {
+                        ModelAggregateExpressionError::CountReturnTypeMappingMissing {
+                            model_name: model_name.clone(),
+                            aggregate_expression: aggregate_expression_name.clone(),
+                            count_type,
+                            count_return_type: aggregate_expression_count.result_type.clone(),
+                            data_connector_name: data_connector_name.clone(),
+                            data_connector_count_return_type: connector_count_scalar_type.clone(),
+                        }
+                    })?;
+
+                let qualified_expected_count_return_type = mk_qualified_type_name(
+                    expected_connector_count_return_type,
+                    &data_connector_name.subgraph,
+                );
+
+                // ... and make sure it matches the type specified in the aggregate expression
+                if aggregate_expression_count.result_type != qualified_expected_count_return_type {
+                    return Err(
+                        ModelAggregateExpressionError::CountReturnTypeMappingMismatch {
+                            model_name: model_name.clone(),
+                            aggregate_expression: aggregate_expression_name.clone(),
+                            count_type,
+                            count_return_type: aggregate_expression_count.result_type.clone(),
+                            data_connector_name: data_connector_name.clone(),
+                            expected_count_return_type: qualified_expected_count_return_type,
+                        }
+                        .into(),
+                    );
+                }
+            }
+        }
+        None => {
+            // If the connector does not specify a count scalar type, we only accept the built-in Int
+            // because we can't validate any other type is acceptable, but we know an Int is an integer
+            // and therefore is fine to use with a count aggregate
+            if !matches!(
+                aggregate_expression_count.result_type,
+                QualifiedTypeName::Inbuilt(InbuiltType::Int)
+            ) {
+                return Err(ModelAggregateExpressionError::CountReturnTypeMustBeInt {
+                    aggregate_expression: aggregate_expression_name.clone(),
                     model_name: model_name.clone(),
-                    aggregate_expression: field_aggregate_expression.name.clone(),
+                    count_type,
                     data_connector_name: data_connector_name.clone(),
-                    data_connector_operand_type: DataConnectorScalarType::from(
-                        data_connector_field_type.as_str(),
-                    ),
-                }));
+                }
+                .into());
             }
         }
     }

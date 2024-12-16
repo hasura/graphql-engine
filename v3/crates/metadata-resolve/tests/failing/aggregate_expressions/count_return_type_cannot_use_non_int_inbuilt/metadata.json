@@ -1,0 +1,55 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
+            "name": "Int4_aggregate_exp",
+            "operand": {
+              "scalar": {
+                "aggregatedType": "Int4",
+                "aggregationFunctions": [
+                  {
+                    "name": "_sum",
+                    "returnType": "Int4!"
+                  },
+                  {
+                    "name": "_min",
+                    "returnType": "Int4!"
+                  },
+                  {
+                    "name": "_max",
+                    "returnType": "Int4!"
+                  }
+                ],
+                "dataConnectorAggregationFunctionMapping": []
+              }
+            },
+            "count": {
+              "enable": true,
+              "returnType": "String"
+            },
+            "countDistinct": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Int4",
+            "graphql": {
+              "typeName": "App_Int4"
+            },
+            "description": null
+          }
+        }
+      ]
+    }
+  ]
+}

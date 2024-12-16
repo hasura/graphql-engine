@@ -11,7 +11,7 @@ use open_dds::{
 };
 
 use crate::{
-    stages::graphql_config::GraphqlConfigError,
+    stages::aggregates::CountAggregateType, stages::graphql_config::GraphqlConfigError,
     stages::scalar_boolean_expressions::LogicalOperators, Qualified, QualifiedTypeName,
     QualifiedTypeReference,
 };
@@ -328,14 +328,6 @@ pub enum AggregateBooleanExpressionError {
         name_source_1: NameSource,
         name_source_2: NameSource,
     },
-}
-
-#[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
-pub enum CountAggregateType {
-    #[display("count")]
-    Count,
-    #[display("count distinct")]
-    CountDistinct,
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]

@@ -1,0 +1,22 @@
+[
+  {
+    "data": {
+      "Institution_aggregate": {
+        "count_all": 3,
+        "Name": {
+          "_count_distinct": 3
+        }
+      }
+    }
+  },
+  {
+    "data": {
+      "Institution_aggregate": {
+        "count_all": 1,
+        "Name": {
+          "_count_distinct": 1
+        }
+      }
+    }
+  }
+]

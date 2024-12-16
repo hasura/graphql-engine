@@ -13,7 +13,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
 use open_dds::accessor::MetadataAccessor;
-use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::data_connector::{DataConnectorColumnName, DataConnectorScalarType};
 use open_dds::types::DataConnectorArgumentName;
 use open_dds::{
     commands::{FunctionName, ProcedureName},
@@ -87,8 +87,10 @@ impl<'a> DataConnectorContext<'a> {
                     &schema_and_capabilities.capabilities.version,
                 )?;
                 let schema = DataConnectorSchema::new(schema_and_capabilities.schema.clone());
-                let capabilities =
-                    mk_ndc_02_capabilities(&schema_and_capabilities.capabilities.capabilities);
+                let capabilities = mk_ndc_02_capabilities(
+                    &schema_and_capabilities.capabilities.capabilities,
+                    schema_and_capabilities.schema.capabilities.as_ref(),
+                );
                 (schema, capabilities, issues)
             }
         };
@@ -186,7 +188,7 @@ fn validate_ndc_version(
 
 /// information provided in the `ndc_models::SchemaResponse`, processed to make it easier to work
 /// with
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct DataConnectorSchema {
     /// A list of scalar types which will be used as the types of collection columns
     pub scalar_types: BTreeMap<ndc_models::ScalarTypeName, ndc_models::ScalarType>,
@@ -488,6 +490,12 @@ pub struct DataConnectorAggregateCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_nested_object_aggregations: bool,
+
+    /// The scalar type used for any count aggregates. Optional because NDC 0.1.x did not specify this.
+    /// If unspecified, one should assume that it will be something that has an integer representation.
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub aggregate_count_scalar_type: Option<DataConnectorScalarType>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -538,6 +546,7 @@ fn mk_ndc_01_capabilities(
                     .nested_fields
                     .aggregates
                     .is_some(),
+                aggregate_count_scalar_type: None,
             }
         }),
         supports_query_variables: capabilities.query.variables.is_some(),
@@ -556,7 +565,10 @@ fn mk_ndc_01_capabilities(
     }
 }
 
-fn mk_ndc_02_capabilities(capabilities: &ndc_models::Capabilities) -> DataConnectorCapabilities {
+fn mk_ndc_02_capabilities(
+    capabilities: &ndc_models::Capabilities,
+    schema_capabilities: Option<&ndc_models::CapabilitySchemaInfo>,
+) -> DataConnectorCapabilities {
     DataConnectorCapabilities {
         supported_ndc_version: NdcVersion::V02,
         supports_explaining_queries: capabilities.query.explain.is_some(),
@@ -571,6 +583,15 @@ fn mk_ndc_02_capabilities(capabilities: &ndc_models::Capabilities) -> DataConnec
                     .nested_fields
                     .aggregates
                     .is_some(),
+
+                aggregate_count_scalar_type: schema_capabilities
+                    .and_then(|capabilities| capabilities.query.as_ref())
+                    .and_then(|query_capabilities| query_capabilities.aggregates.as_ref())
+                    .map(|aggregate_capabilities| {
+                        DataConnectorScalarType::from(
+                            aggregate_capabilities.count_scalar_type.as_str(),
+                        )
+                    }),
             }
         }),
         supports_query_variables: capabilities.query.variables.is_some(),

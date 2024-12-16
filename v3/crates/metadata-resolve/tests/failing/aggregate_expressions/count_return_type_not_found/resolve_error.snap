@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/count_return_type_not_found/metadata.json
+---
+the return type used on the count aggregate (SomeRandoIntType (in subgraph default)) is unknown

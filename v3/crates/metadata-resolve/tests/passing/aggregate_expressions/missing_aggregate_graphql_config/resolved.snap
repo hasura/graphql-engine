@@ -433,10 +433,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                 count: AggregateCountDefinition {
                     enable: true,
                     description: None,
+                    result_type: Inbuilt(
+                        Int,
+                    ),
+                    result_type_defaulted: true,
                 },
                 count_distinct: AggregateCountDefinition {
                     enable: true,
                     description: None,
+                    result_type: Inbuilt(
+                        Int,
+                    ),
+                    result_type_defaulted: true,
                 },
                 graphql: None,
                 description: None,
@@ -499,10 +507,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                 count: AggregateCountDefinition {
                     enable: true,
                     description: None,
+                    result_type: Inbuilt(
+                        Int,
+                    ),
+                    result_type_defaulted: true,
                 },
                 count_distinct: AggregateCountDefinition {
                     enable: false,
                     description: None,
+                    result_type: Inbuilt(
+                        Int,
+                    ),
+                    result_type_defaulted: true,
                 },
                 graphql: None,
                 description: None,

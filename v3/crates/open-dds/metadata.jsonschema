@@ -78,6 +78,17 @@
             "string",
             "null"
           ]
+        },
+        "returnType": {
+          "description": "The scalar type that the count aggregation function returns. Must be an integer type. If omitted, Int is used as the default.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TypeName"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false

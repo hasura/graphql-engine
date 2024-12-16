@@ -1,0 +1,459 @@
+[
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "Institution",
+              "description": null,
+              "args": [
+                {
+                  "name": "limit",
+                  "description": null,
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                {
+                  "name": "offset",
+                  "description": null,
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Institution_aggregate",
+              "description": null,
+              "args": [
+                {
+                  "name": "filter_input",
+                  "description": null,
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "Institution_filter_input",
+                    "ofType": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "Institution_filter_input_type": {
+        "name": "Institution_filter_input",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "limit",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "offset",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Institution_aggregate_exp_type": {
+        "name": "Institution_aggregate_exp",
+        "description": "Aggregate expression for the Institution type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "Id",
+            "description": "Aggregation over the institution id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "CustomInt_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Location",
+            "description": "Aggregation over the institution's location",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Location_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Name",
+            "description": "Aggregation over the institution name",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count",
+            "description": "Count of institutions",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "CustomInt",
+                "ofType": null
+              }
+            }
+          }
+        ]
+      },
+      "Location_aggregate_exp_type": {
+        "name": "Location_aggregate_exp",
+        "description": "Aggregate expression for the Location type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "City",
+            "description": "Aggregation over the location city",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Country",
+            "description": "Aggregation over the location country",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count",
+            "description": "Count of locations",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "CustomInt",
+                "ofType": null
+              }
+            }
+          }
+        ]
+      },
+      "String_aggregate_exp_type": {
+        "name": "String_aggregate_exp",
+        "description": "Aggregate expression for the String type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "CustomInt",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "CustomInt",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Int_aggregate_exp_type": null
+    }
+  },
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "Institution",
+              "description": null,
+              "args": [
+                {
+                  "name": "limit",
+                  "description": null,
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                {
+                  "name": "offset",
+                  "description": null,
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Institution_aggregate",
+              "description": null,
+              "args": [
+                {
+                  "name": "filter_input",
+                  "description": null,
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "Institution_filter_input",
+                    "ofType": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "Institution_filter_input_type": {
+        "name": "Institution_filter_input",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "limit",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "offset",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Institution_aggregate_exp_type": {
+        "name": "Institution_aggregate_exp",
+        "description": "Aggregate expression for the Institution type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "Id",
+            "description": "Aggregation over the institution id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "CustomInt_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Location",
+            "description": "Aggregation over the institution's location",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Location_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Name",
+            "description": "Aggregation over the institution name",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count",
+            "description": "Count of institutions",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "CustomInt",
+                "ofType": null
+              }
+            }
+          }
+        ]
+      },
+      "Location_aggregate_exp_type": {
+        "name": "Location_aggregate_exp",
+        "description": "Aggregate expression for the Location type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "Country",
+            "description": "Aggregation over the location country",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count",
+            "description": "Count of locations",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "CustomInt",
+                "ofType": null
+              }
+            }
+          }
+        ]
+      },
+      "String_aggregate_exp_type": {
+        "name": "String_aggregate_exp",
+        "description": "Aggregate expression for the String type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "CustomInt",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "CustomInt",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Int_aggregate_exp_type": null
+    }
+  }
+]

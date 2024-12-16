@@ -174,6 +174,31 @@ pub enum ModelAggregateExpressionError {
         aggregate_expression: Qualified<AggregateExpressionName>,
         object_type_error: object_types::ObjectTypesError,
     },
+    #[error("the aggregate expression '{aggregate_expression}' used with model '{model_name}' must use the Int type for its {count_type} aggregate as the data connector '{data_connector_name}' does not specify a count type in its schema")]
+    CountReturnTypeMustBeInt {
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        model_name: Qualified<ModelName>,
+        count_type: aggregates::CountAggregateType,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("the aggregate expression '{aggregate_expression}' is used with the model '{model_name}' but the {count_type} aggregate's return type ({count_return_type}) does not have a scalar type representation mapping to the '{data_connector_name}' data connector's count aggregate type '{data_connector_count_return_type}'")]
+    CountReturnTypeMappingMissing {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        count_type: aggregates::CountAggregateType,
+        count_return_type: QualifiedTypeName,
+        data_connector_name: Qualified<DataConnectorName>,
+        data_connector_count_return_type: DataConnectorScalarType,
+    },
+    #[error("the aggregate expression '{aggregate_expression}' is used with the model '{model_name}' but the {count_type} aggregate's return type ({count_return_type}) does not match the count aggregate scalar type defined by the data connector '{data_connector_name}': {expected_count_return_type}")]
+    CountReturnTypeMappingMismatch {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        count_type: aggregates::CountAggregateType,
+        count_return_type: QualifiedTypeName,
+        data_connector_name: Qualified<DataConnectorName>,
+        expected_count_return_type: QualifiedTypeName,
+    },
     #[error("{0}")]
     AggregateExpressionError(#[from] aggregates::AggregateExpressionError),
 }

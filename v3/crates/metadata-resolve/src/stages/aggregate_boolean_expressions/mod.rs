@@ -14,7 +14,7 @@ use open_dds::{
 };
 
 use super::{
-    aggregates::{AggregateCountDefinition, AggregateExpression},
+    aggregates::{AggregateCountDefinition, AggregateExpression, CountAggregateType},
     graphql_config, relationships,
     scalar_boolean_expressions::{self, resolve_logical_operators, LogicalOperators},
     scalar_types::ScalarTypeRepresentation,
@@ -187,9 +187,7 @@ fn resolve_scalar_aggregate_boolean_expression(
     // Check if the specified operand type is actually a scalar type
     let scalar_operand_type = match &scalar_aggregate_operand.r#type {
         // All inbuilt types are scalar types
-        open_dds::types::TypeName::Inbuilt(inbuilt) => {
-            Ok(QualifiedTypeName::Inbuilt(inbuilt.clone()))
-        }
+        open_dds::types::TypeName::Inbuilt(inbuilt) => Ok(QualifiedTypeName::Inbuilt(*inbuilt)),
         open_dds::types::TypeName::Custom(custom_type_name) => {
             let qualified_name = Qualified::new(subgraph.clone(), custom_type_name.clone());
             if scalar_types.keys().any(|t| *t == qualified_name) {

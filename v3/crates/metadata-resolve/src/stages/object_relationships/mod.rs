@@ -475,6 +475,10 @@ fn resolve_aggregate_relationship_field(
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
 ) -> Result<Option<RelationshipField>, Error> {
     // If an aggregate has been specified
     let aggregate_expression_name_and_description = model_relationship_target
@@ -503,6 +507,7 @@ fn resolve_aggregate_relationship_field(
                 resolved_target_model.source.as_ref(),
                 aggregate_expressions,
                 object_types,
+                data_connector_scalars,
             )
             .map_err(|error| RelationshipError::ModelAggregateExpressionError {
                 type_name: source_type_name.clone(),
@@ -621,6 +626,7 @@ fn resolve_model_relationship_fields(
         aggregate_expressions,
         object_types,
         graphql_config,
+        data_connector_scalars,
     )?;
 
     let regular_relationship_field = RelationshipField {

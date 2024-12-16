@@ -126,6 +126,7 @@ pub fn resolve(
                     resolved_model.source.as_ref(),
                     aggregate_expressions,
                     object_types,
+                    data_connector_scalars,
                 )
             })
             .transpose()?;

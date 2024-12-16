@@ -4,7 +4,7 @@ use lang_graphql::ast::common as ast;
 use open_dds::aggregates::{AggregateExpressionName, AggregationFunctionName};
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::identifier::SubgraphName;
-use open_dds::types::{CustomTypeName, TypeName};
+use open_dds::types::{CustomTypeName, InbuiltType, TypeName};
 
 use crate::helpers::check_for_duplicates;
 use crate::helpers::types::{store_new_graphql_type, unwrap_qualified_type_name};
@@ -117,12 +117,26 @@ fn resolve_aggregate_expression(
         issues,
     )?;
 
+    let count = resolve_aggregate_count(
+        CountAggregateType::Count,
+        aggregate_expression.count.as_ref(),
+        aggregate_expression_name,
+        scalar_types,
+    )?;
+
+    let count_distinct = resolve_aggregate_count(
+        CountAggregateType::CountDistinct,
+        aggregate_expression.count_distinct.as_ref(),
+        aggregate_expression_name,
+        scalar_types,
+    )?;
+
     Ok(AggregateExpression {
         name: aggregate_expression_name.clone(),
         operand,
         graphql,
-        count: resolve_aggregate_count(aggregate_expression.count.as_ref()),
-        count_distinct: resolve_aggregate_count(aggregate_expression.count_distinct.as_ref()),
+        count,
+        count_distinct,
         description: aggregate_expression.description.clone(),
     })
 }
@@ -716,18 +730,71 @@ fn resolve_aggregate_expression_graphql_config(
 }
 
 fn resolve_aggregate_count(
+    count_type: CountAggregateType,
     aggregate_count_definition: Option<&open_dds::aggregates::AggregateCountDefinition>,
-) -> AggregateCountDefinition {
+    aggregate_expression_name: &Qualified<AggregateExpressionName>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+) -> Result<AggregateCountDefinition, AggregateExpressionError> {
     if let Some(aggregate_count_definition) = aggregate_count_definition {
-        AggregateCountDefinition {
+        // Resolve the count aggregate result type
+        let count_result_type = if let Some(count_return_type) =
+            &aggregate_count_definition.return_type
+        {
+            match count_return_type {
+                TypeName::Inbuilt(InbuiltType::Int) => QualifiedTypeName::Inbuilt(InbuiltType::Int),
+
+                // Non-integer inbuilts are not valid
+                TypeName::Inbuilt(
+                    inbuilt @ (InbuiltType::Float
+                    | InbuiltType::String
+                    | InbuiltType::Boolean
+                    | InbuiltType::ID),
+                ) => {
+                    return Err(AggregateExpressionError::InvalidCountReturnType {
+                        aggregate_expression_name: aggregate_expression_name.clone(),
+                        count_type,
+                        return_type: QualifiedTypeName::Inbuilt(*inbuilt),
+                    })
+                }
+
+                // We can't really validate custom types as they don't have a representation until they're
+                // connected to a data connector, so we will need to validate that when we see how the
+                // aggregate expression is used with a model
+                TypeName::Custom(custom_type_name) => {
+                    let qualified_name = Qualified::new(
+                        aggregate_expression_name.subgraph.clone(),
+                        custom_type_name.to_owned(),
+                    );
+
+                    // Check that the custom scalar actually exists
+                    if !scalar_types.contains_key(&qualified_name) {
+                        return Err(AggregateExpressionError::UnknownCountReturnType {
+                            aggregate_expression_name: aggregate_expression_name.clone(),
+                            count_type,
+                            return_type: QualifiedTypeName::Custom(qualified_name),
+                        });
+                    }
+
+                    QualifiedTypeName::Custom(qualified_name)
+                }
+            }
+        } else {
+            QualifiedTypeName::Inbuilt(InbuiltType::Int)
+        };
+
+        Ok(AggregateCountDefinition {
             enable: aggregate_count_definition.enable,
             description: aggregate_count_definition.description.clone(),
-        }
+            result_type: count_result_type,
+            result_type_defaulted: aggregate_count_definition.return_type.is_none(),
+        })
     } else {
-        AggregateCountDefinition {
+        Ok(AggregateCountDefinition {
             enable: false,
             description: None,
-        }
+            result_type: QualifiedTypeName::Inbuilt(InbuiltType::Int),
+            result_type_defaulted: true,
+        })
     }
 }
 

@@ -165,7 +165,7 @@ impl QualifiedTypeName {
     pub fn to_untagged(&self) -> UnTaggedQualifiedTypeName {
         match self {
             QualifiedTypeName::Inbuilt(inbuilt_type) => {
-                UnTaggedQualifiedTypeName::Inbuilt(inbuilt_type.clone())
+                UnTaggedQualifiedTypeName::Inbuilt(*inbuilt_type)
             }
             QualifiedTypeName::Custom(custom_type) => {
                 UnTaggedQualifiedTypeName::Custom(custom_type.clone())
@@ -297,7 +297,7 @@ pub(crate) fn mk_qualified_type_name(
     subgraph: &SubgraphName,
 ) -> QualifiedTypeName {
     match type_name {
-        TypeName::Inbuilt(inbuilt_type) => QualifiedTypeName::Inbuilt(inbuilt_type.clone()),
+        TypeName::Inbuilt(inbuilt_type) => QualifiedTypeName::Inbuilt(*inbuilt_type),
         TypeName::Custom(type_name) => {
             QualifiedTypeName::Custom(Qualified::new(subgraph.clone(), type_name.to_owned()))
         }

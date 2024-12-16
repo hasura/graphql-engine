@@ -89,6 +89,7 @@ pub fn build_aggregate_select_output_type(
 
     add_count_aggregation_fields(
         &mut aggregate_select_output_type_fields,
+        gds,
         builder,
         aggregate_expression,
     )?;
@@ -189,6 +190,7 @@ fn add_aggregatable_fields(
 
 fn add_count_aggregation_fields(
     type_fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>>,
+    gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     aggregate_expression: &AggregateExpression,
 ) -> Result<(), Error> {
@@ -207,7 +209,14 @@ fn add_count_aggregation_fields(
                         AggregationFunctionAnnotation::Count,
                     ),
                 )),
-                TypeContainer::named_non_null(gql_schema::RegisteredTypeName::int()),
+                ast::TypeContainer {
+                    base: output_type::get_base_type_container(
+                        gds,
+                        builder,
+                        &aggregate_expression.count.result_type,
+                    )?,
+                    nullable: false,
+                },
                 BTreeMap::new(), // Arguments
                 mk_deprecation_status(None),
             );
@@ -242,7 +251,14 @@ fn add_count_aggregation_fields(
                         AggregationFunctionAnnotation::CountDistinct,
                     ),
                 )),
-                TypeContainer::named_non_null(gql_schema::RegisteredTypeName::int()),
+                ast::TypeContainer {
+                    base: output_type::get_base_type_container(
+                        gds,
+                        builder,
+                        &aggregate_expression.count_distinct.result_type,
+                    )?,
+                    nullable: false,
+                },
                 BTreeMap::new(), // Arguments
                 mk_deprecation_status(None),
             );

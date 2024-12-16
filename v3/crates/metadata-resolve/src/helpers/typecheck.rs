@@ -107,7 +107,7 @@ fn typecheck_inbuilt_type(
         )
         | (open_dds::types::InbuiltType::Boolean, serde_json::Value::Bool(_)) => Ok(()),
         _ => Err(TypecheckError::ScalarTypeMismatch {
-            expected: inbuilt.clone(),
+            expected: *inbuilt,
             actual: value.clone(),
         }),
     }

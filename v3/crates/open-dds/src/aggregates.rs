@@ -196,9 +196,14 @@ pub struct AggregateFunctionMapping {
 pub struct AggregateCountDefinition {
     /// Whether or not the aggregate function is available for use or not
     pub enable: bool,
+
     /// A description of the aggregation function.
     /// Gets added to the description of the field in the GraphQL schema.
     pub description: Option<String>,
+
+    /// The scalar type that the count aggregation function returns.
+    /// Must be an integer type. If omitted, Int is used as the default.
+    pub return_type: Option<TypeName>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]

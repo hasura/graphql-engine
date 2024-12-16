@@ -961,7 +961,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 "mypg",
                             ),
                         ),
-                    }: JSON,
+                    }: Int64,
                 },
             },
             Qualified {
@@ -1371,7 +1371,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 ),
                                 response_config: None,
                                 capabilities: DataConnectorCapabilities {
-                                    supported_ndc_version: V01,
+                                    supported_ndc_version: V02,
                                     supports_explaining_queries: true,
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
@@ -1380,19 +1380,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,
+                                            aggregate_count_scalar_type: Some(
+                                                DataConnectorScalarType(
+                                                    "int8",
+                                                ),
+                                            ),
                                         },
                                     ),
                                     supports_query_variables: true,
                                     supports_relationships: Some(
                                         DataConnectorRelationshipCapabilities {
                                             supports_relation_comparisons: true,
-                                            supports_nested_relationships: Some(
-                                                DataConnectorNestedRelationshipCapabilities {
-                                                    supports_nested_array_selection: true,
-                                                    supports_nested_in_filtering: false,
-                                                    supports_nested_in_ordering: false,
-                                                },
-                                            ),
+                                            supports_nested_relationships: None,
                                         },
                                     ),
                                 },
@@ -2672,10 +2671,36 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 count: AggregateCountDefinition {
                     enable: true,
                     description: None,
+                    result_type: Custom(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Int8",
+                                ),
+                            ),
+                        },
+                    ),
+                    result_type_defaulted: false,
                 },
                 count_distinct: AggregateCountDefinition {
                     enable: true,
                     description: None,
+                    result_type: Custom(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Int8",
+                                ),
+                            ),
+                        },
+                    ),
+                    result_type_defaulted: false,
                 },
                 graphql: None,
                 description: None,
@@ -2738,10 +2763,36 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 count: AggregateCountDefinition {
                     enable: false,
                     description: None,
+                    result_type: Custom(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Int8",
+                                ),
+                            ),
+                        },
+                    ),
+                    result_type_defaulted: false,
                 },
                 count_distinct: AggregateCountDefinition {
                     enable: false,
                     description: None,
+                    result_type: Custom(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Int8",
+                                ),
+                            ),
+                        },
+                    ),
+                    result_type_defaulted: false,
                 },
                 graphql: None,
                 description: None,
