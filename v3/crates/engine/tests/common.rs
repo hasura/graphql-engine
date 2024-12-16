@@ -857,10 +857,15 @@ pub async fn open_dd_pipeline_test(
                 // for instance
                 let ir = graphql_frontend::to_opendd_ir(&normalized_request);
 
-                insta::assert_debug_snapshot!(
-                    format!("ir_{test_path_string}_{}", session.role),
-                    ir
-                );
+                insta::with_settings!({
+                snapshot_path => test_path_string,
+                snapshot_suffix => "",
+                prepend_module_to_snapshot => false},{
+                    insta::assert_debug_snapshot!(
+                        format!("generate_open_dd_query_for_{}", session.role),
+                        ir
+                    );
+                });
             }
         }
         TestOpenDDPipeline::TestNDCResponses => {
@@ -877,12 +882,6 @@ pub async fn open_dd_pipeline_test(
                 // `normalize_request` fails when we try and access a field we're not allowed to,
                 // for instance
                 let query_ir = graphql_frontend::to_opendd_ir(&normalized_request);
-
-                // check IR is what we expect
-                insta::assert_debug_snapshot!(
-                    format!("ir_{test_path_string}_{}", session.role),
-                    query_ir
-                );
 
                 // create a query execution plan for a single node with the new pipeline
                 let plan_result = plan::plan_query_request(
@@ -922,17 +921,27 @@ pub async fn open_dd_pipeline_test(
                                 results.insert(alias, rowsets);
                             }
 
-                            insta::assert_json_snapshot!(
-                                format!("rowsets_{test_path_string}_{}", session.role),
-                                results
-                            );
+                            insta::with_settings!({
+                            snapshot_path => test_path_string,
+                            snapshot_suffix => "",
+                            prepend_module_to_snapshot => false},{
+                                        insta::assert_json_snapshot!(
+                                            format!("test_ndc_responses_for_{}", session.role),
+                                            results
+                                        );
+                            });
                         }
                     },
                     Err(err) => {
+                        insta::with_settings!({
+                            snapshot_path => test_path_string,
+                            snapshot_suffix => "",
+                            prepend_module_to_snapshot => false},{
+
                         insta::assert_debug_snapshot!(
-                            format!("{test_path_string}_{}_error", session.role),
+                            format!("error_in_test_ndc_responses_for_{}", session.role),
                             err
-                        );
+                        );});
                     }
                 }
             }

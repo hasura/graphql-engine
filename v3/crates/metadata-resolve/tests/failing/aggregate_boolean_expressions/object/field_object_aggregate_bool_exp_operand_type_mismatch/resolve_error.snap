@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: msg
-input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/field_object_type_bool_exp_operand_type_mismatch/metadata.json
+input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/field_object_aggregate_bool_exp_operand_type_mismatch/metadata.json
 ---
 error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the boolean expression type (String_aggregate_bool_exp (in subgraph default)) used in the comparable field 'nested_artist' must have a 'object aggregate' operand, to match the field type 'Artist (in subgraph default)'

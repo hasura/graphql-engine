@@ -1,6 +1,6 @@
 ---
 source: crates/graphql/schema/src/lib.rs
-expression: "make_sdl_from_metadata_file_for_role(PathBuf::from(\"tests/metadata_with_presets.json\").as_ref(),\n    &Role(\"role_with_presets\".to_string()))"
+expression: "make_sdl_from_metadata_file_for_role(PathBuf::from(\"tests/metadata_with_presets.json\").as_ref(),\n&Role(\"role_with_presets\".to_string()))"
 ---
 schema {
   query: Query 
