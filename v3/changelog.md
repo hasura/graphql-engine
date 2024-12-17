@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.12.17]
+
+### Added
+
 - Plugins will now receive the `X-FORWARDED-FOR` header, which contains the IP
   address of the client who made the request. This allows for the implementation
   of plugins such as IP allow lists and per-user traffic control.
@@ -54,8 +62,6 @@
 - Fixed a bug where `OrderByExpressions` could refer to array relationships in
   an `orderableRelationship`. Such a configuration will now result in a build
   error.
-
-### Changed
 
 ## [v2024.12.04]
 
@@ -913,7 +919,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.12.03...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.12.17...HEAD
+[v2024.12.17]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.17
 [v2024.12.03]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.03
 [v2024.11.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.25
 [v2024.11.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.18
