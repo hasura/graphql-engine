@@ -309,12 +309,7 @@ fn from_relationship_selection(
         plan_types::NdcRelationshipName::new(object_type_name, &target.relationship_name);
     relationships.insert(
         ndc_relationship_name.clone(),
-        process_model_relationship_definition(&local_model_relationship_info).map_err(|err| {
-            PlanError::Internal(format!(
-                "Unable to process relationship {} definition: {}",
-                &target.relationship_name, err
-            ))
-        })?,
+        process_model_relationship_definition(&local_model_relationship_info)?,
     );
 
     let relationship_model_target = ModelTarget {

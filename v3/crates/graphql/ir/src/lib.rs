@@ -34,9 +34,7 @@ pub use plan::{
     QueryPlan, RequestPlan,
 };
 pub use query_root::generate_ir as generate_query_ir;
-pub use relationship::{
-    build_remote_command_relationship, build_remote_relationship, LocalCommandRelationshipInfo,
-};
+pub use relationship::{build_remote_command_relationship, build_remote_relationship};
 pub use root_field::{
     ApolloFederationRootFields, MutationRootField, QueryRootField, SubscriptionRootField,
 };

@@ -1,4 +1,10 @@
-use open_dds::{relationships::RelationshipName, types::FieldName};
+use metadata_resolve::Qualified;
+use open_dds::{
+    arguments::ArgumentName,
+    commands::CommandName,
+    relationships::RelationshipName,
+    types::{CustomTypeName, FieldName},
+};
 
 #[derive(Debug, derive_more::Display)]
 pub enum PlanError {
@@ -14,6 +20,13 @@ pub enum RelationshipError {
     MappingExistsInRelationship {
         source_column: FieldName,
         relationship_name: RelationshipName,
+    },
+    #[error("Missing argument mapping to command {command_name} data connector source for argument {argument_name} used in relationship {relationship_name} on type {source_type}")]
+    MissingArgumentMappingInCommandRelationship {
+        source_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        command_name: Qualified<CommandName>,
+        argument_name: ArgumentName,
     },
     #[error("{0}")]
     Other(String),

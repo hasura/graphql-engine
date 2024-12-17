@@ -25,23 +25,13 @@ use graphql_schema::{
     InputAnnotation, ModelAggregateRelationshipAnnotation, ModelInputAnnotation,
     ModelRelationshipAnnotation, GDS,
 };
-use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
+use metadata_resolve::{self, Qualified, RelationshipModelMapping};
 use plan::{count_command, count_model};
 use plan_types::{
-    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison,
-    LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts, VariableName,
+    ComparisonTarget, ComparisonValue, Expression, LocalCommandRelationshipInfo,
+    LocalFieldComparison, LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts,
+    VariableName,
 };
-
-#[derive(Debug, Serialize)]
-pub struct LocalCommandRelationshipInfo<'s> {
-    pub annotation: &'s CommandRelationshipAnnotation,
-    pub source_data_connector: &'s metadata_resolve::DataConnectorLink,
-    #[serde(serialize_with = "serialize_qualified_btreemap")]
-    pub source_type_mappings:
-        &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-
-    pub target_source: &'s CommandTargetSource,
-}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct RemoteModelRelationshipInfo {
@@ -309,7 +299,6 @@ pub fn generate_command_relationship_ir<'s>(
             field,
             field_call,
             annotation,
-            source_data_connector,
             type_mappings,
             target_source,
             session_variables,
@@ -364,7 +353,6 @@ pub fn build_local_command_relationship<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
-    data_connector: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
@@ -385,10 +373,13 @@ pub fn build_local_command_relationship<'s>(
     )?;
 
     let rel_info = LocalCommandRelationshipInfo {
-        annotation,
-        source_data_connector: data_connector,
+        relationship_name: &annotation.relationship_name,
+        source_type: &annotation.source_type,
         source_type_mappings: type_mappings,
-        target_source,
+        command_name: &annotation.command_name,
+        argument_mappings: &target_source.details.argument_mappings,
+        function_name: &target_source.function_name,
+        mappings: &annotation.mappings,
     };
 
     // Relationship names needs to be unique across the IR. This is so that, the

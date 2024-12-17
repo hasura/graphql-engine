@@ -11,15 +11,15 @@ use std::collections::BTreeMap;
 use super::arguments;
 use super::commands::FunctionBasedCommand;
 use super::model_selection::ModelSelection;
-use super::relationship::{
-    self, LocalCommandRelationshipInfo, RemoteCommandRelationshipInfo, RemoteModelRelationshipInfo,
-};
+use super::relationship::{self, RemoteCommandRelationshipInfo, RemoteModelRelationshipInfo};
 use crate::error;
 use crate::global_id;
 use graphql_schema::TypeKind;
 use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 use plan::UnresolvedArgument;
-use plan_types::{LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts};
+use plan_types::{
+    LocalCommandRelationshipInfo, LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts,
+};
 
 #[derive(Debug, Serialize)]
 pub enum NestedSelection<'s> {

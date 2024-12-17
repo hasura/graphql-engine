@@ -25,6 +25,8 @@ pub use ndc_field_alias::NdcFieldAlias;
 pub use ndc_function_ir_value::FUNCTION_IR_VALUE_COLUMN_NAME;
 pub use ndc_relationship_name::NdcRelationshipName;
 pub use order_by::{OrderByDirection, OrderByElement, OrderByTarget};
-pub use relationships::{LocalModelRelationshipInfo, RelationshipPathElement};
+pub use relationships::{
+    LocalCommandRelationshipInfo, LocalModelRelationshipInfo, RelationshipPathElement,
+};
 pub use usage_counts::{CommandCount, ModelCount, UsagesCounts};
 pub use variable_name::VariableName;

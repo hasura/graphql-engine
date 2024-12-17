@@ -22,7 +22,9 @@ pub use model::{
     ModelAggregateSelection,
 };
 pub use permissions::process_model_predicate;
-pub use relationships::process_model_relationship_definition;
+pub use relationships::{
+    process_command_relationship_definition, process_model_relationship_definition,
+};
 use std::sync::Arc;
 pub use types::{NDCFunction, NDCProcedure, NDCQuery, QueryContext};
 
