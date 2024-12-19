@@ -12,54 +12,62 @@ use std::sync::Arc;
 #[test]
 fn test_get_succeeding_requests() {
     insta::glob!("passing/**/*.txt", |path| {
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all() // this enables time and IO
-            .build()
-            .unwrap();
+        let directory = path.parent().unwrap();
+        insta::with_settings!({
+            snapshot_path => directory,
+            snapshot_suffix => "",
+            prepend_module_to_snapshot => false,
+        }, {
+            let runtime = tokio::runtime::Builder::new_current_thread()
+                .enable_all() // this enables time and IO
+                .build()
+                .unwrap();
 
-        runtime.block_on(async {
-            let TestEnvironment {
-                jsonapi_catalog,
-                metadata,
-            } = test_environment_setup();
+            runtime.block_on(async {
+                let TestEnvironment {
+                    jsonapi_catalog,
+                    metadata,
+                } = test_environment_setup();
 
-            let TestRequest { query, model_name } = test_request_setup(path);
+                let TestRequest { query, model_name } = test_request_setup(path);
 
-            // always test in `default` subgraph for now
-            let request_path = format!("/default/{model_name}");
+                // always test in `default` subgraph for now
+                let request_path = format!("/default/{model_name}");
 
-            let http_context = HttpContext {
-                client: reqwest::Client::new(),
-                ndc_response_size_limit: None,
-            };
+                let http_context = HttpContext {
+                    client: reqwest::Client::new(),
+                    ndc_response_size_limit: None,
+                };
 
-            let session = create_default_session();
+                let session = create_default_session();
 
-            let result = jsonapi::handler_internal(
-                Arc::new(HeaderMap::default()),
-                Arc::new(http_context.clone()),
-                Arc::new(session.clone()),
-                &jsonapi_catalog,
-                metadata.into(),
-                axum::http::method::Method::GET,
-                axum::http::uri::Uri::from_str(&request_path).unwrap(),
-                query,
-            )
-            .await;
+                let result = jsonapi::handler_internal(
+                    Arc::new(HeaderMap::default()),
+                    Arc::new(http_context.clone()),
+                    Arc::new(session.clone()),
+                    &jsonapi_catalog,
+                    metadata.into(),
+                    axum::http::method::Method::GET,
+                    axum::http::uri::Uri::from_str(&request_path).unwrap(),
+                    query,
+                )
+                    .await;
 
-            match result {
-                Ok(result) => {
-                    // Assert uniqueness of resources in the response
-                    validate_resource_uniqueness(&result).unwrap();
-                    // Assert all relationships have corresponding included resources
-                    validate_relationships_in_included(&result).unwrap();
-                    insta::assert_debug_snapshot!(
-                        format!("result_for_role_{}", session.role),
-                        result
-                    );
+                match result {
+                    Ok(result) => {
+                        // Assert uniqueness of resources in the response
+                        validate_resource_uniqueness(&result).unwrap();
+                        // Assert all relationships have corresponding included resources
+                        validate_relationships_in_included(&result).unwrap();
+                        let file_name = path.file_name().unwrap().to_str().unwrap();
+                        insta::assert_debug_snapshot!(
+                            format!("result_for_role_{}__{file_name}", session.role),
+                            result
+                        );
+                    }
+                    Err(e) => panic!("expected success for {path:?}, instead got {e}"),
                 }
-                Err(e) => panic!("expected success for {path:?}, instead got {e}"),
-            }
+            });
         });
     });
 }
@@ -67,42 +75,50 @@ fn test_get_succeeding_requests() {
 #[test]
 fn test_get_failing_requests() {
     insta::glob!("failing/**/*.txt", |path| {
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all() // this enables time and IO
-            .build()
-            .unwrap();
+        let directory = path.parent().unwrap();
+        insta::with_settings!({
+            snapshot_path => directory,
+            snapshot_suffix => "",
+            prepend_module_to_snapshot => false,
+        }, {
+            let runtime = tokio::runtime::Builder::new_current_thread()
+                .enable_all() // this enables time and IO
+                .build()
+                .unwrap();
 
-        runtime.block_on(async {
-            let TestEnvironment {
-                metadata,
-                jsonapi_catalog,
-            } = test_environment_setup();
+            runtime.block_on(async {
+                let TestEnvironment {
+                    metadata,
+                    jsonapi_catalog,
+                } = test_environment_setup();
 
-            let TestRequest { query, model_name } = test_request_setup(path);
+                let TestRequest { query, model_name } = test_request_setup(path);
 
-            // always test in `default` subgraph for now
-            let request_path = format!("/default/{model_name}");
+                // always test in `default` subgraph for now
+                let request_path = format!("/default/{model_name}");
 
-            let http_context = HttpContext {
-                client: reqwest::Client::new(),
-                ndc_response_size_limit: None,
-            };
+                let http_context = HttpContext {
+                    client: reqwest::Client::new(),
+                    ndc_response_size_limit: None,
+                };
 
-            let session = create_default_session();
+                let session = create_default_session();
 
-            let result = jsonapi::handler_internal(
-                Arc::new(HeaderMap::default()),
-                Arc::new(http_context.clone()),
-                Arc::new(session.clone()),
-                &jsonapi_catalog,
-                metadata.into(),
-                axum::http::method::Method::GET,
-                axum::http::uri::Uri::from_str(&request_path).unwrap(),
-                query,
-            )
-            .await;
+                let result = jsonapi::handler_internal(
+                    Arc::new(HeaderMap::default()),
+                    Arc::new(http_context.clone()),
+                    Arc::new(session.clone()),
+                    &jsonapi_catalog,
+                    metadata.into(),
+                    axum::http::method::Method::GET,
+                    axum::http::uri::Uri::from_str(&request_path).unwrap(),
+                    query,
+                )
+                    .await;
 
-            insta::assert_debug_snapshot!(format!("error_for_role_{}", session.role), result);
+                let file_name = path.file_name().unwrap().to_str().unwrap();
+                insta::assert_debug_snapshot!(format!("error_for_role_{}__{file_name}", session.role), result);
+            });
         });
     });
 }
@@ -115,19 +131,26 @@ fn test_openapi_generation() {
         metadata: _,
     } = test_environment_setup();
 
-    for (role, state) in &jsonapi_catalog.state_per_role {
-        let generated_openapi = jsonapi::openapi_schema(state);
+    let tests_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+    insta::with_settings!({
+        snapshot_path => tests_dir.join("openapi"),
+        snapshot_suffix => "",
+        prepend_module_to_snapshot => false,
+    }, {
+        for (role, state) in &jsonapi_catalog.state_per_role {
+            let generated_openapi = jsonapi::openapi_schema(state);
 
-        // if the test fails, let's take a look at what was generated
-        dbg!(&serde_json::to_value(&generated_openapi)
-            .unwrap()
-            .to_string());
+            // if the test fails, let's take a look at what was generated
+            dbg!(&serde_json::to_value(&generated_openapi)
+                 .unwrap()
+                 .to_string());
 
-        insta::assert_json_snapshot!(
-            format!("generated_openapi_for_role_{role}"),
-            generated_openapi
-        );
-    }
+            insta::assert_json_snapshot!(
+                format!("generated_openapi_for_role_{role}"),
+                generated_openapi
+            );
+        }
+    });
 }
 
 struct TestRequest {
