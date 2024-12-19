@@ -128,8 +128,14 @@ update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
     #!/usr/bin/env bash
     set -e
 
-    new_capabilities=$(curl http://localhost:{{ PORT }}/capabilities | jq)
-    new_schema=$(curl http://localhost:{{ PORT }}/schema | jq)
+    capabilities_file=$(mktemp)
+    curl http://localhost:{{ PORT }}/capabilities | jq > $capabilities_file
+    trap 'rm -f "$capabilities_file"' EXIT
+
+    schema_file=$(mktemp)
+    curl http://localhost:{{ PORT }}/schema | jq > $schema_file
+    trap 'rm -f "$schema_file"' EXIT
+
     ndc_version="{{ NDC_VERSION }}"
 
     # Should only be tests that actually talk to the running connector and therefore must be up to date
@@ -143,9 +149,9 @@ update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
         and any(.subgraphs[].objects[]; .kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://localhost:{{ PORT }}")' "$file" >/dev/null; then
 
         # Update its schema, capabilities and version
-        jq --argjson newCapabilities "$new_capabilities" --argjson newSchema "$new_schema" --arg ndcVersion "$ndc_version" '
+        jq --slurpfile newCapabilities "$capabilities_file" --slurpfile newSchema "$schema_file" --arg ndcVersion "$ndc_version" '
           (.subgraphs[].objects[] | select(.kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://localhost:{{ PORT }}").definition.schema)
-          |= (.capabilities = $newCapabilities | .schema = $newSchema | .version = $ndcVersion)
+          |= (.capabilities = $newCapabilities[0] | .schema = $newSchema[0] | .version = $ndcVersion)
         ' $file \
         | sponge $file
 

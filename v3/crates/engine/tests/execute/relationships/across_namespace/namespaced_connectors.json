@@ -2701,8 +2701,36 @@
                       }
                     }
                   },
+                  "city": {
+                    "fields": {
+                      "name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      }
+                    }
+                  },
                   "country": {
                     "fields": {
+                      "cities": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "array",
+                            "element_type": {
+                              "type": "nullable",
+                              "underlying_type": {
+                                "type": "named",
+                                "name": "city"
+                              }
+                            }
+                          }
+                        }
+                      },
                       "continent": {
                         "type": {
                           "type": "nullable",
@@ -2946,6 +2974,28 @@
                             "type": "named",
                             "name": "text"
                           }
+                        }
+                      }
+                    }
+                  },
+                  "search_articles": {
+                    "fields": {
+                      "author_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "title": {
+                        "type": {
+                          "type": "named",
+                          "name": "character varying"
                         }
                       }
                     }
@@ -8491,6 +8541,20 @@
                     "foreign_keys": {}
                   },
                   {
+                    "name": "search_articles",
+                    "arguments": {
+                      "search_term": {
+                        "type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      }
+                    },
+                    "type": "search_articles",
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  },
+                  {
                     "name": "value_types",
                     "arguments": {
                       "bool": {
@@ -8659,8 +8723,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Album' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Album"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Album"
+                          }
                         }
                       }
                     },
@@ -8683,8 +8750,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Artist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Artist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Artist"
+                          }
                         }
                       }
                     },
@@ -8707,8 +8777,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Customer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Customer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Customer"
+                          }
                         }
                       }
                     },
@@ -8730,8 +8803,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Employee' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Employee"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Employee"
+                          }
                         }
                       }
                     },
@@ -8753,8 +8829,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Genre' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Genre"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Genre"
+                          }
                         }
                       }
                     },
@@ -8776,8 +8855,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'InvoiceLine' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "InvoiceLine"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "InvoiceLine"
+                          }
                         }
                       }
                     },
@@ -8799,8 +8881,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Invoice' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Invoice"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Invoice"
+                          }
                         }
                       }
                     },
@@ -8822,8 +8907,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'MediaType' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "MediaType"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "MediaType"
+                          }
                         }
                       }
                     },
@@ -8851,8 +8939,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'PlaylistTrack' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "PlaylistTrack"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "PlaylistTrack"
+                          }
                         }
                       }
                     },
@@ -8874,8 +8965,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Playlist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Playlist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Playlist"
+                          }
                         }
                       }
                     },
@@ -8897,8 +8991,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Track' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Track"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Track"
+                          }
                         }
                       }
                     },
@@ -8920,8 +9017,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'article' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "article"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "article"
+                          }
                         }
                       }
                     },
@@ -8943,8 +9043,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'author' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "author"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "author"
+                          }
                         }
                       }
                     },
@@ -8966,8 +9069,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'institution' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "institution"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "institution"
+                          }
                         }
                       }
                     },
@@ -8989,8 +9095,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'movie_analytics' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "movie_analytics"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "movie_analytics"
+                          }
                         }
                       }
                     },
@@ -9012,8 +9121,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'spatial_ref_sys' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "spatial_ref_sys"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "spatial_ref_sys"
+                          }
                         }
                       }
                     },
@@ -9047,8 +9159,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       }
                     },
@@ -9076,8 +9191,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       }
                     },
@@ -9099,8 +9217,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       }
                     },
@@ -9122,8 +9243,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       }
                     },
@@ -9148,8 +9272,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Album' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Album"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Album"
+                          }
                         }
                       }
                     },
@@ -9174,8 +9301,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Artist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Artist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Artist"
+                          }
                         }
                       }
                     },
@@ -9200,8 +9330,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Customer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Customer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Customer"
+                          }
                         }
                       }
                     },
@@ -9226,8 +9359,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Employee' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Employee"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Employee"
+                          }
                         }
                       }
                     },
@@ -9252,8 +9388,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Genre' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Genre"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Genre"
+                          }
                         }
                       }
                     },
@@ -9278,8 +9417,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Invoice' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Invoice"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Invoice"
+                          }
                         }
                       }
                     },
@@ -9304,8 +9446,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'InvoiceLine' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "InvoiceLine"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "InvoiceLine"
+                          }
                         }
                       }
                     },
@@ -9330,8 +9475,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'MediaType' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "MediaType"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "MediaType"
+                          }
                         }
                       }
                     },
@@ -9356,8 +9504,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Playlist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Playlist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Playlist"
+                          }
                         }
                       }
                     },
@@ -9382,8 +9533,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'PlaylistTrack' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "PlaylistTrack"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "PlaylistTrack"
+                          }
                         }
                       }
                     },
@@ -9408,8 +9562,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Track' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Track"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Track"
+                          }
                         }
                       }
                     },
@@ -9434,8 +9591,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'article' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "article"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "article"
+                          }
                         }
                       }
                     },
@@ -9460,8 +9620,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'author' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "author"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "author"
+                          }
                         }
                       }
                     },
@@ -9486,8 +9649,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'institution' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "institution"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "institution"
+                          }
                         }
                       }
                     },
@@ -9512,8 +9678,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'movie_analytics' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "movie_analytics"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "movie_analytics"
+                          }
                         }
                       }
                     },
@@ -9538,8 +9707,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'spatial_ref_sys' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "spatial_ref_sys"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "spatial_ref_sys"
+                          }
                         }
                       }
                     },
@@ -9564,8 +9736,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       }
                     },
@@ -9590,8 +9765,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       }
                     },
@@ -9614,15 +9792,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Album' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Album"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Album"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Album' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Album"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Album"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9651,15 +9835,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Artist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Artist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Artist"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Artist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Artist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Artist"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9688,15 +9878,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Customer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Customer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Customer"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Customer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Customer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Customer"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9724,15 +9920,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Employee' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Employee"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Employee"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Employee' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Employee"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Employee"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9760,15 +9962,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Genre' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Genre"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Genre"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Genre' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Genre"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Genre"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9796,15 +10004,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'InvoiceLine' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "InvoiceLine"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "InvoiceLine"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'InvoiceLine' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "InvoiceLine"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "InvoiceLine"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9832,15 +10046,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Invoice' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Invoice"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Invoice"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Invoice' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Invoice"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Invoice"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9868,15 +10088,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'MediaType' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "MediaType"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "MediaType"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'MediaType' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "MediaType"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "MediaType"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9910,15 +10136,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'PlaylistTrack' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "PlaylistTrack"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "PlaylistTrack"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'PlaylistTrack' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "PlaylistTrack"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "PlaylistTrack"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9946,15 +10178,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Playlist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Playlist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Playlist"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Playlist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Playlist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Playlist"
+                          }
                         }
                       },
                       "update_columns": {
@@ -9982,15 +10220,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Track' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Track"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Track"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Track' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Track"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Track"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10018,15 +10262,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'article' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "article"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "article"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'article' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "article"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "article"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10054,15 +10304,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'author' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "author"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "author"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'author' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "author"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "author"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10090,15 +10346,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'institution' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "institution"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "institution"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'institution' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "institution"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "institution"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10126,15 +10388,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'movie_analytics' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "movie_analytics"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "movie_analytics"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'movie_analytics' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "movie_analytics"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "movie_analytics"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10162,15 +10430,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'spatial_ref_sys' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "spatial_ref_sys"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "spatial_ref_sys"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'spatial_ref_sys' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "spatial_ref_sys"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "spatial_ref_sys"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10210,15 +10484,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10252,15 +10532,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10288,15 +10574,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       },
                       "update_columns": {
@@ -10324,15 +10616,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       },
                       "update_columns": {
@@ -13079,8 +13377,36 @@
                       }
                     }
                   },
+                  "city": {
+                    "fields": {
+                      "name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      }
+                    }
+                  },
                   "country": {
                     "fields": {
+                      "cities": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "array",
+                            "element_type": {
+                              "type": "nullable",
+                              "underlying_type": {
+                                "type": "named",
+                                "name": "city"
+                              }
+                            }
+                          }
+                        }
+                      },
                       "continent": {
                         "type": {
                           "type": "nullable",
@@ -13324,6 +13650,28 @@
                             "type": "named",
                             "name": "text"
                           }
+                        }
+                      }
+                    }
+                  },
+                  "search_articles": {
+                    "fields": {
+                      "author_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "title": {
+                        "type": {
+                          "type": "named",
+                          "name": "character varying"
                         }
                       }
                     }
@@ -18869,6 +19217,20 @@
                     "foreign_keys": {}
                   },
                   {
+                    "name": "search_articles",
+                    "arguments": {
+                      "search_term": {
+                        "type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      }
+                    },
+                    "type": "search_articles",
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  },
+                  {
                     "name": "value_types",
                     "arguments": {
                       "bool": {
@@ -19037,8 +19399,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Album' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Album"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Album"
+                          }
                         }
                       }
                     },
@@ -19061,8 +19426,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Artist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Artist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Artist"
+                          }
                         }
                       }
                     },
@@ -19085,8 +19453,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Customer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Customer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Customer"
+                          }
                         }
                       }
                     },
@@ -19108,8 +19479,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Employee' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Employee"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Employee"
+                          }
                         }
                       }
                     },
@@ -19131,8 +19505,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Genre' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Genre"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Genre"
+                          }
                         }
                       }
                     },
@@ -19154,8 +19531,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'InvoiceLine' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "InvoiceLine"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "InvoiceLine"
+                          }
                         }
                       }
                     },
@@ -19177,8 +19557,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Invoice' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Invoice"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Invoice"
+                          }
                         }
                       }
                     },
@@ -19200,8 +19583,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'MediaType' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "MediaType"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "MediaType"
+                          }
                         }
                       }
                     },
@@ -19229,8 +19615,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'PlaylistTrack' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "PlaylistTrack"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "PlaylistTrack"
+                          }
                         }
                       }
                     },
@@ -19252,8 +19641,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Playlist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Playlist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Playlist"
+                          }
                         }
                       }
                     },
@@ -19275,8 +19667,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'Track' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Track"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Track"
+                          }
                         }
                       }
                     },
@@ -19298,8 +19693,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'article' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "article"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "article"
+                          }
                         }
                       }
                     },
@@ -19321,8 +19719,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'author' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "author"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "author"
+                          }
                         }
                       }
                     },
@@ -19344,8 +19745,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'institution' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "institution"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "institution"
+                          }
                         }
                       }
                     },
@@ -19367,8 +19771,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'movie_analytics' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "movie_analytics"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "movie_analytics"
+                          }
                         }
                       }
                     },
@@ -19390,8 +19797,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'spatial_ref_sys' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "spatial_ref_sys"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "spatial_ref_sys"
+                          }
                         }
                       }
                     },
@@ -19425,8 +19835,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       }
                     },
@@ -19454,8 +19867,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       }
                     },
@@ -19477,8 +19893,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       }
                     },
@@ -19500,8 +19919,11 @@
                       "pre_check": {
                         "description": "Delete permission predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       }
                     },
@@ -19526,8 +19948,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Album' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Album"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Album"
+                          }
                         }
                       }
                     },
@@ -19552,8 +19977,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Artist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Artist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Artist"
+                          }
                         }
                       }
                     },
@@ -19578,8 +20006,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Customer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Customer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Customer"
+                          }
                         }
                       }
                     },
@@ -19604,8 +20035,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Employee' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Employee"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Employee"
+                          }
                         }
                       }
                     },
@@ -19630,8 +20064,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Genre' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Genre"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Genre"
+                          }
                         }
                       }
                     },
@@ -19656,8 +20093,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Invoice' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Invoice"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Invoice"
+                          }
                         }
                       }
                     },
@@ -19682,8 +20122,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'InvoiceLine' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "InvoiceLine"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "InvoiceLine"
+                          }
                         }
                       }
                     },
@@ -19708,8 +20151,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'MediaType' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "MediaType"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "MediaType"
+                          }
                         }
                       }
                     },
@@ -19734,8 +20180,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Playlist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Playlist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Playlist"
+                          }
                         }
                       }
                     },
@@ -19760,8 +20209,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'PlaylistTrack' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "PlaylistTrack"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "PlaylistTrack"
+                          }
                         }
                       }
                     },
@@ -19786,8 +20238,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'Track' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Track"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Track"
+                          }
                         }
                       }
                     },
@@ -19812,8 +20267,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'article' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "article"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "article"
+                          }
                         }
                       }
                     },
@@ -19838,8 +20296,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'author' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "author"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "author"
+                          }
                         }
                       }
                     },
@@ -19864,8 +20325,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'institution' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "institution"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "institution"
+                          }
                         }
                       }
                     },
@@ -19890,8 +20354,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'movie_analytics' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "movie_analytics"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "movie_analytics"
+                          }
                         }
                       }
                     },
@@ -19916,8 +20383,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'spatial_ref_sys' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "spatial_ref_sys"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "spatial_ref_sys"
+                          }
                         }
                       }
                     },
@@ -19942,8 +20412,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       }
                     },
@@ -19968,8 +20441,11 @@
                       "post_check": {
                         "description": "Insert permission predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       }
                     },
@@ -19992,15 +20468,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Album' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Album"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Album"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Album' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Album"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Album"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20029,15 +20511,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Artist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Artist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Artist"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Artist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Artist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Artist"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20066,15 +20554,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Customer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Customer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Customer"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Customer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Customer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Customer"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20102,15 +20596,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Employee' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Employee"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Employee"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Employee' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Employee"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Employee"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20138,15 +20638,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Genre' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Genre"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Genre"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Genre' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Genre"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Genre"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20174,15 +20680,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'InvoiceLine' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "InvoiceLine"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "InvoiceLine"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'InvoiceLine' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "InvoiceLine"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "InvoiceLine"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20210,15 +20722,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Invoice' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Invoice"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Invoice"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Invoice' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Invoice"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Invoice"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20246,15 +20764,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'MediaType' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "MediaType"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "MediaType"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'MediaType' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "MediaType"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "MediaType"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20288,15 +20812,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'PlaylistTrack' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "PlaylistTrack"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "PlaylistTrack"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'PlaylistTrack' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "PlaylistTrack"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "PlaylistTrack"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20324,15 +20854,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Playlist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Playlist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Playlist"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Playlist' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Playlist"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Playlist"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20360,15 +20896,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'Track' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Track"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Track"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'Track' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "Track"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "Track"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20396,15 +20938,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'article' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "article"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "article"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'article' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "article"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "article"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20432,15 +20980,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'author' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "author"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "author"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'author' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "author"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "author"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20468,15 +21022,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'institution' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "institution"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "institution"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'institution' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "institution"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "institution"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20504,15 +21064,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'movie_analytics' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "movie_analytics"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "movie_analytics"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'movie_analytics' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "movie_analytics"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "movie_analytics"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20540,15 +21106,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'spatial_ref_sys' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "spatial_ref_sys"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "spatial_ref_sys"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'spatial_ref_sys' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "spatial_ref_sys"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "spatial_ref_sys"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20588,15 +21160,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20630,15 +21208,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'topology_layer' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_layer"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_layer"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20666,15 +21250,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       },
                       "update_columns": {
@@ -20702,15 +21292,21 @@
                       "post_check": {
                         "description": "Update permission post-condition predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       },
                       "pre_check": {
                         "description": "Update permission pre-condition predicate over the 'topology_topology' collection",
                         "type": {
-                          "type": "predicate",
-                          "object_type_name": "topology_topology"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "topology_topology"
+                          }
                         }
                       },
                       "update_columns": {

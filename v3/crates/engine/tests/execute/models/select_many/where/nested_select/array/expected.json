@@ -23,6 +23,23 @@
             ]
           }
         }
+      ],
+      "institution_in_a_country_with_a_city_named_stockholm": [
+        {
+          "id": 2,
+          "location": {
+            "country": {
+              "cities": [
+                {
+                  "name": "Gothenburg"
+                },
+                {
+                  "name": "Stockholm"
+                }
+              ]
+            }
+          }
+        }
       ]
     }
   },

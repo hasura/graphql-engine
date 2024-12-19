@@ -388,6 +388,10 @@
                   {
                     "fieldName": "continent",
                     "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "cities",
+                    "booleanExpressionType": "city_bool_exp"
                   }
                 ],
                 "comparableRelationships": []
@@ -401,6 +405,34 @@
             },
             "graphql": {
               "typeName": "CountryBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "city_bool_exp",
+            "operand": {
+              "object": {
+                "type": "city",
+                "comparableFields": [
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "CityBoolExp"
             }
           }
         },
@@ -449,6 +481,10 @@
               {
                 "name": "continent",
                 "type": "String"
+              },
+              {
+                "name": "cities",
+                "type": "[city]"
               }
             ],
             "graphql": {
@@ -467,6 +503,35 @@
                   "continent": {
                     "column": {
                       "name": "continent"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "city",
+            "fields": [
+              {
+                "name": "name",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "City"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "city",
+                "fieldMapping": {
+                  "name": {
+                    "column": {
+                      "name": "name"
                     }
                   }
                 }
@@ -530,7 +595,22 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": ["name", "continent"]
+                  "allowedFields": ["name", "continent", "cities"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "city",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["name"]
                 }
               }
             ]

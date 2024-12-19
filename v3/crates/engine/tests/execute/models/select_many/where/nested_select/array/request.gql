@@ -18,4 +18,17 @@ query MyQuery {
       campuses
     }
   }
+
+  institution_in_a_country_with_a_city_named_stockholm: InstitutionMany(
+    where: { location: { country: { cities: { name: { _eq: "Stockholm" } } } } }
+  ) {
+    id
+    location {
+      country {
+        cities {
+          name
+        }
+      }
+    }
+  }
 }

@@ -178,8 +178,16 @@ fn resolve_object_boolean_expression<'s>(
                             )?;
 
                             Expression::LocalNestedArray {
-                                column: column.clone(),
-                                field_path: column_path.iter().copied().cloned().collect(),
+                                // The column name is the root column
+                                column: column_path.first().map_or(column, Deref::deref).clone(),
+                                // The field path is the nesting path inside the root column, if any
+                                field_path: column_path
+                                    .iter()
+                                    .copied()
+                                    .chain([column])
+                                    .skip(1)
+                                    .cloned()
+                                    .collect(),
                                 predicate: Box::new(inner_expression),
                             }
                         }

@@ -28,5 +28,5 @@ echo 'Starting PostgreSQL...'
 docker compose up --wait postgres
 
 echo 'Updating the configuration...'
-export CONNECTION_URI='postgresql://postgres:password@localhost:64001'
+export CONNECTION_URI='postgresql://postgres:password@localhost:5432'
 ndc-postgres-cli update

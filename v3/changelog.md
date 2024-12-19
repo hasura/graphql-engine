@@ -10,6 +10,9 @@
 
 - Fix syntax error in descriptions in generated SDL, when description strings
   contained a trailing double-quote
+- Filtering by fields in an object nested inside an array that itself is nested
+  inside an object now works correctly. Previously this would generate an
+  invalid query.
 
 ### Changed
 

@@ -2565,10 +2565,33 @@
       }
     },
     "compositeTypes": {
+      "city": {
+        "typeName": "city",
+        "schemaName": "public",
+        "fields": {
+          "name": {
+            "fieldName": "name",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          }
+        },
+        "description": null
+      },
       "country": {
         "typeName": "country",
         "schemaName": "public",
         "fields": {
+          "cities": {
+            "fieldName": "cities",
+            "type": {
+              "arrayType": {
+                "compositeType": "city"
+              }
+            },
+            "description": null
+          },
           "continent": {
             "fieldName": "continent",
             "type": {
@@ -2706,48 +2729,6 @@
       }
     },
     "nativeQueries": {
-      "search_articles": {
-        "sql": {
-          "inline": "SELECT * FROM search_articles({{search_term}})"
-        },
-        "columns": {
-          "author_id": {
-            "name": "author_id",
-            "type": {
-              "scalarType": "int4"
-            },
-            "nullable": "nonNullable",
-            "description": null
-          },
-          "id": {
-            "name": "id",
-            "type": {
-              "scalarType": "int4"
-            },
-            "nullable": "nonNullable",
-            "description": null
-          },
-          "title": {
-            "name": "title",
-            "type": {
-              "scalarType": "character varying"
-            },
-            "nullable": "nonNullable",
-            "description": null
-          }
-        },
-        "arguments": {
-          "search_term": {
-            "name": "search_term",
-            "type": {
-              "scalarType": "text"
-            },
-            "nullable": "nonNullable",
-            "description": null
-          }
-        },
-        "description": null
-      },
       "album_by_title": {
         "sql": {
           "inline": "SELECT * FROM public.\"Album\" WHERE \"Title\" LIKE {{title}} AND \"AlbumId\" < {{id}}"
@@ -2894,6 +2875,48 @@
               "scalarType": "int4"
             },
             "nullable": "nullable",
+            "description": null
+          }
+        },
+        "description": null
+      },
+      "search_articles": {
+        "sql": {
+          "inline": "SELECT * FROM search_articles({{search_term}})"
+        },
+        "columns": {
+          "author_id": {
+            "name": "author_id",
+            "type": {
+              "scalarType": "int4"
+            },
+            "nullable": "nonNullable",
+            "description": null
+          },
+          "id": {
+            "name": "id",
+            "type": {
+              "scalarType": "int4"
+            },
+            "nullable": "nonNullable",
+            "description": null
+          },
+          "title": {
+            "name": "title",
+            "type": {
+              "scalarType": "character varying"
+            },
+            "nullable": "nonNullable",
+            "description": null
+          }
+        },
+        "arguments": {
+          "search_term": {
+            "name": "search_term",
+            "type": {
+              "scalarType": "text"
+            },
+            "nullable": "nonNullable",
             "description": null
           }
         },
