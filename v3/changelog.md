@@ -8,6 +8,9 @@
 
 ### Fixed
 
+- Fix syntax error in descriptions in generated SDL, when description strings
+  contained a trailing double-quote
+
 ### Changed
 
 ## [v2024.12.17]

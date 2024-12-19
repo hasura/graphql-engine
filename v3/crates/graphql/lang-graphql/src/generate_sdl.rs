@@ -346,11 +346,15 @@ fn get_schema_sdl<S: SchemaContext, NSGet: NamespacedGetter<S>>(
     )
 }
 
-/// Generate SDL for description. Descriptions are just wrapped in 3 double quotes.
+/// Generate SDL for description. Descriptions are formatted as block strings (with surrounding
+/// triple double-quotes) and must follow <https://spec.graphql.org/October2021/#StringValue>
 fn generate_description_sdl(description: Option<&String>) -> String {
     description
         .as_ref()
-        .map(|d| format!("\"\"\"{d}\"\"\""))
+        // Note newline before enclosing `"""`, otherwise if `d` ends in `"` consumers will get a
+        // parse error (ENG-1452). To be totally conformant we also need to strip points outside
+        // the SourceCharacter range: https://spec.graphql.org/October2021/#sec-Language.Source-Text
+        .map(|d| format!("\"\"\"{d}\n\"\"\""))
         .unwrap_or_default()
 }
 
