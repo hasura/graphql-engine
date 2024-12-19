@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use open_dds::aggregates::AggregateExpressionName;
-use open_dds::data_connector::DataConnectorName;
 use open_dds::models::{ModelGraphQlDefinitionV2, ModelName};
 use open_dds::relationships::{ModelRelationshipTarget, RelationshipTarget};
 
@@ -13,7 +12,7 @@ use super::types::{
 };
 use crate::helpers::types::{mk_name, store_new_graphql_type, TrackGraphQLRootFields};
 use crate::stages::order_by_expressions::OrderByExpressions;
-use crate::stages::{data_connector_scalar_types, graphql_config, models, object_types};
+use crate::stages::{graphql_config, models, object_types};
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 use crate::Warning;
@@ -28,10 +27,6 @@ pub(crate) fn resolve_model_graphql_api(
     model: &models::Model,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     track_root_fields: &mut TrackGraphQLRootFields,
-    data_connector_scalars: &BTreeMap<
-        Qualified<DataConnectorName>,
-        data_connector_scalar_types::DataConnectorScalars,
-    >,
     model_description: Option<&String>,
     aggregate_expression_name: Option<&Qualified<AggregateExpressionName>>,
     order_by_expressions: &OrderByExpressions,
@@ -62,7 +57,6 @@ pub(crate) fn resolve_model_graphql_api(
                         &model.data_type,
                         model_source,
                         field_name,
-                        data_connector_scalars,
                         || "the unique identifier for select unique".to_string(),
                     )
                 })

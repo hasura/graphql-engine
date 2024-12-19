@@ -245,10 +245,10 @@ fn validate_data_connector_with_comparable_relationship(
 
                         let equal_operators = comparison_operators
                             .clone()
-                            .map(|ops| ops.equality_operators)
+                            .map(|ops| ops.eq_operator)
                             .unwrap_or_default();
 
-                        if equal_operators.is_empty() {
+                        if equal_operators.is_none() {
                             return Err(Error::TypePredicateError {
                                 type_predicate_error: TypePredicateError::MissingEqualOperator {
                                     location: format!(

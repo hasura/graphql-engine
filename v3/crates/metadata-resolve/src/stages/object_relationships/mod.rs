@@ -215,10 +215,6 @@ fn resolve_relationship_mappings_model(
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &object_types::ObjectTypeRepresentation,
     target_model: &models::Model,
-    data_connector_scalars: &BTreeMap<
-        Qualified<DataConnectorName>,
-        data_connector_scalar_types::DataConnectorScalars,
-    >,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
     let mut field_mapping_btree_set_for_validation = BTreeSet::new();
@@ -287,7 +283,6 @@ fn resolve_relationship_mappings_model(
                             &target_model.data_type,
                             target_model_source,
                             &resolved_relationship_target_mapping.field_name,
-                            data_connector_scalars,
                             || {
                                 format!(
                                     "the mapping for relationship {} on type {}",
@@ -613,7 +608,6 @@ fn resolve_model_relationship_fields(
         source_type_name,
         source_type,
         resolved_target_model,
-        data_connector_scalars,
     )?;
 
     let aggregate_relationship_field = resolve_aggregate_relationship_field(

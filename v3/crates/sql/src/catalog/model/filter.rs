@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::catalog::model::Model;
 use datafusion::logical_expr::{BinaryExpr, Expr, Operator, TableProviderFilterPushDown};
 use metadata_resolve::Metadata;
-use open_dds::types::OperatorName;
+use open_dds::query::ComparisonOperator;
 
 pub(crate) fn can_pushdown_filters(
     _metadata: &Arc<Metadata>,
@@ -85,12 +85,12 @@ pub(crate) fn pushdown_filter(
                     // OpenDD operators, and using the mapping defined in the
                     // scalar representation.
                     let operator = match op {
-                        Operator::Eq => OperatorName::from("_eq"),
-                        Operator::NotEq => OperatorName::from("_neq"),
-                        Operator::Gt => OperatorName::from("_gt"),
-                        Operator::GtEq => OperatorName::from("_gte"),
-                        Operator::Lt => OperatorName::from("_lt"),
-                        Operator::LtEq => OperatorName::from("_lte"),
+                        Operator::Eq => ComparisonOperator::Equals,
+                        Operator::NotEq => ComparisonOperator::NotEquals,
+                        Operator::Gt => ComparisonOperator::GreaterThan,
+                        Operator::GtEq => ComparisonOperator::GreaterThanOrEqual,
+                        Operator::Lt => ComparisonOperator::LessThan,
+                        Operator::LtEq => ComparisonOperator::LessThanOrEqual,
                         _ => panic!("operator not handled in pushdown_filter"),
                     };
 

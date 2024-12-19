@@ -185,6 +185,24 @@ impl Value {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub enum ComparisonOperator {
+    #[serde(rename = "_eq")]
+    Equals,
+    #[serde(rename = "_neq")]
+    NotEquals,
+    #[serde(rename = "_lt")]
+    LessThan,
+    #[serde(rename = "_lte")]
+    LessThanOrEqual,
+    #[serde(rename = "_gt")]
+    GreaterThan,
+    #[serde(rename = "_gte")]
+    GreaterThanOrEqual,
+    #[serde(untagged)]
+    Custom(OperatorName),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// A boolean expression value that can be used for model filters or boolean expression arguments.
 pub enum BooleanExpression {
@@ -194,7 +212,7 @@ pub enum BooleanExpression {
     IsNull(Operand),
     Comparison {
         operand: Operand,
-        operator: OperatorName,
+        operator: ComparisonOperator,
         argument: Box<Value>,
     },
 }
@@ -224,13 +242,39 @@ impl BooleanExpression {
                 operand,
                 operator,
                 argument,
-            } => match operator.as_str() {
-                "_eq" => format!(
+            } => match operator {
+                ComparisonOperator::Equals => format!(
                     "{} = {}",
                     operand.fmt_for_explain(),
                     argument.fmt_for_explain()
                 ),
-                op => format!(
+                ComparisonOperator::NotEquals => format!(
+                    "{} != {}",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::LessThan => format!(
+                    "{} < {}",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::LessThanOrEqual => format!(
+                    "{} ≤ {}",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::GreaterThan => format!(
+                    "{} > {}",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::GreaterThanOrEqual => format!(
+                    "{} ≥ {}",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+
+                ComparisonOperator::Custom(op) => format!(
                     "{}({}, {})",
                     operand.fmt_for_explain(),
                     op,

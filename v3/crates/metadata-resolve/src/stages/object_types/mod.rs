@@ -5,14 +5,16 @@ pub use error::{ObjectTypesError, TypeMappingValidationError};
 use open_dds::identifier::SubgraphName;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
-use types::ComparisonOperators;
 
 use open_dds::commands::ArgumentMapping;
-use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
+use open_dds::{
+    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
+    types::CustomTypeName,
+};
 pub use types::{
-    DataConnectorTypeMappingsForObject, FieldArgumentInfo, FieldDefinition, FieldMapping,
-    ObjectTypeRepresentation, ObjectTypeWithTypeMappings, ObjectTypesOutput,
-    ObjectTypesWithTypeMappings, ResolvedApolloFederationObjectKey,
+    ComparisonOperators, DataConnectorTypeMappingsForObject, FieldArgumentInfo, FieldDefinition,
+    FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings, ObjectTypesIssue,
+    ObjectTypesOutput, ObjectTypesWithTypeMappings, ResolvedApolloFederationObjectKey,
     ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
@@ -25,8 +27,6 @@ use crate::types::subgraph::{mk_qualified_type_reference, Qualified};
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 
-use super::data_connector_scalar_types::get_comparison_operators;
-
 /// resolve object types, matching them to that in the data connectors
 pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -36,6 +36,7 @@ pub(crate) fn resolve(
     let mut graphql_types = BTreeSet::new();
     let mut global_id_enabled_types = BTreeMap::new();
     let mut apollo_federation_entity_enabled_types = BTreeMap::new();
+    let mut issues = Vec::new();
 
     for open_dds::accessor::QualifiedObject {
         path: _,
@@ -63,7 +64,7 @@ pub(crate) fn resolve(
                 subgraph.clone(),
                 dc_type_mapping.data_connector_name.clone(),
             );
-            let type_mapping = resolve_data_connector_type_mapping(
+            let (type_mapping, new_issues) = resolve_data_connector_type_mapping(
                 dc_type_mapping,
                 &qualified_object_type_name,
                 subgraph,
@@ -76,6 +77,9 @@ pub(crate) fn resolve(
                     error: type_validation_error,
                 }
             })?;
+
+            issues.extend(new_issues);
+
             type_mappings.insert(
                 &qualified_data_connector_name,
                 &dc_type_mapping.data_connector_object_type,
@@ -102,6 +106,7 @@ pub(crate) fn resolve(
     }
 
     Ok(ObjectTypesOutput {
+        issues,
         graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
@@ -285,7 +290,8 @@ pub fn resolve_data_connector_type_mapping(
     subgraph: &SubgraphName,
     type_representation: &ObjectTypeRepresentation,
     data_connectors: &data_connectors::DataConnectors,
-) -> Result<TypeMapping, TypeMappingValidationError> {
+) -> Result<(TypeMapping, Vec<ObjectTypesIssue>), TypeMappingValidationError> {
+    let mut issues = Vec::new();
     let qualified_data_connector_name = Qualified::new(
         subgraph.clone(),
         data_connector_type_mapping.data_connector_name.clone(),
@@ -344,6 +350,7 @@ pub fn resolve_data_connector_type_mapping(
         let source_column =
             get_column(ndc_object_type, field_name, &resolved_field_mapping_column)?;
         let underlying_column_type = get_underlying_named_type(&source_column.r#type);
+
         let scalar_type = data_connector_context
             .schema
             .scalar_types
@@ -351,13 +358,14 @@ pub fn resolve_data_connector_type_mapping(
 
         let column_type_representation = scalar_type.map(|ty| ty.representation.clone());
 
+        let scalar_type_name = ndc_models::ScalarTypeName::new(underlying_column_type.clone());
+
         let comparison_operators = scalar_type.map(|ty| {
-            let c = get_comparison_operators(ty);
-            ComparisonOperators {
-                equality_operators: c.equal_operators,
-                in_operators: c.in_operators,
-                other_operators: c.other_operators,
-            }
+            let (c, new_issues) =
+                get_comparison_operators(&scalar_type_name, ty, &qualified_data_connector_name);
+
+            issues.extend(new_issues);
+            c
         });
 
         let resolved_field_mapping = FieldMapping {
@@ -397,7 +405,186 @@ pub fn resolve_data_connector_type_mapping(
         field_mappings: resolved_field_mappings,
     };
 
-    Ok(resolved_type_mapping)
+    Ok((resolved_type_mapping, issues))
+}
+
+pub(crate) fn get_comparison_operators(
+    scalar_type_name: &ndc_models::ScalarTypeName,
+    scalar_type: &ndc_models::ScalarType,
+    data_connector_name: &Qualified<DataConnectorName>,
+) -> (ComparisonOperators, Vec<ObjectTypesIssue>) {
+    let mut comparison_operators = ComparisonOperators::default();
+    let mut issues = Vec::new();
+
+    for (operator_name, operator_definition) in &scalar_type.comparison_operators {
+        match operator_definition {
+            ndc_models::ComparisonOperatorDefinition::Equal => {
+                if comparison_operators.eq_operator.is_none() {
+                    comparison_operators.eq_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "equals".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::In => {
+                if comparison_operators.in_operator.is_none() {
+                    comparison_operators.in_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "in".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::LessThan => {
+                if comparison_operators.lt_operator.is_none() {
+                    comparison_operators.lt_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "less than".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::LessThanOrEqual => {
+                if comparison_operators.lte_operator.is_none() {
+                    comparison_operators.lte_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "less than or equal to".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::GreaterThan => {
+                if comparison_operators.gt_operator.is_none() {
+                    comparison_operators.gt_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "greater than".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual => {
+                if comparison_operators.gte_operator.is_none() {
+                    comparison_operators.gte_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "greater than or equal to".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::Contains => {
+                if comparison_operators.contains_operator.is_none() {
+                    comparison_operators.contains_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "contains".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::ContainsInsensitive => {
+                if comparison_operators.icontains_operator.is_none() {
+                    comparison_operators.icontains_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "contains insensitive".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::StartsWith => {
+                if comparison_operators.starts_with_operator.is_none() {
+                    comparison_operators.starts_with_operator = Some(
+                        DataConnectorOperatorName::new(operator_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "starts with".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::StartsWithInsensitive => {
+                if comparison_operators.istarts_with_operator.is_none() {
+                    comparison_operators.istarts_with_operator = Some(
+                        DataConnectorOperatorName::new(operator_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "starts with insensitive".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::EndsWith => {
+                if comparison_operators.ends_with_operator.is_none() {
+                    comparison_operators.ends_with_operator = Some(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "ends with".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::EndsWithInsensitive => {
+                if comparison_operators.iends_with_operator.is_none() {
+                    comparison_operators.iends_with_operator = Some(
+                        DataConnectorOperatorName::new(operator_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateOperatorsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        operator_name: "ends with insensitive".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+
+            ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {
+                comparison_operators
+                    .other_operators
+                    .push(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+            }
+        };
+    }
+    (comparison_operators, issues)
 }
 
 fn get_column<'a>(

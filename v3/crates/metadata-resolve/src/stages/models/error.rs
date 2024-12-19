@@ -81,12 +81,6 @@ pub enum ModelsError {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
-    #[error("multiple equality operators have been defined in the data connector for field {field_name:} of model {model_name:} used in {comparison_location}")]
-    MultipleEqualOperatorsForComparedField {
-        comparison_location: String,
-        model_name: Qualified<ModelName>,
-        field_name: FieldName,
-    },
     #[error("the following model is defined more than once: {name:}")]
     DuplicateModelDefinition { name: Qualified<ModelName> },
     #[error("Error in order by expression {order_by_expression_name}: {error}")]

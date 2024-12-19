@@ -33,6 +33,7 @@ pub enum Flag {
     RequireNestedSupportForOrderByExpressions,
     DisallowModelV1OrderingNonScalarFields,
     DisallowArrayRelationshipInOrderBy,
+    DisallowDuplicateOperatorDefinitionsForScalarType,
 }
 
 impl Flag {
@@ -81,6 +82,9 @@ impl Flag {
                 "disallow_model_v1_ordering_non_scalar_fields"
             }
             Flag::DisallowArrayRelationshipInOrderBy => "disallow_array_relationship_in_order_by",
+            Flag::DisallowDuplicateOperatorDefinitionsForScalarType => {
+                "disallow_duplicate_operator_definitions_for_scalar_type"
+            }
         }
     }
 }

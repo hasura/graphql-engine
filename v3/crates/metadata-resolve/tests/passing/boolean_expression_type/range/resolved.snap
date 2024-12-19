@@ -105,8 +105,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [],
-                                                in_operators: [],
+                                                eq_operator: None,
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "match",
@@ -146,8 +156,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [],
-                                                in_operators: [],
+                                                eq_operator: None,
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "match",
@@ -313,8 +333,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [],
-                                                in_operators: [],
+                                                eq_operator: None,
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "match",
@@ -354,8 +384,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [],
-                                                in_operators: [],
+                                                eq_operator: None,
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "match",
@@ -395,8 +435,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [],
-                                                in_operators: [],
+                                                eq_operator: None,
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "match",
@@ -640,8 +690,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [],
-                                                    in_operators: [],
+                                                    eq_operator: None,
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "match",
@@ -681,8 +741,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [],
-                                                    in_operators: [],
+                                                    eq_operator: None,
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "match",
@@ -722,8 +792,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [],
-                                                    in_operators: [],
+                                                    eq_operator: None,
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "match",

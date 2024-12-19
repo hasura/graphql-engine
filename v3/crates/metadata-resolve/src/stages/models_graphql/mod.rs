@@ -7,12 +7,11 @@ use indexmap::IndexMap;
 use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
-use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
+use open_dds::{models::ModelName, types::CustomTypeName};
 
 use crate::helpers::types::TrackGraphQLRootFields;
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, graphql_config, models,
-    object_boolean_expressions, object_relationships,
+    boolean_expressions, graphql_config, models, object_boolean_expressions, object_relationships,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -29,10 +28,6 @@ use super::order_by_expressions;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    data_connector_scalars: &BTreeMap<
-        Qualified<DataConnectorName>,
-        data_connector_scalar_types::DataConnectorScalars,
-    >,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -96,7 +91,6 @@ pub fn resolve(
                 &model,
                 &mut existing_graphql_types,
                 track_root_fields,
-                data_connector_scalars,
                 model.raw.description.as_ref(),
                 model.aggregate_expression.as_ref(),
                 order_by_expressions,

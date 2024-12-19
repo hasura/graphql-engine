@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use super::types::{Model, ModelSource, ModelsIssue};
-use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
+use open_dds::data_connector::DataConnectorObjectType;
 use open_dds::identifier::SubgraphName;
 use open_dds::types::DataConnectorArgumentName;
 
@@ -11,8 +11,8 @@ use crate::helpers::ndc_validation;
 use super::helpers;
 use crate::helpers::type_mappings;
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, object_boolean_expressions,
-    scalar_types, type_permissions,
+    boolean_expressions, data_connectors, object_boolean_expressions, scalar_types,
+    type_permissions,
 };
 use crate::types::subgraph::Qualified;
 
@@ -29,10 +29,6 @@ pub(crate) fn resolve_model_source(
     model: &mut Model,
     subgraph: &SubgraphName,
     data_connectors: &data_connectors::DataConnectors,
-    data_connector_scalars: &BTreeMap<
-        Qualified<DataConnectorName>,
-        data_connector_scalar_types::DataConnectorScalars,
-    >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
@@ -175,7 +171,6 @@ pub(crate) fn resolve_model_source(
                     &model.data_type,
                     &resolved_model_source,
                     global_id_field,
-                    data_connector_scalars,
                     || format!("the global ID fields of type {}", model.data_type),
                 )?,
             );
@@ -195,7 +190,6 @@ pub(crate) fn resolve_model_source(
                             &model.data_type,
                             &resolved_model_source,
                             field,
-                            data_connector_scalars,
                             || {
                                 format!(
                                     "the apollo federation key fields of type {}",

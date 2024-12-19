@@ -33,7 +33,9 @@ pub use stages::boolean_expressions::{
     ObjectComparisonKind, OperatorMapping, ResolvedObjectBooleanExpressionType,
     ScalarBooleanExpressionGraphqlConfig,
 };
-pub use stages::data_connectors::{ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset};
+pub use stages::data_connectors::{
+    ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset, NdcVersion,
+};
 pub use stages::graphql_config::{GlobalGraphqlConfig, MultipleOrderByInputObjectFields};
 pub use stages::model_permissions::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
@@ -55,7 +57,7 @@ pub use stages::object_relationships::{
     RelationshipField, RelationshipModelMapping, RelationshipTarget,
 };
 pub use stages::object_types::{
-    FieldArgumentInfo, FieldMapping, ObjectTypeRepresentation,
+    ComparisonOperators, FieldArgumentInfo, FieldMapping, ObjectTypeRepresentation,
     ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::order_by_expressions::{

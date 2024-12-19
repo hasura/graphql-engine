@@ -270,12 +270,12 @@ pub fn build_relationship_comparison_expression<'s>(
                     ..
                 } = get_field_mapping_of_field_name(type_mappings, source_type, source_field)?;
 
-                let equal_operators = comparison_operators
+                let equal_operator = comparison_operators
                     .as_ref()
-                    .map(|ops| Cow::Borrowed(&ops.equality_operators))
+                    .map(|ops| Cow::Borrowed(&ops.eq_operator))
                     .unwrap_or_default();
 
-                let eq_operator = equal_operators.first().ok_or_else(|| {
+                let eq_operator = equal_operator.as_ref().clone().ok_or_else(|| {
                     InternalEngineError::InternalGeneric {
                         description: format!(
                             "Cannot use relationship '{relationship_name}' \
@@ -288,7 +288,7 @@ pub fn build_relationship_comparison_expression<'s>(
                 let source_ndc_column = SourceNdcColumn {
                     column: source_column.clone(),
                     field_path: column_path.iter().copied().cloned().collect(),
-                    eq_operator: eq_operator.clone(),
+                    eq_operator,
                 };
 
                 let target_ndc_column = &relationship_mapping

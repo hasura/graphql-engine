@@ -1,12 +1,15 @@
+use super::column::{to_resolved_column, ResolvedColumn};
 use super::types::PlanError;
-use metadata_resolve::{Qualified, TypeMapping};
+use metadata_resolve::{
+    ComparisonOperators, DataConnectorLink, NdcVersion, Qualified, TypeMapping,
+};
 use open_dds::{
-    data_connector::DataConnectorName, query::BooleanExpression, types::CustomTypeName,
+    data_connector::DataConnectorOperatorName,
+    query::{BooleanExpression, ComparisonOperator},
+    types::CustomTypeName,
 };
 use plan_types::ResolvedFilterExpression;
 use std::collections::BTreeMap;
-
-use super::column::{to_resolved_column, ResolvedColumn};
 
 pub fn to_resolved_filter_expr(
     metadata: &metadata_resolve::Metadata,
@@ -15,7 +18,7 @@ pub fn to_resolved_filter_expr(
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     boolean_expression_type: &metadata_resolve::ResolvedObjectBooleanExpressionType,
     expr: &BooleanExpression,
-    data_connector_name: &Qualified<DataConnectorName>,
+    data_connector: &DataConnectorLink,
 ) -> Result<ResolvedFilterExpression, PlanError> {
     match expr {
         BooleanExpression::And(exprs) => Ok(ResolvedFilterExpression::mk_and(
@@ -29,7 +32,7 @@ pub fn to_resolved_filter_expr(
                         model_object_type,
                         boolean_expression_type,
                         expr,
-                        data_connector_name,
+                        data_connector,
                     )
                 })
                 .collect::<Result<Vec<_>, PlanError>>()?,
@@ -45,7 +48,7 @@ pub fn to_resolved_filter_expr(
                         model_object_type,
                         boolean_expression_type,
                         expr,
-                        data_connector_name,
+                        data_connector,
                     )
                 })
                 .collect::<Result<Vec<_>, PlanError>>()?,
@@ -58,7 +61,7 @@ pub fn to_resolved_filter_expr(
                 model_object_type,
                 boolean_expression_type,
                 expr,
-                data_connector_name,
+                data_connector,
             )?))
         }
         BooleanExpression::IsNull(open_dds::query::Operand::Field(field)) => {
@@ -109,66 +112,166 @@ pub fn to_resolved_filter_expr(
                 ))
             })?;
 
-            let operator_str = operator.as_str();
+            match operator {
+                ComparisonOperator::Equals | ComparisonOperator::NotEquals => {
+                    let data_connector_operator_name = comparison_operators
+                        .eq_operator
+                        .as_ref()
+                        .or_else(|| {
+                            find_comparison_operator(
+                                "_eq",
+                                &comparison_operators,
+                                data_connector.capabilities.supported_ndc_version,
+                            )
+                        })
+                        .ok_or_else(|| {
+                            PlanError::Internal(format!(
+                                "no equality operator(s) found for type: {type_name:?}"
+                            ))
+                        })?;
 
-            // if these operators really are special cased we should consider change the string
-            // representation for an enum
-            if operator_str == "_eq" || operator_str == "_neq" {
-                let operator = comparison_operators
-                    .equality_operators
-                    .first()
-                    .ok_or_else(|| {
-                        PlanError::Internal(format!(
-                            "no equality operator(s) found for type: {type_name:?}"
-                        ))
-                    })?
-                    .clone();
-
-                let eq_expr = ResolvedFilterExpression::LocalFieldComparison(
-                    plan_types::LocalFieldComparison::BinaryComparison {
-                        column: plan_types::ComparisonTarget::Column {
-                            name: column_name,
-                            field_path,
+                    let eq_expr = ResolvedFilterExpression::LocalFieldComparison(
+                        plan_types::LocalFieldComparison::BinaryComparison {
+                            column: plan_types::ComparisonTarget::Column {
+                                name: column_name,
+                                field_path,
+                            },
+                            operator: data_connector_operator_name.clone(),
+                            value,
                         },
-                        operator,
-                        value,
-                    },
-                );
+                    );
 
-                match operator_str {
-                    "_eq" => Ok(eq_expr),
-                    "_neq" => Ok(ResolvedFilterExpression::Not {
-                        expression: Box::new(eq_expr),
-                    }),
-                    _ => panic!("invalid pattern match in to_resolved_filter_expr: {operator_str}"),
+                    match operator {
+                        ComparisonOperator::Equals => Ok(eq_expr),
+                        ComparisonOperator::NotEquals => Ok(ResolvedFilterExpression::Not {
+                            expression: Box::new(eq_expr),
+                        }),
+                        _ => {
+                            panic!("invalid pattern match in to_resolved_filter_expr: {operator:?}")
+                        }
+                    }
                 }
-            } else {
-                let data_connector_operators = comparison_expression_info
-                    .operator_mapping
-                    .get(data_connector_name)
-                    .ok_or_else(|| {
-                        PlanError::Internal(format!(
-                            "Operators for data connector {data_connector_name} could not be found"
-                        ))
-                    })?;
+                ComparisonOperator::LessThan
+                | ComparisonOperator::GreaterThan
+                | ComparisonOperator::LessThanOrEqual
+                | ComparisonOperator::GreaterThanOrEqual => {
+                    let data_connector_operator_name = match operator {
+                        ComparisonOperator::LessThan => comparison_operators
+                            .lt_operator
+                            .as_ref()
+                            .or_else(|| find_comparison_operator("_lt", &comparison_operators,
+                                    data_connector.capabilities.supported_ndc_version,
+))
+                            .ok_or_else(|| {
+                                PlanError::Internal(format!(
+                                    "no 'less than' operator found for type: {type_name:?}"
+                                ))
+                            }),
 
-                let expr = ResolvedFilterExpression::LocalFieldComparison(
-                    plan_types::LocalFieldComparison::BinaryComparison {
-                        column: plan_types::ComparisonTarget::Column {
-                            name: column_name,
-                            field_path,
+                        ComparisonOperator::GreaterThan => comparison_operators
+                            .gt_operator
+                            .as_ref()
+                            .or_else(|| find_comparison_operator("_gt", &comparison_operators,
+data_connector.capabilities.supported_ndc_version,
+
+                                    ))
+                            .ok_or_else(|| {
+                                PlanError::Internal(format!(
+                                    "no 'greater than' operator found for type: {type_name:?}"
+                                ))
+                            }),
+
+                        ComparisonOperator::LessThanOrEqual => comparison_operators
+                            .lte_operator
+                            .as_ref()
+                            .or_else(|| find_comparison_operator("_lte", &comparison_operators,
+                                    data_connector.capabilities.supported_ndc_version,
+
+                                    ))
+                            .ok_or_else(|| {
+                                PlanError::Internal(format!(
+                                    "no 'less than or equal' operator found for type: {type_name:?}"
+                                ))
+                            }),
+
+                        ComparisonOperator::GreaterThanOrEqual => comparison_operators
+                            .gte_operator
+                            .as_ref()
+                            .or_else(|| find_comparison_operator("_gte", &comparison_operators,
+data_connector.capabilities.supported_ndc_version,
+
+                                    ))
+                            .ok_or_else(|| {
+                                PlanError::Internal(format!(
+                                    "no 'greater than or equal' operator found for type: {type_name:?}"
+                                ))
+                            }),_ => {panic!("invalid pattern match in to_resolved_filter_expr: {operator:?}")}
+                    }?;
+
+                    Ok(ResolvedFilterExpression::LocalFieldComparison(
+                        plan_types::LocalFieldComparison::BinaryComparison {
+                            column: plan_types::ComparisonTarget::Column {
+                                name: column_name,
+                                field_path,
+                            },
+                            operator: data_connector_operator_name.clone(),
+                            value,
                         },
-                        operator: data_connector_operators.get(operator).clone(),
-                        value,
-                    },
-                );
+                    ))
+                }
+                ComparisonOperator::Custom(custom_operator) => {
+                    let data_connector_operators = comparison_expression_info
+                        .operator_mapping
+                        .get(&data_connector.name)
+                        .ok_or_else(|| {
+                            PlanError::Internal(format!(
+                                "Operators for data connector {} could not be found",
+                                data_connector.name
+                            ))
+                        })?;
 
-                Ok(expr)
+                    let expr = ResolvedFilterExpression::LocalFieldComparison(
+                        plan_types::LocalFieldComparison::BinaryComparison {
+                            column: plan_types::ComparisonTarget::Column {
+                                name: column_name,
+                                field_path,
+                            },
+                            operator: data_connector_operators.get(custom_operator).clone(),
+                            value,
+                        },
+                    );
+
+                    Ok(expr)
+                }
             }
         }
         _ => Err(PlanError::Internal(format!(
             "unsupported boolean expression: {expr:?}"
         ))),
+    }
+}
+
+// TODO: this is a very crude backup lookup for operators.
+// We keep it because v0.1 connectors don't have the newer
+// set of comparison operator meanings (lt, lte, gt, gte),
+// so until more connectors are on v0.2, we need a heuristic
+// for finding these operators here.
+fn find_comparison_operator<'a>(
+    operator_str: &str,
+    comparison_operators: &'a ComparisonOperators,
+    ndc_version: NdcVersion,
+) -> Option<&'a DataConnectorOperatorName> {
+    match ndc_version {
+        NdcVersion::V01 => comparison_operators
+            .other_operators
+            .iter()
+            .find(|other_op| {
+                other_op.as_str() == operator_str
+                    || operator_str
+                        .strip_prefix("_")
+                        .is_some_and(|op| other_op.as_str() == op)
+            }),
+        NdcVersion::V02 => None,
     }
 }
 

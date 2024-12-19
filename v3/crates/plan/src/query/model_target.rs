@@ -164,7 +164,7 @@ pub fn model_target_to_ndc_query(
                 model_object_type,
                 boolean_expression_type,
                 expr,
-                &model_source.data_connector.name,
+                &model_source.data_connector,
             )?))
         }
         _ => Ok(None),

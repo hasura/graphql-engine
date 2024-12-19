@@ -66,7 +66,7 @@
                                             "type": "json"
                                           },
                                           "comparison_operators": {
-                                            "equality_operators": ["_eq"],
+                                            "eq_operator": "_eq",
                                             "other_operators": [
                                               "_gt",
                                               "_gte",
@@ -86,7 +86,7 @@
                                             "type": "json"
                                           },
                                           "comparison_operators": {
-                                            "equality_operators": ["_eq"],
+                                            "eq_operator": "_eq",
                                             "other_operators": [
                                               "_gt",
                                               "_gte",
@@ -106,7 +106,7 @@
                                             "type": "json"
                                           },
                                           "comparison_operators": {
-                                            "equality_operators": ["_eq"],
+                                            "eq_operator": "_eq",
                                             "other_operators": [
                                               "_gt",
                                               "_gte",
@@ -248,7 +248,7 @@
                                                   "type": "json"
                                                 },
                                                 "comparison_operators": {
-                                                  "equality_operators": ["_eq"],
+                                                  "eq_operator": "_eq",
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -268,7 +268,7 @@
                                                   "type": "json"
                                                 },
                                                 "comparison_operators": {
-                                                  "equality_operators": ["_eq"],
+                                                  "eq_operator": "_eq",
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -302,7 +302,7 @@
                                                   "type": "json"
                                                 },
                                                 "comparison_operators": {
-                                                  "equality_operators": ["_eq"],
+                                                  "eq_operator": "_eq",
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -444,9 +444,7 @@
                                                         "type": "json"
                                                       },
                                                       "comparison_operators": {
-                                                        "equality_operators": [
-                                                          "_eq"
-                                                        ],
+                                                        "eq_operator": "_eq",
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -466,9 +464,7 @@
                                                         "type": "json"
                                                       },
                                                       "comparison_operators": {
-                                                        "equality_operators": [
-                                                          "_eq"
-                                                        ],
+                                                        "eq_operator": "_eq",
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -488,9 +484,7 @@
                                                         "type": "json"
                                                       },
                                                       "comparison_operators": {
-                                                        "equality_operators": [
-                                                          "_eq"
-                                                        ],
+                                                        "eq_operator": "_eq",
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -914,9 +908,7 @@
                                                         "type": "json"
                                                       },
                                                       "comparison_operators": {
-                                                        "equality_operators": [
-                                                          "_eq"
-                                                        ],
+                                                        "eq_operator": "_eq",
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -936,9 +928,7 @@
                                                         "type": "json"
                                                       },
                                                       "comparison_operators": {
-                                                        "equality_operators": [
-                                                          "_eq"
-                                                        ],
+                                                        "eq_operator": "_eq",
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -972,9 +962,7 @@
                                                         "type": "json"
                                                       },
                                                       "comparison_operators": {
-                                                        "equality_operators": [
-                                                          "_eq"
-                                                        ],
+                                                        "eq_operator": "_eq",
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -1046,9 +1034,7 @@
                                                             "type": "json"
                                                           },
                                                           "comparison_operators": {
-                                                            "equality_operators": [
-                                                              "_eq"
-                                                            ],
+                                                            "eq_operator": "_eq",
                                                             "other_operators": [
                                                               "_gt",
                                                               "_gte",
@@ -1068,9 +1054,7 @@
                                                             "type": "json"
                                                           },
                                                           "comparison_operators": {
-                                                            "equality_operators": [
-                                                              "_eq"
-                                                            ],
+                                                            "eq_operator": "_eq",
                                                             "other_operators": [
                                                               "_gt",
                                                               "_gte",
@@ -1090,9 +1074,7 @@
                                                             "type": "json"
                                                           },
                                                           "comparison_operators": {
-                                                            "equality_operators": [
-                                                              "_eq"
-                                                            ],
+                                                            "eq_operator": "_eq",
                                                             "other_operators": [
                                                               "_gt",
                                                               "_gte",
@@ -1205,7 +1187,7 @@
                                               "type": "json"
                                             },
                                             "comparison_operators": {
-                                              "equality_operators": ["_eq"],
+                                              "eq_operator": "_eq",
                                               "other_operators": [
                                                 "_gt",
                                                 "_gte",
@@ -1225,7 +1207,7 @@
                                               "type": "json"
                                             },
                                             "comparison_operators": {
-                                              "equality_operators": ["_eq"],
+                                              "eq_operator": "_eq",
                                               "other_operators": [
                                                 "_gt",
                                                 "_gte",
@@ -1245,7 +1227,7 @@
                                               "type": "json"
                                             },
                                             "comparison_operators": {
-                                              "equality_operators": ["_eq"],
+                                              "eq_operator": "_eq",
                                               "other_operators": [
                                                 "_gt",
                                                 "_gte",
@@ -1317,7 +1299,7 @@
                                                   "type": "json"
                                                 },
                                                 "comparison_operators": {
-                                                  "equality_operators": ["_eq"],
+                                                  "eq_operator": "_eq",
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -1337,7 +1319,7 @@
                                                   "type": "json"
                                                 },
                                                 "comparison_operators": {
-                                                  "equality_operators": ["_eq"],
+                                                  "eq_operator": "_eq",
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -1371,7 +1353,7 @@
                                                   "type": "json"
                                                 },
                                                 "comparison_operators": {
-                                                  "equality_operators": ["_eq"],
+                                                  "eq_operator": "_eq",
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -1484,7 +1466,7 @@
                                     "type": "json"
                                   },
                                   "comparison_operators": {
-                                    "equality_operators": ["_eq"],
+                                    "eq_operator": "_eq",
                                     "other_operators": [
                                       "_gt",
                                       "_gte",
@@ -1504,7 +1486,7 @@
                                     "type": "json"
                                   },
                                   "comparison_operators": {
-                                    "equality_operators": ["_eq"],
+                                    "eq_operator": "_eq",
                                     "other_operators": [
                                       "_gt",
                                       "_gte",
@@ -1524,7 +1506,7 @@
                                     "type": "json"
                                   },
                                   "comparison_operators": {
-                                    "equality_operators": ["_eq"],
+                                    "eq_operator": "_eq",
                                     "other_operators": [
                                       "_gt",
                                       "_gte",
@@ -1596,7 +1578,7 @@
                                         "type": "json"
                                       },
                                       "comparison_operators": {
-                                        "equality_operators": ["_eq"],
+                                        "eq_operator": "_eq",
                                         "other_operators": [
                                           "_gt",
                                           "_gte",
@@ -1616,7 +1598,7 @@
                                         "type": "json"
                                       },
                                       "comparison_operators": {
-                                        "equality_operators": ["_eq"],
+                                        "eq_operator": "_eq",
                                         "other_operators": [
                                           "_gt",
                                           "_gte",
@@ -1636,7 +1618,7 @@
                                         "type": "json"
                                       },
                                       "comparison_operators": {
-                                        "equality_operators": ["_eq"],
+                                        "eq_operator": "_eq",
                                         "other_operators": [
                                           "_gt",
                                           "_gte",

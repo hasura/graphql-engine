@@ -4,17 +4,14 @@ pub use error::DataConnectorScalarTypesError;
 use open_dds::identifier::SubgraphName;
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
-    ComparisonOperators, DataConnectorScalars, DataConnectorWithScalarsOutput,
-    ScalarTypeWithRepresentationInfo,
+    DataConnectorScalars, DataConnectorWithScalarsOutput, ScalarTypeWithRepresentationInfo,
 };
 
 use lang_graphql::ast::common as ast;
 
 use open_dds::types::{CustomTypeName, TypeName};
 
-use open_dds::data_connector::{
-    DataConnectorName, DataConnectorOperatorName, DataConnectorScalarType,
-};
+use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 
 use crate::helpers::types::mk_name;
 use crate::types::subgraph::Qualified;
@@ -164,12 +161,12 @@ fn convert_data_connectors_contexts<'a>(
         let mut by_ndc_type = BTreeMap::new();
         for (name, scalar) in &context.schema.scalar_types {
             let ndc_scalar_type_name = DataConnectorScalarType::from(name.as_str());
+
             by_ndc_type.insert(
                 ndc_scalar_type_name.clone(),
                 ScalarTypeWithRepresentationInfo {
                     scalar_type: scalar,
                     comparison_expression_name: None,
-                    comparison_operators: get_comparison_operators(scalar),
                     representation: None,
                     aggregate_functions: &scalar.aggregate_functions,
                 },
@@ -185,48 +182,6 @@ fn convert_data_connectors_contexts<'a>(
         );
     }
     data_connector_scalars
-}
-
-pub(crate) fn get_comparison_operators(
-    scalar_type: &ndc_models::ScalarType,
-) -> ComparisonOperators {
-    let mut comparison_operators = ComparisonOperators::default();
-    for (operator_name, operator_definition) in &scalar_type.comparison_operators {
-        match operator_definition {
-            ndc_models::ComparisonOperatorDefinition::Equal => {
-                comparison_operators
-                    .equal_operators
-                    .push(DataConnectorOperatorName::new(
-                        operator_name.inner().clone(),
-                    ));
-            }
-            ndc_models::ComparisonOperatorDefinition::In => {
-                comparison_operators
-                    .in_operators
-                    .push(DataConnectorOperatorName::new(
-                        operator_name.inner().clone(),
-                    ));
-            }
-            ndc_models::ComparisonOperatorDefinition::LessThan
-            | ndc_models::ComparisonOperatorDefinition::LessThanOrEqual
-            | ndc_models::ComparisonOperatorDefinition::GreaterThan
-            | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual
-            | ndc_models::ComparisonOperatorDefinition::Contains
-            | ndc_models::ComparisonOperatorDefinition::ContainsInsensitive
-            | ndc_models::ComparisonOperatorDefinition::StartsWith
-            | ndc_models::ComparisonOperatorDefinition::StartsWithInsensitive
-            | ndc_models::ComparisonOperatorDefinition::EndsWith
-            | ndc_models::ComparisonOperatorDefinition::EndsWithInsensitive
-            | ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {
-                comparison_operators
-                    .other_operators
-                    .push(DataConnectorOperatorName::new(
-                        operator_name.inner().clone(),
-                    ));
-            }
-        };
-    }
-    comparison_operators
 }
 
 // helper function to determine whether a ndc type is a simple scalar

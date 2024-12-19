@@ -68,7 +68,10 @@ pub fn resolve(
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         object_types,
+        issues,
     } = object_types::resolve(&metadata_accessor, &data_connectors).map_err(Error::from)?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Validate custom defined scalar types
     let scalar_types::ScalarTypesOutput {
@@ -282,7 +285,6 @@ pub fn resolve(
     } = models_graphql::resolve(
         &metadata_accessor,
         &models,
-        &data_connector_scalars,
         &object_types_with_relationships,
         &object_boolean_expression_types,
         &boolean_expression_types,

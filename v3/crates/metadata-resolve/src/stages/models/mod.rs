@@ -105,7 +105,6 @@ pub fn resolve(
                 &mut resolved_model,
                 subgraph,
                 data_connectors,
-                data_connector_scalars,
                 object_types,
                 scalar_types,
                 object_boolean_expression_types,

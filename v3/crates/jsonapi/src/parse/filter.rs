@@ -80,7 +80,7 @@ fn expression_from_jsonapi_filter(
             let comparison = BooleanExpression::Comparison {
                 operand: field_operand,
                 argument: Box::new(Value::Literal(comparison_value.clone())),
-                operator,
+                operator: open_dds::query::ComparisonOperator::Custom(operator),
             };
 
             Ok(comparison)

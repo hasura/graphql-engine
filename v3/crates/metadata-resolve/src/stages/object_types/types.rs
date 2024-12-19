@@ -1,4 +1,5 @@
 use super::error::ObjectTypesError;
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::QualifiedTypeReference;
 use indexmap::IndexMap;
 use open_dds::arguments::ArgumentName;
@@ -115,6 +116,7 @@ pub struct ObjectTypesOutput {
     pub apollo_federation_entity_enabled_types:
         BTreeMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
     pub object_types: ObjectTypesWithTypeMappings,
+    pub issues: Vec<ObjectTypesIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -181,16 +183,46 @@ pub struct FieldMapping {
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
 }
 
-/// Mapping from a column to its type.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub struct ComparisonOperators {
-    pub equality_operators: Vec<DataConnectorOperatorName>,
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
-    pub in_operators: Vec<DataConnectorOperatorName>,
-
-    // TODO: for now, put other operators here. Later, once we have NDC
-    // operator meanings, categorize these by their meaning:
+    pub eq_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub in_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub lt_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub lte_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub gt_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub gte_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub contains_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub icontains_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub starts_with_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub istarts_with_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub ends_with_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub iends_with_operator: Option<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub other_operators: Vec<DataConnectorOperatorName>,
 }
 
@@ -202,4 +234,23 @@ pub enum TypeMapping {
         ndc_object_type_name: DataConnectorObjectType,
         field_mappings: BTreeMap<FieldName, FieldMapping>,
     },
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ObjectTypesIssue {
+    #[error("Multiple {operator_name} operators found for type {scalar_type} in data connector {data_connector_name}")]
+    DuplicateOperatorsDefined {
+        scalar_type: ndc_models::ScalarTypeName,
+        operator_name: String,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+}
+
+impl ShouldBeAnError for ObjectTypesIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            ObjectTypesIssue::DuplicateOperatorsDefined { .. } => flags
+                .contains(open_dds::flags::Flag::DisallowDuplicateOperatorDefinitionsForScalarType),
+        }
+    }
 }

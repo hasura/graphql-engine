@@ -514,16 +514,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -595,16 +605,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -676,16 +696,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -757,16 +787,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -838,16 +878,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -917,16 +967,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -966,16 +1026,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -1015,16 +1085,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -1064,16 +1144,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -1302,16 +1392,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -1351,16 +1451,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -1400,16 +1510,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -1449,16 +1569,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -1498,16 +1628,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
-                                                equality_operators: [
+                                                eq_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_eq",
                                                     ),
-                                                ],
-                                                in_operators: [
+                                                ),
+                                                in_operator: Some(
                                                     DataConnectorOperatorName(
                                                         "_in",
                                                     ),
-                                                ],
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
                                                 other_operators: [
                                                     DataConnectorOperatorName(
                                                         "_gt",
@@ -2074,16 +2214,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -2155,16 +2305,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -2236,16 +2396,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -2317,16 +2487,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -2398,16 +2578,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -2477,16 +2667,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -2526,16 +2726,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -2575,16 +2785,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -2624,16 +2844,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -3158,16 +3388,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -3207,16 +3447,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -3256,16 +3506,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -3305,16 +3565,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
@@ -3354,16 +3624,26 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
-                                                    equality_operators: [
+                                                    eq_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_eq",
                                                         ),
-                                                    ],
-                                                    in_operators: [
+                                                    ),
+                                                    in_operator: Some(
                                                         DataConnectorOperatorName(
                                                             "_in",
                                                         ),
-                                                    ],
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
                                                     other_operators: [
                                                         DataConnectorOperatorName(
                                                             "_gt",
