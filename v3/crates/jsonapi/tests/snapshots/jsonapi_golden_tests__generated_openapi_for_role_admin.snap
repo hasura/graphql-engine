@@ -11,6 +11,198 @@ expression: generated_openapi
       "version": "0.1"
     },
     "paths": {
+      "/v1/rest/default/Actors": {
+        "get": {
+          "summary": "Fetch actor values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Actors to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "actor_id",
+                    "-actor_id",
+                    "name",
+                    "-name",
+                    "movie_id",
+                    "-movie_id"
+                  ]
+                }
+              },
+              "example": "actor_id,-name"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Actors to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "MovieFromCommand"
+            },
+            {
+              "name": "fields[actor]",
+              "in": "query",
+              "description": "Optional list of fields from actor type to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "actor_id",
+                    "name",
+                    "movie_id"
+                  ]
+                }
+              },
+              "example": "actor_id,name,movie_id"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Actors response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_actor"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "actor_id": {
+                                  "type": "integer"
+                                },
+                                "movie_id": {
+                                  "type": "integer"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "MovieFromCommand": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_commandMovie"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_commandMovie"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "movie_id": {
+                                      "type": "integer"
+                                    },
+                                    "rating": {
+                                      "type": "integer"
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "/v1/rest/default/Album": {
         "get": {
           "summary": "Fetch Album values",
@@ -5794,6 +5986,20 @@ expression: generated_openapi
             }
           }
         },
+        "default_actor": {
+          "type": "object",
+          "properties": {
+            "actor_id": {
+              "type": "integer"
+            },
+            "movie_id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        },
         "default_commandArticle": {
           "type": "object",
           "properties": {
@@ -5818,6 +6024,20 @@ expression: generated_openapi
               "type": "integer"
             },
             "last_name": {
+              "type": "string"
+            }
+          }
+        },
+        "default_commandMovie": {
+          "type": "object",
+          "properties": {
+            "movie_id": {
+              "type": "integer"
+            },
+            "rating": {
+              "type": "integer"
+            },
+            "title": {
               "type": "string"
             }
           }

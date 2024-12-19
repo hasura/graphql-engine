@@ -4,12 +4,19 @@ use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use super::relationships::process_model_relationship_definition;
+use super::{
+    execute_plan_from_function,
+    relationships::{
+        process_command_relationship_definition, process_model_relationship_definition,
+    },
+    CommandPlan,
+};
 use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
+    commands::DataConnectorCommand,
     query::{
-        Alias, ModelSelection, ModelTarget, ObjectFieldSelection, ObjectSubSelection,
-        RelationshipSelection,
+        Alias, CommandSelection, CommandTarget, ModelSelection, ModelTarget, ObjectFieldSelection,
+        ObjectSubSelection, RelationshipSelection, RelationshipTarget,
     },
     types::{CustomTypeName, FieldName},
 };
@@ -241,28 +248,88 @@ fn from_relationship_selection(
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<Field, PlanError> {
-    let RelationshipSelection { target, selection } = relationship_selection;
+    let relationship_name = &relationship_selection.target.relationship_name;
     let (_, relationship_field) = object_type
         .relationship_fields
         .iter()
         .find(|(_, relationship_field)| {
-            relationship_field.relationship_name == target.relationship_name
+            relationship_field.relationship_name == relationship_name.clone()
         })
         .ok_or_else(|| {
             PlanError::Internal(format!(
                 "couldn't find the relationship {} in the type {}",
-                target.relationship_name, &object_type_name,
+                relationship_name, &object_type_name,
             ))
         })?;
 
-    let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
-        &relationship_field.target
-    else {
-        return Err(PlanError::Relationship(RelationshipError::Other(format!(
-            "Expecting Model as a relationship target for {}",
-            target.relationship_name,
-        ))));
+    let (field, target_data_connector) = match &relationship_field.target {
+        metadata_resolve::RelationshipTarget::Model(model_relationship_target) => {
+            from_model_relationship(
+                metadata,
+                session,
+                request_headers,
+                object_type_name,
+                relationship_selection,
+                relationship_field,
+                type_mappings,
+                data_connector,
+                model_relationship_target,
+                relationships,
+                unique_number,
+            )?
+        }
+        metadata_resolve::RelationshipTarget::Command(command_relationship_target) => {
+            from_command_relationship(
+                metadata,
+                session,
+                request_headers,
+                object_type_name,
+                relationship_selection,
+                type_mappings,
+                command_relationship_target,
+                relationships,
+                unique_number,
+            )?
+        }
+        metadata_resolve::RelationshipTarget::ModelAggregate(_) => {
+            return Err(PlanError::Relationship(RelationshipError::Other(format!(
+                "Model aggregate relationships are not supported: {relationship_name}",
+            ))));
+        }
     };
+
+    // Reject remote relationships
+    if target_data_connector.name != data_connector.name {
+        return Err(PlanError::Relationship(RelationshipError::Other(format!(
+            "Remote relationships are not supported: {relationship_name}",
+        ))));
+    }
+
+    Ok(field)
+}
+
+fn from_model_relationship(
+    metadata: &Metadata,
+    session: &Arc<Session>,
+    request_headers: &reqwest::header::HeaderMap,
+    object_type_name: &Qualified<CustomTypeName>,
+    relationship_selection: &RelationshipSelection,
+    relationship_field: &metadata_resolve::RelationshipField,
+    source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    source_data_connector: &metadata_resolve::DataConnectorLink,
+    model_relationship_target: &metadata_resolve::ModelRelationshipTarget,
+    collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    unique_number: &mut UniqueNumber,
+) -> Result<(Field, Arc<metadata_resolve::DataConnectorLink>), PlanError> {
+    let RelationshipSelection { target, selection } = relationship_selection;
+    let RelationshipTarget {
+        relationship_name,
+        arguments,
+        filter,
+        order_by,
+        limit,
+        offset,
+    } = target;
     let target_model_name = &model_relationship_target.model_name;
     let target_model = metadata.models.get(target_model_name).ok_or_else(|| {
         PlanError::Internal(format!("model {target_model_name} not found in metadata"))
@@ -273,14 +340,6 @@ fn from_relationship_selection(
             PlanError::Internal(format!("model {target_model_name} has no source"))
         })?;
 
-    // Reject remote relationships
-    if target_model_source.data_connector.name != data_connector.name {
-        return Err(PlanError::Relationship(RelationshipError::Other(format!(
-            "Remote relationships are not supported: {}",
-            &target.relationship_name
-        ))));
-    }
-
     let target_source = metadata_resolve::ModelTargetSource {
         model: target_model_source.clone(),
         capabilities: relationship_field
@@ -289,25 +348,25 @@ fn from_relationship_selection(
             .ok_or_else(|| {
                 PlanError::Relationship(RelationshipError::Other(format!(
                     "Relationship capabilities not found for relationship {} in data connector {}",
-                    &target.relationship_name, &target_model_source.data_connector.name,
+                    relationship_name, &target_model_source.data_connector.name,
                 )))
             })?
             .clone(),
     };
     let local_model_relationship_info = plan_types::LocalModelRelationshipInfo {
-        relationship_name: &target.relationship_name,
+        relationship_name,
         relationship_type: &model_relationship_target.relationship_type,
         source_type: object_type_name,
-        source_data_connector: data_connector,
-        source_type_mappings: type_mappings,
+        source_data_connector,
+        source_type_mappings,
         target_source: &target_source,
         target_type: &model_relationship_target.target_typename,
         mappings: &model_relationship_target.mappings,
     };
 
     let ndc_relationship_name =
-        plan_types::NdcRelationshipName::new(object_type_name, &target.relationship_name);
-    relationships.insert(
+        plan_types::NdcRelationshipName::new(object_type_name, relationship_name);
+    collect_relationships.insert(
         ndc_relationship_name.clone(),
         process_model_relationship_definition(&local_model_relationship_info)?,
     );
@@ -315,11 +374,11 @@ fn from_relationship_selection(
     let relationship_model_target = ModelTarget {
         subgraph: target_model_name.subgraph.clone(),
         model_name: target_model_name.name.clone(),
-        arguments: target.arguments.clone(),
-        filter: target.filter.clone(),
-        order_by: target.order_by.clone(),
-        limit: target.limit,
-        offset: target.offset,
+        arguments: arguments.clone(),
+        filter: filter.clone(),
+        order_by: order_by.clone(),
+        limit: *limit,
+        offset: *offset,
     };
 
     let relationship_target_model_selection = ModelSelection {
@@ -327,7 +386,7 @@ fn from_relationship_selection(
         selection: selection.as_ref().map_or_else(IndexMap::new, Clone::clone),
     };
 
-    let (_, ndc_query, relationship_fields) = super::model::from_model_selection(
+    let (_, ndc_query, ndc_fields) = super::model::from_model_selection(
         &relationship_target_model_selection,
         metadata,
         session,
@@ -337,25 +396,126 @@ fn from_relationship_selection(
     let plan_types::QueryExecutionPlan {
         query_node,
         collection: _,
-        arguments,
-        mut collection_relationships,
+        arguments: ndc_arguments,
+        collection_relationships: mut ndc_relationships,
         variables: _,
         data_connector: _,
-    } = super::model::ndc_query_to_query_execution_plan(
-        &ndc_query,
-        &relationship_fields,
-        &IndexMap::new(),
-    );
+    } = super::model::ndc_query_to_query_execution_plan(&ndc_query, &ndc_fields, &IndexMap::new());
 
     // Collect relationships from the generated query above
-    relationships.append(&mut collection_relationships);
+    collect_relationships.append(&mut ndc_relationships);
 
     let ndc_field = Field::Relationship {
         relationship: ndc_relationship_name,
-        arguments,
+        arguments: ndc_arguments,
         query_node: Box::new(query_node),
     };
-    Ok(ndc_field)
+    // returning the target data connector to check if it's a remote relationship at the caller
+    Ok((ndc_field, target_model_source.data_connector.clone()))
+}
+
+fn from_command_relationship(
+    metadata: &Metadata,
+    session: &Arc<Session>,
+    request_headers: &reqwest::header::HeaderMap,
+    object_type_name: &Qualified<CustomTypeName>,
+    relationship_selection: &RelationshipSelection,
+    source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    command_relationship_target: &metadata_resolve::CommandRelationshipTarget,
+    collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    unique_number: &mut UniqueNumber,
+) -> Result<(Field, Arc<metadata_resolve::DataConnectorLink>), PlanError> {
+    let RelationshipSelection { target, selection } = relationship_selection;
+    // Query parameters (limit, offset etc.) are not applicable for command selections
+    let RelationshipTarget {
+        relationship_name,
+        arguments,
+        filter: _,
+        order_by: _,
+        limit: _,
+        offset: _,
+    } = target;
+    let command_name = &command_relationship_target.command_name;
+    let command = metadata.commands.get(command_name).ok_or_else(|| {
+        PlanError::Internal(format!("command {command_name} not found in metadata"))
+    })?;
+    let command_source = command
+        .command
+        .source
+        .as_ref()
+        .ok_or_else(|| PlanError::Internal(format!("command {command_name} has no source")))?;
+    let function_name = match &command_source.source {
+        DataConnectorCommand::Function(function_name) => function_name,
+        DataConnectorCommand::Procedure(_) => {
+            return Err(PlanError::Relationship(RelationshipError::Other(format!(
+                "Procedure relationships are not supported: {relationship_name}",
+            ))));
+        }
+    };
+    let local_command_relationship_info = plan_types::LocalCommandRelationshipInfo {
+        relationship_name,
+        source_type: object_type_name,
+        source_type_mappings,
+        command_name,
+        argument_mappings: &command_source.argument_mappings,
+        function_name,
+        mappings: &command_relationship_target.mappings,
+    };
+
+    let ndc_relationship_name =
+        plan_types::NdcRelationshipName::new(object_type_name, relationship_name);
+    collect_relationships.insert(
+        ndc_relationship_name.clone(),
+        process_command_relationship_definition(&local_command_relationship_info)?,
+    );
+
+    let command_target = CommandTarget {
+        subgraph: command_name.subgraph.clone(),
+        command_name: command_name.name.clone(),
+        arguments: arguments.clone(),
+    };
+    let command_selection = CommandSelection {
+        target: command_target,
+        selection: selection.clone(),
+    };
+
+    let from_command = super::command::from_command_selection(
+        &command_selection,
+        metadata,
+        session,
+        request_headers,
+        command_name,
+        command,
+        command_source,
+        unique_number,
+    )?;
+
+    let plan_types::QueryExecutionPlan {
+        query_node,
+        collection: _,
+        arguments: ndc_arguments,
+        collection_relationships: mut ndc_relationships,
+        variables: _,
+        data_connector: _,
+    } = match from_command.command_plan {
+        CommandPlan::Function(ndc_function) => execute_plan_from_function(&ndc_function),
+        CommandPlan::Procedure(_ndc_procedure) => {
+            // This shouldn't happen as we are already checking for procedure above
+            return Err(PlanError::Relationship(RelationshipError::Other(format!(
+                "Procedure relationships are not supported: {relationship_name}",
+            ))));
+        }
+    };
+
+    collect_relationships.append(&mut ndc_relationships);
+
+    let ndc_field = Field::Relationship {
+        relationship: ndc_relationship_name,
+        arguments: ndc_arguments,
+        query_node: Box::new(query_node),
+    };
+    // returning the target data connector to check if it's a remote relationship at the caller
+    Ok((ndc_field, command_source.data_connector.clone()))
 }
 
 fn ndc_nested_field_selection_for(

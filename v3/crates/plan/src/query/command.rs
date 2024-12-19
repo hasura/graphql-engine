@@ -8,6 +8,7 @@ use metadata_resolve::{
     unwrap_custom_type_name, Metadata, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference,
 };
+use open_dds::commands::CommandName;
 use open_dds::query::CommandSelection;
 use open_dds::{
     commands::DataConnectorCommand,
@@ -60,8 +61,29 @@ pub fn from_command(
         PlanError::Internal(format!("command {qualified_command_name} has no source"))
     })?;
 
-    let output_object_type_name = unwrap_custom_type_name(&command.command.output_type).unwrap();
+    from_command_selection(
+        command_selection,
+        metadata,
+        session,
+        request_headers,
+        &qualified_command_name,
+        command,
+        command_source,
+        unique_number,
+    )
+}
 
+pub(crate) fn from_command_selection(
+    command_selection: &CommandSelection,
+    metadata: &Metadata,
+    session: &Arc<Session>,
+    request_headers: &reqwest::header::HeaderMap,
+    qualified_command_name: &Qualified<CommandName>,
+    command: &metadata_resolve::CommandWithArgumentPresets,
+    command_source: &metadata_resolve::CommandSource,
+    unique_number: &mut UniqueNumber,
+) -> Result<FromCommand, PlanError> {
+    let output_object_type_name = unwrap_custom_type_name(&command.command.output_type).unwrap();
     let output_object_type = metadata
         .object_types
         .get(output_object_type_name)
@@ -164,7 +186,6 @@ pub fn from_command(
             collection_relationships: relationships,
         }),
     };
-
     Ok(FromCommand {
         command_plan,
         output_object_type_name: output_object_type_name.clone(),

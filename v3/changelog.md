@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added support for relationships targeting commands in JSON:API.
+
 ### Fixed
 
 ### Changed

@@ -124,5 +124,6 @@ pub struct RelationshipTree {
 pub struct RelationshipNode {
     pub object_type: Qualified<CustomTypeName>,
     pub relationship_type: RelationshipType,
+    pub is_command_relationship: bool,
     pub nested: RelationshipTree,
 }

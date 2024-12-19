@@ -260,6 +260,8 @@ fn resolve_include_relationships(
             };
             let field_name_ident = Identifier::new(relationship)
                 .map_err(|e| RequestError::BadRequest(format!("Invalid relationship name: {e}")))?;
+
+            let mut is_command_relationship = false;
             let (target_type, relationship_type) = match &target {
                 RelationshipTarget::Model {
                     object_type,
@@ -269,6 +271,7 @@ fn resolve_include_relationships(
                     (model_type, RelationshipType::Object)
                 }
                 RelationshipTarget::Command { type_reference } => {
+                    is_command_relationship = true;
                     match unwrap_custom_type_name(type_reference) {
                         Some(object_type) => (
                             object_type,
@@ -294,6 +297,7 @@ fn resolve_include_relationships(
             let relationship_node = RelationshipNode {
                 object_type: target_type.clone(),
                 relationship_type: relationship_type.clone(),
+                is_command_relationship,
                 nested: nested_relationships,
             };
             relationship_tree

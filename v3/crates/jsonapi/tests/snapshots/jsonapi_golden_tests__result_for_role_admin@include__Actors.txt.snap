@@ -1,0 +1,56 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/include/Actors.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_actor",
+                    id: "1",
+                    attributes: {
+                        "name": String("Leonardo DiCaprio"),
+                    },
+                    relationships: Some(
+                        {
+                            "MovieFromCommand": Relationship {
+                                data: Some(
+                                    Single(
+                                        ResourceIdentifier {
+                                            _type: "default_commandMovie",
+                                            id: "2",
+                                        },
+                                    ),
+                                ),
+                                links: None,
+                            },
+                        },
+                    ),
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: Some(
+        [
+            Resource {
+                _type: "default_commandMovie",
+                id: "2",
+                attributes: {
+                    "movie_id": Number(1),
+                    "rating": Number(4),
+                    "title": String("Titanic"),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+        ],
+    ),
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

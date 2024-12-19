@@ -66,6 +66,7 @@ fn row_to_resource(
                 nested,
                 relationship_type,
                 object_type,
+                is_command_relationship,
             } = relationship_node;
             let relationship_type_name = render_type_name(object_type);
             let relationship_identifier_data = match value
@@ -88,6 +89,7 @@ fn row_to_resource(
                                 collect_relationships,
                                 relationship_id,
                                 object_type,
+                                *is_command_relationship,
                                 object_row_value,
                             );
                             jsonapi_library::model::IdentifierData::Single(resource_identifier)
@@ -110,6 +112,7 @@ fn row_to_resource(
                                 collect_relationships,
                                 relationship_id,
                                 object_type,
+                                *is_command_relationship,
                                 object_row_value.take(),
                             );
                             resource_identifiers.push(resource_identifier);
@@ -149,21 +152,30 @@ fn collect_relationship_value(
     collect_relationships: &mut Vec<jsonapi_library::model::Resource>,
     resource_id: i32,
     row_type: &Qualified<CustomTypeName>,
-    value: serde_json::Value,
+    is_command_relationship: bool,
+    mut value: serde_json::Value,
 ) {
-    // collect this relationship resource
-    let object = match value {
-        serde_json::Value::Object(o) => o,
-        _ => serde_json::Map::new(),
-    };
+    if is_command_relationship {
+        // If this is a command relationship, we need to extract the value from the 'FUNCTION_IR_VALUE_COLUMN_NAME' key
+        // We are ignoring the other keys
+        if let Some(v) = value.get_mut(plan_types::FUNCTION_IR_VALUE_COLUMN_NAME) {
+            // TODO: Also consider connector's CommandsResponseConfig.
+            value = v.take();
+        }
+    }
+    let mut row_object = serde_json::Map::new();
+    if let serde_json::Value::Object(object) = value {
+        row_object = object;
+    }
     let relationship_resource = row_to_resource(
         unique_id,
         relationship_tree,
         collect_relationships,
         resource_id,
         row_type,
-        object.into_iter(),
+        row_object.into_iter(),
     );
+    // collect this relationship resource
     collect_relationships.push(relationship_resource);
 }
 
