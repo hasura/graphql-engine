@@ -5,5 +5,5 @@ input_file: crates/metadata-resolve/tests/failing/boolean_expression/nested_arra
 ---
 The following issues were raised but disallowed by compatibility configuration:
 
-The data connector db (in subgraph default) cannot be used for filtering nested array staff_bool_exp (in subgraph default) within institution_bool_exp (in subgraph default) as it has not defined any capabilities for nested array filtering
-The data connector db (in subgraph default) cannot be used for filtering nested array pet_bool_exp (in subgraph default) within staff_bool_exp (in subgraph default) as it has not defined any capabilities for nested array filtering
+The data connector 'db (in subgraph default)' does not support filtering by nested object arrays. The comparable field 'staff' within institution_bool_exp (in subgraph default)' is of an object array type: [staff_member] (in subgraph default)
+The data connector 'db (in subgraph default)' does not support filtering by nested object arrays. The comparable field 'pets' within staff_bool_exp (in subgraph default)' is of an object array type: [pet] (in subgraph default)

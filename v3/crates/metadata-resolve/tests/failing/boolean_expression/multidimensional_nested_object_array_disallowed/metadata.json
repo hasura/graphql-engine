@@ -1,0 +1,1760 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": {
+              "typeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": {
+              "typeName": "Int_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "institution_bool_exp",
+            "operand": {
+              "object": {
+                "type": "institution",
+                "comparableFields": [
+                  {
+                    "fieldName": "id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "staff",
+                    "booleanExpressionType": "staff_member_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": { "typeName": "InstitutionBoolExp" }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "staff_member_bool_exp",
+            "operand": {
+              "object": {
+                "type": "staff_member",
+                "comparableFields": [
+                  {
+                    "fieldName": "first_name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "last_name",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": { "typeName": "StaffMemberBoolExp" }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "institution",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "location",
+                "type": "location"
+              },
+              {
+                "name": "staff",
+                "type": "[[staff_member]]"
+              },
+              {
+                "name": "departments",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "Institution"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "institution",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "location": {
+                    "column": {
+                      "name": "location"
+                    }
+                  },
+                  "staff": {
+                    "column": {
+                      "name": "staff"
+                    }
+                  },
+                  "departments": {
+                    "column": {
+                      "name": "departments"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "institution",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "location",
+            "fields": [
+              {
+                "name": "city",
+                "type": "String"
+              },
+              {
+                "name": "country",
+                "type": "String"
+              },
+              {
+                "name": "campuses",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "Location"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "location",
+                "fieldMapping": {
+                  "city": {
+                    "column": {
+                      "name": "city"
+                    }
+                  },
+                  "country": {
+                    "column": {
+                      "name": "country"
+                    }
+                  },
+                  "campuses": {
+                    "column": {
+                      "name": "campuses"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "location",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["city", "country", "campuses"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "staff_member",
+            "fields": [
+              {
+                "name": "first_name",
+                "type": "String"
+              },
+              {
+                "name": "last_name",
+                "type": "String"
+              },
+              {
+                "name": "specialities",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "StaffMember"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "staff_member",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  },
+                  "specialities": {
+                    "column": {
+                      "name": "specialities"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "staff_member",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["first_name", "last_name", "specialities"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "institutions",
+            "arguments": [],
+            "objectType": "institution",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "institutions",
+              "argumentMapping": {}
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "InstitutionMany"
+              }
+            },
+            "filterExpressionType": "institution_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "institutions",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "custom",
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:8101"
+              }
+            },
+            "headers": {},
+            "schema": {
+              "version": "v0.2",
+              "schema": {
+                "scalar_types": {
+                  "Actor_Name": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  },
+                  "Bool": {
+                    "representation": {
+                      "type": "boolean"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "eq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Bool"
+                        }
+                      }
+                    }
+                  },
+                  "HeaderMap": {
+                    "representation": {
+                      "type": "json"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  },
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {
+                      "max": {
+                        "type": "max"
+                      },
+                      "min": {
+                        "type": "min"
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    }
+                  },
+                  "String": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {
+                      "max": {
+                        "type": "max"
+                      },
+                      "min": {
+                        "type": "min"
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "like": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "object_types": {
+                  "actor": {
+                    "description": "An actor",
+                    "fields": {
+                      "favourite_author_id": {
+                        "description": "The actor's favourite author ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "id": {
+                        "description": "The actor's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "movie_id": {
+                        "description": "The actor's movie ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "name": {
+                        "description": "The actor's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "city": {
+                    "description": "A city",
+                    "fields": {
+                      "name": {
+                        "description": "The city's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "country": {
+                    "description": "A country",
+                    "fields": {
+                      "area_km2": {
+                        "description": "The country's area size in square kilometers",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "cities": {
+                        "description": "The cities in the country",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "city"
+                          }
+                        }
+                      },
+                      "id": {
+                        "description": "The country's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "The country's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "genre": {
+                    "description": "A movie genre",
+                    "fields": {
+                      "id": {
+                        "description": "The genre's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "movies": {
+                        "description": "Notable movies of this genre",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "movie"
+                          }
+                        }
+                      },
+                      "name": {
+                        "description": "The genre's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "institution": {
+                    "description": "An institution",
+                    "fields": {
+                      "departments": {
+                        "description": "The institution's departments",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "id": {
+                        "description": "The institution's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "location": {
+                        "description": "The institution's location",
+                        "type": {
+                          "type": "named",
+                          "name": "location"
+                        }
+                      },
+                      "name": {
+                        "description": "The institution's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "staff": {
+                        "description": "The institution's staff",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "array",
+                            "element_type": {
+                              "type": "named",
+                              "name": "staff_member"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "location": {
+                    "description": "A location",
+                    "fields": {
+                      "campuses": {
+                        "description": "The location's campuses",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "city": {
+                        "description": "The location's city",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "country": {
+                        "description": "The location's country",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "country_id": {
+                        "description": "The location's country ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "login_response": {
+                    "description": "Response to a login action",
+                    "fields": {
+                      "headers": {
+                        "description": "Response headers to be forwarded",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "response": {
+                        "description": "Authentication successful or not",
+                        "type": {
+                          "type": "named",
+                          "name": "Bool"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "movie": {
+                    "description": "A movie",
+                    "fields": {
+                      "genres": {
+                        "description": "The movie's genres",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "genre"
+                          }
+                        }
+                      },
+                      "id": {
+                        "description": "The movie's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "rating": {
+                        "description": "The movie's rating",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "title": {
+                        "description": "The movie's title",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "name_query": {
+                    "description": "parameters for querying by name",
+                    "fields": {
+                      "first_name": {
+                        "description": "The actor's first name or null to match any first name",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "last_name": {
+                        "description": "The actor's last name or null to match any last",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "session_info": {
+                    "description": "Session details",
+                    "fields": {
+                      "expiry": {
+                        "description": "Token expiry",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "token": {
+                        "description": "Session token",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "session_response": {
+                    "description": "Response of session details",
+                    "fields": {
+                      "headers": {
+                        "description": "Response headers to be forwarded",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "response": {
+                        "description": "Session details",
+                        "type": {
+                          "type": "named",
+                          "name": "session_info"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "staff_member": {
+                    "description": "A staff member",
+                    "fields": {
+                      "favourite_artist_id": {
+                        "description": "The artist_id of the staff member's favourite artist",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "favourite_movie_id": {
+                        "description": "The movie_id of the staff member's favourite movie",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "first_name": {
+                        "description": "The staff member's first name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "last_name": {
+                        "description": "The staff member's last name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "specialities": {
+                        "description": "The staff member's specialities",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "actors",
+                    "description": "A collection of actors",
+                    "arguments": {},
+                    "type": "actor",
+                    "uniqueness_constraints": {
+                      "ActorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "name": "movies",
+                    "description": "A collection of movies",
+                    "arguments": {},
+                    "type": "movie",
+                    "uniqueness_constraints": {
+                      "MovieByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "name": "countries",
+                    "description": "A collection of countries",
+                    "arguments": {},
+                    "type": "country",
+                    "uniqueness_constraints": {
+                      "CountryByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "name": "institutions",
+                    "description": "A collection of institutions",
+                    "arguments": {},
+                    "type": "institution",
+                    "uniqueness_constraints": {
+                      "InstitutionByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "name": "actors_by_movie",
+                    "description": "Actors parameterized by movie",
+                    "arguments": {
+                      "movie_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "type": "actor",
+                    "uniqueness_constraints": {}
+                  },
+                  {
+                    "name": "movies_by_actor_name",
+                    "description": "Movies filtered by actor name search parameters",
+                    "arguments": {
+                      "_headers": {
+                        "description": "headers",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "actor_name": {
+                        "description": "the actor name components to search by",
+                        "type": {
+                          "type": "named",
+                          "name": "name_query"
+                        }
+                      }
+                    },
+                    "type": "movie",
+                    "uniqueness_constraints": {}
+                  }
+                ],
+                "functions": [
+                  {
+                    "name": "latest_actor_id",
+                    "description": "Get the ID of the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_actor_name",
+                    "description": "Get the name of the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Actor_Name"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_actor",
+                    "description": "Get the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actor_by_id",
+                    "description": "Get actor by ID",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_movie_by_id",
+                    "description": "Get movie by ID",
+                    "arguments": {
+                      "movie_id": {
+                        "description": "the id of the movie to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "movie"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_name",
+                    "description": "Get actors by name",
+                    "arguments": {
+                      "name": {
+                        "description": "the name components to search by",
+                        "type": {
+                          "type": "named",
+                          "name": "name_query"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "actor_names_by_movie",
+                    "description": "Get actor names by movie ID",
+                    "arguments": {
+                      "movie_id": {
+                        "description": "the id of the movie to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_all_actors",
+                    "description": "Get all the actors",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_all_movies",
+                    "description": "Get all the movies",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "movie"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_movie_id_bounds",
+                    "description": "Get all actors within a given lower and upper movie id bound",
+                    "arguments": {
+                      "lower_bound": {
+                        "description": "the lower bound for movie id",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "upper_bound": {
+                        "description": "the upper bound for movie id",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_bool_exp",
+                    "description": "Get all actors with a boolean expression",
+                    "arguments": {
+                      "actor_bool_exp": {
+                        "description": "boolean expression over actor",
+                        "type": {
+                          "type": "predicate",
+                          "object_type_name": "actor"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_movie_id",
+                    "description": "Get all actors from a movie by movie ID",
+                    "arguments": {
+                      "movie_id": {
+                        "description": "the id of the movie to fetch the actors from",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_institutions_by_institution_query",
+                    "description": "Get institutions by specifying parts of institution object. For example by 'location.city'. All fields are optional.",
+                    "arguments": {
+                      "institution_query": {
+                        "description": "The institution query object. All fields are optional",
+                        "type": {
+                          "type": "named",
+                          "name": "institution"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "institution"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_session_details",
+                    "description": "Get session details of a user",
+                    "arguments": {
+                      "_headers": {
+                        "description": "headers required for session details",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "user_id": {
+                        "description": "user id of the user",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "session_response"
+                    }
+                  }
+                ],
+                "procedures": [
+                  {
+                    "name": "upsert_actor",
+                    "description": "Insert or update an actor",
+                    "arguments": {
+                      "actor": {
+                        "description": "The actor to insert or update",
+                        "type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "update_actor_name_by_id",
+                    "description": "Update an actor name given the ID and new name",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "the new name of the actor",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "uppercase_actor_name_by_id",
+                    "description": "Uppercase an actor name given the ID",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "uppercase_all_actor_names",
+                    "description": "Uppercase all actor names",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "uppercase_all_actor_names_return_names_list",
+                    "description": "Uppercase all actor names and return a list of the updated names",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "login",
+                    "description": "Perform a user login",
+                    "arguments": {
+                      "_headers": {
+                        "description": "headers required for authentication",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "password": {
+                        "description": "password of the user",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "username": {
+                        "description": "username of the user",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "login_response"
+                    }
+                  },
+                  {
+                    "name": "noop_procedure",
+                    "description": "Procedure which does not perform any actual mutuations on the data",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "String"
+                      }
+                    }
+                  },
+                  {
+                    "name": "add_movie_with_genres",
+                    "description": "Add a movie with genres",
+                    "arguments": {
+                      "movie": {
+                        "description": "The movie to add",
+                        "type": {
+                          "type": "named",
+                          "name": "movie"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "movie"
+                    }
+                  }
+                ],
+                "capabilities": {
+                  "query": {
+                    "aggregates": {
+                      "count_scalar_type": "Int"
+                    }
+                  }
+                }
+              },
+              "capabilities": {
+                "version": "0.2.0",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {},
+                      "aggregates": {}
+                    },
+                    "exists": {
+                      "unrelated": {},
+                      "nested_collections": {},
+                      "nested_scalar_collections": {}
+                    }
+                  },
+                  "mutation": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {},
+                    "nested": {
+                      "array": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "require_graphql_config": false,
+    "require_valid_ndc_v01_version": true,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true,
+    "require_unique_command_graphql_names": true,
+    "allow_partial_supergraph": false,
+    "json_session_variables": true,
+    "disallow_array_field_compared_with_scalar_boolean_type": true,
+    "allow_boolean_expression_fields_without_graphql": true,
+    "require_unique_model_graphql_names": true,
+    "disallow_object_boolean_expression_type": true,
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true,
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true,
+    "require_nested_support_for_order_by_expressions": true,
+    "disallow_model_v1_ordering_non_scalar_fields": true,
+    "disallow_array_relationship_in_order_by": true,
+    "disallow_multidimensional_arrays_in_boolean_expressions": true
+  }
+}

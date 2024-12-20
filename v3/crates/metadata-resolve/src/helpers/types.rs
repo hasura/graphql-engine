@@ -174,6 +174,7 @@ pub(crate) fn get_object_type_for_boolean_expression<'a>(
         .ok_or(Error::from(
         boolean_expressions::BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
             type_name: boolean_expression_type.object_type.clone(),
+            boolean_expression_type_name: boolean_expression_type.name.clone(),
         },
     ))
 }
@@ -190,6 +191,7 @@ pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
         .ok_or(Error::from(
             boolean_expressions::BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
                 type_name: object_boolean_expression_type.object_type.clone(),
+                boolean_expression_type_name: object_boolean_expression_type.name.clone(),
             },
         ))
 }

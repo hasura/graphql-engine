@@ -56,7 +56,7 @@ pub(crate) fn resolve_object_boolean_graphql(
         comparable_fields
     {
         match comparable_field_kind {
-            ComparableFieldKind::Scalar => {
+            ComparableFieldKind::Scalar | ComparableFieldKind::ScalarArray => {
                 if let Some(scalar_boolean_expression_type) =
                     scalar_boolean_expression_types.get(comparable_field_type_name)
                 {

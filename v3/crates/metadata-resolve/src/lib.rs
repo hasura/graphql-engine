@@ -31,7 +31,7 @@ pub use stages::boolean_expressions::{
     BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
     IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo,
     ObjectComparisonKind, OperatorMapping, ResolvedObjectBooleanExpressionType,
-    ScalarBooleanExpressionGraphqlConfig,
+    ScalarBooleanExpressionGraphqlConfig, ScalarComparisonKind,
 };
 pub use stages::data_connectors::{
     ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset, NdcVersion,

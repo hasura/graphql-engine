@@ -451,7 +451,8 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
                                     supports_nested_object_ordering: false,
-                                    supports_nested_array_filtering: false,
+                                    supports_nested_object_array_filtering: false,
+                                    supports_nested_scalar_array_filtering: false,
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,
@@ -947,7 +948,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                             "AlbumId",
                                         ),
                                     ): ComparisonExpressionInfo {
-                                        object_type_name: Some(
+                                        boolean_expression_type_name: Some(
                                             Qualified {
                                                 subgraph: SubgraphName(
                                                     "subgraphs",
@@ -992,13 +993,14 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                             ),
                                         },
                                         logical_operators: Exclude,
+                                        field_kind: Scalar,
                                     },
                                     FieldName(
                                         Identifier(
                                             "ArtistId",
                                         ),
                                     ): ComparisonExpressionInfo {
-                                        object_type_name: Some(
+                                        boolean_expression_type_name: Some(
                                             Qualified {
                                                 subgraph: SubgraphName(
                                                     "subgraphs",
@@ -1043,13 +1045,14 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                             ),
                                         },
                                         logical_operators: Exclude,
+                                        field_kind: Scalar,
                                     },
                                     FieldName(
                                         Identifier(
                                             "Title",
                                         ),
                                     ): ComparisonExpressionInfo {
-                                        object_type_name: Some(
+                                        boolean_expression_type_name: Some(
                                             Qualified {
                                                 subgraph: SubgraphName(
                                                     "subgraphs",
@@ -1094,6 +1097,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                             ),
                                         },
                                         logical_operators: Exclude,
+                                        field_kind: Scalar,
                                     },
                                 },
                                 relationship_fields: {},
@@ -1253,7 +1257,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                     "AlbumId",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -1298,13 +1302,14 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                             FieldName(
                                 Identifier(
                                     "ArtistId",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -1349,13 +1354,14 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                             FieldName(
                                 Identifier(
                                     "Title",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -1400,6 +1406,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                         },
                         relationship_fields: {},

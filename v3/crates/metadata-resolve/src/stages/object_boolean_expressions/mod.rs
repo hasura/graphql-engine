@@ -109,6 +109,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         object_types.get(&qualified_object_type_name).map_err(|_| {
             boolean_expressions::BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
                 type_name: qualified_object_type_name.clone(),
+                boolean_expression_type_name: qualified_name.clone(),
             }
         })?;
 
@@ -338,10 +339,11 @@ pub fn resolve_scalar_fields(
                         scalar_fields.insert(
                             field_name.clone(),
                             boolean_expressions::ComparisonExpressionInfo {
-                                object_type_name: None,
+                                boolean_expression_type_name: None,
                                 operator_mapping,
                                 operators,
                                 logical_operators: LogicalOperators::Exclude,
+                                field_kind: boolean_expressions::ScalarComparisonKind::Scalar,
                             },
                         );
                     };

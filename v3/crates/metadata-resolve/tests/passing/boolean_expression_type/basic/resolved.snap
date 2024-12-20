@@ -377,7 +377,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                     "author_id",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -437,13 +437,14 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                             FieldName(
                                 Identifier(
                                     "first_name",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -503,13 +504,14 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                             FieldName(
                                 Identifier(
                                     "last_name",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -569,6 +571,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                         },
                         relationship_fields: {},

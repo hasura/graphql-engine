@@ -20,6 +20,7 @@ pub use types::{
     IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo,
     ObjectComparisonKind, OperatorMapping, ResolvedObjectBooleanExpressionType,
     ResolvedObjectBooleanExpressionTypeFields, ScalarBooleanExpressionGraphqlConfig,
+    ScalarComparisonKind,
 };
 
 use super::aggregate_boolean_expressions;

@@ -1,11 +1,9 @@
-use super::error::BooleanExpressionError;
-use super::graphql;
-use super::helpers;
-use super::BooleanExpressionIssue;
-pub use super::{
-    BooleanExpressionComparableRelationship, ComparableFieldKind, ComparisonExpressionInfo,
+use super::{
+    error::BooleanExpressionError, graphql, helpers, BooleanExpressionComparableRelationship,
+    BooleanExpressionIssue, ComparableFieldKind, ComparisonExpressionInfo,
     ObjectComparisonExpressionInfo, ObjectComparisonKind, OperatorMapping,
     ResolvedObjectBooleanExpressionType, ResolvedObjectBooleanExpressionTypeFields,
+    ScalarComparisonKind,
 };
 use crate::stages::{
     graphql_config, object_types, relationships, scalar_boolean_expressions, type_permissions,
@@ -76,6 +74,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
             .ok_or_else(
                 || BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
                     type_name: qualified_object_type_name.clone(),
+                    boolean_expression_type_name: boolean_expression_type_name.clone(),
                 },
             )?;
 
@@ -326,7 +325,7 @@ fn resolve_comparable_fields(
         let field_type = field.field_type.get_underlying_type_name();
 
         // get type underlying boolean expression
-        let (field_kind, boolean_expression_underlying_type) = match &raw_boolean_expression_type
+        let (field_kind, boolean_expression_operand_type) = match &raw_boolean_expression_type
             .operand
         {
             BooleanExpressionOperand::Object(BooleanExpressionObjectOperand { r#type, .. })
@@ -342,30 +341,35 @@ fn resolve_comparable_fields(
             BooleanExpressionOperand::Scalar(BooleanExpressionScalarOperand { r#type, .. })
             | BooleanExpressionOperand::ScalarAggregate(
                 BooleanExpressionScalarAggregateOperand { r#type, .. },
-            ) => (ComparableFieldKind::Scalar, r#type.clone()),
-        };
-        if let QualifiedBaseType::List(_) = field.field_type.underlying_type {
-            if field_kind == ComparableFieldKind::Scalar {
-                issues.push(
-                    BooleanExpressionIssue::BooleanExpressionArrayFieldComparedWithScalarType {
-                        field_name: comparable_field.field_name.clone(),
-                        boolean_expression_type_name: field_boolean_expression_type_name,
-                    },
-                );
-                continue;
+            ) => {
+                let field_kind = match field.field_type.underlying_type {
+                    QualifiedBaseType::List(_) => ComparableFieldKind::ScalarArray,
+                    QualifiedBaseType::Named(_) => ComparableFieldKind::Scalar,
+                };
+                (field_kind, r#type.clone())
             }
+        };
+
+        if field.field_type.is_multidimensional_array_type() {
+            issues.push(
+                BooleanExpressionIssue::MultidimensionalArrayComparableFieldNotSupported {
+                    boolean_expression_type_name: boolean_expression_type_name.clone(),
+                    field_name: comparable_field.field_name.clone(),
+                    field_type: field.field_type.clone(),
+                },
+            );
         }
 
-        let qualified_boolean_expression_type =
-            mk_qualified_type_name(&boolean_expression_underlying_type, subgraph);
+        let qualified_boolean_expression_operand_type =
+            mk_qualified_type_name(&boolean_expression_operand_type, subgraph);
 
         // ensure the two types are the same
-        if qualified_boolean_expression_type != *field_type {
+        if qualified_boolean_expression_operand_type != *field_type {
             return Err(BooleanExpressionError::FieldTypeMismatch {
                 field_boolean_expression_type_name: field_boolean_expression_type_name.clone(),
                 field_name: comparable_field.field_name.clone(),
                 field_type: field_type.clone(),
-                underlying_type: qualified_boolean_expression_type,
+                underlying_type: qualified_boolean_expression_operand_type,
             });
         }
 
@@ -390,7 +394,7 @@ fn resolve_comparable_fields(
             &resolved_comparable_fields
         {
             match comparable_field_kind {
-                ComparableFieldKind::Scalar => {
+                ComparableFieldKind::Scalar | ComparableFieldKind::ScalarArray => {
                     if let Some(scalar_boolean_expression_type) =
                         scalar_boolean_expression_types.get(comparable_field_type_name)
                     {
@@ -410,7 +414,17 @@ fn resolve_comparable_fields(
                             scalar_fields.insert(
                                 comparable_field_name.clone(),
                                 ComparisonExpressionInfo {
-                                    object_type_name: Some(comparable_field_type_name.clone()),
+                                    field_kind: match comparable_field_kind {
+                                        ComparableFieldKind::ScalarArray => {
+                                            ScalarComparisonKind::ScalarArray
+                                        }
+                                        ComparableFieldKind::Scalar => ScalarComparisonKind::Scalar,
+                                        ComparableFieldKind::Object
+                                        | ComparableFieldKind::ObjectArray => unreachable!(),
+                                    },
+                                    boolean_expression_type_name: Some(
+                                        comparable_field_type_name.clone(),
+                                    ),
                                     operators: scalar_boolean_expression_type
                                         .comparison_operators
                                         .clone(),
@@ -443,9 +457,10 @@ fn resolve_comparable_fields(
                                         ObjectComparisonKind::ObjectArray
                                     }
                                     ComparableFieldKind::Object => ObjectComparisonKind::Object,
-                                    ComparableFieldKind::Scalar => unreachable!(),
+                                    ComparableFieldKind::Scalar
+                                    | ComparableFieldKind::ScalarArray => unreachable!(),
                                 },
-                                object_type_name: comparable_field_type_name.clone(),
+                                boolean_expression_type_name: comparable_field_type_name.clone(),
                                 underlying_object_type_name: Qualified::new(
                                     (*field_subgraph).clone(),
                                     object_operand.r#type.clone(),

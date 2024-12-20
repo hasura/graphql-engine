@@ -466,7 +466,12 @@ pub struct DataConnectorCapabilities {
     /// Whether not filtering using 'exists' over nested object arrays is supported
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
-    pub supports_nested_array_filtering: bool,
+    pub supports_nested_object_array_filtering: bool,
+
+    /// Whether not filtering using 'exists' over nested scalar arrays is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_nested_scalar_array_filtering: bool,
 
     /// Whether or not aggregates are supported
     #[serde(default = "serde_ext::ser_default")]
@@ -538,7 +543,13 @@ fn mk_ndc_01_capabilities(
         supports_explaining_mutations: capabilities.mutation.explain.is_some(),
         supports_nested_object_filtering: capabilities.query.nested_fields.filter_by.is_some(),
         supports_nested_object_ordering: capabilities.query.nested_fields.order_by.is_some(),
-        supports_nested_array_filtering: capabilities.query.exists.nested_collections.is_some(),
+        supports_nested_object_array_filtering: capabilities
+            .query
+            .exists
+            .nested_collections
+            .is_some(),
+        // Filtering by nested scalar arrays is not supported in NDC 0.1.x
+        supports_nested_scalar_array_filtering: false,
         supports_aggregates: capabilities.query.aggregates.as_ref().map(|_agg| {
             DataConnectorAggregateCapabilities {
                 supports_nested_object_aggregations: capabilities
@@ -575,7 +586,16 @@ fn mk_ndc_02_capabilities(
         supports_explaining_mutations: capabilities.mutation.explain.is_some(),
         supports_nested_object_filtering: capabilities.query.nested_fields.filter_by.is_some(),
         supports_nested_object_ordering: capabilities.query.nested_fields.order_by.is_some(),
-        supports_nested_array_filtering: capabilities.query.exists.nested_collections.is_some(),
+        supports_nested_object_array_filtering: capabilities
+            .query
+            .exists
+            .nested_collections
+            .is_some(),
+        supports_nested_scalar_array_filtering: capabilities
+            .query
+            .exists
+            .nested_scalar_collections
+            .is_some(),
         supports_aggregates: capabilities.query.aggregates.as_ref().map(|_agg| {
             DataConnectorAggregateCapabilities {
                 supports_nested_object_aggregations: capabilities
@@ -669,7 +689,8 @@ mod tests {
             supports_explaining_mutations: false,
             supports_nested_object_filtering: false,
             supports_nested_object_ordering: false,
-            supports_nested_array_filtering: false,
+            supports_nested_object_array_filtering: false,
+            supports_nested_scalar_array_filtering: false,
             supports_aggregates: None,
             supports_query_variables: false,
             supports_relationships: None,
@@ -719,7 +740,8 @@ mod tests {
             supports_explaining_mutations: false,
             supports_nested_object_filtering: false,
             supports_nested_object_ordering: false,
-            supports_nested_array_filtering: false,
+            supports_nested_object_array_filtering: false,
+            supports_nested_scalar_array_filtering: false,
             supports_aggregates: None,
             supports_query_variables: false,
             supports_relationships: None,

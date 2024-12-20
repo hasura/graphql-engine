@@ -83,6 +83,7 @@ pub enum RootFieldKind {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ObjectFieldKind {
     Scalar,
+    ScalarArray,
     Object,
     ObjectArray,
 }

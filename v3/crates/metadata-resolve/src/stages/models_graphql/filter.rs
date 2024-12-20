@@ -101,7 +101,7 @@ pub(crate) fn resolve_filter_expression_type(
                         boolean_expression_types,
                         object_types,
                         models,
-    flags
+                        flags,
                     )?;
                     Ok((ModelExpressionType::BooleanExpressionType(
                         boolean_expression_object_type.clone(),

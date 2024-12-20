@@ -1015,20 +1015,48 @@ fn eval_in_collection(
 
             get_collection_by_name(collection, &arguments, state)
         }
-        ndc_models::ExistsInCollection::NestedCollection { .. } => Err((
-            StatusCode::NOT_IMPLEMENTED,
-            Json(ndc_models::ErrorResponse {
-                message: "ExistsInCollection::NestedCollection is not supported".to_string(),
-                details: serde_json::Value::Null,
-            }),
-        )),
-        ndc_models::ExistsInCollection::NestedScalarCollection { .. } => Err((
-            StatusCode::NOT_IMPLEMENTED,
-            Json(ndc_models::ErrorResponse {
-                message: "ExistsInCollection::NestedScalarCollection is not supported".to_string(),
-                details: serde_json::Value::Null,
-            }),
-        )),
+        ndc_models::ExistsInCollection::NestedCollection {
+            column_name,
+            arguments: _,
+            field_path,
+        } => {
+            let value = eval_column_field_path(item, column_name, Some(field_path))?;
+            serde_json::from_value(value).map_err(|_| {
+                (
+                    StatusCode::BAD_REQUEST,
+                    Json(ndc_models::ErrorResponse {
+                        message: "nested collection must be an array of objects".into(),
+                        details: serde_json::Value::Null,
+                    }),
+                )
+            })
+        }
+        ndc_models::ExistsInCollection::NestedScalarCollection {
+            column_name,
+            arguments: _,
+            field_path,
+        } => {
+            let value = eval_column_field_path(item, column_name, Some(field_path))?;
+            match value {
+                serde_json::Value::Null => Ok(vec![]),
+                serde_json::Value::Array(value_array) => {
+                    let wrapped_array_values = value_array
+                        .iter()
+                        .map(|v| {
+                            BTreeMap::from([(ndc_models::FieldName::from("__value"), v.clone())])
+                        })
+                        .collect();
+                    Ok(wrapped_array_values)
+                }
+                _ => Err((
+                    StatusCode::BAD_REQUEST,
+                    Json(ndc_models::ErrorResponse {
+                        message: "nested scalar collection column value must be an array".into(),
+                        details: serde_json::Value::Null,
+                    }),
+                )),
+            }
+        }
     }
 }
 

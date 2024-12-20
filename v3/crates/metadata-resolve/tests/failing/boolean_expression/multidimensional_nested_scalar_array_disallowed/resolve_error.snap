@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/multidimensional_nested_scalar_array_disallowed/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+the type of the comparable field 'departments' on the boolean expresssion 'institution_bool_exp (in subgraph default)' is a multidimensional array type: [[String]]. Multidimensional arrays are not supported in boolean expressions

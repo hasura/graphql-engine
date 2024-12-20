@@ -3,4 +3,4 @@ source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: msg
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/nested_object_no_capability/metadata.json
 ---
-The data connector custom (in subgraph __unknown_namespace) cannot be used for filtering nested object location_bool_exp (in subgraph __unknown_namespace) within institution_bool_exp (in subgraph __unknown_namespace) as it has not defined any capabilities for nested object filtering
+The data connector 'custom (in subgraph __unknown_namespace)' does not support filtering inside nested objects. The comparable field 'location' within 'institution_bool_exp (in subgraph __unknown_namespace)' is of a nested object type: location (in subgraph __unknown_namespace)

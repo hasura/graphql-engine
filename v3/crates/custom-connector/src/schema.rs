@@ -45,8 +45,8 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
                 exists: ndc_models::ExistsCapabilities {
                     named_scopes: None,
                     unrelated: Some(ndc_models::LeafCapability {}),
-                    nested_collections: None,
-                    nested_scalar_collections: None,
+                    nested_collections: Some(ndc_models::LeafCapability {}),
+                    nested_scalar_collections: Some(ndc_models::LeafCapability {}),
                 },
             },
             relationships: if state.enable_relationship_support {

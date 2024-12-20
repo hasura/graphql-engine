@@ -21,7 +21,7 @@ use metadata_resolve::{
     ObjectComparisonExpressionInfo, ObjectComparisonKind, ObjectTypeWithRelationships,
     OperatorMapping, Qualified, QualifiedTypeReference, RelationshipCapabilities,
     RelationshipField, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
-    ScalarBooleanExpressionGraphqlConfig,
+    ScalarBooleanExpressionGraphqlConfig, ScalarComparisonKind,
 };
 
 use crate::mk_deprecation_status;
@@ -182,7 +182,10 @@ fn build_comparable_fields_schema(
                 types::BooleanExpressionAnnotation::ObjectBooleanExpressionField(
                     types::ObjectBooleanExpressionField::Field {
                         field_name: field_name.clone(),
-                        object_field_kind: ObjectFieldKind::Scalar,
+                        object_field_kind: match comparison_expression.field_kind {
+                            ScalarComparisonKind::Scalar => ObjectFieldKind::Scalar,
+                            ScalarComparisonKind::ScalarArray => ObjectFieldKind::ScalarArray,
+                        },
                         object_type: object_type_name.clone(),
                         deprecated: field_definition.deprecated.clone(),
                     },
@@ -230,7 +233,9 @@ fn build_comparable_fields_schema(
             let registered_type_name =
                 builder.register_type(TypeId::InputObjectBooleanExpressionType {
                     graphql_type_name: object_boolean_expression_graphql.graphql_type_name.clone(),
-                    gds_type_name: object_comparison_expression.object_type_name.clone(),
+                    gds_type_name: object_comparison_expression
+                        .boolean_expression_type_name
+                        .clone(),
                 });
 
             let field_object_type_representation = gds

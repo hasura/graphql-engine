@@ -532,7 +532,8 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                     supports_explaining_mutations: false,
                                     supports_nested_object_filtering: true,
                                     supports_nested_object_ordering: true,
-                                    supports_nested_array_filtering: false,
+                                    supports_nested_object_array_filtering: false,
+                                    supports_nested_scalar_array_filtering: false,
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,

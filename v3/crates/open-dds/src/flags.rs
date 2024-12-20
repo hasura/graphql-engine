@@ -34,6 +34,7 @@ pub enum Flag {
     DisallowModelV1OrderingNonScalarFields,
     DisallowArrayRelationshipInOrderBy,
     DisallowDuplicateOperatorDefinitionsForScalarType,
+    DisallowMultidimensionalArraysInBooleanExpressions,
 }
 
 impl Flag {
@@ -84,6 +85,9 @@ impl Flag {
             Flag::DisallowArrayRelationshipInOrderBy => "disallow_array_relationship_in_order_by",
             Flag::DisallowDuplicateOperatorDefinitionsForScalarType => {
                 "disallow_duplicate_operator_definitions_for_scalar_type"
+            }
+            Flag::DisallowMultidimensionalArraysInBooleanExpressions => {
+                "disallow_multidimensional_arrays_in_boolean_expressions"
             }
         }
     }

@@ -85,6 +85,15 @@ impl QualifiedTypeReference {
             QualifiedBaseType::Named(type_name) => type_name,
         }
     }
+
+    pub fn is_multidimensional_array_type(&self) -> bool {
+        match &self.underlying_type {
+            QualifiedBaseType::List(inner_type) => {
+                matches!(inner_type.underlying_type, QualifiedBaseType::List(_))
+            }
+            QualifiedBaseType::Named(_) => false,
+        }
+    }
 }
 
 // should this argument be converted into an NDC expression

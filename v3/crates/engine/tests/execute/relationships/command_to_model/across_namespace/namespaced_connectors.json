@@ -1345,7 +1345,9 @@
                       "aggregates": {}
                     },
                     "exists": {
-                      "unrelated": {}
+                      "unrelated": {},
+                      "nested_collections": {},
+                      "nested_scalar_collections": {}
                     }
                   },
                   "mutation": {},
@@ -2707,7 +2709,9 @@
                       "aggregates": {}
                     },
                     "exists": {
-                      "unrelated": {}
+                      "unrelated": {},
+                      "nested_collections": {},
+                      "nested_scalar_collections": {}
                     }
                   },
                   "mutation": {},

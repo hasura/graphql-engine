@@ -17,16 +17,19 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
 pub enum BooleanExpressionIssue {
-    #[error("The data connector {data_connector_name} cannot be used for filtering nested array {nested_type_name:} within {parent_type_name:} as it has not defined any capabilities for nested array filtering")]
-    NoNestedArrayFilteringCapabilitiesDefined {
-        parent_type_name: Qualified<CustomTypeName>,
-        nested_type_name: Qualified<CustomTypeName>,
+    #[error("The data connector '{data_connector_name}' does not support filtering by nested object arrays. The comparable field '{field_name}' within {boolean_expression_type_name}' is of an object array type: {field_type}")]
+    DataConnectorDoesNotSupportNestedObjectArrayFiltering {
         data_connector_name: Qualified<DataConnectorName>,
-    },
-    #[error("The underlying type for the field {field_name} is array, but the boolean expression type used for the field is {boolean_expression_type_name}, which is a scalar boolean expression type")]
-    BooleanExpressionArrayFieldComparedWithScalarType {
-        field_name: FieldName,
         boolean_expression_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        field_type: QualifiedTypeReference,
+    },
+    #[error("The data connector '{data_connector_name}' does not support filtering by nested scalar arrays. The comparable field '{field_name}' within '{boolean_expression_type_name}' is of a scalar array type: {field_type}")]
+    DataConnectorDoesNotSupportNestedScalarArrayFiltering {
+        data_connector_name: Qualified<DataConnectorName>,
+        boolean_expression_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        field_type: QualifiedTypeReference,
     },
     #[error("the comparable field '{name}' is defined more than once in the boolean expression type '{type_name}'")]
     DuplicateComparableFieldFound {
@@ -45,15 +48,21 @@ pub enum BooleanExpressionIssue {
         name_source_1: FieldNameSource,
         name_source_2: FieldNameSource,
     },
+    #[error("the type of the comparable field '{field_name}' on the boolean expresssion '{boolean_expression_type_name}' is a multidimensional array type: {field_type}. Multidimensional arrays are not supported in boolean expressions")]
+    MultidimensionalArrayComparableFieldNotSupported {
+        boolean_expression_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        field_type: QualifiedTypeReference,
+    },
 }
 
 impl ShouldBeAnError for BooleanExpressionIssue {
     fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
         match self {
-            BooleanExpressionIssue::NoNestedArrayFilteringCapabilitiesDefined { .. } => {
-                flags.contains(open_dds::flags::Flag::RequireNestedArrayFilteringCapability)
-            }
-            BooleanExpressionIssue::BooleanExpressionArrayFieldComparedWithScalarType {
+            BooleanExpressionIssue::DataConnectorDoesNotSupportNestedObjectArrayFiltering {
+                ..
+            } => flags.contains(open_dds::flags::Flag::RequireNestedArrayFilteringCapability),
+            BooleanExpressionIssue::DataConnectorDoesNotSupportNestedScalarArrayFiltering {
                 ..
             } => flags
                 .contains(open_dds::flags::Flag::DisallowArrayFieldComparedWithScalarBooleanType),
@@ -61,6 +70,11 @@ impl ShouldBeAnError for BooleanExpressionIssue {
             | BooleanExpressionIssue::DuplicateComparableRelationshipFound { .. }
             | BooleanExpressionIssue::GraphqlFieldNameConflict { .. } => {
                 flags.contains(open_dds::flags::Flag::DisallowDuplicateNamesInBooleanExpressions)
+            }
+            BooleanExpressionIssue::MultidimensionalArrayComparableFieldNotSupported { .. } => {
+                flags.contains(
+                    open_dds::flags::Flag::DisallowMultidimensionalArraysInBooleanExpressions,
+                )
             }
         }
     }
@@ -108,6 +122,7 @@ pub struct BooleanExpressionsOutput {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ComparableFieldKind {
     Scalar,
+    ScalarArray,
     Object,
     ObjectArray,
 }
@@ -175,6 +190,12 @@ impl Default for OperatorMapping {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ScalarComparisonKind {
+    Scalar,
+    ScalarArray,
+}
+
 #[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparisonExpressionInfo {
@@ -183,11 +204,12 @@ pub struct ComparisonExpressionInfo {
     // it will be good to get rid of `Option` in future
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
-    pub object_type_name: Option<Qualified<CustomTypeName>>,
+    pub boolean_expression_type_name: Option<Qualified<CustomTypeName>>,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     #[serde_as(as = "Vec<(_, _)>")]
     pub operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
     pub logical_operators: LogicalOperators,
+    pub field_kind: ScalarComparisonKind,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -198,7 +220,7 @@ pub enum ObjectComparisonKind {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectComparisonExpressionInfo {
-    pub object_type_name: Qualified<CustomTypeName>,
+    pub boolean_expression_type_name: Qualified<CustomTypeName>,
     pub underlying_object_type_name: Qualified<CustomTypeName>,
     pub field_kind: ObjectComparisonKind,
 }

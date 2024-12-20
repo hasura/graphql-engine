@@ -629,7 +629,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     supports_explaining_mutations: false,
                                     supports_nested_object_filtering: true,
                                     supports_nested_object_ordering: true,
-                                    supports_nested_array_filtering: false,
+                                    supports_nested_object_array_filtering: false,
+                                    supports_nested_scalar_array_filtering: false,
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,
@@ -1023,7 +1024,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             "id",
                                         ),
                                     ): ComparisonExpressionInfo {
-                                        object_type_name: Some(
+                                        boolean_expression_type_name: Some(
                                             Qualified {
                                                 subgraph: SubgraphName(
                                                     "__unknown_namespace",
@@ -1051,13 +1052,14 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                         },
                                         logical_operators: Exclude,
+                                        field_kind: Scalar,
                                     },
                                     FieldName(
                                         Identifier(
                                             "rating",
                                         ),
                                     ): ComparisonExpressionInfo {
-                                        object_type_name: Some(
+                                        boolean_expression_type_name: Some(
                                             Qualified {
                                                 subgraph: SubgraphName(
                                                     "__unknown_namespace",
@@ -1105,13 +1107,14 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                         },
                                         logical_operators: Exclude,
+                                        field_kind: Scalar,
                                     },
                                     FieldName(
                                         Identifier(
                                             "title",
                                         ),
                                     ): ComparisonExpressionInfo {
-                                        object_type_name: Some(
+                                        boolean_expression_type_name: Some(
                                             Qualified {
                                                 subgraph: SubgraphName(
                                                     "__unknown_namespace",
@@ -1139,6 +1142,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                         },
                                         logical_operators: Exclude,
+                                        field_kind: Scalar,
                                     },
                                 },
                                 relationship_fields: {},
@@ -1298,7 +1302,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     "id",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "__unknown_namespace",
@@ -1326,13 +1330,14 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                             FieldName(
                                 Identifier(
                                     "rating",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "__unknown_namespace",
@@ -1380,13 +1385,14 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                             FieldName(
                                 Identifier(
                                     "title",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "__unknown_namespace",
@@ -1414,6 +1420,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                         },
                         relationship_fields: {},

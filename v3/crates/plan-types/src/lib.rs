@@ -19,7 +19,7 @@ pub use execution_plan::{
 };
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,
-    SourceNdcColumn,
+    SourceNdcColumn, EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
 };
 pub use ndc_field_alias::NdcFieldAlias;
 pub use ndc_function_ir_value::FUNCTION_IR_VALUE_COLUMN_NAME;

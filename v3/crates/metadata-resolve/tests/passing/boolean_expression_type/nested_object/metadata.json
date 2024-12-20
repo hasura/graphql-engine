@@ -339,6 +339,7 @@
                 "queryRootField": "InstitutionMany"
               }
             },
+            "filterExpressionType": "institution_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "id",

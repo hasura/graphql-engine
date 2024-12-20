@@ -307,11 +307,11 @@ fn boolean_expression_for_comparison(
             let object_boolean_expression_type = metadata
                 .boolean_expression_types
                 .objects
-                .get(&object_comparison_info.object_type_name)
+                .get(&object_comparison_info.boolean_expression_type_name)
                 .ok_or_else(|| {
                     PlanError::Internal(format!(
                         "Could not find boolean expression {}",
-                        object_comparison_info.object_type_name
+                        object_comparison_info.boolean_expression_type_name
                     ))
                 })?;
             match operand.as_ref() {

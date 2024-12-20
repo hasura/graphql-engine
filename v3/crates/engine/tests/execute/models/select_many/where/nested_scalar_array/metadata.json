@@ -1,0 +1,541 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "institutions",
+            "arguments": [],
+            "objectType": "institution",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "institutions",
+              "argumentMapping": {}
+            },
+            "filterExpressionType": "institution_bool_exp",
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "InstitutionMany"
+              }
+            },
+            "orderableFields": [
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "institutions",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-institution-id"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "role": "user2",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "institution",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "location",
+                "type": "location"
+              },
+              {
+                "name": "staff",
+                "type": "[staff_member]"
+              },
+              {
+                "name": "departments",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "Institution"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "institution",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "location": {
+                    "column": {
+                      "name": "location"
+                    }
+                  },
+                  "staff": {
+                    "column": {
+                      "name": "staff"
+                    }
+                  },
+                  "departments": {
+                    "column": {
+                      "name": "departments"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "institution",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              },
+              {
+                "role": "user2",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "institution_bool_exp",
+            "operand": {
+              "object": {
+                "type": "institution",
+                "comparableFields": [
+                  {
+                    "fieldName": "id",
+                    "booleanExpressionType": "Int_bool_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "location",
+                    "booleanExpressionType": "location_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": false
+            },
+            "graphql": {
+              "typeName": "institution_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "staff_member",
+            "fields": [
+              {
+                "name": "first_name",
+                "type": "String"
+              },
+              {
+                "name": "last_name",
+                "type": "String"
+              },
+              {
+                "name": "specialities",
+                "type": "[String]"
+              },
+              {
+                "name": "favourite_artist_id",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "StaffMember"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "staff_member",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  },
+                  "specialities": {
+                    "column": {
+                      "name": "specialities"
+                    }
+                  },
+                  "favourite_artist_id": {
+                    "column": {
+                      "name": "favourite_artist_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "staff_member",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "first_name",
+                    "last_name",
+                    "specialities",
+                    "favourite_artist_id"
+                  ]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": [
+                    "first_name",
+                    "last_name",
+                    "specialities",
+                    "favourite_artist_id"
+                  ]
+                }
+              },
+              {
+                "role": "user2",
+                "output": {
+                  "allowedFields": [
+                    "first_name",
+                    "last_name",
+                    "specialities",
+                    "favourite_artist_id"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "location",
+            "fields": [
+              {
+                "name": "city",
+                "type": "String"
+              },
+              {
+                "name": "country",
+                "type": "String"
+              },
+              {
+                "name": "country_id",
+                "type": "Int!"
+              },
+              {
+                "name": "campuses",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "Location"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "location",
+                "fieldMapping": {
+                  "city": {
+                    "column": {
+                      "name": "city"
+                    }
+                  },
+                  "country": {
+                    "column": {
+                      "name": "country"
+                    }
+                  },
+                  "country_id": {
+                    "column": {
+                      "name": "country_id"
+                    }
+                  },
+                  "campuses": {
+                    "column": {
+                      "name": "campuses"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "location_bool_exp",
+            "operand": {
+              "object": {
+                "type": "location",
+                "comparableFields": [
+                  {
+                    "fieldName": "city",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "country",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "campuses",
+                    "booleanExpressionType": "String_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": false
+            },
+            "graphql": {
+              "typeName": "location_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "location",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["city", "country", "country_id", "campuses"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["city", "country", "country_id", "campuses"]
+                }
+              },
+              {
+                "role": "user2",
+                "output": {
+                  "allowedFields": ["city", "country", "country_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "String_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_like",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {
+                      "_eq": "_eq",
+                      "_like": "like"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_bool_exp"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "require_graphql_config": false,
+    "require_valid_ndc_v01_version": true,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true,
+    "require_unique_command_graphql_names": true,
+    "allow_partial_supergraph": false,
+    "json_session_variables": true,
+    "disallow_array_field_compared_with_scalar_boolean_type": true,
+    "allow_boolean_expression_fields_without_graphql": true,
+    "require_unique_model_graphql_names": true,
+    "disallow_object_boolean_expression_type": true,
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true,
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true,
+    "require_nested_support_for_order_by_expressions": true,
+    "disallow_model_v1_ordering_non_scalar_fields": true,
+    "disallow_array_relationship_in_order_by": true
+  }
+}

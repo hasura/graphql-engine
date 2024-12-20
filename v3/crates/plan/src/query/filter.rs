@@ -97,6 +97,19 @@ pub fn plan_expression<'a>(
                 predicate: Box::new(resolved_predicate),
             })
         }
+        Expression::LocalNestedScalarArray {
+            predicate,
+            field_path,
+            column,
+        } => {
+            let resolved_predicate =
+                plan_expression(predicate, relationships, remote_predicates, unique_number)?;
+            Ok(ResolvedFilterExpression::LocalNestedScalarArray {
+                column: column.clone(),
+                field_path: field_path.clone(),
+                predicate: Box::new(resolved_predicate),
+            })
+        }
         Expression::RelationshipLocalComparison {
             relationship,
             field_path,

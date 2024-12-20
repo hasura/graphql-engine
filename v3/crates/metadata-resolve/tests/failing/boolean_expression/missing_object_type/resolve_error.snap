@@ -3,4 +3,4 @@ source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: msg
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/missing_object_type/metadata.json
 ---
-unknown type used in object boolean expression: author (in subgraph __unknown_namespace)
+unknown type 'author (in subgraph __unknown_namespace)' used in object boolean expression 'author_bool_exp (in subgraph __unknown_namespace)'

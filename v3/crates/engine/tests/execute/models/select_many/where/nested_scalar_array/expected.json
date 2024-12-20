@@ -1,0 +1,32 @@
+[
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "name": "Queen Mary University of London",
+          "location": {
+            "campuses": [
+              "Mile End",
+              "Whitechapel",
+              "Charterhouse Square",
+              "West Smithfield"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "InstitutionMany": []
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: the field campuses on type location_bool_exp is not found"
+      }
+    ]
+  }
+]

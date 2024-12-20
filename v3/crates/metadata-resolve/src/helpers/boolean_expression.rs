@@ -5,6 +5,7 @@ use crate::stages::{
     scalar_boolean_expressions,
 };
 use crate::types::subgraph::Qualified;
+use crate::QualifiedTypeReference;
 use indexmap::IndexMap;
 use open_dds::{
     models::ModelName,
@@ -39,13 +40,12 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
             // look up the leaf boolean expression type
             let leaf_boolean_expression = boolean_expression_types
                 .objects
-                .get(&object_comparison_expression_info.object_type_name)
+                .get(&object_comparison_expression_info.boolean_expression_type_name)
                 .ok_or_else(|| {
-                    Error::from(
-                    boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+                    Error::from(boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
                         parent_boolean_expression: object_boolean_expression_type.name.clone(),
                         child_boolean_expression: object_comparison_expression_info
-                            .object_type_name
+                            .boolean_expression_type_name
                             .clone(),
                     },
                 )
@@ -56,26 +56,35 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                     // throw an error if our data connector does not support filtering nested
                     // objects
                     if !data_connector.capabilities.supports_nested_object_filtering {
-                        return Err(
-                    Error::from(boolean_expressions::BooleanExpressionError::NoNestedObjectFilteringCapabilitiesDefined {
-                        parent_type_name: object_boolean_expression_type.name.clone(),
-                        nested_type_name: object_comparison_expression_info
-                            .object_type_name
-                            .clone(),
-                        data_connector_name: data_connector.name.clone(),
-                        }));
+                        let field_type = get_field_type(
+                            field_name,
+                            object_types,
+                            object_boolean_expression_type,
+                        )?;
+                        return Err(Error::from(boolean_expressions::BooleanExpressionError::DataConnectorDoesNotSupportNestedObjectFiltering {
+                            data_connector_name: data_connector.name.clone(),
+                            boolean_expression_type_name: object_boolean_expression_type.name.clone(),
+                            field_name: field_name.clone(),
+                            field_type: field_type.clone(),
+                            }));
                     }
                 }
                 boolean_expressions::ObjectComparisonKind::ObjectArray => {
                     // raise a warning if our data connector does not support filtering nested arrays
-                    if !data_connector.capabilities.supports_nested_array_filtering {
-                        issues.push(
-                    boolean_expressions::BooleanExpressionIssue::NoNestedArrayFilteringCapabilitiesDefined {
-                        parent_type_name: object_boolean_expression_type.name.clone(),
-                        nested_type_name: object_comparison_expression_info
-                            .object_type_name
-                            .clone(),
-                        data_connector_name: data_connector.name.clone(),
+                    if !data_connector
+                        .capabilities
+                        .supports_nested_object_array_filtering
+                    {
+                        let field_type = get_field_type(
+                            field_name,
+                            object_types,
+                            object_boolean_expression_type,
+                        )?;
+                        issues.push(boolean_expressions::BooleanExpressionIssue::DataConnectorDoesNotSupportNestedObjectArrayFiltering {
+                            data_connector_name: data_connector.name.clone(),
+                            boolean_expression_type_name: object_boolean_expression_type.name.clone(),
+                            field_name: field_name.clone(),
+                            field_type: field_type.clone(),
                         });
                     }
                 }
@@ -102,7 +111,7 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                     data_connector_name: data_connector.name.clone(),
                     parent_boolean_expression_type_name: object_boolean_expression_type.name.clone(),
                     field_name: field_name.clone(),
-                    nested_boolean_expression_type_name: object_comparison_expression_info.object_type_name.clone(),
+                    nested_boolean_expression_type_name: object_comparison_expression_info.boolean_expression_type_name.clone(),
                 }));
             }
 
@@ -124,16 +133,40 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
             // this is always present with `BooleanExpressionType` but not
             // `ObjectBooleanExpressionType`, remove this partiality in
             // future
-            if let Some(object_type_name) = &comparison_expression_info.object_type_name {
+            if let Some(boolean_expression_type_name) =
+                &comparison_expression_info.boolean_expression_type_name
+            {
                 let leaf_boolean_expression = boolean_expression_types
                     .scalars
-                    .get(object_type_name)
+                    .get(boolean_expression_type_name)
                     .ok_or_else(|| {
                         Error::from(boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
                             parent_boolean_expression: object_boolean_expression_type.name.clone(),
-                            child_boolean_expression: object_type_name.clone(),
+                            child_boolean_expression: boolean_expression_type_name.clone(),
                         })
                     })?;
+
+                match comparison_expression_info.field_kind {
+                    boolean_expressions::ScalarComparisonKind::ScalarArray => {
+                        if !data_connector
+                            .capabilities
+                            .supports_nested_scalar_array_filtering
+                        {
+                            let field_type = get_field_type(
+                                field_name,
+                                object_types,
+                                object_boolean_expression_type,
+                            )?;
+                            issues.push(boolean_expressions::BooleanExpressionIssue::DataConnectorDoesNotSupportNestedScalarArrayFiltering {
+                                data_connector_name: data_connector.name.clone(),
+                                boolean_expression_type_name: object_boolean_expression_type.name.clone(),
+                                field_name: field_name.clone(),
+                                field_type: field_type.clone(),
+                            });
+                        }
+                    }
+                    boolean_expressions::ScalarComparisonKind::Scalar => {}
+                }
 
                 // check scalar type
                 validate_data_connector_with_scalar_boolean_expression_type(
@@ -161,6 +194,34 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
         }
     }
     Ok(issues)
+}
+
+fn get_field_type<'a>(
+    field_name: &FieldName,
+    object_types: &'a BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    object_boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
+) -> Result<&'a QualifiedTypeReference, Error> {
+    let operand_object_type = object_types.get(&object_boolean_expression_type.object_type).ok_or_else(|| {
+        Error::from(boolean_expressions::BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
+            type_name: object_boolean_expression_type.name.clone(),
+            boolean_expression_type_name: object_boolean_expression_type.name.clone(),
+        })
+    })?;
+
+    operand_object_type
+        .object_type
+        .fields
+        .get(field_name)
+        .map(|field_definition| &field_definition.field_type)
+        .ok_or_else(|| {
+            Error::from(boolean_expressions::BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
+                field_name: field_name.clone(),
+                object_boolean_expression_type: object_boolean_expression_type.name.clone(),
+            })
+        })
 }
 
 // validate comparable relationship field against data connector

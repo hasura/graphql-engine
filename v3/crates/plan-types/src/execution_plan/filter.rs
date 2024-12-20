@@ -19,6 +19,11 @@ pub enum ResolvedFilterExpression {
         field_path: Vec<DataConnectorColumnName>,
         predicate: Box<ResolvedFilterExpression>,
     },
+    LocalNestedScalarArray {
+        column: DataConnectorColumnName,
+        field_path: Vec<DataConnectorColumnName>,
+        predicate: Box<ResolvedFilterExpression>,
+    },
     LocalRelationshipComparison {
         field_path: Vec<DataConnectorColumnName>,
         relationship: NdcRelationshipName,

@@ -3633,6 +3633,10 @@
         "disallow_duplicate_operator_definitions_for_scalar_type": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_multidimensional_arrays_in_boolean_expressions": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

@@ -248,6 +248,17 @@ fn replace_predicates_in_filter_expression(
                 *predicate, predicates,
             )?),
         },
+        ResolvedFilterExpression::LocalNestedScalarArray {
+            column,
+            field_path,
+            predicate,
+        } => ResolvedFilterExpression::LocalNestedScalarArray {
+            column,
+            field_path,
+            predicate: Box::new(replace_predicates_in_filter_expression(
+                *predicate, predicates,
+            )?),
+        },
         ResolvedFilterExpression::LocalRelationshipComparison {
             field_path,
             relationship,

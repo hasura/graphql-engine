@@ -13,12 +13,16 @@ use plan_types::{
 };
 
 #[derive(Debug, thiserror::Error)]
+#[allow(clippy::enum_variant_names)]
 pub enum NdcV01CompatibilityError {
     #[error("Nested relationships in expressions are not supported in NDC v0.1.x")]
     NestedRelationshipsInExpressionsNotSupported,
 
     #[error("Nested relationships in order by targets are not supported in NDC v0.1.x")]
     NestedRelationshipsInOrderByTargetsNotSupported,
+
+    #[error("Comparisons against elements in scalar arrays are not supported in NDC v0.1.x")]
+    NestedScalarArrayComparisonsNotSupported,
 }
 
 pub fn make_query_request(
@@ -256,6 +260,11 @@ fn make_expression(
                 predicate: Some(Box::new(ndc_expression)),
             })
         }
+        ResolvedFilterExpression::LocalNestedScalarArray { .. } => Err(FieldError::InternalError(
+            FieldInternalError::NdcV01CompatibilityError(
+                NdcV01CompatibilityError::NestedScalarArrayComparisonsNotSupported,
+            ),
+        )),
         ResolvedFilterExpression::LocalFieldComparison(
             plan_types::LocalFieldComparison::UnaryComparison { column, operator },
         ) => Ok(ndc_models_v01::Expression::UnaryComparisonOperator {

@@ -1102,7 +1102,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     supports_explaining_mutations: false,
                                     supports_nested_object_filtering: true,
                                     supports_nested_object_ordering: true,
-                                    supports_nested_array_filtering: false,
+                                    supports_nested_object_array_filtering: false,
+                                    supports_nested_scalar_array_filtering: false,
                                     supports_aggregates: Some(
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,
@@ -1628,7 +1629,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     ),
                     aggregate_expression: None,
                     raw: ModelRaw {
-                        filter_expression_type: None,
+                        filter_expression_type: Some(
+                            Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "institution_bool_exp",
+                                    ),
+                                ),
+                            },
+                        ),
                         graphql: Some(
                             ModelGraphQlDefinitionV2 {
                                 select_uniques: [],
@@ -1667,7 +1679,209 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                         allow_subscriptions: false,
                     },
                 },
-                filter_expression_type: None,
+                filter_expression_type: Some(
+                    BooleanExpressionType(
+                        ResolvedObjectBooleanExpressionType {
+                            name: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "institution_bool_exp",
+                                    ),
+                                ),
+                            },
+                            object_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "institution",
+                                    ),
+                                ),
+                            },
+                            graphql: Some(
+                                BooleanExpressionGraphqlConfig {
+                                    type_name: TypeName(
+                                        Name(
+                                            "InstitutionBoolExp",
+                                        ),
+                                    ),
+                                    object_fields: {
+                                        FieldName(
+                                            Identifier(
+                                                "location",
+                                            ),
+                                        ): ObjectBooleanExpressionGraphqlConfig {
+                                            graphql_type_name: TypeName(
+                                                Name(
+                                                    "LocationBoolExp",
+                                                ),
+                                            ),
+                                        },
+                                    },
+                                    scalar_fields: {
+                                        FieldName(
+                                            Identifier(
+                                                "id",
+                                            ),
+                                        ): ScalarBooleanExpressionGraphqlConfig {
+                                            type_name: TypeName(
+                                                Name(
+                                                    "Int_Comparison_Exp",
+                                                ),
+                                            ),
+                                            is_null_operator_name: Some(
+                                                Name(
+                                                    "_is_null",
+                                                ),
+                                            ),
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ): ScalarBooleanExpressionGraphqlConfig {
+                                            type_name: TypeName(
+                                                Name(
+                                                    "String_Comparison_Exp",
+                                                ),
+                                            ),
+                                            is_null_operator_name: Some(
+                                                Name(
+                                                    "_is_null",
+                                                ),
+                                            ),
+                                        },
+                                    },
+                                    field_config: BooleanExpressionGraphqlFieldConfig {
+                                        where_field_name: Name(
+                                            "where",
+                                        ),
+                                        logical_operators: LogicalOperatorsGraphqlConfig {
+                                            and_operator_name: Name(
+                                                "_and",
+                                            ),
+                                            or_operator_name: Name(
+                                                "_or",
+                                            ),
+                                            not_operator_name: Name(
+                                                "_not",
+                                            ),
+                                        },
+                                    },
+                                },
+                            ),
+                            fields: ResolvedObjectBooleanExpressionTypeFields {
+                                object_fields: {
+                                    FieldName(
+                                        Identifier(
+                                            "location",
+                                        ),
+                                    ): ObjectComparisonExpressionInfo {
+                                        boolean_expression_type_name: Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "location_bool_exp",
+                                                ),
+                                            ),
+                                        },
+                                        underlying_object_type_name: Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "location",
+                                                ),
+                                            ),
+                                        },
+                                        field_kind: Object,
+                                    },
+                                },
+                                scalar_fields: {
+                                    FieldName(
+                                        Identifier(
+                                            "id",
+                                        ),
+                                    ): ComparisonExpressionInfo {
+                                        boolean_expression_type_name: Some(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "int_bool_exp",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                        operators: {},
+                                        operator_mapping: {
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: DataConnectorName(
+                                                    Identifier(
+                                                        "custom",
+                                                    ),
+                                                ),
+                                            }: OperatorMapping(
+                                                {},
+                                            ),
+                                        },
+                                        logical_operators: Exclude,
+                                        field_kind: Scalar,
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "name",
+                                        ),
+                                    ): ComparisonExpressionInfo {
+                                        boolean_expression_type_name: Some(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "string_bool_exp",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                        operators: {},
+                                        operator_mapping: {
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: DataConnectorName(
+                                                    Identifier(
+                                                        "custom",
+                                                    ),
+                                                ),
+                                            }: OperatorMapping(
+                                                {},
+                                            ),
+                                        },
+                                        logical_operators: Exclude,
+                                        field_kind: Scalar,
+                                    },
+                                },
+                                relationship_fields: {},
+                            },
+                            include_logical_operators: Yes,
+                        },
+                    ),
+                ),
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
                     select_uniques: [],
@@ -1814,7 +2028,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     "location",
                                 ),
                             ): ObjectComparisonExpressionInfo {
-                                object_type_name: Qualified {
+                                boolean_expression_type_name: Qualified {
                                     subgraph: SubgraphName(
                                         "default",
                                     ),
@@ -1843,7 +2057,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     "id",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -1871,13 +2085,14 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                             FieldName(
                                 Identifier(
                                     "name",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -1905,6 +2120,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                         },
                         relationship_fields: {},
@@ -2009,7 +2225,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     "city",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -2037,13 +2253,14 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                             FieldName(
                                 Identifier(
                                     "country",
                                 ),
                             ): ComparisonExpressionInfo {
-                                object_type_name: Some(
+                                boolean_expression_type_name: Some(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -2071,6 +2288,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 },
                                 logical_operators: Exclude,
+                                field_kind: Scalar,
                             },
                         },
                         relationship_fields: {},

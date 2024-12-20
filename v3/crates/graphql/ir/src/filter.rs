@@ -21,6 +21,7 @@ use open_dds::{
 use plan::count_model;
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
+    EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
 };
 
 /// Filter expression to be applied on a model/command selection set
@@ -197,6 +198,30 @@ fn resolve_object_boolean_expression<'s>(
                             column_path,
                             column,
                         )?,
+                        ObjectFieldKind::ScalarArray => {
+                            let inner_expression = resolve_scalar_boolean_expression(
+                                field_value,
+                                data_connector_link,
+                                &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
+                                &DataConnectorColumnName::from(
+                                    EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
+                                ), // Use the value virtual column name to represent the scalar value being compared against
+                            )?;
+
+                            Expression::LocalNestedScalarArray {
+                                // The column name is the root column
+                                column: column_path.first().map_or(column, Deref::deref).clone(),
+                                // The field path is the nesting path inside the root column, if any
+                                field_path: column_path
+                                    .iter()
+                                    .copied()
+                                    .chain([column])
+                                    .skip(1)
+                                    .cloned()
+                                    .collect(),
+                                predicate: Box::new(inner_expression),
+                            }
+                        }
                     }
                 }
                 ObjectBooleanExpressionField::RelationshipField(FilterRelationshipAnnotation {

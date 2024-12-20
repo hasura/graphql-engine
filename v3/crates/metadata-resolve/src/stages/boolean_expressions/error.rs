@@ -1,6 +1,7 @@
 use crate::helpers::type_mappings::TypeMappingCollectionError;
 use crate::stages::{data_connectors, graphql_config, relationships, scalar_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
+use crate::QualifiedTypeReference;
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType},
     models::ModelName,
@@ -10,12 +11,14 @@ use open_dds::{
 
 #[derive(Debug, thiserror::Error)]
 pub enum BooleanExpressionError {
-    #[error("unknown type used in object boolean expression: {type_name:}")]
+    #[error("unknown type '{type_name}' used in object boolean expression '{boolean_expression_type_name}'")]
     UnknownTypeInObjectBooleanExpressionType {
+        boolean_expression_type_name: Qualified<CustomTypeName>,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("unsupported type used in object boolean expression: {type_name:}; only object types are supported")]
+    #[error("unsupported type '{type_name}' used in object boolean expression. '{boolean_expression_type_name}'; only object types are supported")]
     UnsupportedTypeInObjectBooleanExpressionType {
+        boolean_expression_type_name: Qualified<CustomTypeName>,
         type_name: Qualified<CustomTypeName>,
     },
     #[error("unknown data connector {data_connector:} referenced in object boolean expression type {object_boolean_expression_type:}")]
@@ -71,11 +74,12 @@ pub enum BooleanExpressionError {
         field: FieldName,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("The data connector {data_connector_name} cannot be used for filtering nested object {nested_type_name:} within {parent_type_name:} as it has not defined any capabilities for nested object filtering")]
-    NoNestedObjectFilteringCapabilitiesDefined {
-        parent_type_name: Qualified<CustomTypeName>,
-        nested_type_name: Qualified<CustomTypeName>,
+    #[error("The data connector '{data_connector_name}' does not support filtering inside nested objects. The comparable field '{field_name}' within '{boolean_expression_type_name}' is of a nested object type: {field_type}")]
+    DataConnectorDoesNotSupportNestedObjectFiltering {
         data_connector_name: Qualified<DataConnectorName>,
+        boolean_expression_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        field_type: QualifiedTypeReference,
     },
     #[error("The data connector '{data_connector_name}' does not support filtering across nested relationships. The nested object field '{field_name}' within '{parent_boolean_expression_type_name}' references the boolean expression type '{nested_boolean_expression_type_name}' which has relationship comparisons, making them nested relationship comparisons.")]
     DataConnectorDoesNotSupportNestedRelationshipFiltering {

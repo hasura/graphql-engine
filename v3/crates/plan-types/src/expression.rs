@@ -7,6 +7,8 @@ use std::sync::Arc;
 
 use crate::{LocalModelRelationshipInfo, NdcRelationshipName, VariableName};
 
+pub const EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME: &str = "__value";
+
 /// Represent a boolean expression that can be used to filter data
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub enum Expression<'s> {
@@ -23,6 +25,14 @@ pub enum Expression<'s> {
     LocalField(LocalFieldComparison),
     /// Expression using a nested array for comparison
     LocalNestedArray {
+        column: DataConnectorColumnName,
+        field_path: Vec<DataConnectorColumnName>,
+        predicate: Box<Expression<'s>>,
+    },
+    /// Expression using a nested array of scalars for comparison.
+    /// Each scalar element is lifted into a virtual object with one '__value' property
+    /// that contains the scalar value
+    LocalNestedScalarArray {
         column: DataConnectorColumnName,
         field_path: Vec<DataConnectorColumnName>,
         predicate: Box<Expression<'s>>,

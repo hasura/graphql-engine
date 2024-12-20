@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/nested_scalar_array_no_capability/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+The data connector 'custom (in subgraph default)' does not support filtering by nested scalar arrays. The comparable field 'campuses' within 'location_bool_exp (in subgraph default)' is of a scalar array type: [String]
