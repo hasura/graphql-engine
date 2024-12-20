@@ -1,14 +1,14 @@
 use clap::Parser;
-use serde::Serialize;
-use std::net;
-use std::path::PathBuf;
-
 use engine::{
     get_base_routes, get_cors_layer, get_jsonapi_route, get_metadata_routes,
     internal_flags::{resolve_unstable_features, UnstableFeature},
     StartupError, VERSION,
 };
 use engine_types::ExposeInternalErrors;
+use graphql_ir::GraphqlRequestPipeline;
+use serde::Serialize;
+use std::net;
+use std::path::PathBuf;
 use tracing_util::{add_event_on_active_span, set_attribute_on_active_span, SpanVisibility};
 
 #[global_allocator]
@@ -117,7 +117,17 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         ExposeInternalErrors::Censor
     };
 
+    let request_pipeline = if server
+        .unstable_features
+        .contains(&UnstableFeature::EnableOpenDdPipelineForGraphql)
+    {
+        GraphqlRequestPipeline::OpenDd
+    } else {
+        GraphqlRequestPipeline::Old
+    };
+
     let state = engine::build_state(
+        request_pipeline,
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,

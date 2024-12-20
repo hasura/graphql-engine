@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use super::commands;
 use super::error;
 use super::root_field;
+use crate::GraphqlRequestPipeline;
 use graphql_schema::ApolloFederationRootFields;
 use graphql_schema::CommandSourceDetail;
 use graphql_schema::EntityFieldTypeNameMapping;
@@ -30,6 +31,7 @@ pub mod select_one;
 
 /// Generates IR for the selection set of type 'query root'
 pub fn generate_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
@@ -65,6 +67,7 @@ pub fn generate_ir<'n, 's>(
                             name: model_name,
                         } => {
                             let ir = generate_model_rootfield_ir(
+                                request_pipeline,
                                 &type_name,
                                 source.as_ref(),
                                 data_type,
@@ -176,6 +179,7 @@ fn generate_type_field_ir<'n, 's>(
 
 #[allow(clippy::too_many_arguments)]
 pub fn generate_model_rootfield_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     type_name: &ast::TypeName,
     source: Option<&'s Arc<metadata_resolve::ModelSource>>,
     data_type: &metadata_resolve::Qualified<CustomTypeName>,
@@ -209,6 +213,7 @@ pub fn generate_model_rootfield_ir<'n, 's>(
         RootFieldKind::SelectMany => root_field::QueryRootField::ModelSelectMany {
             selection_set: &field.selection_set,
             ir: select_many::select_many_generate_ir(
+                request_pipeline,
                 field,
                 field_call,
                 data_type,

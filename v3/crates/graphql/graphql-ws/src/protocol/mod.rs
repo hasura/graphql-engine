@@ -2,10 +2,9 @@ pub mod init;
 pub mod subscribe;
 pub mod types;
 
-use types::{ClientMessage, ServerMessage};
-
 use crate::metrics::WebSocketMetrics;
 use crate::websocket::types as ws;
+use types::{ClientMessage, ServerMessage};
 
 /// Protocol name for the GraphQL over WebSocket.
 /// ref: <https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#communication>

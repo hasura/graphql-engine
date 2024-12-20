@@ -5,7 +5,7 @@ use graphql_frontend::{
     execute_mutation_plan, execute_query_internal, execute_query_plan, generate_ir,
     ExecuteQueryResult, RootFieldResult,
 };
-use graphql_ir::{generate_request_plan, RequestPlan};
+use graphql_ir::{generate_request_plan, GraphqlRequestPipeline, RequestPlan};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use indexmap::IndexMap;
@@ -14,8 +14,8 @@ use open_dds::permissions::Role;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::runtime::Runtime;
-
 extern crate json_value_merge;
 use json_value_merge::Merge;
 use serde_json::Value;
@@ -55,11 +55,18 @@ pub fn bench_execute(
     let metadata_path = test_path.join("metadata.json");
     let metadata = merge_with_common_metadata(&metadata_path, &common_metadata_path);
 
-    let gds = GDS::new_with_default_flags(
+    let (resolved_metadata, _) = metadata_resolve::resolve(
         open_dds::traits::OpenDd::deserialize(metadata, jsonpath::JSONPath::new()).unwrap(),
+        &metadata_resolve::configuration::Configuration::default(),
     )
     .unwrap();
-    let schema = GDS::build_schema(&gds).unwrap();
+
+    let gds = GDS {
+        metadata: Arc::new(resolved_metadata.clone()),
+    };
+
+    let schema = gds.build_schema().unwrap();
+
     let http_context = HttpContext {
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
@@ -143,20 +150,41 @@ pub fn bench_execute(
         &(&runtime, &schema),
         |b, (runtime, schema)| {
             b.to_async(*runtime).iter(|| async {
-                generate_ir(schema, &session, &request_headers, &normalized_request).unwrap()
+                generate_ir(
+                    GraphqlRequestPipeline::Old,
+                    schema,
+                    &session,
+                    &request_headers,
+                    &normalized_request,
+                )
+                .unwrap()
             });
         },
     );
 
-    let ir = generate_ir(&schema, &session, &request_headers, &normalized_request).unwrap();
+    let ir = generate_ir(
+        GraphqlRequestPipeline::Old,
+        &schema,
+        &session,
+        &request_headers,
+        &normalized_request,
+    )
+    .unwrap();
 
     // Generate Query Plan
     group.bench_with_input(
         BenchmarkId::new("bench_execute", "Generate Query Plan"),
         &(&runtime),
         |b, runtime| {
-            b.to_async(*runtime)
-                .iter(|| async { generate_request_plan(&ir).unwrap() });
+            b.to_async(*runtime).iter(|| async {
+                generate_request_plan(
+                    &ir,
+                    &resolved_metadata,
+                    &session.clone().into(),
+                    &request_headers,
+                )
+                .unwrap()
+            });
         },
     );
 
@@ -166,7 +194,14 @@ pub fn bench_execute(
         &(&runtime),
         |b, runtime| {
             b.to_async(*runtime).iter(|| async {
-                match generate_request_plan(&ir).unwrap() {
+                match generate_request_plan(
+                    &ir,
+                    &resolved_metadata,
+                    &session.clone().into(),
+                    &request_headers,
+                )
+                .unwrap()
+                {
                     RequestPlan::QueryPlan(query_plan) => {
                         execute_query_plan(&http_context, query_plan, None).await
                     }
@@ -200,9 +235,11 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 execute_query_internal(
+                    GraphqlRequestPipeline::Old,
                     ExposeInternalErrors::Expose,
                     &http_context,
                     schema,
+                    &resolved_metadata.clone().into(),
                     &session,
                     &request_headers,
                     request.clone(),

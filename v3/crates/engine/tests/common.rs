@@ -1,6 +1,7 @@
 use anyhow::anyhow;
 use goldenfile::{differs::text_diff, Mint};
 use graphql_frontend::execute_query;
+use graphql_ir::GraphqlRequestPipeline;
 use graphql_schema::GDS;
 use hasura_authn_core::{
     Identity, JsonSessionVariableValue, Role, Session, SessionError, SessionVariableValue,
@@ -96,7 +97,14 @@ pub(crate) fn test_introspection_expectation(
             metadata
         );
 
-        let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
+        let (resolved_metadata, _) =
+            metadata_resolve::resolve(metadata, &test_metadata_resolve_configuration())?;
+
+        let arc_resolved_metadata = Arc::new(resolved_metadata);
+
+        let gds = GDS {
+            metadata: arc_resolved_metadata.clone(),
+        };
 
         let schema = GDS::build_schema(&gds)?;
 
@@ -140,12 +148,15 @@ pub(crate) fn test_introspection_expectation(
         };
 
         // Execute the test
+        // TODO: also run with new pipeline if test is suitably configured
         let mut responses = Vec::new();
         for session in &sessions {
             let (_, response) = execute_query(
+                GraphqlRequestPipeline::Old,
                 ExposeInternalErrors::Expose,
                 &test_ctx.http_context,
                 &schema,
+                &arc_resolved_metadata,
                 session,
                 &request_headers,
                 raw_request.clone(),
@@ -247,7 +258,15 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 metadata
             );
 
-            let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
+            let (resolved_metadata, _) =
+                metadata_resolve::resolve(metadata, &test_metadata_resolve_configuration())?;
+
+            let arc_resolved_metadata = Arc::new(resolved_metadata);
+
+            let gds = GDS {
+                metadata: arc_resolved_metadata.clone(),
+            };
+
             let schema = GDS::build_schema(&gds)?;
 
             // Verify successful serialization and deserialization of the schema.
@@ -327,7 +346,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             opendd_tests,
                             &query,
                             &schema,
-                            &gds.metadata,
+                            &arc_resolved_metadata.clone(),
                             session,
                             raw_request.clone(),
                             &test_ctx.http_context.clone().into(),
@@ -336,10 +355,13 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
 
                         // do actual test
+                        // TODO: maybe do OpenDD test too?
                         let (_, response) = execute_query(
+                            GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
+                            &arc_resolved_metadata.clone(),
                             session,
                             &request_headers,
                             raw_request.clone(),
@@ -351,6 +373,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
+                            arc_resolved_metadata.clone(),
                             session,
                             &request_headers,
                             raw_request.clone(),
@@ -383,9 +406,11 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
                         // do actual test
                         let (_, response) = execute_query(
+                            GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
+                            &arc_resolved_metadata,
                             session,
                             &request_headers,
                             raw_request.clone(),
@@ -397,6 +422,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
+                            arc_resolved_metadata.clone(),
                             session,
                             &request_headers,
                             raw_request.clone(),
@@ -487,10 +513,16 @@ pub fn test_execute_explain(
                 ..Default::default()
             },
         };
-        let gds = GDS::new(
+        let (resolved_metadata, _) = metadata_resolve::resolve(
             open_dds::traits::OpenDd::deserialize(metadata, jsonpath::JSONPath::new())?,
             &configuration,
         )?;
+
+        let arc_resolved_metadata = Arc::new(resolved_metadata);
+
+        let gds = GDS {
+            metadata: arc_resolved_metadata.clone(),
+        };
 
         let schema = GDS::build_schema(&gds)?;
         let request_headers = reqwest::header::HeaderMap::new();
@@ -509,9 +541,11 @@ pub fn test_execute_explain(
             variables: None,
         };
         let (_, raw_response) = graphql_frontend::execute_explain(
+            GraphqlRequestPipeline::Old,
             ExposeInternalErrors::Expose,
             &test_ctx.http_context,
             &schema,
+            &arc_resolved_metadata,
             &session,
             &request_headers,
             raw_request,
@@ -717,6 +751,7 @@ async fn run_query_graphql_ws(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
+    metadata: Arc<metadata_resolve::Metadata>,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
@@ -734,9 +769,11 @@ async fn run_query_graphql_ws(
     });
 
     let context = graphql_ws::Context {
+        request_pipeline: GraphqlRequestPipeline::Old,
         connection_expiry: graphql_ws::ConnectionExpiry::Never,
         http_context: http_context.clone(),
         expose_internal_errors,
+        metadata,
         project_id: project_id.cloned(),
         schema: Arc::new(schema.clone()),
         auth_config: Arc::new(dummy_auth_config),

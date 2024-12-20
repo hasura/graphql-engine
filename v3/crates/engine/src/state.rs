@@ -1,10 +1,10 @@
 use crate::{EngineState, StartupError};
+use engine_types::{ExposeInternalErrors, HttpContext};
+use graphql_ir::GraphqlRequestPipeline;
 use hasura_authn::resolve_auth_config;
 use std::fmt::Display;
 use std::path::PathBuf;
 use std::sync::Arc;
-
-use engine_types::{ExposeInternalErrors, HttpContext};
 
 #[allow(clippy::print_stdout)]
 /// Print any build warnings to stdout
@@ -16,6 +16,7 @@ fn print_warnings<T: Display>(warnings: Vec<T>) {
 
 /// Build the engine state - include auth, metadata, and sql context.
 pub fn build_state(
+    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
@@ -50,6 +51,7 @@ pub fn build_state(
     let (jsonapi_catalog, _json_api_warnings) = jsonapi::Catalog::new(&resolved_metadata);
 
     let state = EngineState {
+        request_pipeline,
         expose_internal_errors,
         http_context,
         graphql_state: Arc::new(schema),

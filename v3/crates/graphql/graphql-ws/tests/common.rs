@@ -1,6 +1,7 @@
 use axum::{extract::State, response::IntoResponse, routing::get};
 use engine_types::{ExposeInternalErrors, HttpContext};
 use futures_util::{SinkExt, StreamExt};
+use graphql_ir::GraphqlRequestPipeline;
 use graphql_ws::Context;
 use graphql_ws::GRAPHQL_WS_PROTOCOL;
 use std::{net, path::PathBuf, sync::Arc};
@@ -71,7 +72,7 @@ pub(crate) async fn start_websocket_server_expiry(
         metadata_resolve::resolve(metadata, &metadata_resolve_configuration).unwrap();
 
     let schema = graphql_schema::GDS {
-        metadata: resolved_metadata.into(),
+        metadata: resolved_metadata.clone().into(),
     }
     .build_schema()
     .unwrap();
@@ -89,6 +90,8 @@ pub(crate) async fn start_websocket_server_expiry(
     let context = Context {
         connection_expiry: expiry,
         http_context,
+        metadata: resolved_metadata.into(),
+        request_pipeline: GraphqlRequestPipeline::Old,
         expose_internal_errors: ExposeInternalErrors::Expose,
         project_id: None,
         schema: Arc::new(schema),

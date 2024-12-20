@@ -81,7 +81,13 @@ mod tests {
                 &request,
             )?;
 
-            let ir = generate_ir(&schema, &session, &request_headers, &normalized_request)?;
+            let ir = generate_ir(
+                graphql_ir::GraphqlRequestPipeline::Old,
+                &schema,
+                &session,
+                &request_headers,
+                &normalized_request,
+            )?;
             let mut expected = mint.new_goldenfile_with_differ(
                 expected_path,
                 Box::new(|file1, file2| {

@@ -26,9 +26,11 @@ pub async fn handle_request(
                 {
                     Box::pin(
                         graphql_frontend::execute_query(
+                            state.request_pipeline,
                             state.expose_internal_errors,
                             &state.http_context,
                             &state.graphql_state,
+                            &state.resolved_metadata,
                             &session,
                             &headers,
                             request,
@@ -66,9 +68,11 @@ pub async fn handle_explain_request(
             || {
                 Box::pin(
                     graphql_frontend::execute_explain(
+                        state.request_pipeline,
                         state.expose_internal_errors,
                         &state.http_context,
                         &state.graphql_state,
+                        &state.resolved_metadata,
                         &session,
                         &headers,
                         request,
@@ -93,6 +97,8 @@ pub async fn handle_websocket_request(
     // Create the context for the websocket server
     let context = graphql_ws::Context {
         connection_expiry: graphql_ws::ConnectionExpiry::Never,
+        request_pipeline: engine_state.request_pipeline,
+        metadata: engine_state.resolved_metadata,
         http_context: engine_state.http_context,
         project_id: None, // project_id is not needed for OSS v3-engine.
         expose_internal_errors: engine_state.expose_internal_errors,

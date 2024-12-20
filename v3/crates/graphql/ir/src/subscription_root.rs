@@ -10,11 +10,13 @@ use open_dds::{models, types::CustomTypeName};
 use super::error;
 use super::query_root::{select_aggregate, select_many, select_one};
 use super::root_field;
+use crate::GraphqlRequestPipeline;
 use graphql_schema::RootFieldKind;
 use graphql_schema::GDS;
 use graphql_schema::{Annotation, NamespaceAnnotation, OutputAnnotation, RootFieldAnnotation};
 
 pub fn generate_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     selection_set: &'s gql::normalized_ast::SelectionSet<'s, GDS>,
@@ -38,6 +40,7 @@ pub fn generate_ir<'n, 's>(
                             polling_interval_ms,
                         } => {
                             let ir = generate_model_rootfield_ir(
+                                request_pipeline,
                                 &type_name,
                                 source.as_ref(),
                                 data_type,
@@ -71,6 +74,7 @@ pub fn generate_ir<'n, 's>(
 
 #[allow(clippy::too_many_arguments)]
 fn generate_model_rootfield_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     type_name: &ast::TypeName,
     source: Option<&'s Arc<metadata_resolve::ModelSource>>,
     data_type: &metadata_resolve::Qualified<CustomTypeName>,
@@ -118,6 +122,7 @@ fn generate_model_rootfield_ir<'n, 's>(
         RootFieldKind::SelectMany => root_field::SubscriptionRootField::ModelSelectMany {
             selection_set: &field.selection_set,
             ir: select_many::select_many_generate_ir(
+                request_pipeline,
                 field,
                 field_call,
                 data_type,

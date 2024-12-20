@@ -7,34 +7,34 @@ mod order_by;
 mod relationships;
 mod selection_set;
 mod types;
+use crate::query_root::select_many::ModelSelectManySelection;
 use crate::{
     ApolloFederationRootFields, MutationRootField, ProcedureBasedCommand, QueryRootField,
     SubscriptionRootField, IR,
 };
 pub use error::Error;
 use graphql_schema::{GDSRoleNamespaceGetter, GDS};
+use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql as gql;
+pub use metadata_resolve::Metadata;
 use plan_types::{
     ExecutionTree, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
     ProcessResponseAs, QueryExecutionPlan, UniqueNumber,
 };
+use std::sync::Arc;
 pub use types::{
     ApolloFederationSelect, MutationPlan, MutationSelect, NodeQueryPlan, Plan, QueryPlan,
     RequestPlan, SubscriptionSelect,
 };
 
-// in the new world, this is where we'll create execution plans in GraphQL
-// it's here because
-// a) it marks old and new more clearly
-// b) it removes graphql concepts from `execute`
-
-/// Build a plan to handle a given request. This plan will either be a mutation plan or a query
-/// plan, but currently can't be both. This may change when we support protocols other than
-/// GraphQL.
-/// This should really live in `graphql_ir`
+/// Build a plan to handle a given GraphQL request. This plan will either be a mutation plan or a query
+/// plan, but currently can't be both.
 pub fn generate_request_plan<'n, 's, 'ir>(
     ir: &'ir IR<'n, 's>,
+    metadata: &'s Metadata,
+    session: &Arc<Session>,
+    request_headers: &reqwest::header::HeaderMap,
 ) -> Result<RequestPlan<'n, 's, 'ir>, error::Error> {
     let mut unique_number = UniqueNumber::new();
 
@@ -42,7 +42,16 @@ pub fn generate_request_plan<'n, 's, 'ir>(
         IR::Query(ir) => {
             let mut query_plan = IndexMap::new();
             for (alias, field) in ir {
-                query_plan.insert(alias.clone(), plan_query(field, &mut unique_number)?);
+                query_plan.insert(
+                    alias.clone(),
+                    plan_query(
+                        field,
+                        metadata,
+                        session,
+                        request_headers,
+                        &mut unique_number,
+                    )?,
+                );
             }
             Ok(RequestPlan::QueryPlan(query_plan))
         }
@@ -72,7 +81,7 @@ pub fn generate_request_plan<'n, 's, 'ir>(
         }
         IR::Subscription(alias, ir) => Ok(RequestPlan::SubscriptionPlan(
             alias.clone(),
-            plan_subscription(ir, &mut unique_number)?,
+            plan_subscription(ir, metadata, session, request_headers, &mut unique_number)?,
         )),
     }
 }
@@ -113,6 +122,9 @@ fn plan_mutation<'n, 's>(
 
 fn plan_subscription<'s, 'ir>(
     root_field: &'ir SubscriptionRootField<'_, 's>,
+    metadata: &'s Metadata,
+    session: &Arc<Session>,
+    request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<SubscriptionSelect<'s, 'ir>, error::Error> {
     match root_field {
@@ -143,8 +155,30 @@ fn plan_subscription<'s, 'ir>(
             selection_set,
             polling_interval_ms,
         } => {
-            let execution_tree =
-                model_selection::plan_query_execution(&ir.model_selection, unique_number)?;
+            let execution_tree = match ir.model_selection {
+                ModelSelectManySelection::Ir(ref model_selection) => {
+                    model_selection::plan_query_execution(model_selection, unique_number)
+                }
+                ModelSelectManySelection::OpenDd(ref model_selection) => {
+                    // TODO: expose more specific function in `plan` for just model selections
+                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                        &open_dds::query::Query::Model(model_selection.clone()),
+                        metadata,
+                        session,
+                        request_headers,
+                        unique_number,
+                    )
+                    .unwrap();
+                    match single_node_execution_plan {
+                        plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
+                        plan::SingleNodeExecutionPlan::Mutation(_) => {
+                            // we should use a more specific planning function to avoid
+                            // this as it _should not_ happen
+                            Err(error::Error::PlanExpectedQueryGotMutation)
+                        }
+                    }
+                }
+            }?;
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
@@ -192,6 +226,9 @@ fn reject_remote_joins(tree: ExecutionTree) -> Result<QueryExecutionPlan, error:
 // Given a singular root field of a query, plan the execution of that root field.
 fn plan_query<'n, 's, 'ir>(
     ir: &'ir QueryRootField<'n, 's>,
+    metadata: &'s Metadata,
+    session: &Arc<Session>,
+    request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<NodeQueryPlan<'n, 's, 'ir>, error::Error> {
     let query_plan = match ir {
@@ -235,8 +272,31 @@ fn plan_query<'n, 's, 'ir>(
         }
 
         QueryRootField::ModelSelectMany { ir, selection_set } => {
-            let execution_tree =
-                model_selection::plan_query_execution(&ir.model_selection, unique_number)?;
+            let execution_tree = match ir.model_selection {
+                ModelSelectManySelection::Ir(ref model_selection) => {
+                    model_selection::plan_query_execution(model_selection, unique_number)
+                }
+                ModelSelectManySelection::OpenDd(ref model_selection) => {
+                    // TODO: expose more specific function in `plan` for just model selections
+                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                        &open_dds::query::Query::Model(model_selection.clone()),
+                        metadata,
+                        session,
+                        request_headers,
+                        unique_number,
+                    )
+                    .unwrap();
+                    match single_node_execution_plan {
+                        plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
+                        plan::SingleNodeExecutionPlan::Mutation(_) => {
+                            // we should use a more specific planning function to avoid
+                            // this as it _should not_ happen
+                            Err(error::Error::PlanExpectedQueryGotMutation)
+                        }
+                    }
+                }
+            }?;
+
             NodeQueryPlan::NDCQueryExecution {
                 selection_set,
                 query_execution: NDCQueryExecution {

@@ -25,6 +25,7 @@ axum-ext = { path = "../utils/axum-ext" }
 engine-types = { path = "../engine-types" }
 execute = { path = "../execute" }
 graphql-frontend = { path = "../graphql/frontend" }
+graphql-ir = { path = "../graphql/ir" }
 graphql-schema = { path = "../graphql/schema" }
 graphql-ws = { path = "../graphql/graphql-ws" }
 hasura-authn = { path = "../auth/hasura-authn" }

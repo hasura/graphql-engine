@@ -110,7 +110,7 @@ where
 }
 
 // turn a single OpenDD IR Query into a query execution plan
-fn query_to_plan<'req, 'metadata>(
+pub fn query_to_plan<'req, 'metadata>(
     query: &'req Query,
     metadata: &'metadata Metadata,
     session: &Arc<Session>,

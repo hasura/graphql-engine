@@ -8,7 +8,10 @@ use std::sync::Arc;
 use async_recursion::async_recursion;
 use engine_types::{ExposeInternalErrors, HttpContext};
 use execute::ndc::client as ndc_client;
-use graphql_ir::{ApolloFederationSelect, MutationPlan, NodeQueryPlan, QueryPlan, RequestPlan};
+use graphql_ir::{
+    ApolloFederationSelect, GraphqlRequestPipeline, MutationPlan, NodeQueryPlan, QueryPlan,
+    RequestPlan,
+};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -23,17 +26,21 @@ use plan_types::{
 use tracing_util::{AttributeVisibility, SpanVisibility};
 
 pub async fn execute_explain(
+    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
+    metadata: &Arc<metadata_resolve::Metadata>,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
 ) -> (Option<ast::OperationType>, types::ExplainResponse) {
     explain_query_internal(
+        request_pipeline,
         expose_internal_errors,
         http_context,
         schema,
+        metadata,
         session,
         request_headers,
         request,
@@ -52,9 +59,11 @@ pub async fn execute_explain(
 
 /// Explains (query plan) a GraphQL query
 async fn explain_query_internal(
+    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
+    metadata: &Arc<metadata_resolve::Metadata>,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     raw_request: gql::http::RawRequest,
@@ -85,11 +94,17 @@ async fn explain_query_internal(
                         steps::normalize_request(schema, session, query, &raw_request)?;
 
                     // generate IR
-                    let ir =
-                        steps::build_ir(schema, session, request_headers, &normalized_request)?;
+                    let ir = steps::build_ir(
+                        request_pipeline,
+                        schema,
+                        session,
+                        request_headers,
+                        &normalized_request,
+                    )?;
 
                     // construct a plan to execute the request
-                    let request_plan = steps::build_request_plan(&ir)?;
+                    let request_plan =
+                        steps::build_request_plan(&ir, metadata, session, request_headers)?;
 
                     // explain the query plan
                     let response = tracer

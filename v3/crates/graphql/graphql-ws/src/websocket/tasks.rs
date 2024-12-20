@@ -1,10 +1,9 @@
-use axum::extract::ws;
-use futures_util::{SinkExt, StreamExt};
-use tokio::time::{timeout, Duration};
-
 use super::types;
 use crate::metrics::WebSocketMetrics;
 use crate::protocol;
+use axum::extract::ws;
+use futures_util::{SinkExt, StreamExt};
+use tokio::time::{timeout, Duration};
 
 /// Enum to represent whether the loop should continue or break.
 #[derive(PartialEq)]

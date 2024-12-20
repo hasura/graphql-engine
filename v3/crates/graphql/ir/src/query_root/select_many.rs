@@ -17,6 +17,7 @@ use crate::filter;
 use crate::model_selection;
 use crate::order_by::build_ndc_order_by;
 use crate::permissions;
+use crate::GraphqlRequestPipeline;
 use graphql_schema::GDS;
 use graphql_schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use metadata_resolve;
@@ -24,13 +25,19 @@ use metadata_resolve::Qualified;
 use plan::{count_model, process_argument_presets};
 use plan_types::UsagesCounts;
 
+#[derive(Debug, Serialize)]
+pub enum ModelSelectManySelection<'s> {
+    Ir(model_selection::ModelSelection<'s>),
+    OpenDd(open_dds::query::ModelSelection),
+}
+
 /// IR for the 'select_many' operation on a model
 #[derive(Debug, Serialize)]
 pub struct ModelSelectMany<'n, 's> {
     // The name of the field as published in the schema
     pub field_name: ast::Name,
 
-    pub model_selection: model_selection::ModelSelection<'s>,
+    pub model_selection: ModelSelectManySelection<'s>,
 
     // The Graphql output type of the operation
     pub type_container: &'n ast::TypeContainer<ast::TypeName>,
@@ -39,9 +46,11 @@ pub struct ModelSelectMany<'n, 's> {
     // used via relationships. And in future, the models/commands used in the filter clause
     pub usage_counts: UsagesCounts,
 }
+
 /// Generates the IR for a 'select_many' operation
 #[allow(irrefutable_let_patterns)]
 pub fn select_many_generate_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     data_type: &Qualified<open_dds::types::CustomTypeName>,
@@ -157,22 +166,30 @@ pub fn select_many_generate_ir<'n, 's>(
         where_clause,
         additional_filter: None,
     };
-
-    let model_selection = model_selection::model_selection_ir(
-        &field.selection_set,
-        data_type,
-        model_source,
-        model_arguments,
-        query_filter,
-        permissions::get_select_filter_predicate(&field_call.info)?,
-        limit,
-        offset,
-        order_by,
-        session_variables,
-        request_headers,
-        // Get all the models/commands that were used as relationships
-        &mut usage_counts,
-    )?;
+    let model_selection = match request_pipeline {
+        GraphqlRequestPipeline::OpenDd => Err(error::InternalEngineError::InternalGeneric {
+            description: "Not yet implemented - plan model select many for OpenDD".into(),
+        }),
+        GraphqlRequestPipeline::Old => {
+            Ok(ModelSelectManySelection::Ir(
+                model_selection::model_selection_ir(
+                    &field.selection_set,
+                    data_type,
+                    model_source,
+                    model_arguments,
+                    query_filter,
+                    permissions::get_select_filter_predicate(&field_call.info)?,
+                    limit,
+                    offset,
+                    order_by,
+                    session_variables,
+                    request_headers,
+                    // Get all the models/commands that were used as relationships
+                    &mut usage_counts,
+                )?,
+            ))
+        }
+    }?;
 
     Ok(ModelSelectMany {
         field_name: field_call.name.clone(),

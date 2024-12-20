@@ -10,6 +10,9 @@ pub enum Error {
 
     #[error("remote predicates are not supported in mutations")]
     RemotePredicatesAreNotSupportedInMutations,
+
+    #[error("planning returned mutation instead of query")]
+    PlanExpectedQueryGotMutation,
 }
 
 impl TraceableError for Error {
@@ -17,9 +20,8 @@ impl TraceableError for Error {
         match self {
             Self::Internal(_internal) => tracing_util::ErrorVisibility::Internal,
             Self::RemoteJoinsAreNotSupportedSubscriptions => tracing_util::ErrorVisibility::User,
-            Self::RemotePredicatesAreNotSupportedInMutations => {
-                tracing_util::ErrorVisibility::Internal
-            }
+            Self::RemotePredicatesAreNotSupportedInMutations
+            | Self::PlanExpectedQueryGotMutation => tracing_util::ErrorVisibility::Internal,
         }
     }
 }

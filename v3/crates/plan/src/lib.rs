@@ -17,7 +17,7 @@ pub use query::{
     from_model_selection, get_field_mapping_of_field_name, ndc_query_to_query_execution_plan,
     plan_expression, plan_query_request, process_argument_presets,
     process_command_relationship_definition, process_model_predicate,
-    process_model_relationship_definition, CommandPlan, ExecutionPlan, FromCommand,
+    process_model_relationship_definition, query_to_plan, CommandPlan, ExecutionPlan, FromCommand,
     ModelAggregateSelection, NDCFunction, NDCProcedure, NDCQuery, QueryExecution,
     SingleNodeExecutionPlan, UnresolvedArgument,
 };

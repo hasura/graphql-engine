@@ -87,63 +87,65 @@
         "ir": {
           "field_name": "ArticleMany",
           "model_selection": {
-            "data_connector": {
-              "name": {
-                "name": "db"
-              },
-              "url": {
-                "singleUrl": "http://localhost:8080/"
-              },
-              "headers": {
-                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-              },
-              "capabilities": {
-                "supported_ndc_version": "V01",
-                "supports_explaining_queries": true,
-                "supports_nested_object_filtering": true,
-                "supports_nested_object_ordering": true,
-                "supports_aggregates": {},
-                "supports_query_variables": true,
-                "supports_relationships": {
-                  "supports_relation_comparisons": true,
-                  "supports_nested_relationships": {
-                    "supports_nested_array_selection": true
-                  }
-                }
-              }
-            },
-            "collection": "article",
-            "arguments": {},
-            "filter_clause": {
-              "query_filter": {
-                "where_clause": null,
-                "additional_filter": null
-              },
-              "permission_filter": null,
-              "relationship_join_filter": null
-            },
-            "limit": 1,
-            "offset": 1,
-            "order_by": null,
-            "selection": {
-              "fields": {
-                "hasura_global_id_col_id_article_id": {
-                  "Column": {
-                    "column": "id",
-                    "nested_selection": null,
-                    "arguments": {}
-                  }
+            "Ir": {
+              "data_connector": {
+                "name": {
+                  "name": "db"
                 },
-                "title": {
-                  "Column": {
-                    "column": "title",
-                    "nested_selection": null,
-                    "arguments": {}
+                "url": {
+                  "singleUrl": "http://localhost:8080/"
+                },
+                "headers": {
+                  "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                },
+                "capabilities": {
+                  "supported_ndc_version": "V01",
+                  "supports_explaining_queries": true,
+                  "supports_nested_object_filtering": true,
+                  "supports_nested_object_ordering": true,
+                  "supports_aggregates": {},
+                  "supports_query_variables": true,
+                  "supports_relationships": {
+                    "supports_relation_comparisons": true,
+                    "supports_nested_relationships": {
+                      "supports_nested_array_selection": true
+                    }
                   }
                 }
-              }
-            },
-            "aggregate_selection": null
+              },
+              "collection": "article",
+              "arguments": {},
+              "filter_clause": {
+                "query_filter": {
+                  "where_clause": null,
+                  "additional_filter": null
+                },
+                "permission_filter": null,
+                "relationship_join_filter": null
+              },
+              "limit": 1,
+              "offset": 1,
+              "order_by": null,
+              "selection": {
+                "fields": {
+                  "hasura_global_id_col_id_article_id": {
+                    "Column": {
+                      "column": "id",
+                      "nested_selection": null,
+                      "arguments": {}
+                    }
+                  },
+                  "title": {
+                    "Column": {
+                      "column": "title",
+                      "nested_selection": null,
+                      "arguments": {}
+                    }
+                  }
+                }
+              },
+              "aggregate_selection": null
+            }
           },
           "type_container": {
             "base": {
