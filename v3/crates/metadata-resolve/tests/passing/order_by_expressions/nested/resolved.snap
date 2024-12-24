@@ -62,8 +62,10 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                 type_output_permissions: {},
                 type_input_permissions: {},
                 relationship_fields: {
-                    Name(
-                        "row_type",
+                    RelationshipName(
+                        Identifier(
+                            "row_type",
+                        ),
                     ): RelationshipField {
                         field_name: Name(
                             "row_type",
@@ -134,6 +136,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                         ),
                                     },
                                 ],
+                                relationship_aggregate: None,
                             },
                         ),
                         target_capabilities: Some(

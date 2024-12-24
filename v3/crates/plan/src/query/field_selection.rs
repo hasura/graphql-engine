@@ -249,12 +249,9 @@ fn from_relationship_selection(
     unique_number: &mut UniqueNumber,
 ) -> Result<Field, PlanError> {
     let relationship_name = &relationship_selection.target.relationship_name;
-    let (_, relationship_field) = object_type
+    let relationship_field = object_type
         .relationship_fields
-        .iter()
-        .find(|(_, relationship_field)| {
-            relationship_field.relationship_name == relationship_name.clone()
-        })
+        .get(relationship_name)
         .ok_or_else(|| {
             PlanError::Internal(format!(
                 "couldn't find the relationship {} in the type {}",
@@ -290,11 +287,6 @@ fn from_relationship_selection(
                 relationships,
                 unique_number,
             )?
-        }
-        metadata_resolve::RelationshipTarget::ModelAggregate(_) => {
-            return Err(PlanError::Relationship(RelationshipError::Other(format!(
-                "Model aggregate relationships are not supported: {relationship_name}",
-            ))));
         }
     };
 

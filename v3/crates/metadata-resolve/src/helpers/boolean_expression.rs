@@ -244,13 +244,9 @@ fn validate_data_connector_with_comparable_relationship(
             data_type: object_boolean_expression_type.object_type.clone(),
         })?;
 
-    let relationship_field_name = object_relationships::make_relationship_field_name(
-        &comparable_relationship.relationship_name,
-    )?;
-
     let relationship = underlying_object
         .relationship_fields
-        .get(&relationship_field_name)
+        .get(&comparable_relationship.relationship_name)
         .ok_or_else(|| Error::TypePredicateError {
             type_predicate_error: TypePredicateError::UnknownRelationshipInTypePredicate {
                 relationship_name: comparable_relationship.relationship_name.clone(),

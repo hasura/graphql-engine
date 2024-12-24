@@ -23,18 +23,15 @@ pub struct ObjectTypeWithRelationships {
     /// permissions on this type, when it is used in an input context (e.g. in
     /// an argument type of Model or Command)
     pub type_input_permissions: BTreeMap<Role, type_permissions::TypeInputPermission>,
-    /// any relationship fields defined on this object, indexed by field name
-    /// note that a single relationship may result in the generation of multiple fields
-    /// (ie normal relationship + aggregate relationship)
-    pub relationship_fields: IndexMap<ast::Name, RelationshipField>,
+    /// any relationship fields defined on this object, indexed by relationship name
+    pub relationship_fields: IndexMap<RelationshipName, RelationshipField>,
     /// type mappings for each data connector
     pub type_mappings: object_types::DataConnectorTypeMappingsForObject,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum RelationshipTarget {
-    Model(ModelRelationshipTarget),
-    ModelAggregate(ModelAggregateRelationshipTarget),
+    Model(Box<ModelRelationshipTarget>),
     Command(CommandRelationshipTarget),
 }
 
@@ -45,15 +42,15 @@ pub struct ModelRelationshipTarget {
     pub relationship_type: RelationshipType,
     pub target_typename: Qualified<CustomTypeName>,
     pub mappings: Vec<RelationshipModelMapping>,
+    pub relationship_aggregate: Option<AggregateRelationship>, // only applicable to array relationships
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ModelAggregateRelationshipTarget {
-    pub model_name: Qualified<ModelName>,
-    pub target_typename: Qualified<CustomTypeName>,
-    pub mappings: Vec<RelationshipModelMapping>,
+pub struct AggregateRelationship {
+    pub field_name: ast::Name,
     pub aggregate_expression: Qualified<AggregateExpressionName>,
     pub filter_input_field_name: ast::Name,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

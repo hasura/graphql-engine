@@ -64,7 +64,6 @@ pub enum RelationshipTarget {
         object_type: Qualified<CustomTypeName>,
         relationship_type: RelationshipType,
     },
-    ModelAggregate(Qualified<CustomTypeName>),
     Command {
         type_reference: QualifiedTypeReference,
     },

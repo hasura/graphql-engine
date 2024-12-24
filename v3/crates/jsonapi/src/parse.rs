@@ -9,7 +9,7 @@ use open_dds::{
         Alias, ObjectSubSelection, RelationshipSelection,
         RelationshipTarget as OpenDdRelationshipTarget,
     },
-    relationships::{RelationshipName, RelationshipType},
+    relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
@@ -267,9 +267,6 @@ fn resolve_include_relationships(
                     object_type,
                     relationship_type,
                 } => (object_type, relationship_type.clone()),
-                RelationshipTarget::ModelAggregate(model_type) => {
-                    (model_type, RelationshipType::Object)
-                }
                 RelationshipTarget::Command { type_reference } => {
                     is_command_relationship = true;
                     match unwrap_custom_type_name(type_reference) {

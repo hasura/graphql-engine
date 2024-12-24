@@ -7,7 +7,6 @@ use crate::helpers::argument::resolve_value_expression_for_argument;
 use crate::helpers::type_mappings;
 use crate::helpers::typecheck;
 use crate::helpers::typecheck::typecheck_value_expression;
-use crate::helpers::types::mk_name;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, models, models_graphql,
     object_boolean_expressions, object_relationships, object_types, scalar_types, type_permissions,
@@ -441,11 +440,9 @@ pub(crate) fn resolve_model_predicate_with_type(
             open_dds::permissions::RelationshipPredicate { name, predicate },
         ) => {
             if let Some(nested_predicate) = predicate {
-                let relationship_field_name = mk_name(name.as_str())?;
-
                 let relationship = &object_type_representation
                     .relationship_fields
-                    .get(&relationship_field_name)
+                    .get(name)
                     .ok_or_else(|| Error::TypePredicateError {
                         type_predicate_error:
                             TypePredicateError::UnknownRelationshipInTypePredicate {
@@ -461,21 +458,14 @@ pub(crate) fn resolve_model_predicate_with_type(
                                 .to_string(),
                         })
                     }
-                    object_relationships::RelationshipTarget::ModelAggregate { .. } => {
-                        Err(Error::UnsupportedFeature {
-                            message:
-                                "Predicate cannot be built using model aggregate relationships"
-                                    .to_string(),
-                        })
-                    }
-                    object_relationships::RelationshipTarget::Model(
-                        object_relationships::ModelRelationshipTarget {
+                    object_relationships::RelationshipTarget::Model(model_relationship_target) => {
+                        let object_relationships::ModelRelationshipTarget {
                             model_name,
                             relationship_type,
                             target_typename,
                             mappings,
-                        },
-                    ) => {
+                            relationship_aggregate: _,
+                        } = model_relationship_target.as_ref();
                         let target_model = models.get(model_name).ok_or_else(|| {
                             Error::TypePredicateError { type_predicate_error: TypePredicateError::UnknownModelUsedInRelationshipTypePredicate {
                                 type_name: type_name.clone(),

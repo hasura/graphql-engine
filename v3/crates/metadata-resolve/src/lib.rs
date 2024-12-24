@@ -51,8 +51,8 @@ pub use stages::object_boolean_expressions::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
 };
 pub use stages::object_relationships::{
-    relationship_execution_category, CommandRelationshipTarget, FieldNestedness,
-    ModelAggregateRelationshipTarget, ModelRelationshipTarget, ObjectTypeWithRelationships,
+    relationship_execution_category, AggregateRelationship, CommandRelationshipTarget,
+    FieldNestedness, ModelRelationshipTarget, ObjectTypeWithRelationships,
     RelationshipCapabilities, RelationshipCommandMapping, RelationshipExecutionCategory,
     RelationshipField, RelationshipModelMapping, RelationshipTarget,
 };

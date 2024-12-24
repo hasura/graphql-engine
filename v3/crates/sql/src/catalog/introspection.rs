@@ -5,7 +5,7 @@ use std::{any::Any, sync::Arc};
 use async_trait::async_trait;
 use foreign_keys::{InferredForeignKeys, InferredForeignKeysRow, INFERRED_FOREIGN_KEY_CONSTRAINTS};
 use indexmap::IndexMap;
-use metadata_resolve::{self as resolved, ModelRelationshipTarget, Qualified};
+use metadata_resolve::{self as resolved, Qualified};
 use struct_type::{
     StructTypeFieldRow, StructTypeFields, StructTypeRow, StructTypes, STRUCT_TYPE,
     STRUCT_TYPE_FIELD,
@@ -17,7 +17,7 @@ mod datafusion {
         catalog::SchemaProvider, datasource::TableProvider, error::Result,
     };
 }
-use open_dds::{commands::CommandName, models::ModelName, relationships::RelationshipType};
+use open_dds::{commands::CommandName, models::ModelName};
 use serde::{Deserialize, Serialize};
 use unsupported_objects::{
     UnsupportedCommands, UnsupportedCommandsRow, UnsupportedModels, UnsupportedModelsRow,
@@ -135,14 +135,16 @@ impl Introspection {
                 if let Some(object_type) = metadata.object_types.get(&table.data_type) {
                     for relationship in object_type.relationship_fields.values() {
                         if let metadata_resolve::RelationshipTarget::Model(
-                            ModelRelationshipTarget {
-                                model_name,
-                                relationship_type: RelationshipType::Object,
-                                target_typename: _,
-                                mappings,
-                            },
+                            model_relationship_target,
                         ) = &relationship.target
                         {
+                            let metadata_resolve::ModelRelationshipTarget {
+                                model_name,
+                                relationship_type: _,
+                                target_typename: _,
+                                mappings,
+                                relationship_aggregate: _,
+                            } = model_relationship_target.as_ref();
                             for mapping in mappings {
                                 foreign_key_constraint_rows.push(InferredForeignKeysRow::new(
                                     schema_name.to_string(),

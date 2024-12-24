@@ -330,16 +330,17 @@ fn build_all_relationships(
     object_type_name: &Qualified<CustomTypeName>,
     object_type_representation: &ObjectTypeWithRelationships,
 ) -> Result<(), Error> {
-    for (rel_name, relationship) in &object_type_representation.relationship_fields {
-        if let metadata_resolve::RelationshipTarget::Model(
-            metadata_resolve::ModelRelationshipTarget {
+    for relationship in object_type_representation.relationship_fields.values() {
+        if let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
+            &relationship.target
+        {
+            let metadata_resolve::ModelRelationshipTarget {
                 model_name,
                 relationship_type,
                 target_typename,
                 mappings,
-            },
-        ) = &relationship.target
-        {
+                relationship_aggregate: _,
+            } = model_relationship_target.as_ref();
             let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
                 crate::Error::InternalModelNotFound {
                     model_name: model_name.clone(),
@@ -404,10 +405,10 @@ fn build_all_relationships(
                             };
 
                             fields.insert(
-                                    rel_name.clone(),
+                                    relationship.field_name.clone(),
                                     builder.conditional_namespaced(
                                         gql_schema::InputField::new(
-                                            rel_name.clone(),
+                                            relationship.field_name.clone(),
                                             None,
                                             types::Annotation::Input(types::InputAnnotation::Model(
                                                 types::ModelInputAnnotation::ModelOrderByRelationshipArgument(annotation),
@@ -449,27 +450,24 @@ fn build_orderable_relationships(
     orderable_relationships: &BTreeMap<RelationshipName, OrderableRelationship>,
 ) -> Result<(), Error> {
     for (rel_name, orderable_relationship) in orderable_relationships {
-        let field_name = mk_name(rel_name.as_str())
-            .map_err(metadata_resolve::Error::from)
-            .map_err(metadata_resolve::WithContext::from)?;
-
         // lookup the relationship used in the underlying object type
         let relationship = object_type_representation
             .relationship_fields
-            .get(&field_name)
+            .get(rel_name)
             .ok_or_else(|| Error::InternalRelationshipNotFound {
                 relationship_name: rel_name.clone(),
             })?;
 
-        if let metadata_resolve::RelationshipTarget::Model(
-            metadata_resolve::ModelRelationshipTarget {
+        if let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
+            &relationship.target
+        {
+            let metadata_resolve::ModelRelationshipTarget {
                 model_name,
                 relationship_type,
                 target_typename,
                 mappings,
-            },
-        ) = &relationship.target
-        {
+                relationship_aggregate: _,
+            } = model_relationship_target.as_ref();
             let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
                 crate::Error::InternalModelNotFound {
                     model_name: model_name.clone(),
@@ -579,10 +577,10 @@ fn build_orderable_relationships(
                             };
 
                             fields.insert(
-                                    field_name.clone(),
+                                    relationship.field_name.clone(),
                                     builder.conditional_namespaced(
                                         gql_schema::InputField::new(
-                                            field_name.clone(),
+                                            relationship.field_name.clone(),
                                             None,
                                             types::Annotation::Input(types::InputAnnotation::Model(
                                                 types::ModelInputAnnotation::ModelOrderByRelationshipArgument(annotation),

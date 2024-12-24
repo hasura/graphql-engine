@@ -57,17 +57,6 @@ pub fn build_object_type(
                     });
                 }
             }
-            metadata_resolve::RelationshipTarget::ModelAggregate(model_aggregate) => {
-                if object_type_permission_access(
-                    role,
-                    &model_aggregate.target_typename,
-                    object_types,
-                ) {
-                    target = Some(RelationshipTarget::ModelAggregate(
-                        model_aggregate.target_typename.clone(),
-                    ));
-                }
-            }
             metadata_resolve::RelationshipTarget::Command(command) => {
                 let track_this_relationship = if let Some(target_object_type) =
                     unwrap_custom_type_name(&command.target_type)

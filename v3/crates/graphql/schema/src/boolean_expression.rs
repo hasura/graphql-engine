@@ -313,15 +313,11 @@ fn build_new_comparable_relationships_schema(
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     let mut input_fields = BTreeMap::new();
 
-    for (relationship_name, comparable_relationship) in relationship_fields {
-        let field_name = mk_name(relationship_name.as_str())
-            .map_err(metadata_resolve::Error::from)
-            .map_err(metadata_resolve::WithContext::from)?;
-
+    for comparable_relationship in relationship_fields.values() {
         // lookup the relationship used in the underlying object type
         let relationship = object_type_representation
             .relationship_fields
-            .get(&field_name)
+            .get(&comparable_relationship.relationship_name)
             .ok_or_else(|| Error::InternalRelationshipNotFound {
                 relationship_name: comparable_relationship.relationship_name.clone(),
             })?;
@@ -335,15 +331,16 @@ fn build_new_comparable_relationships_schema(
         }
 
         // we haven't thought about Command relationship targets yet
-        if let metadata_resolve::RelationshipTarget::Model(
-            metadata_resolve::ModelRelationshipTarget {
+        if let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
+            &relationship.target
+        {
+            let metadata_resolve::ModelRelationshipTarget {
                 model_name,
                 relationship_type,
                 target_typename: _,
                 mappings,
-            },
-        ) = &relationship.target
-        {
+                relationship_aggregate: _,
+            } = model_relationship_target.as_ref();
             // lookup target model for relationship
             let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
                 Error::InternalModelNotFound {
@@ -435,15 +432,16 @@ fn build_comparable_relationships_schema(
     let mut input_fields = BTreeMap::new();
 
     for relationship in object_type_representation.relationship_fields.values() {
-        if let metadata_resolve::RelationshipTarget::Model(
-            metadata_resolve::ModelRelationshipTarget {
+        if let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
+            &relationship.target
+        {
+            let metadata_resolve::ModelRelationshipTarget {
                 model_name,
                 relationship_type,
                 target_typename: _,
                 mappings,
-            },
-        ) = &relationship.target
-        {
+                relationship_aggregate: _,
+            } = model_relationship_target.as_ref();
             // Check whether the relationship is allowed to be compared
             if !include_relationship_field(
                 relationship.target_capabilities.as_ref(),
