@@ -1,5 +1,6 @@
 use indexmap::IndexMap;
 use serde_json as json;
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 
 use crate::ast::common as ast;
@@ -16,7 +17,7 @@ use super::source::*;
 pub struct Variables<'q, 's, S: schema::SchemaContext> {
     pub definitions:
         &'q HashMap<&'q ast::Name, (&'q executable::VariableDefinition, schema::InputType<'s, S>)>,
-    pub values: &'q HashMap<ast::Name, json::Value>,
+    pub values: &'q BTreeMap<ast::Name, json::Value>,
 }
 
 fn are_base_types_compatible(variable_type: &ast::BaseType, location_type: &ast::BaseType) -> bool {

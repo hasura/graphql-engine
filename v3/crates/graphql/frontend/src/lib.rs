@@ -28,6 +28,7 @@ mod tests {
     use lang_graphql::{parser::Parser, validation::normalize_request};
     use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
     use serde_json as json;
+    use std::collections::BTreeMap;
     use std::{
         collections::HashMap,
         fs::{self, File},
@@ -70,7 +71,7 @@ mod tests {
             let request = Request {
                 operation_name: None,
                 query,
-                variables: HashMap::new(),
+                variables: BTreeMap::new(),
             };
 
             let normalized_request = normalize_request(
@@ -139,7 +140,7 @@ mod tests {
             let request = Request {
                 operation_name: None,
                 query,
-                variables: HashMap::new(),
+                variables: BTreeMap::new(),
             };
 
             let normalized_request = normalize_request(

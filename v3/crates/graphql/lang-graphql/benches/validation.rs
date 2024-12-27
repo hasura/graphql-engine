@@ -4,7 +4,7 @@ use lang_graphql::schema::sdl;
 use lang_graphql::validation;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::str::FromStr;
 
@@ -23,7 +23,7 @@ pub fn bench_validation(c: &mut Criterion) {
         let request = http::Request {
             operation_name: Some(lang_graphql::ast::common::Name::from_str(query_name).unwrap()),
             query: parsed_query,
-            variables: HashMap::new(),
+            variables: BTreeMap::new(),
         };
         validation::normalize_request(&sdl::SDLNamespacedGetter(), &fake_schema, &request).unwrap();
         // parse with our parser

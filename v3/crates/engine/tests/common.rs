@@ -46,7 +46,7 @@ pub fn setup(test_dir: &Path) -> GoldenTestContext {
 }
 
 pub(crate) fn resolve_session(
-    session_variables: HashMap<SessionVariableName, SessionVariableValue>,
+    session_variables: BTreeMap<SessionVariableName, SessionVariableValue>,
 ) -> Result<Session, SessionError> {
     //return an arbitrary identity with role emulation enabled
     let authorization = Identity::admin(Role::new("admin"));
@@ -299,7 +299,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
             // NOTE: It is expected the variables.json file contains a list of
             // variables. Each item in the list corresponding to a session in
             // session_variables.json
-            let query_vars: Option<Vec<HashMap<ast::Name, serde_json::Value>>> =
+            let query_vars: Option<Vec<BTreeMap<ast::Name, serde_json::Value>>> =
                 match read_to_string(&variables_path) {
                     Ok(query_vars_str) => Some(json::from_str(&query_vars_str)?),
                     Err(_) => None,
@@ -527,8 +527,8 @@ pub fn test_execute_explain(
         let schema = GDS::build_schema(&gds)?;
         let request_headers = reqwest::header::HeaderMap::new();
         let session = {
-            let session_variables: HashMap<SessionVariableName, SessionVariableValue> =
-                HashMap::from_iter([(
+            let session_variables: BTreeMap<SessionVariableName, SessionVariableValue> =
+                BTreeMap::from_iter([(
                     SESSION_VARIABLE_ROLE.clone(),
                     SessionVariableValue::Unparsed("admin".to_owned()),
                 )]);

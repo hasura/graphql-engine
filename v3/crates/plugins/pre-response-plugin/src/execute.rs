@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::BTreeMap, str::FromStr};
 
 use axum::{
     http::{HeaderMap, HeaderName, StatusCode},
@@ -46,7 +46,7 @@ impl IntoResponse for Error {
 #[serde(rename_all = "camelCase")]
 pub struct RawRequestBody {
     pub query: Option<String>,
-    pub variables: Option<HashMap<ast::Name, serde_json::Value>>,
+    pub variables: Option<BTreeMap<ast::Name, serde_json::Value>>,
     pub operation_name: Option<ast::Name>,
 }
 

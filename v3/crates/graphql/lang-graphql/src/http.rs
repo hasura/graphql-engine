@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 use nonempty::{nonempty, NonEmpty};
@@ -14,16 +14,16 @@ use crate::ast::executable;
 pub struct RawRequest {
     pub operation_name: Option<ast::Name>,
     pub query: String,
-    pub variables: Option<HashMap<ast::Name, serde_json::Value>>,
+    pub variables: Option<BTreeMap<ast::Name, serde_json::Value>>,
 }
 
 pub struct Request {
     pub operation_name: Option<ast::Name>,
     pub query: executable::ExecutableDocument,
-    pub variables: HashMap<ast::Name, serde_json::Value>,
+    pub variables: BTreeMap<ast::Name, serde_json::Value>,
 }
 
-pub type VariableValues = HashMap<ast::Name, serde_json::Value>;
+pub type VariableValues = BTreeMap<ast::Name, serde_json::Value>;
 
 /// A list of path segments starting at the root of the response and
 /// ending with the field associated with the error.

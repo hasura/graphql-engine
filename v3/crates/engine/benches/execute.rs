@@ -11,7 +11,7 @@ use hasura_authn_core::Identity;
 use indexmap::IndexMap;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -84,7 +84,7 @@ pub fn bench_execute(
     let session = Identity::admin(Role::new("admin"))
         .get_role_authorization(None)
         .unwrap()
-        .build_session(HashMap::new());
+        .build_session(BTreeMap::new());
 
     let mut group = c.benchmark_group(benchmark_group);
 
@@ -115,7 +115,7 @@ pub fn bench_execute(
     let request = gql::http::Request {
         operation_name: None,
         query,
-        variables: HashMap::default(),
+        variables: BTreeMap::default(),
     };
 
     group.bench_with_input(

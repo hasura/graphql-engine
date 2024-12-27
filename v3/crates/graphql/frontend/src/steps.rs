@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use super::types::{GraphQlParseError, GraphQlValidationError};
 use crate::query_usage;
@@ -62,7 +62,7 @@ pub fn normalize_request<'s>(
                     variables: raw_request
                         .variables
                         .as_ref()
-                        .map_or_else(HashMap::default, Clone::clone),
+                        .map_or_else(BTreeMap::default, Clone::clone),
                 };
                 gql::validation::normalize_request(
                     &GDSRoleNamespaceGetter {

@@ -3,7 +3,7 @@ This module provides functions to generate introspection result as GraphQL schem
 for each namespace from the schema.
  */
 use json_ext;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::OnceLock;
 use tracing_util::SpanVisibility;
 use tracing_util::{ErrorVisibility, TraceableError};
@@ -84,6 +84,6 @@ fn introspection_request() -> &'static crate::http::Request {
                 .parse_executable_document()
                 .unwrap()
         },
-        variables: HashMap::new(),
+        variables: BTreeMap::new(),
     })
 }

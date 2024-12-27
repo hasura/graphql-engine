@@ -5,7 +5,7 @@ use lang_graphql::http::Request;
 use lang_graphql::parser::Parser;
 use lang_graphql::validation::normalize_request;
 use open_dds::permissions::Role;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -28,7 +28,7 @@ pub fn bench_generate_ir(c: &mut Criterion) {
     let session = Identity::admin(Role::new("admin"))
         .get_role_authorization(None)
         .unwrap()
-        .build_session(HashMap::new());
+        .build_session(BTreeMap::new());
 
     for input_file in fs::read_dir(test_dir.join("generate_ir")).unwrap() {
         let entry = input_file.unwrap();
@@ -47,7 +47,7 @@ pub fn bench_generate_ir(c: &mut Criterion) {
         let request = Request {
             operation_name: None,
             query,
-            variables: HashMap::new(),
+            variables: BTreeMap::new(),
         };
 
         let normalized_request = normalize_request(

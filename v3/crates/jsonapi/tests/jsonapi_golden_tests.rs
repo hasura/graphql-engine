@@ -4,7 +4,7 @@ use engine_types::HttpContext;
 use hasura_authn_core::{Identity, Role};
 use jsonapi_library::api::{DocumentData, IdentifierData, PrimaryData};
 use reqwest::header::HeaderMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -230,7 +230,7 @@ fn create_default_session() -> hasura_authn_core::Session {
     let role = Role::new("admin");
     let role_authorization = authorization.get_role_authorization(Some(&role)).unwrap();
 
-    role_authorization.build_session(HashMap::new())
+    role_authorization.build_session(BTreeMap::new())
 }
 
 fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
