@@ -112,6 +112,21 @@ fn test_filter_simple_equality() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_filter_starts_with() -> anyhow::Result<()> {
+    test_sql("sql/filter/starts_with")
+}
+
+#[test]
+fn test_filter_starts_with_pg() -> anyhow::Result<()> {
+    test_sql("sql/filter/starts_with_pg")
+}
+
+#[test]
+fn test_filter_starts_with_lower() -> anyhow::Result<()> {
+    test_sql("sql/filter/starts_with_lower")
+}
+
+#[test]
 fn test_filter_timestamp_gt() -> anyhow::Result<()> {
     test_sql("sql/filter/timestamp_gt")
 }

@@ -198,6 +198,18 @@ pub enum ComparisonOperator {
     GreaterThan,
     #[serde(rename = "_gte")]
     GreaterThanOrEqual,
+    #[serde(rename = "_contains")]
+    Contains,
+    #[serde(rename = "_icontains")]
+    ContainsInsensitive,
+    #[serde(rename = "starts_with")]
+    StartsWith,
+    #[serde(rename = "istarts_with")]
+    StartsWithInsensitive,
+    #[serde(rename = "iends_with")]
+    EndsWith,
+    #[serde(rename = "ends_with")]
+    EndsWithInsensitive,
     #[serde(untagged)]
     Custom(OperatorName),
 }
@@ -270,6 +282,37 @@ impl BooleanExpression {
                 ),
                 ComparisonOperator::GreaterThanOrEqual => format!(
                     "{} ≥ {}",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+
+                ComparisonOperator::Contains => format!(
+                    "contains({}, {})",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::ContainsInsensitive => format!(
+                    "icontains({}, {})",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::StartsWith => format!(
+                    "starts_with({}, {})",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::StartsWithInsensitive => format!(
+                    "istarts_with({}, {})",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::EndsWith => format!(
+                    "ends_with({}, {})",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                ComparisonOperator::EndsWithInsensitive => format!(
+                    "iends_with({}, {})",
                     operand.fmt_for_explain(),
                     argument.fmt_for_explain()
                 ),

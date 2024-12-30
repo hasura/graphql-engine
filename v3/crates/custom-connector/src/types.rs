@@ -35,6 +35,54 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                         "_eq".into(),
                         ndc_models::ComparisonOperatorDefinition::Equal,
                     ),
+                    (
+                        "starts_with".into(),
+                        ndc_models::ComparisonOperatorDefinition::Custom {
+                            argument_type: ndc_models::Type::Named {
+                                name: "String".into(),
+                            },
+                        },
+                    ),
+                    (
+                        "ends_with".into(),
+                        ndc_models::ComparisonOperatorDefinition::Custom {
+                            argument_type: ndc_models::Type::Named {
+                                name: "String".into(),
+                            },
+                        },
+                    ),
+                    (
+                        "_contains".into(),
+                        ndc_models::ComparisonOperatorDefinition::Custom {
+                            argument_type: ndc_models::Type::Named {
+                                name: "String".into(),
+                            },
+                        },
+                    ),
+                    (
+                        "istarts_with".into(),
+                        ndc_models::ComparisonOperatorDefinition::Custom {
+                            argument_type: ndc_models::Type::Named {
+                                name: "String".into(),
+                            },
+                        },
+                    ),
+                    (
+                        "iends_with".into(),
+                        ndc_models::ComparisonOperatorDefinition::Custom {
+                            argument_type: ndc_models::Type::Named {
+                                name: "String".into(),
+                            },
+                        },
+                    ),
+                    (
+                        "_icontains".into(),
+                        ndc_models::ComparisonOperatorDefinition::Custom {
+                            argument_type: ndc_models::Type::Named {
+                                name: "String".into(),
+                            },
+                        },
+                    ),
                 ]),
             },
         ),

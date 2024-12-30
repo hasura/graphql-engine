@@ -868,18 +868,59 @@ fn eval_expression(
 
                 Ok(false)
             }
-            "like" => {
+            "istarts_with" | "iends_with" | "_contains" | "starts_with" | "ends_with"
+            | "_icontains" => {
                 let column_val = eval_comparison_target(column, item)?;
-                let regex_vals =
+                let column_str = column_val.as_str().ok_or((
+                    StatusCode::BAD_REQUEST,
+                    Json(ndc_models::ErrorResponse {
+                        message: "column is not a string".into(),
+                        details: serde_json::Value::Null,
+                    }),
+                ))?;
+                let right_vals =
                     eval_comparison_value(collection_relationships, variables, state, value, item)?;
-                for regex_val in &regex_vals {
-                    let column_str = column_val.as_str().ok_or((
+                for right_val in &right_vals {
+                    let right_val_str = right_val.as_str().ok_or((
                         StatusCode::BAD_REQUEST,
                         Json(ndc_models::ErrorResponse {
-                            message: "column is not a string".into(),
+                            message: "argument is not a string".into(),
                             details: serde_json::Value::Null,
                         }),
                     ))?;
+                    if match operator.as_str() {
+                        "starts_with" => column_str.starts_with(right_val_str),
+                        "ends_with" => column_str.ends_with(right_val_str),
+                        "_contains" => column_str.contains(right_val_str),
+                        "istarts_with" => column_str
+                            .to_lowercase()
+                            .starts_with(right_val_str.to_lowercase().as_str()),
+                        "iends_with" => column_str
+                            .to_lowercase()
+                            .ends_with(right_val_str.to_lowercase().as_str()),
+                        "_icontains" => column_str
+                            .to_lowercase()
+                            .contains(right_val_str.to_lowercase().as_str()),
+                        _ => panic!("invalid operator"),
+                    } {
+                        return Ok(true);
+                    }
+                }
+
+                Ok(false)
+            }
+            "like" => {
+                let column_val = eval_comparison_target(column, item)?;
+                let column_str = column_val.as_str().ok_or((
+                    StatusCode::BAD_REQUEST,
+                    Json(ndc_models::ErrorResponse {
+                        message: "column is not a string".into(),
+                        details: serde_json::Value::Null,
+                    }),
+                ))?;
+                let regex_vals =
+                    eval_comparison_value(collection_relationships, variables, state, value, item)?;
+                for regex_val in &regex_vals {
                     let regex_str = regex_val.as_str().ok_or((
                         StatusCode::BAD_REQUEST,
                         Json(ndc_models::ErrorResponse {

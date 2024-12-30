@@ -1,0 +1,10 @@
+[
+  {
+    "plan_type": "logical_plan",
+    "plan": "ModelQuery: model=default:Authors, projection=[author_id,first_name,last_name], filter=[starts_with(first_name, {literal})], limit=10, offset=0"
+  },
+  {
+    "plan_type": "physical_plan",
+    "plan": "NDCQueryPushDown\n"
+  }
+]

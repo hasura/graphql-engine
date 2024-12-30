@@ -151,17 +151,23 @@ pub fn to_resolved_filter_expr(
                         }
                     }
                 }
+
                 ComparisonOperator::LessThan
                 | ComparisonOperator::GreaterThan
                 | ComparisonOperator::LessThanOrEqual
-                | ComparisonOperator::GreaterThanOrEqual => {
+                | ComparisonOperator::GreaterThanOrEqual
+                | ComparisonOperator::Contains
+                | ComparisonOperator::ContainsInsensitive
+                | ComparisonOperator::StartsWith
+                | ComparisonOperator::StartsWithInsensitive
+                | ComparisonOperator::EndsWith
+                | ComparisonOperator::EndsWithInsensitive => {
                     let data_connector_operator_name = match operator {
                         ComparisonOperator::LessThan => comparison_operators
                             .lt_operator
                             .as_ref()
                             .or_else(|| find_comparison_operator("_lt", &comparison_operators,
-                                    data_connector.capabilities.supported_ndc_version,
-))
+                                    data_connector.capabilities.supported_ndc_version))
                             .ok_or_else(|| {
                                 PlanError::Internal(format!(
                                     "no 'less than' operator found for type: {type_name:?}"
@@ -172,9 +178,7 @@ pub fn to_resolved_filter_expr(
                             .gt_operator
                             .as_ref()
                             .or_else(|| find_comparison_operator("_gt", &comparison_operators,
-data_connector.capabilities.supported_ndc_version,
-
-                                    ))
+data_connector.capabilities.supported_ndc_version))
                             .ok_or_else(|| {
                                 PlanError::Internal(format!(
                                     "no 'greater than' operator found for type: {type_name:?}"
@@ -185,9 +189,7 @@ data_connector.capabilities.supported_ndc_version,
                             .lte_operator
                             .as_ref()
                             .or_else(|| find_comparison_operator("_lte", &comparison_operators,
-                                    data_connector.capabilities.supported_ndc_version,
-
-                                    ))
+                                    data_connector.capabilities.supported_ndc_version))
                             .ok_or_else(|| {
                                 PlanError::Internal(format!(
                                     "no 'less than or equal' operator found for type: {type_name:?}"
@@ -198,14 +200,80 @@ data_connector.capabilities.supported_ndc_version,
                             .gte_operator
                             .as_ref()
                             .or_else(|| find_comparison_operator("_gte", &comparison_operators,
-data_connector.capabilities.supported_ndc_version,
-
-                                    ))
+data_connector.capabilities.supported_ndc_version))
                             .ok_or_else(|| {
                                 PlanError::Internal(format!(
                                     "no 'greater than or equal' operator found for type: {type_name:?}"
                                 ))
-                            }),_ => {panic!("invalid pattern match in to_resolved_filter_expr: {operator:?}")}
+                            }),
+
+                        ComparisonOperator::Contains => comparison_operators
+                            .gte_operator
+                            .as_ref()
+                            .or_else(|| find_comparison_operator("_contains", &comparison_operators,
+data_connector.capabilities.supported_ndc_version))
+                            .ok_or_else(|| {
+                                PlanError::Internal(format!(
+                                    "no 'contains' operator found for type: {type_name:?}"
+                                ))
+                            }),
+
+                        ComparisonOperator::ContainsInsensitive => comparison_operators
+                            .gte_operator
+                            .as_ref()
+                            .or_else(|| find_comparison_operator("_icontains", &comparison_operators,
+data_connector.capabilities.supported_ndc_version))
+                            .ok_or_else(|| {
+                                PlanError::Internal(format!(
+                                    "no 'case-insensitive contains' operator found for type: {type_name:?}"
+                                ))
+                            }),
+
+                            ComparisonOperator::StartsWith => comparison_operators
+                                .gte_operator
+                                .as_ref()
+                                .or_else(|| find_comparison_operator("starts_with", &comparison_operators,
+    data_connector.capabilities.supported_ndc_version))
+                                .ok_or_else(|| {
+                                    PlanError::Internal(format!(
+                                        "no 'starts with prefix' operator found for type: {type_name:?}"
+                                    ))
+                                }),
+
+                            ComparisonOperator::StartsWithInsensitive => comparison_operators
+                                .gte_operator
+                                .as_ref()
+                                .or_else(|| find_comparison_operator("istarts_with", &comparison_operators,
+    data_connector.capabilities.supported_ndc_version))
+                                .ok_or_else(|| {
+                                    PlanError::Internal(format!(
+                                        "no 'case-insensitive starts with prefix' operator found for type: {type_name:?}"
+                                    ))
+                                }),
+
+                            ComparisonOperator::EndsWith => comparison_operators
+                                .gte_operator
+                                .as_ref()
+                                .or_else(|| find_comparison_operator("ends_with", &comparison_operators,
+    data_connector.capabilities.supported_ndc_version))
+                                .ok_or_else(|| {
+                                    PlanError::Internal(format!(
+                                        "no 'ends with suffix' operator found for type: {type_name:?}"
+                                    ))
+                                }),
+
+                            ComparisonOperator::EndsWithInsensitive => comparison_operators
+                                .gte_operator
+                                .as_ref()
+                                .or_else(|| find_comparison_operator("iends_with", &comparison_operators,
+    data_connector.capabilities.supported_ndc_version))
+                                .ok_or_else(|| {
+                                    PlanError::Internal(format!(
+                                        "no 'case-insensitive ends with suffix' operator found for type: {type_name:?}"
+                                    ))
+                                }),
+
+                            _ => {panic!("invalid pattern match in to_resolved_filter_expr: {operator:?}")}
                     }?;
 
                     Ok(ResolvedFilterExpression::LocalFieldComparison(

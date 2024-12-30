@@ -136,7 +136,8 @@
                     "dataConnectorName": "db",
                     "dataConnectorScalarType": "text",
                     "operatorMapping": {
-                      "_eq": "_eq"
+                      "_eq": "_eq",
+                      "starts_with": "starts_with"
                     }
                   }
                 ]
@@ -11969,6 +11970,48 @@
                         "type": "equal"
                       },
                       "like": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "starts_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "ends_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_contains": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "istarts_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "iends_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_icontains": {
                         "type": "custom",
                         "argument_type": {
                           "type": "named",
