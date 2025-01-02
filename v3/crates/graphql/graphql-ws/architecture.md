@@ -2,52 +2,73 @@
 
 ## WebSocket Handling Flow
 
-### 1. Client Interaction
+### Client Interaction
 
 - **Initiates WebSocket Request**
   - Client sends a request to establish a WebSocket connection.
 
-### 2. WebSocket Server
+### WebSocket Server
 
 - **Validates Protocol**
-  - Ensures the incoming request adheres to the expected `graphql-transport-ws`
-    protocol.
+  - Ensures the incoming request adheres to the expected GraphQL WebSocket
+    protocol (`graphql-transport-ws`).
 
-### 3. Connection Establishment
+### Connection Establishment
 
 - **WebSocket Connection**
   - Successfully establishes a connection after protocol validation.
-  - **Spawns Tasks:**
-    - **InitCheckerTask**: Verifies the protocol's initialization state.
-    - **IncomingTask**: Handles incoming client messages.
-    - **OutgoingTask**: Sends messages to the client.
+  - **Initializes Session:**
+    - Creates channels for incoming and outgoing messages.
+    - Sets up connection state management.
 
-### 4. Task Management
+### Task Management
 
-- **InitCheckerTask**
-  - Checks initialization state and directs to Task Management.
-- **IncomingTask**
-  - **Client Message Handler**:
-    - Deserializes client messages into appropriate types.
-    - Routes valid messages to the **ProtocolHandler**.
-    - Handles invalid messages by sending error responses.
+- **Spawns Tasks:**
+  - **IncomingTask**: Handles incoming client messages.
+  - **OutgoingTask**: Sends messages to the client.
+  - **ConnectionExpiryTask**: Monitors `graphql-transport-ws` protocol's
+    `connection_init` timeout.
 
-### 5. Protocol Handling
+### Protocol Handling
 
 - **ProtocolHandler**
   - Manages various client messages:
     - **ConnectionInit**: Initializes connection.
-    - **Subscribe**: Starts polling for subscriptions.
-    - **Complete**: Stops the corresponding poller.
+    - **Subscribe**: Starts a new subscription.
+    - **Complete**: Stops a specific subscription.
     - **Ping/Pong**: Manages keep-alive messages.
 
-### 6. Polling Mechanism
+### Subscription Handling
 
-- **Polling Loop**
-  - Fetches data from the data connector.
-  - Processes responses:
-    - Sends GraphQL responses or errors back to the client.
-    - Repeats fetching at defined intervals.
+- **Subscription Creation**
+
+  - Validates subscription request.
+  - Executes pre-parse plugins (if configured).
+  - Parses and normalizes GraphQL query.
+  - Generates query execution plan.
+
+- **Polling Mechanism**
+  - Creates a dedicated poller for each subscription.
+  - Poller continuously executes the GraphQL query:
+    - Fetches data from the data connector.
+    - Processes responses:
+      - Compares with previous result.
+      - Sends updates to the client if changed.
+
+### Error Handling
+
+- Comprehensive error handling at various levels.
+- Communicates errors back to the client over the WebSocket connection.
+
+### Metrics
+
+- Tracks metrics related to WebSocket connections, subscriptions, and query
+  execution.
+
+### Cleanup
+
+- Handles connection closure and expiry.
+- Cleans up resources and stops active pollers when connections are terminated.
 
 ## Diagram
 
@@ -55,70 +76,54 @@
 graph TD
     Client -->|Initiates WebSocket Request| WebSocketServer
     WebSocketServer -->|Validates Protocol| ProtocolValidation
-    ProtocolValidation -->|Success| WebSocketConnection
-    WebSocketConnection -->|Spawn Tasks| InitCheckerTask & IncomingTask & OutgoingTask
+    ProtocolValidation -->|Success| ConnectionEstablishment
+    ConnectionEstablishment -->|Initialize Session| SessionInit
+    SessionInit -->|Spawn Tasks| TaskManagement
 
-    InitCheckerTask -->|Checks Init State| InitState
-    InitState -->|Timeout or Success| TaskManagement
-
-    IncomingTask -->|Handles Client Messages| ClientMessageHandler
-    OutgoingTask -->|Sends Messages to Client| ClientMessageSender
-
-    ClientMessageHandler -->|Deserializes ClientMessage| DeserializeMessage
-    DeserializeMessage -->|Valid ClientMessage| ProtocolHandler
-    DeserializeMessage -->|Invalid Message| SendErrorMessage
-
-    TaskManagement -->|Terminate Remaining Tasks| TaskAborter
-    ProtocolHandler -->|Process Client Message| HandleClientMessage
-
-    subgraph WebSocketServer
-        ProtocolValidation
-        WebSocketConnection
-        InitCheckerTask
+    subgraph TaskManagement
         IncomingTask
         OutgoingTask
+        ConnectionExpiryTask
     end
 
-    subgraph Tasks
-        InitCheckerTask
-        IncomingTask
-        OutgoingTask
-        TaskAborter
+    IncomingTask -->|Process Messages| ProtocolHandler
+    OutgoingTask -->|Send Messages| Client
+    ConnectionExpiryTask -->|Monitor Health| ConnectionState
+
+    subgraph ProtocolHandler
+        ConnectionInit
+        Subscribe
+        Complete
+        PingPong
     end
 
-    subgraph HandleClientMessage
-        ConnectionInit -->|Initialize Connection| HandleConnectionInit
-        Subscribe -->|Start Subscription| HandleSubscribe
-        Complete -->|Stop Poller| StopPoller
-        Ping -->|Respond with Pong| SendPong
-        Pong -->|No Action| NoAction
+    Subscribe -->|Create Subscription| SubscriptionHandling
+
+    subgraph SubscriptionHandling
+        ValidateRequest
+        ExecutePreParsePlugins
+        ParseAndNormalizeQuery
+        GenerateQueryPlan
+        CreatePoller
     end
 
-    HandleSubscribe -->|Check Init State| CheckInitState
-    CheckInitState -->|Not Initialized| SendUnauthorized
-    CheckInitState -->|Initialized| StartPoller
+    CreatePoller -->|Start Polling| PollingMechanism
 
-    StartPoller -->|Poll Subscription| PollSubscription
-    PollSubscription -->|Execute GraphQL Request| ExecuteGraphQLRequest
+    subgraph PollingMechanism
+        FetchData
+        ProcessResponse
+        CompareResults
+        SendUpdates
+    end
 
-    ExecuteGraphQLRequest -->|Mutation Plan| HandleMutationPlan
-    ExecuteGraphQLRequest -->|Query Plan| HandleQueryPlan
-    ExecuteGraphQLRequest -->|Subscription Plan| HandleSubscriptionPlan
+    ProtocolHandler -->|Handle Errors| ErrorHandling
+    ErrorHandling -->|Send Error Messages| OutgoingTask
 
-    HandleMutationPlan -->|Send Result| SendSingleResult
-    HandleQueryPlan -->|Send Result| SendSingleResult
+    TaskManagement -->|Update Metrics| MetricsAndMonitoring
 
-    HandleSubscriptionPlan -->|Poll Data| FetchFromDataConnector
-    FetchFromDataConnector -->|Success| ProcessSubscriptionResponse
-    FetchFromDataConnector -->|Error| SendGraphQLError
+    ConnectionState -->|Trigger Cleanup| Cleanup
+    Complete -->|Stop Subscription| Cleanup
 
-    ProcessSubscriptionResponse -->|Match Hash| CheckResponseHash
-    CheckResponseHash -->|Hash Matches| DoNothing
-    CheckResponseHash -->|New Response| SendGraphQLResponse
-
-    SendGraphQLResponse -->|No Errors| SendGraphQLOk
-    SendGraphQLResponse -->|Has Errors| SendGraphQLError
-
-    SendGraphQLOk -->|Polls Again| FetchFromDataConnector
-    DoNothing -->|Polls Again| FetchFromDataConnector
+    Cleanup -->|Stop Pollers| PollingMechanism
+    Cleanup -->|Release Resources| ConnectionEstablishment
 ```
