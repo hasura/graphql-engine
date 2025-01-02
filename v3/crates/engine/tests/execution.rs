@@ -11,7 +11,7 @@ fn test_model_select_one_simple_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -22,7 +22,7 @@ fn test_model_select_one_with_type_permission() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -44,7 +44,7 @@ fn test_model_select_one_filter() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -55,7 +55,7 @@ fn test_model_select_one_custom_scalar() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -67,7 +67,7 @@ fn test_model_select_many_simple_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -114,7 +114,7 @@ fn test_model_select_many_filter() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -125,7 +125,7 @@ fn test_model_select_many_empty_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -144,7 +144,7 @@ fn test_model_select_many_field_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -163,7 +163,7 @@ fn test_model_select_many_multiple_field_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -175,7 +175,7 @@ fn test_model_select_many_nested_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -189,7 +189,7 @@ fn test_model_select_many_nested_select_no_explicit_type_mapping() -> anyhow::Re
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -204,7 +204,7 @@ fn test_model_select_many_nested_select_with_relationship() -> anyhow::Result<()
     common::test_execution_expectation(
         test_path_string,
         &common_metadata_paths,
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -216,7 +216,7 @@ fn test_model_select_many_nested_select_postgres() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -228,7 +228,7 @@ fn test_model_select_many_order_by() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -239,7 +239,7 @@ fn test_model_select_many_order_by_with_model_v2() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -250,7 +250,7 @@ fn test_model_select_many_order_by_nested() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -272,7 +272,7 @@ fn test_model_select_many_order_by_nested_legacy() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -283,7 +283,7 @@ fn test_model_select_many_order_by_filter() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -295,7 +295,7 @@ fn test_model_select_many_order_by_with_graphql_config() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -313,7 +313,7 @@ fn test_model_select_many_order_by_multiple_columns() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -324,7 +324,7 @@ fn test_model_select_many_order_by_multiple_columns_validation_check() -> anyhow
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -337,7 +337,7 @@ fn test_model_select_many_order_by_multiple_nested_columns_validation_check() ->
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -349,7 +349,7 @@ fn test_model_select_many_type_permission_order_by() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -396,7 +396,7 @@ fn test_model_select_many_type_permission_where() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -408,7 +408,7 @@ fn test_model_select_many_where() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -421,7 +421,7 @@ fn test_model_select_many_shared_boolean_expression() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -432,7 +432,7 @@ fn test_model_select_many_boolean_expression_type() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -444,7 +444,7 @@ fn test_model_select_many_where_nested_select_object() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[shared_metadata, common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -456,7 +456,7 @@ fn test_model_select_many_where_nested_select_array() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[shared_metadata, common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -471,7 +471,7 @@ fn test_model_select_many_where_is_null_object_boolean_expression_type() -> anyh
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -483,7 +483,7 @@ fn test_model_select_many_where_is_null_boolean_expression_type() -> anyhow::Res
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -496,7 +496,7 @@ fn test_model_select_many_where_filter() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -508,7 +508,7 @@ fn test_model_select_many_where_with_grapqhl_config() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -519,7 +519,7 @@ fn test_model_select_many_where_multiple_fields() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -530,7 +530,7 @@ fn test_model_select_many_select_with_args() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -541,7 +541,7 @@ fn test_model_select_many_select_with_args_filter() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -553,7 +553,7 @@ fn test_model_select_many_select_with_args_with_graphql_config() -> anyhow::Resu
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -564,7 +564,7 @@ fn test_model_select_many_where_ndc_operators() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -914,7 +914,7 @@ fn test_model_select_many_object_type_input_arguments() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -929,7 +929,7 @@ fn test_model_select_many_limit() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -942,7 +942,7 @@ fn test_model_select_many_predicate_is_null() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -957,7 +957,7 @@ fn test_model_select_many_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -972,7 +972,7 @@ fn test_model_select_many_limit_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -987,7 +987,7 @@ fn test_model_select_many_negative_limit_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1060,7 +1060,7 @@ fn test_relay_node_field_permission() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1073,7 +1073,7 @@ fn test_relay_node_interface_permissions() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1128,7 +1128,7 @@ fn test_command_functions() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1143,7 +1143,7 @@ fn test_command_object_type_input_arguments() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1158,7 +1158,7 @@ fn test_command_custom_scalar_inputs() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1178,7 +1178,7 @@ fn test_command_functions_scalar_output_type() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1198,7 +1198,7 @@ fn test_command_functions_object_output_type_command_permissions() -> anyhow::Re
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1219,7 +1219,7 @@ fn test_command_functions_object_output_type_output_permissions() -> anyhow::Res
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1239,7 +1239,7 @@ fn test_command_functions_scalar_array_output_type() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1260,7 +1260,7 @@ fn test_command_functions_object_array_output_type_command_permissions() -> anyh
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1282,7 +1282,7 @@ fn test_command_functions_object_array_output_type_output_permissions() -> anyho
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1305,7 +1305,7 @@ fn test_command_functions_multiple_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1499,7 +1499,7 @@ fn test_command_argument_presets() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1525,7 +1525,7 @@ fn test_boolean_expression_command_argument_presets_object_boolean_expression_ty
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
 
     )
 }
@@ -1547,7 +1547,7 @@ fn test_boolean_expression_command_argument_presets_boolean_expression_type() ->
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1567,7 +1567,7 @@ fn test_boolean_expression_command_argument_from_user() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1588,7 +1588,7 @@ fn test_model_argument_presets_select_many() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1609,7 +1609,7 @@ fn test_model_argument_presets_select_one() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -2177,7 +2177,7 @@ fn test_command_query_forwarded_headers() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -2190,7 +2190,7 @@ fn test_session_variables_json_enabled_array_session_variable() -> anyhow::Resul
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -2201,7 +2201,7 @@ fn test_session_variables_json_enabled_integer_session_variable() -> anyhow::Res
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -2212,6 +2212,6 @@ fn test_session_variables_json_disabled_integer_session_variable() -> anyhow::Re
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }

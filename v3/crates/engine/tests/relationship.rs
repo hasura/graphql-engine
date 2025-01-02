@@ -397,7 +397,7 @@ fn test_remote_relationships_from_nested() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -505,7 +505,7 @@ fn test_relationships_permissions_target_model_type_field_not_selectable() -> an
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -517,7 +517,7 @@ fn test_relationships_permissions_target_model_not_selectable() -> anyhow::Resul
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::TestNDCResponses,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 

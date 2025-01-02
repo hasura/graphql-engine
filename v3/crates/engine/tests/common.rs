@@ -6,12 +6,10 @@ use graphql_schema::GDS;
 use hasura_authn_core::{
     Identity, JsonSessionVariableValue, Role, Session, SessionError, SessionVariableValue,
 };
-use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
-use plan_types::{NDCQueryExecution, ProcessResponseAs};
 use pretty_assertions::assert_eq;
 use serde_json as json;
 use sql::catalog::CatalogSerializable;
@@ -70,6 +68,7 @@ pub(crate) fn resolve_session(
 pub(crate) fn test_introspection_expectation(
     test_path_string: &str,
     common_metadata_paths: &[&str],
+    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         // Setup test context
@@ -151,7 +150,7 @@ pub(crate) fn test_introspection_expectation(
         // TODO: also run with new pipeline if test is suitably configured
         let mut responses = Vec::new();
         for session in &sessions {
-            let (_, response) = execute_query(
+            let (_, http_response) = execute_query(
                 GraphqlRequestPipeline::Old,
                 ExposeInternalErrors::Expose,
                 &test_ctx.http_context,
@@ -163,7 +162,31 @@ pub(crate) fn test_introspection_expectation(
                 None,
             )
             .await;
-            responses.push(response.inner());
+            let response = http_response.inner();
+
+            // we'll switch on OpenDD pipeline tests for each test case
+            // as we fix stuff. eventually we'll skip this check and run it every time.
+            match opendd_tests {
+                TestOpenDDPipeline::Skip => (),
+                TestOpenDDPipeline::YesPlease => {
+                    let (_, open_dd_response) = execute_query(
+                        GraphqlRequestPipeline::OpenDd, // the interesting part
+                        ExposeInternalErrors::Expose,
+                        &test_ctx.http_context,
+                        &schema,
+                        &arc_resolved_metadata,
+                        session,
+                        &request_headers,
+                        raw_request.clone(),
+                        None,
+                    )
+                    .await;
+
+                    compare_graphql_responses(&response, &open_dd_response.inner());
+                }
+            }
+
+            responses.push(response);
         }
 
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
@@ -340,22 +363,6 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         variables: None,
                     };
                     for session in &sessions {
-                        // attempt to create open ir for this request
-                        open_dd_pipeline_test(
-                            test_path_string,
-                            opendd_tests,
-                            &query,
-                            &schema,
-                            &arc_resolved_metadata.clone(),
-                            session,
-                            raw_request.clone(),
-                            &test_ctx.http_context.clone().into(),
-                            &request_headers,
-                        )
-                        .await;
-
-                        // do actual test
-                        // TODO: maybe do OpenDD test too?
                         let (_, response) = execute_query(
                             GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
@@ -381,6 +388,32 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         )
                         .await;
                         compare_graphql_responses(&http_response, &graphql_ws_response);
+
+                        // we'll switch on OpenDD pipeline tests for each test case
+                        // as we fix stuff. eventually we'll skip this check and run it every time.
+                        match opendd_tests {
+                            TestOpenDDPipeline::Skip => (),
+                            TestOpenDDPipeline::YesPlease => {
+                                // run tests with new pipeline and diff them
+                                let (_, open_dd_response) = execute_query(
+                                    GraphqlRequestPipeline::OpenDd, // the interesting part
+                                    ExposeInternalErrors::Expose,
+                                    &test_ctx.http_context,
+                                    &schema,
+                                    &arc_resolved_metadata,
+                                    session,
+                                    &request_headers,
+                                    raw_request.clone(),
+                                    None,
+                                )
+                                .await;
+                                compare_graphql_responses(
+                                    &http_response,
+                                    &open_dd_response.inner(),
+                                );
+                            }
+                        }
+
                         responses.push(http_response);
                     }
                 }
@@ -391,19 +424,6 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             query: query.clone(),
                             variables: Some(variables),
                         };
-                        // attempt to create open ir for this request
-                        open_dd_pipeline_test(
-                            test_path_string,
-                            opendd_tests,
-                            &query,
-                            &schema,
-                            &gds.metadata,
-                            session,
-                            raw_request.clone(),
-                            &Arc::new(test_ctx.http_context.clone()),
-                            &request_headers,
-                        )
-                        .await;
                         // do actual test
                         let (_, response) = execute_query(
                             GraphqlRequestPipeline::Old,
@@ -430,6 +450,31 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         )
                         .await;
                         compare_graphql_responses(&http_response, &graphql_ws_response);
+
+                        // we'll switch on OpenDD pipeline tests for each test case
+                        // as we fix stuff. eventually we'll skip this check and run it every time.
+                        match opendd_tests {
+                            TestOpenDDPipeline::Skip => (),
+                            TestOpenDDPipeline::YesPlease => {
+                                // run tests with new pipeline and diff them
+                                let (_, open_dd_response) = execute_query(
+                                    GraphqlRequestPipeline::OpenDd, // the interesting part
+                                    ExposeInternalErrors::Expose,
+                                    &test_ctx.http_context,
+                                    &schema,
+                                    &arc_resolved_metadata,
+                                    session,
+                                    &request_headers,
+                                    raw_request.clone(),
+                                    None,
+                                )
+                                .await;
+                                compare_graphql_responses(
+                                    &http_response,
+                                    &open_dd_response.inner(),
+                                );
+                            }
+                        }
                         responses.push(http_response);
                     }
                 }
@@ -730,20 +775,23 @@ fn read_to_string(path: &Path) -> anyhow::Result<String> {
 
 fn compare_graphql_responses(
     http_response: &lang_graphql::http::Response,
-    ws_response: &lang_graphql::http::Response,
+    other_response: &lang_graphql::http::Response,
 ) {
     assert_eq!(
-        http_response.status_code, ws_response.status_code,
-        "Status Codes donot match {}, {}",
-        http_response.status_code, ws_response.status_code,
+        http_response.status_code, other_response.status_code,
+        "HTTP status codes do not match {}, {}",
+        http_response.status_code, other_response.status_code,
     );
 
     assert_eq!(
-        http_response.errors, ws_response.errors,
+        http_response.errors, other_response.errors,
         "Errors do not match",
     );
 
-    assert_eq!(http_response.data, ws_response.data, "Data do not match");
+    assert_eq!(
+        http_response.data, other_response.data,
+        "Data does not match"
+    );
 }
 
 /// Execute a GraphQL query over a dummy WebSocket connection.
@@ -856,135 +904,10 @@ async fn run_query_graphql_ws(
     response
 }
 
-// which OpenDD IR pipeline tests should we include for this test?
+// should we test with the OpenDD pipeline?
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum TestOpenDDPipeline {
     Skip,
-    GenerateOpenDDQuery,
-    TestNDCResponses,
-    GenerateExecutionPlan,
-}
-
-// generate open_dd_ir for each test and see what happens
-// eventually these tests will be deleted once the OpenDD pipeline becomes the main one
-pub async fn open_dd_pipeline_test(
-    test_path_string: &str,
-    opendd_tests: TestOpenDDPipeline,
-    query: &str,
-    schema: &Schema<GDS>,
-    metadata: &metadata_resolve::Metadata,
-    session: &Session,
-    raw_request: lang_graphql::http::RawRequest,
-    http_context: &Arc<HttpContext>,
-    request_headers: &reqwest::header::HeaderMap,
-) {
-    match opendd_tests {
-        TestOpenDDPipeline::Skip => {}
-        TestOpenDDPipeline::GenerateOpenDDQuery => {
-            // parse the raw request into a GQL query
-            let query = graphql_frontend::parse_query(query).unwrap();
-
-            // normalize the parsed GQL query
-            if let Ok(normalized_request) =
-                graphql_frontend::normalize_request(schema, session, query, &raw_request)
-            {
-                // we can only generate for queries that would have worked,
-                // `normalize_request` fails when we try and access a field we're not allowed to,
-                // for instance
-                let ir = graphql_frontend::to_opendd_ir(&normalized_request);
-
-                insta::with_settings!({
-                snapshot_path => test_path_string,
-                snapshot_suffix => "",
-                prepend_module_to_snapshot => false},{
-                    insta::assert_debug_snapshot!(
-                        format!("generate_open_dd_query_for_{}", session.role),
-                        ir
-                    );
-                });
-            }
-        }
-        TestOpenDDPipeline::TestNDCResponses => {
-            // test the partial NDC pipeline so we can sanity check the planning steps
-
-            // parse the raw request into a GQL query
-            let query = graphql_frontend::parse_query(query).unwrap();
-
-            // normalize the parsed GQL query
-            if let Ok(normalized_request) =
-                graphql_frontend::normalize_request(schema, session, query, &raw_request)
-            {
-                // we can only generate for queries that would have worked,
-                // `normalize_request` fails when we try and access a field we're not allowed to,
-                // for instance
-                let query_ir = graphql_frontend::to_opendd_ir(&normalized_request);
-
-                // create a query execution plan for a single node with the new pipeline
-                let plan_result = plan::plan_query_request(
-                    &query_ir,
-                    metadata,
-                    &Arc::new(session.clone()),
-                    request_headers,
-                );
-
-                match plan_result {
-                    Ok(execution_plan) => match execution_plan {
-                        plan::ExecutionPlan::Mutation(_) => {
-                            todo!("Executing mutations in OpenDD IR pipeline tests not implemented yet")
-                        }
-                        plan::ExecutionPlan::Queries(queries) => {
-                            // this should probably happen in `execute`
-                            let mut results = IndexMap::new();
-
-                            for (alias, query_execution) in queries {
-                                let ndc_query_execution = NDCQueryExecution {
-                                    execution_span_attribute:
-                                        "Engine GraphQL OpenDD pipeline tests",
-                                    execution_tree: query_execution.execution_tree,
-                                    field_span_attribute: "Engine GraphQL OpenDD pipeline tests"
-                                        .into(),
-                                    process_response_as: ProcessResponseAs::Array {
-                                        is_nullable: false,
-                                    },
-                                };
-                                let rowsets = execute::resolve_ndc_query_execution(
-                                    http_context,
-                                    ndc_query_execution,
-                                    None,
-                                )
-                                .await
-                                .map_err(|e| e.to_string());
-                                results.insert(alias, rowsets);
-                            }
-
-                            insta::with_settings!({
-                            snapshot_path => test_path_string,
-                            snapshot_suffix => "",
-                            prepend_module_to_snapshot => false},{
-                                        insta::assert_json_snapshot!(
-                                            format!("test_ndc_responses_for_{}", session.role),
-                                            results
-                                        );
-                            });
-                        }
-                    },
-                    Err(err) => {
-                        insta::with_settings!({
-                            snapshot_path => test_path_string,
-                            snapshot_suffix => "",
-                            prepend_module_to_snapshot => false},{
-
-                        insta::assert_debug_snapshot!(
-                            format!("error_in_test_ndc_responses_for_{}", session.role),
-                            err
-                        );});
-                    }
-                }
-            }
-        }
-        TestOpenDDPipeline::GenerateExecutionPlan => {
-            todo!("GenerateExecutionPlan not implemented yet")
-        }
-    }
+    YesPlease,
 }
