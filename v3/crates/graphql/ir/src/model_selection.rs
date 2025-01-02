@@ -13,6 +13,7 @@ use metadata_resolve::Qualified;
 use metadata_resolve::QualifiedTypeName;
 use open_dds::{
     data_connector::CollectionName,
+    models::ModelName,
     types::{CustomTypeName, DataConnectorArgumentName},
 };
 use plan::UnresolvedArgument;
@@ -63,6 +64,66 @@ struct FilterInputArguments<'s> {
     offset: Option<u32>,
     order_by: Option<order_by::OrderBy<'s>>,
     filter_clause: Option<Expression<'s>>,
+}
+
+/// Generates the IR fragment for selecting from a model.
+#[allow(clippy::too_many_arguments)]
+pub fn model_selection_open_dd_ir<'s>(
+    selection_set: &normalized_ast::SelectionSet<'s, GDS>,
+    data_type: &Qualified<CustomTypeName>,
+    model_source: &'s metadata_resolve::ModelSource,
+    model_name: &Qualified<ModelName>,
+    limit: Option<u32>,
+    offset: Option<u32>,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<open_dds::query::ModelSelection, error::Error> {
+    let field_mappings = get_field_mappings_for_object_type(model_source, data_type)?;
+    let selection = selection_set::generate_selection_set_open_dd_ir(
+        selection_set,
+        metadata_resolve::FieldNestedness::NotNested,
+        &model_source.data_connector,
+        &model_source.type_mappings,
+        field_mappings,
+        session_variables,
+        request_headers,
+        usage_counts,
+    )?;
+
+    let limit: Option<usize> = limit
+        .map(|limit| {
+            usize::try_from(limit).map_err(|_| error::Error::InvalidLimitValue { value: limit })
+        })
+        .transpose()?;
+
+    let offset: Option<usize> = offset
+        .map(|offset| {
+            usize::try_from(offset).map_err(|_| error::Error::InvalidOffsetValue { value: offset })
+        })
+        .transpose()?;
+
+    // MADE UP EMPTY VALUES TO GET THINGS STARTED
+    // TODO: these will be replaced with correct values as we go
+    let order_by = vec![];
+
+    let arguments = IndexMap::new();
+
+    let filter = None;
+
+    // END OF MADE UP VALUES
+
+    let target = open_dds::query::ModelTarget {
+        subgraph: model_name.subgraph.clone(),
+        model_name: model_name.name.clone(),
+        offset,
+        order_by,
+        arguments,
+        filter,
+        limit,
+    };
+
+    Ok(open_dds::query::ModelSelection { selection, target })
 }
 
 /// Generates the IR fragment for selecting from a model.

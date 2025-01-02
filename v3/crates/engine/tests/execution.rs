@@ -33,7 +33,7 @@ fn test_model_select_one_simple_select_introspection() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -67,7 +67,7 @@ fn test_model_select_many_simple_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -78,7 +78,7 @@ fn test_model_select_many_simple_select_introspection() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -90,7 +90,7 @@ fn test_model_select_many_simple_select_introspection_user_1() -> anyhow::Result
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -103,7 +103,7 @@ fn test_model_select_many_simple_select_introspection_with_graphql_config() -> a
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -114,7 +114,7 @@ fn test_model_select_many_filter() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -125,7 +125,7 @@ fn test_model_select_many_empty_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -175,7 +175,7 @@ fn test_model_select_many_nested_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -189,7 +189,7 @@ fn test_model_select_many_nested_select_no_explicit_type_mapping() -> anyhow::Re
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -216,7 +216,7 @@ fn test_model_select_many_nested_select_postgres() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -929,7 +929,7 @@ fn test_model_select_many_limit() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -957,7 +957,7 @@ fn test_model_select_many_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

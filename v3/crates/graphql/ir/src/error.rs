@@ -52,6 +52,15 @@ pub enum Error {
     #[error("'{name:}' is not a valid GraphQL name.")]
     TypeFieldInvalidGraphQlName { name: String },
 
+    #[error("'{alias:} is not a valid alias")]
+    InvalidAlias { alias: String },
+
+    #[error("{value} is not a valid limit value")]
+    InvalidLimitValue { value: u32 },
+
+    #[error("{value} is not a valid offset value")]
+    InvalidOffsetValue { value: u32 },
+
     #[error("field '{field_name:} not found in entity representation")]
     FieldNotFoundInEntityRepresentation { field_name: FieldName },
 

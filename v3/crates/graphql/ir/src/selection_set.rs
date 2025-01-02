@@ -82,6 +82,15 @@ impl ResultSelectionSet<'_> {
     }
 }
 
+// TODO: placeholder: this needs implementing with the new types
+fn build_global_id_fields_for_open_dd_ir(
+    _global_id_fields: &[FieldName],
+    _field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
+    _field_alias: &Alias,
+    _fields: &mut IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>,
+) {
+}
+
 fn build_global_id_fields(
     global_id_fields: &Vec<FieldName>,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
@@ -195,6 +204,209 @@ pub fn generate_nested_selection<'s>(
             }
         }
     }
+}
+
+/// Builds the OpenDD IR from a normalized selection set
+pub fn generate_selection_set_open_dd_ir<'s>(
+    selection_set: &normalized_ast::SelectionSet<'s, GDS>,
+    selection_set_field_nestedness: metadata_resolve::FieldNestedness,
+    data_connector: &'s metadata_resolve::DataConnectorLink,
+    type_mappings: &'s BTreeMap<
+        metadata_resolve::Qualified<CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
+    field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>, error::Error> {
+    let mut fields = IndexMap::new();
+    for field in selection_set.fields.values() {
+        let field_call = field.field_call()?;
+        match field_call.info.generic {
+            annotation @ Annotation::Output(annotated_field) => {
+                match annotated_field {
+                    OutputAnnotation::Field {
+                        name,
+                        field_type,
+                        field_base_type_kind,
+                        argument_types,
+                        ..
+                    } => {
+                        let field_mapping = &field_mappings.get(name).ok_or_else(|| {
+                            error::InternalEngineError::InternalGeneric {
+                                description: format!("invalid field in annotation: {name:}"),
+                            }
+                        })?;
+                        let _nested_selection = generate_nested_selection(
+                            field_type,
+                            *field_base_type_kind,
+                            selection_set_field_nestedness
+                                .max(metadata_resolve::FieldNestedness::ObjectNested),
+                            NestedSelectionType::NestedSelection,
+                            field,
+                            data_connector,
+                            type_mappings,
+                            session_variables,
+                            request_headers,
+                            usage_counts,
+                        )?;
+                        let mut field_arguments = BTreeMap::new();
+                        for (argument_name, argument_type) in argument_types {
+                            let argument_value = match field_call.arguments.get(argument_name) {
+                                None => {
+                                    if argument_type.nullable {
+                                        Ok(None)
+                                    } else {
+                                        Err(error::Error::MissingNonNullableArgument {
+                                            argument_name: argument_name.to_string(),
+                                            field_name: name.to_string(),
+                                        })
+                                    }
+                                }
+                                Some(val) => arguments::map_argument_value_to_ndc_type(
+                                    argument_type,
+                                    &val.value,
+                                    type_mappings,
+                                )
+                                .map(Some),
+                            }?;
+                            if let Some(argument_value) = argument_value {
+                                let argument = UnresolvedArgument::Literal {
+                                    value: argument_value,
+                                };
+                                // If argument name is not found in the mapping, use the open_dd argument name as the ndc argument name
+                                let ndc_argument_name = field_mapping
+                                    .argument_mappings
+                                    .get(argument_name.as_str())
+                                    .map_or_else(
+                                        || DataConnectorArgumentName::from(argument_name.as_str()),
+                                        Clone::clone,
+                                    );
+                                field_arguments.insert(ndc_argument_name, argument);
+                            }
+                        }
+
+                        // TODO: implement arguments and nested selection
+                        let field_selection = open_dds::query::ObjectSubSelection::Field(
+                            open_dds::query::ObjectFieldSelection {
+                                selection: None,
+                                target: open_dds::query::ObjectFieldTarget {
+                                    arguments: IndexMap::new(),
+                                    field_name: name.clone(),
+                                },
+                            },
+                        );
+
+                        fields.insert(make_field_alias(field.alias.0.as_str())?, field_selection);
+                    }
+                    OutputAnnotation::RootField(RootFieldAnnotation::Introspection) => {}
+                    OutputAnnotation::GlobalIDField { global_id_fields } => {
+                        build_global_id_fields_for_open_dd_ir(
+                            global_id_fields,
+                            field_mappings,
+                            &field.alias,
+                            &mut fields,
+                        );
+                    }
+                    OutputAnnotation::RelayNodeInterfaceID { typename_mappings } => {
+                        // Even though we already have the value of the global ID field
+                        // here, we try to re-compute the value of the same ID by decoding the ID.
+                        // We do this because it simplifies the code structure.
+                        // If the NDC were to accept key-value pairs from the v3-engine that will
+                        // then be outputted as it is, then we could avoid this computation.
+                        let type_name = field.selection_set.type_name.clone().ok_or(
+                            error::InternalEngineError::InternalGeneric {
+                                description: "typename not found while resolving NodeInterfaceId"
+                                    .to_string(),
+                            },
+                        )?;
+                        let global_id_fields = typename_mappings.get(&type_name).ok_or(
+                            error::InternalEngineError::InternalGeneric {
+                                description: format!(
+                                    "Global ID fields not found of the type {type_name}"
+                                ),
+                            },
+                        )?;
+
+                        build_global_id_fields_for_open_dd_ir(
+                            global_id_fields,
+                            field_mappings,
+                            &field.alias,
+                            &mut fields,
+                        );
+                    }
+                    OutputAnnotation::RelationshipToModel(_relationship_annotation) => {
+                        todo!("generate_selection_set_open_dd_ir: RelationshipToModel");
+                        /*
+                        fields.insert(
+                            make_field_alias(field.alias.0.as_str())?,
+                            relationship::generate_model_relationship_ir(
+                                field,
+                                relationship_annotation,
+                                selection_set_field_nestedness,
+                                data_connector,
+                                type_mappings,
+                                session_variables,
+                                request_headers,
+                                usage_counts,
+                            )?,
+                        );*/
+                    }
+                    OutputAnnotation::RelationshipToModelAggregate(_relationship_annotation) => {
+                        todo!("generate_selection_set_open_dd_ir: RelationshipToModelAggregate");
+                        /*
+                        fields.insert(
+                            make_field_alias(field.alias.0.as_str())?,
+                            relationship::generate_model_aggregate_relationship_ir(
+                                field,
+                                relationship_annotation,
+                                selection_set_field_nestedness,
+                                data_connector,
+                                type_mappings,
+                                session_variables,
+                                request_headers,
+                                usage_counts,
+                            )?,
+                        );*/
+                    }
+                    OutputAnnotation::RelationshipToCommand(_relationship_annotation) => {
+                        todo!("generate_selection_set_open_dd_ir: RelationshipToCommand");
+                        /*
+                        fields.insert(
+                            make_field_alias(field.alias.0.as_str())?,
+                            relationship::generate_command_relationship_ir(
+                                field,
+                                relationship_annotation,
+                                selection_set_field_nestedness,
+                                data_connector,
+                                type_mappings,
+                                session_variables,
+                                request_headers,
+                                usage_counts,
+                            )?,
+                        );*/
+                    }
+                    _ => Err(error::InternalEngineError::UnexpectedAnnotation {
+                        annotation: annotation.clone(),
+                    })?,
+                }
+            }
+
+            annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
+                annotation: annotation.clone(),
+            })?,
+        }
+    }
+    Ok(fields)
+}
+
+fn make_field_alias(alias: &str) -> Result<open_dds::query::Alias, error::Error> {
+    Ok(open_dds::query::Alias::from(
+        open_dds::identifier::Identifier::new(alias).map_err(|_| error::Error::InvalidAlias {
+            alias: alias.to_string(),
+        })?,
+    ))
 }
 
 /// Builds the IR from a normalized selection set

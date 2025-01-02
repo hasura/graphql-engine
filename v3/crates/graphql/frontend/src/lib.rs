@@ -5,7 +5,6 @@ mod process_response;
 mod query;
 mod query_usage;
 mod steps;
-mod to_opendd_ir;
 mod types;
 
 pub use error::RequestError;
@@ -17,7 +16,6 @@ pub use query::{
     execute_query, execute_query_internal, set_request_metadata_attributes, set_usage_attributes,
 };
 pub use steps::{build_ir, build_request_plan, generate_ir, normalize_request, parse_query};
-pub use to_opendd_ir::to_opendd_ir;
 pub use types::{GraphQLErrors, GraphQLResponse};
 
 #[cfg(test)]

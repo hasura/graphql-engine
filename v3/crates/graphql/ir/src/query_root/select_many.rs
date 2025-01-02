@@ -167,29 +167,38 @@ pub fn select_many_generate_ir<'n, 's>(
         additional_filter: None,
     };
     let model_selection = match request_pipeline {
-        GraphqlRequestPipeline::OpenDd => Err(error::InternalEngineError::InternalGeneric {
-            description: "Not yet implemented - plan model select many for OpenDD".into(),
-        }),
-        GraphqlRequestPipeline::Old => {
-            Ok(ModelSelectManySelection::Ir(
-                model_selection::model_selection_ir(
-                    &field.selection_set,
-                    data_type,
-                    model_source,
-                    model_arguments,
-                    query_filter,
-                    permissions::get_select_filter_predicate(&field_call.info)?,
-                    limit,
-                    offset,
-                    order_by,
-                    session_variables,
-                    request_headers,
-                    // Get all the models/commands that were used as relationships
-                    &mut usage_counts,
-                )?,
-            ))
+        GraphqlRequestPipeline::OpenDd => {
+            ModelSelectManySelection::OpenDd(model_selection::model_selection_open_dd_ir(
+                &field.selection_set,
+                data_type,
+                model_source,
+                model_name,
+                limit,
+                offset,
+                session_variables,
+                request_headers,
+                // Get all the models/commands that were used as relationships
+                &mut usage_counts,
+            )?)
         }
-    }?;
+        GraphqlRequestPipeline::Old => {
+            ModelSelectManySelection::Ir(model_selection::model_selection_ir(
+                &field.selection_set,
+                data_type,
+                model_source,
+                model_arguments,
+                query_filter,
+                permissions::get_select_filter_predicate(&field_call.info)?,
+                limit,
+                offset,
+                order_by,
+                session_variables,
+                request_headers,
+                // Get all the models/commands that were used as relationships
+                &mut usage_counts,
+            )?)
+        }
+    };
 
     Ok(ModelSelectMany {
         field_name: field_call.name.clone(),
