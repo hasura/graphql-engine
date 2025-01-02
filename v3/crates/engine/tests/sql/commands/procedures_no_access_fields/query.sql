@@ -1,4 +1,0 @@
-SELECT
-    *
-FROM
-    uppercase_actor_name_by_id(STRUCT(1 as id));

@@ -14,7 +14,7 @@ fn print_warnings<T: Display>(warnings: Vec<T>) {
     }
 }
 
-/// Build the engine state - include auth, metadata, and sql context.
+/// Build the engine state - include auth, metadata, and jsonapi context.
 pub fn build_state(
     request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,

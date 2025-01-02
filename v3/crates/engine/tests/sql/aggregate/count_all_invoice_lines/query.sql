@@ -1,4 +1,0 @@
-SELECT
-    COUNT(*)
-FROM
-    InvoiceLine;

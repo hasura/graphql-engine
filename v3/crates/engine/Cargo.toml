@@ -40,7 +40,6 @@ plan = { path = "../plan" }
 pre-parse-plugin = { path = "../plugins/pre-parse-plugin" }
 pre-response-plugin = { path = "../plugins/pre-response-plugin" }
 pre-route-plugin = { path = "../plugins/pre-route-plugin" }
-sql = { path = "../sql" }
 tracing-util = { path = "../utils/tracing-util" }
 
 anyhow = { workspace = true }

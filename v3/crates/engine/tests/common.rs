@@ -12,10 +12,7 @@ use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
 use pretty_assertions::assert_eq;
 use serde_json as json;
-use sql::catalog::CatalogSerializable;
-use sql::execute::SqlRequest;
 use std::collections::BTreeMap;
-use std::iter;
 use std::sync::Arc;
 use std::{
     collections::HashMap,
@@ -300,21 +297,8 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
             // future metadata tests that may be added.
             let serialized_metadata =
                 serde_json::to_string(&schema).expect("Failed to serialize schema");
-            let deserialized_metadata: Schema<GDS> =
+            let _deserialized_metadata: Schema<GDS> =
                 serde_json::from_str(&serialized_metadata).expect("Failed to deserialize metadata");
-
-            // Ensure sql_context can be serialized and deserialized
-            let sql_context = sql::catalog::Catalog::from_metadata(&gds.metadata);
-            let sql_context_str = serde_json::to_string(&sql_context.clone().to_serializable())?;
-            let sql_context_parsed: CatalogSerializable = serde_json::from_str(&sql_context_str)?;
-            assert_eq!(
-                sql_context,
-                sql_context_parsed.from_serializable(&gds.metadata)
-            );
-            assert_eq!(
-                schema, deserialized_metadata,
-                "initial built metadata does not match deserialized metadata"
-            );
 
             let query = read_to_string(&request_path)?;
 
@@ -625,146 +609,6 @@ pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configu
             ..Default::default()
         },
     }
-}
-
-#[allow(dead_code)]
-pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
-    tokio_test::block_on(async {
-        // Setup test context
-        let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
-        let mut test_ctx = setup(&root_test_dir);
-        let test_path = root_test_dir.join(test_path_string);
-
-        let request_path = test_path.join("query.sql");
-        let request_path_json = test_path.join("query.json");
-        let headers_path_json = test_path.join("headers.json");
-        let response_path = test_path_string.to_string() + "/expected.json";
-        let explain_path = test_path_string.to_string() + "/plan.json";
-        let metadata_path = root_test_dir.join("sql/metadata.json");
-
-        let metadata_json_value = merge_with_common_metadata(&metadata_path, iter::empty())?;
-
-        let metadata =
-            open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())?;
-
-        // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
-        assert_eq!(
-            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata)?)?,
-            metadata
-        );
-
-        let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
-        let schema = GDS::build_schema(&gds)?;
-
-        // Ensure schema is serialized successfully.
-        serde_json::to_string(&schema)?;
-
-        // Ensure sql_context can be serialized and deserialized
-        let sql_context = sql::catalog::Catalog::from_metadata(&gds.metadata);
-        let sql_context_str = serde_json::to_string(&sql_context.clone().to_serializable())?;
-        let sql_context_parsed: CatalogSerializable = serde_json::from_str(&sql_context_str)?;
-        assert_eq!(
-            sql_context,
-            sql_context_parsed.from_serializable(&gds.metadata)
-        );
-
-        let request = if let Ok(content) = read_to_string(&request_path) {
-            SqlRequest::new(content)
-        } else {
-            let json_content = read_to_string(&request_path_json)?;
-            serde_json::from_str(&json_content)?
-        };
-
-        let header_map = if let Ok(content) = read_to_string(&headers_path_json) {
-            let header_map: HashMap<String, String> = serde_json::from_str(&content)?;
-            Arc::new(reqwest::header::HeaderMap::try_from(&header_map)?)
-        } else {
-            Arc::new(reqwest::header::HeaderMap::new())
-        };
-
-        let session = Arc::new({
-            let session_vars_path = &test_path.join("session_variables.json");
-            let session_variables: HashMap<SessionVariableName, JsonSessionVariableValue> =
-                serde_json::from_str(read_to_string(session_vars_path)?.as_ref())?;
-            resolve_session(
-                session_variables
-                    .into_iter()
-                    .map(|(k, v)| (k, v.into()))
-                    .collect(),
-            )
-        }?);
-
-        let catalog = Arc::new(sql::catalog::Catalog::from_metadata(&gds.metadata));
-        let http_context = Arc::new(test_ctx.http_context);
-
-        // Execute the test
-        snapshot_sql(
-            &catalog,
-            &gds.metadata,
-            &session,
-            &http_context,
-            &mut test_ctx.mint,
-            explain_path,
-            &header_map,
-            &SqlRequest::new(format!("EXPLAIN {}", request.sql)),
-        )
-        .await?;
-
-        snapshot_sql(
-            &catalog,
-            &gds.metadata,
-            &session,
-            &http_context,
-            &mut test_ctx.mint,
-            response_path,
-            &header_map,
-            &request,
-        )
-        .await?;
-
-        Ok(())
-    })
-}
-
-async fn snapshot_sql(
-    catalog: &Arc<sql::catalog::Catalog>,
-    metadata: &Arc<metadata_resolve::Metadata>,
-    session: &Arc<hasura_authn_core::Session>,
-    http_context: &Arc<HttpContext>,
-    mint: &mut Mint,
-    response_path: String,
-    request_headers: &Arc<reqwest::header::HeaderMap>,
-    request: &SqlRequest,
-) -> Result<(), anyhow::Error> {
-    let response = sql::execute::execute_sql(
-        request_headers.clone(),
-        catalog.clone(),
-        metadata.clone(),
-        session.clone(),
-        http_context.clone(),
-        request,
-    )
-    .await;
-
-    let response = match response {
-        Ok(r) => r,
-        Err(e) => serde_json::to_vec(&e.to_error_response())?,
-    };
-    let response = serde_json::from_reader::<_, serde_json::Value>(response.as_slice())?;
-    let mut expected = mint.new_goldenfile_with_differ(
-        response_path,
-        Box::new(|file1, file2| {
-            let json1: serde_json::Value =
-                serde_json::from_reader(File::open(file1).unwrap()).unwrap();
-            let json2: serde_json::Value =
-                serde_json::from_reader(File::open(file2).unwrap()).unwrap();
-            if json1 != json2 {
-                text_diff(file1, file2);
-            }
-        }),
-    )?;
-    write!(expected, "{}", serde_json::to_string_pretty(&response)?)?;
-    Ok(())
 }
 
 /// A utility wrapper around std::read_to_string

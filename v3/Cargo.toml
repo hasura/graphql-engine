@@ -21,7 +21,6 @@ members = [
   "crates/plan-types",
   "crates/plugins/*",
   "crates/query-usage-analytics",
-  "crates/sql",
   "crates/utils/*",
 ]
 

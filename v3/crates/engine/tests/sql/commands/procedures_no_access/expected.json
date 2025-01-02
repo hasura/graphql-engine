@@ -1,3 +1,0 @@
-{
-  "error": "error in data fusion: Error during planning: role no-access does not have permission to select any fields of type actor (in subgraph default)"
-}

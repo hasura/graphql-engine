@@ -1,6 +1,0 @@
-[
-  {
-    "plan_type": "logical_plan",
-    "plan": "ModelQuery: model=default:institutions, projection=[staff], limit=1, offset=0"
-  }
-]
