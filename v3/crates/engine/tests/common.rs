@@ -65,7 +65,6 @@ pub(crate) fn resolve_session(
 pub(crate) fn test_introspection_expectation(
     test_path_string: &str,
     common_metadata_paths: &[&str],
-    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         // Setup test context
@@ -144,7 +143,6 @@ pub(crate) fn test_introspection_expectation(
         };
 
         // Execute the test
-        // TODO: also run with new pipeline if test is suitably configured
         let mut responses = Vec::new();
         for session in &sessions {
             let (_, http_response) = execute_query(
@@ -161,27 +159,21 @@ pub(crate) fn test_introspection_expectation(
             .await;
             let response = http_response.inner();
 
-            // we'll switch on OpenDD pipeline tests for each test case
-            // as we fix stuff. eventually we'll skip this check and run it every time.
-            match opendd_tests {
-                TestOpenDDPipeline::Skip => (),
-                TestOpenDDPipeline::YesPlease => {
-                    let (_, open_dd_response) = execute_query(
-                        GraphqlRequestPipeline::OpenDd, // the interesting part
-                        ExposeInternalErrors::Expose,
-                        &test_ctx.http_context,
-                        &schema,
-                        &arc_resolved_metadata,
-                        session,
-                        &request_headers,
-                        raw_request.clone(),
-                        None,
-                    )
-                    .await;
+            // do the same with OpenDD pipeline and diff the responses
+            let (_, open_dd_response) = execute_query(
+                GraphqlRequestPipeline::OpenDd, // the interesting part
+                ExposeInternalErrors::Expose,
+                &test_ctx.http_context,
+                &schema,
+                &arc_resolved_metadata,
+                session,
+                &request_headers,
+                raw_request.clone(),
+                None,
+            )
+            .await;
 
-                    compare_graphql_responses(&response, &open_dd_response.inner());
-                }
-            }
+            compare_graphql_responses(&response, &open_dd_response.inner());
 
             responses.push(response);
         }

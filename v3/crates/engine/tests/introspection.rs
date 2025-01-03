@@ -12,7 +12,6 @@ fn test_introspect_command_with_preset_arguments() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -27,7 +26,6 @@ fn test_introspect_model_with_preset_arguments_select_many() -> anyhow::Result<(
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -42,7 +40,6 @@ fn test_introspect_model_with_preset_arguments_select_one() -> anyhow::Result<()
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -58,7 +55,6 @@ fn test_introspect_input_type_field_presets_on_command() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -74,7 +70,6 @@ fn test_introspect_input_type_field_presets_on_model_arguments() -> anyhow::Resu
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -86,7 +81,6 @@ fn test_graphql_deprecated() -> anyhow::Result<()> {
     common::test_introspection_expectation(
         "execute/deprecated",
         &[common_custom_connector_path_string],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -105,10 +99,7 @@ fn test_introspect_boolean_expression_in_command_object_boolean_expression_type(
         &[
             common_metadata_path_string,
             common_command_metadata_path_string,
-        ],
-        common::TestOpenDDPipeline::Skip,
-
-    )
+        ])
 }
 
 // new `boolean_expression_type`
@@ -124,7 +115,6 @@ fn test_introspect_boolean_expression_in_command_boolean_expression_type() -> an
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -142,7 +132,6 @@ fn test_introspect_boolean_expression_in_command_boolean_expression_type_passed_
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -158,7 +147,6 @@ fn test_introspect_aggregates_root_field_simple_select() -> anyhow::Result<()> {
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -172,7 +160,6 @@ fn test_introspect_aggregates_root_field_filtering() -> anyhow::Result<()> {
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -186,7 +173,6 @@ fn test_introspect_aggregates_root_field_nested_object() -> anyhow::Result<()> {
             "execute/aggregates/common_metadata/custom_connector_vBoth_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -200,7 +186,6 @@ fn test_introspect_aggregates_root_field_custom_count_return_type() -> anyhow::R
             "execute/aggregates/common_metadata/custom_connector_v02_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -214,7 +199,6 @@ fn test_introspect_aggregates_relationship_field_simple_select() -> anyhow::Resu
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -228,7 +212,6 @@ fn test_introspect_aggregates_relationship_field_filtering() -> anyhow::Result<(
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -239,7 +222,6 @@ fn test_introspect_relationship_comparison_capabilities_with_object_boolean_expr
     common::test_introspection_expectation(
         test_path_string,
         &["execute/relationships/no_relationship_comparison_capability/metadata.json"],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -251,7 +233,6 @@ fn test_introspect_relationship_comparison_capabilities_with_boolean_expression_
     common::test_introspection_expectation(
         test_path_string,
         &["execute/relationships/no_relationship_comparison_capability/metadata.json"],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -268,7 +249,6 @@ fn test_introspect_model_select_many_where_object_boolean_array_relationship_sim
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -278,44 +258,28 @@ fn test_introspect_model_select_many_where_object_boolean_array_relationship_sim
 fn test_introspect_model_select_many_order_by() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_introspection_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
-    )
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 fn test_introspect_model_select_many_order_by_with_model_v2() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/with_model_v2";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_introspection_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
-    )
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 fn test_introspect_model_select_many_order_by_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/nested";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
-    common::test_introspection_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
-    )
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 fn test_introspect_model_select_many_order_by_nested_legacy() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/nested_legacy";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
-    common::test_introspection_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
-    )
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 // Tests for subscriptions
@@ -325,9 +289,5 @@ fn test_introspect_model_select_many_order_by_nested_legacy() -> anyhow::Result<
 fn test_subscription_introspection() -> anyhow::Result<()> {
     let test_path_string = "execute/subscriptions/introspection";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_introspection_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
-    )
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
 }
