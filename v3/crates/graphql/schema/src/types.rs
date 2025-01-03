@@ -279,6 +279,9 @@ pub enum ScalarBooleanExpressionField {
             deserialize_with = "deserialize_non_string_key_btreemap"
         )]
         operator_mapping: BTreeMap<Qualified<DataConnectorName>, DataConnectorOperatorName>,
+        /// In OpenDD IR we don't need to think about the data connector, so we'll just need this
+        /// name:
+        operator_name: open_dds::types::OperatorName,
     },
     IsNullOperation,
 }

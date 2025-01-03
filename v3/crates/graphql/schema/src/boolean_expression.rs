@@ -821,6 +821,7 @@ pub fn build_scalar_boolean_expression_input(
                     types::BooleanExpressionAnnotation::ScalarBooleanExpressionField(
                         types::ScalarBooleanExpressionField::ComparisonOperation {
                             operator_mapping: this_operator_mapping,
+                            operator_name,
                         },
                     ),
                 )),

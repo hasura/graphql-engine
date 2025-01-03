@@ -73,6 +73,7 @@ pub fn model_selection_open_dd_ir<'s>(
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
     model_name: &Qualified<ModelName>,
+    where_clause: Option<open_dds::query::BooleanExpression>,
     limit: Option<u32>,
     offset: Option<u32>,
     session_variables: &SessionVariables,
@@ -103,13 +104,14 @@ pub fn model_selection_open_dd_ir<'s>(
         })
         .transpose()?;
 
+    // TODO: append select permissions etc
+    let filter = where_clause;
+
     // MADE UP EMPTY VALUES TO GET THINGS STARTED
     // TODO: these will be replaced with correct values as we go
     let order_by = vec![];
 
     let arguments = IndexMap::new();
-
-    let filter = None;
 
     // END OF MADE UP VALUES
 

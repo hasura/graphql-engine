@@ -61,7 +61,7 @@ pub fn select_many_generate_ir<'n, 's>(
 ) -> Result<ModelSelectMany<'n, 's>, error::Error> {
     let mut limit = None;
     let mut offset = None;
-    let mut where_clause = None;
+    let mut where_input = None;
     let mut order_by = None;
     let mut model_arguments = BTreeMap::new();
 
@@ -126,13 +126,7 @@ pub fn select_many_generate_ir<'n, 's>(
             Annotation::Input(graphql_schema::InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpressionRootField,
             )) => {
-                where_clause = Some(filter::resolve_filter_expression(
-                    argument.value.as_object()?,
-                    &model_source.data_connector,
-                    &model_source.type_mappings,
-                    session_variables,
-                    &mut usage_counts,
-                )?);
+                where_input = Some(argument.value.as_object()?);
             }
 
             annotation => {
@@ -162,17 +156,23 @@ pub fn select_many_generate_ir<'n, 's>(
         &mut usage_counts,
     )?;
 
-    let query_filter = filter::QueryFilter {
-        where_clause,
-        additional_filter: None,
-    };
     let model_selection = match request_pipeline {
         GraphqlRequestPipeline::OpenDd => {
+            let where_clause = match where_input {
+                Some(where_input) => Some(filter::resolve_filter_expression_open_dd(
+                    where_input,
+                    session_variables,
+                    &mut usage_counts,
+                )?),
+                None => None,
+            };
+
             ModelSelectManySelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
                 data_type,
                 model_source,
                 model_name,
+                where_clause,
                 limit,
                 offset,
                 session_variables,
@@ -182,6 +182,22 @@ pub fn select_many_generate_ir<'n, 's>(
             )?)
         }
         GraphqlRequestPipeline::Old => {
+            let where_clause = match where_input {
+                Some(where_input) => Some(filter::resolve_filter_expression(
+                    where_input,
+                    &model_source.data_connector,
+                    &model_source.type_mappings,
+                    session_variables,
+                    &mut usage_counts,
+                )?),
+                None => None,
+            };
+
+            let query_filter = filter::QueryFilter {
+                where_clause,
+                additional_filter: None,
+            };
+
             ModelSelectManySelection::Ir(model_selection::model_selection_ir(
                 &field.selection_set,
                 data_type,
