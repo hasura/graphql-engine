@@ -77,15 +77,21 @@ pub fn resolve(
                     error,
                 })?;
 
-                resolved_order_by_expressions.scalars.insert(
-                    Qualified::new(
-                        subgraph.clone(),
-                        OrderByExpressionIdentifier::FromOrderByExpression(
-                            order_by_expression.name.clone(),
+                if let Some(existing_order_by_expression) =
+                    resolved_order_by_expressions.scalars.insert(
+                        Qualified::new(
+                            subgraph.clone(),
+                            OrderByExpressionIdentifier::FromOrderByExpression(
+                                order_by_expression.name.clone(),
+                            ),
                         ),
-                    ),
-                    resolved_scalar_order_by_expression,
-                );
+                        resolved_scalar_order_by_expression,
+                    )
+                {
+                    issues.push(OrderByExpressionIssue::DuplicateOrderByExpression {
+                        order_by_expression: existing_order_by_expression.identifier,
+                    });
+                };
             }
             OrderByExpressionOperand::Object(object_operand) => {
                 let (resolved_order_by_expression, new_issues) =
@@ -110,11 +116,16 @@ pub fn resolve(
                     })?;
 
                 issues.extend(new_issues);
-
-                resolved_order_by_expressions.objects.insert(
-                    resolved_order_by_expression.identifier.clone(),
-                    resolved_order_by_expression,
-                );
+                if let Some(existing_order_by_expression) =
+                    resolved_order_by_expressions.objects.insert(
+                        resolved_order_by_expression.identifier.clone(),
+                        resolved_order_by_expression,
+                    )
+                {
+                    issues.push(OrderByExpressionIssue::DuplicateOrderByExpression {
+                        order_by_expression: existing_order_by_expression.identifier,
+                    });
+                };
             }
         }
     }

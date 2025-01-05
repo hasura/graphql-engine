@@ -111,6 +111,10 @@ pub struct OrderByExpressionGraphqlConfig {
 
 #[derive(Debug, thiserror::Error)]
 pub enum OrderByExpressionIssue {
+    #[error("Duplicate order by expression found: {order_by_expression}")]
+    DuplicateOrderByExpression {
+        order_by_expression: Qualified<OrderByExpressionIdentifier>,
+    },
     #[error("Cannot order by array relationship {relationship_name} in order by expression {order_by_expression}")]
     CannotOrderByAnArrayRelationship {
         order_by_expression: Qualified<OrderByExpressionIdentifier>,
@@ -121,6 +125,8 @@ pub enum OrderByExpressionIssue {
 impl ShouldBeAnError for OrderByExpressionIssue {
     fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
         match self {
+            OrderByExpressionIssue::DuplicateOrderByExpression { .. } => flags
+                .contains(open_dds::flags::Flag::DisallowDuplicateNamesAcrossTypesAndExpressions),
             OrderByExpressionIssue::CannotOrderByAnArrayRelationship { .. } => {
                 flags.contains(open_dds::flags::Flag::DisallowArrayRelationshipInOrderBy)
             }

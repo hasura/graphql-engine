@@ -1,0 +1,32 @@
+{
+  "version": "v3",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "ConflictingType",
+            "description": "This is a scalar type"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "ConflictingType",
+            "description": "This is an object type",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

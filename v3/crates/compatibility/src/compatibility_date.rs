@@ -147,7 +147,8 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         | Flag::DisallowModelV1OrderingNonScalarFields
         | Flag::DisallowArrayRelationshipInOrderBy => Some(new_compatibility_date(2024, 12, 18)),
         Flag::DisallowDuplicateOperatorDefinitionsForScalarType
-        | Flag::DisallowMultidimensionalArraysInBooleanExpressions => {
+        | Flag::DisallowMultidimensionalArraysInBooleanExpressions
+        | Flag::DisallowDuplicateNamesAcrossTypesAndExpressions => {
             None // TODO: Must be set before we release
         }
     }

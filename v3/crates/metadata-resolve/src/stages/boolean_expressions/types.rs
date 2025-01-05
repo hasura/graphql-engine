@@ -54,6 +54,10 @@ pub enum BooleanExpressionIssue {
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
+    #[error("the boolean expression type with name {type_name} is defined more than once")]
+    DuplicateBooleanExpressionType {
+        type_name: Qualified<CustomTypeName>,
+    },
 }
 
 impl ShouldBeAnError for BooleanExpressionIssue {
@@ -76,6 +80,8 @@ impl ShouldBeAnError for BooleanExpressionIssue {
                     open_dds::flags::Flag::DisallowMultidimensionalArraysInBooleanExpressions,
                 )
             }
+            BooleanExpressionIssue::DuplicateBooleanExpressionType { .. } => flags
+                .contains(open_dds::flags::Flag::DisallowDuplicateNamesAcrossTypesAndExpressions),
         }
     }
 }

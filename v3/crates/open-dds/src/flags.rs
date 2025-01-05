@@ -35,6 +35,7 @@ pub enum Flag {
     DisallowArrayRelationshipInOrderBy,
     DisallowDuplicateOperatorDefinitionsForScalarType,
     DisallowMultidimensionalArraysInBooleanExpressions,
+    DisallowDuplicateNamesAcrossTypesAndExpressions,
 }
 
 impl Flag {
@@ -88,6 +89,9 @@ impl Flag {
             }
             Flag::DisallowMultidimensionalArraysInBooleanExpressions => {
                 "disallow_multidimensional_arrays_in_boolean_expressions"
+            }
+            Flag::DisallowDuplicateNamesAcrossTypesAndExpressions => {
+                "disallow_duplicate_names_across_types_and_expressions"
             }
         }
     }

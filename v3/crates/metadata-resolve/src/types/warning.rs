@@ -1,9 +1,13 @@
-use open_dds::flags;
+use derive_more::derive::Display;
+use open_dds::{flags, types::CustomTypeName};
 
-use crate::stages::{
-    aggregate_boolean_expressions, aggregates, boolean_expressions, commands, data_connectors,
-    models, models_graphql, object_boolean_expressions, object_types, order_by_expressions,
-    plugins, scalar_boolean_expressions, scalar_types,
+use crate::{
+    stages::{
+        aggregate_boolean_expressions, aggregates, boolean_expressions, commands, data_connectors,
+        models, models_graphql, object_boolean_expressions, object_types, order_by_expressions,
+        plugins, scalar_boolean_expressions, scalar_types,
+    },
+    Qualified,
 };
 
 use super::error::ShouldBeAnError;
@@ -42,6 +46,8 @@ pub enum Warning {
     ScalarTypesIssue(#[from] scalar_types::ScalarTypesIssue),
     #[error("{0}")]
     PluginIssue(#[from] plugins::PluginIssue),
+    #[error("{0}")]
+    ConflictingNameAcrossTypes(ConflictingNameAcrossTypes),
 }
 
 impl ShouldBeAnError for Warning {
@@ -60,4 +66,33 @@ impl ShouldBeAnError for Warning {
             _ => false,
         }
     }
+}
+
+/// Represents the source of a type definition
+#[derive(Debug, Display)]
+pub enum TypeSource {
+    /// Indicates the type is a scalar type
+    #[display("ScalarType")]
+    Scalar,
+    /// Indicates the type is an object type
+    #[display("ObjectType")]
+    Object,
+    /// Indicates the type is a boolean expression type
+    #[display("BooleanExpressionType")]
+    BooleanExpression,
+}
+
+/// Represents a collection of conflicting type sources
+#[derive(Debug, Display)]
+#[display("{}", _0.into_iter().map(std::string::ToString::to_string).collect::<Vec<_>>().join(", "))]
+pub struct ConflictingSources(pub nonempty::NonEmpty<TypeSource>);
+
+/// Represents an error when a type name conflicts across different type sources
+#[derive(Debug, thiserror::Error)]
+#[error("Types with conflicting name {name} found in {conflicting_sources}")]
+pub struct ConflictingNameAcrossTypes {
+    /// The name of the conflicting type
+    pub name: Qualified<CustomTypeName>,
+    /// The sources where the conflicting type was found
+    pub conflicting_sources: ConflictingSources,
 }

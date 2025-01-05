@@ -83,10 +83,13 @@ pub fn resolve(
         object: boolean_expression_type,
     } in &metadata_accessor.boolean_expression_types
     {
-        raw_boolean_expression_types.insert(
-            Qualified::new(subgraph.clone(), boolean_expression_type.name.clone()),
-            (subgraph, boolean_expression_type),
-        );
+        let type_name = Qualified::new(subgraph.clone(), boolean_expression_type.name.clone());
+        if raw_boolean_expression_types
+            .insert(type_name.clone(), (subgraph, boolean_expression_type))
+            .is_some()
+        {
+            issues.push(BooleanExpressionIssue::DuplicateBooleanExpressionType { type_name });
+        };
     }
 
     let mut boolean_expression_object_types = BTreeMap::new();

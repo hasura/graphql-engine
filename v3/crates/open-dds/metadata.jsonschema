@@ -3637,6 +3637,10 @@
         "disallow_multidimensional_arrays_in_boolean_expressions": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_duplicate_names_across_types_and_expressions": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

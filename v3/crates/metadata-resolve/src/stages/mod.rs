@@ -6,6 +6,7 @@ pub mod arguments;
 pub mod boolean_expressions;
 pub mod command_permissions;
 pub mod commands;
+mod conflicting_types;
 pub mod data_connector_scalar_types;
 pub mod data_connectors;
 pub mod graphql_config;
@@ -21,17 +22,18 @@ pub mod relationships;
 pub mod relay;
 pub mod roles;
 pub mod scalar_boolean_expressions;
+pub mod scalar_type_representations;
 pub mod scalar_types;
 pub mod type_permissions;
 mod types;
-use crate::types::warning::Warning;
+
 use open_dds::flags;
 pub use types::Metadata;
-pub mod scalar_type_representations;
 
 use crate::helpers::types::TrackGraphQLRootFields;
 use crate::types::configuration::Configuration;
 use crate::types::error::{Error, SeparatedBy, ShouldBeAnError, WithContext};
+use crate::types::warning::Warning;
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(
@@ -343,6 +345,13 @@ pub fn resolve(
     );
 
     all_issues.extend(plugin_warnings);
+
+    // check for duplicate names across types
+    all_issues.extend(conflicting_types::check_conflicting_names_across_types(
+        &scalar_types_with_representations,
+        &object_types_with_relationships,
+        &boolean_expression_types,
+    ));
 
     let all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_issues)?;
 

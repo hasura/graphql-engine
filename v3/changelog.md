@@ -13,6 +13,8 @@
 - Filtering by fields in an object nested inside an array that itself is nested
   inside an object now works correctly. Previously this would generate an
   invalid query.
+- Prevent conflicting names for `BooleanExpressionType`, `OrderByExpression`,
+  `ScalarType` and `ObjectType` definitions.
 
 ### Changed
 
