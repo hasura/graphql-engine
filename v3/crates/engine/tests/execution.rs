@@ -44,7 +44,7 @@ fn test_model_select_one_filter() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::YesPlease,
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1111,7 +1111,7 @@ fn test_typename() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

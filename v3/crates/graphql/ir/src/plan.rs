@@ -8,6 +8,7 @@ mod relationships;
 mod selection_set;
 mod types;
 use crate::query_root::select_many::ModelSelectManySelection;
+use crate::query_root::select_one::ModelSelectOneSelection;
 use crate::{
     ApolloFederationRootFields, MutationRootField, ProcedureBasedCommand, QueryRootField,
     SubscriptionRootField, IR,
@@ -133,8 +134,30 @@ fn plan_subscription<'s, 'ir>(
             selection_set,
             polling_interval_ms,
         } => {
-            let execution_tree =
-                model_selection::plan_query_execution(&ir.model_selection, unique_number)?;
+            let execution_tree = match ir.model_selection {
+                ModelSelectOneSelection::Ir(ref model_selection) => {
+                    model_selection::plan_query_execution(model_selection, unique_number)
+                }
+                ModelSelectOneSelection::OpenDd(ref model_selection) => {
+                    // TODO: expose more specific function in `plan` for just model selections
+                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                        &open_dds::query::Query::Model(model_selection.clone()),
+                        metadata,
+                        session,
+                        request_headers,
+                        unique_number,
+                    )
+                    .unwrap();
+                    match single_node_execution_plan {
+                        plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
+                        plan::SingleNodeExecutionPlan::Mutation(_) => {
+                            // we should use a more specific planning function to avoid
+                            // this as it _should not_ happen
+                            Err(error::Error::PlanExpectedQueryGotMutation)
+                        }
+                    }
+                }
+            }?;
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
@@ -256,8 +279,31 @@ fn plan_query<'n, 's, 'ir>(
             schema,
         },
         QueryRootField::ModelSelectOne { ir, selection_set } => {
-            let execution_tree =
-                model_selection::plan_query_execution(&ir.model_selection, unique_number)?;
+            let execution_tree = match ir.model_selection {
+                ModelSelectOneSelection::Ir(ref model_selection) => {
+                    model_selection::plan_query_execution(model_selection, unique_number)
+                }
+                ModelSelectOneSelection::OpenDd(ref model_selection) => {
+                    // TODO: expose more specific function in `plan` for just model selections
+                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                        &open_dds::query::Query::Model(model_selection.clone()),
+                        metadata,
+                        session,
+                        request_headers,
+                        unique_number,
+                    )
+                    .unwrap();
+                    match single_node_execution_plan {
+                        plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
+                        plan::SingleNodeExecutionPlan::Mutation(_) => {
+                            // we should use a more specific planning function to avoid
+                            // this as it _should not_ happen
+                            Err(error::Error::PlanExpectedQueryGotMutation)
+                        }
+                    }
+                }
+            }?;
+
             NodeQueryPlan::NDCQueryExecution {
                 selection_set,
                 query_execution: NDCQueryExecution {

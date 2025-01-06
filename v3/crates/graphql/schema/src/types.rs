@@ -238,6 +238,8 @@ pub enum ModelInputAnnotation {
     ModelLimitArgument,
     ModelOffsetArgument,
     ModelUniqueIdentifierArgument {
+        // in future this will be the only thing required
+        field_name: types::FieldName,
         // Optional because we allow building schema without specifying a data source
         ndc_column: Option<NdcColumnForComparison>,
     },

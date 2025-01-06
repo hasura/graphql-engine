@@ -109,6 +109,7 @@ fn generate_model_rootfield_ir<'n, 's>(
         RootFieldKind::SelectOne => root_field::SubscriptionRootField::ModelSelectOne {
             selection_set: &field.selection_set,
             ir: select_one::select_one_generate_ir(
+                request_pipeline,
                 field,
                 field_call,
                 data_type,
