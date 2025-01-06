@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2025.01.06]
+
+### Added
+
 - Added support for relationships targeting commands in JSON:API.
 
 ### Fixed
@@ -15,8 +23,6 @@
   invalid query.
 - Prevent conflicting names for `BooleanExpressionType`, `OrderByExpression`,
   `ScalarType` and `ObjectType` definitions.
-
-### Changed
 
 ## [v2024.12.17]
 
@@ -929,7 +935,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.12.17...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.01.06...HEAD
+[v2025.01.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.06
 [v2024.12.17]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.17
 [v2024.12.03]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.03
 [v2024.11.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.25

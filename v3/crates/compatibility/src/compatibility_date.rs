@@ -149,7 +149,7 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowDuplicateOperatorDefinitionsForScalarType
         | Flag::DisallowMultidimensionalArraysInBooleanExpressions
         | Flag::DisallowDuplicateNamesAcrossTypesAndExpressions => {
-            None // TODO: Must be set before we release
+            Some(new_compatibility_date(2025, 1, 7))
         }
     }
 }
