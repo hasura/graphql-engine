@@ -7,6 +7,8 @@ mod order_by;
 mod relationships;
 mod selection_set;
 mod types;
+use crate::query_root::apollo_federation::ModelEntitySelection;
+use crate::query_root::node_field::ModelNodeSelection;
 use crate::query_root::select_many::ModelSelectManySelection;
 use crate::query_root::select_one::ModelSelectOneSelection;
 use crate::{
@@ -370,8 +372,13 @@ fn plan_query<'n, 's, 'ir>(
         }
         QueryRootField::NodeSelect(optional_ir) => match optional_ir {
             Some(ir) => {
-                let execution_tree =
-                    model_selection::plan_query_execution(&ir.model_selection, unique_number)?;
+                let execution_tree = match ir.model_selection {
+                    ModelNodeSelection::Ir(ref model_selection) => {
+                        model_selection::plan_query_execution(model_selection, unique_number)
+                    }
+                    ModelNodeSelection::OpenDd(_) => todo!("Plan NodeSelect for OpenDd"),
+                }?;
+
                 NodeQueryPlan::RelayNodeSelect(Some((
                     NDCQueryExecution {
                         execution_tree,
@@ -404,8 +411,14 @@ fn plan_query<'n, 's, 'ir>(
         QueryRootField::ApolloFederation(ApolloFederationRootFields::EntitiesSelect(irs)) => {
             let mut ndc_query_executions = Vec::new();
             for ir in irs {
-                let execution_tree =
-                    model_selection::plan_query_execution(&ir.model_selection, unique_number)?;
+                let execution_tree = match ir.model_selection {
+                    ModelEntitySelection::Ir(ref model_selection) => {
+                        model_selection::plan_query_execution(model_selection, unique_number)?
+                    }
+                    ModelEntitySelection::OpenDd(_) => {
+                        todo!("ApolloFederationRootFields for OpenDd")
+                    }
+                };
                 ndc_query_executions.push((
                     NDCQueryExecution {
                         execution_tree,

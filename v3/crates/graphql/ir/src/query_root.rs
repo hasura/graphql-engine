@@ -103,6 +103,7 @@ pub fn generate_ir<'n, 's>(
                         }
                         RootFieldAnnotation::RelayNode { typename_mappings } => {
                             let ir = generate_nodefield_ir(
+                                request_pipeline,
                                 field,
                                 field_call,
                                 typename_mappings,
@@ -115,6 +116,7 @@ pub fn generate_ir<'n, 's>(
                             ApolloFederationRootFields::Entities { typename_mappings },
                         ) => {
                             let ir = generate_entities_ir(
+                                request_pipeline,
                                 field,
                                 field_call,
                                 typename_mappings,
@@ -287,6 +289,7 @@ fn generate_command_rootfield_ir<'n, 's>(
 }
 
 fn generate_nodefield_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'n gql::normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, NodeFieldTypeNameMapping>,
@@ -294,6 +297,7 @@ fn generate_nodefield_ir<'n, 's>(
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let ir = root_field::QueryRootField::NodeSelect(node_field::relay_node_ir(
+        request_pipeline,
         field,
         field_call,
         typename_mappings,
@@ -304,6 +308,7 @@ fn generate_nodefield_ir<'n, 's>(
 }
 
 fn generate_entities_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'n gql::normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, EntityFieldTypeNameMapping>,
@@ -312,6 +317,7 @@ fn generate_entities_ir<'n, 's>(
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let ir = root_field::QueryRootField::ApolloFederation(
         root_field::ApolloFederationRootFields::EntitiesSelect(apollo_federation::entities_ir(
+            request_pipeline,
             field,
             field_call,
             typename_mappings,

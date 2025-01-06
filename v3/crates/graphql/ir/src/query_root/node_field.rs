@@ -11,6 +11,7 @@ use serde::Serialize;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
+use crate::GraphqlRequestPipeline;
 use graphql_schema::GDS;
 use graphql_schema::{GlobalID, NamespaceAnnotation, NodeFieldTypeNameMapping};
 use json_ext::HashMapWithJsonKey;
@@ -20,6 +21,12 @@ use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
 
+#[derive(Debug, Serialize)]
+pub enum ModelNodeSelection<'s> {
+    Ir(model_selection::ModelSelection<'s>),
+    OpenDd(open_dds::query::ModelSelection),
+}
+
 /// IR for the 'select_one' operation on a model
 #[derive(Serialize, Debug)]
 pub struct NodeSelect<'n, 's> {
@@ -27,7 +34,7 @@ pub struct NodeSelect<'n, 's> {
     pub field_name: &'n ast::Name,
 
     /// Model Selection IR fragment
-    pub model_selection: model_selection::ModelSelection<'s>,
+    pub model_selection: ModelNodeSelection<'s>,
 
     // We need this to post process the response for `__typename` fields and for
     // validating the response from the data connector. This is not a reference
@@ -74,6 +81,7 @@ fn get_relay_node_namespace_typename_mappings<'s>(
 /// object type that was decoded, then this function
 /// returns `None`.
 pub(crate) fn relay_node_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, NodeFieldTypeNameMapping>,
@@ -151,6 +159,10 @@ pub(crate) fn relay_node_ir<'n, 's>(
                 additional_filter: Some(Expression::mk_and(filter_clause_expressions)),
             };
 
+            if request_pipeline == GraphqlRequestPipeline::OpenDd {
+                todo!("NodeSelect for OpenDd")
+            };
+
             let model_selection = model_selection::model_selection_ir(
                 &new_selection_set,
                 &typename_mapping.type_name,
@@ -168,7 +180,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
             )?;
             Ok(Some(NodeSelect {
                 field_name: &field_call.name,
-                model_selection,
+                model_selection: ModelNodeSelection::Ir(model_selection),
                 selection_set: new_selection_set,
                 usage_counts,
             }))

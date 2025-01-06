@@ -10,6 +10,7 @@ use serde::Serialize;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
+use crate::GraphqlRequestPipeline;
 use graphql_schema::GDS;
 use graphql_schema::{EntityFieldTypeNameMapping, NamespaceAnnotation};
 use json_ext::HashMapWithJsonKey;
@@ -20,6 +21,12 @@ use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
 
+#[derive(Debug, Serialize)]
+pub enum ModelEntitySelection<'s> {
+    Ir(model_selection::ModelSelection<'s>),
+    OpenDd(open_dds::query::ModelSelection),
+}
+
 /// IR for the '_entities' operation for a model
 #[derive(Serialize, Debug)]
 pub struct EntitySelect<'n, 's> {
@@ -27,7 +34,7 @@ pub struct EntitySelect<'n, 's> {
     pub field_name: &'n ast::Name,
 
     /// Model Selection IR fragment
-    pub model_selection: model_selection::ModelSelection<'s>,
+    pub model_selection: ModelEntitySelection<'s>,
 
     // We need this for validating the response from the data connector. This is not a reference as it is constructed
     // from the original selection set by filtering fields that are relevant.
@@ -79,12 +86,16 @@ fn get_entity_namespace_typename_mappings<'s>(
 /// the entities. The `__typename` field is used to determine the type of the entity and the fields are used to filter
 /// the entities.
 pub(crate) fn entities_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, EntityFieldTypeNameMapping>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<Vec<EntitySelect<'n, 's>>, error::Error> {
+    if request_pipeline == GraphqlRequestPipeline::OpenDd {
+        todo!("entities_ir for OpenDd");
+    }
     let representations = field_call
         .expected_argument(&lang_graphql::mk_name!("representations"))?
         .value
@@ -186,7 +197,7 @@ pub(crate) fn entities_ir<'n, 's>(
             )?;
             entity_selects.push(EntitySelect {
                 field_name: &field_call.name,
-                model_selection,
+                model_selection: ModelEntitySelection::Ir(model_selection),
                 selection_set: new_selection_set,
                 usage_counts,
             });

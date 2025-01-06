@@ -45,7 +45,7 @@ pub use subscription_root::generate_ir as generate_subscription_ir;
 
 /// Feature flag to decide whether to use the new OpenDD-based GraphQL request pipeline
 /// Only used in development and tests atm, `Old` is exposed to users
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum GraphqlRequestPipeline {
     Old,
     OpenDd,
