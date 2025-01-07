@@ -14,7 +14,7 @@ use super::model_selection::ModelSelection;
 use super::relationship::{self, RemoteCommandRelationshipInfo, RemoteModelRelationshipInfo};
 use crate::error;
 use crate::global_id;
-use graphql_schema::TypeKind;
+use graphql_schema::{AggregateOutputAnnotation, AggregationFunctionAnnotation, TypeKind};
 use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 use plan::UnresolvedArgument;
 use plan_types::{
@@ -399,6 +399,81 @@ pub fn generate_selection_set_open_dd_ir<'s>(
         }
     }
     Ok(fields)
+}
+
+/// Builds the OpenDD IR from a normalized selection set
+pub fn generate_aggregate_selection_set_open_dd_ir(
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+) -> Result<IndexMap<open_dds::query::Alias, open_dds::query::Aggregate>, error::Error> {
+    let mut fields = IndexMap::new();
+    collect_aggregate_fields(&mut fields, None, selection_set)?;
+    Ok(fields)
+}
+
+fn collect_aggregate_fields(
+    aggregate_fields: &mut IndexMap<open_dds::query::Alias, open_dds::query::Aggregate>,
+    operand: Option<&open_dds::query::Operand>,
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+) -> Result<(), error::Error> {
+    for field in selection_set.fields.values() {
+        let field_call = field.field_call()?;
+        let field_alias = make_field_alias(field.alias.0.as_str())?;
+        match field_call.info.generic {
+            annotation @ Annotation::Output(annotated_field) => match annotated_field {
+                OutputAnnotation::Aggregate(aggregate_annotation) => match aggregate_annotation {
+                    AggregateOutputAnnotation::AggregatableField {
+                        field_name,
+                        aggregate_operand_type: _,
+                    } => {
+                        let arguments = IndexMap::new();
+                        let field_operand =
+                            open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
+                                target: Box::new(open_dds::query::ObjectFieldTarget {
+                                    field_name: field_name.clone(),
+                                    arguments,
+                                }),
+                                nested: operand.cloned().map(Box::new),
+                            });
+                        collect_aggregate_fields(
+                            aggregate_fields,
+                            Some(&field_operand),
+                            &field.selection_set,
+                        )?;
+                    }
+                    AggregateOutputAnnotation::AggregationFunctionField(aggregation_function) => {
+                        let function = match aggregation_function {
+                            AggregationFunctionAnnotation::Count => {
+                                open_dds::query::AggregationFunction::Count {}
+                            }
+                            AggregationFunctionAnnotation::CountDistinct => {
+                                open_dds::query::AggregationFunction::CountDistinct {}
+                            }
+                            AggregationFunctionAnnotation::Function {
+                                function_name,
+                                data_connector_functions: _,
+                            } => open_dds::query::AggregationFunction::Custom {
+                                name: function_name.clone(),
+                            },
+                        };
+                        aggregate_fields.insert(
+                            field_alias,
+                            open_dds::query::Aggregate {
+                                function,
+                                operand: operand.cloned(),
+                            },
+                        );
+                    }
+                },
+                _ => Err(error::InternalEngineError::UnexpectedAnnotation {
+                    annotation: annotation.clone(),
+                })?,
+            },
+            annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
+                annotation: annotation.clone(),
+            })?,
+        }
+    }
+    Ok(())
 }
 
 fn make_field_alias(alias: &str) -> Result<open_dds::query::Alias, error::Error> {

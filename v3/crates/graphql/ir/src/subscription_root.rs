@@ -137,6 +137,7 @@ fn generate_model_rootfield_ir<'n, 's>(
         RootFieldKind::SelectAggregate => root_field::SubscriptionRootField::ModelSelectAggregate {
             selection_set: &field.selection_set,
             ir: select_aggregate::select_aggregate_generate_ir(
+                request_pipeline,
                 field,
                 field_call,
                 data_type,
