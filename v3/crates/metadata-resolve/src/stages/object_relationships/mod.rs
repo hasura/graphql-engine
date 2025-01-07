@@ -410,6 +410,7 @@ fn get_relationship_capabilities(
                     Error::from(models::ModelsError::UnknownModelDataConnector {
                         model_name: model_name.clone(),
                         data_connector: data_connector.name.clone(),
+                        data_connector_path: None,
                     })
                 }
                 RelationshipTargetName::Command(command_name) => {

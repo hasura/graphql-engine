@@ -32,7 +32,7 @@ pub use types::Metadata;
 
 use crate::helpers::types::TrackGraphQLRootFields;
 use crate::types::configuration::Configuration;
-use crate::types::error::{Error, SeparatedBy, ShouldBeAnError, WithContext};
+use crate::types::error::{ContextualError, Error, SeparatedBy, ShouldBeAnError, WithContext};
 use crate::types::warning::Warning;
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
@@ -40,6 +40,17 @@ pub fn resolve(
     metadata: open_dds::Metadata,
     configuration: &Configuration,
 ) -> Result<(Metadata, Vec<Warning>), WithContext<Error>> {
+    resolve_internal(metadata, configuration).map_err(|error| match error.create_error_context() {
+        Some(context) => WithContext::Contextualised { error, context },
+        None => WithContext::Raw(error),
+    })
+}
+
+/// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
+fn resolve_internal(
+    metadata: open_dds::Metadata,
+    configuration: &Configuration,
+) -> Result<(Metadata, Vec<Warning>), Error> {
     // all issues raised throughout metadata-resolve. These will be turned into `warnings` or
     // `errors` at the end of this function, depending on OpenDDS flags.
     let mut all_issues = vec![];
@@ -53,14 +64,13 @@ pub fn resolve(
     // The graphql config represents the shape of the Hasura features in the graphql schema,
     // and which features should be enabled or disabled. We check this structure is valid.
     let graphql_config =
-        graphql_config::resolve(&metadata_accessor.graphql_config, &metadata_accessor.flags)
-            .map_err(Error::from)?;
+        graphql_config::resolve(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 
     // Fetch and check schema information for all our data connectors
     let data_connectors::DataConnectorsOutput {
         data_connectors,
         issues,
-    } = data_connectors::resolve(&metadata_accessor, configuration).map_err(Error::from)?;
+    } = data_connectors::resolve(&metadata_accessor, configuration)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -71,7 +81,7 @@ pub fn resolve(
         apollo_federation_entity_enabled_types,
         object_types,
         issues,
-    } = object_types::resolve(&metadata_accessor, &data_connectors).map_err(Error::from)?;
+    } = object_types::resolve(&metadata_accessor, &data_connectors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -80,7 +90,7 @@ pub fn resolve(
         scalar_types,
         graphql_types,
         issues,
-    } = scalar_types::resolve(&metadata_accessor, graphql_types).map_err(Error::from)?;
+    } = scalar_types::resolve(&metadata_accessor, graphql_types)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -96,8 +106,7 @@ pub fn resolve(
         &object_types,
         &scalar_types,
         &graphql_config,
-    )
-    .map_err(Error::from)?;
+    )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -111,16 +120,14 @@ pub fn resolve(
         &data_connectors,
         &scalar_types,
         graphql_types,
-    )
-    .map_err(Error::from)?;
+    )?;
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =
-        type_permissions::resolve(&metadata_accessor, object_types).map_err(Error::from)?;
+        type_permissions::resolve(&metadata_accessor, object_types)?;
 
     // collect raw relationships information
-    let relationships = relationships::resolve(&metadata_accessor, &object_types_with_permissions)
-        .map_err(Error::from)?;
+    let relationships = relationships::resolve(&metadata_accessor, &object_types_with_permissions)?;
 
     // Check aggregate expressions
     let aggregates::AggregateExpressionsOutput {
@@ -135,8 +142,7 @@ pub fn resolve(
         &scalar_types,
         graphql_types,
         &graphql_config,
-    )
-    .map_err(Error::from)?;
+    )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -155,8 +161,7 @@ pub fn resolve(
         &scalar_types,
         &graphql_config,
         graphql_types,
-    )
-    .map_err(Error::from)?;
+    )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -174,8 +179,7 @@ pub fn resolve(
         &graphql_config,
         &object_types_with_permissions,
         &relationships,
-    )
-    .map_err(Error::from)?;
+    )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -232,8 +236,7 @@ pub fn resolve(
         &aggregate_expressions,
         order_by_expressions,
         graphql_types,
-    )
-    .map_err(WithContext::coerce)?;
+    )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -245,14 +248,13 @@ pub fn resolve(
         &scalar_types,
         &object_boolean_expression_types,
         &boolean_expression_types,
-    )
-    .map_err(Error::from)?;
+    )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
-    apollo::resolve(apollo_federation_entity_enabled_types).map_err(Error::from)?;
+    apollo::resolve(apollo_federation_entity_enabled_types)?;
 
-    relay::resolve(global_id_enabled_types).map_err(Error::from)?;
+    relay::resolve(global_id_enabled_types)?;
 
     let object_types_with_relationships = object_relationships::resolve(
         object_types_with_permissions,
@@ -326,8 +328,7 @@ pub fn resolve(
         &models_with_permissions,
         &commands_with_permissions,
         &object_types_with_relationships,
-    )
-    .map_err(Error::from)?;
+    )?;
 
     let roles = roles::resolve(
         &object_types_with_relationships,

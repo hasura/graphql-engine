@@ -95,6 +95,7 @@ fn resolve_model_predicate_with_model(
         models::ModelsError::UnknownModelDataConnector {
             model_name: model.name.clone(),
             data_connector: data_connector_name.clone(),
+            data_connector_path: None,
         }
     })?;
 

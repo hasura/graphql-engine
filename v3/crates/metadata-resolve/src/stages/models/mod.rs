@@ -57,7 +57,7 @@ pub fn resolve(
     >,
     mut order_by_expressions: order_by_expressions::OrderByExpressions,
     mut graphql_types: BTreeSet<ast::TypeName>,
-) -> Result<ModelsOutput, crate::types::error::WithContext<ModelsError>> {
+) -> Result<ModelsOutput, ModelsError> {
     // resolve models
     // TODO: validate types
     let mut models = IndexMap::new();
@@ -178,7 +178,7 @@ fn resolve_model(
         Qualified<CustomTypeName>,
         Option<Qualified<ModelName>>,
     >,
-) -> Result<Model, crate::types::error::WithContext<ModelsError>> {
+) -> Result<Model, ModelsError> {
     let qualified_object_type_name = Qualified::new(subgraph.clone(), model.object_type().clone());
     let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
     let object_type_representation = source::get_model_object_type_representation(

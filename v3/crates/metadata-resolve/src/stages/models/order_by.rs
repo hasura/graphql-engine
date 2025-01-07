@@ -30,7 +30,7 @@ pub fn resolve_order_by_expression(
     graphql_types: &mut BTreeSet<ast::TypeName>,
     order_by_expressions: &mut OrderByExpressions,
     issues: &mut Vec<ModelsIssue>,
-) -> Result<Option<Qualified<OrderByExpressionIdentifier>>, crate::WithContext<ModelsError>> {
+) -> Result<Option<Qualified<OrderByExpressionIdentifier>>, ModelsError> {
     match model {
         open_dds::models::Model::V1(model_v1) => {
             let object_type_representation = source::get_model_object_type_representation(
@@ -197,7 +197,7 @@ fn resolve_order_by_expression_for_model(
     order_by_expressions: &OrderByExpressions,
     qualified_model_object_type_name: &Qualified<CustomTypeName>,
     issues: &mut Vec<ModelsIssue>,
-) -> Result<Qualified<OrderByExpressionIdentifier>, crate::WithContext<ModelsError>> {
+) -> Result<Qualified<OrderByExpressionIdentifier>, ModelsError> {
     let order_by_expression_identifier = Qualified::new(
         qualified_model_name.subgraph.clone(),
         OrderByExpressionIdentifier::FromOrderByExpression(order_by_expression_name.clone()),
@@ -222,8 +222,7 @@ fn resolve_order_by_expression_for_model(
                 order_by_expression_name.clone(),
             ),
             order_by_expression_type: order_by_expression.ordered_type.clone(),
-        }
-        .into());
+        });
     }
 
     // Validate compatibility with the model's data connector. We can only do that
@@ -247,7 +246,7 @@ fn validate_data_connector_compatibility(
     model_name: &Qualified<ModelName>,
     order_by_expressions: &OrderByExpressions,
     issues: &mut Vec<ModelsIssue>,
-) -> Result<(), crate::WithContext<ModelsError>> {
+) -> Result<(), ModelsError> {
     for (field_name, orderable_field) in &order_by_expression.orderable_fields {
         match orderable_field {
             OrderableField::Object(orderable_object_field) => {
@@ -300,7 +299,7 @@ fn validate_nested_relationship_compatibility(
     model_name: &Qualified<ModelName>,
     order_by_expressions: &OrderByExpressions,
     issues: &mut Vec<ModelsIssue>,
-) -> Result<(), crate::WithContext<ModelsError>> {
+) -> Result<(), ModelsError> {
     match &order_by_expression.orderable_relationships {
         // Only created by old ModelV1 ordering which doesn't handle nested fields anyway
         OrderableRelationships::ModelV1AllowAll => {}

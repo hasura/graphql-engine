@@ -3,6 +3,7 @@ use crate::helpers::{argument::ArgumentMappingError, type_mappings::TypeMappingC
 use crate::stages::{
     aggregates, apollo, data_connectors, graphql_config, object_types, order_by_expressions, relay,
 };
+use crate::types::error::ContextualError;
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 
 use open_dds::{
@@ -11,6 +12,7 @@ use open_dds::{
     data_connector::{CollectionName, DataConnectorName, DataConnectorScalarType},
     models::ModelName,
     order_by_expression::OrderByExpressionName,
+    spanned::Spanned,
     types::{CustomTypeName, FieldName},
 };
 
@@ -30,6 +32,7 @@ pub enum ModelsError {
     UnknownModelDataConnector {
         model_name: Qualified<ModelName>,
         data_connector: Qualified<DataConnectorName>,
+        data_connector_path: Option<jsonpath::JSONPath>,
     },
     #[error(
         "the following argument in model {model_name:} is defined more than once: {argument_name:}"
@@ -43,7 +46,7 @@ pub enum ModelsError {
     UnknownModelCollection {
         model_name: Qualified<ModelName>,
         data_connector: Qualified<DataConnectorName>,
-        collection: CollectionName,
+        collection: Spanned<CollectionName>,
     },
     #[error("An error occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {error:}")]
     ModelCollectionArgumentMappingError {
@@ -125,6 +128,36 @@ pub enum ModelsError {
     ModelAggregateExpressionError(#[from] ModelAggregateExpressionError),
     #[error("{0}")]
     DataConnectorError(#[from] data_connectors::NamedDataConnectorError),
+}
+
+impl ContextualError for ModelsError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        match self {
+            ModelsError::UnknownModelDataConnector {
+                data_connector,
+                data_connector_path,
+                ..
+            } => Some(error_context::Context(vec![error_context::Step {
+                message: "There is no DataConnectorLink defined with this name".to_string(),
+                path: data_connector_path.clone()?,
+                subgraph: Some(data_connector.subgraph.clone()),
+            }])),
+
+            ModelsError::UnknownModelCollection {
+                collection,
+                data_connector,
+                ..
+            } => Some(error_context::Context(vec![error_context::Step {
+                message: format!(
+                    "This collection is not defined in the data connector schema for {}",
+                    data_connector.name
+                ),
+                path: collection.path.clone(),
+                subgraph: Some(data_connector.subgraph.clone()),
+            }])),
+            _other => None,
+        }
+    }
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -36,7 +36,7 @@ pub(crate) fn resolve_model_source(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<(ModelSource, Vec<ModelsIssue>), crate::WithContext<ModelsError>> {
+) -> Result<(ModelSource, Vec<ModelsIssue>), ModelsError> {
     if model.source.is_some() {
         Err(ModelsError::DuplicateModelSourceDefinition {
             model_name: model.name.clone(),
@@ -50,33 +50,20 @@ pub(crate) fn resolve_model_source(
     let data_connector_context = data_connectors
         .0
         .get(&qualified_data_connector_name)
-        .ok_or_else(|| crate::WithContext::Contextualised {
-            error: ModelsError::UnknownModelDataConnector {
-                model_name: model.name.clone(),
-                data_connector: qualified_data_connector_name.clone(),
-            },
-            context: error_context::Context(vec![error_context::Step {
-                message: "Data connector name given here".to_string(),
-                path: model_source.data_connector_name.path.clone(),
-                subgraph: Some(subgraph.clone()),
-            }]),
+        .ok_or_else(|| ModelsError::UnknownModelDataConnector {
+            model_name: model.name.clone(),
+            data_connector: qualified_data_connector_name.clone(),
+            data_connector_path: Some(model_source.data_connector_name.path.clone()),
         })?;
 
     let source_collection = data_connector_context
         .schema
         .collections
         .get(model_source.collection.as_str())
-        .ok_or_else(|| crate::WithContext::Contextualised {
-            error: ModelsError::UnknownModelCollection {
-                model_name: model.name.clone(),
-                data_connector: qualified_data_connector_name.clone(),
-                collection: model_source.collection.value.clone(),
-            },
-            context: error_context::Context(vec![error_context::Step {
-                message: "Collection name given here".to_string(),
-                path: model_source.collection.path.clone(),
-                subgraph: Some(subgraph.clone()),
-            }]),
+        .ok_or_else(|| ModelsError::UnknownModelCollection {
+            model_name: model.name.clone(),
+            data_connector: qualified_data_connector_name.clone(),
+            collection: model_source.collection.clone(),
         })?;
     let source_collection_type =
         DataConnectorObjectType::from(source_collection.collection_type.as_str());

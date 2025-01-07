@@ -351,6 +351,19 @@ pub trait ShouldBeAnError {
     fn should_be_an_error(&self, flags: &flags::OpenDdFlags) -> bool;
 }
 
+pub trait ContextualError {
+    fn create_error_context(&self) -> Option<error_context::Context>;
+}
+
+impl ContextualError for Error {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        match self {
+            Error::ModelsError(error) => error.create_error_context(),
+            _other => None,
+        }
+    }
+}
+
 // A small utility type which exists for the sole purpose of displaying a vector with a certain
 // separator.
 #[derive(Debug)]

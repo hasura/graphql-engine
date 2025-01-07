@@ -304,6 +304,7 @@ fn validate_count_aggregations(
             .ok_or_else(|| ModelsError::UnknownModelDataConnector {
                 model_name: model_name.clone(),
                 data_connector: data_connector_name.clone(),
+                data_connector_path: None,
             })?;
 
     let connector_count_scalar_type = data_connector_capabilities

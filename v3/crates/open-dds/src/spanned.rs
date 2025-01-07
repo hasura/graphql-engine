@@ -1,6 +1,7 @@
 use crate::traits::{OpenDd, OpenDdDeserializeError};
 use core::ops::Deref;
 use serde::{Serialize, Serializer};
+use std::fmt::Display;
 
 /// Wrapper that combines an item with its parsed JSONPath
 /// for use in error reporting
@@ -8,6 +9,12 @@ use serde::{Serialize, Serializer};
 pub struct Spanned<T> {
     pub path: jsonpath::JSONPath,
     pub value: T,
+}
+
+impl<T: Display> Display for Spanned<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.value.fmt(f)
+    }
 }
 
 impl<T> Deref for Spanned<T> {
