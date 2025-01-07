@@ -100,13 +100,13 @@ export const BenefitsView = (props: EETrialBenefitsProps) => {
           id="prometheus-metrics"
           label="Prometheus Metrics"
           icon={PrometheusLogo}
-          url="https://hasura.io/docs/latest/enterprise/metrics/"
+          url="https://hasura.io/docs/2.0/observability/enterprise-edition/prometheus/metrics/"
         />
         <ListItem
           label="OpenTelemetry Exporter"
           id="opentlemetry-exporter"
           icon={IconOpenTelemetry}
-          url="https://hasura.io/docs/latest/enterprise/opentelemetry/"
+          url="https://hasura.io/docs/2.0/observability/opentelemetry/"
         />
         <ListHeader label="PERFORMANCE" />
         <ListItem
