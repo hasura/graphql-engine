@@ -48,7 +48,7 @@ pub struct AggregateCountDefinition {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregateOperand {
     pub aggregated_type: QualifiedTypeName,
-    pub aggregatable_fields: Vec<AggregatableFieldInfo>,
+    pub aggregatable_fields: Vec<AggregatableFieldInfo>, // Empty for scalar operands
     pub aggregation_functions: Vec<AggregationFunctionInfo>,
 }
 

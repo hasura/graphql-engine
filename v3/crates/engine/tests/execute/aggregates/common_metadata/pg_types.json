@@ -360,6 +360,269 @@
               "comparisonExpressionTypeName": "db_text_comparisonexp"
             }
           }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "String_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_gt",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_gte",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_ilike",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[String!]!"
+                  },
+                  {
+                    "name": "_iregex",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_like",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_lt",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_lte",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_nilike",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_niregex",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_nlike",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_nregex",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_regex",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "st_coveredby",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "st_covers",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "st_intersects",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "st_relatematch",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "starts_with",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "ts_match_tt",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "text",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_gt",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_gte",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[Int!]!"
+                  },
+                  {
+                    "name": "_lt",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_lte",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "Int!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "int4",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Numeric_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Numeric",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Numeric!"
+                  },
+                  {
+                    "name": "_gt",
+                    "argumentType": "Numeric!"
+                  },
+                  {
+                    "name": "_gte",
+                    "argumentType": "Numeric!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[Numeric!]!"
+                  },
+                  {
+                    "name": "_lt",
+                    "argumentType": "Numeric!"
+                  },
+                  {
+                    "name": "_lte",
+                    "argumentType": "Numeric!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "Numeric!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "numeric",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Numeric_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Timestamp_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Timestamp",
+                "comparisonOperators": [
+                  {
+                    "name": "_gt",
+                    "argumentType": "Timestamp"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "timestamp",
+                    "operatorMapping": {
+                      "_gt": "_gt"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
         }
       ]
     }

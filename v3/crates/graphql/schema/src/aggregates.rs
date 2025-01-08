@@ -37,6 +37,7 @@ pub enum AggregationFunctionAnnotation {
     CountDistinct,
     Function {
         function_name: AggregationFunctionName,
+        aggregate_expression: AggregateExpressionName,
         data_connector_functions: Vec<DataConnectorAggregationFunctionInfo>,
     },
 }
@@ -299,6 +300,7 @@ fn add_aggregation_functions(
                 AggregateOutputAnnotation::AggregationFunctionField(
                     AggregationFunctionAnnotation::Function {
                         function_name: aggregatable_function_info.name.clone(),
+                        aggregate_expression: aggregate_expression.name.name.clone(),
                         data_connector_functions: aggregatable_function_info
                             .data_connector_functions
                             .clone(),

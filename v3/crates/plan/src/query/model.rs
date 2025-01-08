@@ -4,6 +4,11 @@ use super::{field_selection, model_target};
 use crate::column::to_resolved_column;
 use crate::types::PlanError;
 use indexmap::IndexMap;
+use nonempty::NonEmpty;
+use open_dds::aggregates::{
+    AggregateExpressionName, AggregationFunctionName, DataConnectorAggregationFunctionName,
+};
+use open_dds::identifier::SubgraphName;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -73,14 +78,33 @@ pub fn from_model_aggregate_selection(
             Some(_) => Err(PlanError::Internal("unsupported aggregate operand".into())),
         }?;
 
-        let ndc_aggregate = match aggregate.function {
+        let ndc_aggregate = match &aggregate.function {
             AggregationFunction::Count {} => Ok(AggregateFieldSelection::Count { column_path }),
             AggregationFunction::CountDistinct {} => {
                 Ok(AggregateFieldSelection::CountDistinct { column_path })
             }
-            AggregationFunction::Custom { .. } => Err(PlanError::Internal(
-                "custom aggregate functions are not supported".into(),
-            )),
+            AggregationFunction::Custom {
+                name: aggregation_function_name,
+                expression: aggregate_expression,
+            } => {
+                let ndc_aggregation_function_name = get_ndc_aggregation_function(
+                    metadata,
+                    &model_target.subgraph,
+                    &model_source.data_connector,
+                    aggregation_function_name,
+                    aggregate_expression,
+                )?;
+                let Some(column_path) = NonEmpty::from_vec(column_path) else {
+                    Err(PlanError::Internal(
+                        "column path shouldn't be empty for aggregation function {aggregation_function_name}"
+                            .into(),
+                    ))?
+                };
+                Ok(AggregateFieldSelection::AggregationFunction {
+                    function_name: ndc_aggregation_function_name,
+                    column_path,
+                })
+            }
         }?;
 
         fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_aggregate);
@@ -102,6 +126,37 @@ pub fn from_model_aggregate_selection(
         query,
         fields,
     })
+}
+
+fn get_ndc_aggregation_function(
+    metadata: &Metadata,
+    subgraph: &SubgraphName,
+    data_connector: &metadata_resolve::DataConnectorLink,
+    aggregate_function: &AggregationFunctionName,
+    aggregate_expression: &AggregateExpressionName,
+) -> Result<DataConnectorAggregationFunctionName, PlanError> {
+    let aggregate_expression_name = Qualified::new(subgraph.clone(), aggregate_expression.clone());
+    let ndc_aggregation_function_info = metadata
+        .aggregate_expressions
+        .get(&aggregate_expression_name)
+        .ok_or_else(|| {
+            PlanError::Internal(format!(
+                "aggregate expression {aggregate_expression} not found in metadata"
+            ))
+        })?
+        .operand.aggregation_functions.iter().find(|info| info.name == *aggregate_function).ok_or_else(|| {
+            PlanError::Internal(format!(
+                "aggregation function {aggregate_function} not found in aggregate expression {aggregate_expression}"
+            ))
+        })?
+        .data_connector_functions.iter().find(|info| {
+            info.data_connector_name == data_connector.name
+        } ).ok_or_else(|| {
+            PlanError::Internal(format!(
+                "aggregation function {aggregate_function} is missing a data connector mapping for {}", data_connector.name
+            ))
+        })?;
+    Ok(ndc_aggregation_function_info.function_name.clone())
 }
 
 pub fn from_model_selection(

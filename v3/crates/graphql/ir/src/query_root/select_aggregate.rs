@@ -2,8 +2,8 @@
 //!
 //! A 'select_aggregate' operation fetches a set of aggregates over rows of a model
 
-use graphql_schema::GDS;
 use graphql_schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
+use graphql_schema::{InputAnnotation, GDS};
 /// Generates the IR for a 'select_aggregate' operation
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common as ast;
@@ -54,94 +54,154 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
     model_name: &'s Qualified<open_dds::models::ModelName>,
 ) -> Result<ModelSelectAggregate<'n, 's>, error::Error> {
     let mut usage_counts = UsagesCounts::new();
-    let model_selection =
-        match request_pipeline {
-            GraphqlRequestPipeline::Old => {
-                ModelSelectAggregateSelection::Ir(
-                    model_selection::generate_aggregate_model_selection_ir(
-                        field,
-                        field_call,
-                        data_type,
-                        model_source,
-                        model_name,
-                        session_variables,
-                        request_headers,
-                        // Get all the models/commands that were used as relationships
-                        &mut usage_counts,
-                    )?,
-                )
-            }
-            GraphqlRequestPipeline::OpenDd => {
-                // TODO: De-duplicate the following code with the implementation in super::select_many
-                let mut limit = None;
-                let mut offset = None;
-                let mut where_input = None;
+    let model_selection = match request_pipeline {
+        GraphqlRequestPipeline::Old => {
+            ModelSelectAggregateSelection::Ir(
+                model_selection::generate_aggregate_model_selection_ir(
+                    field,
+                    field_call,
+                    data_type,
+                    model_source,
+                    model_name,
+                    session_variables,
+                    request_headers,
+                    // Get all the models/commands that were used as relationships
+                    &mut usage_counts,
+                )?,
+            )
+        }
+        GraphqlRequestPipeline::OpenDd => {
+            // TODO: put the following code in a separate function
+            let mut limit = None;
+            let mut offset = None;
+            let mut where_input = None;
 
-                // Add the name of the root model
-                count_model(model_name, &mut usage_counts);
+            // Add the name of the root model
+            count_model(model_name, &mut usage_counts);
 
-                for argument in field_call.arguments.values() {
-                    match argument.info.generic {
-                        annotation @ Annotation::Input(graphql_schema::InputAnnotation::Model(
-                            model_argument_annotation,
-                        )) => match model_argument_annotation {
-                            ModelInputAnnotation::ModelLimitArgument => {
-                                limit = Some(argument.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
-                            }
-                            ModelInputAnnotation::ModelOffsetArgument => {
-                                offset = Some(argument.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
-                            }
-                            ModelInputAnnotation::ModelArgumentsExpression
-                            | ModelInputAnnotation::ModelOrderByExpression => {
-                                // TODO: Handle model arguments and order_by inputs
-                            }
-                            _ => {
-                                return Err(error::InternalEngineError::UnexpectedAnnotation {
-                                    annotation: annotation.clone(),
-                                })?
-                            }
-                        },
+            for field_call_argument in field_call.arguments.values() {
+                match field_call_argument.info.generic {
+                    // Model arguments
+                    Annotation::Input(InputAnnotation::Model(
+                        ModelInputAnnotation::ModelArgumentsExpression,
+                    )) => {
+                        // TODO: Handle model arguments
+                    }
+                    // Filter input arguments
+                    Annotation::Input(InputAnnotation::Model(
+                        ModelInputAnnotation::ModelFilterInputArgument,
+                    )) => {
+                        let filter_input_object = field_call_argument.value.as_object()?;
+                        for filter_input_field_arg in filter_input_object.values() {
+                            match filter_input_field_arg.info.generic {
+                                // Limit argument
+                                Annotation::Input(InputAnnotation::Model(
+                                    ModelInputAnnotation::ModelLimitArgument,
+                                )) => {
+                                    if limit.is_some() {
+                                        return Err(
+                                            error::InternalEngineError::UnexpectedAnnotation {
+                                                annotation: filter_input_field_arg
+                                                    .info
+                                                    .generic
+                                                    .clone(),
+                                            }
+                                            .into(),
+                                        );
+                                    }
+                                    limit =
+                                        Some(filter_input_field_arg.value.as_int_u32().map_err(
+                                            error::Error::map_unexpected_value_to_external_error,
+                                        )?);
+                                }
 
-                        Annotation::Input(graphql_schema::InputAnnotation::BooleanExpression(
-                            BooleanExpressionAnnotation::BooleanExpressionRootField,
-                        )) => {
-                            where_input = Some(argument.value.as_object()?);
-                        }
+                                // Offset argument
+                                Annotation::Input(InputAnnotation::Model(
+                                    ModelInputAnnotation::ModelOffsetArgument,
+                                )) => {
+                                    if offset.is_some() {
+                                        return Err(
+                                            error::InternalEngineError::UnexpectedAnnotation {
+                                                annotation: filter_input_field_arg
+                                                    .info
+                                                    .generic
+                                                    .clone(),
+                                            }
+                                            .into(),
+                                        );
+                                    }
+                                    offset =
+                                        Some(filter_input_field_arg.value.as_int_u32().map_err(
+                                            error::Error::map_unexpected_value_to_external_error,
+                                        )?);
+                                }
 
-                        annotation => {
-                            return Err(error::InternalEngineError::UnexpectedAnnotation {
-                                annotation: annotation.clone(),
-                            })?
+                                // Order By argument
+                                Annotation::Input(InputAnnotation::Model(
+                                    ModelInputAnnotation::ModelOrderByExpression,
+                                )) => {
+                                    //TODO: Handle order_by
+                                }
+
+                                // Where argument
+                                Annotation::Input(InputAnnotation::BooleanExpression(
+                                    BooleanExpressionAnnotation::BooleanExpressionRootField,
+                                )) => {
+                                    if where_input.is_some() {
+                                        return Err(
+                                            error::InternalEngineError::UnexpectedAnnotation {
+                                                annotation: filter_input_field_arg
+                                                    .info
+                                                    .generic
+                                                    .clone(),
+                                            }
+                                            .into(),
+                                        );
+                                    }
+                                    where_input = Some(filter_input_field_arg.value.as_object()?);
+                                }
+
+                                _ => {
+                                    return Err(error::InternalEngineError::UnexpectedAnnotation {
+                                        annotation: filter_input_field_arg.info.generic.clone(),
+                                    }
+                                    .into())
+                                }
+                            }
                         }
                     }
-                }
 
-                let where_clause = match where_input {
-                    Some(where_input) => Some(filter::resolve_filter_expression_open_dd(
-                        where_input,
-                        session_variables,
-                        &mut usage_counts,
-                    )?),
-                    None => None,
-                };
-                ModelSelectAggregateSelection::OpenDd(
-                    model_selection::model_aggregate_selection_open_dd_ir(
-                        &field.selection_set,
-                        data_type,
-                        model_source,
-                        model_name,
-                        where_clause,
-                        limit,
-                        offset,
-                        &mut usage_counts,
-                    )?,
-                )
+                    _ => {
+                        return Err(error::InternalEngineError::UnexpectedAnnotation {
+                            annotation: field_call_argument.info.generic.clone(),
+                        }
+                        .into())
+                    }
+                }
             }
-        };
+
+            let where_clause = match where_input {
+                Some(where_input) => Some(filter::resolve_filter_expression_open_dd(
+                    where_input,
+                    session_variables,
+                    &mut usage_counts,
+                )?),
+                None => None,
+            };
+            ModelSelectAggregateSelection::OpenDd(
+                model_selection::model_aggregate_selection_open_dd_ir(
+                    &field.selection_set,
+                    data_type,
+                    model_source,
+                    model_name,
+                    where_clause,
+                    limit,
+                    offset,
+                    &mut usage_counts,
+                )?,
+            )
+        }
+    };
 
     Ok(ModelSelectAggregate {
         field_name: field_call.name.clone(),

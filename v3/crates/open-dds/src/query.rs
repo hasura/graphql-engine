@@ -3,7 +3,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    aggregates::AggregationFunctionName,
+    aggregates::{AggregateExpressionName, AggregationFunctionName},
     arguments::ArgumentName,
     commands::CommandName,
     identifier::{Identifier, SubgraphName},
@@ -355,7 +355,10 @@ impl OrderByElement {
 pub enum AggregationFunction {
     Count {},
     CountDistinct {},
-    Custom { name: AggregationFunctionName },
+    Custom {
+        name: AggregationFunctionName,
+        expression: AggregateExpressionName,
+    },
 }
 
 /// An aggregate metric computed over a set of values in whose context this is used.

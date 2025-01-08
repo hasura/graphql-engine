@@ -388,69 +388,60 @@
           }
         },
         {
-          "kind": "ObjectBooleanExpressionType",
+          "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
             "name": "Invoice_boolexp",
-            "objectType": "Invoice",
-            "dataConnectorName": "db",
-            "dataConnectorObjectType": "Invoice",
-            "comparableFields": [
-              {
-                "fieldName": "BillingAddress",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "BillingCity",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "BillingCountry",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "BillingPostalCode",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "BillingState",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "CustomerId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "InvoiceDate",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "InvoiceId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Total",
-                "operators": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "type": "Invoice",
+                "comparableFields": [
+                  {
+                    "fieldName": "BillingAddress",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "BillingCity",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "BillingCountry",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "BillingPostalCode",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "BillingState",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "CustomerId",
+                    "booleanExpressionType": "Int_bool_exp"
+                  },
+                  {
+                    "fieldName": "InvoiceDate",
+                    "booleanExpressionType": "Timestamp_bool_exp"
+                  },
+                  {
+                    "fieldName": "InvoiceId",
+                    "booleanExpressionType": "Int_bool_exp"
+                  },
+                  {
+                    "fieldName": "Total",
+                    "booleanExpressionType": "Numeric_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
               }
-            ],
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": false
+            },
             "graphql": {
               "typeName": "Invoice_boolexp"
             }

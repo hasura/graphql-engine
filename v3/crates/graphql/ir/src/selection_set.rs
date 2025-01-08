@@ -12,6 +12,7 @@ use super::arguments;
 use super::commands::FunctionBasedCommand;
 use super::model_selection::ModelSelection;
 use super::relationship::{self, RemoteCommandRelationshipInfo, RemoteModelRelationshipInfo};
+use crate::aggregates::mk_alias_from_graphql_field_path;
 use crate::error;
 use crate::global_id;
 use graphql_schema::{AggregateOutputAnnotation, AggregationFunctionAnnotation, TypeKind};
@@ -406,18 +407,25 @@ pub fn generate_aggregate_selection_set_open_dd_ir(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<IndexMap<open_dds::query::Alias, open_dds::query::Aggregate>, error::Error> {
     let mut fields = IndexMap::new();
-    collect_aggregate_fields(&mut fields, None, selection_set)?;
+    collect_aggregate_fields(&mut fields, None, &[], selection_set)?;
     Ok(fields)
 }
 
 fn collect_aggregate_fields(
     aggregate_fields: &mut IndexMap<open_dds::query::Alias, open_dds::query::Aggregate>,
     operand: Option<&open_dds::query::Operand>,
+    graphql_field_path: &[&Alias], // For generating the alias for the aggregate field
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<(), error::Error> {
     for field in selection_set.fields.values() {
         let field_call = field.field_call()?;
-        let field_alias = make_field_alias(field.alias.0.as_str())?;
+        let graphql_field_path = graphql_field_path
+            .iter()
+            .chain(std::iter::once(&&field.alias))
+            .copied()
+            .collect::<Vec<&Alias>>();
+        let field_alias =
+            make_field_alias(mk_alias_from_graphql_field_path(&graphql_field_path).as_str())?;
         match field_call.info.generic {
             annotation @ Annotation::Output(annotated_field) => match annotated_field {
                 OutputAnnotation::Aggregate(aggregate_annotation) => match aggregate_annotation {
@@ -437,6 +445,7 @@ fn collect_aggregate_fields(
                         collect_aggregate_fields(
                             aggregate_fields,
                             Some(&field_operand),
+                            &graphql_field_path,
                             &field.selection_set,
                         )?;
                     }
@@ -450,9 +459,11 @@ fn collect_aggregate_fields(
                             }
                             AggregationFunctionAnnotation::Function {
                                 function_name,
+                                aggregate_expression,
                                 data_connector_functions: _,
                             } => open_dds::query::AggregationFunction::Custom {
                                 name: function_name.clone(),
+                                expression: aggregate_expression.clone(),
                             },
                         };
                         aggregate_fields.insert(
@@ -464,6 +475,8 @@ fn collect_aggregate_fields(
                         );
                     }
                 },
+                OutputAnnotation::RootField(graphql_schema::RootFieldAnnotation::Introspection) => {
+                } // Skip introspection fields such as __typename, as they will be processed during response handling.
                 _ => Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
                 })?,
