@@ -1,0 +1,10 @@
+query MyQuery {
+  AuthorMany(order_by: [{ first_name: Asc }]) {
+    author_id
+    first_name
+  }
+  AuthorCopyMany(order_by: [{ first_name: Desc }]) {
+    author_id
+    first_name
+  }
+}

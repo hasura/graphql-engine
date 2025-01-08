@@ -14,7 +14,7 @@ use open_dds::{
     aggregates,
     arguments::ArgumentName,
     commands,
-    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
+    data_connector::{DataConnectorName, DataConnectorOperatorName},
     models,
     types::{self, DataConnectorArgumentName, Deprecated},
 };
@@ -218,7 +218,8 @@ pub enum ModelInputAnnotation {
     },
     ModelOrderByExpression,
     ModelOrderByNestedExpression {
-        ndc_column: DataConnectorColumnName,
+        field_name: types::FieldName,
+        parent_type: Qualified<types::CustomTypeName>,
         multiple_input_properties: metadata_resolve::MultipleOrderByInputObjectFields,
     },
     ModelOrderByArgument {
@@ -226,7 +227,6 @@ pub enum ModelInputAnnotation {
         /// The parent type is required to report field usage while analyzing query usage.
         /// Field usage is reported with the name of object type where the field is defined.
         parent_type: Qualified<types::CustomTypeName>,
-        ndc_column: DataConnectorColumnName,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
         deprecated: Option<Deprecated>,
     },
@@ -420,8 +420,7 @@ pub enum TypeId {
         model_name: Qualified<models::ModelName>,
         type_name: ast::TypeName,
     },
-    ModelOrderByExpression {
-        model_name: Qualified<models::ModelName>,
+    OrderByExpression {
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         graphql_type_name: ast::TypeName,
     },
@@ -474,7 +473,7 @@ impl TypeId {
             | TypeId::InputScalarBooleanExpressionType {
                 graphql_type_name, ..
             }
-            | TypeId::ModelOrderByExpression {
+            | TypeId::OrderByExpression {
                 graphql_type_name, ..
             }
             | TypeId::OrderByEnumType {

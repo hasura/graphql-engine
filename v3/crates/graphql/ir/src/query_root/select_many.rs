@@ -114,6 +114,9 @@ pub fn select_many_generate_ir<'n, 's>(
                         argument,
                         session_variables,
                         &mut usage_counts,
+                        &model_source.type_mappings,
+                        &model_source.data_connector,
+                        data_type,
                     )?);
                 }
                 _ => {

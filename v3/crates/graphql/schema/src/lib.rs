@@ -206,15 +206,13 @@ impl gql_schema::SchemaContext for GDS {
                 is_null_operator_name.as_ref(),
                 logical_operators,
             ),
-            types::TypeId::ModelOrderByExpression {
+            types::TypeId::OrderByExpression {
                 order_by_expression_identifier,
                 graphql_type_name,
-                model_name,
             } => model_order_by::build_model_order_by_input_schema(
                 self,
                 builder,
                 graphql_type_name,
-                model_name,
                 order_by_expression_identifier,
             ),
             types::TypeId::OrderByEnumType { graphql_type_name } => {
