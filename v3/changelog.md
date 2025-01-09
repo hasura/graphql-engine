@@ -6,8 +6,6 @@
 
 ### Fixed
 
-- Allow reusing `OrderByExpressions` in different models.
-
 ### Changed
 
 ## [v2025.01.06]

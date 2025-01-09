@@ -1,3 +1,6 @@
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
 use open_dds::{
     commands::{CommandName, FunctionName},
     models::ModelName,
@@ -7,7 +10,10 @@ use open_dds::{
 
 use serde::{Deserialize, Serialize};
 
-use metadata_resolve::{self, Qualified, QualifiedTypeReference};
+use metadata_resolve::{
+    self, deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
+    QualifiedTypeReference,
+};
 
 use crate::types::{CommandSourceDetail, TypeKind};
 
@@ -51,7 +57,12 @@ pub struct OrderByRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub object_type_name: Qualified<CustomTypeName>,
+    pub source_data_connector: Arc<metadata_resolve::DataConnectorLink>,
+    #[serde(
+        serialize_with = "serialize_qualified_btreemap",
+        deserialize_with = "deserialize_qualified_btreemap"
+    )]
+    pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     pub target_source: metadata_resolve::ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,

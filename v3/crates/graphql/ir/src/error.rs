@@ -76,23 +76,6 @@ pub enum Error {
     #[error("Only one subscription root field is allowed")]
     NoneOrMoreSubscriptionRootFields,
 
-    #[error("internal error: type mapping not found for type {type_name:}")]
-    InternalTypeMappingNotFound {
-        type_name: Qualified<CustomTypeName>,
-    },
-
-    #[error("internal error: type mapping or field mapping not found for type {type_name:} and field {field_name:}")]
-    InternalMappingNotFound {
-        type_name: Qualified<CustomTypeName>,
-        field_name: FieldName,
-    },
-
-    #[error("internal error: missing target model source for the relationship {relationship_name:} on type {type_name:}")]
-    InternalMissingTargetModelSourceForRelationship {
-        relationship_name: RelationshipName,
-        type_name: Qualified<CustomTypeName>,
-    },
-
     #[error("internal: {0}")]
     Internal(#[from] InternalError),
 }
