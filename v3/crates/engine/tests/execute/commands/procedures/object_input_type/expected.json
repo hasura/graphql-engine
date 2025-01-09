@@ -23,7 +23,7 @@
       "addMovieWithGenres": {
         "movie_id": 111,
         "title": "MyMovie",
-        "rating": 10,
+        "rating": 5,
         "genres": [
           {
             "genre_id": 1,

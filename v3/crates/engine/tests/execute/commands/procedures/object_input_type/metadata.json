@@ -14,12 +14,32 @@
                 "role": "admin",
                 "output": {
                   "allowedFields": ["movie_id", "title", "rating", "genres"]
+                },
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "rating",
+                      "value": {
+                        "sessionVariable": "x-hasura-rating"
+                      }
+                    }
+                  ]
                 }
               },
               {
                 "role": "user",
                 "output": {
                   "allowedFields": ["movie_id", "title", "rating", "genres"]
+                },
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "rating",
+                      "value": {
+                        "sessionVariable": "x-hasura-rating"
+                      }
+                    }
+                  ]
                 }
               }
             ]

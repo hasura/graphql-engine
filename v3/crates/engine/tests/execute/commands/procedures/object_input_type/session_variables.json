@@ -1,8 +1,10 @@
 [
   {
-    "x-hasura-role": "admin"
+    "x-hasura-role": "admin",
+    "x-hasura-rating": "10"
   },
   {
-    "x-hasura-role": "user"
+    "x-hasura-role": "user",
+    "x-hasura-rating": "5"
   }
 ]

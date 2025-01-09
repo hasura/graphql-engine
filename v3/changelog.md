@@ -6,6 +6,10 @@
 
 ### Fixed
 
+- Fixed a bug where erroneous typechecking errors could be produced when
+  querying a Model or Command that used an object type as an argument that had
+  input field presets applied on its TypePermissions.
+
 ### Changed
 
 ## [v2025.01.06]

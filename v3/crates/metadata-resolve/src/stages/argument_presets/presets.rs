@@ -8,6 +8,7 @@ use crate::types::{
     subgraph::{Qualified, QualifiedTypeReference},
 };
 use hasura_authn_core::Role;
+use indexmap::IndexMap;
 use open_dds::{
     data_connector::DataConnectorColumnName,
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
@@ -16,9 +17,12 @@ use std::collections::BTreeMap;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ArgumentPresetError {
-    #[error(
-        "Type mapping or field mapping not found for type {type_name:} and field {field_name:}"
-    )]
+    #[error("Field not found for type {type_name} and field {field_name}")]
+    FieldNotFound {
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+    #[error("Type mapping or field mapping not found for type {type_name} and field {field_name}")]
     MappingNotFound {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
@@ -204,8 +208,8 @@ fn build_annotations_from_input_object_type_permissions<'a>(
                 for (role, permission) in &object_type_repr.type_input_permissions {
                     let preset_map = build_preset_map_from_input_object_type_permission(
                         permission,
+                        &object_type_repr.object_type.fields,
                         field_mappings,
-                        type_reference,
                         field_path,
                         ndc_argument_name,
                         object_type,
@@ -271,8 +275,8 @@ fn build_annotations_from_input_object_type_permissions<'a>(
 ///   `Map<("person", ["address", "country"]), ValueExpression(SessionVariable("x-hasura-user-country"))>`
 fn build_preset_map_from_input_object_type_permission(
     permission: &type_permissions::TypeInputPermission,
+    fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     field_mappings: Option<&BTreeMap<FieldName, object_types::FieldMapping>>,
-    type_reference: &QualifiedTypeReference,
     field_path: &[DataConnectorColumnName],
     ndc_argument_name: Option<&DataConnectorArgumentName>,
     object_type: &Qualified<CustomTypeName>,
@@ -284,6 +288,13 @@ fn build_preset_map_from_input_object_type_permission(
         .field_presets
         .iter()
         .map(|(field_name, preset)| {
+            let field_definition =
+                fields
+                    .get(field_name)
+                    .ok_or_else(|| ArgumentPresetError::FieldNotFound {
+                        type_name: object_type.clone(),
+                        field_name: field_name.clone(),
+                    })?;
             let ndc_field = field_mappings
                 .and_then(|mappings| {
                     mappings
@@ -304,7 +315,7 @@ fn build_preset_map_from_input_object_type_permission(
                 field_path: new_field_path,
             };
 
-            let value = (type_reference.clone(), preset.value.clone());
+            let value = (field_definition.field_type.clone(), preset.value.clone());
 
             Ok((key, value))
         })
