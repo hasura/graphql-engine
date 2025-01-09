@@ -1,8 +1,9 @@
+use crate::stages::boolean_expressions;
 use crate::{
     types::subgraph::{Qualified, QualifiedTypeReference},
     QualifiedTypeName,
 };
-use open_dds::types::{CustomTypeName, GraphQlTypeName, OperatorName};
+use open_dds::types::{GraphQlTypeName, OperatorName};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -11,8 +12,10 @@ use serde_with::serde_as;
 
 #[derive(Debug)]
 pub struct ScalarBooleanExpressionsOutput {
-    pub boolean_expression_scalar_types:
-        BTreeMap<Qualified<CustomTypeName>, ResolvedScalarBooleanExpressionType>,
+    pub boolean_expression_scalar_types: BTreeMap<
+        boolean_expressions::BooleanExpressionTypeIdentifier,
+        ResolvedScalarBooleanExpressionType,
+    >,
     pub graphql_types: BTreeSet<ast::TypeName>,
     pub issues: Vec<super::error::ScalarBooleanExpressionTypeIssue>,
 }
@@ -20,8 +23,6 @@ pub struct ScalarBooleanExpressionsOutput {
 #[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ResolvedScalarBooleanExpressionType {
-    pub name: Qualified<CustomTypeName>,
-
     /// The OpenDD type this scalar refers to
     pub operand_type: QualifiedTypeName,
 

@@ -4,8 +4,8 @@ use open_dds::{flags, types::CustomTypeName};
 use crate::{
     stages::{
         aggregate_boolean_expressions, aggregates, boolean_expressions, commands, data_connectors,
-        models, models_graphql, object_boolean_expressions, object_types, order_by_expressions,
-        plugins, scalar_boolean_expressions, scalar_types,
+        models, models_graphql, object_types, order_by_expressions, plugins,
+        scalar_boolean_expressions, scalar_types,
     },
     Qualified,
 };
@@ -16,8 +16,6 @@ use super::error::ShouldBeAnError;
 /// These are things that don't break the build, but may do so in future
 #[derive(Debug, thiserror::Error)]
 pub enum Warning {
-    #[error("{0}")]
-    ObjectBooleanExpressionIssue(#[from] object_boolean_expressions::ObjectBooleanExpressionIssue),
     #[error("{0}")]
     ObjectTypesIssue(#[from] object_types::ObjectTypesIssue),
     #[error("{0}")]
@@ -56,7 +54,6 @@ impl ShouldBeAnError for Warning {
             Warning::DataConnectorIssue(issue) => issue.should_be_an_error(flags),
             Warning::BooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ObjectTypesIssue(issue) => issue.should_be_an_error(flags),
-            Warning::ObjectBooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
             Warning::OrderByExpressionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ScalarTypesIssue(issue) => issue.should_be_an_error(flags),
             Warning::ModelGraphqlIssue(issue) => issue.should_be_an_error(flags),

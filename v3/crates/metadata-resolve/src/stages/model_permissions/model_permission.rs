@@ -9,7 +9,7 @@ use crate::helpers::typecheck;
 use crate::helpers::typecheck::typecheck_value_expression;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, models, models_graphql,
-    object_boolean_expressions, object_relationships, object_types, scalar_types, type_permissions,
+    object_relationships, object_types, scalar_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::error::{Error, TypePredicateError};
 use crate::types::permission::ValueExpression;
@@ -158,10 +158,6 @@ pub fn resolve_model_select_permissions(
     >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<BTreeMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
@@ -227,7 +223,6 @@ pub fn resolve_model_select_permissions(
                             subgraph,
                             object_types,
                             scalar_types,
-                            object_boolean_expression_types,
                             boolean_expression_types,
                             models,
                             data_connector_scalars,
@@ -646,7 +641,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                 target_object_type,
                                 target_boolean_expression_fields.as_ref(),
                                 target_data_connector_field_mappings,
-                                data_connector_link,
+                                &target_source.model.data_connector,
                                 subgraph,
                                 scalars,
                                 object_types,
@@ -840,7 +835,7 @@ fn resolve_binary_operator_for_type<'a>(
         )),
         ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => Ok((
             ndc_operator_name,
-            object_boolean_expressions::resolve_ndc_type(
+            scalar_boolean_expressions::resolve_ndc_type(
                 data_connector,
                 argument_type,
                 scalars,

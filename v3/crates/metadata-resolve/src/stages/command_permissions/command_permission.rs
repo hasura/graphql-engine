@@ -6,7 +6,7 @@ use open_dds::{data_connector::DataConnectorName, models::ModelName, types::Cust
 
 use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, models_graphql,
-    object_boolean_expressions, object_relationships, scalar_types,
+    object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -46,10 +46,6 @@ pub fn resolve_command_permissions(
         object_relationships::ObjectTypeWithRelationships,
     >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     data_connectors: &data_connectors::DataConnectors,
@@ -107,7 +103,6 @@ pub fn resolve_command_permissions(
                         subgraph,
                         object_types,
                         scalar_types,
-                        object_boolean_expression_types,
                         boolean_expression_types,
                         models,
                         data_connector_scalars,

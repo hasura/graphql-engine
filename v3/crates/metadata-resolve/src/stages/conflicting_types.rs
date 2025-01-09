@@ -1,8 +1,8 @@
-use open_dds::types::CustomTypeName;
-use std::collections::{BTreeMap, HashMap};
-
+use crate::stages::boolean_expressions::BooleanExpressionTypeIdentifier;
 use crate::types::warning::{ConflictingNameAcrossTypes, ConflictingSources, TypeSource, Warning};
 use crate::Qualified;
+use open_dds::types::CustomTypeName;
+use std::collections::{BTreeMap, HashMap};
 
 /// Struct to collect and track type names across different sources
 struct CollectTypeNames<'a>(HashMap<&'a Qualified<CustomTypeName>, nonempty::NonEmpty<TypeSource>>);
@@ -79,7 +79,21 @@ pub(crate) fn check_conflicting_names_across_types(
             scalar_aggregates,
         } = boolean_expression_types;
         let mut names = objects.keys().collect::<Vec<_>>();
-        names.extend(scalars.keys());
+
+        // need to unwrap scalar names
+        names.extend(
+            scalars
+                .keys()
+                .filter_map(|bool_exp_identifier| match bool_exp_identifier {
+                    BooleanExpressionTypeIdentifier::FromBooleanExpressionType(bool_exp_type) => {
+                        Some(bool_exp_type)
+                    }
+                    BooleanExpressionTypeIdentifier::FromDataConnectorScalarRepresentation(_) => {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>(),
+        );
         names.extend(scalar_aggregates.keys());
         names.extend(object_aggregates.keys());
         names

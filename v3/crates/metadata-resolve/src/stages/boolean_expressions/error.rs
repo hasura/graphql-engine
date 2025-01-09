@@ -1,5 +1,8 @@
+use super::BooleanExpressionTypeIdentifier;
 use crate::helpers::type_mappings::TypeMappingCollectionError;
-use crate::stages::{data_connectors, graphql_config, relationships, scalar_boolean_expressions};
+use crate::stages::{
+    boolean_expressions, data_connectors, graphql_config, relationships, scalar_boolean_expressions,
+};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use crate::QualifiedTypeReference;
 use open_dds::{
@@ -56,16 +59,21 @@ pub enum BooleanExpressionError {
         name: Qualified<CustomTypeName>,
         model: Qualified<ModelName>,
     },
-    #[error("could not find boolean expression type {child_boolean_expression:} referenced within boolean expression {parent_boolean_expression:}")]
+    #[error("could not find object boolean expression type {child_boolean_expression:} referenced within boolean expression {parent_boolean_expression:}")]
     BooleanExpressionCouldNotBeFound {
         parent_boolean_expression: Qualified<CustomTypeName>,
         child_boolean_expression: Qualified<CustomTypeName>,
     },
+    #[error("could not find scalar boolean expression type {child_boolean_expression:} referenced within boolean expression {parent_boolean_expression:}")]
+    ScalarBooleanExpressionCouldNotBeFound {
+        parent_boolean_expression: Qualified<CustomTypeName>,
+        child_boolean_expression: boolean_expressions::BooleanExpressionTypeIdentifier,
+    },
     #[error("the boolean expression type {name:} used in model {model:} corresponds to object type {boolean_expression_object_type:} whereas the model's object type is {model_object_type:}")]
     BooleanExpressionTypeForInvalidObjectTypeInModel {
         name: Qualified<CustomTypeName>,
-        boolean_expression_object_type: Qualified<CustomTypeName>,
         model: Qualified<ModelName>,
+        boolean_expression_object_type: Qualified<CustomTypeName>,
         model_object_type: Qualified<CustomTypeName>,
     },
     #[error("field {field:} is missing a mapping for data connector {data_connector_name:} in boolean expression {boolean_expression_name:}")]
@@ -92,8 +100,14 @@ pub enum BooleanExpressionError {
     FieldTypeMismatch {
         field_name: FieldName,
         field_type: QualifiedTypeName,
-        field_boolean_expression_type_name: Qualified<CustomTypeName>,
+        field_boolean_expression_type_name: BooleanExpressionTypeIdentifier,
         underlying_type: QualifiedTypeName,
+    },
+
+    #[error("Scalar representations for data connector '{data_connector_name}' could not found for boolean expression type {boolean_expression_type}")]
+    DataConnectorScalarRepresentationsNotFound {
+        data_connector_name: Qualified<DataConnectorName>,
+        boolean_expression_type: Qualified<CustomTypeName>,
     },
 
     #[error("Field level comparison operator configuration is not fully supported yet. Please use \"enableAll\":true.")]

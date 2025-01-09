@@ -1,4 +1,4 @@
-use crate::stages::{data_connector_scalar_types, scalar_boolean_expressions};
+use crate::stages::data_connector_scalar_types;
 
 use crate::types::subgraph::{
     mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
@@ -6,6 +6,7 @@ use crate::types::subgraph::{
 
 use ndc_models;
 
+use super::error::ScalarBooleanExpressionTypeError;
 use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 use open_dds::identifier::SubgraphName;
 
@@ -16,11 +17,11 @@ pub fn resolve_ndc_type(
     source_type: &ndc_models::Type,
     scalars: &data_connector_scalar_types::DataConnectorScalars,
     subgraph: &SubgraphName,
-) -> Result<QualifiedTypeReference, scalar_boolean_expressions::ScalarBooleanExpressionTypeError> {
+) -> Result<QualifiedTypeReference, ScalarBooleanExpressionTypeError> {
     match source_type {
         ndc_models::Type::Named { name } => {
             let scalar_type = scalars.by_ndc_type.get(name.as_str()).ok_or(
-                scalar_boolean_expressions::ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
+                ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
                     data_connector: data_connector.clone(),
                     scalar_type: DataConnectorScalarType::from(name.as_str()),
                 },
@@ -28,10 +29,12 @@ pub fn resolve_ndc_type(
             scalar_type
                 .representation
                 .clone()
-                .ok_or(scalar_boolean_expressions::ScalarBooleanExpressionTypeError::DataConnectorScalarRepresentationRequired {
-                    data_connector: data_connector.clone(),
-                    scalar_type: DataConnectorScalarType::from(name.as_str()),
-                })
+                .ok_or(
+                    ScalarBooleanExpressionTypeError::DataConnectorScalarRepresentationRequired {
+                        data_connector: data_connector.clone(),
+                        scalar_type: DataConnectorScalarType::from(name.as_str()),
+                    },
+                )
                 .map(|ty| QualifiedTypeReference {
                     underlying_type: QualifiedBaseType::Named(mk_qualified_type_name(
                         &ty, subgraph,
@@ -55,8 +58,8 @@ pub fn resolve_ndc_type(
                 }
             })
         }
-        ndc_models::Type::Predicate { .. } => Err(
-            scalar_boolean_expressions::ScalarBooleanExpressionTypeError::PredicateTypesUnsupported,
-        ),
+        ndc_models::Type::Predicate { .. } => {
+            Err(ScalarBooleanExpressionTypeError::PredicateTypesUnsupported)
+        }
     }
 }

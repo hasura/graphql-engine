@@ -1,6 +1,6 @@
 use crate::catalog::Model;
 use indexmap::IndexMap;
-use metadata_resolve::{ModelExpressionType, Qualified};
+use metadata_resolve::Qualified;
 use open_dds::query::{BooleanExpression, ObjectFieldOperand, ObjectFieldTarget, Operand, Value};
 use open_dds::{identifier::Identifier, models::ModelName, types::FieldName};
 use serde::{Deserialize, Serialize};
@@ -37,18 +37,11 @@ pub fn build_boolean_expression(
     // `filter={"name":{"$eq":"Horse"},"age":{"$gt":100}}`
     // with multiple expressions that we should && together
 
-    if let Some(filter_exp_type) = &model.filter_expression_type {
-        match filter_exp_type {
-            ModelExpressionType::BooleanExpressionType(_x) => {
-                // only include a filter if the model has a `BooleanExpressionType`
-                let parsed_filter = parse_filter_value(filter).unwrap();
+    if model.filter_expression_type.is_some() {
+        // only include a filter if the model has a `BooleanExpressionType`
+        let parsed_filter = parse_filter_value(filter).unwrap();
 
-                Ok(expression_from_jsonapi_filter(&parsed_filter).unwrap())
-            }
-            ModelExpressionType::ObjectBooleanExpressionType(_x) => {
-                Err(FilterError::NoBooleanExpressionDefined(model.name.clone()))
-            }
-        }
+        Ok(expression_from_jsonapi_filter(&parsed_filter).unwrap())
     } else {
         Err(FilterError::NoBooleanExpressionDefined(model.name.clone()))
     }

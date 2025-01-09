@@ -26,21 +26,11 @@ input_file: crates/metadata-resolve/tests/passing/conflicting_type_names_warning
         },
         models: {},
         commands: {},
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {
-                Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "ConflictingType",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "default",
                         ),
@@ -50,6 +40,7 @@ input_file: crates/metadata-resolve/tests/passing/conflicting_type_names_warning
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         String,
                     ),

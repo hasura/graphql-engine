@@ -1889,7 +1889,6 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                 },
             },
         },
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {
                 Qualified {
@@ -2006,7 +2005,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     "albumId",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -2194,7 +2193,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     "artistId",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -2382,7 +2381,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     "title",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -2759,20 +2758,12 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         relationship_fields: {},
                     },
                     include_logical_operators: Yes,
+                    data_connector: None,
                 },
             },
             scalars: {
-                Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "Int4BoolExp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "default",
                         ),
@@ -2782,6 +2773,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Custom(
                         Qualified {
                             subgraph: SubgraphName(
@@ -2986,17 +2978,8 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         ),
                     },
                 },
-                Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "VarcharBoolExp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "default",
                         ),
@@ -3006,6 +2989,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Custom(
                         Qualified {
                             subgraph: SubgraphName(

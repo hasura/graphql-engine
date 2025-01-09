@@ -5,7 +5,9 @@ use open_dds::{data_connector::DataConnectorColumnName, types::DataConnectorArgu
 use std::collections::BTreeMap;
 use std::fmt::Display;
 
-use crate::stages::{command_permissions, commands, model_permissions, models, models_graphql};
+use crate::stages::{
+    boolean_expressions, command_permissions, commands, model_permissions, models, models_graphql,
+};
 use crate::types::subgraph::Qualified;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -18,7 +20,7 @@ pub struct ModelWithArgumentPresets {
     pub model: models::Model,
     pub argument_presets: BTreeMap<Role, ArgumentPresets>,
     pub select_permissions: BTreeMap<Role, model_permissions::SelectPermission>,
-    pub filter_expression_type: Option<models_graphql::ModelExpressionType>,
+    pub filter_expression_type: Option<boolean_expressions::ResolvedObjectBooleanExpressionType>,
     pub graphql_api: models_graphql::ModelGraphQlApi,
 }
 

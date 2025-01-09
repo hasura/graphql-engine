@@ -4,8 +4,8 @@ use crate::types::{RoleWarning, Warning};
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use metadata_resolve::{
-    deserialize_qualified_btreemap, serialize_qualified_btreemap, ModelExpressionType, Qualified,
-    QualifiedTypeReference,
+    deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
+    QualifiedTypeReference, ResolvedObjectBooleanExpressionType,
 };
 use open_dds::{
     data_connector::DataConnectorName,
@@ -162,7 +162,5 @@ pub struct Model {
     pub description: Option<String>,
     pub data_type: Qualified<CustomTypeName>,
     pub data_connector_name: Qualified<DataConnectorName>,
-    /// let's consider only making this work with `BooleanExpressionType`
-    /// to simplify implementation and nudge users to upgrade
-    pub filter_expression_type: Option<ModelExpressionType>,
+    pub filter_expression_type: Option<ResolvedObjectBooleanExpressionType>,
 }

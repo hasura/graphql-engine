@@ -9,7 +9,7 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::stages::{boolean_expressions, models, object_boolean_expressions};
+use crate::stages::{boolean_expressions, models};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use crate::{helpers::types::NdcColumnForComparison, OrderByExpressionIdentifier};
@@ -24,14 +24,8 @@ pub struct ModelsWithGraphqlOutput {
 #[derive(Debug)]
 pub(crate) struct ModelWithGraphql {
     pub inner: models::Model,
-    pub filter_expression_type: Option<ModelExpressionType>,
+    pub filter_expression_type: Option<boolean_expressions::ResolvedObjectBooleanExpressionType>,
     pub graphql_api: ModelGraphQlApi,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub enum ModelExpressionType {
-    ObjectBooleanExpressionType(object_boolean_expressions::ObjectBooleanExpressionType),
-    BooleanExpressionType(boolean_expressions::ResolvedObjectBooleanExpressionType),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

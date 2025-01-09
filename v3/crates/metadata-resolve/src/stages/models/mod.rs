@@ -17,7 +17,7 @@ pub use helpers::get_ndc_column_for_comparison;
 
 use crate::stages::{
     aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors,
-    object_boolean_expressions, order_by_expressions, relay, scalar_types, type_permissions,
+    order_by_expressions, relay, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
@@ -46,10 +46,6 @@ pub fn resolve(
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     aggregate_expressions: &BTreeMap<
         Qualified<AggregateExpressionName>,
@@ -76,7 +72,6 @@ pub fn resolve(
             subgraph,
             model,
             object_types,
-            object_boolean_expression_types,
             boolean_expression_types,
             &mut global_id_enabled_types,
             &mut apollo_federation_entity_enabled_types,
@@ -107,7 +102,6 @@ pub fn resolve(
                 data_connectors,
                 object_types,
                 scalar_types,
-                object_boolean_expression_types,
                 boolean_expression_types,
             )?;
             resolved_model.source = Some(Arc::new(resolved_model_source));
@@ -168,10 +162,6 @@ fn resolve_model(
     subgraph: &SubgraphName,
     model: &open_dds::models::Model,
     object_types: &type_permissions::ObjectTypesWithPermissions,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     global_id_enabled_types: &mut BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut BTreeMap<
@@ -286,12 +276,8 @@ fn resolve_model(
     let mut arguments = IndexMap::new();
     for argument in model.arguments() {
         // is this an expression or not?
-        let argument_kind = get_argument_kind(
-            &argument.argument_type,
-            subgraph,
-            object_boolean_expression_types,
-            boolean_expression_types,
-        );
+        let argument_kind =
+            get_argument_kind(&argument.argument_type, subgraph, boolean_expression_types);
 
         if arguments
             .insert(

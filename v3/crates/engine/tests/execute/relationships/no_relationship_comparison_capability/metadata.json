@@ -10683,7 +10683,7 @@
             "dataConnectorScalarType": "text",
             "representation": "String",
             "graphql": {
-              "comparisonExpressionTypeName": "String_Comparison_Exp"
+              "comparisonExpressionTypeName": "String_Comparison_Exp22"
             }
           }
         },

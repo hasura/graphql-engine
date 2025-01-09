@@ -746,7 +746,6 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                 },
             },
         },
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {
                 Qualified {
@@ -863,7 +862,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                                     "AlbumId",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -915,7 +914,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                                     "ArtistId",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -967,7 +966,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                                     "Title",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -1018,20 +1017,12 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                         relationship_fields: {},
                     },
                     include_logical_operators: Yes,
+                    data_connector: None,
                 },
             },
             scalars: {
-                Qualified {
-                    subgraph: SubgraphName(
-                        "subgraphs",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "Int_bool_exp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "subgraphs",
                         ),
@@ -1041,6 +1032,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         Int,
                     ),
@@ -1100,17 +1092,8 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                         ),
                     },
                 },
-                Qualified {
-                    subgraph: SubgraphName(
-                        "subgraphs",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "String_bool_exp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "subgraphs",
                         ),
@@ -1120,6 +1103,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         String,
                     ),

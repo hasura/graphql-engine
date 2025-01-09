@@ -1,7 +1,7 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: resolved
-input_file: crates/metadata-resolve/tests/passing/conflicting_type_names/scalar_and_object/metadata.json
+input_file: crates/metadata-resolve/tests/passing/conflicting_type_names_warnings/scalar_and_object/metadata.json
 ---
 (
     Metadata {
@@ -72,7 +72,6 @@ input_file: crates/metadata-resolve/tests/passing/conflicting_type_names/scalar_
         },
         models: {},
         commands: {},
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},

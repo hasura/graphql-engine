@@ -9,7 +9,7 @@ use crate::types::PlanError;
 use std::collections::BTreeMap;
 
 use hasura_authn_core::Session;
-use metadata_resolve::{FilterPermission, ModelExpressionType};
+use metadata_resolve::FilterPermission;
 use open_dds::query::ModelTarget;
 use plan_types::{
     Argument, PredicateQueryTrees, Relationship, ResolvedFilterExpression, UniqueNumber,
@@ -147,15 +147,13 @@ pub fn model_target_to_ndc_query(
     // our model
     let model_filter = match &model_target.filter {
         Some(expr) => {
-            let boolean_expression_type = match &model.filter_expression_type {
-                Some(ModelExpressionType::BooleanExpressionType(boolean_expression_type)) => {
-                    Ok(boolean_expression_type)
-                }
-                _ => Err(PlanError::Internal(format!(
-                    "Cannot filter model {} as no boolean expression is defined for it",
-                    model.model.name
-                ))),
-            }?;
+            let boolean_expression_type =
+                model.filter_expression_type.as_ref().ok_or_else(|| {
+                    PlanError::Internal(format!(
+                        "Cannot filter model {} as no boolean expression is defined for it",
+                        model.model.name
+                    ))
+                })?;
 
             Ok(Some(to_resolved_filter_expr(
                 metadata,

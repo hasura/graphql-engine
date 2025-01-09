@@ -142,7 +142,9 @@ impl QualifiedBaseType {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, JsonSchema)]
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, PartialOrd, Ord, Hash, Eq, JsonSchema,
+)]
 pub enum QualifiedTypeName {
     Inbuilt(InbuiltType),
     Custom(Qualified<CustomTypeName>),

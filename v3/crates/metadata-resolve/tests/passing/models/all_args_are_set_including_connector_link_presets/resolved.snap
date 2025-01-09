@@ -577,7 +577,6 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
             },
         },
         commands: {},
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},

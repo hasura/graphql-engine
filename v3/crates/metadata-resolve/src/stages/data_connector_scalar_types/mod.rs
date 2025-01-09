@@ -19,7 +19,6 @@ use crate::types::subgraph::Qualified;
 use crate::stages::{data_connectors, scalar_boolean_expressions, scalar_types};
 
 /// resolve data connector scalar representations
-/// also use scalar `BooleanExpressionType`s
 pub fn resolve<'a>(
     metadata_accessor: &'a open_dds::accessor::MetadataAccessor,
     data_connectors: &'a data_connectors::DataConnectors,

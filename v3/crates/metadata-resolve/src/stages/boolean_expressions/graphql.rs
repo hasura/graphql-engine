@@ -5,8 +5,9 @@ use super::{
     IncludeLogicalOperators,
 };
 pub use super::{
-    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparableFieldKind,
-    ObjectBooleanExpressionGraphqlConfig, ScalarBooleanExpressionGraphqlConfig,
+    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig,
+    BooleanExpressionTypeIdentifier, ComparableFieldKind, ObjectBooleanExpressionGraphqlConfig,
+    ScalarBooleanExpressionGraphqlConfig,
 };
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::{
@@ -15,22 +16,19 @@ use crate::stages::{
 };
 use crate::Qualified;
 use lang_graphql::ast::common::{self as ast};
-use open_dds::{
-    boolean_expression::BooleanExpressionTypeGraphQlConfiguration,
-    types::{CustomTypeName, FieldName},
-};
+use open_dds::types::{CustomTypeName, FieldName, GraphQlTypeName};
 use std::collections::{BTreeMap, BTreeSet};
 
 // validate graphql config
 // we use the raw boolean expression types for lookup
 pub(crate) fn resolve_object_boolean_graphql(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
-    boolean_expression_graphql_config: &BooleanExpressionTypeGraphQlConfiguration,
-    comparable_fields: &BTreeMap<FieldName, (ComparableFieldKind, Qualified<CustomTypeName>)>,
+    boolean_expression_graphql_name: &GraphQlTypeName,
+    comparable_fields: &BTreeMap<FieldName, (ComparableFieldKind, BooleanExpressionTypeIdentifier)>,
     comparable_relationships: &BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
     include_logical_operators: IncludeLogicalOperators,
     scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
+        BooleanExpressionTypeIdentifier,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     raw_boolean_expression_types: &super::object::RawBooleanExpressionTypes,
@@ -39,7 +37,7 @@ pub(crate) fn resolve_object_boolean_graphql(
     issues: &mut Vec<BooleanExpressionIssue>,
 ) -> Result<BooleanExpressionGraphqlConfig, BooleanExpressionError> {
     let boolean_expression_graphql_name =
-        mk_name(boolean_expression_graphql_config.type_name.as_ref()).map(ast::TypeName)?;
+        mk_name(boolean_expression_graphql_name.as_ref()).map(ast::TypeName)?;
 
     store_new_graphql_type(graphql_types, Some(&boolean_expression_graphql_name))?;
 
@@ -98,26 +96,35 @@ pub(crate) fn resolve_object_boolean_graphql(
             }
             ComparableFieldKind::Object | ComparableFieldKind::ObjectArray => {
                 // if this field isn't a scalar, let's see if it's an object instead
-                let (_field_subgraph, raw_boolean_expression_type) =
-                    helpers::lookup_raw_boolean_expression(
-                        boolean_expression_type_name,
-                        comparable_field_type_name,
-                        raw_boolean_expression_types,
-                    )?;
-
-                if let Some(graphql_name) = raw_boolean_expression_type
-                    .graphql
-                    .as_ref()
-                    .map(|gql| gql.type_name.clone())
+                if let Some((_field_subgraph, raw_boolean_expression_type)) =
+                    match &comparable_field_type_name {
+                        BooleanExpressionTypeIdentifier::FromBooleanExpressionType(
+                            comparable_field_type_name,
+                        ) => Some(helpers::lookup_raw_boolean_expression(
+                            boolean_expression_type_name,
+                            comparable_field_type_name,
+                            raw_boolean_expression_types,
+                        )?),
+                        BooleanExpressionTypeIdentifier::FromDataConnectorScalarRepresentation(
+                            _,
+                        ) => None,
+                    }
                 {
-                    let graphql_type_name = mk_name(graphql_name.as_str()).map(ast::TypeName)?;
+                    if let Some(graphql_name) = raw_boolean_expression_type
+                        .graphql
+                        .as_ref()
+                        .map(|gql| gql.type_name.clone())
+                    {
+                        let graphql_type_name =
+                            mk_name(graphql_name.as_str()).map(ast::TypeName)?;
 
-                    object_fields.insert(
-                        comparable_field_name.clone(),
-                        ObjectBooleanExpressionGraphqlConfig {
-                            graphql_type_name: graphql_type_name.clone(),
-                        },
-                    );
+                        object_fields.insert(
+                            comparable_field_name.clone(),
+                            ObjectBooleanExpressionGraphqlConfig {
+                                graphql_type_name: graphql_type_name.clone(),
+                            },
+                        );
+                    }
                 }
             }
         }
@@ -150,7 +157,7 @@ pub(crate) fn resolve_object_boolean_graphql(
 }
 
 fn check_graphql_field_name_conflicts(
-    comparable_fields: &BTreeMap<FieldName, (ComparableFieldKind, Qualified<CustomTypeName>)>,
+    comparable_fields: &BTreeMap<FieldName, (ComparableFieldKind, BooleanExpressionTypeIdentifier)>,
     comparable_relationships: &BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
     include_logical_operators: IncludeLogicalOperators,
     logical_operators_graphql_config: &LogicalOperatorsGraphqlConfig,

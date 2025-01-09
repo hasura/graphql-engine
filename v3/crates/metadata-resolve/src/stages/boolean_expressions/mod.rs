@@ -1,34 +1,39 @@
 mod error;
 mod graphql;
 mod helpers;
+mod legacy;
 mod object;
 mod types;
 pub use error::BooleanExpressionError;
-
 use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
-use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
-
-use crate::stages::{graphql_config, relationships, scalar_boolean_expressions, type_permissions};
-use crate::Qualified;
-
-pub use types::{
-    BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
-    BooleanExpressionGraphqlFieldConfig, BooleanExpressionIssue, BooleanExpressionTypes,
-    BooleanExpressionsOutput, ComparableFieldKind, ComparisonExpressionInfo,
-    IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo,
-    ObjectComparisonKind, OperatorMapping, ResolvedObjectBooleanExpressionType,
-    ResolvedObjectBooleanExpressionTypeFields, ScalarBooleanExpressionGraphqlConfig,
-    ScalarComparisonKind,
+use open_dds::{
+    boolean_expression::BooleanExpressionOperand, data_connector::DataConnectorName,
+    types::CustomTypeName,
 };
 
 use super::aggregate_boolean_expressions;
+use crate::stages::{
+    data_connector_scalar_types, data_connectors, graphql_config, relationships,
+    scalar_boolean_expressions, type_permissions,
+};
+use crate::Qualified;
+pub use types::{
+    BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
+    BooleanExpressionGraphqlFieldConfig, BooleanExpressionIssue, BooleanExpressionTypeIdentifier,
+    BooleanExpressionTypes, BooleanExpressionsOutput, ComparableFieldKind,
+    ComparisonExpressionInfo, DataConnectorType, IncludeLogicalOperators,
+    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionGraphqlConfig,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, OperatorMapping,
+    ResolvedObjectBooleanExpressionType, ResolvedObjectBooleanExpressionTypeFields,
+    ScalarBooleanExpressionGraphqlConfig, ScalarComparisonKind,
+};
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     boolean_expression_scalar_types: BTreeMap<
-        Qualified<CustomTypeName>,
+        BooleanExpressionTypeIdentifier,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     boolean_expression_object_aggregate_types: BTreeMap<
@@ -40,6 +45,11 @@ pub fn resolve(
         aggregate_boolean_expressions::ScalarAggregateBooleanExpression,
     >,
     mut graphql_types: BTreeSet<ast::TypeName>,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     graphql_config: &graphql_config::GraphqlConfig,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     relationships: &relationships::Relationships,
@@ -93,6 +103,42 @@ pub fn resolve(
     }
 
     let mut boolean_expression_object_types = BTreeMap::new();
+
+    // collect raw object_boolean_expression_type names for validation
+    for open_dds::accessor::QualifiedObject {
+        path: _,
+        subgraph,
+        object: object_boolean_expression_type,
+    } in &metadata_accessor.object_boolean_expression_types
+    {
+        let boolean_expression_type_name = Qualified::new(
+            subgraph.clone(),
+            object_boolean_expression_type.name.clone(),
+        );
+
+        let (object_boolean_expression_type, boolean_expression_issues) =
+            legacy::resolve_object_boolean_expression_type(
+                object_boolean_expression_type,
+                &boolean_expression_type_name,
+                data_connectors,
+                data_connector_scalars,
+                object_types,
+                &boolean_expression_scalar_types,
+                &raw_boolean_expression_types,
+                relationships,
+                &raw_models,
+                &object_boolean_expression_type_names,
+                graphql_config,
+                &mut graphql_types,
+                &metadata_accessor.flags,
+            )?;
+
+        issues.extend(boolean_expression_issues);
+        boolean_expression_object_types.insert(
+            boolean_expression_type_name.clone(),
+            object_boolean_expression_type,
+        );
+    }
 
     for (boolean_expression_type_name, (subgraph, boolean_expression_type)) in
         &raw_boolean_expression_types

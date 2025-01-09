@@ -130,52 +130,48 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
         for (field_name, comparison_expression_info) in
             &object_boolean_expression_type.fields.scalar_fields
         {
-            // this is always present with `BooleanExpressionType` but not
-            // `ObjectBooleanExpressionType`, remove this partiality in
-            // future
-            if let Some(boolean_expression_type_name) =
-                &comparison_expression_info.boolean_expression_type_name
-            {
-                let leaf_boolean_expression = boolean_expression_types
+            let boolean_expression_type_name =
+                &comparison_expression_info.boolean_expression_type_name;
+
+            let leaf_boolean_expression = boolean_expression_types
                     .scalars
                     .get(boolean_expression_type_name)
                     .ok_or_else(|| {
-                        Error::from(boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+                        Error::from(boolean_expressions::BooleanExpressionError::ScalarBooleanExpressionCouldNotBeFound {
                             parent_boolean_expression: object_boolean_expression_type.name.clone(),
                             child_boolean_expression: boolean_expression_type_name.clone(),
                         })
                     })?;
 
-                match comparison_expression_info.field_kind {
-                    boolean_expressions::ScalarComparisonKind::ScalarArray => {
-                        if !data_connector
-                            .capabilities
-                            .supports_nested_scalar_array_filtering
-                        {
-                            let field_type = get_field_type(
-                                field_name,
-                                object_types,
-                                object_boolean_expression_type,
-                            )?;
-                            issues.push(boolean_expressions::BooleanExpressionIssue::DataConnectorDoesNotSupportNestedScalarArrayFiltering {
+            match comparison_expression_info.field_kind {
+                boolean_expressions::ScalarComparisonKind::ScalarArray => {
+                    if !data_connector
+                        .capabilities
+                        .supports_nested_scalar_array_filtering
+                    {
+                        let field_type = get_field_type(
+                            field_name,
+                            object_types,
+                            object_boolean_expression_type,
+                        )?;
+                        issues.push(boolean_expressions::BooleanExpressionIssue::DataConnectorDoesNotSupportNestedScalarArrayFiltering {
                                 data_connector_name: data_connector.name.clone(),
                                 boolean_expression_type_name: object_boolean_expression_type.name.clone(),
                                 field_name: field_name.clone(),
                                 field_type: field_type.clone(),
                             });
-                        }
                     }
-                    boolean_expressions::ScalarComparisonKind::Scalar => {}
                 }
-
-                // check scalar type
-                validate_data_connector_with_scalar_boolean_expression_type(
-                    leaf_boolean_expression,
-                    &object_boolean_expression_type.name,
-                    data_connector,
-                    field_name,
-                )?;
+                boolean_expressions::ScalarComparisonKind::Scalar => {}
             }
+
+            // check scalar type
+            validate_data_connector_with_scalar_boolean_expression_type(
+                leaf_boolean_expression,
+                &object_boolean_expression_type.name,
+                data_connector,
+                field_name,
+            )?;
         }
 
         for comparable_relationship in object_boolean_expression_type

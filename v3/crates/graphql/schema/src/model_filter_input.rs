@@ -176,22 +176,8 @@ pub fn add_where_input_field(
         &model
             .filter_expression_type
             .as_ref()
-            .and_then(|bool_exp| match bool_exp {
-                metadata_resolve::ModelExpressionType::ObjectBooleanExpressionType(
-                    object_boolean_expression_type,
-                ) => object_boolean_expression_type
-                    .graphql
-                    .as_ref()
-                    .map(|graphql_config| {
-                        (
-                            object_boolean_expression_type.name.clone(),
-                            &graphql_config.type_name,
-                            &graphql_config.field_config,
-                        )
-                    }),
-                metadata_resolve::ModelExpressionType::BooleanExpressionType(
-                    boolean_expression_object_type,
-                ) => boolean_expression_object_type
+            .and_then(|boolean_expression_object_type| {
+                boolean_expression_object_type
                     .graphql
                     .as_ref()
                     .map(|graphql_config| {
@@ -200,7 +186,7 @@ pub fn add_where_input_field(
                             &graphql_config.type_name,
                             &graphql_config.field_config,
                         )
-                    }),
+                    })
             });
 
     if let Some((

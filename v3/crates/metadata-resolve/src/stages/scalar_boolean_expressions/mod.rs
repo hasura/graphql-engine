@@ -1,26 +1,39 @@
 mod error;
+mod helpers;
+mod legacy;
 mod scalar;
 mod types;
 
 pub use error::{ScalarBooleanExpressionTypeError, ScalarBooleanExpressionTypeIssue};
+pub use helpers::resolve_ndc_type;
+pub use scalar::resolve_logical_operators;
+pub use types::{
+    IsNullOperator, IsNullOperatorGraphqlConfig, LogicalOperators, LogicalOperatorsGraphqlConfig,
+    ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionsOutput,
+};
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
-use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
-
-use crate::stages::{data_connectors, graphql_config, object_types, scalar_types};
-use crate::Qualified;
-
-pub use scalar::resolve_logical_operators;
-pub use types::{
-    IsNullOperator, LogicalOperators, LogicalOperatorsGraphqlConfig,
-    ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionsOutput,
+use open_dds::{
+    boolean_expression::BooleanExpressionOperand, data_connector::DataConnectorName,
+    types::CustomTypeName,
 };
+
+use crate::stages::{
+    boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
+    object_types, scalar_types,
+};
+use crate::Qualified;
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     mut graphql_types: BTreeSet<ast::TypeName>,
     data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars<'_>,
+    >,
     object_types: &object_types::ObjectTypesWithTypeMappings,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -42,10 +55,9 @@ pub fn resolve(
         );
     }
 
-    // let's resolve scalar types first
-
     let mut boolean_expression_scalar_types = BTreeMap::new();
 
+    // let's resolve scalar types first
     for (boolean_expression_type_name, (subgraph, boolean_expression_type)) in
         &raw_boolean_expression_types
     {
@@ -67,12 +79,40 @@ pub fn resolve(
             )?;
 
             boolean_expression_scalar_types.insert(
-                boolean_expression_type_name.clone(),
+                boolean_expressions::BooleanExpressionTypeIdentifier::FromBooleanExpressionType(
+                    boolean_expression_type_name.clone(),
+                ),
                 scalar_boolean_expression_type,
             );
         }
     }
 
+    // do we have any `ObjectBooleanExpressionType` to resolve? If not, don't bother with other
+    // legacy stuff (as they are likely to be incomplete)
+    if !metadata_accessor.object_boolean_expression_types.is_empty() {
+        // collect raw data connector scalar representations, which we'll use when converting
+        // old `ObjectBooleanExpressionType`s
+        for open_dds::accessor::QualifiedObject {
+            path: _,
+            subgraph,
+            object: data_connector_scalar_representation,
+        } in &metadata_accessor.data_connector_scalar_representations
+        {
+            let (boolean_expression_type_identifier, scalar_boolean_expression_type) =
+                legacy::resolve_data_connector_scalar_representation(
+                    data_connector_scalar_representation,
+                    subgraph,
+                    data_connectors,
+                    data_connector_scalars,
+                    graphql_config,
+                )?;
+
+            boolean_expression_scalar_types.insert(
+                boolean_expression_type_identifier,
+                scalar_boolean_expression_type,
+            );
+        }
+    }
     Ok(ScalarBooleanExpressionsOutput {
         boolean_expression_scalar_types,
         // TODO: make sure we are adding new types to graphql_types

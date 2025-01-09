@@ -2,20 +2,9 @@ mod types;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use lang_graphql::ast::common as ast;
-use open_dds::{
-    accessor::QualifiedObject,
-    aggregates::AggregateExpressionName,
-    boolean_expression::{
-        AggregateBooleanExpressionComparableCount, BooleanExpressionComparableAggregationFunction,
-    },
-    identifier::SubgraphName,
-    types::{CustomTypeName, InbuiltType},
-};
-
 use super::{
     aggregates::{AggregateCountDefinition, AggregateExpression, CountAggregateType},
-    graphql_config, relationships,
+    boolean_expressions, graphql_config, relationships,
     scalar_boolean_expressions::{self, resolve_logical_operators, LogicalOperators},
     scalar_types::ScalarTypeRepresentation,
     type_permissions::ObjectTypeWithPermissions,
@@ -27,13 +16,23 @@ use crate::{
     types::subgraph::mk_qualified_type_name,
     Qualified, QualifiedBaseType, QualifiedTypeName, ResolvedScalarBooleanExpressionType,
 };
+use lang_graphql::ast::common as ast;
+use open_dds::{
+    accessor::QualifiedObject,
+    aggregates::AggregateExpressionName,
+    boolean_expression::{
+        AggregateBooleanExpressionComparableCount, BooleanExpressionComparableAggregationFunction,
+    },
+    identifier::SubgraphName,
+    types::{CustomTypeName, InbuiltType},
+};
 pub use types::*;
 
 pub fn resolve(
     unstable_features: &UnstableFeatures,
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
+        boolean_expressions::BooleanExpressionTypeIdentifier,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     aggregate_expressions: &BTreeMap<Qualified<AggregateExpressionName>, AggregateExpression>,
@@ -175,7 +174,7 @@ fn resolve_scalar_aggregate_boolean_expression(
     boolean_expression: &open_dds::boolean_expression::BooleanExpressionTypeV1,
     scalar_aggregate_operand: &open_dds::boolean_expression::BooleanExpressionScalarAggregateOperand,
     scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
+        boolean_expressions::BooleanExpressionTypeIdentifier,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     aggregate_expressions: &BTreeMap<Qualified<AggregateExpressionName>, AggregateExpression>,
@@ -366,7 +365,7 @@ fn resolve_comparable_aggregation_function(
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     aggregate_expression: &AggregateExpression,
     scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
+        boolean_expressions::BooleanExpressionTypeIdentifier,
         ResolvedScalarBooleanExpressionType,
     >,
 ) -> Result<ComparableAggregationFunction, AggregateBooleanExpressionError> {
@@ -383,10 +382,13 @@ fn resolve_comparable_aggregation_function(
             },
         )?;
 
-    let agg_fn_bool_exp_name = Qualified::new(
-        subgraph.clone(),
-        comparable_agg_fn.boolean_expression_type.clone(),
-    );
+    let agg_fn_bool_exp_name =
+        boolean_expressions::BooleanExpressionTypeIdentifier::FromBooleanExpressionType(
+            Qualified::new(
+                subgraph.clone(),
+                comparable_agg_fn.boolean_expression_type.clone(),
+            ),
+        );
 
     // Check that the referenced boolean expression for the aggregate function exists
     let agg_fn_bool_exp = scalar_boolean_expression_types
@@ -432,7 +434,7 @@ fn resolve_object_aggregate_boolean_expression(
     boolean_expression: &open_dds::boolean_expression::BooleanExpressionTypeV1,
     object_aggregate_operand: &open_dds::boolean_expression::BooleanExpressionObjectAggregateOperand,
     scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
+        boolean_expressions::BooleanExpressionTypeIdentifier,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     unresolved_bool_exps: &[QualifiedObject<
@@ -905,7 +907,7 @@ fn resolve_count_aggregation_function(
     aggregate_count_definition: &AggregateCountDefinition,
     boolean_expression: &open_dds::boolean_expression::BooleanExpressionTypeV1,
     scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
+        boolean_expressions::BooleanExpressionTypeIdentifier,
         ResolvedScalarBooleanExpressionType,
     >,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -920,10 +922,13 @@ fn resolve_count_aggregation_function(
         });
     }
 
-    let count_bool_exp_name = Qualified::new(
-        subgraph.clone(),
-        comparable_count.boolean_expression_type.clone(),
-    );
+    let count_bool_exp_name =
+        boolean_expressions::BooleanExpressionTypeIdentifier::FromBooleanExpressionType(
+            Qualified::new(
+                subgraph.clone(),
+                comparable_count.boolean_expression_type.clone(),
+            ),
+        );
 
     // Check that the boolean expression used for comparison to the count result exists
     let count_bool_exp = scalar_boolean_expression_types

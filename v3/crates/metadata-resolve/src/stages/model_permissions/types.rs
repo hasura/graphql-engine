@@ -12,7 +12,8 @@ use open_dds::{
 };
 
 use crate::stages::{
-    argument_presets, data_connectors, models, models_graphql, object_relationships, object_types,
+    argument_presets, boolean_expressions, data_connectors, models, models_graphql,
+    object_relationships, object_types,
 };
 use crate::types::error::{Error, RelationshipError};
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
@@ -23,7 +24,7 @@ use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 pub struct ModelWithPermissions {
     pub model: models::Model,
     pub select_permissions: BTreeMap<Role, SelectPermission>,
-    pub filter_expression_type: Option<models_graphql::ModelExpressionType>,
+    pub filter_expression_type: Option<boolean_expressions::ResolvedObjectBooleanExpressionType>,
     pub graphql_api: models_graphql::ModelGraphQlApi,
 }
 

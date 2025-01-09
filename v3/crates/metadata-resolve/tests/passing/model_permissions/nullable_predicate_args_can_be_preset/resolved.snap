@@ -844,269 +844,268 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                     },
                 },
                 filter_expression_type: Some(
-                    BooleanExpressionType(
-                        ResolvedObjectBooleanExpressionType {
-                            name: Qualified {
-                                subgraph: SubgraphName(
-                                    "subgraphs",
+                    ResolvedObjectBooleanExpressionType {
+                        name: Qualified {
+                            subgraph: SubgraphName(
+                                "subgraphs",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Album_bool_exp",
                                 ),
-                                name: CustomTypeName(
-                                    Identifier(
+                            ),
+                        },
+                        object_type: Qualified {
+                            subgraph: SubgraphName(
+                                "subgraphs",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Album",
+                                ),
+                            ),
+                        },
+                        graphql: Some(
+                            BooleanExpressionGraphqlConfig {
+                                type_name: TypeName(
+                                    Name(
                                         "Album_bool_exp",
                                     ),
                                 ),
-                            },
-                            object_type: Qualified {
-                                subgraph: SubgraphName(
-                                    "subgraphs",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Album",
-                                    ),
-                                ),
-                            },
-                            graphql: Some(
-                                BooleanExpressionGraphqlConfig {
-                                    type_name: TypeName(
-                                        Name(
-                                            "Album_bool_exp",
-                                        ),
-                                    ),
-                                    object_fields: {},
-                                    scalar_fields: {
-                                        FieldName(
-                                            Identifier(
-                                                "AlbumId",
-                                            ),
-                                        ): ScalarBooleanExpressionGraphqlConfig {
-                                            type_name: TypeName(
-                                                Name(
-                                                    "Int_bool_exp",
-                                                ),
-                                            ),
-                                            is_null_operator_name: Some(
-                                                Name(
-                                                    "_is_null",
-                                                ),
-                                            ),
-                                        },
-                                        FieldName(
-                                            Identifier(
-                                                "ArtistId",
-                                            ),
-                                        ): ScalarBooleanExpressionGraphqlConfig {
-                                            type_name: TypeName(
-                                                Name(
-                                                    "Int_bool_exp",
-                                                ),
-                                            ),
-                                            is_null_operator_name: Some(
-                                                Name(
-                                                    "_is_null",
-                                                ),
-                                            ),
-                                        },
-                                        FieldName(
-                                            Identifier(
-                                                "Title",
-                                            ),
-                                        ): ScalarBooleanExpressionGraphqlConfig {
-                                            type_name: TypeName(
-                                                Name(
-                                                    "String_bool_exp",
-                                                ),
-                                            ),
-                                            is_null_operator_name: Some(
-                                                Name(
-                                                    "_is_null",
-                                                ),
-                                            ),
-                                        },
-                                    },
-                                    field_config: BooleanExpressionGraphqlFieldConfig {
-                                        where_field_name: Name(
-                                            "where",
-                                        ),
-                                        logical_operators: LogicalOperatorsGraphqlConfig {
-                                            and_operator_name: Name(
-                                                "_and",
-                                            ),
-                                            or_operator_name: Name(
-                                                "_or",
-                                            ),
-                                            not_operator_name: Name(
-                                                "_not",
-                                            ),
-                                        },
-                                    },
-                                },
-                            ),
-                            fields: ResolvedObjectBooleanExpressionTypeFields {
                                 object_fields: {},
                                 scalar_fields: {
                                     FieldName(
                                         Identifier(
                                             "AlbumId",
                                         ),
-                                    ): ComparisonExpressionInfo {
-                                        boolean_expression_type_name: Some(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "subgraphs",
-                                                ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "Int_bool_exp",
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                        operators: {
-                                            OperatorName(
-                                                "_eq",
-                                            ): QualifiedTypeReference {
-                                                underlying_type: Named(
-                                                    Inbuilt(
-                                                        Int,
-                                                    ),
-                                                ),
-                                                nullable: false,
-                                            },
-                                        },
-                                        operator_mapping: {
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "subgraphs",
-                                                ),
-                                                name: DataConnectorName(
-                                                    Identifier(
-                                                        "myconnector",
-                                                    ),
-                                                ),
-                                            }: OperatorMapping(
-                                                {
-                                                    OperatorName(
-                                                        "_eq",
-                                                    ): DataConnectorOperatorName(
-                                                        "eq",
-                                                    ),
-                                                },
+                                    ): ScalarBooleanExpressionGraphqlConfig {
+                                        type_name: TypeName(
+                                            Name(
+                                                "Int_bool_exp",
                                             ),
-                                        },
-                                        logical_operators: Exclude,
-                                        field_kind: Scalar,
+                                        ),
+                                        is_null_operator_name: Some(
+                                            Name(
+                                                "_is_null",
+                                            ),
+                                        ),
                                     },
                                     FieldName(
                                         Identifier(
                                             "ArtistId",
                                         ),
-                                    ): ComparisonExpressionInfo {
-                                        boolean_expression_type_name: Some(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "subgraphs",
-                                                ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "Int_bool_exp",
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                        operators: {
-                                            OperatorName(
-                                                "_eq",
-                                            ): QualifiedTypeReference {
-                                                underlying_type: Named(
-                                                    Inbuilt(
-                                                        Int,
-                                                    ),
-                                                ),
-                                                nullable: false,
-                                            },
-                                        },
-                                        operator_mapping: {
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "subgraphs",
-                                                ),
-                                                name: DataConnectorName(
-                                                    Identifier(
-                                                        "myconnector",
-                                                    ),
-                                                ),
-                                            }: OperatorMapping(
-                                                {
-                                                    OperatorName(
-                                                        "_eq",
-                                                    ): DataConnectorOperatorName(
-                                                        "eq",
-                                                    ),
-                                                },
+                                    ): ScalarBooleanExpressionGraphqlConfig {
+                                        type_name: TypeName(
+                                            Name(
+                                                "Int_bool_exp",
                                             ),
-                                        },
-                                        logical_operators: Exclude,
-                                        field_kind: Scalar,
+                                        ),
+                                        is_null_operator_name: Some(
+                                            Name(
+                                                "_is_null",
+                                            ),
+                                        ),
                                     },
                                     FieldName(
                                         Identifier(
                                             "Title",
                                         ),
-                                    ): ComparisonExpressionInfo {
-                                        boolean_expression_type_name: Some(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "subgraphs",
+                                    ): ScalarBooleanExpressionGraphqlConfig {
+                                        type_name: TypeName(
+                                            Name(
+                                                "String_bool_exp",
+                                            ),
+                                        ),
+                                        is_null_operator_name: Some(
+                                            Name(
+                                                "_is_null",
+                                            ),
+                                        ),
+                                    },
+                                },
+                                field_config: BooleanExpressionGraphqlFieldConfig {
+                                    where_field_name: Name(
+                                        "where",
+                                    ),
+                                    logical_operators: LogicalOperatorsGraphqlConfig {
+                                        and_operator_name: Name(
+                                            "_and",
+                                        ),
+                                        or_operator_name: Name(
+                                            "_or",
+                                        ),
+                                        not_operator_name: Name(
+                                            "_not",
+                                        ),
+                                    },
+                                },
+                            },
+                        ),
+                        fields: ResolvedObjectBooleanExpressionTypeFields {
+                            object_fields: {},
+                            scalar_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ): ComparisonExpressionInfo {
+                                    boolean_expression_type_name: FromBooleanExpressionType(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "subgraphs",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int_bool_exp",
                                                 ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "String_bool_exp",
-                                                    ),
+                                            ),
+                                        },
+                                    ),
+                                    operators: {
+                                        OperatorName(
+                                            "_eq",
+                                        ): QualifiedTypeReference {
+                                            underlying_type: Named(
+                                                Inbuilt(
+                                                    Int,
+                                                ),
+                                            ),
+                                            nullable: false,
+                                        },
+                                    },
+                                    operator_mapping: {
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "subgraphs",
+                                            ),
+                                            name: DataConnectorName(
+                                                Identifier(
+                                                    "myconnector",
+                                                ),
+                                            ),
+                                        }: OperatorMapping(
+                                            {
+                                                OperatorName(
+                                                    "_eq",
+                                                ): DataConnectorOperatorName(
+                                                    "eq",
                                                 ),
                                             },
                                         ),
-                                        operators: {
-                                            OperatorName(
-                                                "_eq",
-                                            ): QualifiedTypeReference {
-                                                underlying_type: Named(
-                                                    Inbuilt(
-                                                        String,
-                                                    ),
+                                    },
+                                    logical_operators: Exclude,
+                                    field_kind: Scalar,
+                                },
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ): ComparisonExpressionInfo {
+                                    boolean_expression_type_name: FromBooleanExpressionType(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "subgraphs",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int_bool_exp",
                                                 ),
-                                                nullable: false,
-                                            },
-                                        },
-                                        operator_mapping: {
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "subgraphs",
-                                                ),
-                                                name: DataConnectorName(
-                                                    Identifier(
-                                                        "myconnector",
-                                                    ),
-                                                ),
-                                            }: OperatorMapping(
-                                                {
-                                                    OperatorName(
-                                                        "_eq",
-                                                    ): DataConnectorOperatorName(
-                                                        "eq",
-                                                    ),
-                                                },
                                             ),
                                         },
-                                        logical_operators: Exclude,
-                                        field_kind: Scalar,
+                                    ),
+                                    operators: {
+                                        OperatorName(
+                                            "_eq",
+                                        ): QualifiedTypeReference {
+                                            underlying_type: Named(
+                                                Inbuilt(
+                                                    Int,
+                                                ),
+                                            ),
+                                            nullable: false,
+                                        },
                                     },
+                                    operator_mapping: {
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "subgraphs",
+                                            ),
+                                            name: DataConnectorName(
+                                                Identifier(
+                                                    "myconnector",
+                                                ),
+                                            ),
+                                        }: OperatorMapping(
+                                            {
+                                                OperatorName(
+                                                    "_eq",
+                                                ): DataConnectorOperatorName(
+                                                    "eq",
+                                                ),
+                                            },
+                                        ),
+                                    },
+                                    logical_operators: Exclude,
+                                    field_kind: Scalar,
                                 },
-                                relationship_fields: {},
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
+                                ): ComparisonExpressionInfo {
+                                    boolean_expression_type_name: FromBooleanExpressionType(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "subgraphs",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "String_bool_exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                    operators: {
+                                        OperatorName(
+                                            "_eq",
+                                        ): QualifiedTypeReference {
+                                            underlying_type: Named(
+                                                Inbuilt(
+                                                    String,
+                                                ),
+                                            ),
+                                            nullable: false,
+                                        },
+                                    },
+                                    operator_mapping: {
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "subgraphs",
+                                            ),
+                                            name: DataConnectorName(
+                                                Identifier(
+                                                    "myconnector",
+                                                ),
+                                            ),
+                                        }: OperatorMapping(
+                                            {
+                                                OperatorName(
+                                                    "_eq",
+                                                ): DataConnectorOperatorName(
+                                                    "eq",
+                                                ),
+                                            },
+                                        ),
+                                    },
+                                    logical_operators: Exclude,
+                                    field_kind: Scalar,
+                                },
                             },
-                            include_logical_operators: Yes,
+                            relationship_fields: {},
                         },
-                    ),
+                        include_logical_operators: Yes,
+                        data_connector: None,
+                    },
                 ),
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
@@ -1142,7 +1141,6 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
             },
         },
         commands: {},
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {
                 Qualified {
@@ -1259,7 +1257,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                     "AlbumId",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -1311,7 +1309,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                     "ArtistId",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -1363,7 +1361,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                     "Title",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "subgraphs",
@@ -1414,20 +1412,12 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                         relationship_fields: {},
                     },
                     include_logical_operators: Yes,
+                    data_connector: None,
                 },
             },
             scalars: {
-                Qualified {
-                    subgraph: SubgraphName(
-                        "subgraphs",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "Int_bool_exp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "subgraphs",
                         ),
@@ -1437,6 +1427,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         Int,
                     ),
@@ -1496,17 +1487,8 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                         ),
                     },
                 },
-                Qualified {
-                    subgraph: SubgraphName(
-                        "subgraphs",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "String_bool_exp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "subgraphs",
                         ),
@@ -1516,6 +1498,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         String,
                     ),

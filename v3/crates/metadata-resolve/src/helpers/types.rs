@@ -1,6 +1,5 @@
 use crate::stages::{
-    boolean_expressions, graphql_config, object_boolean_expressions, object_relationships,
-    scalar_boolean_expressions,
+    boolean_expressions, graphql_config, object_relationships, scalar_boolean_expressions,
 };
 use crate::types::error::Error;
 
@@ -104,8 +103,6 @@ impl TrackGraphQLRootFields {
 pub enum TypeRepresentation<'a, ObjectType, ScalarType> {
     Scalar(&'a ScalarType),
     Object(&'a ObjectType),
-    /// The old expression of boolean expression types
-    BooleanExpression(&'a object_boolean_expressions::ObjectBooleanExpressionType),
     /// New object boolean expression type
     BooleanExpressionObject(&'a boolean_expressions::ResolvedObjectBooleanExpressionType),
     /// New scalar boolean expression type
@@ -118,10 +115,6 @@ pub fn get_type_representation<'a, ObjectType, ScalarType>(
     custom_type_name: &Qualified<CustomTypeName>,
     object_types: &'a BTreeMap<Qualified<CustomTypeName>, ObjectType>,
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, ScalarType>,
-    object_boolean_expression_types: &'a BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
 ) -> Result<TypeRepresentation<'a, ObjectType, ScalarType>, Error> {
     object_types
@@ -135,13 +128,6 @@ pub fn get_type_representation<'a, ObjectType, ScalarType>(
                 })
         })
         .or_else(|| {
-            object_boolean_expression_types.get(custom_type_name).map(
-                |object_boolean_expression_type| {
-                    TypeRepresentation::BooleanExpression(object_boolean_expression_type)
-                },
-            )
-        })
-        .or_else(|| {
             boolean_expression_types
                 .objects
                 .get(custom_type_name)
@@ -152,7 +138,11 @@ pub fn get_type_representation<'a, ObjectType, ScalarType>(
         .or_else(|| {
             boolean_expression_types
                 .scalars
-                .get(custom_type_name)
+                .get(
+                    &boolean_expressions::BooleanExpressionTypeIdentifier::FromBooleanExpressionType(
+                        custom_type_name.clone(),
+                    ),
+                )
                 .map(|boolean_expression_type| {
                     TypeRepresentation::BooleanExpressionScalar(boolean_expression_type)
                 })
@@ -177,23 +167,6 @@ pub(crate) fn get_object_type_for_boolean_expression<'a>(
             boolean_expression_type_name: boolean_expression_type.name.clone(),
         },
     ))
-}
-
-pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
-    object_boolean_expression_type: &object_boolean_expressions::ObjectBooleanExpressionType,
-    object_types: &'a BTreeMap<
-        Qualified<CustomTypeName>,
-        object_relationships::ObjectTypeWithRelationships,
-    >,
-) -> Result<&'a object_relationships::ObjectTypeWithRelationships, Error> {
-    object_types
-        .get(&object_boolean_expression_type.object_type)
-        .ok_or(Error::from(
-            boolean_expressions::BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
-                type_name: object_boolean_expression_type.object_type.clone(),
-                boolean_expression_type_name: object_boolean_expression_type.name.clone(),
-            },
-        ))
 }
 
 // Get the underlying object type by resolving Custom ObjectType, Array and

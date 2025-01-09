@@ -4,13 +4,12 @@ use crate::data_connectors::DataConnectorContext;
 use crate::helpers::ndc_validation;
 use crate::helpers::type_mappings;
 use crate::helpers::types::{
-    get_object_type_for_boolean_expression, get_object_type_for_object_boolean_expression,
-    get_type_representation, unwrap_custom_type_name, TypeRepresentation,
+    get_object_type_for_boolean_expression, get_type_representation, unwrap_custom_type_name,
+    TypeRepresentation,
 };
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions,
-    models_graphql, object_boolean_expressions, object_relationships, object_types, scalar_types,
-    type_permissions,
+    models_graphql, object_relationships, object_types, scalar_types, type_permissions,
 };
 use crate::types::error::{Error, TypeError, TypePredicateError};
 use crate::types::permission::ValueExpressionOrPredicate;
@@ -97,10 +96,6 @@ pub fn get_argument_mappings<'a>(
         type_permissions::ObjectTypeWithPermissions,
     >,
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &'a BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
 ) -> Result<ArgumentMappingResults<'a>, ArgumentMappingError> {
     let mut unconsumed_argument_mappings: BTreeMap<&ArgumentName, &DataConnectorArgumentName> =
@@ -150,7 +145,6 @@ pub fn get_argument_mappings<'a>(
                 object_type_name,
                 object_types,
                 scalar_types,
-                object_boolean_expression_types,
                 boolean_expression_types,
             )
             .map_err(|_| ArgumentMappingError::UnknownType {
@@ -174,16 +168,6 @@ pub fn get_argument_mappings<'a>(
                     // resolve the object type the boolean expression refers to
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
                         type_name: &boolean_expression_type.object_type,
-                        ndc_object_type_name: underlying_ndc_argument_named_type,
-                    });
-                }
-                TypeRepresentation::BooleanExpression(object_boolean_expression_type) => {
-                    let underlying_ndc_argument_named_type =
-                        ndc_validation::get_underlying_named_type(ndc_argument_type);
-
-                    // resolve the object type the boolean expression refers to
-                    type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
-                        type_name: &object_boolean_expression_type.object_type,
                         ndc_object_type_name: underlying_ndc_argument_named_type,
                     });
                 }
@@ -265,10 +249,6 @@ pub(crate) fn resolve_value_expression_for_argument(
         object_relationships::ObjectTypeWithRelationships,
     >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     data_connector_scalars: &BTreeMap<
@@ -301,26 +281,17 @@ pub(crate) fn resolve_value_expression_for_argument(
 
             // lookup the relevant boolean expression type and get the underlying object type
             let (boolean_expression_fields, object_type_representation) =
-                match object_boolean_expression_types.get(base_type) {
-                    Some(object_boolean_expression_type) => Ok((
-                        None,
-                        get_object_type_for_object_boolean_expression(
-                            object_boolean_expression_type,
+                match boolean_expression_types.objects.get(base_type) {
+                    Some(boolean_expression_type) => Ok((
+                        boolean_expression_type.get_fields(flags),
+                        get_object_type_for_boolean_expression(
+                            boolean_expression_type,
                             object_types,
                         )?,
                     )),
-                    None => match boolean_expression_types.objects.get(base_type) {
-                        Some(boolean_expression_type) => Ok((
-                            boolean_expression_type.get_fields(flags),
-                            get_object_type_for_boolean_expression(
-                                boolean_expression_type,
-                                object_types,
-                            )?,
-                        )),
-                        None => Err(Error::UnknownType {
-                            data_type: base_type.clone(),
-                        }),
-                    },
+                    None => Err(Error::UnknownType {
+                        data_type: base_type.clone(),
+                    }),
                 }?;
 
             // get the data_connector_object_type from the NDC command argument type
@@ -398,19 +369,10 @@ pub(crate) fn resolve_value_expression_for_argument(
 pub fn get_argument_kind(
     type_obj: &TypeReference,
     subgraph: &SubgraphName,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> ArgumentKind {
     match &type_obj.underlying_type {
-        BaseType::List(type_obj) => get_argument_kind(
-            type_obj,
-            subgraph,
-            object_boolean_expression_types,
-            boolean_expression_types,
-        ),
+        BaseType::List(type_obj) => get_argument_kind(type_obj, subgraph, boolean_expression_types),
         BaseType::Named(type_name) => match type_name {
             TypeName::Inbuilt(_) => ArgumentKind::Other,
             TypeName::Custom(type_name) => {
@@ -423,13 +385,11 @@ pub fn get_argument_kind(
                     &qualified_type_name,
                     &BTreeMap::new(),
                     &BTreeMap::new(),
-                    object_boolean_expression_types,
                     boolean_expression_types,
                 ) {
                     Ok(
                         TypeRepresentation::BooleanExpressionScalar(_)
-                        | TypeRepresentation::BooleanExpressionObject(_)
-                        | TypeRepresentation::BooleanExpression(_),
+                        | TypeRepresentation::BooleanExpressionObject(_),
                     ) => ArgumentKind::NDCExpression,
                     _ => ArgumentKind::Other,
                 }

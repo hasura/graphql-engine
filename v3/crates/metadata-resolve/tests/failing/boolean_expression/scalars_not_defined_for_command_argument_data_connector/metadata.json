@@ -87,12 +87,21 @@
       "operand": {
         "scalar": {
           "type": "Int",
-          "comparisonOperators": [{ "name": "equals", "argumentType": "Int!" }],
+          "comparisonOperators": [
+            {
+              "name": "equals",
+              "argumentType": "Int!"
+            }
+          ],
           "dataConnectorOperatorMapping": []
         }
       },
-      "logicalOperators": { "enable": true },
-      "isNull": { "enable": true },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
       "graphql": {
         "typeName": "Int_Comparison_Exp"
       }
@@ -107,13 +116,20 @@
         "scalar": {
           "type": "String",
           "comparisonOperators": [
-            { "name": "equals", "argumentType": "String!" }
+            {
+              "name": "equals",
+              "argumentType": "String!"
+            }
           ],
           "dataConnectorOperatorMapping": []
         }
       },
-      "logicalOperators": { "enable": true },
-      "isNull": { "enable": true },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
       "graphql": {
         "typeName": "String_Comparison_Exp"
       }
@@ -144,8 +160,12 @@
           "comparableRelationships": []
         }
       },
-      "logicalOperators": { "enable": true },
-      "isNull": { "enable": true },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
       "graphql": {
         "typeName": "Actor_bool_exp"
       }
@@ -186,7 +206,7 @@
       "dataConnectorScalarType": "String",
       "representation": "String",
       "graphql": {
-        "comparisonExpressionTypeName": "String_Comparison_Exp"
+        "comparisonExpressionTypeName": "String_Comparison_Exp_2"
       }
     }
   },

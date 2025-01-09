@@ -43,12 +43,8 @@ pub use stages::model_permissions::{
 };
 pub use stages::models::{Model, ModelSource, ModelsError};
 pub use stages::models_graphql::{
-    ModelExpressionType, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
-    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
-    UniqueIdentifierField,
-};
-pub use stages::object_boolean_expressions::{
-    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
+    ModelOrderByExpression, SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition,
+    SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
 pub use stages::object_relationships::{
     relationship_execution_category, AggregateRelationship, CommandRelationshipTarget,

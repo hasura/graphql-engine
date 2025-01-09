@@ -462,6 +462,11 @@ impl From<RelationshipError> for Error {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypePredicateError {
+    #[error("field '{field_name:}' used in predicate for type '{type_name:}' not found in data connector field mappings")]
+    UnknownFieldInDataConnectorFieldMappingsForTypePredicate {
+        field_name: FieldName,
+        type_name: Qualified<CustomTypeName>,
+    },
     #[error("unknown field '{field_name:}' used in predicate for type '{type_name:}'")]
     UnknownFieldInTypePredicate {
         field_name: FieldName,

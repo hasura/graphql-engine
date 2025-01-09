@@ -260,7 +260,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
         scalar_types: {},
         models: {},
         commands: {},
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {
                 Qualified {
@@ -377,7 +376,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
                                     "author_id",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -458,7 +457,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
                                     "first_name",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -539,7 +538,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
                                     "last_name",
                                 ),
                             ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: Some(
+                                boolean_expression_type_name: FromBooleanExpressionType(
                                     Qualified {
                                         subgraph: SubgraphName(
                                             "default",
@@ -619,20 +618,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
                         relationship_fields: {},
                     },
                     include_logical_operators: Yes,
+                    data_connector: None,
                 },
             },
             scalars: {
-                Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "postgres_int_comparison_bool_exp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "default",
                         ),
@@ -642,6 +633,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         Int,
                     ),
@@ -730,17 +722,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
                         ),
                     },
                 },
-                Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "postgres_string_comparison_bool_exp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "default",
                         ),
@@ -750,6 +733,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic_
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         String,
                     ),

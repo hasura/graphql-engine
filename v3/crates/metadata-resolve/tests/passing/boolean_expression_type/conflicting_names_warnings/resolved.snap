@@ -93,7 +93,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/confli
         scalar_types: {},
         models: {},
         commands: {},
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {
                 Qualified {
@@ -159,6 +158,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/confli
                         relationship_fields: {},
                     },
                     include_logical_operators: Yes,
+                    data_connector: None,
                 },
             },
             scalars: {},

@@ -143,7 +143,8 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
         };
 
     let is_null_operator = resolve_is_null_operator(
-        boolean_expression,
+        &boolean_expression.is_null,
+        boolean_expression.graphql.as_ref(),
         boolean_expression_type_name,
         graphql_config,
         issues,
@@ -158,7 +159,6 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     );
 
     Ok(ResolvedScalarBooleanExpressionType {
-        name: boolean_expression_type_name.clone(),
         comparison_operators: resolved_comparison_operators,
         operand_type: mk_qualified_type_name(&scalar_boolean_expression_operand.r#type, subgraph),
         data_connector_operator_mappings,
@@ -169,12 +169,15 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
 }
 
 fn resolve_is_null_operator(
-    boolean_expression: &open_dds::boolean_expression::BooleanExpressionTypeV1,
+    is_null: &open_dds::boolean_expression::BooleanExpressionIsNull,
+    boolean_expression_graphql: Option<
+        &open_dds::boolean_expression::BooleanExpressionTypeGraphQlConfiguration,
+    >,
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     issues: &mut Vec<ScalarBooleanExpressionTypeIssue>,
 ) -> IsNullOperator {
-    if boolean_expression.is_null.enable {
+    if is_null.enable {
         let graphql =
             graphql_config
                 .query
@@ -186,7 +189,7 @@ fn resolve_is_null_operator(
 
         // If they've enabled graphql for this boolean expression, but the logical operator names
         // have been omitted from the GraphqlConfig, raise an issue because this is probably a mistake
-        if boolean_expression.graphql.is_some() && graphql.is_none() {
+        if boolean_expression_graphql.is_some() && graphql.is_none() {
             issues.push(
                 ScalarBooleanExpressionTypeIssue::MissingIsNullOperatorNameInGraphqlConfig {
                     type_name: boolean_expression_type_name.clone(),

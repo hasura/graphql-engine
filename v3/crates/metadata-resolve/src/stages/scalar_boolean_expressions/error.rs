@@ -24,6 +24,14 @@ pub enum ScalarBooleanExpressionTypeError {
         operator_name: OperatorName,
         boolean_expression_type: Qualified<CustomTypeName>,
     },
+    #[error("data connector {data_connector:} could not be found")]
+    DataConnectorNotFound {
+        data_connector: Qualified<DataConnectorName>,
+    },
+    #[error("scalar representations for data connector {data_connector:} could not be found")]
+    DataConnectorScalarRepresentationsNotFound {
+        data_connector: Qualified<DataConnectorName>,
+    },
     #[error(
         "scalar type representation required for type {scalar_type:} in data connector {data_connector:}"
     )]

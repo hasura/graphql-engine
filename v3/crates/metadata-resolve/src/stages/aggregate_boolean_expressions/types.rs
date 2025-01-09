@@ -11,7 +11,9 @@ use open_dds::{
 };
 
 use crate::{
-    stages::aggregates::CountAggregateType, stages::graphql_config::GraphqlConfigError,
+    stages::aggregates::CountAggregateType,
+    stages::boolean_expressions::BooleanExpressionTypeIdentifier,
+    stages::graphql_config::GraphqlConfigError,
     stages::scalar_boolean_expressions::LogicalOperators, Qualified, QualifiedTypeName,
     QualifiedTypeReference,
 };
@@ -42,12 +44,12 @@ pub struct ComparableAggregationFunction {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
-    pub boolean_expression_type: Qualified<CustomTypeName>,
+    pub boolean_expression_type: BooleanExpressionTypeIdentifier,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparableCountAggregation {
-    pub boolean_expression_type: Qualified<CustomTypeName>,
+    pub boolean_expression_type: BooleanExpressionTypeIdentifier,
     pub graphql: Option<ComparableCountGraphqlConfig>,
 }
 
@@ -175,14 +177,14 @@ pub enum AggregateBooleanExpressionError {
         "could not find a scalar-operanded boolean expression type named '{boolean_expression_type}'"
     )]
     ScalarBooleanExpressionTypeNotFound {
-        boolean_expression_type: Qualified<CustomTypeName>,
+        boolean_expression_type: BooleanExpressionTypeIdentifier,
     },
 
     #[error("type mismatch between the aggregation function '{aggregation_function_name}' (return type: '{aggregation_function_return_type}') and the specified boolean expression type '{boolean_expression_type}' (operand type: '{boolean_expression_operand_type}')")]
     AggregationFunctionTypeMismatch {
         aggregation_function_name: AggregationFunctionName,
         aggregation_function_return_type: QualifiedTypeName,
-        boolean_expression_type: Qualified<CustomTypeName>,
+        boolean_expression_type: BooleanExpressionTypeIdentifier,
         boolean_expression_operand_type: QualifiedTypeName,
     },
 
@@ -202,7 +204,7 @@ pub enum AggregateBooleanExpressionError {
     CountAggregateTypeMismatch {
         count_type: CountAggregateType,
         count_return_type: QualifiedTypeName,
-        boolean_expression_type: Qualified<CustomTypeName>,
+        boolean_expression_type: BooleanExpressionTypeIdentifier,
         boolean_expression_operand_type: QualifiedTypeName,
     },
 

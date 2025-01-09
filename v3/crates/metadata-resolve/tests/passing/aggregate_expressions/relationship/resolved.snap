@@ -3782,7 +3782,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
             },
         },
         commands: {},
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},

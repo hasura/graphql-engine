@@ -13,7 +13,6 @@ pub mod graphql_config;
 pub mod model_permissions;
 pub mod models;
 pub mod models_graphql;
-pub mod object_boolean_expressions;
 pub mod object_relationships;
 pub mod object_types;
 pub mod order_by_expressions;
@@ -94,24 +93,7 @@ fn resolve_internal(
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
-    // Validate scalar `BooleanExpressionType`s
-    let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {
-        graphql_types,
-        boolean_expression_scalar_types,
-        issues,
-    } = scalar_boolean_expressions::resolve(
-        &metadata_accessor,
-        graphql_types,
-        &data_connectors,
-        &object_types,
-        &scalar_types,
-        &graphql_config,
-    )?;
-
-    all_issues.extend(issues.into_iter().map(Warning::from));
-
-    // Validate `DataConnectorScalarType` metadata. This will soon be deprecated and subsumed by
-    // `BooleanExpressionType`
+    // Validate `DataConnectorScalarType` metadata.
     let data_connector_scalar_types::DataConnectorWithScalarsOutput {
         data_connector_scalars,
         graphql_types,
@@ -121,6 +103,23 @@ fn resolve_internal(
         &scalar_types,
         graphql_types,
     )?;
+
+    // Validate scalar `BooleanExpressionType`s
+    let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {
+        graphql_types,
+        boolean_expression_scalar_types,
+        issues,
+    } = scalar_boolean_expressions::resolve(
+        &metadata_accessor,
+        graphql_types,
+        &data_connectors,
+        &data_connector_scalars,
+        &object_types,
+        &scalar_types,
+        &graphql_config,
+    )?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =
@@ -165,7 +164,7 @@ fn resolve_internal(
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
-    // Resolve fancy new boolean expression types
+    // Resolve object boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
         boolean_expression_types,
         graphql_types,
@@ -176,6 +175,8 @@ fn resolve_internal(
         object_aggregates,
         scalar_aggregates,
         graphql_types,
+        &data_connectors,
+        &data_connector_scalars,
         &graphql_config,
         &object_types_with_permissions,
         &relationships,
@@ -197,24 +198,6 @@ fn resolve_internal(
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
-    // Validate `ObjectBooleanExpressionType` metadata. This will soon be deprecated and subsumed
-    // by `BooleanExpressionType`.
-    let object_boolean_expressions::ObjectBooleanExpressionsOutput {
-        object_boolean_expression_types,
-        graphql_types,
-        issues,
-    } = object_boolean_expressions::resolve(
-        &metadata_accessor,
-        &data_connectors,
-        &data_connector_scalars,
-        &object_types_with_permissions,
-        graphql_types,
-        &graphql_config,
-    )
-    .map_err(Error::from)?;
-
-    all_issues.extend(issues.into_iter().map(Warning::from));
-
     // Resolve models and their sources
     let models::ModelsOutput {
         models,
@@ -231,7 +214,6 @@ fn resolve_internal(
         apollo_federation_entity_enabled_types,
         &object_types_with_permissions,
         &scalar_types,
-        &object_boolean_expression_types,
         &boolean_expression_types,
         &aggregate_expressions,
         order_by_expressions,
@@ -246,7 +228,6 @@ fn resolve_internal(
         &object_types_with_permissions,
         &mut track_root_fields,
         &scalar_types,
-        &object_boolean_expression_types,
         &boolean_expression_types,
     )?;
 
@@ -274,7 +255,6 @@ fn resolve_internal(
         &models,
         &object_types_with_relationships,
         &scalar_types,
-        &object_boolean_expression_types,
         &boolean_expression_types,
         &metadata_accessor.flags,
     )?;
@@ -290,7 +270,6 @@ fn resolve_internal(
         &metadata_accessor,
         &models,
         &object_types_with_relationships,
-        &object_boolean_expression_types,
         &boolean_expression_types,
         &order_by_expressions,
         &graphql_types,
@@ -305,7 +284,6 @@ fn resolve_internal(
         &commands,
         &object_types_with_relationships,
         &scalar_types,
-        &object_boolean_expression_types,
         &boolean_expression_types,
         &models_with_graphql,
         &data_connectors,
@@ -319,7 +297,6 @@ fn resolve_internal(
         &object_types_with_relationships,
         &scalar_types,
         &models_with_graphql,
-        &object_boolean_expression_types,
         &boolean_expression_types,
     )?;
 
@@ -362,7 +339,6 @@ fn resolve_internal(
             object_types: object_types_with_relationships,
             models,
             commands,
-            object_boolean_expression_types,
             boolean_expression_types,
             order_by_expressions,
             aggregate_expressions,

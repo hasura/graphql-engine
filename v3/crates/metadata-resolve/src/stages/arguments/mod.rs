@@ -1,8 +1,7 @@
 use crate::helpers::boolean_expression::validate_data_connector_with_object_boolean_expression_type;
 use crate::helpers::types::{get_type_representation, unwrap_custom_type_name, TypeRepresentation};
 use crate::stages::{
-    boolean_expressions, commands, data_connectors, models, object_boolean_expressions,
-    object_relationships, scalar_types,
+    boolean_expressions, commands, data_connectors, models, object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::{ArgumentInfo, Qualified};
@@ -28,10 +27,6 @@ pub fn resolve(
         object_relationships::ObjectTypeWithRelationships,
     >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
@@ -47,7 +42,6 @@ pub fn resolve(
             type_mapping,
             object_types,
             scalar_types,
-            object_boolean_expression_types,
             boolean_expression_types,
             models,
             flags,
@@ -65,7 +59,6 @@ pub fn resolve(
             type_mapping,
             object_types,
             scalar_types,
-            object_boolean_expression_types,
             boolean_expression_types,
             models,
             flags,
@@ -86,10 +79,6 @@ pub fn validate_arguments_with_source(
         object_relationships::ObjectTypeWithRelationships,
     >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
-    >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     flags: &open_dds::flags::OpenDdFlags,
@@ -103,7 +92,6 @@ pub fn validate_arguments_with_source(
                 custom_type_name,
                 object_types,
                 scalar_types,
-                object_boolean_expression_types,
                 boolean_expression_types,
             )? {
                 TypeRepresentation::BooleanExpressionObject(bool_exp) => Some(bool_exp),

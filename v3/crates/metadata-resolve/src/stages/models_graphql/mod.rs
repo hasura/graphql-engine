@@ -10,17 +10,15 @@ use lang_graphql::ast::common as ast;
 use open_dds::{models::ModelName, types::CustomTypeName};
 
 use crate::helpers::types::TrackGraphQLRootFields;
-use crate::stages::{
-    boolean_expressions, graphql_config, models, object_boolean_expressions, object_relationships,
-};
+use crate::stages::{boolean_expressions, graphql_config, models, object_relationships};
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
 pub(crate) use types::ModelWithGraphql;
 pub use types::{
-    ModelExpressionType, ModelGraphQlApi, ModelGraphqlIssue, ModelOrderByExpression,
-    ModelsWithGraphqlOutput, SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition,
-    SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition, UniqueIdentifierField,
+    ModelGraphQlApi, ModelGraphqlIssue, ModelOrderByExpression, ModelsWithGraphqlOutput,
+    SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+    SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
 
 use super::order_by_expressions;
@@ -31,10 +29,6 @@ pub fn resolve(
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
-    >,
-    object_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     order_by_expressions: &order_by_expressions::OrderByExpressions,
@@ -65,10 +59,9 @@ pub fn resolve(
                 let (filter_expression_type, filter_issues) =
                     filter::resolve_filter_expression_type(
                         &model.name,
-                        model_source,
                         &model.data_type,
+                        model_source,
                         filter_expression_type_name,
-                        object_boolean_expression_types,
                         boolean_expression_types,
                         object_types,
                         models,

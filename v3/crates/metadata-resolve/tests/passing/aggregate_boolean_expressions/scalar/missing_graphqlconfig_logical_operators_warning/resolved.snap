@@ -9,21 +9,11 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
         scalar_types: {},
         models: {},
         commands: {},
-        object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {
-                Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "Int_bool_exp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "default",
                         ),
@@ -33,6 +23,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         Int,
                     ),
@@ -48,17 +39,8 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                         graphql: None,
                     },
                 },
-                Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "String_bool_exp",
-                        ),
-                    ),
-                }: ResolvedScalarBooleanExpressionType {
-                    name: Qualified {
+                FromBooleanExpressionType(
+                    Qualified {
                         subgraph: SubgraphName(
                             "default",
                         ),
@@ -68,6 +50,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ),
                     },
+                ): ResolvedScalarBooleanExpressionType {
                     operand_type: Inbuilt(
                         String,
                     ),
@@ -119,30 +102,34 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             description: Some(
                                 "The lexicographically least string",
                             ),
-                            boolean_expression_type: Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "String_bool_exp",
+                            boolean_expression_type: FromBooleanExpressionType(
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
                                     ),
-                                ),
-                            },
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "String_bool_exp",
+                                        ),
+                                    ),
+                                },
+                            ),
                         },
                     ],
                     count_aggregation: Some(
                         ComparableCountAggregation {
-                            boolean_expression_type: Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Int_bool_exp",
+                            boolean_expression_type: FromBooleanExpressionType(
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
                                     ),
-                                ),
-                            },
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Int_bool_exp",
+                                        ),
+                                    ),
+                                },
+                            ),
                             graphql: Some(
                                 ComparableCountGraphqlConfig {
                                     field_name: Name(
@@ -154,16 +141,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                     ),
                     count_distinct_aggregation: Some(
                         ComparableCountAggregation {
-                            boolean_expression_type: Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Int_bool_exp",
+                            boolean_expression_type: FromBooleanExpressionType(
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
                                     ),
-                                ),
-                            },
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Int_bool_exp",
+                                        ),
+                                    ),
+                                },
+                            ),
                             graphql: Some(
                                 ComparableCountGraphqlConfig {
                                     field_name: Name(
