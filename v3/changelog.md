@@ -6,11 +6,15 @@
 
 ### Fixed
 
+### Changed
+
+## [v2025.01.09]
+
+### Fixed
+
 - Fixed a bug where erroneous typechecking errors could be produced when
   querying a Model or Command that used an object type as an argument that had
   input field presets applied on its TypePermissions.
-
-### Changed
 
 ## [v2025.01.06]
 
@@ -939,8 +943,9 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.01.06...HEAD
-[v2025.01.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.06
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.01.09...HEAD
+[v2025.01.09]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.09
+[v2025.01.06]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.06
 [v2024.12.17]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.17
 [v2024.12.03]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.03
 [v2024.11.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.25
