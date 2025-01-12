@@ -6,6 +6,10 @@
 
 ### Fixed
 
+- Fixed a bug where erroneous build errors would be raised when using a
+  relationship in a boolean expression pre-set to an argument in
+  CommandPermissions.
+
 ### Changed
 
 ## [v2025.01.09]

@@ -735,7 +735,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                             ),
                                             name: CustomTypeName(
                                                 Identifier(
-                                                    "Album_bool_exp",
+                                                    "Album",
                                                 ),
                                             ),
                                         },
@@ -809,7 +809,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                             ),
                                             name: CustomTypeName(
                                                 Identifier(
-                                                    "Album_bool_exp",
+                                                    "Album",
                                                 ),
                                             ),
                                         },

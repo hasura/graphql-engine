@@ -1,0 +1,7 @@
+mutation MyMutation {
+  upsertActor(actor: { actor_id: 1, movie_id: 1, name: "John Doe" }) {
+    actor_id
+    movie_id
+    name
+  }
+}

@@ -24,6 +24,7 @@
               }
             ],
             "graphql": {
+              "inputTypeName": "CommandActorInput",
               "typeName": "CommandActor"
             },
             "dataConnectorTypeMapping": [

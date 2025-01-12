@@ -1,0 +1,34 @@
+[
+  {
+    "data": {
+      "upsertActor": {
+        "actor_id": 1,
+        "movie_id": 1,
+        "name": "Leonardo DiCaprio"
+      }
+    }
+  },
+  {
+    "data": {
+      "upsertActor": null
+    },
+    "errors": [
+      {
+        "message": "error from data source: pre_check failed",
+        "path": ["upsertActor"],
+        "extensions": {
+          "details": null
+        }
+      }
+    ]
+  },
+  {
+    "data": {
+      "upsertActor": {
+        "actor_id": 1,
+        "movie_id": 1,
+        "name": "Leonardo DiCaprio"
+      }
+    }
+  }
+]

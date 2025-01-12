@@ -95,10 +95,52 @@
                       }
                     },
                     "comparison_operators": {
+                      "_contains": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
                       "_eq": {
                         "type": "equal"
                       },
+                      "_icontains": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "ends_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "iends_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "istarts_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
                       "like": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "starts_with": {
                         "type": "custom",
                         "argument_type": {
                           "type": "named",
@@ -1192,6 +1234,16 @@
                         "type": {
                           "type": "named",
                           "name": "actor"
+                        }
+                      },
+                      "pre_check": {
+                        "description": "Validate if the actor can be upserted",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "actor"
+                          }
                         }
                       }
                     },

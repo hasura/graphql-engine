@@ -807,7 +807,7 @@ fn eval_relationship_argument(
     }
 }
 
-fn eval_expression(
+pub(crate) fn eval_expression(
     collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
     state: &AppState,

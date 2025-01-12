@@ -19,7 +19,7 @@ use crate::UnaryComparisonOperator;
 
 use indexmap::IndexMap;
 use ndc_models;
-use open_dds::data_connector::{DataConnectorObjectType, DataConnectorOperatorName};
+use open_dds::data_connector::DataConnectorOperatorName;
 use open_dds::identifier::SubgraphName;
 use open_dds::permissions::NullableModelPredicate;
 use open_dds::{
@@ -28,7 +28,6 @@ use open_dds::{
     types::FieldName,
 };
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
-use ref_cast::RefCast;
 use std::collections::BTreeMap;
 
 fn resolve_model_predicate_with_model(
@@ -549,7 +548,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                             // so that we use the correct column names for the data source
                             let target_data_connector_field_mappings = target_object_type_representation.type_mappings.get(
                                     &target_source.model.data_connector.name,
-                                    DataConnectorObjectType::ref_cast(target_source.model.collection.inner())
+                                    &target_source.model.collection_type
                                 )
                                 .map(|type_mapping| match type_mapping {
                                     object_types::TypeMapping::Object {
@@ -561,7 +560,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     error: object_types::TypeMappingValidationError::DataConnectorTypeMappingNotFound {
                                         object_type_name: target_typename.clone(),
                                         data_connector_name: target_source.model.data_connector.name.clone(),
-                                        data_connector_object_type: DataConnectorObjectType::from(target_source.model.collection.as_str())
+                                        data_connector_object_type: target_source.model.collection_type.clone()
                                     },
                                 }))?;
 

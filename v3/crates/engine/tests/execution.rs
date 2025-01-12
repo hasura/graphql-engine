@@ -1480,6 +1480,23 @@ fn test_command_procedures_multiple_arguments() -> anyhow::Result<()> {
     )
 }
 
+// Tests a mutation command that uses a preset boolean expression as an argument
+#[test]
+fn test_command_procedures_boolean_expression_argument() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/boolean_expression_argument",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            // Not supported in v0.1.x because the old custom connector doesn't support the new boolean expression argument to upsert_actor
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
 // Tests a mutation command with preset arguments:
 // arguments: 2 arguments (lower_bound, upper_bound) - one provided by presets in permissions
 // output: object (commandActor) output type

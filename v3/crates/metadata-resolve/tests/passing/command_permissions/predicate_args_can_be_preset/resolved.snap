@@ -633,7 +633,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/predicate_
                                             ),
                                             name: CustomTypeName(
                                                 Identifier(
-                                                    "Album_bool_exp",
+                                                    "Album",
                                                 ),
                                             ),
                                         },
@@ -709,7 +709,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/predicate_
                                             ),
                                             name: CustomTypeName(
                                                 Identifier(
-                                                    "Album_bool_exp",
+                                                    "Album",
                                                 ),
                                             ),
                                         },

@@ -280,19 +280,15 @@ pub(crate) fn resolve_value_expression_for_argument(
                 })?;
 
             // lookup the relevant boolean expression type and get the underlying object type
-            let (boolean_expression_fields, object_type_representation) =
-                match boolean_expression_types.objects.get(base_type) {
-                    Some(boolean_expression_type) => Ok((
-                        boolean_expression_type.get_fields(flags),
-                        get_object_type_for_boolean_expression(
-                            boolean_expression_type,
-                            object_types,
-                        )?,
-                    )),
-                    None => Err(Error::UnknownType {
-                        data_type: base_type.clone(),
-                    }),
-                }?;
+            let boolean_expression_type = boolean_expression_types
+                .objects
+                .get(base_type)
+                .ok_or_else(|| Error::UnknownType {
+                    data_type: base_type.clone(),
+                })?;
+            let boolean_expression_fields = boolean_expression_type.get_fields(flags);
+            let object_type_representation =
+                get_object_type_for_boolean_expression(boolean_expression_type, object_types)?;
 
             // get the data_connector_object_type from the NDC command argument type
             // or explode
@@ -344,7 +340,7 @@ pub(crate) fn resolve_value_expression_for_argument(
             let resolved_model_predicate = model_permissions::resolve_model_predicate_with_type(
                 flags,
                 bool_exp,
-                base_type,
+                &boolean_expression_type.object_type,
                 object_type_representation,
                 boolean_expression_fields,
                 data_connector_field_mappings,

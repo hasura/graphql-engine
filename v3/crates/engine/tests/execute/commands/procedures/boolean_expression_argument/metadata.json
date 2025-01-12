@@ -1,0 +1,404 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandActor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandMovie",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating", "genres"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating", "genres"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating", "genres"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "upsert_actor",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "precheck",
+                    "value": {
+                      "booleanExpression": {
+                        "and": [
+                          {
+                            "fieldComparison": {
+                              "field": "actor_id",
+                              "operator": "fancy_equals_operator",
+                              "value": {
+                                "literal": 1
+                              }
+                            }
+                          },
+                          {
+                            "relationship": {
+                              "name": "movie",
+                              "predicate": {
+                                "fieldComparison": {
+                                  "field": "movie_id",
+                                  "operator": "fancy_equals_operator",
+                                  "value": {
+                                    "literal": 1
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "precheck",
+                    "value": {
+                      "booleanExpression": {
+                        "and": [
+                          {
+                            "fieldComparison": {
+                              "field": "actor_id",
+                              "operator": "fancy_equals_operator",
+                              "value": {
+                                "literal": 1
+                              }
+                            }
+                          },
+                          {
+                            "relationship": {
+                              "name": "movie",
+                              "predicate": {
+                                "fieldComparison": {
+                                  "field": "movie_id",
+                                  "operator": "fancy_equals_operator",
+                                  "value": {
+                                    "literal": 2
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "role": "user_2",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "custom_int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "fancy_equals_operator",
+                    "argumentType": "Int!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {
+                      "fancy_equals_operator": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "custom_string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "equals",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {
+                      "fancy_equals_operator": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "ActorBoolExp",
+            "operand": {
+              "object": {
+                "type": "commandActor",
+                "comparableFields": [
+                  {
+                    "fieldName": "actor_id",
+                    "booleanExpressionType": "custom_int_bool_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "custom_string_bool_exp"
+                  },
+                  {
+                    "fieldName": "movie_id",
+                    "booleanExpressionType": "custom_int_bool_exp"
+                  }
+                ],
+                "comparableRelationships": [
+                  {
+                    "relationshipName": "movie",
+                    "booleanExpressionType": "MovieBoolExp"
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Actor_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "MovieBoolExp",
+            "operand": {
+              "object": {
+                "type": "commandMovie",
+                "comparableFields": [
+                  {
+                    "fieldName": "movie_id",
+                    "booleanExpressionType": "custom_int_bool_exp"
+                  },
+                  {
+                    "fieldName": "title",
+                    "booleanExpressionType": "custom_string_bool_exp"
+                  },
+                  {
+                    "fieldName": "rating",
+                    "booleanExpressionType": "custom_int_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Movie_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "upsert_actor",
+            "arguments": [
+              {
+                "name": "actor",
+                "type": "commandActor"
+              },
+              {
+                "name": "precheck",
+                "type": "ActorBoolExp"
+              }
+            ],
+            "outputType": "commandActor",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "procedure": "upsert_actor"
+              },
+              "argumentMapping": {
+                "precheck": "pre_check"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "upsertActor",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "movies",
+            "objectType": "commandMovie",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "movies"
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "movies"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "movies",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": null
+              },
+              {
+                "role": "user_1",
+                "select": null
+              },
+              {
+                "role": "user_2",
+                "select": null
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "movie",
+            "sourceType": "commandActor",
+            "target": {
+              "model": {
+                "name": "movies",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
