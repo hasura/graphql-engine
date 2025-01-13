@@ -11,7 +11,7 @@ use super::types::{
     SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
 use crate::helpers::types::{mk_name, store_new_graphql_type, TrackGraphQLRootFields};
-use crate::stages::order_by_expressions::OrderByExpressions;
+use crate::stages::order_by_expressions::{OrderByExpressionIdentifier, OrderByExpressions};
 use crate::stages::{graphql_config, models, object_types};
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -29,6 +29,7 @@ pub(crate) fn resolve_model_graphql_api(
     track_root_fields: &mut TrackGraphQLRootFields,
     model_description: Option<&String>,
     aggregate_expression_name: Option<&Qualified<AggregateExpressionName>>,
+    order_by_expression_identifier: Option<&Qualified<OrderByExpressionIdentifier>>,
     order_by_expressions: &OrderByExpressions,
     graphql_config: &graphql_config::GraphqlConfig,
     issues: &mut Vec<Warning>,
@@ -114,12 +115,13 @@ pub(crate) fn resolve_model_graphql_api(
         .as_ref()
         .map(
             |model_source: &Arc<models::ModelSource>| -> Result<Option<ModelOrderByExpression>, Error> {
-                let order_by_expression = model.order_by_expression.as_ref().map(|n|
+                let order_by_expression = order_by_expression_identifier.map(|n|
                     order_by_expressions.objects.get(n)
                     .ok_or_else(|| models::ModelsError::UnknownOrderByExpressionIdentifier {
                         model_name: model.name.clone(),
                         order_by_expression_identifier: n.clone()
                     })).transpose()?;
+
                 // TODO: (paritosh) should we check for conflicting graphql types for default order_by type name as well?
                 order_by_expression
                     .and_then(|order_by_expression| {
@@ -175,6 +177,7 @@ pub(crate) fn resolve_model_graphql_api(
                 .as_ref()
                 .map(|s| resolve_subscription_graphql_api(s, model_name, track_root_fields, issues))
                 .transpose()?;
+
             mk_name(gql_definition.query_root_field.as_str()).map(|f: ast::Name| {
                 // Let's track and check if the select_many field name is already used
                 track_root_fields.track_query_root_field(&f).unwrap_or_else(|error| {

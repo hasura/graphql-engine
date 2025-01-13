@@ -1,12 +1,11 @@
-use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
-use std::convert::AsRef;
 use std::sync::Arc;
-pub use types::{Model, ModelRaw, ModelSource, ModelsIssue, ModelsOutput, NDCFieldSourceMapping};
+pub use types::{
+    Model, ModelOrderBy, ModelRaw, ModelSource, ModelsIssue, ModelsOutput, NDCFieldSourceMapping,
+};
 mod aggregation;
 mod error;
 mod helpers;
-mod order_by;
 mod source;
 mod types;
 pub use error::ModelsError;
@@ -16,8 +15,8 @@ pub use aggregation::resolve_aggregate_expression;
 pub use helpers::get_ndc_column_for_comparison;
 
 use crate::stages::{
-    aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors,
-    order_by_expressions, relay, scalar_types, type_permissions,
+    aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors, relay,
+    scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
@@ -28,7 +27,7 @@ use open_dds::{
     types::CustomTypeName,
 };
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 /// resolve models and their sources
 /// we check aggregations, filtering and graphql in the next stage (`models_graphql`)
@@ -51,8 +50,6 @@ pub fn resolve(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    mut order_by_expressions: order_by_expressions::OrderByExpressions,
-    mut graphql_types: BTreeSet<ast::TypeName>,
 ) -> Result<ModelsOutput, ModelsError> {
     // resolve models
     // TODO: validate types
@@ -126,18 +123,6 @@ pub fn resolve(
 
         resolved_model.aggregate_expression = qualified_aggregate_expression_name;
 
-        resolved_model.order_by_expression = order_by::resolve_order_by_expression(
-            &qualified_model_name,
-            model,
-            &resolved_model.data_type,
-            resolved_model.source.as_ref().map(AsRef::as_ref),
-            object_types,
-            scalar_types,
-            &mut graphql_types,
-            &mut order_by_expressions,
-            &mut issues,
-        )?;
-
         if models
             .insert(qualified_model_name.clone(), resolved_model)
             .is_some()
@@ -151,8 +136,6 @@ pub fn resolve(
         models,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
-        order_by_expressions,
-        graphql_types,
         issues,
     })
 }
@@ -297,12 +280,27 @@ fn resolve_model(
         }
     }
 
+    // keep relevant order by information for further resolving in `models_graphql`
+    let order_by = match model {
+        open_dds::models::Model::V1(model_v1) => ModelOrderBy::ModelV1 {
+            orderable_fields: model_v1.orderable_fields.clone(),
+            graphql_type_name: model_v1
+                .graphql
+                .as_ref()
+                .and_then(|g| g.order_by_expression_type.clone()),
+        },
+        open_dds::models::Model::V2(model_v2) => {
+            ModelOrderBy::ModelV2(model_v2.order_by_expression.clone())
+        }
+    };
+
     let model_raw = ModelRaw {
         description: model.description().clone(),
         filter_expression_type: model
             .filter_expression_type()
             .as_ref()
             .map(|filter_name| Qualified::new(subgraph.clone(), filter_name.clone())),
+        order_by,
         graphql,
     };
 
@@ -310,7 +308,6 @@ fn resolve_model(
         path,
         name: qualified_model_name,
         data_type: qualified_object_type_name,
-        order_by_expression: None, // we fill this in once we have resolved the model source
         aggregate_expression: None, // we fill this in once we have resolved the model source
         type_fields: object_type_representation.object_type.fields.clone(),
         global_id_fields: object_type_representation

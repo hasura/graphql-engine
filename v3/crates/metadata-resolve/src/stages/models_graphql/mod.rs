@@ -1,5 +1,6 @@
 mod filter;
 mod graphql;
+mod order_by;
 mod types;
 
 use crate::Warning;
@@ -10,7 +11,9 @@ use lang_graphql::ast::common as ast;
 use open_dds::{models::ModelName, types::CustomTypeName};
 
 use crate::helpers::types::TrackGraphQLRootFields;
-use crate::stages::{boolean_expressions, graphql_config, models, object_relationships};
+use crate::stages::{
+    boolean_expressions, graphql_config, models, object_relationships, scalar_types,
+};
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
@@ -31,18 +34,16 @@ pub fn resolve(
         object_relationships::ObjectTypeWithRelationships,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    order_by_expressions: &order_by_expressions::OrderByExpressions,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    mut existing_graphql_types: BTreeSet<ast::TypeName>,
     track_root_fields: &mut TrackGraphQLRootFields,
     graphql_config: &graphql_config::GraphqlConfig,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    order_by_expressions: &mut order_by_expressions::OrderByExpressions,
 ) -> Result<ModelsWithGraphqlOutput, Error> {
     let mut output = ModelsWithGraphqlOutput {
         models_with_graphql: IndexMap::new(),
         issues: vec![],
     };
-
-    // Used to ensure we don't resolve the same type twice.
-    let mut existing_graphql_types = existing_graphql_types.clone();
 
     for (model_name, model) in models.clone() {
         let filter_expression_type = match &model.raw.filter_expression_type {
@@ -77,6 +78,19 @@ pub fn resolve(
             None => None,
         };
 
+        // we don't need this outside graphql resolve for now, but I imagine
+        // we will need it in future
+        let order_by_expression = order_by::resolve_order_by_expression(
+            &model,
+            model.source.as_ref().map(AsRef::as_ref),
+            object_types,
+            models,
+            scalar_types,
+            &mut existing_graphql_types,
+            order_by_expressions,
+            &mut output.issues,
+        )?;
+
         let graphql_api = match model.raw.graphql {
             Some(ref model_graphql_definition) => graphql::resolve_model_graphql_api(
                 metadata_accessor,
@@ -86,6 +100,7 @@ pub fn resolve(
                 track_root_fields,
                 model.raw.description.as_ref(),
                 model.aggregate_expression.as_ref(),
+                order_by_expression.as_ref(),
                 order_by_expressions,
                 graphql_config,
                 &mut output.issues,

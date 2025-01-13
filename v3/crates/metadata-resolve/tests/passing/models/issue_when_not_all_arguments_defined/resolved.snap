@@ -434,20 +434,6 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "collection_with_args",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: None,
@@ -475,6 +461,25 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: Some(
+                                GraphQlTypeName(
+                                    "collection_with_args_order_by",
+                                ),
+                            ),
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "test",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {},
@@ -627,7 +632,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {},
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

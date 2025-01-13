@@ -59,7 +59,7 @@ pub use stages::object_types::{
 pub use stages::order_by_expressions::{
     ObjectOrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
     OrderByExpressions, OrderableField, OrderableObjectField, OrderableRelationship,
-    OrderableRelationships, OrderableScalarField,
+    OrderableScalarField,
 };
 pub use stages::plugins::LifecyclePluginConfigs;
 pub use stages::scalar_boolean_expressions::{

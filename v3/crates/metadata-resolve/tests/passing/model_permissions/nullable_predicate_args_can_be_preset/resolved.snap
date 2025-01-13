@@ -642,20 +642,6 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "subgraphs",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "Albums",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -690,6 +676,41 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: None,
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "AlbumId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "ArtistId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Title",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {
@@ -1675,7 +1696,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {},
                     graphql: None,
                     description: Some(
                         "OrderByExpression for Model Albums (in subgraph subgraphs)",

@@ -236,7 +236,8 @@ fn resolve_object_order_by_expression(
             subgraph,
             &ordered_type,
             order_by_expression_names_and_types,
-            orderable_relationship,
+            &orderable_relationship.relationship_name,
+            orderable_relationship.order_by_expression.as_ref(),
             &identifier,
             relationships,
         )?;
@@ -256,7 +257,7 @@ fn resolve_object_order_by_expression(
             identifier,
             ordered_type,
             orderable_fields,
-            orderable_relationships: OrderableRelationships::ModelV2(orderable_relationships),
+            orderable_relationships,
             graphql: resolve_graphql(order_by_expression_graphql, graphql_types)?,
             description: description.cloned(),
         },
@@ -404,7 +405,8 @@ fn resolve_orderable_relationship(
     subgraph: &SubgraphName,
     ordered_type: &Qualified<CustomTypeName>,
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, TypeName>,
-    orderable_relationship: &order_by_expression::OrderByExpressionOrderableRelationship,
+    relationship_name: &RelationshipName,
+    relationship_order_by_expression: Option<&OrderByExpressionName>,
     order_by_expression_identifier: &Qualified<OrderByExpressionIdentifier>,
     relationships: &relationships::Relationships,
 ) -> Result<ResolvedOrderableRelationship, OrderByExpressionError> {
@@ -412,9 +414,9 @@ fn resolve_orderable_relationship(
 
     // does the relationship exist?
     let relationship = relationships
-        .get(ordered_type, &orderable_relationship.relationship_name)
+        .get(ordered_type, relationship_name)
         .map_err(|_| OrderByExpressionError::UnknownRelationship {
-            relationship_name: orderable_relationship.relationship_name.clone(),
+            relationship_name: relationship_name.clone(),
             object_type_name: ordered_type.clone(),
         })?;
 
@@ -436,14 +438,11 @@ fn resolve_orderable_relationship(
             {
                 issues.push(OrderByExpressionIssue::CannotOrderByAnArrayRelationship {
                     order_by_expression: order_by_expression_identifier.clone(),
-                    relationship_name: orderable_relationship.relationship_name.clone(),
+                    relationship_name: relationship_name.clone(),
                 });
             };
 
-            let resolved_orderable_relationship = match orderable_relationship
-                .order_by_expression
-                .as_ref()
-            {
+            let resolved_orderable_relationship = match relationship_order_by_expression {
                 None => Ok(OrderableRelationship {
                     order_by_expression: None,
                 }),
@@ -459,7 +458,7 @@ fn resolve_orderable_relationship(
                         Err(
                     OrderByExpressionError::UnknownOrderByExpressionNameInOrderableRelationship {
                         order_by_expression_name: order_by_expression_name.clone(),
-                        relationship_name: orderable_relationship.relationship_name.clone(),
+                        relationship_name: relationship_name.clone(),
                     },
                 )
                     }
@@ -467,7 +466,7 @@ fn resolve_orderable_relationship(
             }?;
             Ok(ResolvedOrderableRelationship {
                 orderable_relationship: Some((
-                    orderable_relationship.relationship_name.clone(),
+                    relationship_name.clone(),
                     resolved_orderable_relationship,
                 )),
                 issues,

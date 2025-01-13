@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::data_connectors::ArgumentPresetValue;
 use crate::helpers::argument::ArgumentMappingIssue;
 use crate::helpers::types::NdcColumnForComparison;
-use crate::stages::order_by_expressions::{OrderByExpressionIdentifier, OrderByExpressions};
+use crate::stages::order_by_expressions::OrderByExpressionIdentifier;
 use crate::stages::{data_connectors, object_types};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{
@@ -12,17 +12,16 @@ use crate::types::subgraph::{
 use crate::QualifiedTypeReference;
 
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
 use open_dds::data_connector::{CollectionName, DataConnectorName};
 use open_dds::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
     data_connector::DataConnectorObjectType,
-    models::{ModelGraphQlDefinitionV2, ModelName},
-    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
+    models::{ModelGraphQlDefinitionV2, ModelName, OrderableField},
+    types::{CustomTypeName, DataConnectorArgumentName, FieldName, GraphQlTypeName},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ModelSource {
@@ -45,8 +44,6 @@ pub struct ModelsOutput {
     pub global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
         BTreeMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
-    pub order_by_expressions: OrderByExpressions,
-    pub graphql_types: BTreeSet<ast::TypeName>,
     pub issues: Vec<ModelsIssue>,
 }
 
@@ -61,11 +58,11 @@ pub struct Model {
     pub source: Option<Arc<ModelSource>>, // wrapped in Arc because we include these in our `Plan`
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
-    pub order_by_expression: Option<Qualified<OrderByExpressionIdentifier>>,
     pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
     pub raw: ModelRaw,
 }
 
+// TODO: move this outside `Model` as we don't need it in final resolved metadata
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelRaw {
     pub filter_expression_type: Option<Qualified<CustomTypeName>>,
@@ -73,6 +70,16 @@ pub struct ModelRaw {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
+    pub order_by: ModelOrderBy,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum ModelOrderBy {
+    ModelV1 {
+        graphql_type_name: Option<GraphQlTypeName>,
+        orderable_fields: Vec<OrderableField>,
+    },
+    ModelV2(Option<open_dds::order_by_expression::OrderByExpressionName>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

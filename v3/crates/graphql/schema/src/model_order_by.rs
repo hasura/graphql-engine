@@ -15,7 +15,6 @@ use crate::{permissions, ModelInputAnnotation};
 use metadata_resolve::{
     mk_name, ModelWithArgumentPresets, ObjectTypeWithRelationships, OrderByExpressionGraphqlConfig,
     OrderByExpressionIdentifier, OrderableField, OrderableObjectField, OrderableRelationship,
-    OrderableRelationships,
 };
 use metadata_resolve::{Qualified, TypeMapping};
 
@@ -290,152 +289,19 @@ pub fn build_model_order_by_input_schema(
     }
 
     // relationship fields
-    match &order_by_expression.orderable_relationships {
-        OrderableRelationships::ModelV2(orderable_relationships) => {
-            build_orderable_relationships(
-                gds,
-                &mut fields,
-                builder,
-                model,
-                &order_by_expression.ordered_type,
-                object_type_representation,
-                orderable_relationships,
-            )?;
-        }
-        OrderableRelationships::ModelV1AllowAll => {
-            build_all_relationships(
-                gds,
-                &mut fields,
-                builder,
-                model,
-                &order_by_expression.ordered_type,
-                object_type_representation,
-            )?;
-        }
-    }
+    build_orderable_relationships(
+        gds,
+        &mut fields,
+        builder,
+        model,
+        &order_by_expression.ordered_type,
+        object_type_representation,
+        &order_by_expression.orderable_relationships,
+    )?;
 
     Ok(gql_schema::TypeInfo::InputObject(
         gql_schema::InputObject::new(type_name.clone(), None, fields, Vec::new()),
     ))
-}
-
-// when using `ModelV1` we do not explicitly allow relationships, so any `Relationship` on the type
-// to a valid model is allowed. When we deprecate `ModelV1`, this function should simply be
-// removed.
-fn build_all_relationships(
-    gds: &GDS,
-    fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
-    builder: &mut gql_schema::Builder<GDS>,
-    model: &ModelWithArgumentPresets,
-    object_type_name: &Qualified<CustomTypeName>,
-    object_type_representation: &ObjectTypeWithRelationships,
-) -> Result<(), Error> {
-    for relationship in object_type_representation.relationship_fields.values() {
-        if let metadata_resolve::RelationshipTarget::Model(model_relationship_target) =
-            &relationship.target
-        {
-            let metadata_resolve::ModelRelationshipTarget {
-                model_name,
-                relationship_type,
-                target_typename,
-                mappings,
-                relationship_aggregate: _,
-            } = model_relationship_target.as_ref();
-            let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
-                crate::Error::InternalModelNotFound {
-                    model_name: model_name.clone(),
-                }
-            })?;
-
-            let target_object_type_representation =
-                get_object_type_representation(gds, &target_model.model.data_type)?;
-
-            // Build relationship field in filter expression only when both
-            // the target_model and source model are backed by a source
-            if let (Some(target_source), Some(model_source)) =
-                (&target_model.model.source, &model.model.source)
-            {
-                let target_model_source = metadata_resolve::ModelTargetSource::from_model_source(
-                    target_source,
-                    relationship,
-                )
-                .map_err(metadata_resolve::Error::from)
-                .map_err(metadata_resolve::WithContext::from)?;
-
-                let relationship_field_nestedness = if model.model.data_type == *object_type_name {
-                    metadata_resolve::FieldNestedness::NotNested
-                } else {
-                    metadata_resolve::FieldNestedness::ObjectNested
-                };
-
-                // order_by expression with relationships is currently only supported for local relationships
-                if let metadata_resolve::RelationshipExecutionCategory::Local =
-                    metadata_resolve::relationship_execution_category(
-                        relationship_field_nestedness,
-                        &model_source.data_connector,
-                        &target_source.data_connector,
-                        &target_model_source.capabilities,
-                    )
-                {
-                    // TODO(naveen): Support Array relationships in order_by when the support for aggregates is implemented
-                    if let RelationshipType::Object = relationship_type {
-                        // If the relationship target model does not have orderByExpressionType do not include
-                        // it in the source model order_by input type.
-                        if let Some(target_model_order_by_expression) =
-                            target_model.graphql_api.order_by_expression.as_ref()
-                        {
-                            let target_model_order_by_expression_type_name =
-                                &target_model_order_by_expression.order_by_type_name;
-
-                            let annotation = OrderByRelationshipAnnotation {
-                                source_type: relationship.source.clone(),
-                                relationship_name: relationship.relationship_name.clone(),
-                                target_model_name: model_name.clone(),
-                                target_source: target_model_source.clone(),
-                                target_type: target_typename.clone(),
-                                relationship_type: relationship_type.clone(),
-                                mappings: mappings.clone(),
-                                source_data_connector: model_source.data_connector.clone(),
-                                source_type_mappings: model_source.type_mappings.clone(),
-                                deprecated: relationship.deprecated.clone(),
-                                multiple_input_properties: gds
-                                    .metadata
-                                    .graphql_config
-                                    .multiple_order_by_input_object_fields,
-                            };
-
-                            fields.insert(
-                                    relationship.field_name.clone(),
-                                    builder.conditional_namespaced(
-                                        gql_schema::InputField::new(
-                                            relationship.field_name.clone(),
-                                            None,
-                                            types::Annotation::Input(types::InputAnnotation::Model(
-                                                types::ModelInputAnnotation::ModelOrderByRelationshipArgument(annotation),
-                                            )),
-                                            ast::TypeContainer::named_null(
-                                                gql_schema::RegisteredTypeName::new(
-                                                    target_model_order_by_expression_type_name.0.clone(),
-                                                ),
-                                            ),
-                                            None,
-                                            gql_schema::DeprecationStatus::NotDeprecated,
-                                        ),
-                                        permissions::get_model_relationship_namespace_annotations(
-                                            target_model,
-                                            object_type_representation,
-                                            target_object_type_representation,
-                                            mappings,
-                                        )?,
-                                    ),
-                                );
-                        }
-                    }
-                }
-            }
-        }
-    }
-    Ok(())
 }
 
 // when using `OrderByExpressions` the user explicitly lets us know which relationships

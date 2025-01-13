@@ -810,20 +810,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                         },
                     ),
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "article_namespace",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "Articles",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -858,6 +844,41 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: None,
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "article_id",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "title",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "author_id",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {
@@ -1773,7 +1794,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {},
                     graphql: None,
                     description: Some(
                         "OrderByExpression for Model Articles (in subgraph article_namespace)",

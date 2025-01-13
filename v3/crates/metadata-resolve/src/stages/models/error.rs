@@ -23,7 +23,8 @@ pub enum ModelsError {
         model_name: Qualified<ModelName>,
         data_type: Qualified<CustomTypeName>,
     },
-
+    #[error("the model {model_name:} could not be found")]
+    ModelNotFound { model_name: Qualified<ModelName> },
     #[error("source for the following model is defined more than once: {model_name:}")]
     DuplicateModelSourceDefinition { model_name: Qualified<ModelName> },
     #[error(

@@ -4355,20 +4355,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     ),
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "Artists",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -4423,6 +4409,35 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: Some(
+                                GraphQlTypeName(
+                                    "Artist_Order_By",
+                                ),
+                            ),
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "ArtistId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Name",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {
@@ -6037,20 +6052,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "Albums",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -6101,6 +6102,45 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: Some(
+                                GraphQlTypeName(
+                                    "Album_Order_By",
+                                ),
+                            ),
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "AlbumId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Title",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "ArtistId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {
@@ -7215,20 +7255,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "Tracks",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -7279,6 +7305,45 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: Some(
+                                GraphQlTypeName(
+                                    "Track_Order_By",
+                                ),
+                            ),
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "TrackId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Name",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "AlbumId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {
@@ -8301,20 +8366,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         },
                     ),
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "PlaylistTracks",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -8374,6 +8425,35 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: Some(
+                                GraphQlTypeName(
+                                    "PlaylistTrack_Order_By",
+                                ),
+                            ),
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "PlaylistId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "TrackId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {
@@ -9214,20 +9294,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "artist_below_id",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -9266,6 +9332,35 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: Some(
+                                GraphQlTypeName(
+                                    "artist_below_id_Order_By",
+                                ),
+                            ),
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "ArtistId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Name",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {
@@ -10181,20 +10276,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "Songs",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -10245,6 +10326,45 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: Some(
+                                GraphQlTypeName(
+                                    "Song_Order_By",
+                                ),
+                            ),
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "SongId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Name",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "AlbumId",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {
@@ -19036,7 +19156,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {
+                        RelationshipName(
+                            Identifier(
+                                "Artist",
+                            ),
+                        ): OrderableRelationship {
+                            order_by_expression: None,
+                        },
+                    },
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(
@@ -19136,7 +19264,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {},
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(
@@ -19236,7 +19364,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {},
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(
@@ -19361,7 +19489,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {},
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(
@@ -19486,7 +19614,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {
+                        RelationshipName(
+                            Identifier(
+                                "Album",
+                            ),
+                        ): OrderableRelationship {
+                            order_by_expression: None,
+                        },
+                    },
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(
@@ -19586,7 +19722,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {},
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

@@ -330,20 +330,6 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromModel(
-                                ModelName(
-                                    Identifier(
-                                        "mymodel",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: None,
@@ -367,6 +353,25 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                             },
                         ),
                         description: None,
+                        order_by: ModelV1 {
+                            graphql_type_name: Some(
+                                GraphQlTypeName(
+                                    "mycollection_order_by",
+                                ),
+                            ),
+                            orderable_fields: [
+                                OrderableField {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "test",
+                                        ),
+                                    ),
+                                    order_by_directions: EnableAll(
+                                        true,
+                                    ),
+                                },
+                            ],
+                        },
                     },
                 },
                 argument_presets: {},
@@ -508,7 +513,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                             },
                         ),
                     },
-                    orderable_relationships: ModelV1AllowAll,
+                    orderable_relationships: {},
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

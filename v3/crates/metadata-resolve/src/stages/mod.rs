@@ -185,7 +185,7 @@ fn resolve_internal(
     all_issues.extend(issues.into_iter().map(Warning::from));
 
     let order_by_expressions::OrderByExpressionsOutput {
-        order_by_expressions,
+        mut order_by_expressions,
         graphql_types,
         issues,
     } = order_by_expressions::resolve(
@@ -203,8 +203,6 @@ fn resolve_internal(
         models,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
-        order_by_expressions,
-        graphql_types,
         issues,
     } = models::resolve(
         &metadata_accessor,
@@ -216,8 +214,6 @@ fn resolve_internal(
         &scalar_types,
         &boolean_expression_types,
         &aggregate_expressions,
-        order_by_expressions,
-        graphql_types,
     )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
@@ -271,10 +267,11 @@ fn resolve_internal(
         &models,
         &object_types_with_relationships,
         &boolean_expression_types,
-        &order_by_expressions,
-        &graphql_types,
+        graphql_types,
         &mut track_root_fields,
         &graphql_config,
+        &scalar_types,
+        &mut order_by_expressions,
     )?;
 
     all_issues.extend(issues);

@@ -57,7 +57,7 @@ pub struct ObjectOrderByExpression {
     pub identifier: Qualified<OrderByExpressionIdentifier>,
     pub ordered_type: Qualified<CustomTypeName>,
     pub orderable_fields: BTreeMap<FieldName, OrderableField>,
-    pub orderable_relationships: OrderableRelationships,
+    pub orderable_relationships: BTreeMap<RelationshipName, OrderableRelationship>,
     pub graphql: Option<OrderByExpressionGraphqlConfig>,
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
@@ -72,12 +72,6 @@ pub struct ScalarOrderByExpression {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum OrderableRelationships {
-    ModelV1AllowAll,
-    ModelV2(BTreeMap<RelationshipName, OrderableRelationship>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

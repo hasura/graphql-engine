@@ -330,7 +330,6 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: None,
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: None,
@@ -354,6 +353,9 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                             },
                         ),
                         description: None,
+                        order_by: ModelV2(
+                            None,
+                        ),
                     },
                 },
                 argument_presets: {},

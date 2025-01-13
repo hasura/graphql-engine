@@ -771,20 +771,6 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    order_by_expression: Some(
-                        Qualified {
-                            subgraph: SubgraphName(
-                                "default",
-                            ),
-                            name: FromOrderByExpression(
-                                OrderByExpressionName(
-                                    Identifier(
-                                        "MyOrderByExpression",
-                                    ),
-                                ),
-                            ),
-                        },
-                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: None,
@@ -808,6 +794,15 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             },
                         ),
                         description: None,
+                        order_by: ModelV2(
+                            Some(
+                                OrderByExpressionName(
+                                    Identifier(
+                                        "MyOrderByExpression",
+                                    ),
+                                ),
+                            ),
+                        ),
                     },
                 },
                 argument_presets: {},
@@ -944,28 +939,26 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             },
                         ),
                     },
-                    orderable_relationships: ModelV2(
-                        {
-                            RelationshipName(
-                                Identifier(
-                                    "row_type",
-                                ),
-                            ): OrderableRelationship {
-                                order_by_expression: Some(
-                                    Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
+                    orderable_relationships: {
+                        RelationshipName(
+                            Identifier(
+                                "row_type",
+                            ),
+                        ): OrderableRelationship {
+                            order_by_expression: Some(
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: OrderByExpressionName(
+                                        Identifier(
+                                            "MyOrderByExpression",
                                         ),
-                                        name: OrderByExpressionName(
-                                            Identifier(
-                                                "MyOrderByExpression",
-                                            ),
-                                        ),
-                                    },
-                                ),
-                            },
+                                    ),
+                                },
+                            ),
                         },
-                    ),
+                    },
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(
@@ -1035,9 +1028,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             },
                         ),
                     },
-                    orderable_relationships: ModelV2(
-                        {},
-                    ),
+                    orderable_relationships: {},
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

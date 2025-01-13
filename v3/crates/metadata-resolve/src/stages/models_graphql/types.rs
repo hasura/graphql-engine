@@ -20,7 +20,7 @@ pub struct ModelsWithGraphqlOutput {
     pub issues: Vec<Warning>,
 }
 
-/// A Model, once we have added filter expression and graphql for it
+/// A Model resolved with regards to it's data source
 #[derive(Debug)]
 pub(crate) struct ModelWithGraphql {
     pub inner: models::Model,
