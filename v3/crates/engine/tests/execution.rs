@@ -396,7 +396,7 @@ fn test_model_select_many_type_permission_where() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -408,7 +408,7 @@ fn test_model_select_many_where() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -421,7 +421,7 @@ fn test_model_select_many_shared_boolean_expression() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -432,7 +432,7 @@ fn test_model_select_many_boolean_expression_type() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -471,7 +471,7 @@ fn test_model_select_many_where_is_null_object_boolean_expression_type() -> anyh
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -483,7 +483,7 @@ fn test_model_select_many_where_is_null_boolean_expression_type() -> anyhow::Res
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -508,7 +508,7 @@ fn test_model_select_many_where_with_grapqhl_config() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -519,7 +519,7 @@ fn test_model_select_many_where_multiple_fields() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
