@@ -144,11 +144,19 @@
             default = self.packages.${localSystem}.${defaultBinary};
 
             # a handy script to publish Docker images
-            publish-docker-image = pkgs.writeShellApplication {
-              name = "publish-docker-image";
+            publish-multi-arch-docker-image = pkgs.writeShellApplication {
+              name = "publish-multi-arch-docker-image";
               runtimeInputs = with pkgs; [ coreutils skopeo ];
-              text = builtins.readFile ./.github/scripts/deploy.sh;
+              text = builtins.readFile ./.github/scripts/deploy-multi-arch.sh;
             };
+
+            # a handy script to publish Docker images
+            publish-single-arch-docker-image = pkgs.writeShellApplication {
+              name = "publish-single-arch-docker-image";
+              runtimeInputs = with pkgs; [ coreutils skopeo ];
+              text = builtins.readFile ./.github/scripts/deploy-single-arch.sh;
+            };
+
           };
 
         # build an app per binary
