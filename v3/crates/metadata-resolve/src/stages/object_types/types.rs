@@ -1,6 +1,7 @@
 use super::error::ObjectTypesError;
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::QualifiedTypeReference;
+use crate::NdcVersion;
 use indexmap::IndexMap;
 use open_dds::arguments::ArgumentName;
 use open_dds::models::ModelName;
@@ -224,6 +225,113 @@ pub struct ComparisonOperators {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub other_operators: Vec<DataConnectorOperatorName>,
+}
+
+impl ComparisonOperators {
+    // TODO: this is a very crude backup lookup for operators.
+    // We keep it because v0.1 connectors don't have the newer
+    // set of comparison operator meanings (lt, lte, gt, gte),
+    // so until more connectors are on v0.2, we need a heuristic
+    // for finding these operators here.
+    pub(crate) fn find_comparison_operator<'a>(
+        &'a self,
+        operator_str: &str,
+        ndc_version: NdcVersion,
+    ) -> Option<&'a DataConnectorOperatorName> {
+        match ndc_version {
+            NdcVersion::V01 => self.other_operators.iter().find(|other_op| {
+                other_op.as_str() == operator_str
+                    || operator_str
+                        .strip_prefix("_")
+                        .is_some_and(|op| other_op.as_str() == op)
+            }),
+            NdcVersion::V02 => None,
+        }
+    }
+
+    pub fn get_eq_operator(&self, ndc_version: NdcVersion) -> Option<&DataConnectorOperatorName> {
+        self.eq_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_eq", ndc_version))
+    }
+
+    pub fn get_lt_operator(&self, ndc_version: NdcVersion) -> Option<&DataConnectorOperatorName> {
+        self.lt_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_lt", ndc_version))
+    }
+
+    pub fn get_lte_operator(&self, ndc_version: NdcVersion) -> Option<&DataConnectorOperatorName> {
+        self.lte_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_lte", ndc_version))
+    }
+
+    pub fn get_gt_operator(&self, ndc_version: NdcVersion) -> Option<&DataConnectorOperatorName> {
+        self.gt_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_gt", ndc_version))
+    }
+
+    pub fn get_gte_operator(&self, ndc_version: NdcVersion) -> Option<&DataConnectorOperatorName> {
+        self.gte_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_gte", ndc_version))
+    }
+
+    pub fn get_contains_operator(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorOperatorName> {
+        self.contains_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_contains", ndc_version))
+    }
+
+    pub fn get_icontains_operator(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorOperatorName> {
+        self.icontains_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_icontains", ndc_version))
+    }
+
+    pub fn get_starts_with_operator(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorOperatorName> {
+        self.starts_with_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_starts_with", ndc_version))
+    }
+
+    pub fn get_istarts_with_operator(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorOperatorName> {
+        self.istarts_with_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_istarts_with", ndc_version))
+    }
+
+    pub fn get_ends_with_operator(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorOperatorName> {
+        self.ends_with_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_ends_with", ndc_version))
+    }
+
+    pub fn get_iends_with_operator(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorOperatorName> {
+        self.iends_with_operator
+            .as_ref()
+            .or_else(|| self.find_comparison_operator("_iends_with", ndc_version))
+    }
 }
 
 /// Mapping from an object to their fields, which contain types.
