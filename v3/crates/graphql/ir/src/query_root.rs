@@ -88,6 +88,7 @@ pub fn generate_ir<'n, 's>(
                             result_base_type_kind,
                         } => {
                             let ir = generate_command_rootfield_ir(
+                                request_pipeline,
                                 name,
                                 &type_name,
                                 function_name.as_ref(),
@@ -244,6 +245,7 @@ pub fn generate_model_rootfield_ir<'n, 's>(
 }
 
 fn generate_command_rootfield_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     name: &'s metadata_resolve::Qualified<CommandName>,
     type_name: &ast::TypeName,
     function_name: Option<&'s open_dds::commands::FunctionName>,
@@ -273,18 +275,32 @@ fn generate_command_rootfield_ir<'n, 's>(
 
     let ir = root_field::QueryRootField::FunctionBasedCommand {
         selection_set: &field.selection_set,
-        ir: commands::generate_function_based_command(
-            name,
-            function_name,
-            field,
-            field_call,
-            result_type,
-            *result_base_type_kind,
-            source,
-            session_variables,
-            request_headers,
-            &mut usage_counts,
-        )?,
+        ir: match request_pipeline {
+            GraphqlRequestPipeline::Old => commands::generate_function_based_command(
+                name,
+                function_name,
+                field,
+                field_call,
+                result_type,
+                *result_base_type_kind,
+                source,
+                session_variables,
+                request_headers,
+                &mut usage_counts,
+            )?,
+            GraphqlRequestPipeline::OpenDd => commands::generate_function_based_command_open_dd(
+                name,
+                function_name,
+                field,
+                field_call,
+                result_type,
+                *result_base_type_kind,
+                source,
+                session_variables,
+                request_headers,
+                &mut usage_counts,
+            )?,
+        },
     };
     Ok(ir)
 }

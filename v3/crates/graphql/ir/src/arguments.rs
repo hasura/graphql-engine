@@ -11,9 +11,60 @@ use metadata_resolve::{
     ArgumentKind, DataConnectorLink, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference, TypeMapping,
 };
-use open_dds::types::{CustomTypeName, DataConnectorArgumentName, InbuiltType};
+use open_dds::{
+    arguments::ArgumentName,
+    identifier::Identifier,
+    types::{CustomTypeName, DataConnectorArgumentName, InbuiltType},
+};
 use plan::UnresolvedArgument;
 use plan_types::UsagesCounts;
+
+// fetch input values from annotations and turn them into either JSON or an Expression
+pub fn build_argument_as_value<'s>(
+    argument: &InputField<'s, GDS>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
+) -> Result<(ArgumentName, open_dds::query::Value), error::Error> {
+    let (argument_type, argument_kind) = match argument.info.generic {
+        Annotation::Input(
+            InputAnnotation::CommandArgument {
+                argument_type,
+                argument_kind,
+                ..
+            }
+            | InputAnnotation::Model(ModelInputAnnotation::ModelArgument {
+                argument_type,
+                argument_kind,
+                ..
+            }),
+        ) => Ok((argument_type, argument_kind)),
+
+        annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
+            annotation: annotation.clone(),
+        }),
+    }?;
+
+    // simple values are serialized to JSON, predicates
+    // are converted into NDC expressions (via our internal Expression type)
+    let mapped_argument_value = match argument_kind {
+        ArgumentKind::Other => {
+            map_argument_value_to_ndc_type(argument_type, &argument.value, type_mappings)
+                .map(open_dds::query::Value::Literal)?
+        }
+
+        ArgumentKind::NDCExpression => filter::resolve_filter_expression_open_dd(
+            argument.value.as_object()?,
+            session_variables,
+            usage_counts,
+        )
+        .map(open_dds::query::Value::BooleanExpression)?,
+    };
+
+    let argument_name = ArgumentName::new(Identifier::new(argument.name.as_str()).unwrap());
+
+    Ok((argument_name, mapped_argument_value))
+}
 
 // fetch input values from annotations and turn them into either JSON or an Expression
 pub fn build_ndc_argument_as_value<'a, 's>(

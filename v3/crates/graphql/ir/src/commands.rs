@@ -32,6 +32,20 @@ use plan::{count_command, process_argument_presets};
 use plan_types::NdcFieldAlias;
 use plan_types::UsagesCounts;
 
+#[derive(Serialize, Debug)]
+pub enum CommandSelection<'s> {
+    Ir {
+        /// Arguments for the NDC table
+        arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
+
+        /// IR for the command result selection set
+        selection: Option<selection_set::NestedSelection<'s>>,
+    },
+    OpenDd {
+        selection: open_dds::query::CommandSelection,
+    },
+}
+
 /// IR for the 'command' operations
 #[derive(Serialize, Debug)]
 pub struct CommandInfo<'s> {
@@ -44,11 +58,8 @@ pub struct CommandInfo<'s> {
     /// The data connector backing this model.
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 
-    /// Arguments for the NDC table
-    pub arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
-
     /// IR for the command result selection set
-    pub selection: Option<selection_set::NestedSelection<'s>>,
+    pub selection: CommandSelection<'s>,
 
     /// The Graphql base type for the output_type of command. Helps in deciding how
     /// the response from the NDC needs to be processed.
@@ -141,13 +152,80 @@ pub fn generate_command_info<'n, 's>(
         request_headers,
         &mut usage_counts,
     )?;
-    let selection = wrap_selection_in_response_config(command_source, selection);
+
+    // always generate classic IR for now
+    let selection = CommandSelection::Ir {
+        selection: wrap_selection_in_response_config(command_source, selection),
+        arguments: command_arguments,
+    };
 
     Ok(CommandInfo {
         command_name: Arc::new(command_name.clone()),
         field_name: field_call.name.clone(),
         data_connector: command_source.data_connector.clone(),
+        selection,
+        type_container: field.type_container.clone(),
+        usage_counts,
+    })
+}
+
+/// Generates the OpenDD IR for a 'command' operation
+#[allow(irrefutable_let_patterns)]
+pub fn generate_command_info_open_dd<'n, 's>(
+    command_name: &Qualified<commands::CommandName>,
+    field: &'n normalized_ast::Field<'s, GDS>,
+    field_call: &'n normalized_ast::FieldCall<'s, GDS>,
+    result_type: &QualifiedTypeReference,
+    result_base_type_kind: TypeKind,
+    command_source: &'s CommandSourceDetail,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<CommandInfo<'s>, error::Error> {
+    let mut command_arguments = IndexMap::new();
+    for argument in field_call.arguments.values() {
+        let (argument_name, argument_value) = arguments::build_argument_as_value(
+            argument,
+            &command_source.type_mappings,
+            session_variables,
+            usage_counts,
+        )?;
+
+        command_arguments.insert(argument_name, argument_value);
+    }
+
+    // Add the name of the root command
+    let mut usage_counts = UsagesCounts::new();
+    count_command(command_name, &mut usage_counts);
+
+    let target = open_dds::query::CommandTarget {
         arguments: command_arguments,
+        command_name: command_name.name.clone(),
+        subgraph: command_name.subgraph.clone(),
+    };
+
+    let nested_selection = selection_set::generate_nested_selection_open_dd_ir(
+        result_type,
+        result_base_type_kind,
+        metadata_resolve::FieldNestedness::NotNested,
+        selection_set::NestedSelectionType::CommandRootSelection,
+        field,
+        session_variables,
+        request_headers,
+        &mut usage_counts,
+    )?;
+
+    let selection = CommandSelection::OpenDd {
+        selection: open_dds::query::CommandSelection {
+            selection: nested_selection,
+            target,
+        },
+    };
+
+    Ok(CommandInfo {
+        command_name: Arc::new(command_name.clone()),
+        field_name: field_call.name.clone(),
+        data_connector: command_source.data_connector.clone(),
         selection,
         type_container: field.type_container.clone(),
         usage_counts,
@@ -210,6 +288,38 @@ pub fn generate_function_based_command<'n, 's>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<FunctionBasedCommand<'s>, error::Error> {
     let command_info = generate_command_info(
+        command_name,
+        field,
+        field_call,
+        result_type,
+        result_base_type_kind,
+        command_source,
+        session_variables,
+        request_headers,
+        usage_counts,
+    )?;
+
+    Ok(FunctionBasedCommand {
+        command_info,
+        function_name,
+        variable_arguments: BTreeMap::new(),
+    })
+}
+
+/// Generates the OpenDD IR for a 'function based command' operation
+pub fn generate_function_based_command_open_dd<'n, 's>(
+    command_name: &Qualified<commands::CommandName>,
+    function_name: &'s open_dds::commands::FunctionName,
+    field: &'n normalized_ast::Field<'s, GDS>,
+    field_call: &'n normalized_ast::FieldCall<'s, GDS>,
+    result_type: &QualifiedTypeReference,
+    result_base_type_kind: TypeKind,
+    command_source: &'s CommandSourceDetail,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<FunctionBasedCommand<'s>, error::Error> {
+    let command_info = generate_command_info_open_dd(
         command_name,
         field,
         field_call,

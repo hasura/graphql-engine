@@ -21,7 +21,7 @@ mod selection_set;
 mod subscription_root;
 
 pub use aggregates::mk_alias_from_graphql_field_path;
-pub use commands::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
+pub use commands::{CommandInfo, CommandSelection, FunctionBasedCommand, ProcedureBasedCommand};
 pub use error::{Error, InternalDeveloperError, InternalEngineError};
 pub use filter::FilterExpression;
 pub use global_id::{global_id_col_format, GLOBAL_ID_VERSION};

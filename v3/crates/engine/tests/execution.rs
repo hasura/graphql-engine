@@ -1198,7 +1198,7 @@ fn test_command_functions_object_output_type_command_permissions() -> anyhow::Re
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

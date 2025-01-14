@@ -8,17 +8,23 @@ use super::relationships;
 use super::selection_set;
 use crate::plan::Plan;
 use crate::ModelSelection;
+use hasura_authn_core::Session;
+use metadata_resolve::Metadata;
 use plan_types::{
     ExecutionTree, FieldsSelection, JoinLocations, NdcRelationshipName, PredicateQueryTrees,
     QueryExecutionPlan, QueryNodeNew, Relationship, UniqueNumber,
 };
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
 // #[async_recursion]
 pub(crate) fn plan_query_node(
     ir: &ModelSelection<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    metadata: &'_ Metadata,
+    session: &Arc<Session>,
+    request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<Plan<QueryNodeNew>, error::Error> {
     let mut query_fields = None;
@@ -33,6 +39,9 @@ pub(crate) fn plan_query_node(
             selection,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
+            metadata,
+            session,
+            request_headers,
             unique_number,
         )?;
 
@@ -77,6 +86,9 @@ pub(crate) fn plan_query_node(
 /// Generate query execution plan from internal IR (`ModelSelection`)
 pub(crate) fn plan_query_execution(
     ir: &ModelSelection<'_>,
+    metadata: &'_ Metadata,
+    session: &Arc<Session>,
+    request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<ExecutionTree, error::Error> {
     let mut collection_relationships = BTreeMap::new();
@@ -84,7 +96,14 @@ pub(crate) fn plan_query_execution(
         inner: query,
         join_locations: remote_join_executions,
         mut remote_predicates,
-    } = plan_query_node(ir, &mut collection_relationships, unique_number)?;
+    } = plan_query_node(
+        ir,
+        &mut collection_relationships,
+        metadata,
+        session,
+        request_headers,
+        unique_number,
+    )?;
 
     // collection relationships from order_by clause
     relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;

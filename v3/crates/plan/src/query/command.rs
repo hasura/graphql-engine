@@ -81,7 +81,14 @@ pub(crate) fn from_command_selection(
     command_source: &metadata_resolve::CommandSource,
     unique_number: &mut UniqueNumber,
 ) -> Result<FromCommand, PlanError> {
+    let output_shape = return_type_shape(&command.command.output_type).ok_or_else(|| {
+        PlanError::Internal(
+            "Expected object or array of objects as command return type".to_string(),
+        )
+    })?;
+
     let output_object_type_name = unwrap_custom_type_name(&command.command.output_type).unwrap();
+
     let output_object_type = metadata
         .object_types
         .get(output_object_type_name)
@@ -161,12 +168,6 @@ pub(crate) fn from_command_selection(
     {
         ndc_arguments.insert(argument_name, value);
     }
-
-    let output_shape = return_type_shape(&command.command.output_type).ok_or_else(|| {
-        PlanError::Internal(
-            "Expected object or array of objects as command return type".to_string(),
-        )
-    })?;
 
     let command_plan = match &command_source.source {
         DataConnectorCommand::Function(function_name) => CommandPlan::Function(NDCFunction {

@@ -18,7 +18,6 @@ use super::{
     permissions,
     selection_set::FieldSelection,
 };
-
 use crate::error;
 use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, CommandTargetSource,
