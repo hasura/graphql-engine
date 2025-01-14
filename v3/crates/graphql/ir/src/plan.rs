@@ -143,7 +143,7 @@ fn plan_subscription<'s, 'ir>(
                 }
                 ModelSelectOneSelection::OpenDd(ref model_selection) => {
                     // TODO: expose more specific function in `plan` for just model selections
-                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                    let single_node_execution_plan = plan::query_to_plan(
                         &open_dds::query::Query::Model(model_selection.clone()),
                         metadata,
                         session,
@@ -187,7 +187,7 @@ fn plan_subscription<'s, 'ir>(
                 }
                 ModelSelectManySelection::OpenDd(ref model_selection) => {
                     // TODO: expose more specific function in `plan` for just model selections
-                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                    let single_node_execution_plan = plan::query_to_plan(
                         &open_dds::query::Query::Model(model_selection.clone()),
                         metadata,
                         session,
@@ -231,7 +231,7 @@ fn plan_subscription<'s, 'ir>(
                 }
                 ModelSelectAggregateSelection::OpenDd(model_aggregate_selection) => {
                     // TODO: expose more specific function in `plan` for just model selections
-                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                    let single_node_execution_plan = plan::query_to_plan(
                         &open_dds::query::Query::ModelAggregate(model_aggregate_selection.clone()),
                         metadata,
                         session,
@@ -310,7 +310,7 @@ fn plan_query<'n, 's, 'ir>(
                 }
                 ModelSelectOneSelection::OpenDd(ref model_selection) => {
                     // TODO: expose more specific function in `plan` for just model selections
-                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                    let single_node_execution_plan = plan::query_to_plan(
                         &open_dds::query::Query::Model(model_selection.clone()),
                         metadata,
                         session,
@@ -349,7 +349,7 @@ fn plan_query<'n, 's, 'ir>(
                 }
                 ModelSelectManySelection::OpenDd(ref model_selection) => {
                     // TODO: expose more specific function in `plan` for just model selections
-                    let (single_node_execution_plan, _) = plan::query_to_plan(
+                    let single_node_execution_plan = plan::query_to_plan(
                         &open_dds::query::Query::Model(model_selection.clone()),
                         metadata,
                         session,
@@ -388,7 +388,7 @@ fn plan_query<'n, 's, 'ir>(
                     }
                     ModelSelectAggregateSelection::OpenDd(model_aggregate_selection) => {
                         // TODO: expose more specific function in `plan` for just model selections
-                        let (single_node_execution_plan, _) = plan::query_to_plan(
+                        let single_node_execution_plan = plan::query_to_plan(
                             &open_dds::query::Query::ModelAggregate(
                                 model_aggregate_selection.clone(),
                             ),

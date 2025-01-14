@@ -1,5 +1,4 @@
 use super::types::{RelationshipNode, RelationshipTree};
-use super::QueryResult;
 use metadata_resolve::Qualified;
 use open_dds::{relationships::RelationshipType, types::CustomTypeName};
 use std::collections::BTreeMap;
@@ -180,18 +179,19 @@ fn collect_relationship_value(
 }
 
 pub fn process_result(
-    result: QueryResult,
+    rowsets: Vec<ndc_models::RowSet>,
+    root_type_name: &Qualified<CustomTypeName>,
     relationship_tree: &RelationshipTree,
 ) -> jsonapi_library::api::DocumentData {
     let mut unique_id = 1;
 
     let mut resources = vec![];
     let mut collect_relationships = vec![];
-    if let Some(first_rowset) = result.rowsets.into_iter().next() {
+    if let Some(first_rowset) = rowsets.into_iter().next() {
         resources.extend(to_resource(
             &mut unique_id,
             first_rowset,
-            &result.type_name,
+            root_type_name,
             relationship_tree,
             &mut collect_relationships,
         ));

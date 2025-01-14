@@ -15,14 +15,12 @@ use std::sync::Arc;
 use hasura_authn_core::Session;
 use metadata_resolve::{Metadata, Qualified};
 use open_dds::query::{Aggregate, AggregationFunction, ModelSelection, ModelTarget, Operand};
-use open_dds::types::CustomTypeName;
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, NdcFieldAlias,
     QueryExecutionPlan, QueryNodeNew, UniqueNumber,
 };
 
 pub struct ModelAggregateSelection {
-    pub object_type_name: Qualified<CustomTypeName>,
     pub query: NDCQuery,
     pub fields: IndexMap<NdcFieldAlias, AggregateFieldSelection>,
 }
@@ -121,11 +119,7 @@ pub fn from_model_aggregate_selection(
         unique_number,
     )?;
 
-    Ok(ModelAggregateSelection {
-        object_type_name: model.model.data_type.clone(),
-        query,
-        fields,
-    })
+    Ok(ModelAggregateSelection { query, fields })
 }
 
 fn get_ndc_aggregation_function(
@@ -165,7 +159,7 @@ pub fn from_model_selection(
     session: &Arc<Session>,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<(Qualified<CustomTypeName>, NDCQuery, FieldsSelection), PlanError> {
+) -> Result<(NDCQuery, FieldsSelection), PlanError> {
     let model_target = &model_selection.target;
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
@@ -221,11 +215,7 @@ pub fn from_model_selection(
     // collect relationships accummulated in this scope.
     query.collection_relationships.append(&mut relationships);
 
-    Ok((
-        model.model.data_type.clone(),
-        query,
-        FieldsSelection { fields: ndc_fields },
-    ))
+    Ok((query, FieldsSelection { fields: ndc_fields }))
 }
 
 // take NDCQuery and fields and make a sweet execution plan

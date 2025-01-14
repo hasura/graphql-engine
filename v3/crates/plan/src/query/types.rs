@@ -1,11 +1,10 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use metadata_resolve::Qualified;
 use open_dds::{
     commands::{FunctionName, ProcedureName},
     data_connector::CollectionName,
-    types::{CustomTypeName, DataConnectorArgumentName},
+    types::DataConnectorArgumentName,
 };
 use plan_types::{
     Argument, Field, NdcFieldAlias, NdcRelationshipName, NestedField, OrderByElement, Relationship,
@@ -13,11 +12,6 @@ use plan_types::{
 };
 
 use indexmap::IndexMap;
-
-// additional query context which is helpful when processing the response afterwards
-pub struct QueryContext {
-    pub type_name: Qualified<CustomTypeName>,
-}
 
 #[derive(Debug, Clone)]
 // intermediate type constructed whilst planning a model selection

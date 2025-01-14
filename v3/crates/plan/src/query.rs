@@ -26,7 +26,7 @@ pub use relationships::{
     process_command_relationship_definition, process_model_relationship_definition,
 };
 use std::sync::Arc;
-pub use types::{NDCFunction, NDCProcedure, NDCQuery, QueryContext};
+pub use types::{NDCFunction, NDCProcedure, NDCQuery};
 
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
@@ -41,13 +41,8 @@ pub enum SingleNodeExecutionPlan {
     Mutation(plan_types::MutationExecutionPlan),
 }
 
-pub struct QueryExecution {
-    pub execution_tree: ExecutionTree,
-    pub query_context: QueryContext,
-}
-
 pub enum ExecutionPlan {
-    Queries(IndexMap<Alias, QueryExecution>),
+    Queries(IndexMap<Alias, ExecutionTree>),
     Mutation(plan_types::MutationExecutionPlan), // currently only support a single mutation
 }
 
@@ -68,7 +63,7 @@ where
     let mut mutation = None;
 
     for (alias, query) in &query_request_v1.queries {
-        let (single_node, query_context) = query_to_plan(
+        let single_node = query_to_plan(
             query,
             metadata,
             session,
@@ -78,13 +73,7 @@ where
 
         match single_node {
             SingleNodeExecutionPlan::Query(execution_tree) => {
-                queries.insert(
-                    alias.clone(),
-                    QueryExecution {
-                        execution_tree,
-                        query_context,
-                    },
-                );
+                queries.insert(alias.clone(), execution_tree);
             }
             SingleNodeExecutionPlan::Mutation(mutation_execution_plan) => {
                 if mutation.is_some() {
@@ -116,13 +105,13 @@ pub fn query_to_plan<'req, 'metadata>(
     session: &Arc<Session>,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<(SingleNodeExecutionPlan, QueryContext), PlanError>
+) -> Result<SingleNodeExecutionPlan, PlanError>
 where
     'metadata: 'req,
 {
     match query {
         open_dds::query::Query::Model(model_selection) => {
-            let (type_name, ndc_query, fields) = model::from_model_selection(
+            let (ndc_query, fields) = model::from_model_selection(
                 model_selection,
                 metadata,
                 session,
@@ -132,17 +121,13 @@ where
 
             let query_execution_plan =
                 model::ndc_query_to_query_execution_plan(&ndc_query, &fields, &IndexMap::new());
-            let query_context = QueryContext { type_name };
             let execution_tree = ExecutionTree {
                 query_execution_plan,
                 remote_predicates: PredicateQueryTrees::new(),
                 remote_join_executions: JoinLocations::new(),
             };
 
-            Ok((
-                SingleNodeExecutionPlan::Query(execution_tree),
-                query_context,
-            ))
+            Ok(SingleNodeExecutionPlan::Query(execution_tree))
         }
         open_dds::query::Query::ModelAggregate(model_aggregate) => {
             // we have to use `String` rather than `Alias` in the planning code so not to restrict ourselves to aliases
@@ -155,7 +140,6 @@ where
                 .collect();
 
             let ModelAggregateSelection {
-                object_type_name: type_name,
                 query: ndc_query,
                 fields: aggregate_fields,
             } = model::from_model_aggregate_selection(
@@ -174,22 +158,17 @@ where
                 },
                 &aggregate_fields,
             );
-            let query_context = QueryContext { type_name };
             let execution_tree = ExecutionTree {
                 query_execution_plan,
                 remote_predicates: PredicateQueryTrees::new(),
                 remote_join_executions: JoinLocations::new(),
             };
-            Ok((
-                SingleNodeExecutionPlan::Query(execution_tree),
-                query_context,
-            ))
+            Ok(SingleNodeExecutionPlan::Query(execution_tree))
         }
 
         open_dds::query::Query::Command(command_selection) => {
             let command::FromCommand {
                 command_plan,
-                output_object_type_name,
                 extract_response_from: _,
             } = command::from_command(
                 command_selection,
@@ -202,30 +181,18 @@ where
                 command::CommandPlan::Function(ndc_function) => {
                     let query_execution_plan = command::execute_plan_from_function(&ndc_function);
 
-                    let query_context = QueryContext {
-                        type_name: output_object_type_name,
-                    };
                     let execution_tree = ExecutionTree {
                         query_execution_plan,
                         remote_predicates: PredicateQueryTrees::new(),
                         remote_join_executions: JoinLocations::new(),
                     };
 
-                    Ok((
-                        SingleNodeExecutionPlan::Query(execution_tree),
-                        query_context,
-                    ))
+                    Ok(SingleNodeExecutionPlan::Query(execution_tree))
                 }
                 command::CommandPlan::Procedure(ndc_procedure) => {
                     let query_execution_plan = command::execute_plan_from_procedure(&ndc_procedure);
 
-                    let query_context = QueryContext {
-                        type_name: output_object_type_name,
-                    };
-                    Ok((
-                        SingleNodeExecutionPlan::Mutation(query_execution_plan),
-                        query_context,
-                    ))
+                    Ok(SingleNodeExecutionPlan::Mutation(query_execution_plan))
                 }
             }
         }

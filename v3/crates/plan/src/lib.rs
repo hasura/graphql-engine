@@ -18,7 +18,7 @@ pub use query::{
     plan_expression, plan_query_request, process_argument_presets,
     process_command_relationship_definition, process_model_predicate,
     process_model_relationship_definition, query_to_plan, CommandPlan, ExecutionPlan, FromCommand,
-    ModelAggregateSelection, NDCFunction, NDCProcedure, NDCQuery, QueryExecution,
-    SingleNodeExecutionPlan, UnresolvedArgument,
+    ModelAggregateSelection, NDCFunction, NDCProcedure, NDCQuery, SingleNodeExecutionPlan,
+    UnresolvedArgument,
 };
 pub use types::PlanError;

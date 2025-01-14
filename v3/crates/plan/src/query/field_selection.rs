@@ -346,7 +346,7 @@ fn from_model_relationship(
         selection: selection.as_ref().map_or_else(IndexMap::new, Clone::clone),
     };
 
-    let (_, ndc_query, ndc_fields) = super::model::from_model_selection(
+    let (ndc_query, ndc_fields) = super::model::from_model_selection(
         &relationship_target_model_selection,
         metadata,
         session,
@@ -640,7 +640,6 @@ fn from_relationship_aggregate_selection(
             };
 
             let super::model::ModelAggregateSelection {
-                object_type_name: _,
                 query: ndc_query,
                 fields: aggregate_fields,
             } = super::model::from_model_aggregate_selection(

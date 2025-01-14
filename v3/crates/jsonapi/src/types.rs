@@ -109,12 +109,6 @@ pub struct ModelInfo {
     pub relationship: Vec<String>,
 }
 
-// this is not the correct output type, we should be outputting a JSONAPI document instead
-pub struct QueryResult {
-    pub type_name: Qualified<CustomTypeName>,
-    pub rowsets: Vec<ndc_models::RowSet>,
-}
-
 /// A tree of relationships, used in processing of relationships in the JSON:API response creation
 #[derive(Default)]
 pub struct RelationshipTree {

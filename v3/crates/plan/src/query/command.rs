@@ -13,7 +13,6 @@ use open_dds::query::CommandSelection;
 use open_dds::{
     commands::DataConnectorCommand,
     data_connector::{CollectionName, DataConnectorColumnName},
-    types::CustomTypeName,
 };
 use plan_types::{
     Argument, Field, MutationArgument, MutationExecutionPlan, NdcFieldAlias, NestedArray,
@@ -31,7 +30,6 @@ pub enum CommandPlan {
 
 pub struct FromCommand {
     pub command_plan: CommandPlan,
-    pub output_object_type_name: Qualified<CustomTypeName>,
     pub extract_response_from: Option<DataConnectorColumnName>,
 }
 
@@ -188,7 +186,6 @@ pub(crate) fn from_command_selection(
     };
     Ok(FromCommand {
         command_plan,
-        output_object_type_name: output_object_type_name.clone(),
         extract_response_from,
     })
 }

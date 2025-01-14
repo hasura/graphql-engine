@@ -38,6 +38,11 @@ fn get_object_type<'a>(
         .ok_or_else(|| ParseError::CannotFindObjectType(object_type_name.clone()))
 }
 
+pub struct QueryIR {
+    pub query_request: open_dds::query::QueryRequest,
+    pub root_type_name: Qualified<CustomTypeName>,
+}
+
 pub fn create_query_ir(
     model: &Model,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
@@ -45,7 +50,7 @@ pub fn create_query_ir(
     uri: &Uri,
     relationship_tree: &mut RelationshipTree,
     query_string: &jsonapi_library::query::Query,
-) -> Result<open_dds::query::QueryRequest, RequestError> {
+) -> Result<QueryIR, RequestError> {
     // get model info from parsing URI
     let ModelInfo {
         subgraph,
@@ -122,9 +127,12 @@ pub fn create_query_ir(
         open_dds::query::Alias::new(identifier!("jsonapi_model_query")),
         open_dds::query::Query::Model(model_selection),
     )]);
-    Ok(open_dds::query::QueryRequest::V1(
-        open_dds::query::QueryRequestV1 { queries },
-    ))
+    Ok(QueryIR {
+        query_request: open_dds::query::QueryRequest::V1(open_dds::query::QueryRequestV1 {
+            queries,
+        }),
+        root_type_name: model.data_type.clone(),
+    })
 }
 
 fn resolve_field_selection(

@@ -14,7 +14,7 @@ pub use middleware::rest_request_tracing_middleware;
 use open_dds::relationships::RelationshipType;
 pub use parse::ParseError;
 pub use schema::{empty_schema, openapi_schema};
-pub use types::{InternalError, ModelInfo, QueryResult, RequestError};
+pub use types::{InternalError, ModelInfo, RequestError};
 
 /// Helper function to convert a type reference to a relationship type.
 pub(crate) fn type_reference_to_relationship_type(
