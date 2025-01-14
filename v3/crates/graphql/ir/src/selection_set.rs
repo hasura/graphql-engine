@@ -86,7 +86,6 @@ impl ResultSelectionSet<'_> {
 // TODO: placeholder: this needs implementing with the new types
 fn build_global_id_fields_for_open_dd_ir(
     _global_id_fields: &[FieldName],
-    _field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     _field_alias: &Alias,
     _fields: &mut IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>,
 ) {
@@ -129,6 +128,67 @@ pub enum NestedSelectionType {
 
     /// Any other nested selection
     NestedSelection,
+}
+
+pub fn generate_nested_selection_open_dd_ir(
+    qualified_type_reference: &metadata_resolve::QualifiedTypeReference,
+    field_base_type_kind: TypeKind,
+    selection_set_field_nestedness: metadata_resolve::FieldNestedness,
+    nested_selection_type: NestedSelectionType,
+    field: &normalized_ast::Field<'_, GDS>,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<
+    Option<IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>>,
+    error::Error,
+> {
+    match &qualified_type_reference.underlying_type {
+        metadata_resolve::QualifiedBaseType::List(element_type) => {
+            // If we're selecting the root of a command, then we don't regard this as a "nested field" as such
+            // until we nest past the return type of the command.
+            // Commands use nested selections for their root because they are either embedded in a '__value'
+            // field in a single row for queries or use nested selection types at their root for mutations.
+            // However, we don't consider these to be truly nested until they nest past their return type.
+            let new_nestedness = match nested_selection_type {
+                NestedSelectionType::CommandRootSelection => selection_set_field_nestedness,
+                NestedSelectionType::NestedSelection => selection_set_field_nestedness
+                    .max(metadata_resolve::FieldNestedness::ArrayNested),
+            };
+
+            let array_selection = generate_nested_selection_open_dd_ir(
+                element_type,
+                field_base_type_kind,
+                new_nestedness,
+                NestedSelectionType::NestedSelection,
+                field,
+                session_variables,
+                request_headers,
+                usage_counts,
+            )?;
+            Ok(array_selection) // TODO: do we need to wrap this?
+        }
+        metadata_resolve::QualifiedBaseType::Named(qualified_type_name) => {
+            match qualified_type_name {
+                metadata_resolve::QualifiedTypeName::Inbuilt(_) => Ok(None), // Inbuilt types are all scalars so there should be no subselections.
+                metadata_resolve::QualifiedTypeName::Custom(_data_type) => {
+                    match field_base_type_kind {
+                        TypeKind::Scalar => Ok(None),
+                        TypeKind::Object => {
+                            let nested_selection = generate_selection_set_open_dd_ir(
+                                &field.selection_set,
+                                selection_set_field_nestedness,
+                                session_variables,
+                                request_headers,
+                                usage_counts,
+                            )?;
+                            Ok(Some(nested_selection))
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub fn generate_nested_selection<'s>(
@@ -208,15 +268,9 @@ pub fn generate_nested_selection<'s>(
 }
 
 /// Builds the OpenDD IR from a normalized selection set
-pub fn generate_selection_set_open_dd_ir<'s>(
-    selection_set: &normalized_ast::SelectionSet<'s, GDS>,
+pub fn generate_selection_set_open_dd_ir(
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     selection_set_field_nestedness: metadata_resolve::FieldNestedness,
-    data_connector: &'s metadata_resolve::DataConnectorLink,
-    type_mappings: &'s BTreeMap<
-        metadata_resolve::Qualified<CustomTypeName>,
-        metadata_resolve::TypeMapping,
-    >,
-    field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -231,67 +285,25 @@ pub fn generate_selection_set_open_dd_ir<'s>(
                         name,
                         field_type,
                         field_base_type_kind,
-                        argument_types,
+                        argument_types: _,
                         ..
                     } => {
-                        let field_mapping = &field_mappings.get(name).ok_or_else(|| {
-                            error::InternalEngineError::InternalGeneric {
-                                description: format!("invalid field in annotation: {name:}"),
-                            }
-                        })?;
-                        let _nested_selection = generate_nested_selection(
+                        let nested_selection = generate_nested_selection_open_dd_ir(
                             field_type,
                             *field_base_type_kind,
                             selection_set_field_nestedness
                                 .max(metadata_resolve::FieldNestedness::ObjectNested),
                             NestedSelectionType::NestedSelection,
                             field,
-                            data_connector,
-                            type_mappings,
                             session_variables,
                             request_headers,
                             usage_counts,
                         )?;
-                        let mut field_arguments = BTreeMap::new();
-                        for (argument_name, argument_type) in argument_types {
-                            let argument_value = match field_call.arguments.get(argument_name) {
-                                None => {
-                                    if argument_type.nullable {
-                                        Ok(None)
-                                    } else {
-                                        Err(error::Error::MissingNonNullableArgument {
-                                            argument_name: argument_name.to_string(),
-                                            field_name: name.to_string(),
-                                        })
-                                    }
-                                }
-                                Some(val) => arguments::map_argument_value_to_ndc_type(
-                                    argument_type,
-                                    &val.value,
-                                    type_mappings,
-                                )
-                                .map(Some),
-                            }?;
-                            if let Some(argument_value) = argument_value {
-                                let argument = UnresolvedArgument::Literal {
-                                    value: argument_value,
-                                };
-                                // If argument name is not found in the mapping, use the open_dd argument name as the ndc argument name
-                                let ndc_argument_name = field_mapping
-                                    .argument_mappings
-                                    .get(argument_name.as_str())
-                                    .map_or_else(
-                                        || DataConnectorArgumentName::from(argument_name.as_str()),
-                                        Clone::clone,
-                                    );
-                                field_arguments.insert(ndc_argument_name, argument);
-                            }
-                        }
 
-                        // TODO: implement arguments and nested selection
+                        // TODO: implement arguments
                         let field_selection = open_dds::query::ObjectSubSelection::Field(
                             open_dds::query::ObjectFieldSelection {
-                                selection: None,
+                                selection: nested_selection,
                                 target: open_dds::query::ObjectFieldTarget {
                                     arguments: IndexMap::new(),
                                     field_name: name.clone(),
@@ -305,7 +317,6 @@ pub fn generate_selection_set_open_dd_ir<'s>(
                     OutputAnnotation::GlobalIDField { global_id_fields } => {
                         build_global_id_fields_for_open_dd_ir(
                             global_id_fields,
-                            field_mappings,
                             &field.alias,
                             &mut fields,
                         );
@@ -332,7 +343,6 @@ pub fn generate_selection_set_open_dd_ir<'s>(
 
                         build_global_id_fields_for_open_dd_ir(
                             global_id_fields,
-                            field_mappings,
                             &field.alias,
                             &mut fields,
                         );

@@ -169,8 +169,6 @@ pub fn select_many_generate_ir<'n, 's>(
 
             ModelSelectManySelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
-                data_type,
-                model_source,
                 model_name,
                 where_clause,
                 limit,

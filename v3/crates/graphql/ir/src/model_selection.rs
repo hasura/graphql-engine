@@ -68,10 +68,8 @@ struct FilterInputArguments<'s> {
 
 /// Generates the IR fragment for selecting from a model.
 #[allow(clippy::too_many_arguments)]
-pub fn model_selection_open_dd_ir<'s>(
-    selection_set: &normalized_ast::SelectionSet<'s, GDS>,
-    data_type: &Qualified<CustomTypeName>,
-    model_source: &'s metadata_resolve::ModelSource,
+pub fn model_selection_open_dd_ir(
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     model_name: &Qualified<ModelName>,
     where_clause: Option<open_dds::query::BooleanExpression>,
     limit: Option<u32>,
@@ -80,13 +78,9 @@ pub fn model_selection_open_dd_ir<'s>(
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::ModelSelection, error::Error> {
-    let field_mappings = get_field_mappings_for_object_type(model_source, data_type)?;
     let selection = selection_set::generate_selection_set_open_dd_ir(
         selection_set,
         metadata_resolve::FieldNestedness::NotNested,
-        &model_source.data_connector,
-        &model_source.type_mappings,
-        field_mappings,
         session_variables,
         request_headers,
         usage_counts,

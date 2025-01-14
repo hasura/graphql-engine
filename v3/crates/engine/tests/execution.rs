@@ -444,7 +444,7 @@ fn test_model_select_many_where_nested_select_object() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[shared_metadata, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

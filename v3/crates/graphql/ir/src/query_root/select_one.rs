@@ -151,8 +151,6 @@ pub fn select_one_generate_ir<'n, 's>(
 
             ModelSelectOneSelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
-                data_type,
-                model_source,
                 model_name,
                 where_clause,
                 None, // limit
