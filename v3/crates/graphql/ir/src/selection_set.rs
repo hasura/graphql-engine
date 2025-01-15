@@ -166,7 +166,7 @@ pub fn generate_nested_selection_open_dd_ir(
                 request_headers,
                 usage_counts,
             )?;
-            Ok(array_selection) // TODO: do we need to wrap this?
+            Ok(array_selection)
         }
         metadata_resolve::QualifiedBaseType::Named(qualified_type_name) => {
             match qualified_type_name {

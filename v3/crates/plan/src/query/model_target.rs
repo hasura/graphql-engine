@@ -1,6 +1,5 @@
-use super::arguments::{process_argument_presets, UnresolvedArgument};
-use super::boolean_expression;
-use super::filter::plan_expression;
+use super::arguments::process_arguments;
+use super::filter::resolve_filter_expression;
 use super::permissions::process_model_predicate;
 use super::types::NDCQuery;
 use crate::filter::to_resolved_filter_expr;
@@ -11,29 +10,7 @@ use std::collections::BTreeMap;
 use hasura_authn_core::Session;
 use metadata_resolve::FilterPermission;
 use open_dds::query::ModelTarget;
-use plan_types::{
-    Argument, PredicateQueryTrees, Relationship, ResolvedFilterExpression, UniqueNumber,
-};
-
-// Turn a `plan_types::Expression` into `execute::ResolvedFilterExpression`
-// Currently this works by running all the remote predicates, soon it won't need to
-fn resolve_filter_expression(
-    filter_ir: &plan_types::Expression<'_>,
-    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
-    unique_number: &mut UniqueNumber,
-) -> Result<(ResolvedFilterExpression, PredicateQueryTrees), PlanError> {
-    let mut remote_predicates = plan_types::PredicateQueryTrees::new();
-
-    let resolved_filter_expression = plan_expression(
-        filter_ir,
-        relationships,
-        &mut remote_predicates,
-        unique_number,
-    )
-    .map_err(|e| PlanError::Internal(format!("error constructing permission filter plan: {e}")))?;
-
-    Ok((resolved_filter_expression, remote_predicates))
-}
+use plan_types::{Relationship, ResolvedFilterExpression, UniqueNumber};
 
 pub fn model_target_to_ndc_query(
     model_target: &ModelTarget,
@@ -84,67 +61,26 @@ pub fn model_target_to_ndc_query(
         }
     }?;
 
-    let mut graphql_ir_arguments = BTreeMap::new();
-    for (argument_name, argument_value) in &model_target.arguments {
-        let ndc_argument_name = model_source.argument_mappings.get(argument_name).ok_or_else(|| PlanError::Internal(format!("couldn't fetch argument mapping for argument {argument_name} of model {qualified_model_name}")))?;
-        let ndc_argument_value = match argument_value {
-            open_dds::query::Value::BooleanExpression(bool_exp) => {
-                // this implementation is incomplete
-                // and should be filled out once we implement user-defined filters here
-                let predicate =
-                    boolean_expression::open_dd_boolean_expression_to_plan_types_expression(
-                        bool_exp,
-                        &model_source.type_mappings,
-                        &model.model.data_type,
-                    )?;
-
-                UnresolvedArgument::BooleanExpression { predicate }
-            }
-            open_dds::query::Value::Literal(value) => UnresolvedArgument::Literal {
-                value: value.clone(),
-            },
-        };
-        graphql_ir_arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
-    }
-
-    let argument_presets_for_role = model.argument_presets.get(&session.role).unwrap();
-
-    // add any preset arguments from model permissions
-    let arguments_with_presets = process_argument_presets(
+    // resolve arguments, adding in presets
+    let resolved_arguments = process_arguments(
+        &model_target.arguments,
+        &model.argument_presets,
+        &model.model.arguments,
+        &model_source.argument_mappings,
         &model_source.data_connector,
         &model_source.type_mappings,
-        Some(argument_presets_for_role),
         &model_source.data_connector_link_argument_presets,
-        &session.variables,
+        session,
         request_headers,
-        graphql_ir_arguments,
+        metadata,
         &mut usage_counts,
-    )
-    .map_err(|e| PlanError::Internal(e.to_string()))?;
-
-    // now we turn the GraphQL IR `Arguments` type into the `execute` "resolved" argument type
-    // by resolving any `Expression` types inside
-    // this currently involves executing any remote predicates, but should not in future
-    let mut resolved_arguments = BTreeMap::new();
-    for (argument_name, argument_value) in &arguments_with_presets {
-        let resolved_argument_value = match argument_value {
-            UnresolvedArgument::BooleanExpression { predicate } => {
-                let (resolved_filter_expression, _remote_predicates) =
-                    resolve_filter_expression(predicate, &mut relationships, unique_number)?;
-
-                Argument::BooleanExpression {
-                    predicate: resolved_filter_expression,
-                }
-            }
-            UnresolvedArgument::Literal { value } => Argument::Literal {
-                value: value.clone(),
-            },
-        };
-        resolved_arguments.insert(argument_name.clone(), resolved_argument_value.clone());
-    }
+        &mut relationships,
+        unique_number,
+    )?;
 
     // if we are going to filter our results, we must have a `BooleanExpressionType` defined for
     // our model
+    // todo: what to do for SELECT ONE filters, we shouldn't need a bool exp for that?
     let model_filter = match &model_target.filter {
         Some(expr) => {
             let boolean_expression_type =

@@ -30,7 +30,7 @@ pub struct NDCQuery {
 pub struct NDCFunction {
     pub function_name: FunctionName,
     pub fields: IndexMap<NdcFieldAlias, Field>,
-    pub arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, Argument>,
     pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 }
@@ -38,7 +38,7 @@ pub struct NDCFunction {
 #[derive(Debug, Clone)]
 pub struct NDCProcedure {
     pub procedure_name: ProcedureName,
-    pub arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, Argument>,
     pub fields: Option<NestedField>,
     pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,

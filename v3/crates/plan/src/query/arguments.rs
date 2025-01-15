@@ -1,21 +1,26 @@
+use super::boolean_expression;
+use super::filter::resolve_filter_expression;
 use super::permissions;
-
-use hasura_authn_core::SessionVariables;
+use hasura_authn_core::{Role, Session, SessionVariables};
+use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
 use metadata_resolve::{
-    ArgumentNameAndPath, ArgumentPresets, Qualified, QualifiedTypeReference, TypeMapping,
+    unwrap_custom_type_name, ArgumentInfo, ArgumentNameAndPath, ArgumentPresets, Metadata,
+    Qualified, QualifiedTypeReference, TypeMapping,
 };
 use nonempty::NonEmpty;
 use open_dds::{
+    arguments::ArgumentName,
     data_connector::DataConnectorColumnName,
     types::{CustomTypeName, DataConnectorArgumentName},
 };
-use plan_types::{Expression, UsagesCounts};
+use plan_types::{Argument, Expression, Relationship, UniqueNumber, UsagesCounts};
 use reqwest::header::HeaderMap;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
 use crate::error::{InternalDeveloperError, InternalEngineError, InternalError};
+use crate::PlanError;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub enum UnresolvedArgument<'s> {
@@ -240,146 +245,94 @@ pub fn process_connector_link_presets(
     Ok(arguments)
 }
 
-/*
-// fetch input values from annotations and turn them into either JSON or an Expression
-pub fn build_ndc_argument_as_value<'a, 's>(
-    command_field: &'a Name,
-    argument: &'a InputField<'s, GDS>,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    data_connector_link: &'s DataConnectorLink,
-    session_variables: &SessionVariables,
-    usage_counts: &mut UsagesCounts,
-) -> Result<(DataConnectorArgumentName, Argument<'s>), error::Error> {
-    let (argument_type, argument_kind, ndc_argument) = match argument.info.generic {
-        Annotation::Input(InputAnnotation::CommandArgument {
-            argument_type,
-            argument_kind,
-            ndc_func_proc_argument,
-        }) => Ok((argument_type, argument_kind, ndc_func_proc_argument)),
-        Annotation::Input(InputAnnotation::Model(ModelInputAnnotation::ModelArgument {
-            argument_type,
-            argument_kind,
-            ndc_table_argument,
-        })) => Ok((argument_type, argument_kind, ndc_table_argument)),
-
-        annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
-            annotation: annotation.clone(),
-        }),
-    }?;
-
-    let ndc_argument =
-        ndc_argument
-            .clone()
-            .ok_or_else(|| error::InternalDeveloperError::NoArgumentSource {
-                field_name: command_field.clone(),
-                argument_name: argument.name.clone(),
-            })?;
-
-    // simple values are serialized to JSON, predicates
-    // are converted into NDC expressions (via our internal Expression type)
-    let mapped_argument_value = match argument_kind {
-        ArgumentKind::Other => {
-            map_argument_value_to_ndc_type(argument_type, &argument.value, type_mappings)
-                .map(|value| Argument::Literal { value })?
-        }
-
-        ArgumentKind::NDCExpression => filter::resolve_filter_expression(
-            argument.value.as_object()?,
-            data_connector_link,
-            type_mappings,
-            session_variables,
-            usage_counts,
-        )
-        .map(|predicate| Argument::BooleanExpression { predicate })?,
-    };
-    Ok((ndc_argument, mapped_argument_value))
-}
-
-pub(crate) fn map_argument_value_to_ndc_type(
-    value_type: &QualifiedTypeReference,
-    value: &Value<GDS>,
+pub fn process_arguments(
+    input_arguments: &IndexMap<ArgumentName, open_dds::query::Value>,
+    argument_presets: &BTreeMap<Role, ArgumentPresets>,
+    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
+    argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    data_connector: &metadata_resolve::DataConnectorLink,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<serde_json::Value, error::Error> {
-    if value.is_null() {
-        return Ok(serde_json::Value::Null);
+    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
+    session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
+    metadata: &Metadata,
+    usage_counts: &mut plan_types::UsagesCounts,
+    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
+) -> Result<BTreeMap<DataConnectorArgumentName, Argument>, PlanError> {
+    let mut graphql_ir_arguments = BTreeMap::new();
+    for (argument_name, argument_value) in input_arguments {
+        let ndc_argument_name = argument_mappings.get(argument_name).ok_or_else(|| {
+            PlanError::Internal(format!(
+                "couldn't fetch argument mapping for argument {argument_name}"
+            ))
+        })?;
+
+        let ndc_argument_value = match argument_value {
+            open_dds::query::Value::BooleanExpression(bool_exp) => {
+                let argument_info = arguments.get(argument_name).unwrap();
+                let custom_type_name =
+                    unwrap_custom_type_name(&argument_info.argument_type).unwrap();
+                let boolean_expression_type = metadata
+                    .boolean_expression_types
+                    .objects
+                    .get(custom_type_name)
+                    .unwrap();
+
+                // this implementation is incomplete
+                // and should be filled out once we implement user-defined filters here
+                let predicate =
+                    boolean_expression::open_dd_boolean_expression_to_plan_types_expression(
+                        bool_exp,
+                        type_mappings,
+                        &boolean_expression_type.object_type,
+                    )?;
+
+                UnresolvedArgument::BooleanExpression { predicate }
+            }
+            open_dds::query::Value::Literal(value) => UnresolvedArgument::Literal {
+                value: value.clone(),
+            },
+        };
+        graphql_ir_arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
     }
 
-    match &value_type.underlying_type {
-        QualifiedBaseType::List(element_type) => {
-            let mapped_elements = value
-                .as_list()?
-                .iter()
-                .map(|element_value| {
-                    map_argument_value_to_ndc_type(element_type, element_value, type_mappings)
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(serde_json::Value::from(mapped_elements))
-        }
-        QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(InbuiltType::String)) => {
-            Ok(serde_json::Value::from(value.as_string()?))
-        }
-        QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(InbuiltType::Float)) => {
-            Ok(serde_json::Value::from(value.as_float()?))
-        }
-        QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(InbuiltType::Int)) => {
-            Ok(serde_json::Value::from(value.as_int_i64()?))
-        }
-        QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(InbuiltType::ID)) => {
-            Ok(serde_json::Value::from(value.as_id()?))
-        }
-        QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(InbuiltType::Boolean)) => {
-            Ok(serde_json::Value::from(value.as_boolean()?))
-        }
-        QualifiedBaseType::Named(QualifiedTypeName::Custom(custom_type_name)) => {
-            match type_mappings.get(custom_type_name) {
-                // If the custom type is a scalar or object but opaque on the NDC side, there won't be a mapping,
-                // in which case, pass it as-is.
-                None => Ok(value.as_json()),
-                Some(TypeMapping::Object { field_mappings, .. }) => {
-                    let object_value = value.as_object()?;
-                    let mapped_fields =
-                        object_value
-                            .iter()
-                            .map(|(_gql_field_name, field_value)| {
-                                let (field_name, field_type) = match field_value.info.generic {
-                                    Annotation::Input(InputAnnotation::InputObjectField {
-                                        field_name,
-                                        field_type,
-                                        ..
-                                    }) => Ok((field_name, field_type)),
-                                    annotation => {
-                                        Err(error::InternalEngineError::UnexpectedAnnotation {
-                                            annotation: annotation.clone(),
-                                        })
-                                    }
-                                }?;
+    let argument_presets_for_role = argument_presets.get(&session.role).unwrap();
 
-                                let field_mapping =
-                                    field_mappings.get(field_name).ok_or_else(|| {
-                                        error::InternalEngineError::InternalGeneric {
-                                            description: format!(
-                                                "unable to find mapping for field {field_name:}"
-                                            ),
-                                        }
-                                    })?;
+    // add any preset arguments from model permissions
+    let arguments_with_presets = process_argument_presets(
+        data_connector,
+        type_mappings,
+        Some(argument_presets_for_role),
+        data_connector_link_argument_presets,
+        &session.variables,
+        request_headers,
+        graphql_ir_arguments,
+        usage_counts,
+    )
+    .map_err(|e| PlanError::Internal(e.to_string()))?;
 
-                                let mapped_field_value = map_argument_value_to_ndc_type(
-                                    field_type,
-                                    &field_value.value,
-                                    type_mappings,
-                                )?;
-                                Ok((field_mapping.column.to_string(), mapped_field_value))
-                            })
-                            .collect::<Result<
-                                serde_json::Map<String, serde_json::Value>,
-                                error::Error,
-                            >>()?;
+    // now we turn the GraphQL IR `Arguments` type into the `execute` "resolved" argument type
+    // by resolving any `Expression` types inside
+    let mut resolved_arguments = BTreeMap::new();
+    for (argument_name, argument_value) in &arguments_with_presets {
+        let resolved_argument_value = match argument_value {
+            UnresolvedArgument::BooleanExpression { predicate } => {
+                let (resolved_filter_expression, _remote_predicates) =
+                    resolve_filter_expression(predicate, relationships, unique_number)?;
 
-                    Ok(serde_json::Value::Object(mapped_fields))
+                Argument::BooleanExpression {
+                    predicate: resolved_filter_expression,
                 }
             }
-        }
+            UnresolvedArgument::Literal { value } => Argument::Literal {
+                value: value.clone(),
+            },
+        };
+        resolved_arguments.insert(argument_name.clone(), resolved_argument_value.clone());
     }
+
+    Ok(resolved_arguments)
 }
 
 #[cfg(test)]
@@ -396,7 +349,7 @@ mod test {
     use std::str::FromStr;
 
     fn make_test_session(
-        client_session_variables: HashMap<SessionVariableName, SessionVariableValue>,
+        client_session_variables: BTreeMap<SessionVariableName, SessionVariableValue>,
     ) -> Session {
         let authenticated_session_variables = HashMap::new();
 
@@ -412,7 +365,7 @@ mod test {
     #[test]
     fn test_empty_process_connector_link_presets() {
         let data_connector_link_argument_presets = BTreeMap::new();
-        let session_variables = make_test_session(HashMap::new()).variables;
+        let session_variables = make_test_session(BTreeMap::new()).variables;
         let request_headers = HeaderMap::new();
 
         let expected = BTreeMap::new();
@@ -442,7 +395,7 @@ mod test {
             .insert("headers".into(), ArgumentPresetValue { http_headers });
 
         // what session variables do we have? (none)
-        let session_variables = make_test_session(HashMap::new()).variables;
+        let session_variables = make_test_session(BTreeMap::new()).variables;
 
         // what are our input headers?
         let mut request_headers = HeaderMap::new();
@@ -488,7 +441,7 @@ mod test {
             .insert("headers".into(), ArgumentPresetValue { http_headers });
 
         // what session variables do we have?
-        let mut client_session_variables = HashMap::new();
+        let mut client_session_variables = BTreeMap::new();
         client_session_variables.insert(
             SessionVariableName::from_str("x-name").unwrap(),
             SessionVariableValue::new("Mr Horse"),
@@ -517,5 +470,3 @@ mod test {
         );
     }
 }
-
-*/

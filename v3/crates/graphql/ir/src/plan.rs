@@ -172,8 +172,7 @@ fn plan_subscription<'s, 'ir>(
                         session,
                         request_headers,
                         unique_number,
-                    )
-                    .unwrap();
+                    )?;
                     match single_node_execution_plan {
                         plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
                         plan::SingleNodeExecutionPlan::Mutation(_) => {
@@ -222,8 +221,7 @@ fn plan_subscription<'s, 'ir>(
                         session,
                         request_headers,
                         unique_number,
-                    )
-                    .unwrap();
+                    )?;
                     match single_node_execution_plan {
                         plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
                         plan::SingleNodeExecutionPlan::Mutation(_) => {
@@ -272,8 +270,7 @@ fn plan_subscription<'s, 'ir>(
                         session,
                         request_headers,
                         unique_number,
-                    )
-                    .unwrap();
+                    )?;
                     match single_node_execution_plan {
                         plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
                         plan::SingleNodeExecutionPlan::Mutation(_) => {
@@ -357,8 +354,7 @@ fn plan_query<'n, 's, 'ir>(
                         session,
                         request_headers,
                         unique_number,
-                    )
-                    .unwrap();
+                    )?;
                     match single_node_execution_plan {
                         plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
                         plan::SingleNodeExecutionPlan::Mutation(_) => {
@@ -402,8 +398,7 @@ fn plan_query<'n, 's, 'ir>(
                         session,
                         request_headers,
                         unique_number,
-                    )
-                    .unwrap();
+                    )?;
                     match single_node_execution_plan {
                         plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
                         plan::SingleNodeExecutionPlan::Mutation(_) => {
@@ -449,8 +444,7 @@ fn plan_query<'n, 's, 'ir>(
                             session,
                             request_headers,
                             unique_number,
-                        )
-                        .unwrap();
+                        )?;
                         match single_node_execution_plan {
                             plan::SingleNodeExecutionPlan::Query(execution_tree) => {
                                 Ok(execution_tree)

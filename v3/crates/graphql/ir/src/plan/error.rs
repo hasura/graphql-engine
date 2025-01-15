@@ -13,12 +13,22 @@ pub enum Error {
 
     #[error("planning returned mutation instead of query")]
     PlanExpectedQueryGotMutation,
+
+    #[error("{0}")]
+    OpenDdPlanError(plan::PlanError),
+}
+
+impl From<plan::PlanError> for Error {
+    fn from(plan_error: plan::PlanError) -> Error {
+        Error::OpenDdPlanError(plan_error)
+    }
 }
 
 impl TraceableError for Error {
     fn visibility(&self) -> tracing_util::ErrorVisibility {
         match self {
             Self::Internal(_internal) => tracing_util::ErrorVisibility::Internal,
+            Self::OpenDdPlanError(error) => error.visibility(),
             Self::RemoteJoinsAreNotSupportedSubscriptions => tracing_util::ErrorVisibility::User,
             Self::RemotePredicatesAreNotSupportedInMutations
             | Self::PlanExpectedQueryGotMutation => tracing_util::ErrorVisibility::Internal,

@@ -98,8 +98,7 @@ pub(crate) fn plan_query_execution(
                 session,
                 request_headers,
                 unique_number,
-            )
-            .unwrap();
+            )?;
             match single_node_execution_plan {
                 plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
                 plan::SingleNodeExecutionPlan::Mutation(_) => {
