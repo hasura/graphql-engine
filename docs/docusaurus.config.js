@@ -246,7 +246,7 @@ const config = {
             dropdownItemsAfter: [
               {
                 href: 'https://hasura.io/docs/3.0/index/',
-                label: 'v3.x',
+                label: 'v3.x (DDN)',
               },
               {
                 href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
