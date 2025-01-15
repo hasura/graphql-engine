@@ -301,7 +301,13 @@ pub async fn pre_parse_plugins_handler(
 
     match result {
         PreExecutePluginResponse::Return(value) => {
-            response = Some(value.into_response());
+            let plugin_response = axum::response::Response::builder()
+                .status(StatusCode::OK)
+                .header("Content-Type", "application/json")
+                .body(axum::body::Body::from(value))
+                .unwrap();
+
+            response = Some(plugin_response);
         }
         PreExecutePluginResponse::Continue => {}
         PreExecutePluginResponse::ReturnError { plugin_name, error } => {

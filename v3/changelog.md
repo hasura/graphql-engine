@@ -17,6 +17,9 @@
   being ignored.
 - Fixed a bug where TypePermissions field presets would be ignored if the
   argument type was an array of objects.
+- Fixed a bug where a successful response from a pre-parse plugin would have a
+  Content-Type header `application/octet-stream`. Now it returns
+  `Content-Type: application/json`
 
 ### Changed
 
