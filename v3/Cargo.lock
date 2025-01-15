@@ -2217,9 +2217,9 @@ dependencies = [
 
 [[package]]
 name = "json_value_merge"
-version = "2.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b0a3aadd8aaadfe2be6fd22bbdb5dbc63494ce22b7c124211f684fd757b3215"
+checksum = "a8c724b60f15eb3213be053eca7e4c6186e7a86fbd74760984b5178ab00beaf6"
 dependencies = [
  "serde_json",
 ]
