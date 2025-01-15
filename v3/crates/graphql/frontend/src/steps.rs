@@ -149,6 +149,7 @@ pub fn generate_ir<'n, 's>(
         }
         ast::OperationType::Mutation => {
             let mutation_ir = graphql_ir::generate_mutation_ir(
+                request_pipeline,
                 &normalized_request.selection_set,
                 &session.variables,
                 request_headers,

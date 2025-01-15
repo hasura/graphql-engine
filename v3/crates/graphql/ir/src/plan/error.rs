@@ -11,8 +11,11 @@ pub enum Error {
     #[error("remote predicates are not supported in mutations")]
     RemotePredicatesAreNotSupportedInMutations,
 
-    #[error("planning returned mutation instead of query")]
+    #[error("planning returned mutation instead of expected query")]
     PlanExpectedQueryGotMutation,
+
+    #[error("planning returned query instead of expected mutation")]
+    PlanExpectedMutationGotQuery,
 
     #[error("{0}")]
     OpenDdPlanError(plan::PlanError),
@@ -31,6 +34,7 @@ impl TraceableError for Error {
             Self::OpenDdPlanError(error) => error.visibility(),
             Self::RemoteJoinsAreNotSupportedSubscriptions => tracing_util::ErrorVisibility::User,
             Self::RemotePredicatesAreNotSupportedInMutations
+            | Self::PlanExpectedMutationGotQuery
             | Self::PlanExpectedQueryGotMutation => tracing_util::ErrorVisibility::Internal,
         }
     }

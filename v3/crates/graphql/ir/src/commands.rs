@@ -369,3 +369,35 @@ pub fn generate_procedure_based_command<'n, 's>(
         procedure_name,
     })
 }
+
+/// Generates the OpenDD IR for a 'procedure based command' operation
+pub fn generate_procedure_based_command_open_dd<'n, 's>(
+    command_name: &Qualified<commands::CommandName>,
+    procedure_name: &'s open_dds::commands::ProcedureName,
+    field: &'n normalized_ast::Field<'s, GDS>,
+    field_call: &'n normalized_ast::FieldCall<'s, GDS>,
+    result_type: &QualifiedTypeReference,
+    result_base_type_kind: TypeKind,
+    command_source: &'s CommandSourceDetail,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+) -> Result<ProcedureBasedCommand<'s>, error::Error> {
+    let mut usage_counts = UsagesCounts::new();
+
+    let command_info = generate_command_info_open_dd(
+        command_name,
+        field,
+        field_call,
+        result_type,
+        result_base_type_kind,
+        command_source,
+        session_variables,
+        request_headers,
+        &mut usage_counts,
+    )?;
+
+    Ok(ProcedureBasedCommand {
+        command_info,
+        procedure_name,
+    })
+}

@@ -11,10 +11,12 @@ use graphql_schema::GDS;
 
 use super::{commands, root_field};
 use crate::error;
+use crate::GraphqlRequestPipeline;
 use graphql_schema::{OutputAnnotation, RootFieldAnnotation};
 
 /// Generates IR for the selection set of type 'mutation root'
 pub fn generate_ir<'n, 's>(
+    request_pipeline: GraphqlRequestPipeline,
     selection_set: &'s gql::normalized_ast::SelectionSet<'s, GDS>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
@@ -62,17 +64,34 @@ pub fn generate_ir<'n, 's>(
 
                             Ok(root_field::MutationRootField::ProcedureBasedCommand {
                                 selection_set: &field.selection_set,
-                                ir: commands::generate_procedure_based_command(
-                                    name,
-                                    procedure_name,
-                                    field,
-                                    field_call,
-                                    result_type,
-                                    *result_base_type_kind,
-                                    source,
-                                    session_variables,
-                                    request_headers,
-                                )?,
+                                ir: match request_pipeline {
+                                    GraphqlRequestPipeline::Old => {
+                                        commands::generate_procedure_based_command(
+                                            name,
+                                            procedure_name,
+                                            field,
+                                            field_call,
+                                            result_type,
+                                            *result_base_type_kind,
+                                            source,
+                                            session_variables,
+                                            request_headers,
+                                        )?
+                                    }
+                                    GraphqlRequestPipeline::OpenDd => {
+                                        commands::generate_procedure_based_command_open_dd(
+                                            name,
+                                            procedure_name,
+                                            field,
+                                            field_call,
+                                            result_type,
+                                            *result_base_type_kind,
+                                            source,
+                                            session_variables,
+                                            request_headers,
+                                        )?
+                                    }
+                                },
                             })
                         }
                         annotation => Err(error::InternalEngineError::UnexpectedAnnotation {

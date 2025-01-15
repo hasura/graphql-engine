@@ -171,7 +171,28 @@ pub(crate) fn plan_mutation_execution(
     let mut collection_relationships = BTreeMap::new();
 
     match &ir.command_info.selection {
-        CommandSelection::OpenDd { .. } => todo!("plan_mutation_execution OpenDd"),
+        CommandSelection::OpenDd { selection } => {
+            let single_node_execution_plan = plan::query_to_plan(
+                &open_dds::query::Query::Command(selection.clone()),
+                metadata,
+                session,
+                request_headers,
+                unique_number,
+            )?;
+            match single_node_execution_plan {
+                plan::SingleNodeExecutionPlan::Query(_) => {
+                    // this may be unavoidable as we don't know ahead of time which kind of function we're
+                    // invoking yet
+                    Err(error::Error::PlanExpectedMutationGotQuery)
+                }
+                plan::SingleNodeExecutionPlan::Mutation(mutation_execution_plan) => Ok(Plan {
+                    inner: mutation_execution_plan,
+                    join_locations,
+                    remote_predicates,
+                }),
+            }
+        }
+
         CommandSelection::Ir {
             selection,
             arguments,

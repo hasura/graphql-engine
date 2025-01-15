@@ -200,7 +200,8 @@ pub(crate) fn from_command_selection(
             function_name: function_name.clone(),
             arguments: resolved_arguments,
             data_connector: command_source.data_connector.clone(),
-            fields: wrap_function_ndc_fields(&output_shape, ndc_fields),
+            fields: wrap_scalar_select(wrap_function_ndc_field(&output_shape, ndc_fields)),
+
             collection_relationships: relationships,
         }),
         DataConnectorCommand::Procedure(procedure_name) => CommandPlan::Procedure(NDCProcedure {
@@ -229,9 +230,9 @@ fn wrap_procedure_ndc_fields(
                 fields: Box::new(nested_fields),
             })
         }
-        OutputShape::ScalarType { .. } => {
-            todo!("wrap_procedure_ndc_fields for ScalarType")
-        }
+        OutputShape::ScalarType { .. } => NestedField::Object(NestedObject {
+            fields: wrap_scalar_select(None),
+        }),
     }
 }
 
@@ -266,17 +267,14 @@ fn wrap_function_ndc_field(
     }
 }
 
-fn wrap_function_ndc_fields(
-    output_shape: &OutputShape,
-    ndc_fields: IndexMap<NdcFieldAlias, Field>,
-) -> IndexMap<NdcFieldAlias, Field> {
+fn wrap_scalar_select(nested_fields: Option<NestedField>) -> IndexMap<NdcFieldAlias, Field> {
     IndexMap::from([(
         NdcFieldAlias::from(FUNCTION_IR_VALUE_COLUMN_NAME),
         Field::Column {
             column: open_dds::data_connector::DataConnectorColumnName::from(
                 FUNCTION_IR_VALUE_COLUMN_NAME,
             ),
-            fields: wrap_function_ndc_field(output_shape, ndc_fields),
+            fields: nested_fields,
             arguments: BTreeMap::new(),
         },
     )])
