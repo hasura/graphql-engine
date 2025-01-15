@@ -2335,6 +2335,7 @@
       "description": "Configuration for a lifecycle plugin hook.",
       "type": "object",
       "required": [
+        "matchMethods",
         "matchPath",
         "request"
       ],
@@ -2342,6 +2343,13 @@
         "matchPath": {
           "description": "Regex to match the request path",
           "type": "string"
+        },
+        "matchMethods": {
+          "description": "Possible HTTP methods for the request",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LifecyclePreRoutePluginHookIncomingHTTPMethod"
+          }
         },
         "request": {
           "description": "Configuration for the request to the lifecycle plugin hook.",
@@ -2365,7 +2373,7 @@
       ],
       "properties": {
         "headers": {
-          "description": "Configuration for the headers.",
+          "description": "Configuration for the headers in the pre-route plugin hook HTTP requests.",
           "anyOf": [
             {
               "$ref": "#/definitions/LifecyclePluginHookHeadersConfig"
@@ -2376,10 +2384,10 @@
           ]
         },
         "method": {
-          "description": "Configuration for the method.",
+          "description": "Configuration for the HTTP method for the pre-route plugin hook HTTP requests.",
           "allOf": [
             {
-              "$ref": "#/definitions/RequestMethod"
+              "$ref": "#/definitions/LifecyclePreRoutePluginHookConfigRequestMethod"
             }
           ]
         },
@@ -2388,6 +2396,29 @@
         }
       },
       "additionalProperties": false
+    },
+    "LifecyclePreRoutePluginHookConfigRequestMethod": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreRoutePluginHookConfigRequestMethod",
+      "title": "LifecyclePreRoutePluginHookConfigRequestMethods",
+      "description": "Configuration for the method for the pre-route plugin hook HTTP requests.",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST"
+      ]
+    },
+    "LifecyclePreRoutePluginHookIncomingHTTPMethod": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreRoutePluginHookIncomingHTTPMethod",
+      "title": "RequestMethod",
+      "description": "Possible HTTP Request Methods for the incoming requests handled by the pre-route plugin hook.",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
     },
     "LimitInputGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/LimitInputGraphqlConfig",
@@ -5309,11 +5340,11 @@
     "PreRouteRequestConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/PreRouteRequestConfig",
       "title": "PreRouteRequestConfig",
-      "description": "Configuration for the raw request.",
+      "description": "Configuration for the raw request body for the pre-route plugin hook HTTP requests.",
       "type": "object",
       "properties": {
         "path": {
-          "description": "Configuration for the path",
+          "description": "Configuration for adding/excluding the request path of the incoming request",
           "anyOf": [
             {
               "$ref": "#/definitions/LeafConfig"
@@ -5324,7 +5355,7 @@
           ]
         },
         "method": {
-          "description": "Configuration for the method",
+          "description": "Configuration for adding/excluding the request method of the incoming request",
           "anyOf": [
             {
               "$ref": "#/definitions/LeafConfig"
@@ -5335,7 +5366,18 @@
           ]
         },
         "query": {
-          "description": "Configuration for the query",
+          "description": "Configuration for adding/excluding the query params of the incoming request",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "body": {
+          "description": "Configuration for adding/excluding the body of the incoming request",
           "anyOf": [
             {
               "$ref": "#/definitions/LeafConfig"
@@ -5802,16 +5844,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "RequestMethod": {
-      "$id": "https://hasura.io/jsonschemas/metadata/RequestMethod",
-      "title": "RequestMethod",
-      "description": "Method to match the request path",
-      "type": "string",
-      "enum": [
-        "GET",
-        "POST"
-      ]
     },
     "ResponseHeaders": {
       "$id": "https://hasura.io/jsonschemas/metadata/ResponseHeaders",

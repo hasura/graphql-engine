@@ -231,10 +231,13 @@ pub struct LifecyclePreRoutePluginHook {
 )]
 #[schemars(title = "RequestMethod")]
 #[serde(deny_unknown_fields)]
-/// Method to match the request path
-pub enum RequestMethod {
+/// Possible HTTP Request Methods for the incoming requests handled by the pre-route plugin hook.
+pub enum LifecyclePreRoutePluginHookIncomingHTTPMethod {
     GET,
     POST,
+    PUT,
+    DELETE,
+    PATCH,
 }
 
 #[derive(
@@ -249,6 +252,8 @@ pub struct LifecyclePreRoutePluginHookConfig {
     #[opendd(alias = "match")]
     /// Regex to match the request path
     pub match_path: String,
+    /// Possible HTTP methods for the request
+    pub match_methods: Vec<LifecyclePreRoutePluginHookIncomingHTTPMethod>,
     /// Configuration for the request to the lifecycle plugin hook.
     pub request: LifecyclePreRoutePluginHookConfigRequest,
 }
@@ -261,12 +266,23 @@ pub struct LifecyclePreRoutePluginHookConfig {
 #[schemars(title = "LifecyclePreRoutePluginHookConfigRequest")]
 /// Configuration for a lifecycle plugin hook request.
 pub struct LifecyclePreRoutePluginHookConfigRequest {
-    /// Configuration for the headers.
+    /// Configuration for the headers in the pre-route plugin hook HTTP requests.
     pub headers: Option<LifecyclePluginHookHeadersConfig>,
-    /// Configuration for the method.
-    pub method: RequestMethod,
-    // Configuration for the raw request.
+    /// Configuration for the HTTP method for the pre-route plugin hook HTTP requests.
+    pub method: LifecyclePreRoutePluginHookConfigRequestMethod,
+    // Configuration for the request body for the pre-route plugin hook HTTP requests.
     pub raw_request: PreRouteRequestConfig,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[schemars(title = "LifecyclePreRoutePluginHookConfigRequestMethods")]
+#[serde(deny_unknown_fields)]
+/// Configuration for the method for the pre-route plugin hook HTTP requests.
+pub enum LifecyclePreRoutePluginHookConfigRequestMethod {
+    GET,
+    POST,
 }
 
 #[derive(
@@ -275,14 +291,16 @@ pub struct LifecyclePreRoutePluginHookConfigRequest {
 #[schemars(title = "PreRouteRequestConfig")]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-/// Configuration for the raw request.
+/// Configuration for the raw request body for the pre-route plugin hook HTTP requests.
 pub struct PreRouteRequestConfig {
-    /// Configuration for the path
+    /// Configuration for adding/excluding the request path of the incoming request
     pub path: Option<LeafConfig>,
-    /// Configuration for the method
+    /// Configuration for adding/excluding the request method of the incoming request
     pub method: Option<LeafConfig>,
-    /// Configuration for the query
+    /// Configuration for adding/excluding the query params of the incoming request
     pub query: Option<LeafConfig>,
+    /// Configuration for adding/excluding the body of the incoming request
+    pub body: Option<LeafConfig>,
 }
 
 #[test]

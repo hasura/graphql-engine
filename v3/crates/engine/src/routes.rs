@@ -81,7 +81,7 @@ pub fn get_base_routes(state: EngineState) -> Router {
     let health_route = Router::new().route("/health", get(handle_health));
 
     let pre_route_router = Router::new()
-        .route("/*path", get(pre_route_handler))
+        .route("/*path", axum::routing::any(pre_route_handler))
         .layer(axum::middleware::from_fn(
             pre_route_request_tracing_middleware,
         ))
@@ -147,6 +147,7 @@ async fn pre_route_handler(
     headers: axum::http::header::HeaderMap,
     axum::extract::RawQuery(raw_query): axum::extract::RawQuery,
     axum::extract::State(state): axum::extract::State<EngineState>,
+    request: axum::http::Request<axum::body::Body>,
 ) -> impl axum::response::IntoResponse {
     pre_route_plugin::execute::pre_route_handler(
         method,
@@ -155,6 +156,7 @@ async fn pre_route_handler(
         &state.plugin_configs.pre_route_plugins,
         &state.http_context.client,
         raw_query,
+        request,
     )
     .await
 }

@@ -3235,6 +3235,7 @@ name = "pre-route-plugin"
 version = "3.0.0"
 dependencies = [
  "axum",
+ "http-body-util",
  "open-dds",
  "regex",
  "reqwest",

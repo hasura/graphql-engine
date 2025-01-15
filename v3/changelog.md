@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added multiple HTTP methods in pre-route plugins.
+
 ### Fixed
 
 - Fixed a bug where erroneous build errors would be raised when using a

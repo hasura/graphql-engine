@@ -4,10 +4,14 @@ use axum::{
     http::{HeaderMap, HeaderName, StatusCode},
     response::IntoResponse,
 };
+use http_body_util::BodyExt;
 use regex::Regex;
 use serde::Serialize;
 
-use open_dds::plugins::{LifecyclePreRoutePluginHook, RequestMethod};
+use open_dds::plugins::{
+    LifecyclePreRoutePluginHook, LifecyclePreRoutePluginHookConfigRequestMethod,
+    LifecyclePreRoutePluginHookIncomingHTTPMethod,
+};
 use serde_json::json;
 use tracing_util::{
     set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Traceable, TraceableError,
@@ -25,6 +29,8 @@ pub enum Error {
     UnexpectedStatusCode(u16),
     #[error("Error parsing the request: {0}")]
     PluginRequestParseError(serde_json::error::Error),
+    #[error("HTTP method {0} not supported")]
+    UnsupportedHTTPMethod(String),
     #[error("Not found")]
     NotFound,
 }
@@ -60,15 +66,30 @@ pub enum ErrorResponse {
 
 impl IntoResponse for ErrorResponse {
     fn into_response(self) -> axum::response::Response {
+        // User errors are 400 (BAD_REQUEST) and internal errors are 500 (INTERNAL_SERVER_ERROR)
         let status = match self {
             ErrorResponse::UserError(_) => StatusCode::BAD_REQUEST,
             ErrorResponse::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
+        // Get the error body, we won't include the error body for internal errors.
+        let error_body = match self {
+            ErrorResponse::UserError(error) | ErrorResponse::InternalError(Some(error)) => {
+                json!({"error": error})
+            }
+            ErrorResponse::InternalError(None) => json!({"error": "internal error"}),
+        };
+        // Create the response body having the error body as the response body.
+        let body = match serde_json::to_vec(&error_body) {
+            Ok(body) => axum::body::Body::from(body),
+            // This should never happen, but we'll handle it just in case by returning the error as the response body.
+            Err(_err) => axum::body::Body::from(
+                json!({"error": "there was an error serializing the error"}).to_string(),
+            ),
+        };
         axum::response::Response::builder()
             .status(status)
-            .body(axum::body::Body::from(
-                json!({"error": self.to_string()}).to_string(),
-            ))
+            .header("content-type", "application/json")
+            .body(body)
             .unwrap()
     }
 }
@@ -122,6 +143,7 @@ impl IntoResponse for PreRoutePluginResponse {
         match self {
             PreRoutePluginResponse::Return(body) => axum::response::Response::builder()
                 .status(StatusCode::OK)
+                .header("content-type", "application/json")
                 .body(axum::body::Body::from(body))
                 .unwrap(),
             PreRoutePluginResponse::ReturnError {
@@ -142,6 +164,7 @@ pub struct PreRouteRequestBody {
     pub path: Option<String>,
     pub method: Option<HTTPMethod>,
     pub query: Option<String>,
+    pub body: Option<serde_json::Value>,
 }
 
 impl PreRouteRequestBody {
@@ -150,21 +173,23 @@ impl PreRouteRequestBody {
             path: None,
             method: None,
             query: None,
+            body: None,
         }
     }
 }
 
-fn build_request(
+async fn build_request(
     http_client: &reqwest::Client,
     config: &LifecyclePreRoutePluginHook,
     client_headers: &HeaderMap,
     incoming_request_path: &str,
     incoming_request_method: &reqwest::Method,
     incoming_request_query: Option<String>,
+    request: axum::http::Request<axum::body::Body>,
 ) -> Result<reqwest::RequestBuilder, String> {
     let mut request_builder = match config.config.request.method {
-        RequestMethod::GET => http_client.get(&config.url.value),
-        RequestMethod::POST => http_client.post(&config.url.value),
+        LifecyclePreRoutePluginHookConfigRequestMethod::GET => http_client.get(&config.url.value),
+        LifecyclePreRoutePluginHookConfigRequestMethod::POST => http_client.post(&config.url.value),
     };
     let mut pre_plugin_headers = tracing_util::get_trace_headers();
     if let Some(header_config) = config.config.request.headers.as_ref() {
@@ -201,6 +226,22 @@ fn build_request(
     if config.config.request.raw_request.query.is_some() {
         request_body.query = incoming_request_query;
     }
+    if config.config.request.raw_request.body.is_some() {
+        let body = request.into_body();
+        let bytes = body
+            .collect()
+            .await
+            .map_err(|err| err.to_string())?
+            .to_bytes();
+        request_body.body = match serde_json::from_slice::<serde_json::Value>(&bytes) {
+            Ok(body) => Ok(Some(body)),
+            Err(err) => match err.classify() {
+                // If the request body is empty, we don't set the body in the request body.
+                serde_json::error::Category::Eof => Ok(None),
+                _ => Err(err.to_string()),
+            },
+        }?;
+    }
     request_builder = request_builder.json(&request_body);
     Ok(request_builder)
 }
@@ -212,6 +253,7 @@ pub async fn execute_plugin(
     incoming_request_path: &str,
     incoming_request_method: &reqwest::Method,
     incoming_request_query: Option<String>,
+    request: axum::http::Request<axum::body::Body>,
 ) -> Result<PreRoutePluginResponse, Error> {
     let tracer = tracing_util::global_tracer();
     let response = tracer
@@ -228,7 +270,9 @@ pub async fn execute_plugin(
                         incoming_request_path,
                         incoming_request_method,
                         incoming_request_query,
+                        request,
                     )
+                    .await
                     .map_err(|e| Error::BuildRequestError(plugin.name.clone(), e))?;
                     let req = http_request_builder.build().map_err(Error::ReqwestError)?;
                     http_client.execute(req).await.map_err(|e| {
@@ -274,11 +318,21 @@ pub async fn pre_route_handler(
     pre_route_plugins: &Vec<LifecyclePreRoutePluginHook>,
     http_client: &reqwest::Client,
     raw_query: Option<String>,
+    request: axum::http::Request<axum::body::Body>,
 ) -> Result<PreRoutePluginResponse, Error> {
     let tracer = tracing_util::global_tracer();
     for plugin_config in pre_route_plugins {
         let re = Regex::new(&plugin_config.config.match_path).unwrap();
-        if re.is_match(uri.path()) {
+        // Check if the request path matches the plugin's regex and if the request method is in the plugin's list of methods.
+        let request_method = match method {
+            reqwest::Method::GET => Ok(LifecyclePreRoutePluginHookIncomingHTTPMethod::GET),
+            reqwest::Method::POST => Ok(LifecyclePreRoutePluginHookIncomingHTTPMethod::POST),
+            reqwest::Method::PUT => Ok(LifecyclePreRoutePluginHookIncomingHTTPMethod::PUT),
+            reqwest::Method::DELETE => Ok(LifecyclePreRoutePluginHookIncomingHTTPMethod::DELETE),
+            reqwest::Method::PATCH => Ok(LifecyclePreRoutePluginHookIncomingHTTPMethod::PATCH),
+            _ => Err(Error::UnsupportedHTTPMethod(method.to_string())),
+        }?;
+        if re.is_match(uri.path()) && plugin_config.config.match_methods.contains(&request_method) {
             let plugin_response = tracer
                 .in_span_async(
                     "execute_pre_route_plugin",
@@ -299,6 +353,7 @@ pub async fn pre_route_handler(
                                 uri.path(),
                                 &method,
                                 raw_query.clone(),
+                                request,
                             )
                             .await
                         })
