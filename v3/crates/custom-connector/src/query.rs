@@ -71,7 +71,12 @@ fn execute_query_with_variables(
         }
     }
 
-    let collection = get_collection_by_name(collection, &argument_values, state)?;
+    let collection = get_collection_by_name(
+        collection,
+        &argument_values,
+        collection_relationships,
+        state,
+    )?;
 
     execute_query(
         collection_relationships,
@@ -692,8 +697,12 @@ fn eval_path_element(
             }
         }
 
-        let target =
-            get_collection_by_name(&relationship.target_collection, &all_arguments, state)?;
+        let target = get_collection_by_name(
+            &relationship.target_collection,
+            &all_arguments,
+            collection_relationships,
+            state,
+        )?;
 
         for tgt_row in &target {
             if let Some(predicate) = predicate {
@@ -1054,7 +1063,7 @@ fn eval_in_collection(
                 .map(|(k, v)| Ok((k.clone(), eval_relationship_argument(variables, item, v)?)))
                 .collect::<Result<BTreeMap<_, _>>>()?;
 
-            get_collection_by_name(collection, &arguments, state)
+            get_collection_by_name(collection, &arguments, collection_relationships, state)
         }
         ndc_models::ExistsInCollection::NestedCollection {
             column_name,

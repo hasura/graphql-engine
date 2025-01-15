@@ -378,6 +378,299 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                 ),
                 name: CustomTypeName(
                     Identifier(
+                        "Disc",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "lengthMins",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Int4",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "Disc",
+                            ),
+                        ),
+                    ),
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "DiscInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {
+                    Role(
+                        "admin",
+                    ): TypeOutputPermission {
+                        allowed_fields: {
+                            FieldName(
+                                Identifier(
+                                    "name",
+                                ),
+                            ),
+                            FieldName(
+                                Identifier(
+                                    "lengthMins",
+                                ),
+                            ),
+                        },
+                    },
+                },
+                type_input_permissions: {
+                    Role(
+                        "admin",
+                    ): TypeInputPermission {
+                        field_presets: {
+                            FieldName(
+                                Identifier(
+                                    "lengthMins",
+                                ),
+                            ): FieldPresetInfo {
+                                value: Literal(
+                                    Number(70),
+                                ),
+                                deprecated: None,
+                            },
+                        },
+                    },
+                },
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "pg",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "disc",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "disc",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "lengthMins",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "length_mins",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "int4",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ),
+                                                in_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "name",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "name",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "varchar",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ),
+                                                in_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
                         "InsertAlbumObject",
                     ),
                 ),
@@ -462,6 +755,63 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                             deprecated: None,
                             field_arguments: {},
                         },
+                        FieldName(
+                            Identifier(
+                                "recordLabel",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "RecordLabel",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "discs",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: List(
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "Disc",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
                     },
                     global_id_fields: [],
                     apollo_federation_config: None,
@@ -499,6 +849,11 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                             FieldName(
                                 Identifier(
                                     "title",
+                                ),
+                            ),
+                            FieldName(
+                                Identifier(
+                                    "discs",
                                 ),
                             ),
                         },
@@ -663,6 +1018,46 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 ],
                                             },
                                         ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "discs",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "discs",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Array {
+                                                element_type: Named {
+                                                    name: TypeName(
+                                                        "disc",
+                                                    ),
+                                                },
+                                            },
+                                        },
+                                        column_type_representation: None,
+                                        comparison_operators: None,
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "recordLabel",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "record_label",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Named {
+                                                name: TypeName(
+                                                    "record_label",
+                                                ),
+                                            },
+                                        },
+                                        column_type_representation: None,
+                                        comparison_operators: None,
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -969,6 +1364,290 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "RecordLabel",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Varchar",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "exclusiveRights",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Boolean,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "RecordLabel",
+                            ),
+                        ),
+                    ),
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "RecordLabelInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {
+                    Role(
+                        "admin",
+                    ): TypeOutputPermission {
+                        allowed_fields: {
+                            FieldName(
+                                Identifier(
+                                    "name",
+                                ),
+                            ),
+                            FieldName(
+                                Identifier(
+                                    "exclusiveRights",
+                                ),
+                            ),
+                        },
+                    },
+                },
+                type_input_permissions: {
+                    Role(
+                        "admin",
+                    ): TypeInputPermission {
+                        field_presets: {
+                            FieldName(
+                                Identifier(
+                                    "exclusiveRights",
+                                ),
+                            ): FieldPresetInfo {
+                                value: Literal(
+                                    Bool(true),
+                                ),
+                                deprecated: None,
+                            },
+                        },
+                    },
+                },
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "pg",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "record_label",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "record_label",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "exclusiveRights",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "exclusive_rights",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "bool",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Boolean,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ),
+                                                in_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "name",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "name",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "varchar",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ),
+                                                in_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ),
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
@@ -1476,6 +2155,170 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                     ),
                                     name: CustomTypeName(
                                         Identifier(
+                                            "Disc",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "disc",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "lengthMins",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "length_mins",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "int4",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "name",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
                                             "InsertAlbumObject",
                                         ),
                                     ),
@@ -1600,6 +2443,46 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     ],
                                                 },
                                             ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "discs",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "discs",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Array {
+                                                    element_type: Named {
+                                                        name: TypeName(
+                                                            "disc",
+                                                        ),
+                                                    },
+                                                },
+                                            },
+                                            column_type_representation: None,
+                                            comparison_operators: None,
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "recordLabel",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "record_label",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Named {
+                                                    name: TypeName(
+                                                        "record_label",
+                                                    ),
+                                                },
+                                            },
+                                            column_type_representation: None,
+                                            comparison_operators: None,
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1787,6 +2670,170 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                         },
                                     },
                                 },
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "RecordLabel",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "record_label",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "exclusiveRights",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "exclusive_rights",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "bool",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Boolean,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "name",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ),
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
                             },
                             argument_mappings: {
                                 ArgumentName(
@@ -1838,7 +2885,82 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         "admin",
                     ): CommandPermission {
                         allow_execution: true,
-                        argument_presets: {},
+                        argument_presets: {
+                            ArgumentName(
+                                Identifier(
+                                    "postCheck",
+                                ),
+                            ): (
+                                QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Custom(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "AlbumBoolExp",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                    ),
+                                    nullable: true,
+                                },
+                                BooleanExpression(
+                                    BinaryFieldComparison {
+                                        field: FieldName(
+                                            Identifier(
+                                                "artistId",
+                                            ),
+                                        ),
+                                        field_parent_type: Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Album",
+                                                ),
+                                            ),
+                                        },
+                                        ndc_column: DataConnectorColumnName(
+                                            "artist_id",
+                                        ),
+                                        operator: DataConnectorOperatorName(
+                                            "_eq",
+                                        ),
+                                        argument_type: QualifiedTypeReference {
+                                            underlying_type: Named(
+                                                Custom(
+                                                    Qualified {
+                                                        subgraph: SubgraphName(
+                                                            "default",
+                                                        ),
+                                                        name: CustomTypeName(
+                                                            Identifier(
+                                                                "Int4",
+                                                            ),
+                                                        ),
+                                                    },
+                                                ),
+                                            ),
+                                            nullable: false,
+                                        },
+                                        value: SessionVariable(
+                                            SessionVariableReference {
+                                                name: SessionVariableName(
+                                                    "x-hasura-artist-id",
+                                                ),
+                                                passed_as_json: true,
+                                            },
+                                        ),
+                                        deprecated: None,
+                                    },
+                                ),
+                            ),
+                        },
                     },
                 },
                 argument_presets: {
@@ -1881,6 +3003,146 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                             "x-hasura-artist-id",
                                         ),
                                         passed_as_json: true,
+                                    },
+                                ),
+                            ),
+                            ArgumentNameAndPath {
+                                ndc_argument_name: Some(
+                                    DataConnectorArgumentName(
+                                        "objects",
+                                    ),
+                                ),
+                                field_path: [
+                                    DataConnectorColumnName(
+                                        "discs",
+                                    ),
+                                    DataConnectorColumnName(
+                                        "length_mins",
+                                    ),
+                                ],
+                            }: (
+                                QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Custom(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "Int4",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                Literal(
+                                    Number(70),
+                                ),
+                            ),
+                            ArgumentNameAndPath {
+                                ndc_argument_name: Some(
+                                    DataConnectorArgumentName(
+                                        "objects",
+                                    ),
+                                ),
+                                field_path: [
+                                    DataConnectorColumnName(
+                                        "record_label",
+                                    ),
+                                    DataConnectorColumnName(
+                                        "exclusive_rights",
+                                    ),
+                                ],
+                            }: (
+                                QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Boolean,
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                Literal(
+                                    Bool(true),
+                                ),
+                            ),
+                            ArgumentNameAndPath {
+                                ndc_argument_name: Some(
+                                    DataConnectorArgumentName(
+                                        "post_check",
+                                    ),
+                                ),
+                                field_path: [],
+                            }: (
+                                QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Custom(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "AlbumBoolExp",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                    ),
+                                    nullable: true,
+                                },
+                                BooleanExpression(
+                                    BinaryFieldComparison {
+                                        field: FieldName(
+                                            Identifier(
+                                                "artistId",
+                                            ),
+                                        ),
+                                        field_parent_type: Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Album",
+                                                ),
+                                            ),
+                                        },
+                                        ndc_column: DataConnectorColumnName(
+                                            "artist_id",
+                                        ),
+                                        operator: DataConnectorOperatorName(
+                                            "_eq",
+                                        ),
+                                        argument_type: QualifiedTypeReference {
+                                            underlying_type: Named(
+                                                Custom(
+                                                    Qualified {
+                                                        subgraph: SubgraphName(
+                                                            "default",
+                                                        ),
+                                                        name: CustomTypeName(
+                                                            Identifier(
+                                                                "Int4",
+                                                            ),
+                                                        ),
+                                                    },
+                                                ),
+                                            ),
+                                            nullable: false,
+                                        },
+                                        value: SessionVariable(
+                                            SessionVariableReference {
+                                                name: SessionVariableName(
+                                                    "x-hasura-artist-id",
+                                                ),
+                                                passed_as_json: true,
+                                            },
+                                        ),
+                                        deprecated: None,
                                     },
                                 ),
                             ),

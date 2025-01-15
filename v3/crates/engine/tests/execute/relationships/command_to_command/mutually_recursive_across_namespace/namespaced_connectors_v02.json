@@ -276,6 +276,26 @@
                     },
                     "foreign_keys": {}
                   },
+                  "evaluated_institution": {
+                    "description": "An institution and its evaluation result",
+                    "fields": {
+                      "evaluation_result": {
+                        "description": "The institution's evaluation result",
+                        "type": {
+                          "type": "named",
+                          "name": "Boolean"
+                        }
+                      },
+                      "institution": {
+                        "description": "The institution",
+                        "type": {
+                          "type": "named",
+                          "name": "institution"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
                   "genre": {
                     "description": "A movie genre",
                     "fields": {
@@ -947,6 +967,36 @@
                   }
                 ],
                 "functions": [
+                  {
+                    "name": "eval_institutions",
+                    "description": "Evaluates submitted institution objects against the provided boolean expression",
+                    "arguments": {
+                      "check": {
+                        "description": "The boolean expression to evaluate the institutions against",
+                        "type": {
+                          "type": "predicate",
+                          "object_type_name": "institution"
+                        }
+                      },
+                      "institutions": {
+                        "description": "The institutions to evaluate",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "institution"
+                          }
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "evaluated_institution"
+                      }
+                    }
+                  },
                   {
                     "name": "latest_actor_id",
                     "description": "Get the ID of the most recent actor",
@@ -1692,6 +1742,26 @@
                     },
                     "foreign_keys": {}
                   },
+                  "evaluated_institution": {
+                    "description": "An institution and its evaluation result",
+                    "fields": {
+                      "evaluation_result": {
+                        "description": "The institution's evaluation result",
+                        "type": {
+                          "type": "named",
+                          "name": "Boolean"
+                        }
+                      },
+                      "institution": {
+                        "description": "The institution",
+                        "type": {
+                          "type": "named",
+                          "name": "institution"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
                   "genre": {
                     "description": "A movie genre",
                     "fields": {
@@ -2363,6 +2433,36 @@
                   }
                 ],
                 "functions": [
+                  {
+                    "name": "eval_institutions",
+                    "description": "Evaluates submitted institution objects against the provided boolean expression",
+                    "arguments": {
+                      "check": {
+                        "description": "The boolean expression to evaluate the institutions against",
+                        "type": {
+                          "type": "predicate",
+                          "object_type_name": "institution"
+                        }
+                      },
+                      "institutions": {
+                        "description": "The institutions to evaluate",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "institution"
+                          }
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "evaluated_institution"
+                      }
+                    }
+                  },
                   {
                     "name": "latest_actor_id",
                     "description": "Get the ID of the most recent actor",

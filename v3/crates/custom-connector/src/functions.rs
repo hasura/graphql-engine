@@ -9,6 +9,7 @@ use crate::{
 };
 
 pub mod actor_names_by_movie;
+pub mod eval_institutions;
 pub mod get_actor_by_id;
 pub mod get_actors_by_bool_exp;
 pub mod get_actors_by_movie_id;
@@ -25,6 +26,7 @@ pub mod latest_actor_name;
 
 pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
     vec![
+        eval_institutions::function_info(),
         latest_actor_id::function_info(),
         latest_actor_name::function_info(),
         latest_actor::function_info(),
@@ -45,9 +47,11 @@ pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
 pub(crate) fn get_function_by_name(
     collection_name: &ndc_models::CollectionName,
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
+    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
     match collection_name.as_str() {
+        "eval_institutions" => eval_institutions::rows(arguments, collection_relationships, state),
         "latest_actor_id" => latest_actor_id::rows(arguments, state),
         "latest_actor_name" => latest_actor_name::rows(arguments, state),
         "latest_actor" => latest_actor::rows(arguments, state),

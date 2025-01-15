@@ -1,0 +1,56 @@
+[
+  {
+    "data": {
+      "EvalInstitutions": [
+        {
+          "EvaluationResult": true,
+          "Institution": {
+            "Id": 1,
+            "Name": "Academy of Science",
+            "Location": {
+              "Campuses": [
+                "Mile End",
+                "Whitechapel",
+                "Charterhouse Square",
+                "West Smithfield"
+              ],
+              "City": "London",
+              "Country": "UK"
+            },
+            "Staff": [],
+            "Departments": [
+              "Humanities and Social Sciences",
+              "Science and Engineering",
+              "Medicine and Dentistry"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "EvalInstitutions": [
+        {
+          "EvaluationResult": false,
+          "Institution": {
+            "Id": 1,
+            "Name": "Academy of Science",
+            "Location": {
+              "Campuses": [
+                "Mile End",
+                "Whitechapel",
+                "Charterhouse Square",
+                "West Smithfield"
+              ],
+              "City": "London",
+              "Country": "United Kingdom"
+            },
+            "Staff": [],
+            "Departments": ["Objectivism", "Ethics", "Philosophy of Science"]
+          }
+        }
+      ]
+    }
+  }
+]

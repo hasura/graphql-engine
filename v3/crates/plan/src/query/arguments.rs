@@ -140,12 +140,32 @@ where
                                 })
                             }
                         }?;
-                        if let Some(current_arg_object) = current_arg.as_object_mut() {
-                            follow_field_path_and_insert_value(
-                                &field_path,
-                                current_arg_object,
-                                preset_value,
-                            )?;
+                        match current_arg {
+                            serde_json::Value::Array(current_arg_array) => {
+                                // This is not an acceptable way to handle arrays, as it only works at the top level here
+                                // and not down the field path. It also does not handle multiply-nested arrays. However,
+                                // it's a quick fix for a common case now, and this whole area will be rewritten soon
+                                for item in current_arg_array {
+                                    if let serde_json::Value::Object(item_object) = item {
+                                        follow_field_path_and_insert_value(
+                                            &field_path,
+                                            item_object,
+                                            preset_value.clone(),
+                                        )?;
+                                    }
+                                }
+                            }
+                            serde_json::Value::Object(current_arg_object) => {
+                                follow_field_path_and_insert_value(
+                                    &field_path,
+                                    current_arg_object,
+                                    preset_value,
+                                )?;
+                            }
+                            serde_json::Value::Bool(_)
+                            | serde_json::Value::Number(_)
+                            | serde_json::Value::String(_)
+                            | serde_json::Value::Null => {}
                         }
                     }
                 }

@@ -28,6 +28,7 @@ pub(crate) fn get_collections() -> Vec<ndc_models::CollectionInfo> {
 pub(crate) fn get_collection_by_name(
     collection_name: &ndc_models::CollectionName,
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
+    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
     match collection_name.as_str() {
@@ -37,6 +38,11 @@ pub(crate) fn get_collection_by_name(
         "institutions" => institutions::rows(arguments, state),
         "actors_by_movie" => actors_by_movie::rows(arguments, state),
         "movies_by_actor_name" => movies_by_actor_name::rows(arguments, state),
-        _ => super::functions::get_function_by_name(collection_name, arguments, state),
+        _ => super::functions::get_function_by_name(
+            collection_name,
+            arguments,
+            collection_relationships,
+            state,
+        ),
     }
 }

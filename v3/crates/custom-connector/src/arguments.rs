@@ -272,6 +272,51 @@ fn hash(
     Ok(serde_json::Value::String(hash))
 }
 
+pub(crate) fn parse_object_array_argument<'a, Arg>(
+    argument_name: &Arg,
+    arguments: &mut BTreeMap<ndc_models::ArgumentName, &'a serde_json::Value>,
+) -> Result<Vec<&'a serde_json::Map<String, serde_json::Value>>>
+where
+    ndc_models::ArgumentName: Borrow<Arg>,
+    Arg: Ord + ?Sized + Display,
+{
+    let result = arguments
+        .remove(argument_name)
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("missing argument {argument_name}"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?
+        .as_array()
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("{argument_name} must be an object"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?
+        .iter()
+        .map(|v| {
+            v.as_object().ok_or_else(|| {
+                (
+                    StatusCode::BAD_REQUEST,
+                    Json(ndc_models::ErrorResponse {
+                        message: format!("{argument_name} must be an array of objects"),
+                        details: serde_json::Value::Null,
+                    }),
+                )
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(result)
+}
+
 pub(crate) fn parse_object_argument<'a, Arg>(
     argument_name: &Arg,
     arguments: &mut BTreeMap<ndc_models::ArgumentName, &'a serde_json::Value>,

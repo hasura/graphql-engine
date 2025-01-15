@@ -13,6 +13,7 @@ use open_dds::{
     data_connector::DataConnectorColumnName,
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
+use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 
 #[derive(Debug, thiserror::Error)]
@@ -37,72 +38,63 @@ pub fn get_argument_presets_for_model(
         object_relationships::ObjectTypeWithRelationships,
     >,
 ) -> Result<BTreeMap<Role, ArgumentPresets>, ArgumentPresetError> {
-    let mut argument_presets_by_role: BTreeMap<Role, ArgumentPresets> = model
+    let mut model_argument_presets_by_role = model
         .select_permissions
         .iter()
         .map(|(role, select_permission)| {
-            (
-                role.clone(),
-                ArgumentPresets {
-                    argument_presets: select_permission
-                        .argument_presets
-                        .iter()
-                        .map(|(arg_name, preset)| {
-                            (
-                                ArgumentNameAndPath {
-                                    ndc_argument_name: model
-                                        .model
-                                        .source
-                                        .as_ref()
-                                        .and_then(|model_source| {
-                                            model_source.argument_mappings.get(arg_name)
-                                        })
-                                        .cloned(),
-                                    field_path: vec![],
-                                },
-                                preset.clone(),
-                            )
-                        })
-                        .collect(),
-                },
-            )
+            let argument_presets = select_permission
+                .argument_presets
+                .iter()
+                .map(|(arg_name, preset)| {
+                    (
+                        ArgumentNameAndPath {
+                            ndc_argument_name: model
+                                .model
+                                .source
+                                .as_ref()
+                                .and_then(|model_source| {
+                                    model_source.argument_mappings.get(arg_name)
+                                })
+                                .cloned(),
+                            field_path: vec![],
+                        },
+                        preset.clone(),
+                    )
+                })
+                .collect();
+
+            (role.clone(), ArgumentPresets { argument_presets })
         })
-        .collect();
+        .collect::<BTreeMap<_, _>>();
 
     // if any of model argument's input type has field presets defined, add
     // them to model argument preset annotations as well. if there is no
     // source defined for the model, we don't generate these preset
     // annotations.
     if let Some(model_source) = model.model.source.as_ref() {
-        let mut role_presets_map = BTreeMap::new();
         for (arg_name, arg_info) in &model.model.arguments {
             // get the NDC argument name of this command source
             let ndc_argument_name = model_source.argument_mappings.get(arg_name).cloned();
 
             // A list to keep track of the input types we have already processed
             let mut processed_input_types = Vec::new();
-            let mut field_path = Vec::new();
 
+            // There should be no conflicts as all TypePermissions presets have a field path
+            // but all ModelPermissions presets have an empty field path in their
+            // ArgumentNameAndPath
             build_annotations_from_input_object_type_permissions(
-                &mut field_path,
+                &[], // empty starting field path
                 &arg_info.argument_type,
                 ndc_argument_name.as_ref(),
                 object_types,
                 &model_source.type_mappings,
-                &mut role_presets_map,
+                &mut model_argument_presets_by_role,
                 &mut processed_input_types,
             )?;
         }
-
-        // go through the role presets map and extend them into the permissions map
-        for (role, preset_map) in role_presets_map {
-            if let Some(argument_presets) = argument_presets_by_role.get_mut(&role) {
-                *argument_presets = preset_map;
-            }
-        }
     }
 
-    Ok(argument_presets_by_role)
+    Ok(model_argument_presets_by_role)
 }
 
 /// Build namespace annotation for commands
@@ -113,11 +105,11 @@ pub fn get_argument_presets_for_command(
         object_relationships::ObjectTypeWithRelationships,
     >,
 ) -> Result<BTreeMap<Role, ArgumentPresets>, ArgumentPresetError> {
-    let mut argument_presets_by_role = BTreeMap::new();
-
-    // process command permissions, and annotate any command argument presets
-    for (role, permission) in &command.permissions {
-        if permission.allow_execution {
+    // Get the argument presets as defined on the CommandPermissions
+    let mut command_argument_presets_by_role = command
+        .permissions
+        .iter()
+        .map(|(role, permission)| {
             let argument_presets = permission
                 .argument_presets
                 .iter()
@@ -139,46 +131,42 @@ pub fn get_argument_presets_for_command(
                 })
                 .collect();
 
-            argument_presets_by_role.insert(role.clone(), ArgumentPresets { argument_presets });
-        }
-    }
+            (role.clone(), ArgumentPresets { argument_presets })
+        })
+        .collect::<BTreeMap<_, _>>();
 
     // if any of command argument's input type has field presets defined, add
     // them to command argument preset annotations as well. if there is no
     // source defined for the command, we don't generate these preset
     // annotations.
     if let Some(command_source) = command.command.source.as_ref() {
-        let mut role_presets_map = BTreeMap::new();
         for (arg_name, arg_info) in &command.command.arguments {
             // get the NDC argument name of this command source
             let ndc_argument_name = command_source.argument_mappings.get(arg_name).cloned();
 
             // A list to keep track of the input types we have already processed
             let mut processed_input_types = Vec::new();
-            let mut field_path = Vec::new();
+
+            // There should be no conflicts as all TypePermissions presets have a field path
+            // but all CommandPermissions presets have an empty field path in their
+            // ArgumentNameAndPath
             build_annotations_from_input_object_type_permissions(
-                &mut field_path,
+                &[], // empty starting field path
                 &arg_info.argument_type,
                 ndc_argument_name.as_ref(),
                 object_types,
                 &command_source.type_mappings,
-                &mut role_presets_map,
+                &mut command_argument_presets_by_role,
                 &mut processed_input_types,
             )?;
         }
-        // go through the role presets map and extend them into the permissions map
-        for (role, preset_map) in role_presets_map {
-            if let Some(argument_presets) = argument_presets_by_role.get_mut(&role) {
-                *argument_presets = preset_map;
-            }
-        }
     }
 
-    Ok(argument_presets_by_role)
+    Ok(command_argument_presets_by_role)
 }
 
 fn build_annotations_from_input_object_type_permissions<'a>(
-    field_path: &mut [DataConnectorColumnName],
+    field_path: &[&DataConnectorColumnName],
     type_reference: &'a QualifiedTypeReference,
     ndc_argument_name: Option<&DataConnectorArgumentName>,
     object_types: &'a BTreeMap<
@@ -215,12 +203,17 @@ fn build_annotations_from_input_object_type_permissions<'a>(
                         object_type,
                     )?;
 
-                    role_presets_map.insert(
-                        role.clone(),
-                        ArgumentPresets {
-                            argument_presets: preset_map,
-                        },
-                    );
+                    // Merge the presets from type permissions into the role presets map
+                    match role_presets_map.entry(role.clone()) {
+                        Entry::Occupied(mut entry) => {
+                            entry.get_mut().argument_presets.extend(preset_map.clone());
+                        }
+                        Entry::Vacant(entry) => {
+                            entry.insert(ArgumentPresets {
+                                argument_presets: preset_map,
+                            });
+                        }
+                    }
                 }
 
                 // Push the input type to the list of processed input types
@@ -229,21 +222,25 @@ fn build_annotations_from_input_object_type_permissions<'a>(
                 // recursively process all the fields of this input object type
                 // the processed_input_types_ list is passed to avoid infinite recursion
                 for (field_name, field_definition) in &object_type_repr.object_type.fields {
-                    let mut field_path_ = field_path.to_owned();
                     let ndc_field = field_mappings
                         .and_then(|mappings| {
                             mappings
                                 .get(field_name)
-                                .map(|field_mapping| field_mapping.column.clone())
+                                .map(|field_mapping| &field_mapping.column)
                         })
                         .ok_or_else(|| ArgumentPresetError::MappingNotFound {
                             type_name: object_type.clone(),
                             field_name: field_name.clone(),
                         })?;
 
-                    field_path_.push(ndc_field.clone());
+                    let new_field_path = field_path
+                        .iter()
+                        .copied()
+                        .chain([ndc_field])
+                        .collect::<Vec<_>>();
+
                     build_annotations_from_input_object_type_permissions(
-                        &mut field_path_,
+                        new_field_path.as_slice(),
                         &field_definition.field_type,
                         ndc_argument_name,
                         object_types,
@@ -277,7 +274,7 @@ fn build_preset_map_from_input_object_type_permission(
     permission: &type_permissions::TypeInputPermission,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     field_mappings: Option<&BTreeMap<FieldName, object_types::FieldMapping>>,
-    field_path: &[DataConnectorColumnName],
+    field_path: &[&DataConnectorColumnName],
     ndc_argument_name: Option<&DataConnectorArgumentName>,
     object_type: &Qualified<CustomTypeName>,
 ) -> Result<
@@ -307,8 +304,12 @@ fn build_preset_map_from_input_object_type_permission(
                 })?;
 
             // extend the existing field path with a new field
-            let mut new_field_path = field_path.to_owned();
-            new_field_path.push(ndc_field);
+            let new_field_path = field_path
+                .iter()
+                .copied()
+                .cloned()
+                .chain([ndc_field])
+                .collect::<Vec<_>>();
 
             let key = ArgumentNameAndPath {
                 ndc_argument_name: ndc_argument_name.cloned(),

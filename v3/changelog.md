@@ -9,6 +9,14 @@
 - Fixed a bug where erroneous build errors would be raised when using a
   relationship in a boolean expression pre-set to an argument in
   CommandPermissions.
+- Fixed a bug where setting both Command/Model argument presets (via
+  ModelPermissions or CommandPermissions) as well as setting field presets (via
+  TypePermissions) would result in the argument presets being ignored.
+- Fixed a bug where setting field presets (via TypePermissions) on multiple
+  types that were nested inside each other would result in some field presets
+  being ignored.
+- Fixed a bug where TypePermissions field presets would be ignored if the
+  argument type was an array of objects.
 
 ### Changed
 
