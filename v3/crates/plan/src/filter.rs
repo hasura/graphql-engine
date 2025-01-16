@@ -16,7 +16,7 @@ pub fn to_resolved_filter_expr(
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
-    boolean_expression_type: &metadata_resolve::ResolvedObjectBooleanExpressionType,
+    boolean_expression_type: Option<&metadata_resolve::ResolvedObjectBooleanExpressionType>,
     expr: &BooleanExpression,
     data_connector: &DataConnectorLink,
 ) -> Result<ResolvedFilterExpression, PlanError> {
@@ -99,9 +99,6 @@ pub fn to_resolved_filter_expr(
                     "boolean expressions in comparison values are not supported: {b:?}"
                 ))),
             }?;
-
-            let comparison_expression_info =
-                boolean_expression_for_comparison(metadata, boolean_expression_type, field)?;
 
             // ideally everything would be resolved via boolean expression types, but
             // we need this information from the object types as we mark which operators
@@ -288,6 +285,17 @@ data_connector.capabilities.supported_ndc_version))
                     ))
                 }
                 ComparisonOperator::Custom(custom_operator) => {
+                    // Boolean expression type is required to resolve custom operators
+                    let boolean_expression_type = boolean_expression_type.ok_or_else(|| {
+                        PlanError::Internal(
+                            "Custom operators require a boolean expression type".into(),
+                        )
+                    })?;
+                    let comparison_expression_info = boolean_expression_for_comparison(
+                        metadata,
+                        boolean_expression_type,
+                        field,
+                    )?;
                     let data_connector_operators = comparison_expression_info
                         .operator_mapping
                         .get(&data_connector.name)

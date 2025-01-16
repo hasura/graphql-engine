@@ -78,29 +78,16 @@ pub fn model_target_to_ndc_query(
         unique_number,
     )?;
 
-    // if we are going to filter our results, we must have a `BooleanExpressionType` defined for
-    // our model
-    // todo: what to do for SELECT ONE filters, we shouldn't need a bool exp for that?
     let model_filter = match &model_target.filter {
-        Some(expr) => {
-            let boolean_expression_type =
-                model.filter_expression_type.as_ref().ok_or_else(|| {
-                    PlanError::Internal(format!(
-                        "Cannot filter model {} as no boolean expression is defined for it",
-                        model.model.name
-                    ))
-                })?;
-
-            Ok(Some(to_resolved_filter_expr(
-                metadata,
-                &model_source.type_mappings,
-                &model.model.data_type,
-                model_object_type,
-                boolean_expression_type,
-                expr,
-                &model_source.data_connector,
-            )?))
-        }
+        Some(expr) => Ok(Some(to_resolved_filter_expr(
+            metadata,
+            &model_source.type_mappings,
+            &model.model.data_type,
+            model_object_type,
+            model.filter_expression_type.as_ref(),
+            expr,
+            &model_source.data_connector,
+        )?)),
         _ => Ok(None),
     }?;
 
