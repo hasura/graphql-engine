@@ -564,7 +564,7 @@ fn test_model_select_many_where_ndc_operators() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -942,7 +942,7 @@ fn test_model_select_many_predicate_is_null() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -972,7 +972,7 @@ fn test_model_select_many_limit_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -987,7 +987,7 @@ fn test_model_select_many_negative_limit_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1584,7 +1584,7 @@ fn test_boolean_expression_command_argument_from_user() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2224,7 +2224,7 @@ fn test_session_variables_json_enabled_array_session_variable() -> anyhow::Resul
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2235,7 +2235,7 @@ fn test_session_variables_json_enabled_integer_session_variable() -> anyhow::Res
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2246,6 +2246,6 @@ fn test_session_variables_json_disabled_integer_session_variable() -> anyhow::Re
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }

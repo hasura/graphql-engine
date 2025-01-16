@@ -286,6 +286,8 @@ pub fn process_arguments(
                         bool_exp,
                         type_mappings,
                         &boolean_expression_type.object_type,
+                        &data_connector.name,
+                        boolean_expression_type,
                     )?;
 
                 UnresolvedArgument::BooleanExpression { predicate }
