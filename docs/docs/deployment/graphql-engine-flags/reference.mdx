@@ -294,18 +294,33 @@ instead of the CDN, set the value to `/srv/console-assets`.
 
 ### CORS Domain
 
-List of domains, **including scheme (http/https) and port**, to allow for CORS.
-[Wildcard domains are allowed](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors). **Setting an empty
-value will block requests from all other domains**.
+List of domains, **including scheme (http/https) and port**, to allow for CORS.  
+[Wildcard domains are allowed](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors), but there are
+important **limitations**:
 
-|                     |                                                                                               |
-| ------------------- | --------------------------------------------------------------------------------------------- |
-| **Flag**            | `--cors-domain <DOMAINS>`                                                                     |
-| **Env var**         | `HASURA_GRAPHQL_CORS_DOMAIN`                                                                  |
-| **Accepted values** | String (comma separated list of domains)                                                      |
-| **Default**         | **CE**, **Enterprise Edition**: `null` <br />**Cloud**: `*`                                   |
-| **Example**         | "https://\*.foo.bar.com:8080, http://\*.localhost, http://localhost:3000, http://example.com" |
-| **Supported in**    | CE, Enterprise Edition, Cloud                                                                 |
+1. **Wildcard for subdomains**:
+
+   - Wildcards (`*`) can indicate **only a single subdomain position** and must be the **starting subdomain**.
+     - Example: `http://*.foo.com` will match `http://app.foo.com` but **not** `http://www.app.foo.com`.
+     - Similarly, `http://www.*.foo.com` will **not** handle `http://www.app.foo.com`.
+   - To allow multiple subdomains, you need to explicitly list entries for each required subdomain.
+     - Example: Use `http://*.app.foo.com` and `http://*.app2.foo.com` for `http://bar.app.foo.com` and
+       `http://baz.app2.foo.com`.
+
+2. **Wildcard for ports is not supported**:
+   - Ports must be specified explicitly.
+     - Example: Use `http://localhost:3000` instead of `http://localhost:*`.
+
+**Setting an empty value will block requests from all other domains.**
+
+|                     |                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| **Flag**            | `--cors-domain <DOMAINS>`                                                                   |
+| **Env var**         | `HASURA_GRAPHQL_CORS_DOMAIN`                                                                |
+| **Accepted values** | String (comma separated list of domains)                                                    |
+| **Default**         | **CE**, **Enterprise Edition**: `null` <br />**Cloud**: `*`                                 |
+| **Example**         | `https://*.foo.bar.com:8080, http://*.localhost, http://localhost:3000, http://example.com` |
+| **Supported in**    | CE, Enterprise Edition, Cloud                                                               |
 
 :::info Note
 
@@ -1317,8 +1332,8 @@ Enable WebSocket `permessage-deflate` compression.
 
 ### Websocket Connection Init Timeout
 
-Used to set the connection initialization timeout for GraphQL subscription protocols
-(`graphql-transport-ws` and `subscriptions-transport-ws`).
+Used to set the connection initialization timeout for GraphQL subscription protocols (`graphql-transport-ws` and
+`subscriptions-transport-ws`).
 
 |                     |                                                            |
 | ------------------- | ---------------------------------------------------------- |
