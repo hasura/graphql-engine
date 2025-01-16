@@ -1,12 +1,12 @@
-use std::collections::BTreeMap;
-
 use hasura_authn_core::SessionVariables;
+use indexmap::IndexMap;
 use lang_graphql::normalized_ast::{self, Field};
 use open_dds::{
     arguments::ArgumentName,
     relationships::{RelationshipName, RelationshipType},
     types::{CustomTypeName, FieldName},
 };
+use std::collections::BTreeMap;
 
 use serde::Serialize;
 
@@ -16,7 +16,7 @@ use super::{
     model_selection::{self, model_selection_ir},
     order_by::build_ndc_order_by,
     permissions,
-    selection_set::FieldSelection,
+    selection_set::{generate_selection_set_open_dd_ir, FieldSelection},
 };
 use crate::error;
 use graphql_schema::{
@@ -49,6 +49,127 @@ pub struct RemoteCommandRelationshipInfo<'s> {
 
 pub type SourceField = (FieldName, metadata_resolve::FieldMapping);
 pub type TargetField = (FieldName, metadata_resolve::NdcColumnForComparison);
+
+pub fn generate_model_relationship_open_dd_ir<'s>(
+    field: &Field<'s, GDS>,
+    relationship_annotation: &'s ModelRelationshipAnnotation,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<open_dds::query::RelationshipSelection, error::Error> {
+    // Add the target model being used in the usage counts
+    count_model(&relationship_annotation.model_name, usage_counts);
+    let field_call = field.field_call()?;
+
+    let mut limit = None;
+    let mut offset = None;
+    let mut where_input = None;
+
+    for argument in field_call.arguments.values() {
+        match argument.info.generic {
+            annotation @ Annotation::Input(argument_annotation) => {
+                match argument_annotation {
+                    InputAnnotation::Model(model_argument_annotation) => {
+                        match model_argument_annotation {
+                            ModelInputAnnotation::ModelLimitArgument => {
+                                limit = Some(argument.value.as_int_u32().map_err(
+                                    error::Error::map_unexpected_value_to_external_error,
+                                )?);
+                            }
+                            ModelInputAnnotation::ModelOffsetArgument => {
+                                offset = Some(argument.value.as_int_u32().map_err(
+                                    error::Error::map_unexpected_value_to_external_error,
+                                )?);
+                            }
+                            ModelInputAnnotation::ModelOrderByExpression => {
+                                /*
+                                order_by = Some(build_ndc_order_by(
+                                    argument,
+                                    session_variables,
+                                    usage_counts,
+                                )?);*/
+                            }
+                            _ => {
+                                return Err(error::InternalEngineError::UnexpectedAnnotation {
+                                    annotation: annotation.clone(),
+                                })?
+                            }
+                        }
+                    }
+                    InputAnnotation::BooleanExpression(
+                        BooleanExpressionAnnotation::BooleanExpressionRootField,
+                    ) => {
+                        if let Some(_model_source) = &relationship_annotation.target_source {
+                            where_input = Some(argument.value.as_object()?);
+                        }
+                    }
+
+                    _ => {
+                        return Err(error::InternalEngineError::UnexpectedAnnotation {
+                            annotation: annotation.clone(),
+                        })?
+                    }
+                }
+            }
+
+            annotation => {
+                return Err(error::InternalEngineError::UnexpectedAnnotation {
+                    annotation: annotation.clone(),
+                })?
+            }
+        }
+    }
+
+    let where_clause = match where_input {
+        Some(where_input) => Some(filter::resolve_filter_expression_open_dd(
+            where_input,
+            session_variables,
+            usage_counts,
+        )?),
+        None => None,
+    };
+
+    let selection = generate_selection_set_open_dd_ir(
+        &field.selection_set,
+        metadata_resolve::FieldNestedness::NotNested,
+        session_variables,
+        request_headers,
+        usage_counts,
+    )?;
+
+    let limit: Option<usize> = limit
+        .map(|limit| {
+            usize::try_from(limit).map_err(|_| error::Error::InvalidLimitValue { value: limit })
+        })
+        .transpose()?;
+
+    let offset: Option<usize> = offset
+        .map(|offset| {
+            usize::try_from(offset).map_err(|_| error::Error::InvalidOffsetValue { value: offset })
+        })
+        .transpose()?;
+
+    // TODO: append select permissions etc
+    let filter = where_clause;
+
+    let target = open_dds::query::RelationshipTarget {
+        relationship_name: relationship_annotation.relationship_name.clone(),
+        arguments: IndexMap::new(),
+        filter,
+        limit,
+        offset,
+        order_by: vec![], // TODO: don't ignore me
+    };
+
+    // we're not worrying about local / remote relationships at this point, we'll see if that's
+    // the thing to do
+    let relationship_selection = open_dds::query::RelationshipSelection {
+        selection: Some(selection),
+        target,
+    };
+
+    Ok(relationship_selection)
+}
 
 pub fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,

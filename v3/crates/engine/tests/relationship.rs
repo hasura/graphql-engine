@@ -29,7 +29,7 @@ fn test_local_relationships_model_to_model_object() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -40,7 +40,7 @@ fn test_local_relationships_model_to_model_multi_mapping() -> anyhow::Result<()>
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -97,7 +97,7 @@ fn test_local_relationships_command_to_model() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -116,7 +116,7 @@ fn test_relationships_command_to_model_with_graphql_config() -> anyhow::Result<(
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -192,7 +192,7 @@ fn test_local_relationships_permissions_target_model_filter_predicate() -> anyho
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
