@@ -1,10 +1,9 @@
 use indexmap::IndexMap;
-
 use serde::{Deserialize, Serialize};
 
+pub use crate::arguments::ArgumentName;
 use crate::{
     aggregates::{AggregateExpressionName, AggregationFunctionName},
-    arguments::ArgumentName,
     commands::CommandName,
     identifier::{Identifier, SubgraphName},
     models::{ModelName, OrderByDirection},

@@ -32,6 +32,7 @@ pub(crate) fn generate_command_argument(
         field_name.clone(),
         argument_type.description.clone(),
         Annotation::Input(types::InputAnnotation::CommandArgument {
+            argument_name: argument_name.clone(),
             argument_type: argument_type.argument_type.clone(),
             argument_kind: argument_type.argument_kind.clone(),
             ndc_func_proc_argument: command

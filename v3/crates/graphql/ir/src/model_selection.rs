@@ -71,6 +71,7 @@ struct FilterInputArguments<'s> {
 pub fn model_selection_open_dd_ir(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     model_name: &Qualified<ModelName>,
+    model_arguments: Option<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>>,
     where_clause: Option<open_dds::query::BooleanExpression>,
     limit: Option<u32>,
     offset: Option<u32>,
@@ -105,8 +106,6 @@ pub fn model_selection_open_dd_ir(
     // TODO: these will be replaced with correct values as we go
     let order_by = vec![];
 
-    let arguments = IndexMap::new();
-
     // END OF MADE UP VALUES
 
     let target = open_dds::query::ModelTarget {
@@ -114,7 +113,7 @@ pub fn model_selection_open_dd_ir(
         model_name: model_name.name.clone(),
         offset,
         order_by,
-        arguments,
+        arguments: model_arguments.unwrap_or_default(), // Permission presets are handled during planning
         filter,
         limit,
     };
@@ -129,6 +128,7 @@ pub fn model_aggregate_selection_open_dd_ir<'s>(
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
     model_name: &Qualified<ModelName>,
+    model_arguments: Option<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>>,
     where_clause: Option<open_dds::query::BooleanExpression>,
     limit: Option<u32>,
     offset: Option<u32>,
@@ -157,8 +157,6 @@ pub fn model_aggregate_selection_open_dd_ir<'s>(
     // TODO: these will be replaced with correct values as we go
     let order_by = vec![];
 
-    let arguments = IndexMap::new();
-
     // END OF MADE UP VALUES
 
     let target = open_dds::query::ModelTarget {
@@ -166,7 +164,7 @@ pub fn model_aggregate_selection_open_dd_ir<'s>(
         model_name: model_name.name.clone(),
         offset,
         order_by,
-        arguments,
+        arguments: model_arguments.unwrap_or_default(), // Permission presets are handled during planning
         filter,
         limit,
     };

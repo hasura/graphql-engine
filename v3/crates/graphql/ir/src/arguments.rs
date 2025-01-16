@@ -5,6 +5,7 @@ use crate::filter;
 use graphql_schema::GDS;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use hasura_authn_core::SessionVariables;
+use indexmap::IndexMap;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
 use metadata_resolve::{
@@ -18,6 +19,67 @@ use open_dds::{
 };
 use plan::UnresolvedArgument;
 use plan_types::UsagesCounts;
+
+/// The "args" input field.
+pub fn resolve_model_arguments_input_opendd<'s>(
+    arguments: &IndexMap<Name, InputField<'s, GDS>>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
+) -> Result<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>, error::Error> {
+    arguments
+        .values()
+        .map(|argument| {
+            resolve_argument_opendd(argument, type_mappings, session_variables, usage_counts)
+        })
+        .collect::<Result<IndexMap<_, _>, _>>()
+}
+
+// fetch input values from annotations and turn them into either JSON or an Expression
+pub fn resolve_argument_opendd<'s>(
+    argument: &InputField<'s, GDS>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
+) -> Result<(open_dds::query::ArgumentName, open_dds::query::Value), error::Error> {
+    let (argument_name, argument_type, argument_kind) = match argument.info.generic {
+        Annotation::Input(
+            InputAnnotation::CommandArgument {
+                argument_name,
+                argument_type,
+                argument_kind,
+                ndc_func_proc_argument: _,
+            }
+            | InputAnnotation::Model(ModelInputAnnotation::ModelArgument {
+                argument_name,
+                argument_type,
+                argument_kind,
+                ndc_table_argument: _,
+            }),
+        ) => Ok((argument_name, argument_type, argument_kind)),
+
+        annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
+            annotation: annotation.clone(),
+        }),
+    }?;
+
+    // simple values are serialized to JSON
+    // predicates are converted into boolean expressions
+    let mapped_argument_value = match argument_kind {
+        ArgumentKind::Other => {
+            map_argument_value_to_ndc_type(argument_type, &argument.value, type_mappings)
+                .map(open_dds::query::Value::Literal)?
+        }
+
+        ArgumentKind::NDCExpression => filter::resolve_filter_expression_open_dd(
+            argument.value.as_object()?,
+            session_variables,
+            usage_counts,
+        )
+        .map(open_dds::query::Value::BooleanExpression)?,
+    };
+    Ok((argument_name.clone(), mapped_argument_value))
+}
 
 // fetch input values from annotations and turn them into either JSON or an Expression
 pub fn build_argument_as_value<'s>(
@@ -77,11 +139,13 @@ pub fn build_ndc_argument_as_value<'a, 's>(
 ) -> Result<(DataConnectorArgumentName, UnresolvedArgument<'s>), error::Error> {
     let (argument_type, argument_kind, ndc_argument) = match argument.info.generic {
         Annotation::Input(InputAnnotation::CommandArgument {
+            argument_name: _,
             argument_type,
             argument_kind,
             ndc_func_proc_argument,
         }) => Ok((argument_type, argument_kind, ndc_func_proc_argument)),
         Annotation::Input(InputAnnotation::Model(ModelInputAnnotation::ModelArgument {
+            argument_name: _,
             argument_type,
             argument_kind,
             ndc_table_argument,

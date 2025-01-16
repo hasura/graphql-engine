@@ -97,7 +97,7 @@ pub fn select_one_generate_ir<'n, 's>(
 
     let mut model_arguments = BTreeMap::new();
 
-    for argument in model_argument_fields {
+    for argument in &model_argument_fields {
         let (ndc_arg_name, ndc_val) = arguments::build_ndc_argument_as_value(
             &field_call.name,
             argument,
@@ -149,9 +149,22 @@ pub fn select_one_generate_ir<'n, 's>(
                 where_clause = Some(open_dds::query::BooleanExpression::And(filter_expressions));
             }
 
+            let model_arguments = model_argument_fields
+                .iter()
+                .map(|argument| {
+                    arguments::resolve_argument_opendd(
+                        argument,
+                        &model_source.type_mappings,
+                        session_variables,
+                        &mut usage_counts,
+                    )
+                })
+                .collect::<Result<IndexMap<_, _>, _>>()?;
+
             ModelSelectOneSelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
                 model_name,
+                Some(model_arguments),
                 where_clause,
                 None, // limit
                 None, // offset

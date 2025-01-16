@@ -65,6 +65,9 @@ pub fn select_many_generate_ir<'n, 's>(
     let mut order_by = None;
     let mut model_arguments = BTreeMap::new();
 
+    // For opendd execution pipeline
+    let mut model_arguments_input = None;
+
     // Add the name of the root model
     let mut usage_counts = UsagesCounts::new();
     count_model(model_name, &mut usage_counts);
@@ -104,6 +107,7 @@ pub fn select_many_generate_ir<'n, 's>(
 
                             model_arguments.insert(ndc_arg_name, ndc_val);
                         }
+                        model_arguments_input = Some(arguments);
                     }
                     _ => Err(error::InternalEngineError::InternalGeneric {
                         description: "Expected object value for model arguments".into(),
@@ -170,9 +174,21 @@ pub fn select_many_generate_ir<'n, 's>(
                 None => None,
             };
 
+            let model_arguments = model_arguments_input
+                .map(|arguments_input| {
+                    arguments::resolve_model_arguments_input_opendd(
+                        arguments_input,
+                        &model_source.type_mappings,
+                        session_variables,
+                        &mut usage_counts,
+                    )
+                })
+                .transpose()?;
+
             ModelSelectManySelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
                 model_name,
+                model_arguments,
                 where_clause,
                 limit,
                 offset,

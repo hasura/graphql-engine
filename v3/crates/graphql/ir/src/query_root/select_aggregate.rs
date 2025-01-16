@@ -15,6 +15,7 @@ use plan::count_model;
 use plan_types::UsagesCounts;
 use serde::Serialize;
 
+use crate::arguments;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
@@ -75,6 +76,7 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
             let mut limit = None;
             let mut offset = None;
             let mut where_input = None;
+            let mut model_arguments_input = None;
 
             // Add the name of the root model
             count_model(model_name, &mut usage_counts);
@@ -85,7 +87,7 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
                     Annotation::Input(InputAnnotation::Model(
                         ModelInputAnnotation::ModelArgumentsExpression,
                     )) => {
-                        // TODO: Handle model arguments
+                        model_arguments_input = Some(field_call_argument.value.as_object()?);
                     }
                     // Filter input arguments
                     Annotation::Input(InputAnnotation::Model(
@@ -188,12 +190,24 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
                 )?),
                 None => None,
             };
+            let model_arguments = model_arguments_input
+                .map(|arguments_input| {
+                    arguments::resolve_model_arguments_input_opendd(
+                        arguments_input,
+                        &model_source.type_mappings,
+                        session_variables,
+                        &mut usage_counts,
+                    )
+                })
+                .transpose()?;
+
             ModelSelectAggregateSelection::OpenDd(
                 model_selection::model_aggregate_selection_open_dd_ir(
                     &field.selection_set,
                     data_type,
                     model_source,
                     model_name,
+                    model_arguments,
                     where_clause,
                     limit,
                     offset,
