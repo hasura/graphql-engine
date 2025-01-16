@@ -33,10 +33,14 @@ impl RequestError {
             ) => "internal error".into(),
             (e, _) => e.to_string(),
         };
+        // We are using the visibility of the error to determine if it is an internal error or not. We are assuming that
+        // if we are showing the error message to the user, it is something that they can fix on their end.
+        let is_internal = self.visibility() == ErrorVisibility::Internal;
         GraphQLError {
             message,
             path: None,
             extensions: None,
+            is_internal,
         }
     }
 }

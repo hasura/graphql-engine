@@ -38,6 +38,12 @@ impl ExplainResponse {
     pub fn does_contain_error(&self) -> bool {
         self.errors.is_some()
     }
+    pub fn does_contain_internal_error(&self) -> bool {
+        match &self.errors {
+            Some(errors) => errors.iter().any(|e| e.is_internal),
+            None => false,
+        }
+    }
 }
 
 impl axum::response::IntoResponse for ExplainResponse {

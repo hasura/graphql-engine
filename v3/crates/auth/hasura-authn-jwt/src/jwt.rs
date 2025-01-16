@@ -124,9 +124,32 @@ impl Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
+        let is_internal = match self {
+            Error::Internal(_) => true,
+            Error::ErrorDecodingAuthorizationHeader(_)
+            | Error::KidHeaderNotFound
+            | Error::ExpectedStringifiedJson
+            | Error::DisallowedDefaultRole
+            | Error::ParseClaimsMapEntryError {
+                claim_name: _,
+                err: _,
+            }
+            | Error::RequiredClaimNotFound { claim_name: _ }
+            | Error::AuthorizationHeaderSourceNotFound { header_name: _ }
+            | Error::CookieNotFound
+            | Error::CookieNameNotFound { cookie_name: _ }
+            | Error::AuthorizationHeaderParseError {
+                err: _,
+                header_name: _,
+            }
+            | Error::CookieParseError { err: _ }
+            | Error::MissingCookieValue { cookie_name: _ }
+            | Error::ClaimMustBeAString { claim_name: _ } => false,
+        };
         lang_graphql::http::Response::error_message_with_status(
             self.to_status_code(),
             self.to_string(),
+            is_internal,
         )
         .into_response()
     }

@@ -69,9 +69,16 @@ impl Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
+        let is_internal = match &self {
+            Error::ErrorInConvertingHeaderValueToString { .. } | Error::AuthenticationFailed => {
+                false
+            }
+            Error::Internal(_e) => true,
+        };
         lang_graphql::http::Response::error_message_with_status(
             self.to_status_code(),
             self.to_string(),
+            is_internal,
         )
         .into_response()
     }

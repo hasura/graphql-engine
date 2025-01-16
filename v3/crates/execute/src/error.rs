@@ -67,11 +67,13 @@ impl FieldError {
                 // Internal errors showing up in the API response is not desirable.
                 // Hence, extensions are masked for internal errors.
                 extensions: None,
+                is_internal: true,
             },
             (e, _) => GraphQLError {
                 message: e.to_string(),
                 path,
                 extensions: details.map(|details| gql::http::Extensions { details }),
+                is_internal: false,
             },
         }
     }

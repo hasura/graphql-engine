@@ -71,6 +71,9 @@ pub struct GraphQLError {
     /// Extensions to the error with additional information.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
+    /// Is the error an internal error? Are we interested in monitoring it?
+    #[serde(skip_serializing)]
+    pub is_internal: bool,
 }
 
 #[derive(Serialize)]
@@ -120,12 +123,14 @@ impl Response {
     pub fn error_message_with_status(
         status_code: http::status::StatusCode,
         message: String,
+        is_internal: bool,
     ) -> Self {
         Self {
             status_code,
             headers: http::HeaderMap::default(),
             data: None,
             errors: Some(nonempty![GraphQLError {
+                is_internal,
                 message,
                 path: None,
                 extensions: None,
@@ -137,12 +142,14 @@ impl Response {
         status_code: http::status::StatusCode,
         message: String,
         details: serde_json::Value,
+        is_internal: bool,
     ) -> Self {
         Self {
             status_code,
             headers: http::HeaderMap::default(),
             data: None,
             errors: Some(nonempty![GraphQLError {
+                is_internal,
                 message,
                 path: None,
                 extensions: Some(Extensions { details }),

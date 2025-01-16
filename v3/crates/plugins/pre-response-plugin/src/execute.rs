@@ -34,9 +34,17 @@ impl TraceableError for Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
+        let is_internal = match &self {
+            Error::ErrorWhileMakingHTTPRequestToTheHook(_, _) => false,
+            Error::BuildRequestError(_, _)
+            | Error::ReqwestError(_)
+            | Error::PluginRequestParseError(_)
+            | Error::EngineResponseParseError(_) => true,
+        };
         lang_graphql::http::Response::error_message_with_status(
             StatusCode::INTERNAL_SERVER_ERROR,
             self.to_string(),
+            is_internal,
         )
         .into_response()
     }

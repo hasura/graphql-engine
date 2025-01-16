@@ -215,7 +215,11 @@ impl IntoResponse for SessionError {
             SessionError::InternalRoleNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
             SessionError::InvalidHeaderValue { .. } => StatusCode::BAD_REQUEST,
         };
-        Response::error_message_with_status(code, self.to_string()).into_response()
+        let is_internal = match self {
+            SessionError::Unauthorized(_) | SessionError::InvalidHeaderValue { .. } => false,
+            SessionError::InternalRoleNotFound(_) => true,
+        };
+        Response::error_message_with_status(code, self.to_string(), is_internal).into_response()
     }
 }
 

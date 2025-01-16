@@ -30,10 +30,19 @@ pub enum Error {
 
 impl Error {
     pub fn into_graphql_error(self) -> lang_graphql::http::GraphQLError {
+        let is_internal = match &self {
+            Error::ErrorWhileMakingHTTPRequestToTheHook(_, _) | Error::UnexpectedStatusCode(_) => {
+                false
+            }
+            Error::BuildRequestError(_, _)
+            | Error::ReqwestError(_)
+            | Error::PluginRequestParseError(_) => true,
+        };
         lang_graphql::http::GraphQLError {
             message: self.to_string(),
             path: None,
             extensions: None,
+            is_internal,
         }
     }
 }
@@ -67,11 +76,13 @@ impl ErrorResponse {
                 message: format!("User error in pre-parse plugin: {plugin_name}"),
                 path: None,
                 extensions: Some(lang_graphql::http::Extensions { details: error }),
+                is_internal: false,
             },
             Self::InternalError(_error) => lang_graphql::http::GraphQLError {
                 message: format!("Internal error in pre-parse plugin: {plugin_name}"),
                 path: None,
                 extensions: None,
+                is_internal: false,
             },
         }
     }

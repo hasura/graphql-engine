@@ -54,6 +54,18 @@ impl GraphQLResponse {
         self.0.does_contains_error()
     }
 
+    pub fn does_contain_internal_error(&self) -> bool {
+        match &self.0.errors {
+            Some(errors) =>
+            // if any of the errors is internal, return true
+            {
+                errors.iter().any(|e| e.is_internal)
+            }
+            // if no errors, return false
+            None => false,
+        }
+    }
+
     pub fn inner(self) -> gql::http::Response {
         self.0
     }
