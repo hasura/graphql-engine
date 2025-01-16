@@ -152,13 +152,8 @@ pub fn add_order_by_input_field(
     model: &metadata_resolve::ModelWithArgumentPresets,
 ) {
     if let Some(order_by_expression_info) = &model.graphql_api.order_by_expression {
-        let order_by_argument = {
-            get_order_by_expression_input_field(
-                builder,
-                model.model.name.clone(),
-                order_by_expression_info,
-            )
-        };
+        let order_by_argument =
+            { get_order_by_expression_input_field(builder, order_by_expression_info) };
 
         fields.insert(
             order_by_argument.name.clone(),

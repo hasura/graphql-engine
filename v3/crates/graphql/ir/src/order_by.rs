@@ -28,6 +28,12 @@ pub fn build_ndc_order_by<'s>(
     args_field: &InputField<'s, GDS>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
+    type_mappings: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    data_type: &metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
 ) -> Result<OrderBy<'s>, error::Error> {
     match &args_field.value {
         normalized_ast::Value::List(arguments) => {
@@ -43,6 +49,9 @@ pub fn build_ndc_order_by<'s>(
                     &mut relationships,
                     session_variables,
                     usage_counts,
+                    type_mappings,
+                    data_connector_link,
+                    data_type,
                 )?;
                 order_by_elements.extend(order_by_element);
             }
@@ -91,6 +100,12 @@ pub fn build_ndc_order_by_element<'s>(
     relationships: &mut BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
+    type_mappings: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    data_type: &metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
 ) -> Result<Vec<OrderByElement<Expression<'s>>>, error::Error> {
     let input_object_fields = input_field_value.as_object()?;
     let mut order_by_elements = Vec::new();
@@ -113,7 +128,11 @@ pub fn build_ndc_order_by_element<'s>(
             // a relationship column, we'll have to join all the paths to specify NDC,
             // what relationships needs to be traversed to access this column
             Annotation::Input(InputAnnotation::Model(
-                graphql_schema::ModelInputAnnotation::ModelOrderByArgument { ndc_column, .. },
+                graphql_schema::ModelInputAnnotation::ModelOrderByArgument {
+                    parent_type,
+                    field_name,
+                    ..
+                },
             )) => {
                 let order_by_value = object_field.value.as_enum()?;
                 let order_direction = match &order_by_value.info.generic {
@@ -126,6 +145,24 @@ pub fn build_ndc_order_by_element<'s>(
                         })?
                     }
                 };
+                let field_mappings = type_mappings
+                    .get(parent_type)
+                    .map(
+                        |metadata_resolve::TypeMapping::Object { field_mappings, .. }| {
+                            field_mappings
+                        },
+                    )
+                    .ok_or_else(|| error::Error::InternalTypeMappingNotFound {
+                        type_name: parent_type.clone(),
+                    })?;
+
+                let ndc_column = field_mappings
+                    .get(field_name)
+                    .map(|field_mapping| field_mapping.column.clone())
+                    .ok_or_else(|| error::Error::InternalMappingNotFound {
+                        type_name: parent_type.clone(),
+                        field_name: field_name.clone(),
+                    })?;
 
                 let order_element = OrderByElement {
                     order_direction: match order_direction {
@@ -135,12 +172,15 @@ pub fn build_ndc_order_by_element<'s>(
                     target: OrderByTarget::Column {
                         relationship_path: relationship_path.iter().copied().cloned().collect(),
                         // The column name is the root column
-                        name: column_path.first().map_or(ndc_column, Deref::deref).clone(),
+                        name: column_path
+                            .first()
+                            .map_or(&ndc_column, Deref::deref)
+                            .clone(),
                         // The field path is the nesting path inside the root column, if any
                         field_path: column_path
                             .iter()
                             .copied()
-                            .chain([ndc_column])
+                            .chain([&ndc_column])
                             .skip(1)
                             .cloned()
                             .collect(),
@@ -157,8 +197,7 @@ pub fn build_ndc_order_by_element<'s>(
                         relationship_name,
                         relationship_type,
                         source_type,
-                        source_data_connector,
-                        source_type_mappings,
+                        object_type_name,
                         target_source,
                         target_type,
                         target_model_name,
@@ -168,65 +207,105 @@ pub fn build_ndc_order_by_element<'s>(
                     },
                 ),
             )) => {
-                let ndc_relationship_name =
-                    NdcRelationshipName::new(source_type, relationship_name);
-
-                relationships.insert(
-                    ndc_relationship_name.clone(),
-                    LocalModelRelationshipInfo {
-                        relationship_name,
-                        relationship_type,
-                        source_type,
-                        source_data_connector,
-                        source_type_mappings,
-                        target_source,
-                        target_type,
-                        mappings,
-                    },
-                );
-
-                // Add the target model being used in the usage counts
-                count_model(target_model_name, usage_counts);
-
-                let filter_permission =
-                    permissions::get_select_filter_predicate(&object_field.info)?;
-                let filter_predicate = permissions::build_model_permissions_filter_predicate(
-                    &target_source.model.data_connector,
-                    &target_source.model.type_mappings,
-                    filter_permission,
-                    session_variables,
-                    usage_counts,
-                )?;
-
-                // Add the current relationship to the relationship path.
-                let relationship_path_element = RelationshipPathElement {
-                    field_path: column_path.iter().copied().cloned().collect(),
-                    relationship_name: ndc_relationship_name,
-                    filter_predicate,
+                let relationship_field_nestedness = if *data_type == *object_type_name {
+                    metadata_resolve::FieldNestedness::NotNested
+                } else {
+                    metadata_resolve::FieldNestedness::ObjectNested
                 };
-                let new_relationship_path = relationship_path
-                    .iter()
-                    .copied()
-                    .chain([&relationship_path_element])
-                    .collect::<Vec<_>>();
+                if let metadata_resolve::RelationshipExecutionCategory::Local =
+                    metadata_resolve::relationship_execution_category(
+                        relationship_field_nestedness,
+                        data_connector_link,
+                        &target_source.model.data_connector,
+                        &target_source.capabilities,
+                    )
+                {
+                    let ndc_relationship_name =
+                        NdcRelationshipName::new(source_type, relationship_name);
 
-                let new_order_by_elements = build_ndc_order_by_element(
-                    &object_field.value,
-                    *multiple_input_properties,
-                    &[], // Field path resets as we pass through a relationship
-                    &new_relationship_path,
-                    relationships,
-                    session_variables,
-                    usage_counts,
-                )?;
-                order_by_elements.extend(new_order_by_elements);
+                    relationships.insert(
+                        ndc_relationship_name.clone(),
+                        LocalModelRelationshipInfo {
+                            relationship_name,
+                            relationship_type,
+                            source_type,
+                            source_data_connector: data_connector_link,
+                            source_type_mappings: type_mappings,
+                            target_source,
+                            target_type,
+                            mappings,
+                        },
+                    );
+
+                    // Add the target model being used in the usage counts
+                    count_model(target_model_name, usage_counts);
+
+                    let filter_permission =
+                        permissions::get_select_filter_predicate(&object_field.info)?;
+                    let filter_predicate = permissions::build_model_permissions_filter_predicate(
+                        &target_source.model.data_connector,
+                        &target_source.model.type_mappings,
+                        filter_permission,
+                        session_variables,
+                        usage_counts,
+                    )?;
+
+                    // Add the current relationship to the relationship path.
+                    let relationship_path_element = RelationshipPathElement {
+                        field_path: column_path.iter().copied().cloned().collect(),
+                        relationship_name: ndc_relationship_name,
+                        filter_predicate,
+                    };
+                    let new_relationship_path = relationship_path
+                        .iter()
+                        .copied()
+                        .chain([&relationship_path_element])
+                        .collect::<Vec<_>>();
+
+                    let new_order_by_elements = build_ndc_order_by_element(
+                        &object_field.value,
+                        *multiple_input_properties,
+                        &[], // Field path resets as we pass through a relationship
+                        &new_relationship_path,
+                        relationships,
+                        session_variables,
+                        usage_counts,
+                        &target_source.model.type_mappings,
+                        data_connector_link,
+                        data_type,
+                    )?;
+                    order_by_elements.extend(new_order_by_elements);
+                } else {
+                    Err(error::InternalEngineError::InternalGeneric {
+                        description: "Remote relationships are not supported in order_by".into(),
+                    })?;
+                }
             }
             Annotation::Input(InputAnnotation::Model(
                 graphql_schema::ModelInputAnnotation::ModelOrderByNestedExpression {
-                    ndc_column,
+                    parent_type,
+                    field_name,
                     multiple_input_properties,
                 },
             )) => {
+                let field_mappings = type_mappings
+                    .get(parent_type)
+                    .map(
+                        |metadata_resolve::TypeMapping::Object { field_mappings, .. }| {
+                            field_mappings
+                        },
+                    )
+                    .ok_or_else(|| error::Error::InternalTypeMappingNotFound {
+                        type_name: parent_type.clone(),
+                    })?;
+
+                let ndc_column = field_mappings
+                    .get(field_name)
+                    .map(|field_mapping| &field_mapping.column)
+                    .ok_or_else(|| error::Error::InternalMappingNotFound {
+                        type_name: parent_type.clone(),
+                        field_name: field_name.clone(),
+                    })?;
                 let new_column_path = column_path
                     .iter()
                     .copied()
@@ -243,6 +322,9 @@ pub fn build_ndc_order_by_element<'s>(
                             relationships,
                             session_variables,
                             usage_counts,
+                            type_mappings,
+                            data_connector_link,
+                            data_type,
                         )?;
                         order_by_elements.extend(order_by_element);
                     }
@@ -259,6 +341,9 @@ pub fn build_ndc_order_by_element<'s>(
                                 relationships,
                                 session_variables,
                                 usage_counts,
+                                type_mappings,
+                                data_connector_link,
+                                data_type,
                             )?;
                             order_by_elements.extend(order_by_element);
                         }

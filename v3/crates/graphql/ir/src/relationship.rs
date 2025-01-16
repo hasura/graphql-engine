@@ -207,11 +207,23 @@ pub fn generate_model_relationship_ir<'s>(
                                 )?);
                             }
                             ModelInputAnnotation::ModelOrderByExpression => {
-                                order_by = Some(build_ndc_order_by(
-                                    argument,
-                                    session_variables,
-                                    usage_counts,
-                                )?);
+                                if let Some(target_source) =
+                                    relationship_annotation.target_source.as_ref()
+                                {
+                                    order_by = Some(build_ndc_order_by(
+                                        argument,
+                                        session_variables,
+                                        usage_counts,
+                                        &target_source.model.type_mappings,
+                                        source_data_connector,
+                                        &relationship_annotation.source_type,
+                                    )?);
+                                } else {
+                                    Err(error::Error::InternalMissingTargetModelSourceForRelationship {
+                                        relationship_name: relationship_annotation.relationship_name.clone(),
+                                        type_name: relationship_annotation.source_type.clone(),
+                                    })?;
+                                };
                             }
                             _ => {
                                 return Err(error::InternalEngineError::UnexpectedAnnotation {

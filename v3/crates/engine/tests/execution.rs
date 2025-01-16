@@ -390,6 +390,17 @@ fn test_model_select_many_order_by_object_relationship_nested() -> anyhow::Resul
 }
 
 #[test]
+fn test_model_select_many_order_by_reuse_order_by_expression() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/reuse_order_by_expression";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
+#[test]
 fn test_model_select_many_type_permission_where() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/type_permission/where";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";

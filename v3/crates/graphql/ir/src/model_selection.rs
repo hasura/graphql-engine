@@ -244,6 +244,7 @@ pub fn generate_aggregate_model_selection_ir<'s>(
     let mut arguments = read_model_select_aggregate_arguments(
         field_call,
         model_source,
+        data_type,
         session_variables,
         usage_counts,
     )?;
@@ -286,6 +287,7 @@ pub fn generate_aggregate_model_selection_ir<'s>(
 fn read_model_select_aggregate_arguments<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     model_source: &'s metadata_resolve::ModelSource,
+    data_type: &Qualified<open_dds::types::CustomTypeName>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelectAggregateArguments<'s>, error::Error> {
@@ -356,6 +358,7 @@ fn read_model_select_aggregate_arguments<'s>(
     let filter_input_arguments = read_filter_input_arguments(
         filter_input_props,
         model_source,
+        data_type,
         session_variables,
         usage_counts,
     )?;
@@ -369,6 +372,7 @@ fn read_model_select_aggregate_arguments<'s>(
 fn read_filter_input_arguments<'s>(
     filter_input_field_props: Option<&IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>>,
     model_source: &'s metadata_resolve::ModelSource,
+    data_type: &Qualified<open_dds::types::CustomTypeName>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FilterInputArguments<'s>, error::Error> {
@@ -430,6 +434,9 @@ fn read_filter_input_arguments<'s>(
                         filter_input_field_arg,
                         session_variables,
                         usage_counts,
+                        &model_source.type_mappings,
+                        &model_source.data_connector,
+                        data_type,
                     )?);
                 }
 

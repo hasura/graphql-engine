@@ -70,6 +70,7 @@ customizations:
 
 ### Fixed
 
+- Allow reusing `OrderByExpressions` in different models.
 - Fixed a bug where erroneous build errors would be raised when using a
   relationship in a boolean expression pre-set to an argument in
   CommandPermissions.
