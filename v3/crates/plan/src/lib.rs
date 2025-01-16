@@ -6,7 +6,7 @@ mod order_by;
 mod query;
 mod types;
 
-pub use column::ResolvedColumn;
+pub use column::{to_resolved_column, ResolvedColumn};
 pub use error::{InternalDeveloperError, InternalEngineError, InternalError};
 pub use filter::to_resolved_filter_expr;
 pub use model_tracking::{count_command, count_model, extend_usage_count};
