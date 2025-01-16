@@ -13,15 +13,16 @@ use super::{
 };
 use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
+    arguments::ArgumentName,
     commands::DataConnectorCommand,
     models::ModelName,
     query::{
         Alias, CommandSelection, CommandTarget, ModelSelection, ModelTarget, ObjectFieldSelection,
-        ObjectSubSelection, RelationshipAggregateSelection, RelationshipSelection,
-        RelationshipTarget,
+        ObjectFieldTarget, ObjectSubSelection, RelationshipAggregateSelection,
+        RelationshipSelection, RelationshipTarget, Value,
     },
     relationships::RelationshipName,
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject, UniqueNumber};
 
@@ -107,44 +108,41 @@ fn from_field_selection(
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     unique_number: &mut UniqueNumber,
 ) -> Result<Field, PlanError> {
+    let ObjectFieldTarget {
+        field_name,
+        arguments,
+    } = &field_selection.target;
     let type_permissions = object_type
         .type_output_permissions
         .get(&session.role)
         .ok_or_else(|| {
             PlanError::Permission(format!(
-                "role {} does not have permission to select any fields of type {}",
-                session.role, object_type_name,
+                "role {} does not have permission to select any fields of type {object_type_name}",
+                session.role
             ))
         })?;
-    if !type_permissions
-        .allowed_fields
-        .contains(&field_selection.target.field_name)
-    {
+    if !type_permissions.allowed_fields.contains(field_name) {
         return Err(PlanError::Permission(format!(
-            "role {} does not have permission to select the field {} from type {}",
-            session.role, field_selection.target.field_name, object_type_name,
+            "role {} does not have permission to select the field {field_name} from type {object_type_name}",
+            session.role
         )));
     }
 
     let field_mapping = field_mappings
-        .get(&field_selection.target.field_name)
+        .get(field_name)
         // .map(|field_mapping| field_mapping.column.clone())
         .ok_or_else(|| {
             PlanError::Internal(format!(
-                "couldn't fetch field mapping of field {} in type {}",
-                field_selection.target.field_name, object_type_name,
+                "couldn't fetch field mapping of field {field_name} in type {object_type_name}"
             ))
         })?;
 
     let field_type = &object_type
         .object_type
         .fields
-        .get(&field_selection.target.field_name)
+        .get(field_name)
         .ok_or_else(|| {
-            PlanError::Internal(format!(
-                "could not look up type of field {}",
-                field_selection.target.field_name
-            ))
+            PlanError::Internal(format!("could not look up type of field {field_name}"))
         })?
         .field_type;
 
@@ -160,12 +158,40 @@ fn from_field_selection(
         unique_number,
     )?;
 
+    let field_arguments = resolve_field_arguments(field_name, arguments, field_mapping)?;
+
     let ndc_field = Field::Column {
         column: field_mapping.column.clone(),
         fields,
-        arguments: BTreeMap::new(),
+        arguments: field_arguments,
     };
     Ok(ndc_field)
+}
+
+fn resolve_field_arguments(
+    field_name: &FieldName,
+    input_arguments: &IndexMap<ArgumentName, Value>,
+    field_mapping: &metadata_resolve::FieldMapping,
+) -> Result<BTreeMap<DataConnectorArgumentName, plan_types::Argument>, PlanError> {
+    // NOTE: Presets for field arguments are not currently supported.
+    let mut arguments = BTreeMap::new();
+    for (argument_name, argument_value) in input_arguments {
+        let ndc_argument_name = field_mapping.argument_mappings.get(argument_name).ok_or_else(|| {
+            PlanError::Internal(format!(
+                "couldn't find the argument mapping for argument {argument_name} in field {field_name}"
+            ))
+        })?;
+        let argument = match argument_value {
+            Value::Literal(literal) => plan_types::Argument::Literal {
+                value: literal.clone(),
+            },
+            Value::BooleanExpression(_boolean_expression) => Err(PlanError::Internal(format!(
+                "boolean expression arguments are not supported in field {field_name}",
+            )))?,
+        };
+        arguments.insert(ndc_argument_name.clone(), argument);
+    }
+    Ok(arguments)
 }
 
 fn resolve_nested_field_selection(

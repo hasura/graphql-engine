@@ -208,6 +208,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
         result_type,
         result_base_type_kind,
         metadata_resolve::FieldNestedness::NotNested,
+        &command_source.type_mappings,
         selection_set::NestedSelectionType::CommandRootSelection,
         field,
         session_variables,

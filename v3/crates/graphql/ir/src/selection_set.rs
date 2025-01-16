@@ -15,7 +15,9 @@ use super::relationship::{self, RemoteCommandRelationshipInfo, RemoteModelRelati
 use crate::aggregates::mk_alias_from_graphql_field_path;
 use crate::error;
 use crate::global_id;
-use graphql_schema::{AggregateOutputAnnotation, AggregationFunctionAnnotation, TypeKind};
+use graphql_schema::{
+    AggregateOutputAnnotation, AggregationFunctionAnnotation, InputAnnotation, TypeKind,
+};
 use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 use plan::UnresolvedArgument;
 use plan_types::{
@@ -134,6 +136,10 @@ pub fn generate_nested_selection_open_dd_ir(
     qualified_type_reference: &metadata_resolve::QualifiedTypeReference,
     field_base_type_kind: TypeKind,
     selection_set_field_nestedness: metadata_resolve::FieldNestedness,
+    type_mappings: &BTreeMap<
+        metadata_resolve::Qualified<CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
     nested_selection_type: NestedSelectionType,
     field: &normalized_ast::Field<'_, GDS>,
     session_variables: &SessionVariables,
@@ -160,6 +166,7 @@ pub fn generate_nested_selection_open_dd_ir(
                 element_type,
                 field_base_type_kind,
                 new_nestedness,
+                type_mappings,
                 NestedSelectionType::NestedSelection,
                 field,
                 session_variables,
@@ -178,6 +185,7 @@ pub fn generate_nested_selection_open_dd_ir(
                             let nested_selection = generate_selection_set_open_dd_ir(
                                 &field.selection_set,
                                 selection_set_field_nestedness,
+                                type_mappings,
                                 session_variables,
                                 request_headers,
                                 usage_counts,
@@ -271,6 +279,10 @@ pub fn generate_nested_selection<'s>(
 pub fn generate_selection_set_open_dd_ir(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     selection_set_field_nestedness: metadata_resolve::FieldNestedness,
+    type_mappings: &BTreeMap<
+        metadata_resolve::Qualified<CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -285,7 +297,7 @@ pub fn generate_selection_set_open_dd_ir(
                         name,
                         field_type,
                         field_base_type_kind,
-                        argument_types: _,
+                        argument_types,
                         ..
                     } => {
                         let nested_selection = generate_nested_selection_open_dd_ir(
@@ -293,19 +305,50 @@ pub fn generate_selection_set_open_dd_ir(
                             *field_base_type_kind,
                             selection_set_field_nestedness
                                 .max(metadata_resolve::FieldNestedness::ObjectNested),
+                            type_mappings,
                             NestedSelectionType::NestedSelection,
                             field,
                             session_variables,
                             request_headers,
                             usage_counts,
                         )?;
-
-                        // TODO: implement arguments
+                        let mut field_arguments = IndexMap::new();
+                        for (argument_name, argument_type) in argument_types {
+                            match field_call.arguments.get(argument_name) {
+                                None => {
+                                    if !argument_type.nullable {
+                                        Err(error::Error::MissingNonNullableArgument {
+                                            argument_name: argument_name.to_string(),
+                                            field_name: name.to_string(),
+                                        })?;
+                                    }
+                                }
+                                Some(val) => {
+                                    let Annotation::Input(InputAnnotation::FieldArgument {
+                                        argument_name,
+                                    }) = val.info.generic
+                                    else {
+                                        Err(error::InternalEngineError::UnexpectedAnnotation {
+                                            annotation: val.info.generic.clone(),
+                                        })?
+                                    };
+                                    let argument_value = arguments::map_argument_value_to_ndc_type(
+                                        argument_type,
+                                        &val.value,
+                                        type_mappings,
+                                    )?;
+                                    field_arguments.insert(
+                                        argument_name.clone(),
+                                        open_dds::query::Value::Literal(argument_value),
+                                    );
+                                }
+                            }
+                        }
                         let field_selection = open_dds::query::ObjectSubSelection::Field(
                             open_dds::query::ObjectFieldSelection {
                                 selection: nested_selection,
                                 target: open_dds::query::ObjectFieldTarget {
-                                    arguments: IndexMap::new(),
+                                    arguments: field_arguments,
                                     field_name: name.clone(),
                                 },
                             },
@@ -353,6 +396,7 @@ pub fn generate_selection_set_open_dd_ir(
                             open_dds::query::ObjectSubSelection::Relationship(
                                 relationship::generate_model_relationship_open_dd_ir(
                                     field,
+                                    type_mappings,
                                     relationship_annotation,
                                     session_variables,
                                     request_headers,

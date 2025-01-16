@@ -71,6 +71,10 @@ struct FilterInputArguments<'s> {
 pub fn model_selection_open_dd_ir(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     model_name: &Qualified<ModelName>,
+    type_mappings: &BTreeMap<
+        metadata_resolve::Qualified<CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
     model_arguments: Option<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>>,
     where_clause: Option<open_dds::query::BooleanExpression>,
     limit: Option<u32>,
@@ -82,6 +86,7 @@ pub fn model_selection_open_dd_ir(
     let selection = selection_set::generate_selection_set_open_dd_ir(
         selection_set,
         metadata_resolve::FieldNestedness::NotNested,
+        type_mappings,
         session_variables,
         request_headers,
         usage_counts,

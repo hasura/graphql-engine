@@ -21,7 +21,9 @@ pub fn generate_field_argument(
     let input_field = gql_schema::InputField::new(
         field_name.clone(),
         argument_type.description.clone(),
-        Annotation::Input(types::InputAnnotation::FieldArgument),
+        Annotation::Input(types::InputAnnotation::FieldArgument {
+            argument_name: argument_name.clone(),
+        }),
         input_type,
         None,
         gql_schema::DeprecationStatus::NotDeprecated,

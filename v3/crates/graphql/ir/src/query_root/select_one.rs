@@ -164,6 +164,7 @@ pub fn select_one_generate_ir<'n, 's>(
             ModelSelectOneSelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
                 model_name,
+                &model_source.type_mappings,
                 Some(model_arguments),
                 where_clause,
                 None, // limit

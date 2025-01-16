@@ -328,7 +328,9 @@ pub enum InputAnnotation {
     },
     Relay(RelayInputAnnotation),
     ApolloFederationRepresentationsInput(ApolloFederationInputAnnotation),
-    FieldArgument,
+    FieldArgument {
+        argument_name: ArgumentName, // OpenDd argument name
+    },
 }
 
 /// Contains the different possible entities that can be used to generate

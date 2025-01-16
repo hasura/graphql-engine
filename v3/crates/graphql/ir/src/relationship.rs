@@ -52,6 +52,7 @@ pub type TargetField = (FieldName, metadata_resolve::NdcColumnForComparison);
 
 pub fn generate_model_relationship_open_dd_ir<'s>(
     field: &Field<'s, GDS>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     relationship_annotation: &'s ModelRelationshipAnnotation,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
@@ -132,6 +133,7 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
     let selection = generate_selection_set_open_dd_ir(
         &field.selection_set,
         metadata_resolve::FieldNestedness::NotNested,
+        type_mappings,
         session_variables,
         request_headers,
         usage_counts,

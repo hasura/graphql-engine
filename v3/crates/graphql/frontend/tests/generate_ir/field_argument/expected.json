@@ -100,7 +100,11 @@
                         "name": "hash",
                         "info": {
                           "generic": {
-                            "Input": "FieldArgument"
+                            "Input": {
+                              "FieldArgument": {
+                                "argument_name": "hash"
+                              }
+                            }
                           },
                           "namespaced": null
                         },

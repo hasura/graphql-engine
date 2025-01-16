@@ -195,7 +195,7 @@ fn analyze_input_annotation(annotation: &graphql_schema::InputAnnotation) -> Vec
         )
         | graphql_schema::InputAnnotation::CommandArgument { .. }
         | graphql_schema::InputAnnotation::Relay(_)
-        | graphql_schema::InputAnnotation::FieldArgument
+        | graphql_schema::InputAnnotation::FieldArgument { argument_name: _ }
         | graphql_schema::InputAnnotation::ApolloFederationRepresentationsInput(_) => {}
     }
     result
