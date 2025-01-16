@@ -19,7 +19,6 @@
 pub enum UnstableFeature {
     EnableNdcV02Support,
     EnableAggregationPredicates,
-    EnablePreRoutePlugins,
     EnableOpenDdPipelineForGraphql,
 }
 
@@ -35,9 +34,6 @@ pub fn resolve_unstable_features(
             }
             UnstableFeature::EnableAggregationPredicates => {
                 features.enable_aggregation_predicates = true;
-            }
-            UnstableFeature::EnablePreRoutePlugins => {
-                features.enable_pre_route_plugins = true;
             }
             UnstableFeature::EnableOpenDdPipelineForGraphql => {
                 // this does not currently affect metadata resolve behaviour

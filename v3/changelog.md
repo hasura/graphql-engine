@@ -4,7 +4,69 @@
 
 ### Added
 
-- Added multiple HTTP methods in pre-route plugins.
+#### Pre-route Engine Plugins
+
+Add support for pre-route engine plugins. Engine now supports calling a HTTP
+webhook in pre-route execution step. This can be used to add a bunch of
+functionalities to the DDN, such as a restify middleware, etc.
+
+The following is an example of the OpenDD metadata for the plugins:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  pre: route
+  name: restified_endpoints
+  url:
+    value: http://localhost:5001/restified
+  config:
+    match: "/v1/api/rest/*"
+    matchMethods: ["GET", "POST"]
+    request:
+      method: POST
+      headers:
+        forward:
+          - Authorization
+        additional:
+          hasura-m-auth:
+            value: "your-strong-m-auth-key"
+      rawRequest:
+        path: {}
+        query: {}
+        method: {}
+        body: {}
+```
+
+This will match all GET and POST requests to `/v1/api/rest/*` and make a POST
+request to `http://localhost:5001/restified` with the following request body:
+
+```json
+{
+  "path": "/v1/api/rest/some/path",
+  "method": "GET",
+  "query": "some=query&params=here",
+  "body": "..."
+}
+```
+
+Additionally, the following headers will be sent with the request:
+
+- `Authorization` header from the original request
+- `hasura-m-auth` header with the value `your-strong-m-auth-key`
+
+The response from the plugin will be used as the response to the original
+request.
+
+The pre-route plugin hook's request can be customized using the
+`LifecyclePluginHook` metadata object. Currently we support the following
+customizations:
+
+- forwarding/additional headers
+- adding/removing path information
+- adding/removing query information
+- adding/removing method information
+- adding/removing body information
 
 ### Fixed
 

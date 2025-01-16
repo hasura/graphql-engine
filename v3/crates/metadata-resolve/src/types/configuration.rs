@@ -16,5 +16,4 @@ pub struct Configuration {
 pub struct UnstableFeatures {
     pub enable_ndc_v02_support: bool,
     pub enable_aggregation_predicates: bool,
-    pub enable_pre_route_plugins: bool,
 }

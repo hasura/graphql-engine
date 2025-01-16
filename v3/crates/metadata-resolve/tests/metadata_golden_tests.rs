@@ -83,7 +83,6 @@ fn read_test_configuration(
     let unstable_features = configuration::UnstableFeatures {
         enable_ndc_v02_support: false,
         enable_aggregation_predicates: true,
-        enable_pre_route_plugins: false,
     };
 
     let configuration_path = directory.join("configuration.json");

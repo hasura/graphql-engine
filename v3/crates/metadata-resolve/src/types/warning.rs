@@ -4,8 +4,8 @@ use open_dds::{flags, types::CustomTypeName};
 use crate::{
     stages::{
         aggregate_boolean_expressions, aggregates, boolean_expressions, commands, data_connectors,
-        models, models_graphql, object_types, order_by_expressions, plugins,
-        scalar_boolean_expressions, scalar_types,
+        models, models_graphql, object_types, order_by_expressions, scalar_boolean_expressions,
+        scalar_types,
     },
     Qualified,
 };
@@ -42,8 +42,6 @@ pub enum Warning {
     AggregateExpressionIssue(#[from] aggregates::AggregateExpressionIssue),
     #[error("{0}")]
     ScalarTypesIssue(#[from] scalar_types::ScalarTypesIssue),
-    #[error("{0}")]
-    PluginIssue(#[from] plugins::PluginIssue),
     #[error("{0}")]
     ConflictingNameAcrossTypes(ConflictingNameAcrossTypes),
 }

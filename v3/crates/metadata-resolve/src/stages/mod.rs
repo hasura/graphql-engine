@@ -314,12 +314,7 @@ fn resolve_internal(
     let scalar_types_with_representations =
         scalar_type_representations::resolve(&data_connector_scalars, &scalar_types);
 
-    let (plugin_configs, plugin_warnings) = plugins::resolve(
-        &metadata_accessor,
-        &configuration.unstable_features.enable_pre_route_plugins,
-    );
-
-    all_issues.extend(plugin_warnings);
+    let plugin_configs = plugins::resolve(&metadata_accessor);
 
     // check for duplicate names across types
     all_issues.extend(conflicting_types::check_conflicting_names_across_types(
