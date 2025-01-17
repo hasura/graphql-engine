@@ -10,30 +10,22 @@ mod relationships;
 mod types;
 use crate::types::PlanError;
 pub use arguments::{process_argument_presets, UnresolvedArgument};
-pub use command::{
-    execute_plan_from_function, execute_plan_from_procedure, from_command, CommandPlan, FromCommand,
-};
+pub use command::{from_command, CommandPlan, FromCommand};
 pub use filter::{
     build_relationship_comparison_expression, get_field_mapping_of_field_name, plan_expression,
 };
 use indexmap::IndexMap;
-pub use model::{
-    from_model_aggregate_selection, from_model_selection, ndc_query_to_query_execution_plan,
-    ModelAggregateSelection,
-};
+pub use model::{from_model_aggregate_selection, from_model_selection};
 pub use permissions::process_model_predicate;
 pub use relationships::{
     process_command_relationship_definition, process_model_relationship_definition,
 };
 use std::sync::Arc;
-pub use types::{NDCFunction, NDCProcedure, NDCQuery};
 
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use open_dds::query::{Alias, Query, QueryRequest};
-use plan_types::{
-    ExecutionTree, FieldsSelection, JoinLocations, PredicateQueryTrees, UniqueNumber,
-};
+use plan_types::{ExecutionTree, UniqueNumber};
 
 // these types should probably live in `plan-types`
 pub enum SingleNodeExecutionPlan {
@@ -111,21 +103,13 @@ where
 {
     match query {
         open_dds::query::Query::Model(model_selection) => {
-            let (ndc_query, fields) = model::from_model_selection(
+            let execution_tree = model::from_model_selection(
                 model_selection,
                 metadata,
                 session,
                 request_headers,
                 unique_number,
             )?;
-
-            let query_execution_plan =
-                model::ndc_query_to_query_execution_plan(&ndc_query, &fields, &IndexMap::new());
-            let execution_tree = ExecutionTree {
-                query_execution_plan,
-                remote_predicates: PredicateQueryTrees::new(),
-                remote_join_executions: JoinLocations::new(),
-            };
 
             Ok(SingleNodeExecutionPlan::Query(execution_tree))
         }
@@ -139,10 +123,7 @@ where
                 .map(|(k, v)| (k.to_string(), v.clone()))
                 .collect();
 
-            let ModelAggregateSelection {
-                query: ndc_query,
-                fields: aggregate_fields,
-            } = model::from_model_aggregate_selection(
+            let execution_tree = model::from_model_aggregate_selection(
                 &model_aggregate.target,
                 &selection,
                 metadata,
@@ -151,18 +132,6 @@ where
                 unique_number,
             )?;
 
-            let query_execution_plan = model::ndc_query_to_query_execution_plan(
-                &ndc_query,
-                &FieldsSelection {
-                    fields: IndexMap::new(),
-                },
-                &aggregate_fields,
-            );
-            let execution_tree = ExecutionTree {
-                query_execution_plan,
-                remote_predicates: PredicateQueryTrees::new(),
-                remote_join_executions: JoinLocations::new(),
-            };
             Ok(SingleNodeExecutionPlan::Query(execution_tree))
         }
 
@@ -178,21 +147,11 @@ where
                 unique_number,
             )?;
             match command_plan {
-                command::CommandPlan::Function(ndc_function) => {
-                    let query_execution_plan = command::execute_plan_from_function(&ndc_function);
-
-                    let execution_tree = ExecutionTree {
-                        query_execution_plan,
-                        remote_predicates: PredicateQueryTrees::new(),
-                        remote_join_executions: JoinLocations::new(),
-                    };
-
+                command::CommandPlan::Function(execution_tree) => {
                     Ok(SingleNodeExecutionPlan::Query(execution_tree))
                 }
-                command::CommandPlan::Procedure(ndc_procedure) => {
-                    let query_execution_plan = command::execute_plan_from_procedure(&ndc_procedure);
-
-                    Ok(SingleNodeExecutionPlan::Mutation(query_execution_plan))
+                command::CommandPlan::Procedure(mutation_execution_plan) => {
+                    Ok(SingleNodeExecutionPlan::Mutation(mutation_execution_plan))
                 }
             }
         }

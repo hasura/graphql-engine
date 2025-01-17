@@ -1,7 +1,6 @@
 use super::arguments::process_arguments;
 use super::field_selection;
 use crate::PlanError;
-use crate::{NDCFunction, NDCProcedure};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{
@@ -15,8 +14,9 @@ use open_dds::{
     types::CustomTypeName,
 };
 use plan_types::{
-    Argument, Field, MutationArgument, MutationExecutionPlan, NdcFieldAlias, NdcRelationshipName,
-    NestedArray, NestedField, NestedObject, QueryExecutionPlan, QueryNodeNew, Relationship,
+    Argument, ExecutionTree, Field, JoinLocations, MutationArgument, MutationExecutionPlan,
+    NdcFieldAlias, NdcRelationshipName, NestedArray, NestedField, NestedObject,
+    PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew, Relationship,
 };
 use plan_types::{UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME};
 use std::collections::BTreeMap;
@@ -24,8 +24,8 @@ use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum CommandPlan {
-    Function(NDCFunction),
-    Procedure(NDCProcedure),
+    Function(ExecutionTree),
+    Procedure(MutationExecutionPlan),
 }
 
 pub struct FromCommand {
@@ -196,21 +196,56 @@ pub(crate) fn from_command_selection(
     )?;
 
     let command_plan = match &command_source.source {
-        DataConnectorCommand::Function(function_name) => CommandPlan::Function(NDCFunction {
-            function_name: function_name.clone(),
-            arguments: resolved_arguments,
-            data_connector: command_source.data_connector.clone(),
-            fields: wrap_scalar_select(wrap_function_ndc_field(&output_shape, ndc_fields)),
+        DataConnectorCommand::Function(function_name) => CommandPlan::Function(ExecutionTree {
+            remote_predicates: PredicateQueryTrees::new(),
+            remote_join_executions: JoinLocations::new(),
+            query_execution_plan: QueryExecutionPlan {
+                query_node: QueryNodeNew {
+                    fields: Some(plan_types::FieldsSelection {
+                        fields: wrap_scalar_select(wrap_function_ndc_field(
+                            &output_shape,
+                            ndc_fields,
+                        )),
+                    }),
+                    aggregates: None,
+                    limit: None,
+                    offset: None,
+                    order_by: None,
+                    predicate: None,
+                },
+                collection: CollectionName::from(function_name.as_str()),
+                arguments: resolved_arguments,
+                collection_relationships: relationships.clone(),
+                variables: None,
+                data_connector: command_source.data_connector.clone(),
+            },
+        }),
+        DataConnectorCommand::Procedure(procedure_name) => {
+            CommandPlan::Procedure(MutationExecutionPlan {
+                procedure_name: procedure_name.clone(),
+                procedure_arguments: resolved_arguments
+                    .into_iter()
+                    .map(|(name, argument)| {
+                        (
+                            name,
+                            match argument {
+                                Argument::Literal { value } => MutationArgument::Literal { value },
+                                Argument::BooleanExpression { predicate } => {
+                                    MutationArgument::BooleanExpression { predicate }
+                                }
+                                Argument::Variable { name: _ } => {
+                                    todo!("variable in mutation argument")
+                                }
+                            },
+                        )
+                    })
+                    .collect(),
+                procedure_fields: Some(wrap_procedure_ndc_fields(&output_shape, ndc_fields)),
 
-            collection_relationships: relationships,
-        }),
-        DataConnectorCommand::Procedure(procedure_name) => CommandPlan::Procedure(NDCProcedure {
-            procedure_name: procedure_name.clone(),
-            arguments: resolved_arguments,
-            data_connector: command_source.data_connector.clone(),
-            fields: Some(wrap_procedure_ndc_fields(&output_shape, ndc_fields)),
-            collection_relationships: relationships,
-        }),
+                collection_relationships: relationships.clone(),
+                data_connector: command_source.data_connector.clone(),
+            })
+        }
     };
     Ok(FromCommand {
         command_plan,
@@ -319,51 +354,5 @@ fn return_type_shape(
                 inner: Box::new(inner),
             })
         }
-    }
-}
-
-pub fn execute_plan_from_function(function: &NDCFunction) -> QueryExecutionPlan {
-    QueryExecutionPlan {
-        query_node: QueryNodeNew {
-            fields: Some(plan_types::FieldsSelection {
-                fields: function.fields.clone(),
-            }),
-            aggregates: None,
-            limit: None,
-            offset: None,
-            order_by: None,
-            predicate: None,
-        },
-        collection: CollectionName::from(function.function_name.as_str()),
-        arguments: function.arguments.clone(),
-        collection_relationships: function.collection_relationships.clone(),
-        variables: None,
-        data_connector: function.data_connector.clone(),
-    }
-}
-
-pub fn execute_plan_from_procedure(procedure: &NDCProcedure) -> MutationExecutionPlan {
-    MutationExecutionPlan {
-        procedure_name: procedure.procedure_name.clone(),
-        procedure_arguments: procedure
-            .arguments
-            .clone()
-            .into_iter()
-            .map(|(name, argument)| {
-                (
-                    name,
-                    match argument {
-                        Argument::Literal { value } => MutationArgument::Literal { value },
-                        Argument::BooleanExpression { predicate } => {
-                            MutationArgument::BooleanExpression { predicate }
-                        }
-                        Argument::Variable { name: _ } => todo!("variable in mutation argument"),
-                    },
-                )
-            })
-            .collect(),
-        procedure_fields: procedure.fields.clone(),
-        collection_relationships: procedure.collection_relationships.clone(),
-        data_connector: procedure.data_connector.clone(),
     }
 }

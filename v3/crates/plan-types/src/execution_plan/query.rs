@@ -1,7 +1,10 @@
 use super::{aggregates, arguments, field, filter, relationships};
 use crate::NdcFieldAlias;
 use crate::OrderByElement;
-use crate::{ExecutionTree, NdcRelationshipName, RelationshipColumnMapping, VariableName};
+use crate::{
+    AggregateFieldSelection, ExecutionTree, NdcRelationshipName, RelationshipColumnMapping,
+    VariableName,
+};
 use indexmap::IndexMap;
 use metadata_resolve::Qualified;
 use open_dds::{
@@ -107,4 +110,9 @@ pub struct QueryNodeNew {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FieldsSelection {
     pub fields: IndexMap<NdcFieldAlias, field::Field>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AggregateFieldsSelection {
+    pub aggregate_fields: IndexMap<NdcFieldAlias, AggregateFieldSelection>,
 }

@@ -1,4 +1,3 @@
-use super::types::NDCQuery;
 use super::{field_selection, model_target};
 
 use crate::column::to_resolved_column;
@@ -16,14 +15,9 @@ use hasura_authn_core::Session;
 use metadata_resolve::{Metadata, Qualified};
 use open_dds::query::{Aggregate, AggregationFunction, ModelSelection, ModelTarget, Operand};
 use plan_types::{
-    AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, NdcFieldAlias,
-    QueryExecutionPlan, QueryNodeNew, UniqueNumber,
+    AggregateFieldSelection, AggregateSelectionSet, ExecutionTree, FieldsSelection, JoinLocations,
+    NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew, UniqueNumber,
 };
-
-pub struct ModelAggregateSelection {
-    pub query: NDCQuery,
-    pub fields: IndexMap<NdcFieldAlias, AggregateFieldSelection>,
-}
 
 pub fn from_model_aggregate_selection(
     model_target: &ModelTarget,
@@ -32,7 +26,7 @@ pub fn from_model_aggregate_selection(
     session: &Arc<Session>,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<ModelAggregateSelection, PlanError> {
+) -> Result<ExecutionTree, PlanError> {
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
         model_target.model_name.clone(),
@@ -119,7 +113,42 @@ pub fn from_model_aggregate_selection(
         unique_number,
     )?;
 
-    Ok(ModelAggregateSelection { query, fields })
+    let query_aggregate_fields = if fields.is_empty() {
+        None
+    } else {
+        Some(AggregateSelectionSet {
+            fields: fields.clone(),
+        })
+    };
+
+    // only send an ordering if there are actually elements
+    let order_by = if query.order_by.is_empty() {
+        None
+    } else {
+        Some(query.order_by.clone())
+    };
+
+    let query_execution_plan = QueryExecutionPlan {
+        query_node: QueryNodeNew {
+            fields: None,
+            aggregates: query_aggregate_fields,
+            limit: query.limit,
+            offset: query.offset,
+            order_by,
+            predicate: query.filter.clone(),
+        },
+        collection: query.collection_name.clone(),
+        arguments: query.arguments.clone(),
+        collection_relationships: query.collection_relationships.clone(),
+        variables: None,
+        data_connector: query.data_connector,
+    };
+
+    Ok(ExecutionTree {
+        query_execution_plan,
+        remote_predicates: PredicateQueryTrees::new(),
+        remote_join_executions: JoinLocations::new(),
+    })
 }
 
 fn get_ndc_aggregation_function(
@@ -159,7 +188,7 @@ pub fn from_model_selection(
     session: &Arc<Session>,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<(NDCQuery, FieldsSelection), PlanError> {
+) -> Result<ExecutionTree, PlanError> {
     let model_target = &model_selection.target;
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
@@ -215,27 +244,10 @@ pub fn from_model_selection(
     // collect relationships accummulated in this scope.
     query.collection_relationships.append(&mut relationships);
 
-    Ok((query, FieldsSelection { fields: ndc_fields }))
-}
-
-// take NDCQuery and fields and make a sweet execution plan
-pub fn ndc_query_to_query_execution_plan(
-    query: &NDCQuery,
-    fields: &FieldsSelection,
-    aggregate_fields: &IndexMap<NdcFieldAlias, AggregateFieldSelection>,
-) -> QueryExecutionPlan {
-    let query_fields: Option<FieldsSelection> = if fields.fields.is_empty() {
+    let query_fields: Option<FieldsSelection> = if ndc_fields.is_empty() {
         None
     } else {
-        Some(fields.clone())
-    };
-
-    let query_aggregate_fields = if aggregate_fields.is_empty() {
-        None
-    } else {
-        Some(AggregateSelectionSet {
-            fields: aggregate_fields.clone(),
-        })
+        Some(FieldsSelection { fields: ndc_fields })
     };
 
     // only send an ordering if there are actually elements
@@ -245,10 +257,10 @@ pub fn ndc_query_to_query_execution_plan(
         Some(query.order_by.clone())
     };
 
-    QueryExecutionPlan {
+    let query_execution_plan = QueryExecutionPlan {
         query_node: QueryNodeNew {
             fields: query_fields,
-            aggregates: query_aggregate_fields,
+            aggregates: None,
             limit: query.limit,
             offset: query.offset,
             order_by,
@@ -259,5 +271,11 @@ pub fn ndc_query_to_query_execution_plan(
         collection_relationships: query.collection_relationships.clone(),
         variables: None,
         data_connector: query.data_connector.clone(),
-    }
+    };
+
+    Ok(ExecutionTree {
+        query_execution_plan,
+        remote_predicates: PredicateQueryTrees::new(),
+        remote_join_executions: JoinLocations::new(),
+    })
 }

@@ -5,7 +5,6 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use super::{
-    execute_plan_from_function,
     relationships::{
         process_command_relationship_definition, process_model_relationship_definition,
     },
@@ -24,7 +23,10 @@ use open_dds::{
     relationships::RelationshipName,
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
-use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject, UniqueNumber};
+use plan_types::{
+    ExecutionTree, Field, NdcFieldAlias, NestedArray, NestedField, NestedObject,
+    QueryExecutionPlan, UniqueNumber,
+};
 
 pub fn resolve_field_selection(
     metadata: &Metadata,
@@ -372,21 +374,25 @@ fn from_model_relationship(
         selection: selection.as_ref().map_or_else(IndexMap::new, Clone::clone),
     };
 
-    let (ndc_query, ndc_fields) = super::model::from_model_selection(
+    // TODO: don't throw away remote joins and predicates
+    let ExecutionTree {
+        query_execution_plan:
+            QueryExecutionPlan {
+                query_node,
+                collection: _,
+                arguments: ndc_arguments,
+                collection_relationships: mut ndc_relationships,
+                variables: _,
+                data_connector: _,
+            },
+        ..
+    } = super::model::from_model_selection(
         &relationship_target_model_selection,
         metadata,
         session,
         request_headers,
         unique_number,
     )?;
-    let plan_types::QueryExecutionPlan {
-        query_node,
-        collection: _,
-        arguments: ndc_arguments,
-        collection_relationships: mut ndc_relationships,
-        variables: _,
-        data_connector: _,
-    } = super::model::ndc_query_to_query_execution_plan(&ndc_query, &ndc_fields, &IndexMap::new());
 
     // Collect relationships from the generated query above
     collect_relationships.append(&mut ndc_relationships);
@@ -483,15 +489,20 @@ fn from_command_relationship(
         unique_number,
     )?;
 
-    let plan_types::QueryExecutionPlan {
-        query_node,
-        collection: _,
-        arguments: ndc_arguments,
-        collection_relationships: mut ndc_relationships,
-        variables: _,
-        data_connector: _,
+    // TODO: don't throw remote joins and predicates away
+    let ExecutionTree {
+        query_execution_plan:
+            QueryExecutionPlan {
+                query_node,
+                collection: _,
+                arguments: ndc_arguments,
+                collection_relationships: mut ndc_relationships,
+                variables: _,
+                data_connector: _,
+            },
+        ..
     } = match from_command.command_plan {
-        CommandPlan::Function(ndc_function) => execute_plan_from_function(&ndc_function),
+        CommandPlan::Function(execution_tree) => execution_tree,
         CommandPlan::Procedure(_ndc_procedure) => {
             // This shouldn't happen as we are already checking for procedure above
             return Err(PlanError::Relationship(RelationshipError::Other(format!(
@@ -665,9 +676,18 @@ fn from_relationship_aggregate_selection(
                 offset: *offset,
             };
 
-            let super::model::ModelAggregateSelection {
-                query: ndc_query,
-                fields: aggregate_fields,
+            // TODO: don't throw away remote joins and predicates
+            let ExecutionTree {
+                query_execution_plan:
+                    QueryExecutionPlan {
+                        query_node,
+                        collection: _,
+                        arguments: ndc_arguments,
+                        collection_relationships: mut ndc_relationships,
+                        variables: _,
+                        data_connector: _,
+                    },
+                ..
             } = super::model::from_model_aggregate_selection(
                 &relationship_model_target,
                 selection,
@@ -676,20 +696,7 @@ fn from_relationship_aggregate_selection(
                 request_headers,
                 unique_number,
             )?;
-            let plan_types::QueryExecutionPlan {
-                query_node,
-                collection: _,
-                arguments: ndc_arguments,
-                collection_relationships: mut ndc_relationships,
-                variables: _,
-                data_connector: _,
-            } = super::model::ndc_query_to_query_execution_plan(
-                &ndc_query,
-                &plan_types::FieldsSelection {
-                    fields: IndexMap::new(),
-                },
-                &aggregate_fields,
-            );
+
             // Collect relationships from the generated query above
             collect_relationships.append(&mut ndc_relationships);
             Ok(Field::Relationship {

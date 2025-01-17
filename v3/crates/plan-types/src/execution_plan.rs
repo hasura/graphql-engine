@@ -16,8 +16,8 @@ pub use field::{Field, NestedArray, NestedField, NestedObject};
 pub use filter::ResolvedFilterExpression;
 pub use mutation::MutationExecutionPlan;
 pub use query::{
-    FieldsSelection, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
-    RemotePredicateKey, UniqueNumber,
+    AggregateFieldsSelection, FieldsSelection, PredicateQueryTree, PredicateQueryTrees,
+    QueryExecutionPlan, QueryNodeNew, RemotePredicateKey, UniqueNumber,
 };
 pub use relationships::{Relationship, RelationshipArgument};
 pub use remote_joins::{
