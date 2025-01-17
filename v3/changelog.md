@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2025.01.17]
+
+### Added
+
 #### Pre-route Engine Plugins
 
 Add support for pre-route engine plugins. Engine now supports calling a HTTP
@@ -85,8 +93,6 @@ customizations:
 - Fixed a bug where a successful response from a pre-parse plugin would have a
   Content-Type header `application/octet-stream`. Now it returns
   `Content-Type: application/json`
-
-### Changed
 
 ## [v2025.01.09]
 
@@ -1023,7 +1029,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.01.09...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.01.17...HEAD
+[v2025.01.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.17
 [v2025.01.09]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.09
 [v2025.01.06]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.06
 [v2024.12.17]: https://github.com/hasura/v3-engine/releases/tag/v2024.12.17
