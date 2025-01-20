@@ -416,8 +416,8 @@ impl ObjectFieldOperand {
 /// Operand targeting a particular relationship or an operand nested within that relationship.
 pub struct RelationshipOperand {
     #[serde(flatten)]
-    target: Box<RelationshipTarget>,
-    nested: Option<Box<Operand>>,
+    pub target: Box<RelationshipTarget>,
+    pub nested: Option<Box<Operand>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

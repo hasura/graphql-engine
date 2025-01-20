@@ -64,7 +64,7 @@ fn test_local_relationships_model_to_model_array_with_arguments() -> anyhow::Res
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -77,7 +77,7 @@ fn test_relationships_array_with_arguments_with_graphql_config() -> anyhow::Resu
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, common_metadata_graphql_config],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

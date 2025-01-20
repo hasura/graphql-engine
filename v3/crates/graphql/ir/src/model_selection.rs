@@ -71,12 +71,17 @@ struct FilterInputArguments<'s> {
 pub fn model_selection_open_dd_ir(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     model_name: &Qualified<ModelName>,
+    models: &IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
     type_mappings: &BTreeMap<
         metadata_resolve::Qualified<CustomTypeName>,
         metadata_resolve::TypeMapping,
     >,
     model_arguments: Option<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>>,
     where_clause: Option<open_dds::query::BooleanExpression>,
+    order_by: Vec<open_dds::query::OrderByElement>,
     limit: Option<u32>,
     offset: Option<u32>,
     session_variables: &SessionVariables,
@@ -86,6 +91,7 @@ pub fn model_selection_open_dd_ir(
     let selection = selection_set::generate_selection_set_open_dd_ir(
         selection_set,
         metadata_resolve::FieldNestedness::NotNested,
+        models,
         type_mappings,
         session_variables,
         request_headers,
@@ -106,12 +112,6 @@ pub fn model_selection_open_dd_ir(
 
     // TODO: append select permissions etc
     let filter = where_clause;
-
-    // MADE UP EMPTY VALUES TO GET THINGS STARTED
-    // TODO: these will be replaced with correct values as we go
-    let order_by = vec![];
-
-    // END OF MADE UP VALUES
 
     let target = open_dds::query::ModelTarget {
         subgraph: model_name.subgraph.clone(),
@@ -135,6 +135,7 @@ pub fn model_aggregate_selection_open_dd_ir<'s>(
     model_name: &Qualified<ModelName>,
     model_arguments: Option<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>>,
     where_clause: Option<open_dds::query::BooleanExpression>,
+    order_by: Vec<open_dds::query::OrderByElement>,
     limit: Option<u32>,
     offset: Option<u32>,
     usage_counts: &mut UsagesCounts,
@@ -157,12 +158,6 @@ pub fn model_aggregate_selection_open_dd_ir<'s>(
 
     // TODO: append select permissions etc
     let filter = where_clause;
-
-    // MADE UP EMPTY VALUES TO GET THINGS STARTED
-    // TODO: these will be replaced with correct values as we go
-    let order_by = vec![];
-
-    // END OF MADE UP VALUES
 
     let target = open_dds::query::ModelTarget {
         subgraph: model_name.subgraph.clone(),

@@ -136,6 +136,10 @@ pub fn generate_nested_selection_open_dd_ir(
     qualified_type_reference: &metadata_resolve::QualifiedTypeReference,
     field_base_type_kind: TypeKind,
     selection_set_field_nestedness: metadata_resolve::FieldNestedness,
+    models: &IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
     type_mappings: &BTreeMap<
         metadata_resolve::Qualified<CustomTypeName>,
         metadata_resolve::TypeMapping,
@@ -166,6 +170,7 @@ pub fn generate_nested_selection_open_dd_ir(
                 element_type,
                 field_base_type_kind,
                 new_nestedness,
+                models,
                 type_mappings,
                 NestedSelectionType::NestedSelection,
                 field,
@@ -185,6 +190,7 @@ pub fn generate_nested_selection_open_dd_ir(
                             let nested_selection = generate_selection_set_open_dd_ir(
                                 &field.selection_set,
                                 selection_set_field_nestedness,
+                                models,
                                 type_mappings,
                                 session_variables,
                                 request_headers,
@@ -297,6 +303,10 @@ pub fn generate_nested_selection<'s>(
 pub fn generate_selection_set_open_dd_ir(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     selection_set_field_nestedness: metadata_resolve::FieldNestedness,
+    models: &IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
     type_mappings: &BTreeMap<
         metadata_resolve::Qualified<CustomTypeName>,
         metadata_resolve::TypeMapping,
@@ -323,6 +333,7 @@ pub fn generate_selection_set_open_dd_ir(
                             *field_base_type_kind,
                             selection_set_field_nestedness
                                 .max(metadata_resolve::FieldNestedness::ObjectNested),
+                            models,
                             type_mappings,
                             NestedSelectionType::NestedSelection,
                             field,
@@ -414,6 +425,7 @@ pub fn generate_selection_set_open_dd_ir(
                             open_dds::query::ObjectSubSelection::Relationship(
                                 relationship::generate_model_relationship_open_dd_ir(
                                     field,
+                                    models,
                                     type_mappings,
                                     relationship_annotation,
                                     session_variables,

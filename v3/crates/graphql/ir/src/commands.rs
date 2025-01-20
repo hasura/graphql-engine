@@ -182,6 +182,10 @@ pub fn generate_command_info<'n, 's>(
 /// Generates the OpenDD IR for a 'command' operation
 #[allow(irrefutable_let_patterns)]
 pub fn generate_command_info_open_dd<'n, 's>(
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
     command_name: &Qualified<commands::CommandName>,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
@@ -218,6 +222,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
         result_type,
         result_base_type_kind,
         metadata_resolve::FieldNestedness::NotNested,
+        models,
         &command_source.type_mappings,
         selection_set::NestedSelectionType::CommandRootSelection,
         field,
@@ -336,6 +341,10 @@ pub fn generate_function_based_command<'n, 's>(
 
 /// Generates the OpenDD IR for a 'function based command' operation
 pub fn generate_function_based_command_open_dd<'n, 's>(
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
     command_name: &Qualified<commands::CommandName>,
     function_name: &'s open_dds::commands::FunctionName,
     field: &'n normalized_ast::Field<'s, GDS>,
@@ -348,6 +357,7 @@ pub fn generate_function_based_command_open_dd<'n, 's>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<FunctionBasedCommand<'s>, error::Error> {
     let command_info = generate_command_info_open_dd(
+        models,
         command_name,
         field,
         field_call,
@@ -417,6 +427,10 @@ pub fn generate_procedure_based_command<'n, 's>(
 
 /// Generates the OpenDD IR for a 'procedure based command' operation
 pub fn generate_procedure_based_command_open_dd<'n, 's>(
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
     command_name: &Qualified<commands::CommandName>,
     procedure_name: &'s open_dds::commands::ProcedureName,
     field: &'n normalized_ast::Field<'s, GDS>,
@@ -430,6 +444,7 @@ pub fn generate_procedure_based_command_open_dd<'n, 's>(
     let mut usage_counts = UsagesCounts::new();
 
     let command_info = generate_command_info_open_dd(
+        models,
         command_name,
         field,
         field_call,

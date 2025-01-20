@@ -174,11 +174,13 @@ pub fn select_one_generate_ir<'n, 's>(
             ModelSelectOneSelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
                 model_name,
+                models,
                 &model_source.type_mappings,
                 Some(model_arguments),
                 where_clause,
-                None, // limit
-                None, // offset
+                vec![], // order_by
+                None,   // limit
+                None,   // offset
                 &session.variables,
                 request_headers,
                 // Get all the models/commands that were used as relationships

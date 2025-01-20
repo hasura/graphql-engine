@@ -345,6 +345,7 @@ fn generate_command_rootfield_ir<'n, 's>(
                 &mut usage_counts,
             )?,
             GraphqlRequestPipeline::OpenDd => commands::generate_function_based_command_open_dd(
+                models,
                 name,
                 function_name,
                 field,

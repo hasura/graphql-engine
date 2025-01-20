@@ -20,6 +20,7 @@ use super::{
     selection_set::{generate_selection_set_open_dd_ir, FieldSelection},
 };
 use crate::error;
+use crate::order_by;
 use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, InputAnnotation,
     ModelAggregateRelationshipAnnotation, ModelInputAnnotation, ModelRelationshipAnnotation, GDS,
@@ -52,6 +53,10 @@ pub type TargetField = (FieldName, metadata_resolve::NdcColumnForComparison);
 
 pub fn generate_model_relationship_open_dd_ir<'s>(
     field: &Field<'s, GDS>,
+    models: &'s IndexMap<
+        Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     relationship_annotation: &'s ModelRelationshipAnnotation,
     session_variables: &SessionVariables,
@@ -65,55 +70,74 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
     let mut limit = None;
     let mut offset = None;
     let mut where_input = None;
+    let mut order_by = Vec::new();
 
     for argument in field_call.arguments.values() {
         match argument.info.generic {
-            annotation @ Annotation::Input(argument_annotation) => {
-                match argument_annotation {
-                    InputAnnotation::Model(model_argument_annotation) => {
-                        match model_argument_annotation {
-                            ModelInputAnnotation::ModelLimitArgument => {
-                                limit = Some(argument.value.as_int_u32().map_err(
+            annotation @ Annotation::Input(argument_annotation) => match argument_annotation {
+                InputAnnotation::Model(model_argument_annotation) => {
+                    match model_argument_annotation {
+                        ModelInputAnnotation::ModelLimitArgument => {
+                            limit =
+                                Some(argument.value.as_int_u32().map_err(
                                     error::Error::map_unexpected_value_to_external_error,
                                 )?);
-                            }
-                            ModelInputAnnotation::ModelOffsetArgument => {
-                                offset = Some(argument.value.as_int_u32().map_err(
+                        }
+                        ModelInputAnnotation::ModelOffsetArgument => {
+                            offset =
+                                Some(argument.value.as_int_u32().map_err(
                                     error::Error::map_unexpected_value_to_external_error,
                                 )?);
-                            }
-                            ModelInputAnnotation::ModelOrderByExpression => {
-                                /*
-                                order_by = Some(build_ndc_order_by(
-                                    argument,
-                                    session_variables,
-                                    usage_counts,
-                                )?);*/
-                            }
-                            _ => {
-                                return Err(error::InternalEngineError::UnexpectedAnnotation {
-                                    annotation: annotation.clone(),
-                                })?
-                            }
                         }
-                    }
-                    InputAnnotation::BooleanExpression(
-                        BooleanExpressionAnnotation::BooleanExpressionRootField,
-                    ) => {
-                        if let Some(_target_capabilities) =
-                            &relationship_annotation.target_capabilities
-                        {
-                            where_input = Some(argument.value.as_object()?);
+                        ModelInputAnnotation::ModelOrderByExpression => {
+                            let target_model = models
+                                    .get(&relationship_annotation.model_name)
+                                    .ok_or_else(|| {
+                                        error::InternalError::Developer(
+                                            error::InternalDeveloperError::TargetModelNotFoundForRelationship {
+                                                model_name: relationship_annotation.model_name.clone(),
+                                                relationship_name: relationship_annotation.relationship_name.clone(),
+                                            },
+                                        )
+                                    })?;
+                            let target_model_source =
+                                target_model.model.source.as_ref().ok_or_else(|| {
+                                    error::Error::InternalMissingTargetModelSourceForRelationship {
+                                        relationship_name: relationship_annotation
+                                            .relationship_name
+                                            .clone(),
+                                        type_name: relationship_annotation.source_type.clone(),
+                                    }
+                                })?;
+                            order_by.extend(order_by::build_order_by_open_dd_ir(
+                                &argument.value,
+                                usage_counts,
+                                &target_model_source.data_connector,
+                                &relationship_annotation.target_type,
+                            )?);
                         }
-                    }
-
-                    _ => {
-                        return Err(error::InternalEngineError::UnexpectedAnnotation {
-                            annotation: annotation.clone(),
-                        })?
+                        _ => {
+                            return Err(error::InternalEngineError::UnexpectedAnnotation {
+                                annotation: annotation.clone(),
+                            })?
+                        }
                     }
                 }
-            }
+                InputAnnotation::BooleanExpression(
+                    BooleanExpressionAnnotation::BooleanExpressionRootField,
+                ) => {
+                    if let Some(_target_capabilities) = &relationship_annotation.target_capabilities
+                    {
+                        where_input = Some(argument.value.as_object()?);
+                    }
+                }
+
+                _ => {
+                    return Err(error::InternalEngineError::UnexpectedAnnotation {
+                        annotation: annotation.clone(),
+                    })?
+                }
+            },
 
             annotation => {
                 return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -135,6 +159,7 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
     let selection = generate_selection_set_open_dd_ir(
         &field.selection_set,
         metadata_resolve::FieldNestedness::NotNested,
+        models,
         type_mappings,
         session_variables,
         request_headers,
@@ -162,7 +187,7 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
         filter,
         limit,
         offset,
-        order_by: vec![], // TODO: don't ignore me
+        order_by,
     };
 
     // we're not worrying about local / remote relationships at this point, we'll see if that's

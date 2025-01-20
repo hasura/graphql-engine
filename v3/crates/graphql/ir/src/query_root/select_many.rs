@@ -16,7 +16,7 @@ use crate::arguments;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
-use crate::order_by::build_ndc_order_by;
+use crate::order_by::{build_ndc_order_by, build_order_by_open_dd_ir};
 use crate::permissions;
 use crate::GraphqlRequestPipeline;
 use graphql_schema::GDS;
@@ -81,6 +81,7 @@ pub fn select_many_generate_ir<'n, 's>(
 
     // For opendd execution pipeline
     let mut model_arguments_input = None;
+    let mut order_by_input = None;
 
     // Add the name of the root model
     let mut usage_counts = UsagesCounts::new();
@@ -136,6 +137,8 @@ pub fn select_many_generate_ir<'n, 's>(
                         &model_source.data_connector,
                         data_type,
                     )?);
+                    // For opendd execution pipeline
+                    order_by_input = Some(&argument.value);
                 }
                 _ => {
                     return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -189,13 +192,24 @@ pub fn select_many_generate_ir<'n, 's>(
                     )
                 })
                 .transpose()?;
+            let order_by = match order_by_input {
+                None => vec![],
+                Some(order_by_input) => build_order_by_open_dd_ir(
+                    order_by_input,
+                    &mut usage_counts,
+                    &model_source.data_connector,
+                    data_type,
+                )?,
+            };
 
             ModelSelectManySelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
                 model_name,
+                models,
                 &model_source.type_mappings,
                 model_arguments,
                 where_clause,
+                order_by,
                 limit,
                 offset,
                 &session.variables,

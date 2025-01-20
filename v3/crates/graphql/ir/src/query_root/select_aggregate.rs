@@ -21,6 +21,7 @@ use crate::arguments;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
+use crate::order_by;
 use crate::GraphqlRequestPipeline;
 
 #[derive(Debug, Serialize)]
@@ -86,6 +87,7 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
             let mut offset = None;
             let mut where_input = None;
             let mut model_arguments_input = None;
+            let mut order_by_input = None;
 
             // Add the name of the root model
             count_model(model_name, &mut usage_counts);
@@ -151,7 +153,7 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
                                 Annotation::Input(InputAnnotation::Model(
                                     ModelInputAnnotation::ModelOrderByExpression,
                                 )) => {
-                                    //TODO: Handle order_by
+                                    order_by_input = Some(&filter_input_field_arg.value);
                                 }
 
                                 // Where argument
@@ -210,6 +212,16 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
                 })
                 .transpose()?;
 
+            let order_by = match order_by_input {
+                None => vec![],
+                Some(order_by_input) => order_by::build_order_by_open_dd_ir(
+                    order_by_input,
+                    &mut usage_counts,
+                    &model_source.data_connector,
+                    data_type,
+                )?,
+            };
+
             ModelSelectAggregateSelection::OpenDd(
                 model_selection::model_aggregate_selection_open_dd_ir(
                     &field.selection_set,
@@ -218,6 +230,7 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
                     model_name,
                     model_arguments,
                     where_clause,
+                    order_by,
                     limit,
                     offset,
                     &mut usage_counts,
