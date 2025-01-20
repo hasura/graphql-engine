@@ -472,12 +472,44 @@
             "permissions": [
               {
                 "role": "admin",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "LastName",
+                      "value": {
+                        "literal": "Adminman"
+                      }
+                    },
+                    {
+                      "field": "Specialities",
+                      "value": {
+                        "literal": ["Science"]
+                      }
+                    }
+                  ]
+                },
                 "output": {
                   "allowedFields": ["FirstName", "LastName", "Specialities"]
                 }
               },
               {
                 "role": "user",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "LastName",
+                      "value": {
+                        "literal": "Userman"
+                      }
+                    },
+                    {
+                      "field": "Specialities",
+                      "value": {
+                        "literal": ["Engineering"]
+                      }
+                    }
+                  ]
+                },
                 "output": {
                   "allowedFields": ["FirstName", "LastName", "Specialities"]
                 }

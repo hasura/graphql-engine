@@ -17,7 +17,18 @@
               "City": "London",
               "Country": "UK"
             },
-            "Staff": [],
+            "Staff": [
+              {
+                "FirstName": "John",
+                "LastName": "Adminman",
+                "Specialities": ["Science"]
+              },
+              {
+                "FirstName": "Jane",
+                "LastName": "Adminman",
+                "Specialities": ["Science"]
+              }
+            ],
             "Departments": [
               "Humanities and Social Sciences",
               "Science and Engineering",
@@ -46,7 +57,18 @@
               "City": "London",
               "Country": "United Kingdom"
             },
-            "Staff": [],
+            "Staff": [
+              {
+                "FirstName": "John",
+                "LastName": "Userman",
+                "Specialities": ["Engineering"]
+              },
+              {
+                "FirstName": "Jane",
+                "LastName": "Userman",
+                "Specialities": ["Engineering"]
+              }
+            ],
             "Departments": ["Objectivism", "Ethics", "Philosophy of Science"]
           }
         }

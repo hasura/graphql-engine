@@ -16,7 +16,7 @@ use std::collections::{BTreeMap, HashMap};
 /// arguments fields will live.
 pub fn get_model_arguments_input_field(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     include_empty_default: bool,
 ) -> Result<gql_schema::InputField<GDS>, crate::Error> {
     model
@@ -60,7 +60,7 @@ pub fn get_model_arguments_input_field(
 pub fn build_model_argument_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<
     BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::Error,
@@ -142,7 +142,7 @@ pub fn build_model_arguments_input_schema(
 pub fn add_model_arguments_field(
     arguments: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     parent_field_name: &ast::Name,
     parent_type: &ast::TypeName,
 ) -> Result<(), crate::Error> {
@@ -171,7 +171,7 @@ pub fn add_model_arguments_field(
 
         let model_arguments = builder.conditional_namespaced(
             model_arguments_input,
-            permissions::get_select_permissions_namespace_annotations(model)?,
+            permissions::get_select_permissions_namespace_annotations(model),
         );
 
         if arguments.insert(name.clone(), model_arguments).is_some() {

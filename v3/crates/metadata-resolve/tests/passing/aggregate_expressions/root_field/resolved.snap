@@ -1125,7 +1125,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                         "Invoice",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -2369,7 +2369,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                         },
                     },
                 },
-                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {

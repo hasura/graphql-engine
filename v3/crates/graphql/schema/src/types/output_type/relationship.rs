@@ -7,16 +7,16 @@ use open_dds::{
 
 use serde::{Deserialize, Serialize};
 
-use metadata_resolve::{self, Qualified, QualifiedTypeReference};
+use metadata_resolve::{self, Qualified, QualifiedTypeReference, RelationshipCapabilities};
 
-use crate::types::{CommandSourceDetail, TypeKind};
+use crate::types::TypeKind;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ModelRelationshipAnnotation {
     pub source_type: Qualified<CustomTypeName>,
     pub relationship_name: RelationshipName,
     pub model_name: Qualified<ModelName>,
-    pub target_source: Option<metadata_resolve::ModelTargetSource>,
+    pub target_capabilities: Option<RelationshipCapabilities>,
     pub target_type: Qualified<CustomTypeName>,
     pub relationship_type: RelationshipType,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
@@ -28,7 +28,7 @@ pub struct ModelAggregateRelationshipAnnotation {
     pub source_type: Qualified<CustomTypeName>,
     pub relationship_name: RelationshipName,
     pub model_name: Qualified<ModelName>,
-    pub target_source: Option<metadata_resolve::ModelTargetSource>,
+    pub target_capabilities: Option<RelationshipCapabilities>,
     pub target_type: Qualified<CustomTypeName>,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
     pub deprecated: Option<Deprecated>,
@@ -74,14 +74,13 @@ pub struct CommandRelationshipAnnotation {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct CommandTargetSource {
-    pub details: CommandSourceDetail,
     pub function_name: FunctionName,
     pub capabilities: metadata_resolve::RelationshipCapabilities,
 }
 
 impl CommandTargetSource {
     pub fn new(
-        command: &metadata_resolve::CommandWithArgumentPresets,
+        command: &metadata_resolve::CommandWithPermissions,
         relationship: &metadata_resolve::RelationshipField,
     ) -> Result<Option<Self>, crate::Error> {
         command
@@ -90,15 +89,6 @@ impl CommandTargetSource {
             .as_ref()
             .map(|command_source| {
                 Ok(Self {
-                    details: CommandSourceDetail {
-                        data_connector: command_source.data_connector.clone(),
-                        type_mappings: command_source.type_mappings.clone(),
-                        argument_mappings: command_source.argument_mappings.clone(),
-                        data_connector_link_argument_presets: command_source
-                            .data_connector_link_argument_presets
-                            .clone(),
-                        ndc_type_opendd_type_same: command_source.ndc_type_opendd_type_same,
-                    },
                     function_name: match &command_source.source {
                         crate::types::output_type::DataConnectorCommand::Function(
                             function_name,

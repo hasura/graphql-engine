@@ -20,11 +20,9 @@ use open_dds::{
 };
 
 use metadata_resolve::{
-    self, data_connectors::ArgumentPresetValue, deserialize_non_string_key_btreemap,
-    deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
-    serialize_qualified_btreemap, ArgumentPresets, DataConnectorLink, FieldPresetInfo,
+    self, deserialize_non_string_key_btreemap, serialize_non_string_key_btreemap, FieldPresetInfo,
     LogicalOperators, NdcColumnForComparison, OperatorMapping, OrderByExpressionIdentifier,
-    Qualified, QualifiedTypeReference, TypeMapping,
+    Qualified, QualifiedTypeReference,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -94,21 +92,6 @@ pub enum ModelOrderByDirection {
     Desc,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-/// Common details to generate a command annotation.
-pub struct CommandSourceDetail {
-    pub data_connector: Arc<DataConnectorLink>,
-    #[serde(
-        serialize_with = "serialize_qualified_btreemap",
-        deserialize_with = "deserialize_qualified_btreemap"
-    )]
-    pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
-    pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
-    pub data_connector_link_argument_presets:
-        BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
-    pub ndc_type_opendd_type_same: bool,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 /// Annotations of the GraphQL root field.
 pub enum RootFieldAnnotation {
@@ -125,14 +108,12 @@ pub enum RootFieldAnnotation {
     },
     Model {
         data_type: Qualified<types::CustomTypeName>,
-        source: Option<Arc<metadata_resolve::ModelSource>>,
         // select_permissions: HashMap<Role, metadata_resolve::SelectPermission>,
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,
     },
     ModelSubscription {
         data_type: Qualified<types::CustomTypeName>,
-        source: Option<Arc<metadata_resolve::ModelSource>>,
         // select_permissions: HashMap<Role, metadata_resolve::SelectPermission>,
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,
@@ -142,16 +123,12 @@ pub enum RootFieldAnnotation {
         name: Qualified<commands::CommandName>,
         result_type: QualifiedTypeReference,
         result_base_type_kind: TypeKind,
-        // A command may/may not have a source
-        source: Option<CommandSourceDetail>,
         function_name: Option<commands::FunctionName>,
     },
     ProcedureCommand {
         name: Qualified<commands::CommandName>,
         result_type: QualifiedTypeReference,
         result_base_type_kind: TypeKind,
-        // A command may/may not have a source
-        source: Option<CommandSourceDetail>,
         procedure_name: Option<commands::ProcedureName>,
     },
     ApolloFederation(ApolloFederationRootFields),
@@ -353,11 +330,25 @@ pub enum Annotation {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 pub enum NamespaceAnnotation {
     /// any arguments that we should prefill for a command or type
-    Command(ArgumentPresets),
+    Command(
+        BTreeMap<
+            ArgumentName,
+            (
+                QualifiedTypeReference,
+                metadata_resolve::ValueExpressionOrPredicate,
+            ),
+        >,
+    ),
     /// any filter and arguments for selecting from a model
     Model {
         filter: metadata_resolve::FilterPermission,
-        argument_presets: ArgumentPresets,
+        argument_presets: BTreeMap<
+            ArgumentName,
+            (
+                QualifiedTypeReference,
+                metadata_resolve::ValueExpressionOrPredicate,
+            ),
+        >,
         allow_subscriptions: bool,
     },
     /// Field presets for an input field.

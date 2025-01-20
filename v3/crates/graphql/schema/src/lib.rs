@@ -39,7 +39,7 @@ pub use types::output_type::relationship::{
     OrderByRelationshipAnnotation,
 };
 pub use types::{
-    Annotation, ApolloFederationRootFields, BooleanExpressionAnnotation, CommandSourceDetail,
+    Annotation, ApolloFederationRootFields, BooleanExpressionAnnotation,
     EntityFieldTypeNameMapping, GlobalID, InputAnnotation, LogicalOperatorField,
     ModelInputAnnotation, ModelOrderByDirection, NamespaceAnnotation, NodeFieldTypeNameMapping,
     ObjectBooleanExpressionField, ObjectFieldKind, OutputAnnotation, RootFieldAnnotation,

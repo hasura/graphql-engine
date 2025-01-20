@@ -10,13 +10,13 @@ use crate::permissions;
 use crate::GraphqlRequestPipeline;
 /// Generates the IR for a 'select_one' operation
 // TODO: Remove once TypeMapping has more than one variant
-use hasura_authn_core::SessionVariables;
+use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql::{ast::common as ast, normalized_ast};
 use metadata_resolve;
 use metadata_resolve::Qualified;
 use open_dds;
-use plan::{count_model, process_argument_presets};
+use plan::{count_model, process_argument_presets_for_model};
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
@@ -54,8 +54,21 @@ pub fn select_one_generate_ir<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'s normalized_ast::FieldCall<'s, GDS>,
     data_type: &Qualified<open_dds::types::CustomTypeName>,
+    model: &'s metadata_resolve::ModelWithPermissions,
     model_source: &'s metadata_resolve::ModelSource,
-    session_variables: &SessionVariables,
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    commands: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::commands::CommandName>,
+        metadata_resolve::CommandWithPermissions,
+    >,
+    object_types: &'s BTreeMap<
+        Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     model_name: &'s Qualified<open_dds::models::ModelName>,
 ) -> Result<ModelSelectOne<'n, 's>, error::Error> {
@@ -103,23 +116,20 @@ pub fn select_one_generate_ir<'n, 's>(
             argument,
             &model_source.type_mappings,
             &model_source.data_connector,
-            session_variables,
+            &session.variables,
             &mut usage_counts,
         )?;
 
         model_arguments.insert(ndc_arg_name, ndc_val);
     }
 
-    let argument_presets = permissions::get_argument_presets(field_call.info.namespaced.as_ref())?;
     // add any preset arguments from model permissions
-    model_arguments = process_argument_presets(
-        &model_source.data_connector,
-        &model_source.type_mappings,
-        argument_presets,
-        &model_source.data_connector_link_argument_presets,
-        session_variables,
-        request_headers,
+    model_arguments = process_argument_presets_for_model(
         model_arguments,
+        model,
+        object_types,
+        session,
+        request_headers,
         &mut usage_counts,
     )?;
 
@@ -155,7 +165,7 @@ pub fn select_one_generate_ir<'n, 's>(
                     arguments::resolve_argument_opendd(
                         argument,
                         &model_source.type_mappings,
-                        session_variables,
+                        &session.variables,
                         &mut usage_counts,
                     )
                 })
@@ -169,7 +179,7 @@ pub fn select_one_generate_ir<'n, 's>(
                 where_clause,
                 None, // limit
                 None, // offset
-                session_variables,
+                &session.variables,
                 request_headers,
                 // Get all the models/commands that were used as relationships
                 &mut usage_counts,
@@ -207,7 +217,10 @@ pub fn select_one_generate_ir<'n, 's>(
                 None, // limit
                 None, // offset
                 None, // order_by
-                session_variables,
+                models,
+                commands,
+                object_types,
+                session,
                 request_headers,
                 // Get all the models/commands that were used as relationships
                 &mut usage_counts,

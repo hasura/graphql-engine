@@ -15,7 +15,7 @@ use crate::types::subgraph::Qualified;
 
 use std::collections::BTreeMap;
 mod types;
-pub use types::{CommandPermission, CommandWithPermissions};
+pub use types::CommandWithPermissions;
 
 /// resolve command permissions
 pub fn resolve(

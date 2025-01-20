@@ -270,6 +270,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
     raw_request: lang_graphql::http::RawRequest,
 ) -> Result<(), graphql_frontend::RequestError> {
     let schema = &connection.context.schema;
+    let metadata = &connection.context.metadata;
     // Parse the raw GraphQL request.
     let query = graphql_frontend::parse_query(&raw_request.query)?;
     // Normalize the parsed GraphQL query.
@@ -279,6 +280,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
     let ir = graphql_frontend::build_ir(
         connection.context.request_pipeline,
         schema,
+        metadata,
         &session,
         &headers,
         &normalized_request,

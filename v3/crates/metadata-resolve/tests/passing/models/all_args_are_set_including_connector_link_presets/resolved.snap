@@ -151,7 +151,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                         "collection_with_args",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -501,7 +501,6 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                         },
                     },
                 },
-                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {

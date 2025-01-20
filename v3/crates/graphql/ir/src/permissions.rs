@@ -36,35 +36,6 @@ pub(crate) fn get_select_filter_predicate<'s>(
         )))
 }
 
-/// Fetch argument presets from the namespace annotation
-/// of the field call. If there are no annotations, this is fine,
-/// but if unexpected ones are found an error will be thrown.
-pub(crate) fn get_argument_presets(
-    namespaced_info: Option<&'_ graphql_schema::NamespaceAnnotation>,
-) -> Result<Option<&'_ metadata_resolve::ArgumentPresets>, error::Error> {
-    match namespaced_info {
-        None => Ok(None), // no annotation is fine...
-        Some(annotation) => match annotation {
-            graphql_schema::NamespaceAnnotation::Command(argument_presets)
-            | graphql_schema::NamespaceAnnotation::Model {
-                argument_presets, ..
-            } => Ok(Some(argument_presets)),
-            other_namespace_annotation =>
-            // If we're hitting this case, it means that the caller of this
-            // function expects an annotation containing argument presets, but it was not annotated
-            // when the V3 engine metadata was built
-            {
-                Err(error::Error::Internal(error::InternalError::Engine(
-                    error::InternalEngineError::UnexpectedNamespaceAnnotation {
-                        namespace_annotation: other_namespace_annotation.clone(),
-                        expected_type: "ArgumentPresets".to_string(),
-                    },
-                )))
-            }
-        },
-    }
-}
-
 pub fn build_model_permissions_filter_predicate<'s>(
     model_data_connector_link: &'s metadata_resolve::DataConnectorLink,
     model_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,

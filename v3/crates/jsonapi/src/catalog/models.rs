@@ -1,14 +1,14 @@
 use super::types::Model;
 use crate::types::ModelWarning;
 use hasura_authn_core::Role;
-use metadata_resolve::{ModelWithArgumentPresets, ObjectTypeWithRelationships, Qualified};
+use metadata_resolve::{ModelWithPermissions, ObjectTypeWithRelationships, Qualified};
 use open_dds::types::CustomTypeName;
 use std::collections::BTreeMap;
 
 // look at permissions and work out which fields we're allowed to see
 // this is quite limited and leans to be overcautious
 pub fn build_model(
-    model: &ModelWithArgumentPresets,
+    model: &ModelWithPermissions,
     role: &Role,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 ) -> Result<Model, ModelWarning> {

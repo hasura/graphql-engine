@@ -82,6 +82,7 @@ pub fn normalize_request<'s>(
 pub fn build_ir<'n, 's>(
     request_pipeline: graphql_ir::GraphqlRequestPipeline,
     schema: &'s gql::schema::Schema<GDS>,
+    metadata: &'s metadata_resolve::Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
@@ -95,6 +96,7 @@ pub fn build_ir<'n, 's>(
             generate_ir(
                 request_pipeline,
                 schema,
+                metadata,
                 session,
                 request_headers,
                 normalized_request,
@@ -132,6 +134,7 @@ pub fn build_request_plan<'n, 's, 'ir>(
 pub fn generate_ir<'n, 's>(
     request_pipeline: graphql_ir::GraphqlRequestPipeline,
     schema: &'s gql::schema::Schema<GDS>,
+    metadata: &'s metadata_resolve::Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
@@ -141,6 +144,7 @@ pub fn generate_ir<'n, 's>(
             let query_ir = graphql_ir::generate_query_ir(
                 request_pipeline,
                 schema,
+                metadata,
                 session,
                 request_headers,
                 &normalized_request.selection_set,
@@ -151,7 +155,8 @@ pub fn generate_ir<'n, 's>(
             let mutation_ir = graphql_ir::generate_mutation_ir(
                 request_pipeline,
                 &normalized_request.selection_set,
-                &session.variables,
+                metadata,
+                session,
                 request_headers,
             )?;
             Ok(graphql_ir::IR::Mutation(mutation_ir))
@@ -160,6 +165,7 @@ pub fn generate_ir<'n, 's>(
             let (alias, field) = graphql_ir::generate_subscription_ir(
                 request_pipeline,
                 session,
+                metadata,
                 request_headers,
                 &normalized_request.selection_set,
             )?;

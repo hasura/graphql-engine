@@ -136,7 +136,7 @@ impl_OpenDd_default_for!(SchemaAndCapabilitiesV01);
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "SchemaAndCapabilitiesV01")]
+#[schemars(title = "SchemaAndCapabilitiesV02")]
 pub struct SchemaAndCapabilitiesV02 {
     #[schemars(schema_with = "ndc_schema_response_v02_schema_reference")]
     pub schema: ndc_models::SchemaResponse,

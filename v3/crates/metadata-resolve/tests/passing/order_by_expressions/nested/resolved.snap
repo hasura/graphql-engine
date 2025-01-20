@@ -419,7 +419,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                         "mymodel",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -805,7 +805,6 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                         ),
                     },
                 },
-                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {

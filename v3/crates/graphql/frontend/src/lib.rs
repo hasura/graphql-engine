@@ -83,6 +83,7 @@ mod tests {
             let ir = generate_ir(
                 graphql_ir::GraphqlRequestPipeline::Old,
                 &schema,
+                &gds.metadata,
                 &session,
                 &request_headers,
                 &normalized_request,

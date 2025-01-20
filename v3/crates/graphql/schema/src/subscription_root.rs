@@ -87,7 +87,7 @@ pub fn subscription_root_schema(
 fn select_one_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
     subscription: &metadata_resolve::SubscriptionGraphQlDefinition,
     parent_type: &ast::TypeName,
@@ -111,7 +111,7 @@ fn select_one_field(
 
     let output_typename = get_custom_output_type(gds, builder, &model.model.data_type)?;
     let field_annotations =
-        get_select_one_namespace_annotations(model, object_type_representation, unique_identifier)?;
+        get_select_one_namespace_annotations(model, object_type_representation, unique_identifier);
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(
             subscription_root_field.clone(),
@@ -119,7 +119,6 @@ fn select_one_field(
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::ModelSubscription {
                     data_type: model.model.data_type.clone(),
-                    source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectOne,
                     name: model.model.name.clone(),
                     polling_interval_ms: subscription.polling_interval_ms,
@@ -138,7 +137,7 @@ fn select_one_field(
 fn select_many_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     subscription: &metadata_resolve::SubscriptionGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
@@ -170,7 +169,6 @@ fn select_many_field(
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::ModelSubscription {
                     data_type: model.model.data_type.clone(),
-                    source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectMany,
                     name: model.model.name.clone(),
                     polling_interval_ms: subscription.polling_interval_ms,
@@ -180,7 +178,7 @@ fn select_many_field(
             arguments,
             mk_deprecation_status(subscription.deprecated.as_ref()),
         ),
-        get_select_permissions_namespace_annotations(model)?,
+        get_select_permissions_namespace_annotations(model),
     );
     Ok((subscription_root_field, field))
 }
@@ -189,7 +187,7 @@ fn select_many_field(
 fn select_aggregate_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     aggregate_expression_name: &metadata_resolve::Qualified<AggregateExpressionName>,
     filter_input_field_name: &ast::Name,
     subscription: &metadata_resolve::SubscriptionGraphQlDefinition,
@@ -219,7 +217,7 @@ fn select_aggregate_field(
         parent_type,
     )?;
 
-    let field_permissions = get_select_permissions_namespace_annotations(model)?;
+    let field_permissions = get_select_permissions_namespace_annotations(model);
 
     let output_typename = get_aggregate_select_output_type(builder, aggregate_expression)?;
 
@@ -230,7 +228,6 @@ fn select_aggregate_field(
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::ModelSubscription {
                     data_type: model.model.data_type.clone(),
-                    source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectAggregate,
                     name: model.model.name.clone(),
                     polling_interval_ms: subscription.polling_interval_ms,
@@ -250,16 +247,16 @@ fn select_aggregate_field(
 /// This wrapper function combines the process of generating annotations and
 /// applying subscription permission for a single root field.
 fn get_select_one_namespace_annotations(
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
-) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
     let annotations = super::permissions::get_select_one_namespace_annotations(
         model,
         object_type_representation,
         unique_identifier,
-    )?;
-    Ok(apply_subscription_permissions_model(annotations))
+    );
+    apply_subscription_permissions_model(annotations)
 }
 
 /// Build namespace annotations for subscription select root fields.
@@ -267,10 +264,10 @@ fn get_select_one_namespace_annotations(
 /// This wrapper function combines the process of generating annotations and
 /// applying subscription permission for select root fields.
 fn get_select_permissions_namespace_annotations(
-    model: &metadata_resolve::ModelWithArgumentPresets,
-) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
-    let annotations = super::permissions::get_select_permissions_namespace_annotations(model)?;
-    Ok(apply_subscription_permissions_model(annotations))
+    model: &metadata_resolve::ModelWithPermissions,
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+    let annotations = super::permissions::get_select_permissions_namespace_annotations(model);
+    apply_subscription_permissions_model(annotations)
 }
 
 /// Filters a HashMap of role-to-annotation mappings, retaining only those

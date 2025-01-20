@@ -12,7 +12,7 @@ use crate::types::subgraph::Qualified;
 
 use crate::helpers::typecheck;
 use crate::stages::object_types;
-use crate::ValueExpressionOrPredicate;
+use crate::ValueExpression;
 
 /// resolve type permissions
 pub fn resolve(
@@ -138,10 +138,10 @@ pub(crate) fn resolve_input_type_permission(
                 };
                 let resolved_value = match &value {
                     open_dds::permissions::ValueExpression::Literal(literal) => {
-                        ValueExpressionOrPredicate::Literal(literal.clone())
+                        ValueExpression::Literal(literal.clone())
                     }
                     open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-                        ValueExpressionOrPredicate::SessionVariable(
+                        ValueExpression::SessionVariable(
                             hasura_authn_core::SessionVariableReference {
                                 name: session_variable.clone(),
                                 passed_as_json: flags

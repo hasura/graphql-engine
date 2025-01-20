@@ -21,7 +21,7 @@ use super::types::output_type::get_type_kind;
 pub(crate) fn generate_command_argument(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &metadata_resolve::CommandWithArgumentPresets,
+    command: &metadata_resolve::CommandWithPermissions,
     argument_name: &ArgumentName,
     argument_type: &metadata_resolve::ArgumentInfo,
 ) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::Error> {
@@ -69,7 +69,7 @@ pub(crate) fn generate_command_argument(
 pub(crate) fn command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &metadata_resolve::CommandWithArgumentPresets,
+    command: &metadata_resolve::CommandWithPermissions,
     command_field_name: ast::Name,
     command_annotation: Annotation,
     deprecation_status: gql_schema::DeprecationStatus,
@@ -98,7 +98,7 @@ pub(crate) fn command_field(
             arguments,
             deprecation_status,
         ),
-        permissions::get_command_namespace_annotations(command)?,
+        permissions::get_command_namespace_annotations(command),
     );
     Ok((command_field_name, field))
 }
@@ -106,7 +106,7 @@ pub(crate) fn command_field(
 pub(crate) fn function_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &metadata_resolve::CommandWithArgumentPresets,
+    command: &metadata_resolve::CommandWithPermissions,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
@@ -116,17 +116,8 @@ pub(crate) fn function_command_field(
     ),
     crate::Error,
 > {
-    let (command_source_detail, function_name) = match &command.command.source {
+    let function_name = match &command.command.source {
         Some(command_source) => {
-            let command_source_detail = types::CommandSourceDetail {
-                data_connector: command_source.data_connector.clone(),
-                type_mappings: command_source.type_mappings.clone(),
-                argument_mappings: command_source.argument_mappings.clone(),
-                data_connector_link_argument_presets: command_source
-                    .data_connector_link_argument_presets
-                    .clone(),
-                ndc_type_opendd_type_same: command_source.ndc_type_opendd_type_same,
-            };
             let function_name = match &command_source.source {
                 DataConnectorCommand::Function(function_name) => function_name.clone(),
                 DataConnectorCommand::Procedure(_) => {
@@ -135,9 +126,9 @@ pub(crate) fn function_command_field(
                     })
                 }
             };
-            (Some(command_source_detail), Some(function_name))
+            Some(function_name)
         }
-        None => (None, None),
+        None => None,
     };
 
     let command_annotation = Annotation::Output(types::OutputAnnotation::RootField(
@@ -145,7 +136,6 @@ pub(crate) fn function_command_field(
             name: command.command.name.clone(),
             result_type: command.command.output_type.clone(),
             result_base_type_kind: get_type_kind(gds, &command.command.output_type)?,
-            source: command_source_detail,
             function_name,
         },
     ));
@@ -163,7 +153,7 @@ pub(crate) fn function_command_field(
 pub(crate) fn procedure_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &metadata_resolve::CommandWithArgumentPresets,
+    command: &metadata_resolve::CommandWithPermissions,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
@@ -173,17 +163,8 @@ pub(crate) fn procedure_command_field(
     ),
     crate::Error,
 > {
-    let (command_source_detail, procedure_name) = match &command.command.source {
+    let procedure_name = match &command.command.source {
         Some(command_source) => {
-            let command_source_detail = types::CommandSourceDetail {
-                data_connector: command_source.data_connector.clone(),
-                type_mappings: command_source.type_mappings.clone(),
-                argument_mappings: command_source.argument_mappings.clone(),
-                data_connector_link_argument_presets: command_source
-                    .data_connector_link_argument_presets
-                    .clone(),
-                ndc_type_opendd_type_same: command_source.ndc_type_opendd_type_same,
-            };
             let procedure_name = match &command_source.source {
                 DataConnectorCommand::Procedure(procedure_name) => procedure_name.clone(),
                 DataConnectorCommand::Function(_) => {
@@ -192,9 +173,9 @@ pub(crate) fn procedure_command_field(
                     })
                 }
             };
-            (Some(command_source_detail), Some(procedure_name))
+            Some(procedure_name)
         }
-        None => (None, None),
+        None => None,
     };
 
     let command_annotation = Annotation::Output(types::OutputAnnotation::RootField(
@@ -202,7 +183,6 @@ pub(crate) fn procedure_command_field(
             name: command.command.name.clone(),
             result_type: command.command.output_type.clone(),
             result_base_type_kind: get_type_kind(gds, &command.command.output_type)?,
-            source: command_source_detail,
             procedure_name,
         },
     ));

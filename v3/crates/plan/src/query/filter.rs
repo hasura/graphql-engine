@@ -257,7 +257,7 @@ pub fn build_relationship_comparison_expression<'s>(
                 source_type,
                 source_data_connector: data_connector_link,
                 source_type_mappings: type_mappings,
-                target_source,
+                target_source: &target_source.model,
                 target_type,
                 mappings,
             };

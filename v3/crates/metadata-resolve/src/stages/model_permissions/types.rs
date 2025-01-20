@@ -12,7 +12,7 @@ use open_dds::{
 };
 
 use crate::stages::{
-    argument_presets, boolean_expressions, data_connectors, models, models_graphql,
+    boolean_expressions, data_connectors, model_permissions, models, models_graphql,
     object_relationships, object_types,
 };
 use crate::types::error::{Error, RelationshipError};
@@ -102,7 +102,7 @@ pub struct ModelTargetSource {
 
 impl ModelTargetSource {
     pub fn new(
-        model: &argument_presets::ModelWithArgumentPresets,
+        model: &model_permissions::ModelWithPermissions,
         relationship: &object_relationships::RelationshipField,
     ) -> Result<Option<Self>, Error> {
         model

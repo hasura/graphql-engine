@@ -12,7 +12,7 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
-use graphql_schema::{Annotation, NamespaceAnnotation};
+use graphql_schema::Annotation;
 use metadata_resolve::{Qualified, QualifiedTypeName};
 
 impl From<plan::InternalError> for Error {
@@ -139,6 +139,18 @@ pub enum InternalError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum InternalDeveloperError {
+    #[error("Target model {model_name} not found for relationship {relationship_name}")]
+    TargetModelNotFoundForRelationship {
+        model_name: Qualified<open_dds::models::ModelName>,
+        relationship_name: open_dds::relationships::RelationshipName,
+    },
+
+    #[error("Target command {command_name} not found for relationship {relationship_name}")]
+    TargetCommandNotFoundForRelationship {
+        command_name: Qualified<open_dds::commands::CommandName>,
+        relationship_name: open_dds::relationships::RelationshipName,
+    },
+
     #[error("No source data connector specified for field {field_name} of type {type_name}")]
     NoSourceDataConnector {
         type_name: ast::TypeName,
@@ -214,12 +226,6 @@ pub enum InternalEngineError {
 
     #[error("unexpected annotation: {annotation}")]
     UnexpectedAnnotation { annotation: Annotation },
-
-    #[error("unexpected namespace annotation: {namespace_annotation:} found, expected type {expected_type:}")]
-    UnexpectedNamespaceAnnotation {
-        namespace_annotation: NamespaceAnnotation,
-        expected_type: String,
-    },
 
     #[error("expected namespace annotation type {namespace_annotation_type} but not found")]
     // Running into this error means that the GDS field was not annotated with the correct

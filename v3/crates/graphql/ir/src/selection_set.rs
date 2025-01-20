@@ -1,4 +1,4 @@
-use hasura_authn_core::SessionVariables;
+use hasura_authn_core::{Session, SessionVariables};
 use indexmap::IndexMap;
 use lang_graphql::ast::common::Alias;
 use lang_graphql::normalized_ast;
@@ -210,7 +210,19 @@ pub fn generate_nested_selection<'s>(
         metadata_resolve::Qualified<CustomTypeName>,
         metadata_resolve::TypeMapping,
     >,
-    session_variables: &SessionVariables,
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    commands: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::commands::CommandName>,
+        metadata_resolve::CommandWithPermissions,
+    >,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<NestedSelection<'s>>, error::Error> {
@@ -235,7 +247,10 @@ pub fn generate_nested_selection<'s>(
                 field,
                 data_connector,
                 type_mappings,
-                session_variables,
+                models,
+                commands,
+                object_types,
+                session,
                 request_headers,
                 usage_counts,
             )?;
@@ -262,7 +277,10 @@ pub fn generate_nested_selection<'s>(
                                 data_connector,
                                 type_mappings,
                                 field_mappings,
-                                session_variables,
+                                models,
+                                commands,
+                                object_types,
+                                session,
                                 request_headers,
                                 usage_counts,
                             )?;
@@ -561,7 +579,19 @@ pub fn generate_selection_set_ir<'s>(
         metadata_resolve::TypeMapping,
     >,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
-    session_variables: &SessionVariables,
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    commands: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::commands::CommandName>,
+        metadata_resolve::CommandWithPermissions,
+    >,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ResultSelectionSet<'s>, error::Error> {
@@ -591,7 +621,10 @@ pub fn generate_selection_set_ir<'s>(
                         field,
                         data_connector,
                         type_mappings,
-                        session_variables,
+                        models,
+                        commands,
+                        object_types,
+                        session,
                         request_headers,
                         usage_counts,
                     )?;
@@ -685,7 +718,10 @@ pub fn generate_selection_set_ir<'s>(
                             selection_set_field_nestedness,
                             data_connector,
                             type_mappings,
-                            session_variables,
+                            models,
+                            commands,
+                            object_types,
+                            session,
                             request_headers,
                             usage_counts,
                         )?,
@@ -700,7 +736,9 @@ pub fn generate_selection_set_ir<'s>(
                             selection_set_field_nestedness,
                             data_connector,
                             type_mappings,
-                            session_variables,
+                            models,
+                            object_types,
+                            session,
                             request_headers,
                             usage_counts,
                         )?,
@@ -715,7 +753,10 @@ pub fn generate_selection_set_ir<'s>(
                             selection_set_field_nestedness,
                             data_connector,
                             type_mappings,
-                            session_variables,
+                            models,
+                            commands,
+                            object_types,
+                            session,
                             request_headers,
                             usage_counts,
                         )?,

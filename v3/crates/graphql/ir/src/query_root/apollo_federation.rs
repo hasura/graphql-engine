@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
-use hasura_authn_core::SessionVariables;
+use hasura_authn_core::Session;
+use indexmap::IndexMap;
 use lang_graphql::{ast::common as ast, normalized_ast};
 use open_dds::identifier;
 use open_dds::types::CustomTypeName;
@@ -90,7 +91,19 @@ pub(crate) fn entities_ir<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, EntityFieldTypeNameMapping>,
-    session_variables: &SessionVariables,
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    commands: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::commands::CommandName>,
+        metadata_resolve::CommandWithPermissions,
+    >,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<Vec<EntitySelect<'n, 's>>, error::Error> {
     if request_pipeline == GraphqlRequestPipeline::OpenDd {
@@ -190,7 +203,10 @@ pub(crate) fn entities_ir<'n, 's>(
                 None, // limit
                 None, // offset
                 None, // order_by
-                session_variables,
+                models,
+                commands,
+                object_types,
+                session,
                 request_headers,
                 // Get all the models/commands that were used as relationships
                 &mut usage_counts,

@@ -1,7 +1,6 @@
 pub mod aggregate_boolean_expressions;
 pub mod aggregates;
 pub mod apollo;
-pub mod argument_presets;
 pub mod arguments;
 pub mod boolean_expressions;
 pub mod command_permissions;
@@ -297,13 +296,6 @@ fn resolve_internal(
         &boolean_expression_types,
     )?;
 
-    // calculate any preset arguments for these models
-    let argument_presets::ArgumentPresetsOutput { models, commands } = argument_presets::resolve(
-        &models_with_permissions,
-        &commands_with_permissions,
-        &object_types_with_relationships,
-    )?;
-
     let roles = roles::resolve(
         &object_types_with_relationships,
         &models_with_permissions,
@@ -329,8 +321,8 @@ fn resolve_internal(
         Metadata {
             scalar_types: scalar_types_with_representations,
             object_types: object_types_with_relationships,
-            models,
-            commands,
+            models: models_with_permissions,
+            commands: commands_with_permissions,
             boolean_expression_types,
             order_by_expressions,
             aggregate_expressions,

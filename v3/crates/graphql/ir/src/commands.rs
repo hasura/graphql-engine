@@ -1,13 +1,14 @@
 //! IR and execution logic for commands
 //!
 //! A 'command' executes a function/procedure and returns back the result of the execution.
-use hasura_authn_core::SessionVariables;
+use hasura_authn_core::{Session, SessionVariables};
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::ast::common::TypeContainer;
 use lang_graphql::ast::common::TypeName;
 use lang_graphql::normalized_ast;
 
+use metadata_resolve::CommandSource;
 use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
@@ -22,13 +23,11 @@ use super::selection_set::FieldSelection;
 use super::selection_set::NestedSelection;
 use super::selection_set::ResultSelectionSet;
 use crate::error;
-use crate::permissions;
-use graphql_schema::CommandSourceDetail;
 use graphql_schema::TypeKind;
 use graphql_schema::GDS;
 use metadata_resolve::{Qualified, QualifiedTypeReference};
 use plan::UnresolvedArgument;
-use plan::{count_command, process_argument_presets};
+use plan::{count_command, process_argument_presets_for_command};
 use plan_types::NdcFieldAlias;
 use plan_types::UsagesCounts;
 
@@ -100,8 +99,21 @@ pub fn generate_command_info<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
     result_base_type_kind: TypeKind,
-    command_source: &'s CommandSourceDetail,
-    session_variables: &SessionVariables,
+    command: &'s metadata_resolve::CommandWithPermissions,
+    command_source: &'s CommandSource,
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    commands: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::commands::CommandName>,
+        metadata_resolve::CommandWithPermissions,
+    >,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<CommandInfo<'s>, error::Error> {
@@ -113,26 +125,21 @@ pub fn generate_command_info<'n, 's>(
             argument,
             &command_source.type_mappings,
             &command_source.data_connector,
-            session_variables,
+            &session.variables,
             usage_counts,
         )?;
 
         command_arguments.insert(ndc_arg_name, ndc_val);
     }
 
-    let command_argument_presets =
-        permissions::get_argument_presets(field_call.info.namespaced.as_ref())?;
-
     // preset arguments from permissions presets (both command permission argument
-    // presets and input field presets)
-    command_arguments = process_argument_presets(
-        &command_source.data_connector,
-        &command_source.type_mappings,
-        command_argument_presets,
-        &command_source.data_connector_link_argument_presets,
-        session_variables,
-        request_headers,
+    // presets)
+    command_arguments = process_argument_presets_for_command(
         command_arguments,
+        command,
+        object_types,
+        session,
+        request_headers,
         usage_counts,
     )?;
 
@@ -148,7 +155,10 @@ pub fn generate_command_info<'n, 's>(
         field,
         &command_source.data_connector,
         &command_source.type_mappings,
-        session_variables,
+        models,
+        commands,
+        object_types,
+        session,
         request_headers,
         &mut usage_counts,
     )?;
@@ -177,7 +187,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
     result_base_type_kind: TypeKind,
-    command_source: &'s CommandSourceDetail,
+    command_source: &'s CommandSource,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -243,7 +253,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
 ///    `{"headers": ..., "response": ...}` shape, and the actual selection from the
 ///    user-facing query goes inside the `response` field
 fn wrap_selection_in_response_config<'a>(
-    command_source: &CommandSourceDetail,
+    command_source: &CommandSource,
     original_selection: Option<NestedSelection<'a>>,
 ) -> Option<NestedSelection<'a>> {
     match &command_source.data_connector.response_config {
@@ -283,8 +293,21 @@ pub fn generate_function_based_command<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
     result_base_type_kind: TypeKind,
-    command_source: &'s CommandSourceDetail,
-    session_variables: &SessionVariables,
+    command: &'s metadata_resolve::CommandWithPermissions,
+    command_source: &'s CommandSource,
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    commands: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::commands::CommandName>,
+        metadata_resolve::CommandWithPermissions,
+    >,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FunctionBasedCommand<'s>, error::Error> {
@@ -294,8 +317,12 @@ pub fn generate_function_based_command<'n, 's>(
         field_call,
         result_type,
         result_base_type_kind,
+        command,
         command_source,
-        session_variables,
+        models,
+        commands,
+        object_types,
+        session,
         request_headers,
         usage_counts,
     )?;
@@ -315,7 +342,7 @@ pub fn generate_function_based_command_open_dd<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
     result_base_type_kind: TypeKind,
-    command_source: &'s CommandSourceDetail,
+    command_source: &'s CommandSource,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -347,8 +374,21 @@ pub fn generate_procedure_based_command<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
     result_base_type_kind: TypeKind,
-    command_source: &'s CommandSourceDetail,
-    session_variables: &SessionVariables,
+    command: &'s metadata_resolve::CommandWithPermissions,
+    command_source: &'s CommandSource,
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    commands: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::commands::CommandName>,
+        metadata_resolve::CommandWithPermissions,
+    >,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<ProcedureBasedCommand<'s>, error::Error> {
     let mut usage_counts = UsagesCounts::new();
@@ -359,8 +399,12 @@ pub fn generate_procedure_based_command<'n, 's>(
         field_call,
         result_type,
         result_base_type_kind,
+        command,
         command_source,
-        session_variables,
+        models,
+        commands,
+        object_types,
+        session,
         request_headers,
         &mut usage_counts,
     )?;
@@ -379,7 +423,7 @@ pub fn generate_procedure_based_command_open_dd<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
     result_base_type_kind: TypeKind,
-    command_source: &'s CommandSourceDetail,
+    command_source: &'s CommandSource,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<ProcedureBasedCommand<'s>, error::Error> {

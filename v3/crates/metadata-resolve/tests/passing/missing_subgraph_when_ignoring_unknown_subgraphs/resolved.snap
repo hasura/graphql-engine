@@ -389,7 +389,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         "Articles",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -868,23 +868,6 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                 },
                             ],
                         },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
-                    },
-                    Role(
-                        "user1",
-                    ): ArgumentPresets {
-                        argument_presets: {},
-                    },
-                    Role(
-                        "user2",
-                    ): ArgumentPresets {
-                        argument_presets: {},
                     },
                 },
                 select_permissions: {

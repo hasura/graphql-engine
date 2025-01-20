@@ -376,7 +376,7 @@ fn command_relationship_field(
             command,
             object_type_representation,
             &command_relationship_target.mappings,
-        )?,
+        ),
     );
     Ok(field)
 }
@@ -440,8 +440,7 @@ fn model_relationship_fields(
                     source_type: relationship.source.clone(),
                     relationship_name: relationship.relationship_name.clone(),
                     model_name: model_relationship_target.model_name.clone(),
-                    target_source: metadata_resolve::ModelTargetSource::new(model, relationship)
-                        .map_err(metadata_resolve::WithContext::from)?,
+                    target_capabilities: relationship.target_capabilities.clone(),
                     target_type: model_relationship_target.target_typename.clone(),
                     relationship_type: model_relationship_target.relationship_type.clone(),
                     mappings: model_relationship_target.mappings.clone(),
@@ -457,7 +456,7 @@ fn model_relationship_fields(
             object_type_representation,
             target_object_type_representation,
             &model_relationship_target.mappings,
-        )?,
+        ),
     );
     let aggregate_field = model_relationship_target
         .relationship_aggregate
@@ -488,7 +487,7 @@ fn model_aggregate_relationship_field(
     aggregate_relationship: &metadata_resolve::AggregateRelationship,
     builder: &mut gql_schema::Builder<GDS>,
     gds: &GDS,
-    target_model: &metadata_resolve::ModelWithArgumentPresets,
+    target_model: &metadata_resolve::ModelWithPermissions,
     aggregate_field_name: &ast::Name,
     target_typename: &Qualified<CustomTypeName>,
     mappings: &[metadata_resolve::RelationshipModelMapping],
@@ -528,11 +527,7 @@ fn model_aggregate_relationship_field(
                     source_type: relationship.source.clone(),
                     relationship_name: relationship.relationship_name.clone(),
                     model_name: target_model.model.name.clone(),
-                    target_source: metadata_resolve::ModelTargetSource::new(
-                        target_model,
-                        relationship,
-                    )
-                    .map_err(metadata_resolve::WithContext::from)?,
+                    target_capabilities: relationship.target_capabilities.clone(),
                     target_type: target_typename.clone(),
                     mappings: mappings.to_vec(),
                     deprecated: relationship.deprecated.clone(),
@@ -547,7 +542,7 @@ fn model_aggregate_relationship_field(
             object_type_representation,
             target_object_type_representation,
             mappings,
-        )?,
+        ),
     );
     Ok(field)
 }

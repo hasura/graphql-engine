@@ -299,7 +299,6 @@ fn from_relationship_selection(
                 request_headers,
                 object_type_name,
                 relationship_selection,
-                relationship_field,
                 type_mappings,
                 data_connector,
                 model_relationship_target,
@@ -330,7 +329,6 @@ fn from_model_relationship(
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     relationship_selection: &RelationshipSelection,
-    relationship_field: &metadata_resolve::RelationshipField,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     source_data_connector: &metadata_resolve::DataConnectorLink,
     model_relationship_target: &metadata_resolve::ModelRelationshipTarget,
@@ -353,7 +351,6 @@ fn from_model_relationship(
         object_type_name,
         relationship_name,
         target_model_name,
-        relationship_field,
         source_type_mappings,
         source_data_connector,
         model_relationship_target,
@@ -527,7 +524,6 @@ fn record_local_model_relationship(
     object_type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
     target_model_name: &Qualified<ModelName>,
-    relationship_field: &metadata_resolve::RelationshipField,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     source_data_connector: &metadata_resolve::DataConnectorLink,
     model_relationship_target: &metadata_resolve::ModelRelationshipTarget,
@@ -538,30 +534,17 @@ fn record_local_model_relationship(
     })?;
 
     let target_model_source =
-        target_model.model.source.as_ref().ok_or_else(|| {
+        target_model.model.source.as_deref().ok_or_else(|| {
             PlanError::Internal(format!("model {target_model_name} has no source"))
         })?;
 
-    let target_source = metadata_resolve::ModelTargetSource {
-        model: target_model_source.clone(),
-        capabilities: relationship_field
-            .target_capabilities
-            .as_ref()
-            .ok_or_else(|| {
-                PlanError::Relationship(RelationshipError::Other(format!(
-                    "Relationship capabilities not found for relationship {} in data connector {}",
-                    relationship_name, &target_model_source.data_connector.name,
-                )))
-            })?
-            .clone(),
-    };
     let local_model_relationship_info = plan_types::LocalModelRelationshipInfo {
         relationship_name,
         relationship_type: &model_relationship_target.relationship_type,
         source_type: object_type_name,
         source_data_connector,
         source_type_mappings,
-        target_source: &target_source,
+        target_source: target_model_source,
         target_type: &model_relationship_target.target_typename,
         mappings: &model_relationship_target.mappings,
     };
@@ -630,30 +613,17 @@ fn from_relationship_aggregate_selection(
                 PlanError::Internal(format!("model {target_model_name} not found in metadata"))
             })?;
 
-            let target_model_source = target_model.model.source.as_ref().ok_or_else(|| {
+            let target_model_source = target_model.model.source.as_deref().ok_or_else(|| {
                 PlanError::Internal(format!("model {target_model_name} has no source"))
             })?;
 
-            let target_source = metadata_resolve::ModelTargetSource {
-                model: target_model_source.clone(),
-                capabilities: relationship_field
-                    .target_capabilities
-                    .as_ref()
-                    .ok_or_else(|| {
-                        PlanError::Relationship(RelationshipError::Other(format!(
-                            "Relationship capabilities not found for relationship {} in data connector {}",
-                            relationship_name, &target_model_source.data_connector.name,
-                        )))
-                    })?
-                    .clone(),
-            };
             let local_model_relationship_info = plan_types::LocalModelRelationshipInfo {
                 relationship_name,
                 relationship_type: &model_relationship_target.relationship_type,
                 source_type: object_type_name,
                 source_data_connector,
                 source_type_mappings,
-                target_source: &target_source,
+                target_source: target_model_source,
                 target_type: &model_relationship_target.target_typename,
                 mappings: &model_relationship_target.mappings,
             };

@@ -4022,7 +4022,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Artists",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -4438,18 +4438,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                             ],
                         },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
-                    },
-                    Role(
-                        "complex-permission",
-                    ): ArgumentPresets {
-                        argument_presets: {},
                     },
                 },
                 select_permissions: {
@@ -5660,7 +5648,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Albums",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -6141,13 +6129,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                             ],
                         },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
                     },
                 },
                 select_permissions: {
@@ -6863,7 +6844,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Tracks",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -7344,13 +7325,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                             ],
                         },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
                     },
                 },
                 select_permissions: {
@@ -8045,7 +8019,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "PlaylistTracks",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -8454,13 +8428,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                             ],
                         },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
                     },
                 },
                 select_permissions: {
@@ -8945,7 +8912,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "artist_below_id",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -9361,13 +9328,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                             ],
                         },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
                     },
                 },
                 select_permissions: {
@@ -9884,7 +9844,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Songs",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -10365,13 +10325,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                             ],
                         },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
                     },
                 },
                 select_permissions: {
@@ -11504,7 +11457,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "insert_album",
                     ),
                 ),
-            }: CommandWithArgumentPresets {
+            }: CommandWithPermissions {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -12043,18 +11996,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         argument_presets: {},
                     },
                 },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
-                    },
-                    Role(
-                        "user",
-                    ): ArgumentPresets {
-                        argument_presets: {},
-                    },
-                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -12065,7 +12006,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "insert_artist",
                     ),
                 ),
-            }: CommandWithArgumentPresets {
+            }: CommandWithPermissions {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -12515,18 +12456,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         argument_presets: {},
                     },
                 },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {},
-                    },
-                    Role(
-                        "user",
-                    ): ArgumentPresets {
-                        argument_presets: {},
-                    },
-                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -12537,7 +12466,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "V2DeletePlaylistTrackByPlaylistIdAndTrackId",
                     ),
                 ),
-            }: CommandWithArgumentPresets {
+            }: CommandWithPermissions {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -13067,77 +12996,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {
-                            ArgumentNameAndPath {
-                                ndc_argument_name: Some(
-                                    DataConnectorArgumentName(
-                                        "pre_check",
-                                    ),
-                                ),
-                                field_path: [],
-                            }: (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "default",
-                                                ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "PlaylistTrackBoolExp",
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                    ),
-                                    nullable: false,
-                                },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "TrackId",
-                                            ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "PlaylistTrack",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "TrackId",
-                                        ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    Int,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: Literal(
-                                            Number(8),
-                                        ),
-                                        deprecated: None,
-                                    },
-                                ),
-                            ),
-                        },
-                    },
-                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -13148,7 +13006,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "V2InsertArtist",
                     ),
                 ),
-            }: CommandWithArgumentPresets {
+            }: CommandWithPermissions {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -13844,77 +13702,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {
-                            ArgumentNameAndPath {
-                                ndc_argument_name: Some(
-                                    DataConnectorArgumentName(
-                                        "post_check",
-                                    ),
-                                ),
-                                field_path: [],
-                            }: (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "default",
-                                                ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "ArtistBoolExp",
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                    ),
-                                    nullable: false,
-                                },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "Name",
-                                            ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Artist",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "Name",
-                                        ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    String,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: Literal(
-                                            String("Olympians"),
-                                        ),
-                                        deprecated: None,
-                                    },
-                                ),
-                            ),
-                        },
-                    },
-                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -13925,7 +13712,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "V2UpdateArtistByArtistId",
                     ),
                 ),
-            }: CommandWithArgumentPresets {
+            }: CommandWithPermissions {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -14757,140 +14544,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     "preCheck",
                                 ),
                             ): (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "default",
-                                                ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "ArtistBoolExp",
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                    ),
-                                    nullable: false,
-                                },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "Name",
-                                            ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Artist",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "Name",
-                                        ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    String,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: Literal(
-                                            String("AC/DC"),
-                                        ),
-                                        deprecated: None,
-                                    },
-                                ),
-                            ),
-                        },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "admin",
-                    ): ArgumentPresets {
-                        argument_presets: {
-                            ArgumentNameAndPath {
-                                ndc_argument_name: Some(
-                                    DataConnectorArgumentName(
-                                        "post_check",
-                                    ),
-                                ),
-                                field_path: [],
-                            }: (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "default",
-                                                ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "ArtistBoolExp",
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                    ),
-                                    nullable: false,
-                                },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "Name",
-                                            ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Artist",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "Name",
-                                        ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    String,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: Literal(
-                                            String("Olympians"),
-                                        ),
-                                        deprecated: None,
-                                    },
-                                ),
-                            ),
-                            ArgumentNameAndPath {
-                                ndc_argument_name: Some(
-                                    DataConnectorArgumentName(
-                                        "pre_check",
-                                    ),
-                                ),
-                                field_path: [],
-                            }: (
                                 QualifiedTypeReference {
                                     underlying_type: Named(
                                         Custom(

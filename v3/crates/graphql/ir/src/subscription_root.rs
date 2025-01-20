@@ -1,8 +1,9 @@
 //! IR of the subscription root type
 
-use std::sync::Arc;
+use std::collections::BTreeMap;
 
 use hasura_authn_core::Session;
+use indexmap::IndexMap;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use open_dds::{models, types::CustomTypeName};
@@ -18,6 +19,7 @@ use graphql_schema::{Annotation, NamespaceAnnotation, OutputAnnotation, RootFiel
 pub fn generate_ir<'n, 's>(
     request_pipeline: GraphqlRequestPipeline,
     session: &Session,
+    metadata: &'s metadata_resolve::Metadata,
     request_headers: &reqwest::header::HeaderMap,
     selection_set: &'s gql::normalized_ast::SelectionSet<'s, GDS>,
 ) -> Result<(ast::Alias, root_field::SubscriptionRootField<'n, 's>), error::Error> {
@@ -34,15 +36,22 @@ pub fn generate_ir<'n, 's>(
                     match root_field {
                         RootFieldAnnotation::ModelSubscription {
                             data_type,
-                            source,
                             kind,
                             name: model_name,
                             polling_interval_ms,
                         } => {
+                            let model = metadata.models.get(model_name).ok_or_else(|| {
+                                error::InternalEngineError::InternalGeneric {
+                                    description: format!("Model {model_name} not found"),
+                                }
+                            })?;
                             let ir = generate_model_rootfield_ir(
                                 request_pipeline,
                                 &type_name,
-                                source.as_ref(),
+                                model,
+                                &metadata.models,
+                                &metadata.commands,
+                                &metadata.object_types,
                                 data_type,
                                 kind,
                                 field,
@@ -76,7 +85,19 @@ pub fn generate_ir<'n, 's>(
 fn generate_model_rootfield_ir<'n, 's>(
     request_pipeline: GraphqlRequestPipeline,
     type_name: &ast::TypeName,
-    source: Option<&'s Arc<metadata_resolve::ModelSource>>,
+    model: &'s metadata_resolve::ModelWithPermissions,
+    models: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    commands: &'s IndexMap<
+        metadata_resolve::Qualified<open_dds::commands::CommandName>,
+        metadata_resolve::CommandWithPermissions,
+    >,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
     data_type: &metadata_resolve::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
@@ -86,13 +107,12 @@ fn generate_model_rootfield_ir<'n, 's>(
     model_name: &'s metadata_resolve::Qualified<models::ModelName>,
     polling_interval_ms: &u64,
 ) -> Result<root_field::SubscriptionRootField<'n, 's>, error::Error> {
-    let source =
-        source
-            .as_ref()
-            .ok_or_else(|| error::InternalDeveloperError::NoSourceDataConnector {
-                type_name: type_name.clone(),
-                field_name: field_call.name.clone(),
-            })?;
+    let source = model.model.source.as_deref().ok_or_else(|| {
+        error::InternalDeveloperError::NoSourceDataConnector {
+            type_name: type_name.clone(),
+            field_name: field_call.name.clone(),
+        }
+    })?;
     // Check if subscription is allowed
     // We won't be generating graphql schema any way if subscription is not allowed in permission.
     // This is just a double check, if in case we missed something.
@@ -113,8 +133,12 @@ fn generate_model_rootfield_ir<'n, 's>(
                 field,
                 field_call,
                 data_type,
+                model,
                 source,
-                &session.variables,
+                models,
+                commands,
+                object_types,
+                session,
                 request_headers,
                 model_name,
             )?,
@@ -127,8 +151,12 @@ fn generate_model_rootfield_ir<'n, 's>(
                 field,
                 field_call,
                 data_type,
+                model,
                 source,
-                &session.variables,
+                models,
+                commands,
+                object_types,
+                session,
                 request_headers,
                 model_name,
             )?,
@@ -141,8 +169,10 @@ fn generate_model_rootfield_ir<'n, 's>(
                 field,
                 field_call,
                 data_type,
+                model,
                 source,
-                &session.variables,
+                object_types,
+                session,
                 request_headers,
                 model_name,
             )?,

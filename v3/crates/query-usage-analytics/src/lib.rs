@@ -6,7 +6,7 @@ use open_dds::{
     commands::CommandName,
     models::ModelName,
     relationships::{RelationshipName, RelationshipType},
-    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
+    types::{CustomTypeName, FieldName},
 };
 use schemars::JsonSchema;
 use serde::Serialize;
@@ -96,7 +96,7 @@ pub struct FilterPredicateUsage {
 
 #[derive(Serialize, JsonSchema, Clone)]
 pub struct ArgumentPresetsUsage {
-    pub arguments: Vec<DataConnectorArgumentName>,
+    pub arguments: Vec<ArgumentName>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]

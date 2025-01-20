@@ -268,7 +268,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                         "GetAlbums",
                     ),
                 ),
-            }: CommandWithArgumentPresets {
+            }: CommandWithPermissions {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -605,82 +605,6 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                                     "where",
                                 ),
                             ): (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "subgraphs",
-                                                ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "Album_bool_exp",
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                    ),
-                                    nullable: true,
-                                },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "AlbumId",
-                                            ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "subgraphs",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Album",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "AlbumId",
-                                        ),
-                                        operator: DataConnectorOperatorName(
-                                            "eq",
-                                        ),
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    Int,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: SessionVariable(
-                                            SessionVariableReference {
-                                                name: SessionVariableName(
-                                                    "x-hasura-album-id",
-                                                ),
-                                                passed_as_json: true,
-                                            },
-                                        ),
-                                        deprecated: None,
-                                    },
-                                ),
-                            ),
-                        },
-                    },
-                },
-                argument_presets: {
-                    Role(
-                        "user",
-                    ): ArgumentPresets {
-                        argument_presets: {
-                            ArgumentNameAndPath {
-                                ndc_argument_name: Some(
-                                    DataConnectorArgumentName(
-                                        "where",
-                                    ),
-                                ),
-                                field_path: [],
-                            }: (
                                 QualifiedTypeReference {
                                     underlying_type: Named(
                                         Custom(

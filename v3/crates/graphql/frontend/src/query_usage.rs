@@ -1,7 +1,10 @@
+use std::collections::BTreeMap;
+
 use graphql_schema::GDS;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast::{self, Operation};
 use metadata_resolve::{FieldPresetInfo, FilterPermission, ModelPredicate};
+use open_dds::arguments::ArgumentName;
 use open_dds::relationships::RelationshipType;
 use open_dds::types::Deprecated;
 use query_usage_analytics::{
@@ -410,23 +413,21 @@ fn analyze_namespace_annotation(
 }
 
 fn analyze_argument_presets(
-    argument_presets: &metadata_resolve::ArgumentPresets,
+    argument_presets: &BTreeMap<
+        ArgumentName,
+        (
+            metadata_resolve::QualifiedTypeReference,
+            metadata_resolve::ValueExpressionOrPredicate,
+        ),
+    >,
 ) -> Option<OpenddObject> {
-    let mut arguments = Vec::new();
-    for argument in argument_presets.argument_presets.keys() {
-        if let Some(connector_argument) = &argument.ndc_argument_name {
-            // Only top level arguments are collected
-            if argument.field_path.is_empty() {
-                arguments.push(connector_argument.to_owned());
-            }
-        }
-    }
-
-    if arguments.is_empty() {
+    if argument_presets.is_empty() {
         None
     } else {
         Some(OpenddObject::Permission(PermissionUsage::ArgumentPresets(
-            ArgumentPresetsUsage { arguments },
+            ArgumentPresetsUsage {
+                arguments: argument_presets.keys().cloned().collect(),
+            },
         )))
     }
 }

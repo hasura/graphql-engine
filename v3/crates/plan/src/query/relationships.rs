@@ -56,7 +56,7 @@ pub fn process_model_relationship_definition(
     let relationship = Relationship {
         column_mapping,
         relationship_type: relationship_type.clone(),
-        target_collection: target_source.model.collection.clone(),
+        target_collection: target_source.collection.clone(),
         arguments: BTreeMap::new(),
     };
     Ok(relationship)

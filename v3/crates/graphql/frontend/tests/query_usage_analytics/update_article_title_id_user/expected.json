@@ -159,7 +159,7 @@
           {
             "permission": {
               "argument_presets": {
-                "arguments": ["id"]
+                "arguments": ["article_id"]
               }
             }
           }

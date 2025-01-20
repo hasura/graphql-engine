@@ -16,7 +16,7 @@ use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{ObjectFieldKind, TypeId};
 use metadata_resolve::{
     mk_name, BooleanExpressionComparableRelationship, ComparisonExpressionInfo,
-    GlobalGraphqlConfig, IncludeLogicalOperators, ModelWithArgumentPresets,
+    GlobalGraphqlConfig, IncludeLogicalOperators, ModelWithPermissions,
     ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo, ObjectComparisonKind,
     ObjectTypeWithRelationships, OperatorMapping, Qualified, QualifiedTypeReference,
     RelationshipCapabilities, RelationshipField, RelationshipModelMapping,
@@ -404,7 +404,7 @@ fn build_model_relationship_schema(
     source_object_type_representation: &ObjectTypeWithRelationships,
     target_object_type_representation: &ObjectTypeWithRelationships,
     target_filter_expression_graphql_type: &ast::TypeName,
-    target_model: &ModelWithArgumentPresets,
+    target_model: &ModelWithPermissions,
     target_source: &Arc<metadata_resolve::ModelSource>,
     relationship: &RelationshipField,
     relationship_type: &RelationshipType,
@@ -435,7 +435,7 @@ fn build_model_relationship_schema(
         source_object_type_representation,
         target_object_type_representation,
         relationship_model_mappings,
-    )?;
+    );
 
     Ok((
         relationship.field_name.clone(),

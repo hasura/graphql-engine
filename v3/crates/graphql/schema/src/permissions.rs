@@ -8,42 +8,33 @@ use metadata_resolve::{self};
 
 /// Build namespace annotation for select permissions
 pub(crate) fn get_select_permissions_namespace_annotations(
-    model: &metadata_resolve::ModelWithArgumentPresets,
-) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
+    model: &metadata_resolve::ModelWithPermissions,
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
     let mut namespace_annotations = HashMap::new();
 
     for (role, select_permission) in &model.select_permissions {
-        // these should always be defined, even if they are empty, so a lookup failure here is
-        // an internal error
-        let argument_presets = model.argument_presets.get(role).ok_or_else(|| {
-            crate::Error::InternalModelArgumentPresetLookupFailure {
-                role: role.clone(),
-                model_name: model.model.name.clone(),
-            }
-        })?;
-
         namespace_annotations.insert(
             role.clone(),
             Some(types::NamespaceAnnotation::Model {
                 filter: select_permission.filter.clone(),
-                argument_presets: argument_presets.clone(),
+                argument_presets: select_permission.argument_presets.clone(),
                 allow_subscriptions: select_permission.allow_subscriptions,
             }),
         );
     }
 
-    Ok(namespace_annotations)
+    namespace_annotations
 }
 
 /// Build namespace annotation for select one permissions.
 /// This is different from generating permissions for select_many etc,
 /// as we need to check the permissions of the arguments used in the selection.
 pub(crate) fn get_select_one_namespace_annotations(
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
-) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
-    let select_permissions = get_select_permissions_namespace_annotations(model)?;
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+    let select_permissions = get_select_permissions_namespace_annotations(model);
 
     let permissions = select_permissions
         .into_iter()
@@ -54,19 +45,19 @@ pub(crate) fn get_select_one_namespace_annotations(
             })
         })
         .collect();
-    Ok(permissions)
+    permissions
 }
 
 /// Build namespace annotation for model relationship permissions.
 /// We need to check the permissions of the source and target fields
 /// in the relationship mappings.
 pub(crate) fn get_model_relationship_namespace_annotations(
-    target_model: &metadata_resolve::ModelWithArgumentPresets,
+    target_model: &metadata_resolve::ModelWithPermissions,
     source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     target_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     mappings: &[metadata_resolve::RelationshipModelMapping],
-) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
-    let select_permissions = get_select_permissions_namespace_annotations(target_model)?;
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+    let select_permissions = get_select_permissions_namespace_annotations(target_model);
     let permissions = select_permissions
         .into_iter()
         .filter(|(role, _)| {
@@ -81,50 +72,41 @@ pub(crate) fn get_model_relationship_namespace_annotations(
             })
         })
         .collect();
-    Ok(permissions)
+    permissions
 }
 
 /// Build namespace annotation for commands
 pub(crate) fn get_command_namespace_annotations(
-    command: &metadata_resolve::CommandWithArgumentPresets,
-) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
+    command: &metadata_resolve::CommandWithPermissions,
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
     let mut permissions = HashMap::new();
 
     // process command permissions, and annotate any command argument presets
     for (role, permission) in &command.permissions {
         if permission.allow_execution {
-            // these should always be defined, even if they are empty, so a lookup failure here is
-            // an internal error
-            let argument_presets = command.argument_presets.get(role).ok_or_else(|| {
-                crate::Error::InternalCommandArgumentPresetLookupFailure {
-                    role: role.clone(),
-                    command_name: command.command.name.clone(),
-                }
-            })?;
-
             permissions.insert(
                 role.clone(),
                 Some(types::NamespaceAnnotation::Command(
-                    argument_presets.clone(),
+                    permission.argument_presets.clone(),
                 )),
             );
         }
     }
 
-    Ok(permissions)
+    permissions
 }
 
 /// Build namespace annotation for command relationship permissions.
 /// We need to check the permissions of the source fields
 /// in the relationship mappings.
 pub(crate) fn get_command_relationship_namespace_annotations(
-    command: &metadata_resolve::CommandWithArgumentPresets,
+    command: &metadata_resolve::CommandWithPermissions,
     source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     mappings: &[metadata_resolve::RelationshipCommandMapping],
-) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
-    let select_permissions = get_command_namespace_annotations(command)?;
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+    let select_permissions = get_command_namespace_annotations(command);
 
-    Ok(select_permissions
+    select_permissions
         .into_iter()
         .filter(|(role, _)| {
             mappings.iter().all(|mapping| {
@@ -135,7 +117,7 @@ pub(crate) fn get_command_relationship_namespace_annotations(
                 .any(|allowed_role| role == allowed_role)
             })
         })
-        .collect())
+        .collect()
 }
 
 /// Build namespace annotations for the node interface..
@@ -212,7 +194,7 @@ pub(crate) fn get_allowed_roles_for_field<'a>(
 /// Builds namespace annotations for the `node` field.
 pub(crate) fn get_node_field_namespace_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> HashMap<Role, metadata_resolve::FilterPermission> {
     let mut permissions = HashMap::new();
 
@@ -243,7 +225,7 @@ pub(crate) fn get_node_field_namespace_permissions(
 /// Builds namespace annotations for the `_entities` field.
 pub(crate) fn get_entities_field_namespace_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> HashMap<Role, metadata_resolve::FilterPermission> {
     let mut permissions = HashMap::new();
 

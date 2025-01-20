@@ -1,5 +1,5 @@
-use super::arguments::process_arguments;
-use super::field_selection;
+use super::arguments::{get_unresolved_arguments, resolve_arguments};
+use super::{field_selection, process_argument_presets_for_command};
 use crate::PlanError;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
@@ -148,7 +148,7 @@ pub(crate) fn from_command_selection(
     session: &Arc<Session>,
     request_headers: &reqwest::header::HeaderMap,
     qualified_command_name: &Qualified<CommandName>,
-    command: &metadata_resolve::CommandWithArgumentPresets,
+    command: &metadata_resolve::CommandWithPermissions,
     command_source: &metadata_resolve::CommandSource,
     unique_number: &mut UniqueNumber,
 ) -> Result<FromCommand, PlanError> {
@@ -179,21 +179,26 @@ pub(crate) fn from_command_selection(
     };
 
     // resolve arguments, adding in presets
-    let resolved_arguments = process_arguments(
+    let unresolved_arguments = get_unresolved_arguments(
         &command_selection.target.arguments,
-        &command.argument_presets,
         &command.command.arguments,
         &command_source.argument_mappings,
-        &command_source.data_connector,
+        metadata,
         &command_source.type_mappings,
-        &command_source.data_connector_link_argument_presets,
+        &command_source.data_connector,
+    )?;
+    // add any preset arguments from model permissions
+    let unresolved_arguments = process_argument_presets_for_command(
+        unresolved_arguments,
+        command,
+        &metadata.object_types,
         session,
         request_headers,
-        metadata,
         &mut usage_counts,
-        &mut relationships,
-        unique_number,
-    )?;
+    )
+    .map_err(|e| PlanError::Internal(e.to_string()))?;
+    let resolved_arguments =
+        resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
 
     let command_plan = match &command_source.source {
         DataConnectorCommand::Function(function_name) => CommandPlan::Function(ExecutionTree {

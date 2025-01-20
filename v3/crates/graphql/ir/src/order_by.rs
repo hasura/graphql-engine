@@ -222,7 +222,6 @@ pub fn build_ndc_order_by_element<'s>(
                 {
                     let ndc_relationship_name =
                         NdcRelationshipName::new(source_type, relationship_name);
-
                     relationships.insert(
                         ndc_relationship_name.clone(),
                         LocalModelRelationshipInfo {
@@ -231,7 +230,7 @@ pub fn build_ndc_order_by_element<'s>(
                             source_type,
                             source_data_connector: data_connector_link,
                             source_type_mappings: type_mappings,
-                            target_source,
+                            target_source: &target_source.model,
                             target_type,
                             mappings,
                         },

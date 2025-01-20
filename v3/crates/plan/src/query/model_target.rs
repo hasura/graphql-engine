@@ -1,6 +1,7 @@
-use super::arguments::process_arguments;
+use super::arguments::{get_unresolved_arguments, resolve_arguments};
 use super::filter::resolve_filter_expression;
 use super::permissions::process_model_predicate;
+use super::process_argument_presets_for_model;
 use super::types::NDCQuery;
 use crate::filter::to_resolved_filter_expr;
 use crate::order_by::to_resolved_order_by_element;
@@ -19,7 +20,7 @@ pub fn model_target_to_ndc_query(
     request_headers: &reqwest::header::HeaderMap,
     // The following are things we could compute, but we have them on hand
     // at all call sites anyway:
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     model_source: &metadata_resolve::ModelSource,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     unique_number: &mut UniqueNumber,
@@ -61,22 +62,26 @@ pub fn model_target_to_ndc_query(
         }
     }?;
 
-    // resolve arguments, adding in presets
-    let resolved_arguments = process_arguments(
+    let unresolved_arguments = get_unresolved_arguments(
         &model_target.arguments,
-        &model.argument_presets,
         &model.model.arguments,
         &model_source.argument_mappings,
-        &model_source.data_connector,
+        metadata,
         &model_source.type_mappings,
-        &model_source.data_connector_link_argument_presets,
+        &model_source.data_connector,
+    )?;
+    // add any preset arguments from model permissions
+    let unresolved_arguments = process_argument_presets_for_model(
+        unresolved_arguments,
+        model,
+        &metadata.object_types,
         session,
         request_headers,
-        metadata,
         &mut usage_counts,
-        &mut relationships,
-        unique_number,
-    )?;
+    )
+    .map_err(|e| PlanError::Internal(e.to_string()))?;
+    let resolved_arguments =
+        resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
 
     let model_filter = match &model_target.filter {
         Some(expr) => Ok(Some(to_resolved_filter_expr(

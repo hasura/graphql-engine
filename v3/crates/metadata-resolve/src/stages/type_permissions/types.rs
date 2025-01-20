@@ -6,7 +6,7 @@ use open_dds::{
 };
 
 use crate::Qualified;
-use crate::{stages::object_types, ValueExpressionOrPredicate};
+use crate::{stages::object_types, ValueExpression};
 use open_dds::types::{CustomTypeName, FieldName};
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
@@ -43,7 +43,7 @@ pub struct TypeInputPermission {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldPresetInfo {
-    pub value: ValueExpressionOrPredicate,
+    pub value: ValueExpression,
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecated: Option<Deprecated>,

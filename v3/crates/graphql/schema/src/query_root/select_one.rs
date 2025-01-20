@@ -23,7 +23,7 @@ use metadata_resolve::mk_name;
 pub(crate) fn select_one_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     select_unique: &metadata_resolve::SelectUniqueGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
@@ -51,7 +51,7 @@ pub(crate) fn select_one_field(
         model,
         object_type_representation,
         &select_unique.unique_identifier,
-    )?;
+    );
 
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(
@@ -60,7 +60,6 @@ pub(crate) fn select_one_field(
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::Model {
                     data_type: model.model.data_type.clone(),
-                    source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectOne,
                     name: model.model.name.clone(),
                 },
@@ -77,7 +76,7 @@ pub(crate) fn select_one_field(
 pub(crate) fn generate_select_one_arguments(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     root_field: ast::Name,
     unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
     parent_type: &ast::TypeName,

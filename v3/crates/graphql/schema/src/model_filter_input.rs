@@ -14,7 +14,7 @@ pub fn add_filter_input_argument_field(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     field_name: &ast::Name,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<(), Error> {
     let filter_input_type_name = get_model_filter_input_type(builder, model)?;
 
@@ -39,7 +39,7 @@ pub fn add_filter_input_argument_field(
 
 pub fn get_model_filter_input_type(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<gql_schema::RegisteredTypeName, Error> {
     model
         .graphql_api
@@ -106,7 +106,7 @@ pub fn build_model_filter_input_type(
 pub fn add_limit_input_field(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<(), Error> {
     if let Some(limit_field) = &model.graphql_api.limit_field {
         let limit_argument = generate_int_input_argument(
@@ -127,7 +127,7 @@ pub fn add_limit_input_field(
 pub fn add_offset_input_field(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<(), Error> {
     if let Some(offset_field) = &model.graphql_api.offset_field {
         let offset_argument = generate_int_input_argument(
@@ -149,7 +149,7 @@ pub fn add_offset_input_field(
 pub fn add_order_by_input_field(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) {
     if let Some(order_by_expression_info) = &model.graphql_api.order_by_expression {
         let order_by_argument =
@@ -165,7 +165,7 @@ pub fn add_order_by_input_field(
 pub fn add_where_input_field(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
 ) {
     let boolean_expression_filter_type =
         &model

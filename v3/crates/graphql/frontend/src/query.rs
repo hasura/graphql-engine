@@ -82,6 +82,7 @@ pub async fn execute_query_internal(
                     let ir = steps::build_ir(
                         request_pipeline,
                         schema,
+                        metadata,
                         session,
                         request_headers,
                         &normalized_request,

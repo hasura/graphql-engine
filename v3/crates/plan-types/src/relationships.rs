@@ -20,7 +20,7 @@ pub struct LocalModelRelationshipInfo<'s> {
     #[serde(serialize_with = "serialize_qualified_btreemap")]
     pub source_type_mappings:
         &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    pub target_source: &'s metadata_resolve::ModelTargetSource,
+    pub target_source: &'s metadata_resolve::ModelSource,
     pub target_type: &'s Qualified<CustomTypeName>,
     pub mappings: &'s Vec<metadata_resolve::RelationshipModelMapping>,
 }

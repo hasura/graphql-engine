@@ -1,6 +1,6 @@
 //! IR of the mutation root type
 
-use hasura_authn_core::SessionVariables;
+use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
@@ -18,7 +18,8 @@ use graphql_schema::{OutputAnnotation, RootFieldAnnotation};
 pub fn generate_ir<'n, 's>(
     request_pipeline: GraphqlRequestPipeline,
     selection_set: &'s gql::normalized_ast::SelectionSet<'s, GDS>,
-    session_variables: &SessionVariables,
+    metadata: &'s metadata_resolve::Metadata,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<IndexMap<ast::Alias, root_field::MutationRootField<'n, 's>>, error::Error> {
     let tracer = tracing_util::global_tracer();
@@ -42,13 +43,17 @@ pub fn generate_ir<'n, 's>(
                         Annotation::Output(OutputAnnotation::RootField(
                             RootFieldAnnotation::ProcedureCommand {
                                 name,
-                                source,
                                 procedure_name,
                                 result_type,
                                 result_base_type_kind,
                             },
                         )) => {
-                            let source = source.as_ref().ok_or_else(|| {
+                            let command = metadata.commands.get(name).ok_or_else(|| {
+                                error::InternalEngineError::InternalGeneric {
+                                    description: format!("Command {name} not found"),
+                                }
+                            })?;
+                            let source = command.command.source.as_deref().ok_or_else(|| {
                                 error::InternalDeveloperError::NoSourceDataConnector {
                                     type_name: type_name.clone(),
                                     field_name: field_call.name.clone(),
@@ -73,8 +78,12 @@ pub fn generate_ir<'n, 's>(
                                             field_call,
                                             result_type,
                                             *result_base_type_kind,
+                                            command,
                                             source,
-                                            session_variables,
+                                            &metadata.models,
+                                            &metadata.commands,
+                                            &metadata.object_types,
+                                            session,
                                             request_headers,
                                         )?
                                     }
@@ -87,7 +96,7 @@ pub fn generate_ir<'n, 's>(
                                             result_type,
                                             *result_base_type_kind,
                                             source,
-                                            session_variables,
+                                            &session.variables,
                                             request_headers,
                                         )?
                                     }

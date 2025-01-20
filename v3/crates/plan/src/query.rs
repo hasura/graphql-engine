@@ -9,7 +9,9 @@ mod permissions;
 mod relationships;
 mod types;
 use crate::types::PlanError;
-pub use arguments::{process_argument_presets, UnresolvedArgument};
+pub use arguments::{
+    process_argument_presets_for_command, process_argument_presets_for_model, UnresolvedArgument,
+};
 pub use command::{from_command, CommandPlan, FromCommand};
 pub use filter::{
     build_relationship_comparison_expression, get_field_mapping_of_field_name, plan_expression,

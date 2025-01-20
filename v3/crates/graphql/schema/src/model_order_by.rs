@@ -408,7 +408,7 @@ fn build_orderable_relationships(
                                             object_type_representation,
                                             target_object_type_representation,
                                             mappings,
-                                        )?,
+                                        ),
                                     ),
                                 );
                     };

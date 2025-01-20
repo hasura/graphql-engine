@@ -71,9 +71,12 @@
           {
             "name": "location",
             "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "LocationInput",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "LocationInput"
+              }
             }
           },
           {
@@ -240,9 +243,12 @@
           {
             "name": "location",
             "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "LocationInput",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "LocationInput"
+              }
             }
           },
           {

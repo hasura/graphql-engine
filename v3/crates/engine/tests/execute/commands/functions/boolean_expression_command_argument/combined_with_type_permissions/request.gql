@@ -13,7 +13,7 @@ query MyQuery {
           ]
           City: "London"
         }
-        Staff: []
+        Staff: [{ FirstName: "John" }, { FirstName: "Jane" }]
       }
     ]
   ) {
@@ -29,6 +29,7 @@ query MyQuery {
       Staff {
         FirstName
         LastName
+        Specialities
       }
       Departments
     }

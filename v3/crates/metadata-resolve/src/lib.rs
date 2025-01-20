@@ -23,9 +23,6 @@ pub use stages::aggregates::{
     AggregatableFieldInfo, AggregateExpression, AggregateExpressionGraphqlConfig, AggregateOperand,
     AggregationFunctionInfo, DataConnectorAggregationFunctionInfo,
 };
-pub use stages::argument_presets::{
-    ArgumentNameAndPath, ArgumentPresets, CommandWithArgumentPresets, ModelWithArgumentPresets,
-};
 pub use stages::boolean_expressions::{
     BooleanExpressionComparableRelationship, BooleanExpressionError,
     BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,

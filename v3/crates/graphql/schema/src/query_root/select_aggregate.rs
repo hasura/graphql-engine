@@ -17,7 +17,7 @@ use metadata_resolve;
 pub(crate) fn select_aggregate_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     select_aggregate: &metadata_resolve::SelectAggregateGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
@@ -45,7 +45,7 @@ pub(crate) fn select_aggregate_field(
         parent_type,
     )?;
 
-    let field_permissions = permissions::get_select_permissions_namespace_annotations(model)?;
+    let field_permissions = permissions::get_select_permissions_namespace_annotations(model);
 
     let output_typename = get_aggregate_select_output_type(builder, aggregate_expression)?;
 
@@ -56,7 +56,6 @@ pub(crate) fn select_aggregate_field(
             Annotation::Output(types::OutputAnnotation::RootField(
                 RootFieldAnnotation::Model {
                     data_type: model.model.data_type.clone(),
-                    source: model.model.source.clone(),
                     kind: RootFieldKind::SelectAggregate,
                     name: model.model.name.clone(),
                 },
@@ -72,7 +71,7 @@ pub(crate) fn select_aggregate_field(
 
 pub fn generate_select_aggregate_arguments(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithArgumentPresets,
+    model: &metadata_resolve::ModelWithPermissions,
     filter_input_field_name: &ast::Name,
     parent_field_name: &ast::Name,
     parent_type: &ast::TypeName,

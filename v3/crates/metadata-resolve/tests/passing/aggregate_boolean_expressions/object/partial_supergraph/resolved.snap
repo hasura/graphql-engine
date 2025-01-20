@@ -239,7 +239,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                         "Albums",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -595,7 +595,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                         },
                     },
                 },
-                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {

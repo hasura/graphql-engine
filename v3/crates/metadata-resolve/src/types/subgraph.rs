@@ -183,6 +183,13 @@ impl QualifiedTypeName {
             }
         }
     }
+
+    pub fn get_custom_type_name(&self) -> Option<&Qualified<CustomTypeName>> {
+        match self {
+            QualifiedTypeName::Inbuilt(_) => None,
+            QualifiedTypeName::Custom(custom_type) => Some(custom_type),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, JsonSchema)]

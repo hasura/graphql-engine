@@ -1125,7 +1125,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                         "Invoice",
                     ),
                 ),
-            }: ModelWithArgumentPresets {
+            }: ModelWithPermissions {
                 model: Model {
                     path: JSONPath(
                         [
@@ -2371,7 +2371,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                         },
                     },
                 },
-                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {

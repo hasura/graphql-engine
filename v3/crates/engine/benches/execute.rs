@@ -153,6 +153,7 @@ pub fn bench_execute(
                 generate_ir(
                     GraphqlRequestPipeline::Old,
                     schema,
+                    &gds.metadata,
                     &session,
                     &request_headers,
                     &normalized_request,
@@ -165,6 +166,7 @@ pub fn bench_execute(
     let ir = generate_ir(
         GraphqlRequestPipeline::Old,
         &schema,
+        &gds.metadata,
         &session,
         &request_headers,
         &normalized_request,

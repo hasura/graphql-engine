@@ -1,22 +1,22 @@
 use super::boolean_expression;
 use super::filter::resolve_filter_expression;
 use super::permissions;
-use hasura_authn_core::{Role, Session, SessionVariables};
+use hasura_authn_core::{Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
 use metadata_resolve::{
-    unwrap_custom_type_name, ArgumentInfo, ArgumentNameAndPath, ArgumentPresets, Metadata,
-    Qualified, QualifiedTypeReference, TypeMapping,
+    unwrap_custom_type_name, ArgumentInfo, CommandWithPermissions, Metadata, ModelWithPermissions,
+    ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeReference, TypeMapping,
+    ValueExpressionOrPredicate,
 };
-use nonempty::NonEmpty;
 use open_dds::{
     arguments::ArgumentName,
-    data_connector::DataConnectorColumnName,
     types::{CustomTypeName, DataConnectorArgumentName},
 };
 use plan_types::{Argument, Expression, Relationship, UniqueNumber, UsagesCounts};
 use reqwest::header::HeaderMap;
 use serde::Serialize;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use crate::error::{InternalDeveloperError, InternalEngineError, InternalError};
@@ -33,161 +33,352 @@ pub enum UnresolvedArgument<'s> {
     },
 }
 
-/// Takes a field path and a serde_json object, and insert a serde_json value
-/// into that object, following the field path.
-///
-/// For example,
-/// with JSON object -
-///   `{"name": "Queen Mary University of London", "location": {"city": "London"}}`
-/// a field path - `["location", "country"]`, and a value - "UK"
-/// it will modify the JSON object to -
-///   `{"name": "Queen Mary University of London", "location": {"city": "London", "country": "UK"}}`
-pub(crate) fn follow_field_path_and_insert_value(
-    field_path: &NonEmpty<DataConnectorColumnName>,
-    object_slice: &mut serde_json::Map<String, serde_json::Value>,
-    value: serde_json::Value,
-) -> Result<(), InternalError> {
-    let (field_name, rest) = field_path.split_first();
-    match NonEmpty::from_slice(rest) {
-        // if rest is empty, we have only one-top level field. insert that into the object
-        None => {
-            object_slice.insert(field_name.to_string(), value);
+pub fn process_argument_presets_for_model<'s>(
+    arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
+    model: &'s ModelWithPermissions,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    session: &Session,
+    request_headers: &HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, InternalError> {
+    let model_source = model.model.source.as_ref().ok_or_else(|| {
+        InternalEngineError::ArgumentPresetExecution {
+            description: format!("Model source not found for model '{}'", model.model.name),
         }
-        // if rest is *not* empty, pick the field from the current object, and
-        // recursively process with the rest
-        Some(tail) => {
-            match object_slice.get_mut(field_name.as_str()) {
-                None => {
-                    // object should have this field; if it doesn't then all the fields are preset
-                    object_slice.insert(
-                        field_name.to_string(),
-                        serde_json::Value::Object(serde_json::Map::new()),
-                    );
-                }
-                Some(json_value) => {
-                    let inner_object = json_value.as_object_mut().ok_or_else(|| {
-                        InternalEngineError::ArgumentPresetExecution {
-                            description: "input value is not a valid JSON object".to_string(),
-                        }
-                    })?;
-                    follow_field_path_and_insert_value(&tail, inner_object, value)?;
-                }
-            }
-        }
-    }
-    Ok(())
+    })?;
+
+    let argument_presets = &model
+        .select_permissions
+        .get(&session.role)
+        .ok_or_else(|| InternalEngineError::ArgumentPresetExecution {
+            description: format!(
+                "Select permissions not found for role '{}' for model '{}'",
+                session.role, model.model.name
+            ),
+        })?
+        .argument_presets;
+
+    process_argument_presets(
+        arguments,
+        &model.model.arguments,
+        &model_source.argument_mappings,
+        argument_presets,
+        object_types,
+        &model_source.type_mappings,
+        &model_source.data_connector,
+        &model_source.data_connector_link_argument_presets,
+        session,
+        request_headers,
+        usage_counts,
+    )
 }
 
-/// Takes 'ArgumentPresets' annotations, data connector link argument presets, and
-/// existing arguments (which might be partially filled), and fill values in the
-/// existing arguments based on the presets
-pub fn process_argument_presets<'s, 'a>(
-    data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    argument_presets: Option<&'a ArgumentPresets>,
-    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
-    session_variables: &SessionVariables,
+pub fn process_argument_presets_for_command<'s>(
+    arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
+    command: &'s CommandWithPermissions,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    session: &Session,
     request_headers: &HeaderMap,
-    mut arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, InternalError>
-where
-    'a: 's,
-{
-    if let Some(ArgumentPresets { argument_presets }) = argument_presets {
-        for (argument_name_and_path, (field_type, argument_value)) in argument_presets {
-            let ArgumentNameAndPath {
-                ndc_argument_name,
-                field_path,
-            } = argument_name_and_path;
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, InternalError> {
+    let command_source = command.command.source.as_ref().ok_or_else(|| {
+        InternalEngineError::ArgumentPresetExecution {
+            description: format!(
+                "Command source not found for command '{}'",
+                command.command.name
+            ),
+        }
+    })?;
 
-            let argument_name = ndc_argument_name.as_ref().ok_or_else(|| {
-                // this can only happen when no argument mapping was not found
-                // during annotation generation
+    let argument_presets = &command
+        .permissions
+        .get(&session.role)
+        .ok_or_else(|| InternalEngineError::ArgumentPresetExecution {
+            description: format!(
+                "Command permissions not found for role '{}' for command '{}'",
+                session.role, command.command.name
+            ),
+        })?
+        .argument_presets;
+
+    process_argument_presets(
+        arguments,
+        &command.command.arguments,
+        &command_source.argument_mappings,
+        argument_presets,
+        object_types,
+        &command_source.type_mappings,
+        &command_source.data_connector,
+        &command_source.data_connector_link_argument_presets,
+        session,
+        request_headers,
+        usage_counts,
+    )
+}
+
+fn process_argument_presets<'s>(
+    mut arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
+    argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
+    argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    argument_presets: &'s BTreeMap<
+        ArgumentName,
+        (QualifiedTypeReference, ValueExpressionOrPredicate),
+    >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
+    session: &Session,
+    request_headers: &HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, InternalError> {
+    // Preset arguments from `DataConnectorLink` argument presets
+    for (argument_name, value) in process_connector_link_presets(
+        data_connector_link_argument_presets,
+        &session.variables,
+        request_headers,
+    )? {
+        arguments.insert(argument_name, UnresolvedArgument::Literal { value });
+    }
+
+    // Preset arguments from Model/CommandPermission argument presets
+    for (argument_name, (field_type, argument_value)) in argument_presets {
+        let data_connector_argument_name =
+            argument_mappings.get(argument_name).ok_or_else(|| {
                 InternalEngineError::ArgumentPresetExecution {
-                    description: "unexpected; ndc argument name not preset".to_string(),
+                    description: format!("argument mapping not found for '{argument_name}'"),
                 }
             })?;
 
-            let actual_value = permissions::make_argument_from_value_expression_or_predicate(
-                data_connector_link,
-                type_mappings,
-                argument_value,
-                field_type,
-                session_variables,
-                usage_counts,
-            )?;
+        let argument_value = permissions::make_argument_from_value_expression_or_predicate(
+            data_connector_link,
+            type_mappings,
+            argument_value,
+            field_type,
+            &session.variables,
+            usage_counts,
+        )?;
 
-            match NonEmpty::from_slice(field_path) {
-                // if field path is empty, then the entire argument has to preset
-                None => {
-                    arguments.insert(argument_name.clone(), actual_value);
+        arguments.insert(data_connector_argument_name.clone(), argument_value);
+    }
+
+    // Apply input field presets from the TypePermissions involved in the arguments' types
+    for (argument_name, argument_info) in argument_infos {
+        let data_connector_argument_name =
+            argument_mappings.get(argument_name).ok_or_else(|| {
+                InternalEngineError::ArgumentPresetExecution {
+                    description: format!("argument mapping not found for '{argument_name}'"),
                 }
-                // if there is some field path, preset the argument partially based on the field path
-                Some(field_path) => {
-                    if let Some(current_arg) = arguments.get_mut(&argument_name.clone()) {
-                        let current_arg = match current_arg {
-                            UnresolvedArgument::Literal { value } => Ok(value),
-                            UnresolvedArgument::BooleanExpression { predicate: _ } => {
-                                Err(InternalEngineError::ArgumentPresetExecution {
-                                    description: "unexpected; can't merge an argument preset into an argument that has a boolean expression value"
-                                        .to_owned(),
-                                })
-                            }
-                        }?;
-                        let preset_value = match actual_value {
-                            UnresolvedArgument::Literal { value } => Ok(value),
-                            UnresolvedArgument::BooleanExpression { predicate: _ } => {
-                                // See graphql_schema::Error::BooleanExpressionInTypePresetArgument
-                                Err(InternalEngineError::ArgumentPresetExecution {
-                                    description: "unexpected; type input presets cannot contain a boolean expression preset value"
-                                        .to_owned(),
-                                })
-                            }
-                        }?;
-                        match current_arg {
-                            serde_json::Value::Array(current_arg_array) => {
-                                // This is not an acceptable way to handle arrays, as it only works at the top level here
-                                // and not down the field path. It also does not handle multiply-nested arrays. However,
-                                // it's a quick fix for a common case now, and this whole area will be rewritten soon
-                                for item in current_arg_array {
-                                    if let serde_json::Value::Object(item_object) = item {
-                                        follow_field_path_and_insert_value(
-                                            &field_path,
-                                            item_object,
-                                            preset_value.clone(),
-                                        )?;
-                                    }
-                                }
-                            }
-                            serde_json::Value::Object(current_arg_object) => {
-                                follow_field_path_and_insert_value(
-                                    &field_path,
-                                    current_arg_object,
-                                    preset_value,
-                                )?;
-                            }
-                            serde_json::Value::Bool(_)
-                            | serde_json::Value::Number(_)
-                            | serde_json::Value::String(_)
-                            | serde_json::Value::Null => {}
-                        }
+            })?;
+
+        if let Some(existing_argument_value) = arguments.get_mut(data_connector_argument_name) {
+            match existing_argument_value {
+                UnresolvedArgument::Literal { value } => {
+                    apply_input_field_presets_to_value(
+                        value,
+                        &argument_info.argument_type,
+                        type_mappings,
+                        object_types,
+                        session,
+                    )?;
+                }
+                UnresolvedArgument::BooleanExpression { .. } => {
+                    // We don't apply input field presets to boolean expression arguments
+                }
+            };
+        }
+    }
+
+    Ok(arguments)
+}
+
+fn apply_input_field_presets_to_value(
+    value: &mut serde_json::Value,
+    type_reference: &QualifiedTypeReference,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    session: &Session,
+) -> Result<(), InternalError> {
+    match &type_reference.underlying_type {
+        QualifiedBaseType::List(list_element_type) => {
+            let Some(array_elements) = get_value_array_or_null(value, type_reference)? else {
+                return Ok(()); // Nothing to do if the value is null
+            };
+
+            // Apply presets to each element in the array
+            for element_value in array_elements {
+                apply_input_field_presets_to_value(
+                    element_value,
+                    list_element_type,
+                    type_mappings,
+                    object_types,
+                    session,
+                )?;
+            }
+        }
+        QualifiedBaseType::Named(qualified_type_name) => {
+            // Get the object type information
+            let Some((object_type_name, object_type_info)) = qualified_type_name
+                .get_custom_type_name()
+                .and_then(|type_name| {
+                    object_types
+                        .get(type_name)
+                        .map(|object_type_info| (type_name, object_type_info))
+                })
+            else {
+                return Ok(()); // This is not an object type, so there are no input field presets to apply, skip it
+            };
+
+            let object_value =
+                if let Some(object_value) = get_value_object_or_null(value, type_reference)? {
+                    object_value
+                } else {
+                    // If the value is null, let's see if it is allowed to be null
+                    if type_reference.nullable {
+                        return Ok(()); // Null is allowed, so we can keep the null and skip the presets
+                    }
+
+                    // The value is not allowed to be null, so we create an empty object to fill with presets
+                    // Because we received a null here, the object will be entirely populated with presets
+                    *value = serde_json::Value::Object(serde_json::Map::new());
+                    value.as_object_mut().unwrap() // This is safe because we just created an object value
+                };
+
+            // Get the input permissions for this object type for the current role
+            let field_presets = object_type_info
+                .type_input_permissions
+                .get(&session.role)
+                .map_or_else(
+                    || Cow::Owned(BTreeMap::new()),
+                    |input_permissions| Cow::Borrowed(&input_permissions.field_presets),
+                );
+
+            // Get the data connector type mapping for this object type
+            let TypeMapping::Object { field_mappings, .. } = type_mappings
+                .get(object_type_name)
+                .ok_or_else(|| InternalEngineError::ArgumentPresetExecution {
+                    description: format!(
+                        "no data connector type mapping found for object type '{object_type_name}'"
+                    ),
+                })?;
+
+            // Apply all input field presets to the object value
+            for (field_name, field_preset) in field_presets.as_ref() {
+                // Get the data connector field mapping for this field
+                let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
+                    InternalEngineError::ArgumentPresetExecution {
+                        description: format!("no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'"),
+                    }
+                })?;
+                // Get the type information about the field
+                let field_info = object_type_info.object_type.fields.get(field_name).ok_or_else(|| {
+                    InternalEngineError::ArgumentPresetExecution {
+                        description: format!("no field definition found for field '{field_name}' of object type '{object_type_name}'"),
+                    }
+                })?;
+
+                let argument_value = permissions::make_argument_from_value_expression(
+                    &field_preset.value,
+                    &field_info.field_type,
+                    &session.variables,
+                )?;
+
+                object_value.insert(field_mapping.column.as_str().to_owned(), argument_value);
+            }
+
+            // Recur and apply input field presets to the values of all the object fields
+            for (field_name, field_info) in &object_type_info.object_type.fields {
+                // Get the data connector field mapping for this field
+                let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
+                    InternalEngineError::ArgumentPresetExecution {
+                        description: format!("no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'"),
+                    }
+                })?;
+
+                // Get the object field value; if it is missing, insert a null value
+                if let Some(field_value) = object_value.get_mut(field_mapping.column.as_str()) {
+                    apply_input_field_presets_to_value(
+                        field_value,
+                        &field_info.field_type,
+                        type_mappings,
+                        object_types,
+                        session,
+                    )?;
+                } else {
+                    let mut field_value = serde_json::Value::Null;
+
+                    apply_input_field_presets_to_value(
+                        &mut field_value,
+                        &field_info.field_type,
+                        type_mappings,
+                        object_types,
+                        session,
+                    )?;
+
+                    // If the field value is still null, don't insert it into the object
+                    // Technically we should be able to do, but bugs in the postgres connector
+                    // mean that postgres treats null vs missing differently, even though it shouldn't
+                    if !field_value.is_null() {
+                        object_value.insert(field_mapping.column.as_str().to_owned(), field_value);
                     }
                 }
             }
         }
     }
 
-    // preset arguments from `DataConnectorLink` argument presets
-    for (argument_name, value) in process_connector_link_presets(
-        data_connector_link_argument_presets,
-        session_variables,
-        request_headers,
-    )? {
-        arguments.insert(argument_name, UnresolvedArgument::Literal { value });
-    }
+    Ok(())
+}
 
-    Ok(arguments)
+fn get_value_array_or_null<'a>(
+    value: &'a mut serde_json::Value,
+    expected_type: &QualifiedTypeReference,
+) -> Result<Option<&'a mut Vec<serde_json::Value>>, InternalError> {
+    match value {
+        serde_json::Value::Array(array) => Ok(Some(array)),
+        serde_json::Value::Null => Ok(None),
+        serde_json::Value::Bool(_) => Err(InternalEngineError::ArgumentPresetExecution {
+            description: format!("expected {expected_type}, but got a boolean"),
+        }
+        .into()),
+        serde_json::Value::Number(_) => Err(InternalEngineError::ArgumentPresetExecution {
+            description: format!("expected {expected_type}, but got a number"),
+        }
+        .into()),
+        serde_json::Value::String(_) => Err(InternalEngineError::ArgumentPresetExecution {
+            description: format!("expected {expected_type}, but got a string"),
+        }
+        .into()),
+        serde_json::Value::Object(_) => Err(InternalEngineError::ArgumentPresetExecution {
+            description: format!("expected {expected_type}, but got an object"),
+        }
+        .into()),
+    }
+}
+
+fn get_value_object_or_null<'a>(
+    value: &'a mut serde_json::Value,
+    expected_type: &QualifiedTypeReference,
+) -> Result<Option<&'a mut serde_json::Map<String, serde_json::Value>>, InternalError> {
+    match value {
+        serde_json::Value::Object(map) => Ok(Some(map)),
+        serde_json::Value::Null => Ok(None),
+        serde_json::Value::Bool(_) => Err(InternalEngineError::ArgumentPresetExecution {
+            description: format!("expected {expected_type}, but got a boolean"),
+        }
+        .into()),
+        serde_json::Value::Number(_) => Err(InternalEngineError::ArgumentPresetExecution {
+            description: format!("expected {expected_type}, but got a number"),
+        }
+        .into()),
+        serde_json::Value::String(_) => Err(InternalEngineError::ArgumentPresetExecution {
+            description: format!("expected {expected_type}, but got a string"),
+        }
+        .into()),
+        serde_json::Value::Array(_) => Err(InternalEngineError::ArgumentPresetExecution {
+            description: format!("expected {expected_type}, but got an array"),
+        }
+        .into()),
+    }
 }
 
 /// Builds arguments for a command that come from a connector link's argument presets
@@ -245,22 +436,15 @@ pub fn process_connector_link_presets(
     Ok(arguments)
 }
 
-pub fn process_arguments(
+pub fn get_unresolved_arguments<'s>(
     input_arguments: &IndexMap<ArgumentName, open_dds::query::Value>,
-    argument_presets: &BTreeMap<Role, ArgumentPresets>,
-    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
+    argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
     argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
-    data_connector: &metadata_resolve::DataConnectorLink,
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
-    session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
     metadata: &Metadata,
-    usage_counts: &mut plan_types::UsagesCounts,
-    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
-    unique_number: &mut UniqueNumber,
-) -> Result<BTreeMap<DataConnectorArgumentName, Argument>, PlanError> {
-    let mut graphql_ir_arguments = BTreeMap::new();
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &metadata_resolve::DataConnectorLink,
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
+    let mut arguments = BTreeMap::new();
     for (argument_name, argument_value) in input_arguments {
         let ndc_argument_name = argument_mappings.get(argument_name).ok_or_else(|| {
             PlanError::Internal(format!(
@@ -270,7 +454,7 @@ pub fn process_arguments(
 
         let ndc_argument_value = match argument_value {
             open_dds::query::Value::BooleanExpression(bool_exp) => {
-                let argument_info = arguments.get(argument_name).unwrap();
+                let argument_info = argument_infos.get(argument_name).unwrap();
                 let custom_type_name =
                     unwrap_custom_type_name(&argument_info.argument_type).unwrap();
                 let boolean_expression_type = metadata
@@ -296,32 +480,24 @@ pub fn process_arguments(
                 value: value.clone(),
             },
         };
-        graphql_ir_arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
+        arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
     }
+    Ok(arguments)
+}
 
-    let argument_presets_for_role = argument_presets.get(&session.role).unwrap();
-
-    // add any preset arguments from model permissions
-    let arguments_with_presets = process_argument_presets(
-        data_connector,
-        type_mappings,
-        Some(argument_presets_for_role),
-        data_connector_link_argument_presets,
-        &session.variables,
-        request_headers,
-        graphql_ir_arguments,
-        usage_counts,
-    )
-    .map_err(|e| PlanError::Internal(e.to_string()))?;
-
+pub fn resolve_arguments(
+    arguments_with_presets: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'_>>,
+    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
+    unique_number: &mut UniqueNumber,
+) -> Result<BTreeMap<DataConnectorArgumentName, Argument>, PlanError> {
     // now we turn the GraphQL IR `Arguments` type into the `execute` "resolved" argument type
     // by resolving any `Expression` types inside
     let mut resolved_arguments = BTreeMap::new();
-    for (argument_name, argument_value) in &arguments_with_presets {
+    for (argument_name, argument_value) in arguments_with_presets {
         let resolved_argument_value = match argument_value {
             UnresolvedArgument::BooleanExpression { predicate } => {
                 let (resolved_filter_expression, _remote_predicates) =
-                    resolve_filter_expression(predicate, relationships, unique_number)?;
+                    resolve_filter_expression(&predicate, relationships, unique_number)?;
 
                 Argument::BooleanExpression {
                     predicate: resolved_filter_expression,
@@ -331,7 +507,7 @@ pub fn process_arguments(
                 value: value.clone(),
             },
         };
-        resolved_arguments.insert(argument_name.clone(), resolved_argument_value.clone());
+        resolved_arguments.insert(argument_name, resolved_argument_value.clone());
     }
 
     Ok(resolved_arguments)

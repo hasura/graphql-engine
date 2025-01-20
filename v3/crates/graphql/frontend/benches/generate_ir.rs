@@ -67,6 +67,7 @@ pub fn bench_generate_ir(c: &mut Criterion) {
                     graphql_frontend::generate_ir(
                         graphql_ir::GraphqlRequestPipeline::Old,
                         schema,
+                        &gds.metadata,
                         &session,
                         &request_headers,
                         normalized_request,

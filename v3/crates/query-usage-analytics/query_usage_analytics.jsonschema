@@ -600,16 +600,10 @@
         "arguments": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/DataConnectorArgumentName"
+            "$ref": "#/definitions/ArgumentName"
           }
         }
       }
-    },
-    "DataConnectorArgumentName": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorArgumentName",
-      "title": "DataConnectorArgumentName",
-      "description": "The name of an argument as defined by a data connector.",
-      "type": "string"
     },
     "RelationshipUsage": {
       "type": "object",
