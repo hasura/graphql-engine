@@ -459,6 +459,50 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
     }
 }
 
+pub fn generate_command_relationship_open_dd_ir<'s>(
+    field: &Field<'s, GDS>,
+    relationship_annotation: &'s CommandRelationshipAnnotation,
+    models: &IndexMap<
+        metadata_resolve::Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
+    type_mappings: &BTreeMap<
+        metadata_resolve::Qualified<CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<open_dds::query::RelationshipSelection, error::Error> {
+    count_command(&relationship_annotation.command_name, usage_counts);
+
+    let selection = generate_selection_set_open_dd_ir(
+        &field.selection_set,
+        metadata_resolve::FieldNestedness::NotNested,
+        models,
+        type_mappings,
+        session_variables,
+        request_headers,
+        usage_counts,
+    )?;
+
+    let target = open_dds::query::RelationshipTarget {
+        relationship_name: relationship_annotation.relationship_name.clone(),
+        arguments: IndexMap::new(),
+        filter: None,
+        limit: None,
+        offset: None,
+        order_by: vec![], // TODO: don't ignore me
+    };
+
+    let relationship_selection = open_dds::query::RelationshipSelection {
+        selection: Some(selection),
+        target,
+    };
+
+    Ok(relationship_selection)
+}
+
 pub fn generate_command_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,

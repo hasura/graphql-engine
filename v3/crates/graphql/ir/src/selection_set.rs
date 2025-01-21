@@ -452,22 +452,21 @@ pub fn generate_selection_set_open_dd_ir(
                             )?,
                         );*/
                     }
-                    OutputAnnotation::RelationshipToCommand(_relationship_annotation) => {
-                        todo!("generate_selection_set_open_dd_ir: RelationshipToCommand");
-                        /*
+                    OutputAnnotation::RelationshipToCommand(relationship_annotation) => {
                         fields.insert(
                             make_field_alias(field.alias.0.as_str())?,
-                            relationship::generate_command_relationship_ir(
-                                field,
-                                relationship_annotation,
-                                selection_set_field_nestedness,
-                                data_connector,
-                                type_mappings,
-                                session_variables,
-                                request_headers,
-                                usage_counts,
-                            )?,
-                        );*/
+                            open_dds::query::ObjectSubSelection::Relationship(
+                                relationship::generate_command_relationship_open_dd_ir(
+                                    field,
+                                    relationship_annotation,
+                                    models,
+                                    type_mappings,
+                                    session_variables,
+                                    request_headers,
+                                    usage_counts,
+                                )?,
+                            ),
+                        );
                     }
                     _ => Err(error::InternalEngineError::UnexpectedAnnotation {
                         annotation: annotation.clone(),
