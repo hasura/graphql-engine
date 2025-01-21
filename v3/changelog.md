@@ -6,6 +6,11 @@
 
 ### Fixed
 
+- Fixed a bug where TypePermissions field presets would be ignored if the type
+  was inside a nested array.
+- Fixed a bug where TypePermissions field presets would be ignored if recursive
+  types were used.
+
 ### Changed
 
 ## [v2025.01.17]
@@ -90,10 +95,6 @@ customizations:
   being ignored.
 - Fixed a bug where TypePermissions field presets would be ignored if the
   argument type was an array of objects.
-- Fixed a bug where TypePermissions field presets would be ignored if the type
-  was inside a nested array.
-- Fixed a bug where TypePermissions field presets would be ignored if recursive
-  types were used.
 - Fixed a bug where a successful response from a pre-parse plugin would have a
   Content-Type header `application/octet-stream`. Now it returns
   `Content-Type: application/json`
