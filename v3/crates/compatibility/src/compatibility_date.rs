@@ -122,7 +122,6 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
             Some(new_compatibility_date(2024, 9, 26))
         }
         Flag::RequireUniqueCommandGraphqlNames => Some(new_compatibility_date(2024, 10, 7)),
-        Flag::AllowPartialSupergraph => None, // This is not triggered by compatibility date, instead it is set by the build settings (ie. using a /partial endpoint)
         Flag::JsonSessionVariables => Some(new_compatibility_date(2024, 10, 16)),
         Flag::DisallowArrayFieldComparedWithScalarBooleanType => {
             Some(new_compatibility_date(2024, 10, 31))
@@ -151,5 +150,8 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         | Flag::DisallowDuplicateNamesAcrossTypesAndExpressions => {
             Some(new_compatibility_date(2025, 1, 7))
         }
+        // AllowPartialSupergraph is not triggered by compatibility date, instead it is set by the build settings (ie. using a /partial endpoint)
+        Flag::AllowPartialSupergraph
+        | Flag::DisallowDuplicateAggregateFunctionDefinitionsForScalarType => None,
     }
 }

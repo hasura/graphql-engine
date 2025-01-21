@@ -241,6 +241,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -280,6 +297,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 other_operators: [],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -297,6 +331,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -340,6 +375,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -359,6 +411,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -535,6 +588,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -578,6 +648,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -619,6 +706,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                         "like",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -795,6 +899,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -836,6 +957,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                         "like",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -881,6 +1019,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                         "like",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -1193,6 +1348,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1232,6 +1404,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     other_operators: [],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1249,6 +1438,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1292,6 +1482,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1311,6 +1518,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                     },
@@ -1372,6 +1580,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1415,6 +1640,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1456,6 +1698,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                             "like",
                                                         ),
                                                     ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},
@@ -1517,6 +1776,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1558,6 +1834,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                             "like",
                                                         ),
                                                     ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},
@@ -1603,6 +1896,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                             "like",
                                                         ),
                                                     ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},

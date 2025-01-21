@@ -217,6 +217,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "avg",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "bit_and",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "bit_or",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "bit_xor",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stddev",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stddev_pop",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stddev_samp",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "var_pop",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "var_samp",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "variance",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -268,6 +314,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                     ),
                                                     DataConnectorOperatorName(
                                                         "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "avg",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "bit_and",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "bit_or",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "bit_xor",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stddev",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stddev_pop",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stddev_samp",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "var_pop",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "var_samp",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "variance",
                                                     ),
                                                 ],
                                             },
@@ -367,6 +459,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                         "ts_match_tt",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -629,6 +730,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "avg",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "bit_and",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "bit_or",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "bit_xor",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "stddev",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "stddev_pop",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "stddev_samp",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "var_pop",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "var_samp",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "variance",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -680,6 +827,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "avg",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "bit_and",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "bit_or",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "bit_xor",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "stddev",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "stddev_pop",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "stddev_samp",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "var_pop",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "var_samp",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "variance",
                                                         ),
                                                     ],
                                                 },
@@ -779,6 +972,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                             "ts_match_tt",
                                                         ),
                                                     ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},

@@ -141,6 +141,22 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                                 other_operators: [],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "_max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "_min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -180,6 +196,22 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                                 other_operators: [],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "_max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "_min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -217,6 +249,22 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                                 ends_with_operator: None,
                                                 iends_with_operator: None,
                                                 other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "_max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "_min",
+                                                    ),
+                                                ],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -463,6 +511,22 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                                     other_operators: [],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "_max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "_min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -502,6 +566,22 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                                     other_operators: [],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "_max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "_min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -539,6 +619,22 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                                     ends_with_operator: None,
                                                     iends_with_operator: None,
                                                     other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "_max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "_min",
+                                                        ),
+                                                    ],
                                                 },
                                             ),
                                             argument_mappings: {},

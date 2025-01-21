@@ -3672,6 +3672,10 @@
         "disallow_duplicate_names_across_types_and_expressions": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_duplicate_aggregate_function_definitions_for_scalar_type": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

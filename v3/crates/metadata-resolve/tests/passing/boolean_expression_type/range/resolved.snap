@@ -136,6 +136,37 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "avg",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "cardinality",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stats",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "sum",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "value_count",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -183,6 +214,37 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                     ),
                                                     DataConnectorOperatorName(
                                                         "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "avg",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "cardinality",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stats",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "sum",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "value_count",
                                                     ),
                                                 ],
                                             },
@@ -364,6 +426,37 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "avg",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "cardinality",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stats",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "sum",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "value_count",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -411,6 +504,37 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                     ),
                                                     DataConnectorOperatorName(
                                                         "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "avg",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "cardinality",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "stats",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "sum",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "value_count",
                                                     ),
                                                 ],
                                             },
@@ -479,6 +603,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                         "wildcard",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -722,6 +855,37 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "avg",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "cardinality",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "stats",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "sum",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "value_count",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -769,6 +933,37 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "terms",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "avg",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "cardinality",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "stats",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "sum",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "value_count",
                                                         ),
                                                     ],
                                                 },
@@ -837,6 +1032,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                             "wildcard",
                                                         ),
                                                     ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},

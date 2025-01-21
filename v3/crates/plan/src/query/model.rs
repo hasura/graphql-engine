@@ -52,11 +52,14 @@ pub fn from_model_aggregate_selection(
             ))
         })?;
 
+    let data_connector = &model_source.data_connector;
+    let ndc_version = data_connector.capabilities.supported_ndc_version;
+
     let mut fields = IndexMap::new();
 
     for (field_alias, aggregate) in selection {
-        let column_path = match aggregate.operand.as_ref() {
-            None => Ok(vec![]),
+        let resolved_column = match aggregate.operand.as_ref() {
+            None => Ok(None),
             Some(Operand::Field(operand)) => {
                 let column = to_resolved_column(
                     metadata,
@@ -65,15 +68,93 @@ pub fn from_model_aggregate_selection(
                     model_object_type,
                     operand,
                 )?;
-                Ok([vec![column.column_name], column.field_path].concat())
+                Ok(Some(column))
             }
             Some(_) => Err(PlanError::Internal("unsupported aggregate operand".into())),
         }?;
 
+        let column_path = match resolved_column.clone() {
+            None => vec![],
+            Some(column) => [vec![column.column_name], column.field_path].concat(),
+        };
+
         let ndc_aggregate = match &aggregate.function {
-            AggregationFunction::Count {} => Ok(AggregateFieldSelection::Count { column_path }),
+            AggregationFunction::Count {} => {
+                Ok::<_, PlanError>(AggregateFieldSelection::Count { column_path })
+            }
             AggregationFunction::CountDistinct {} => {
-                Ok(AggregateFieldSelection::CountDistinct { column_path })
+                Ok::<_, PlanError>(AggregateFieldSelection::CountDistinct { column_path })
+            }
+            AggregationFunction::Sum
+            | AggregationFunction::Min
+            | AggregationFunction::Max
+            | AggregationFunction::Average => {
+                let resolved_column = resolved_column.ok_or(
+                    PlanError::Internal(
+                        "column shouldn't be empty for aggregation function {aggregation_function_name}"
+                            .into(),
+                    ))?;
+                let Some(column_path) = NonEmpty::from_vec(column_path) else {
+                    Err(PlanError::Internal(
+                                        "column path shouldn't be empty for aggregation function {aggregation_function_name}"
+                                            .into(),
+                                    ))?
+                };
+                let aggregate_functions = resolved_column.field_mapping.aggregate_functions.ok_or(
+                    PlanError::Internal(format!(
+                        "no aggregate functions defined for field {}",
+                        field_alias.as_str()
+                    )),
+                )?;
+                let data_connector_function_name = match &aggregate.function {
+                    AggregationFunction::Sum => aggregate_functions
+                        .get_sum_function(ndc_version)
+                        .ok_or_else(|| {
+                            PlanError::Internal(format!(
+                                "no 'sum' operator found for type: {:?}",
+                                resolved_column.field_mapping.column_type
+                            ))
+                        }),
+
+                    AggregationFunction::Min => aggregate_functions
+                        .get_min_function(ndc_version)
+                        .ok_or_else(|| {
+                            PlanError::Internal(format!(
+                                "no 'min' operator found for type: {:?}",
+                                resolved_column.field_mapping.column_type
+                            ))
+                        }),
+
+                    AggregationFunction::Max => aggregate_functions
+                        .get_max_function(ndc_version)
+                        .ok_or_else(|| {
+                            PlanError::Internal(format!(
+                                "no 'max' operator found for type: {:?}",
+                                resolved_column.field_mapping.column_type
+                            ))
+                        }),
+
+                    AggregationFunction::Average => aggregate_functions
+                        .get_avg_function(ndc_version)
+                        .ok_or_else(|| {
+                            PlanError::Internal(format!(
+                                "no 'average' operator found for type: {:?}",
+                                resolved_column.field_mapping.column_type
+                            ))
+                        }),
+
+                    _ => {
+                        panic!(
+                            "invalid pattern match in from_model_aggregate_selection: {:?}",
+                            aggregate.function
+                        )
+                    }
+                }?;
+
+                Ok(AggregateFieldSelection::AggregationFunction {
+                    function_name: data_connector_function_name.clone(),
+                    column_path,
+                })
             }
             AggregationFunction::Custom {
                 name: aggregation_function_name,
@@ -88,9 +169,9 @@ pub fn from_model_aggregate_selection(
                 )?;
                 let Some(column_path) = NonEmpty::from_vec(column_path) else {
                     Err(PlanError::Internal(
-                        "column path shouldn't be empty for aggregation function {aggregation_function_name}"
-                            .into(),
-                    ))?
+                                    "column path shouldn't be empty for aggregation function {aggregation_function_name}"
+                                        .into(),
+                                ))?
                 };
                 Ok(AggregateFieldSelection::AggregationFunction {
                     function_name: ndc_aggregation_function_name,

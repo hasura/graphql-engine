@@ -352,6 +352,10 @@ impl OrderByElement {
 #[serde(rename_all = "camelCase")]
 /// An aggregate function to execute.
 pub enum AggregationFunction {
+    Sum,
+    Min,
+    Max,
+    Average,
     Count {},
     CountDistinct {},
     Custom {

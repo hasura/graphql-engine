@@ -3,6 +3,7 @@ use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::QualifiedTypeReference;
 use crate::NdcVersion;
 use indexmap::IndexMap;
+use open_dds::aggregates::DataConnectorAggregationFunctionName;
 use open_dds::arguments::ArgumentName;
 use open_dds::models::ModelName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, FieldName};
@@ -179,6 +180,7 @@ pub struct FieldMapping {
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub column_type_representation: Option<ndc_models::TypeRepresentation>,
     pub comparison_operators: Option<ComparisonOperators>,
+    pub aggregate_functions: Option<AggregateFunctions>,
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
@@ -334,6 +336,72 @@ impl ComparisonOperators {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub struct AggregateFunctions {
+    pub sum_function: Option<DataConnectorAggregationFunctionName>,
+    pub min_function: Option<DataConnectorAggregationFunctionName>,
+    pub max_function: Option<DataConnectorAggregationFunctionName>,
+    pub avg_function: Option<DataConnectorAggregationFunctionName>,
+    pub other_functions: Vec<DataConnectorAggregationFunctionName>,
+}
+
+impl AggregateFunctions {
+    // TODO: this is a very crude backup lookup for functions.
+    // We keep it because v0.1 connectors don't have the newer
+    // set of aggregate function meanings,
+    // so until more connectors are on v0.2, we need a heuristic
+    // for finding these functions here.
+    pub(crate) fn find_function<'a>(
+        &'a self,
+        operator_str: &str,
+        ndc_version: NdcVersion,
+    ) -> Option<&'a DataConnectorAggregationFunctionName> {
+        match ndc_version {
+            NdcVersion::V01 => self
+                .other_functions
+                .iter()
+                .find(|other_op| other_op.as_str() == operator_str),
+            NdcVersion::V02 => None,
+        }
+    }
+
+    pub fn get_sum_function(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorAggregationFunctionName> {
+        self.sum_function
+            .as_ref()
+            .or_else(|| self.find_function("sum", ndc_version))
+    }
+
+    pub fn get_min_function(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorAggregationFunctionName> {
+        self.min_function
+            .as_ref()
+            .or_else(|| self.find_function("min", ndc_version))
+    }
+
+    pub fn get_max_function(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorAggregationFunctionName> {
+        self.max_function
+            .as_ref()
+            .or_else(|| self.find_function("max", ndc_version))
+    }
+
+    pub fn get_avg_function(
+        &self,
+        ndc_version: NdcVersion,
+    ) -> Option<&DataConnectorAggregationFunctionName> {
+        self.avg_function
+            .as_ref()
+            .or_else(|| self.find_function("avg", ndc_version))
+    }
+}
+
 /// Mapping from an object to their fields, which contain types.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum TypeMapping {
@@ -352,6 +420,12 @@ pub enum ObjectTypesIssue {
         operator_name: String,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error("Multiple {function_name} aggregate functions found for type {scalar_type} in data connector {data_connector_name}")]
+    DuplicateAggregateFunctionsDefined {
+        scalar_type: ndc_models::ScalarTypeName,
+        function_name: String,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
 }
 
 impl ShouldBeAnError for ObjectTypesIssue {
@@ -359,6 +433,9 @@ impl ShouldBeAnError for ObjectTypesIssue {
         match self {
             ObjectTypesIssue::DuplicateOperatorsDefined { .. } => flags
                 .contains(open_dds::flags::Flag::DisallowDuplicateOperatorDefinitionsForScalarType),
+            ObjectTypesIssue::DuplicateAggregateFunctionsDefined { .. } => flags.contains(
+                open_dds::flags::Flag::DisallowDuplicateAggregateFunctionDefinitionsForScalarType,
+            ),
         }
     }
 }

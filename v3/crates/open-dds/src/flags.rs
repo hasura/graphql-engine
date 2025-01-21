@@ -36,6 +36,7 @@ pub enum Flag {
     DisallowDuplicateOperatorDefinitionsForScalarType,
     DisallowMultidimensionalArraysInBooleanExpressions,
     DisallowDuplicateNamesAcrossTypesAndExpressions,
+    DisallowDuplicateAggregateFunctionDefinitionsForScalarType,
 }
 
 impl Flag {
@@ -92,6 +93,9 @@ impl Flag {
             }
             Flag::DisallowDuplicateNamesAcrossTypesAndExpressions => {
                 "disallow_duplicate_names_across_types_and_expressions"
+            }
+            Flag::DisallowDuplicateAggregateFunctionDefinitionsForScalarType => {
+                "disallow_duplicate_aggregate_function_definitions_for_scalar_type"
             }
         }
     }

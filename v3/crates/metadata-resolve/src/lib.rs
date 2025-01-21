@@ -50,8 +50,8 @@ pub use stages::object_relationships::{
     RelationshipField, RelationshipModelMapping, RelationshipTarget,
 };
 pub use stages::object_types::{
-    ComparisonOperators, FieldArgumentInfo, FieldMapping, ObjectTypeRepresentation,
-    ResolvedObjectApolloFederationConfig, TypeMapping,
+    AggregateFunctions, ComparisonOperators, FieldArgumentInfo, FieldMapping,
+    ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::order_by_expressions::{
     ObjectOrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,

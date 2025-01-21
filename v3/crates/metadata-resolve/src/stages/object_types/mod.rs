@@ -2,6 +2,7 @@ mod error;
 pub mod types;
 
 pub use error::{ObjectTypesError, TypeMappingValidationError};
+use open_dds::aggregates::DataConnectorAggregationFunctionName;
 use open_dds::identifier::SubgraphName;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
@@ -12,10 +13,10 @@ use open_dds::{
     types::CustomTypeName,
 };
 pub use types::{
-    ComparisonOperators, DataConnectorTypeMappingsForObject, FieldArgumentInfo, FieldDefinition,
-    FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings, ObjectTypesIssue,
-    ObjectTypesOutput, ObjectTypesWithTypeMappings, ResolvedApolloFederationObjectKey,
-    ResolvedObjectApolloFederationConfig, TypeMapping,
+    AggregateFunctions, ComparisonOperators, DataConnectorTypeMappingsForObject, FieldArgumentInfo,
+    FieldDefinition, FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings,
+    ObjectTypesIssue, ObjectTypesOutput, ObjectTypesWithTypeMappings,
+    ResolvedApolloFederationObjectKey, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
@@ -368,11 +369,20 @@ pub fn resolve_data_connector_type_mapping(
             c
         });
 
+        let aggregate_functions = scalar_type.map(|ty| {
+            let (c, new_issues) =
+                make_aggregate_functions(&scalar_type_name, ty, &qualified_data_connector_name);
+
+            issues.extend(new_issues);
+            c
+        });
+
         let resolved_field_mapping = FieldMapping {
             column: resolved_field_mapping_column.into_owned(),
             column_type: source_column.r#type.clone(),
             column_type_representation,
             comparison_operators,
+            aggregate_functions,
             argument_mappings: resolved_argument_mappings.0,
         };
 
@@ -585,6 +595,79 @@ pub(crate) fn get_comparison_operators(
         };
     }
     (comparison_operators, issues)
+}
+
+pub(crate) fn make_aggregate_functions(
+    scalar_type_name: &ndc_models::ScalarTypeName,
+    scalar_type: &ndc_models::ScalarType,
+    data_connector_name: &Qualified<DataConnectorName>,
+) -> (AggregateFunctions, Vec<ObjectTypesIssue>) {
+    let mut aggregate_functions = AggregateFunctions::default();
+    let mut issues = Vec::new();
+
+    for (function_name, definition) in &scalar_type.aggregate_functions {
+        match definition {
+            ndc_models::AggregateFunctionDefinition::Sum { result_type: _ } => {
+                if aggregate_functions.sum_function.is_none() {
+                    aggregate_functions.sum_function = Some(
+                        DataConnectorAggregationFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "sum".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::AggregateFunctionDefinition::Min => {
+                if aggregate_functions.min_function.is_none() {
+                    aggregate_functions.min_function = Some(
+                        DataConnectorAggregationFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "minimum".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::AggregateFunctionDefinition::Max => {
+                if aggregate_functions.max_function.is_none() {
+                    aggregate_functions.max_function = Some(
+                        DataConnectorAggregationFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "maximum".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::AggregateFunctionDefinition::Average { result_type: _ } => {
+                if aggregate_functions.avg_function.is_none() {
+                    aggregate_functions.avg_function = Some(
+                        DataConnectorAggregationFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "average".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::AggregateFunctionDefinition::Custom { result_type: _ } => {
+                aggregate_functions.other_functions.push(
+                    DataConnectorAggregationFunctionName::new(function_name.inner().clone()),
+                );
+            }
+        }
+    }
+
+    (aggregate_functions, issues)
 }
 
 fn get_column<'a>(

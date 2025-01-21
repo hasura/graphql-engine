@@ -378,6 +378,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -433,6 +449,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                     DataConnectorOperatorName(
                                                         "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
                                                     ),
                                                 ],
                                             },
@@ -518,6 +550,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         "_regex",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -697,6 +738,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -716,6 +773,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -1009,6 +1067,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1090,6 +1164,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         "_regex",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -1269,6 +1352,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1288,6 +1387,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -1473,6 +1573,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1528,6 +1644,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                     DataConnectorOperatorName(
                                                         "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
                                                     ),
                                                 ],
                                             },
@@ -1815,6 +1947,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1898,6 +2046,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1953,6 +2110,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                     DataConnectorOperatorName(
                                                         "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
                                                     ),
                                                 ],
                                             },
@@ -2240,6 +2413,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -2323,6 +2512,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -2378,6 +2576,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                     DataConnectorOperatorName(
                                                         "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
                                                     ),
                                                 ],
                                             },
@@ -2529,6 +2743,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                     DataConnectorOperatorName(
                                                         "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
                                                     ),
                                                 ],
                                             },
@@ -2708,6 +2938,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         "_regex",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -2899,6 +3138,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -2918,6 +3173,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -3087,6 +3343,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -3170,6 +3442,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         "_regex",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -3361,6 +3642,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -3380,6 +3677,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -3569,6 +3867,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -3588,6 +3902,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -3739,6 +4054,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -3756,6 +4072,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -3919,6 +4236,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -4000,6 +4333,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         "_regex",
                                                     ),
                                                 ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -4243,6 +4585,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -4324,6 +4682,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             "_regex",
                                                         ),
                                                     ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},
@@ -4607,6 +4974,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             ],
                                                         },
                                                     ),
+                                                    aggregate_functions: Some(
+                                                        AggregateFunctions {
+                                                            sum_function: None,
+                                                            min_function: None,
+                                                            max_function: None,
+                                                            avg_function: None,
+                                                            other_functions: [
+                                                                DataConnectorAggregationFunctionName(
+                                                                    "max",
+                                                                ),
+                                                                DataConnectorAggregationFunctionName(
+                                                                    "min",
+                                                                ),
+                                                            ],
+                                                        },
+                                                    ),
                                                     argument_mappings: {},
                                                 },
                                                 FieldName(
@@ -4688,6 +5071,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     "_regex",
                                                                 ),
                                                             ],
+                                                        },
+                                                    ),
+                                                    aggregate_functions: Some(
+                                                        AggregateFunctions {
+                                                            sum_function: None,
+                                                            min_function: None,
+                                                            max_function: None,
+                                                            avg_function: None,
+                                                            other_functions: [],
                                                         },
                                                     ),
                                                     argument_mappings: {},
@@ -4840,6 +5232,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     ],
                                                                 },
                                                             ),
+                                                            aggregate_functions: Some(
+                                                                AggregateFunctions {
+                                                                    sum_function: None,
+                                                                    min_function: None,
+                                                                    max_function: None,
+                                                                    avg_function: None,
+                                                                    other_functions: [
+                                                                        DataConnectorAggregationFunctionName(
+                                                                            "max",
+                                                                        ),
+                                                                        DataConnectorAggregationFunctionName(
+                                                                            "min",
+                                                                        ),
+                                                                    ],
+                                                                },
+                                                            ),
                                                             argument_mappings: {},
                                                         },
                                                         FieldName(
@@ -4895,6 +5303,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                         ),
                                                                         DataConnectorOperatorName(
                                                                             "_neq",
+                                                                        ),
+                                                                    ],
+                                                                },
+                                                            ),
+                                                            aggregate_functions: Some(
+                                                                AggregateFunctions {
+                                                                    sum_function: None,
+                                                                    min_function: None,
+                                                                    max_function: None,
+                                                                    avg_function: None,
+                                                                    other_functions: [
+                                                                        DataConnectorAggregationFunctionName(
+                                                                            "max",
+                                                                        ),
+                                                                        DataConnectorAggregationFunctionName(
+                                                                            "min",
                                                                         ),
                                                                     ],
                                                                 },
@@ -4980,6 +5404,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                             "_regex",
                                                                         ),
                                                                     ],
+                                                                },
+                                                            ),
+                                                            aggregate_functions: Some(
+                                                                AggregateFunctions {
+                                                                    sum_function: None,
+                                                                    min_function: None,
+                                                                    max_function: None,
+                                                                    avg_function: None,
+                                                                    other_functions: [],
                                                                 },
                                                             ),
                                                             argument_mappings: {},
@@ -5886,6 +6319,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -5941,6 +6390,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
                                                         ),
                                                     ],
                                                 },
@@ -6026,6 +6491,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             "_regex",
                                                         ),
                                                     ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},
@@ -7082,6 +7556,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -7165,6 +7655,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -7220,6 +7719,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
                                                         ),
                                                     ],
                                                 },
@@ -8240,6 +8755,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -8295,6 +8826,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
                                                         ),
                                                     ],
                                                 },
@@ -9150,6 +9697,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -9231,6 +9794,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             "_regex",
                                                         ),
                                                     ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},
@@ -10082,6 +10654,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -10165,6 +10753,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -10220,6 +10817,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
                                                         ),
                                                     ],
                                                 },
@@ -10487,6 +11100,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             ],
                                                         },
                                                     ),
+                                                    aggregate_functions: Some(
+                                                        AggregateFunctions {
+                                                            sum_function: None,
+                                                            min_function: None,
+                                                            max_function: None,
+                                                            avg_function: None,
+                                                            other_functions: [
+                                                                DataConnectorAggregationFunctionName(
+                                                                    "max",
+                                                                ),
+                                                                DataConnectorAggregationFunctionName(
+                                                                    "min",
+                                                                ),
+                                                            ],
+                                                        },
+                                                    ),
                                                     argument_mappings: {},
                                                 },
                                                 FieldName(
@@ -10570,6 +11199,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             ],
                                                         },
                                                     ),
+                                                    aggregate_functions: Some(
+                                                        AggregateFunctions {
+                                                            sum_function: None,
+                                                            min_function: None,
+                                                            max_function: None,
+                                                            avg_function: None,
+                                                            other_functions: [],
+                                                        },
+                                                    ),
                                                     argument_mappings: {},
                                                 },
                                                 FieldName(
@@ -10625,6 +11263,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                 ),
                                                                 DataConnectorOperatorName(
                                                                     "_neq",
+                                                                ),
+                                                            ],
+                                                        },
+                                                    ),
+                                                    aggregate_functions: Some(
+                                                        AggregateFunctions {
+                                                            sum_function: None,
+                                                            min_function: None,
+                                                            max_function: None,
+                                                            avg_function: None,
+                                                            other_functions: [
+                                                                DataConnectorAggregationFunctionName(
+                                                                    "max",
+                                                                ),
+                                                                DataConnectorAggregationFunctionName(
+                                                                    "min",
                                                                 ),
                                                             ],
                                                         },
@@ -10779,6 +11433,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     ],
                                                                 },
                                                             ),
+                                                            aggregate_functions: Some(
+                                                                AggregateFunctions {
+                                                                    sum_function: None,
+                                                                    min_function: None,
+                                                                    max_function: None,
+                                                                    avg_function: None,
+                                                                    other_functions: [
+                                                                        DataConnectorAggregationFunctionName(
+                                                                            "max",
+                                                                        ),
+                                                                        DataConnectorAggregationFunctionName(
+                                                                            "min",
+                                                                        ),
+                                                                    ],
+                                                                },
+                                                            ),
                                                             argument_mappings: {},
                                                         },
                                                         FieldName(
@@ -10834,6 +11504,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                         ),
                                                                         DataConnectorOperatorName(
                                                                             "_neq",
+                                                                        ),
+                                                                    ],
+                                                                },
+                                                            ),
+                                                            aggregate_functions: Some(
+                                                                AggregateFunctions {
+                                                                    sum_function: None,
+                                                                    min_function: None,
+                                                                    max_function: None,
+                                                                    avg_function: None,
+                                                                    other_functions: [
+                                                                        DataConnectorAggregationFunctionName(
+                                                                            "max",
+                                                                        ),
+                                                                        DataConnectorAggregationFunctionName(
+                                                                            "min",
                                                                         ),
                                                                     ],
                                                                 },
@@ -10919,6 +11605,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                             "_regex",
                                                                         ),
                                                                     ],
+                                                                },
+                                                            ),
+                                                            aggregate_functions: Some(
+                                                                AggregateFunctions {
+                                                                    sum_function: None,
+                                                                    min_function: None,
+                                                                    max_function: None,
+                                                                    avg_function: None,
+                                                                    other_functions: [],
                                                                 },
                                                             ),
                                                             argument_mappings: {},
@@ -11690,6 +12385,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -11745,6 +12456,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
                                                         ),
                                                     ],
                                                 },
@@ -11832,6 +12559,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -11907,6 +12643,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -11926,6 +12678,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                     },
@@ -12223,6 +12976,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -12306,6 +13075,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -12381,6 +13159,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -12400,6 +13194,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                     },
@@ -12714,6 +13509,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -12769,6 +13580,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
                                                         ),
                                                     ],
                                                 },
@@ -12848,6 +13675,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -12867,6 +13710,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                     },
@@ -13248,6 +14092,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -13331,6 +14191,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -13402,6 +14271,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
                                                         ),
                                                     ],
                                                 },
@@ -13491,6 +14376,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -13566,6 +14460,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -13585,6 +14495,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                     },
@@ -13994,6 +14905,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -14077,6 +15004,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -14148,6 +15084,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         ),
                                                         DataConnectorOperatorName(
                                                             "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
                                                         ),
                                                     ],
                                                 },
@@ -14253,6 +15205,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -14328,6 +15289,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -14347,6 +15324,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                     },
@@ -14380,6 +15358,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -14397,6 +15376,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                     },

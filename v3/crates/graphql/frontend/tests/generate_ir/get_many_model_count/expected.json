@@ -547,6 +547,16 @@
                                                               "_lte",
                                                               "_neq"
                                                             ]
+                                                          },
+                                                          "aggregate_functions": {
+                                                            "sum_function": null,
+                                                            "min_function": null,
+                                                            "max_function": null,
+                                                            "avg_function": null,
+                                                            "other_functions": [
+                                                              "max",
+                                                              "min"
+                                                            ]
                                                           }
                                                         },
                                                         "first_name": {
@@ -581,6 +591,13 @@
                                                               "starts_with",
                                                               "ts_match_tt"
                                                             ]
+                                                          },
+                                                          "aggregate_functions": {
+                                                            "sum_function": null,
+                                                            "min_function": null,
+                                                            "max_function": null,
+                                                            "avg_function": null,
+                                                            "other_functions": []
                                                           }
                                                         },
                                                         "last_name": {
@@ -615,6 +632,13 @@
                                                               "starts_with",
                                                               "ts_match_tt"
                                                             ]
+                                                          },
+                                                          "aggregate_functions": {
+                                                            "sum_function": null,
+                                                            "min_function": null,
+                                                            "max_function": null,
+                                                            "avg_function": null,
+                                                            "other_functions": []
                                                           }
                                                         }
                                                       }
@@ -672,6 +696,26 @@
                                                                 "_lte",
                                                                 "_neq"
                                                               ]
+                                                            },
+                                                            "aggregate_functions": {
+                                                              "sum_function": null,
+                                                              "min_function": null,
+                                                              "max_function": null,
+                                                              "avg_function": null,
+                                                              "other_functions": [
+                                                                "avg",
+                                                                "bit_and",
+                                                                "bit_or",
+                                                                "bit_xor",
+                                                                "max",
+                                                                "min",
+                                                                "stddev",
+                                                                "stddev_pop",
+                                                                "stddev_samp",
+                                                                "var_pop",
+                                                                "var_samp",
+                                                                "variance"
+                                                              ]
                                                             }
                                                           },
                                                           "author_id": {
@@ -691,6 +735,26 @@
                                                                 "_lt",
                                                                 "_lte",
                                                                 "_neq"
+                                                              ]
+                                                            },
+                                                            "aggregate_functions": {
+                                                              "sum_function": null,
+                                                              "min_function": null,
+                                                              "max_function": null,
+                                                              "avg_function": null,
+                                                              "other_functions": [
+                                                                "avg",
+                                                                "bit_and",
+                                                                "bit_or",
+                                                                "bit_xor",
+                                                                "max",
+                                                                "min",
+                                                                "stddev",
+                                                                "stddev_pop",
+                                                                "stddev_samp",
+                                                                "var_pop",
+                                                                "var_samp",
+                                                                "variance"
                                                               ]
                                                             }
                                                           },
@@ -726,6 +790,13 @@
                                                                 "starts_with",
                                                                 "ts_match_tt"
                                                               ]
+                                                            },
+                                                            "aggregate_functions": {
+                                                              "sum_function": null,
+                                                              "min_function": null,
+                                                              "max_function": null,
+                                                              "avg_function": null,
+                                                              "other_functions": []
                                                             }
                                                           }
                                                         }
@@ -815,6 +886,26 @@
                                                     "_lte",
                                                     "_neq"
                                                   ]
+                                                },
+                                                "aggregate_functions": {
+                                                  "sum_function": null,
+                                                  "min_function": null,
+                                                  "max_function": null,
+                                                  "avg_function": null,
+                                                  "other_functions": [
+                                                    "avg",
+                                                    "bit_and",
+                                                    "bit_or",
+                                                    "bit_xor",
+                                                    "max",
+                                                    "min",
+                                                    "stddev",
+                                                    "stddev_pop",
+                                                    "stddev_samp",
+                                                    "var_pop",
+                                                    "var_samp",
+                                                    "variance"
+                                                  ]
                                                 }
                                               },
                                               "author_id": {
@@ -834,6 +925,26 @@
                                                     "_lt",
                                                     "_lte",
                                                     "_neq"
+                                                  ]
+                                                },
+                                                "aggregate_functions": {
+                                                  "sum_function": null,
+                                                  "min_function": null,
+                                                  "max_function": null,
+                                                  "avg_function": null,
+                                                  "other_functions": [
+                                                    "avg",
+                                                    "bit_and",
+                                                    "bit_or",
+                                                    "bit_xor",
+                                                    "max",
+                                                    "min",
+                                                    "stddev",
+                                                    "stddev_pop",
+                                                    "stddev_samp",
+                                                    "var_pop",
+                                                    "var_samp",
+                                                    "variance"
                                                   ]
                                                 }
                                               },
@@ -869,6 +980,13 @@
                                                     "starts_with",
                                                     "ts_match_tt"
                                                   ]
+                                                },
+                                                "aggregate_functions": {
+                                                  "sum_function": null,
+                                                  "min_function": null,
+                                                  "max_function": null,
+                                                  "avg_function": null,
+                                                  "other_functions": []
                                                 }
                                               }
                                             }
@@ -926,6 +1044,16 @@
                                                       "_lte",
                                                       "_neq"
                                                     ]
+                                                  },
+                                                  "aggregate_functions": {
+                                                    "sum_function": null,
+                                                    "min_function": null,
+                                                    "max_function": null,
+                                                    "avg_function": null,
+                                                    "other_functions": [
+                                                      "max",
+                                                      "min"
+                                                    ]
                                                   }
                                                 },
                                                 "first_name": {
@@ -960,6 +1088,13 @@
                                                       "starts_with",
                                                       "ts_match_tt"
                                                     ]
+                                                  },
+                                                  "aggregate_functions": {
+                                                    "sum_function": null,
+                                                    "min_function": null,
+                                                    "max_function": null,
+                                                    "avg_function": null,
+                                                    "other_functions": []
                                                   }
                                                 },
                                                 "last_name": {
@@ -994,6 +1129,13 @@
                                                       "starts_with",
                                                       "ts_match_tt"
                                                     ]
+                                                  },
+                                                  "aggregate_functions": {
+                                                    "sum_function": null,
+                                                    "min_function": null,
+                                                    "max_function": null,
+                                                    "avg_function": null,
+                                                    "other_functions": []
                                                   }
                                                 }
                                               }
@@ -1083,6 +1225,26 @@
                                           "_lte",
                                           "_neq"
                                         ]
+                                      },
+                                      "aggregate_functions": {
+                                        "sum_function": null,
+                                        "min_function": null,
+                                        "max_function": null,
+                                        "avg_function": null,
+                                        "other_functions": [
+                                          "avg",
+                                          "bit_and",
+                                          "bit_or",
+                                          "bit_xor",
+                                          "max",
+                                          "min",
+                                          "stddev",
+                                          "stddev_pop",
+                                          "stddev_samp",
+                                          "var_pop",
+                                          "var_samp",
+                                          "variance"
+                                        ]
                                       }
                                     },
                                     "author_id": {
@@ -1102,6 +1264,26 @@
                                           "_lt",
                                           "_lte",
                                           "_neq"
+                                        ]
+                                      },
+                                      "aggregate_functions": {
+                                        "sum_function": null,
+                                        "min_function": null,
+                                        "max_function": null,
+                                        "avg_function": null,
+                                        "other_functions": [
+                                          "avg",
+                                          "bit_and",
+                                          "bit_or",
+                                          "bit_xor",
+                                          "max",
+                                          "min",
+                                          "stddev",
+                                          "stddev_pop",
+                                          "stddev_samp",
+                                          "var_pop",
+                                          "var_samp",
+                                          "variance"
                                         ]
                                       }
                                     },
@@ -1137,6 +1319,13 @@
                                           "starts_with",
                                           "ts_match_tt"
                                         ]
+                                      },
+                                      "aggregate_functions": {
+                                        "sum_function": null,
+                                        "min_function": null,
+                                        "max_function": null,
+                                        "avg_function": null,
+                                        "other_functions": []
                                       }
                                     }
                                   }
@@ -1194,6 +1383,26 @@
                                             "_lte",
                                             "_neq"
                                           ]
+                                        },
+                                        "aggregate_functions": {
+                                          "sum_function": null,
+                                          "min_function": null,
+                                          "max_function": null,
+                                          "avg_function": null,
+                                          "other_functions": [
+                                            "avg",
+                                            "bit_and",
+                                            "bit_or",
+                                            "bit_xor",
+                                            "max",
+                                            "min",
+                                            "stddev",
+                                            "stddev_pop",
+                                            "stddev_samp",
+                                            "var_pop",
+                                            "var_samp",
+                                            "variance"
+                                          ]
                                         }
                                       },
                                       "author_id": {
@@ -1213,6 +1422,26 @@
                                             "_lt",
                                             "_lte",
                                             "_neq"
+                                          ]
+                                        },
+                                        "aggregate_functions": {
+                                          "sum_function": null,
+                                          "min_function": null,
+                                          "max_function": null,
+                                          "avg_function": null,
+                                          "other_functions": [
+                                            "avg",
+                                            "bit_and",
+                                            "bit_or",
+                                            "bit_xor",
+                                            "max",
+                                            "min",
+                                            "stddev",
+                                            "stddev_pop",
+                                            "stddev_samp",
+                                            "var_pop",
+                                            "var_samp",
+                                            "variance"
                                           ]
                                         }
                                       },
@@ -1248,6 +1477,13 @@
                                             "starts_with",
                                             "ts_match_tt"
                                           ]
+                                        },
+                                        "aggregate_functions": {
+                                          "sum_function": null,
+                                          "min_function": null,
+                                          "max_function": null,
+                                          "avg_function": null,
+                                          "other_functions": []
                                         }
                                       }
                                     }

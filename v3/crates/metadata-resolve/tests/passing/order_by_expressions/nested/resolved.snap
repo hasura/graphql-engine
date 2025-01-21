@@ -212,6 +212,15 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                 other_operators: [],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -251,6 +260,15 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                 ends_with_operator: None,
                                                 iends_with_operator: None,
                                                 other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
                                             },
                                         ),
                                         argument_mappings: {},
@@ -382,6 +400,15 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                 other_operators: [],
                                             },
                                         ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -399,6 +426,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                         },
                                         column_type_representation: None,
                                         comparison_operators: None,
+                                        aggregate_functions: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -646,6 +674,15 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                     other_operators: [],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -685,6 +722,15 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                     ends_with_operator: None,
                                                     iends_with_operator: None,
                                                     other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
                                                 },
                                             ),
                                             argument_mappings: {},
@@ -742,6 +788,15 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                     other_operators: [],
                                                 },
                                             ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -759,6 +814,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                             },
                                             column_type_representation: None,
                                             comparison_operators: None,
+                                            aggregate_functions: None,
                                             argument_mappings: {},
                                         },
                                     },
