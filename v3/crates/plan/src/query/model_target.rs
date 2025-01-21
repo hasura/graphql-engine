@@ -1,15 +1,12 @@
 use super::arguments::{get_unresolved_arguments, resolve_arguments};
-use super::filter::resolve_filter_expression;
-use super::permissions::process_model_predicate;
 use super::process_argument_presets_for_model;
 use super::types::NDCQuery;
-use crate::filter::to_resolved_filter_expr;
+use crate::filter::{resolve_model_permission_filter, to_resolved_filter_expr};
 use crate::order_by::to_resolved_order_by_element;
 use crate::types::PlanError;
 use std::collections::BTreeMap;
 
 use hasura_authn_core::Session;
-use metadata_resolve::FilterPermission;
 use open_dds::query::ModelTarget;
 use plan_types::{Relationship, ResolvedFilterExpression, UniqueNumber};
 
@@ -25,42 +22,19 @@ pub fn model_target_to_ndc_query(
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     unique_number: &mut UniqueNumber,
 ) -> Result<NDCQuery, PlanError> {
-    let qualified_model_name = metadata_resolve::Qualified::new(
-        model_target.subgraph.clone(),
-        model_target.model_name.clone(),
-    );
-
-    let model_select_permission = model.select_permissions.get(&session.role).ok_or_else(|| {
-        PlanError::Permission(format!(
-            "role {} does not have select permission for model {}",
-            session.role, qualified_model_name
-        ))
-    })?;
-
     let mut usage_counts = plan_types::UsagesCounts::default();
     let mut relationships: BTreeMap<plan_types::NdcRelationshipName, Relationship> =
         BTreeMap::new();
 
-    let permission_filter = match &model_select_permission.filter {
-        FilterPermission::AllowAll => Ok::<_, PlanError>(None),
-        FilterPermission::Filter(filter) => {
-            let filter_ir = process_model_predicate(
-                &model_source.data_connector,
-                &model_source.type_mappings,
-                filter,
-                &session.variables,
-                &mut usage_counts,
-            )
-            .map_err(|e| {
-                PlanError::Internal(format!("error when processing model predicate: {e}"))
-            })?;
-
-            let (filter, _remote_predicates) =
-                resolve_filter_expression(&filter_ir, &mut relationships, unique_number)?;
-
-            Ok(Some(filter))
-        }
-    }?;
+    // Permission filter
+    let permission_filter = resolve_model_permission_filter(
+        session,
+        model,
+        model_source,
+        &mut relationships,
+        unique_number,
+        &mut usage_counts,
+    )?;
 
     let unresolved_arguments = get_unresolved_arguments(
         &model_target.arguments,
@@ -110,10 +84,15 @@ pub fn model_target_to_ndc_query(
         .map(|element| {
             to_resolved_order_by_element(
                 metadata,
+                session,
                 &model_source.type_mappings,
                 &model.model.data_type,
                 model_object_type,
+                &model_source.data_connector,
                 element,
+                &mut relationships,
+                unique_number,
+                &mut usage_counts,
             )
         })
         .collect::<Result<Vec<_>, PlanError>>()?;

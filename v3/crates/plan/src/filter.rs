@@ -1,11 +1,14 @@
+use crate::process_model_predicate;
+
 use super::column::{to_resolved_column, ResolvedColumn};
 use super::types::PlanError;
+use hasura_authn_core::Session;
 use metadata_resolve::{DataConnectorLink, Qualified, TypeMapping};
 use open_dds::{
     query::{BooleanExpression, ComparisonOperator},
     types::CustomTypeName,
 };
-use plan_types::ResolvedFilterExpression;
+use plan_types::{ResolvedFilterExpression, UniqueNumber, UsagesCounts};
 use std::collections::BTreeMap;
 
 pub fn to_resolved_filter_expr(
@@ -338,6 +341,48 @@ fn boolean_expression_for_comparison(
                     "Relationships in boolean expressions not supported".into(),
                 )),
             }
+        }
+    }
+}
+
+// Resolve the model permission filter
+pub(crate) fn resolve_model_permission_filter(
+    session: &Session,
+    model: &metadata_resolve::ModelWithPermissions,
+    model_source: &metadata_resolve::ModelSource,
+    collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    unique_number: &mut UniqueNumber,
+    usage_counts: &mut UsagesCounts,
+) -> Result<Option<ResolvedFilterExpression>, PlanError> {
+    let model_name = &model.model.name;
+    let model_select_permission = model.select_permissions.get(&session.role).ok_or_else(|| {
+        PlanError::Permission(format!(
+            "role {} does not have select permission for model {model_name}",
+            session.role
+        ))
+    })?;
+
+    match &model_select_permission.filter {
+        metadata_resolve::FilterPermission::AllowAll => Ok::<_, PlanError>(None),
+        metadata_resolve::FilterPermission::Filter(filter) => {
+            let filter_ir = process_model_predicate(
+                &model_source.data_connector,
+                &model_source.type_mappings,
+                filter,
+                &session.variables,
+                usage_counts,
+            )
+            .map_err(|e| {
+                PlanError::Internal(format!("error when processing model predicate: {e}"))
+            })?;
+
+            let (filter, _remote_predicates) = super::query::filter::resolve_filter_expression(
+                &filter_ir,
+                collect_relationships,
+                unique_number,
+            )?;
+
+            Ok(Some(filter))
         }
     }
 }

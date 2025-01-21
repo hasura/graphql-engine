@@ -261,7 +261,7 @@ fn test_model_select_many_order_by_nested_relationships() -> anyhow::Result<()> 
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -385,7 +385,7 @@ fn test_model_select_many_order_by_object_relationship_nested() -> anyhow::Resul
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

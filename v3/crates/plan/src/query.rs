@@ -2,7 +2,7 @@ mod arguments;
 mod boolean_expression;
 mod command;
 pub mod field_selection;
-mod filter;
+pub mod filter;
 mod model;
 pub mod model_target;
 mod permissions;

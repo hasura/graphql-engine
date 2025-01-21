@@ -150,6 +150,10 @@ async fn handle_rest_request(
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": "Internal error" })),
             ),
+            jsonapi::RequestError::PlanError(plan::PlanError::OrderBy(_error)) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "Internal error" })),
+            ),
             jsonapi::RequestError::ExecuteError(field_error) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": field_error.to_string() })),

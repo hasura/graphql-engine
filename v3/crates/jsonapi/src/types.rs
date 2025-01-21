@@ -73,6 +73,9 @@ impl RequestError {
             RequestError::PlanError(plan::PlanError::Relationship(_error)) => {
                 serde_json::json!({"error": "Internal error" })
             }
+            RequestError::PlanError(plan::PlanError::OrderBy(_error)) => {
+                serde_json::json!({"error": "Internal error" })
+            }
             RequestError::PlanError(plan::PlanError::External(_err)) => {
                 serde_json::json!({"error": "Internal error" })
             }

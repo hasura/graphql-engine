@@ -14,7 +14,6 @@ use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping}
 use open_dds::{
     arguments::ArgumentName,
     commands::DataConnectorCommand,
-    models::ModelName,
     query::{
         Alias, CommandSelection, CommandTarget, ModelSelection, ModelTarget, ObjectFieldSelection,
         ObjectFieldTarget, ObjectSubSelection, RelationshipAggregateSelection,
@@ -350,7 +349,6 @@ fn from_model_relationship(
         metadata,
         object_type_name,
         relationship_name,
-        target_model_name,
         source_type_mappings,
         source_data_connector,
         model_relationship_target,
@@ -523,12 +521,12 @@ fn record_local_model_relationship(
     metadata: &Metadata,
     object_type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
-    target_model_name: &Qualified<ModelName>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     source_data_connector: &metadata_resolve::DataConnectorLink,
     model_relationship_target: &metadata_resolve::ModelRelationshipTarget,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
 ) -> Result<plan_types::NdcRelationshipName, PlanError> {
+    let target_model_name = &model_relationship_target.model_name;
     let target_model = metadata.models.get(target_model_name).ok_or_else(|| {
         PlanError::Internal(format!("model {target_model_name} not found in metadata"))
     })?;
@@ -566,7 +564,7 @@ fn record_local_model_relationship(
     Ok(ndc_relationship_name)
 }
 
-fn reject_remote_relationship(
+pub fn reject_remote_relationship(
     relationship_name: &RelationshipName,
     source_data_connector: &metadata_resolve::DataConnectorLink,
     target_data_connector: &metadata_resolve::DataConnectorLink,
