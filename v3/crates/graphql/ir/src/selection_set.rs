@@ -435,22 +435,17 @@ pub fn generate_selection_set_open_dd_ir(
                             ),
                         );
                     }
-                    OutputAnnotation::RelationshipToModelAggregate(_relationship_annotation) => {
-                        todo!("generate_selection_set_open_dd_ir: RelationshipToModelAggregate");
-                        /*
+                    OutputAnnotation::RelationshipToModelAggregate(relationship_annotation) => {
                         fields.insert(
                             make_field_alias(field.alias.0.as_str())?,
-                            relationship::generate_model_aggregate_relationship_ir(
-                                field,
-                                relationship_annotation,
-                                selection_set_field_nestedness,
-                                data_connector,
-                                type_mappings,
-                                session_variables,
-                                request_headers,
-                                usage_counts,
-                            )?,
-                        );*/
+                            open_dds::query::ObjectSubSelection::RelationshipAggregate(
+                                relationship::generate_model_aggregate_relationship_open_dd_ir(
+                                    field,
+                                    relationship_annotation,
+                                    usage_counts,
+                                )?,
+                            ),
+                        );
                     }
                     OutputAnnotation::RelationshipToCommand(relationship_annotation) => {
                         fields.insert(

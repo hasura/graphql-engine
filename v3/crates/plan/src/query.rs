@@ -122,7 +122,7 @@ where
             let selection = model_aggregate
                 .selection
                 .iter()
-                .map(|(k, v)| (k.to_string(), v.clone()))
+                .map(|(k, v)| (k.as_str().to_string(), v.clone()))
                 .collect();
 
             let execution_tree = model::from_model_aggregate_selection(

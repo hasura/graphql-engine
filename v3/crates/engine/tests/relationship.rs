@@ -296,7 +296,7 @@ fn test_remote_relationships_model_to_model_array_aggregate() -> anyhow::Result<
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

@@ -17,7 +17,7 @@ use super::{
     model_selection::{self, model_selection_ir},
     order_by::build_ndc_order_by,
     permissions,
-    selection_set::{generate_selection_set_open_dd_ir, FieldSelection},
+    selection_set::{self, generate_selection_set_open_dd_ir, FieldSelection},
 };
 use crate::error;
 use crate::order_by;
@@ -369,6 +369,35 @@ pub fn generate_model_relationship_ir<'s>(
     }
 }
 
+pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
+    field: &Field<'s, GDS>,
+    relationship_annotation: &'s ModelAggregateRelationshipAnnotation,
+    usage_counts: &mut UsagesCounts,
+) -> Result<open_dds::query::RelationshipAggregateSelection, error::Error> {
+    // Add the target model being used in the usage counts
+    count_model(&relationship_annotation.model_name, usage_counts);
+
+    let selection =
+        selection_set::generate_aggregate_selection_set_open_dd_ir(&field.selection_set)?;
+
+    let target = open_dds::query::RelationshipTarget {
+        relationship_name: relationship_annotation.relationship_name.clone(),
+        arguments: IndexMap::new(),
+        filter: None,
+        limit: None,
+        offset: None,
+        order_by: vec![],
+    };
+
+    Ok(open_dds::query::RelationshipAggregateSelection {
+        selection: selection
+            .into_iter()
+            .map(|(alias, aggregate)| (alias.to_string(), aggregate))
+            .collect(),
+        target,
+    })
+}
+
 pub fn generate_model_aggregate_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     relationship_annotation: &'s ModelAggregateRelationshipAnnotation,
@@ -387,6 +416,9 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
+    // Add the target model being used in the usage counts
+    count_model(&relationship_annotation.model_name, usage_counts);
+
     let field_call = field.field_call()?;
 
     let model = models
