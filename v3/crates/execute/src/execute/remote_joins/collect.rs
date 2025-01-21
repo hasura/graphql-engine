@@ -5,7 +5,6 @@
 //! relationship field mapping.
 
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
 use nonempty::NonEmpty;
 use serde_json as json;
 use std::collections::{BTreeMap, HashSet};
@@ -14,11 +13,11 @@ use json_ext::ValueExt;
 
 use super::error;
 use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
+use plan_types::{CommandReturnKind, ProcessResponseAs, VariableName};
 use plan_types::{
     JoinLocations, JoinNode, LocationKind, RemoteJoin, RemoteJoinArgument, SourceFieldAlias,
     TargetField,
 };
-use plan_types::{ProcessResponseAs, VariableName};
 
 /// An executable join node is a remote join node, it's collected join values
 /// from a LHS response, and the rest of the join sub-tree
@@ -116,10 +115,12 @@ fn collect_argument_from_rows(
                     }
                     ProcessResponseAs::CommandResponse {
                         command_name: _,
-                        type_container,
+                        is_nullable,
+                        return_kind,
                         response_config: _,
                     } => {
-                        let mut command_rows = resolve_command_response_row(row, type_container)?;
+                        let mut command_rows =
+                            resolve_command_response_row(row, *is_nullable, *return_kind)?;
                         for command_row in &mut command_rows {
                             collect_argument_from_row(
                                 command_row,
@@ -269,7 +270,8 @@ fn rows_from_row_field_value(
 /// resolve/process the command response for remote join execution
 fn resolve_command_response_row(
     row: &IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
-    type_container: &ast::TypeContainer<ast::TypeName>,
+    is_nullable: bool,
+    return_kind: CommandReturnKind,
 ) -> Result<Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>, error::FieldError> {
     let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
         error::NDCUnexpectedError::BadNDCResponse {
@@ -288,7 +290,7 @@ fn resolve_command_response_row(
             })?
         }
         json::Value::Null => {
-            if type_container.nullable {
+            if is_nullable {
                 Ok(Vec::new())
             } else {
                 Err(error::NDCUnexpectedError::BadNDCResponse {
@@ -297,15 +299,17 @@ fn resolve_command_response_row(
             }
         }
         json::Value::Object(result_map) => {
-            if type_container.is_list() {
+            match return_kind {
+                CommandReturnKind::Array => {
                 Err(error::NDCUnexpectedError::BadNDCResponse {
                     summary: "Unable to parse response from NDC, object value expected".into(),
                 })?
-            } else {
+            } ,
+            CommandReturnKind::Object => {
                 let index_map: IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue> =
                     json::from_value(json::Value::Object(result_map.clone()))?;
                 Ok(vec![index_map])
-            }
+            }}
         }
         json::Value::Array(values) => {
             // There can be cases when the command returns an array of objects,
@@ -319,12 +323,13 @@ fn resolve_command_response_row(
             let array_values: Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>> =
                     json::from_value(json::Value::Array(values.clone()))?;
 
-            if type_container.is_list(){
-                Ok(array_values)
-            } else {
+            match return_kind {
+                CommandReturnKind::Array =>
+            {    Ok(array_values)}
+            ,CommandReturnKind::Object =>{
                 Ok(vec![array_values.into_iter().next().ok_or(error::NDCUnexpectedError::BadNDCResponse {
                     summary: "Unable to parse response from NDC, rowset is empty".into(),
-                })?])
+                })?])}
             }
         }
     }

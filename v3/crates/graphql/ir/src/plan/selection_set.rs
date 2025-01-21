@@ -14,9 +14,9 @@ use metadata_resolve::{FieldMapping, Metadata};
 use open_dds::data_connector::DataConnectorColumnName;
 use plan::{process_command_relationship_definition, process_model_relationship_definition};
 use plan_types::{
-    ExecutionTree, Field, JoinLocations, JoinNode, Location, LocationKind, NestedArray,
-    NestedField, NestedObject, PredicateQueryTrees, RemoteJoin, RemoteJoinType, SourceFieldAlias,
-    TargetField,
+    CommandReturnKind, ExecutionTree, Field, JoinLocations, JoinNode, Location, LocationKind,
+    NestedArray, NestedField, NestedObject, PredicateQueryTrees, RemoteJoin, RemoteJoinType,
+    SourceFieldAlias, TargetField,
 };
 use plan_types::{NdcFieldAlias, NdcRelationshipName, Relationship, UniqueNumber};
 use std::collections::{BTreeMap, HashMap};
@@ -348,7 +348,12 @@ pub(crate) fn plan_selection_set(
                     join_mapping,
                     process_response_as: ProcessResponseAs::CommandResponse {
                         command_name: ir.command_info.command_name.clone(),
-                        type_container: ir.command_info.type_container.clone(),
+                        is_nullable: ir.command_info.type_container.nullable,
+                        return_kind: if ir.command_info.type_container.is_list() {
+                            CommandReturnKind::Array
+                        } else {
+                            CommandReturnKind::Object
+                        },
                         response_config: ir.command_info.data_connector.response_config.clone(),
                     },
                     remote_join_type: RemoteJoinType::ToCommand,

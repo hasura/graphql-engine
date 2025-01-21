@@ -3130,7 +3130,6 @@ dependencies = [
  "derive_more",
  "indexmap 2.7.0",
  "json-ext",
- "lang-graphql",
  "metadata-resolve",
  "nonempty",
  "open-dds",

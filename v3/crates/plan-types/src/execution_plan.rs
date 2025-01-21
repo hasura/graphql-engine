@@ -7,7 +7,6 @@ mod mutation;
 mod query;
 mod relationships;
 mod remote_joins;
-use lang_graphql::ast::common as ast;
 use std::sync::Arc;
 
 pub use aggregates::{AggregateFieldSelection, AggregateSelectionSet};
@@ -61,6 +60,12 @@ pub struct ExecutionTree {
     pub remote_join_executions: remote_joins::JoinLocations,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum CommandReturnKind {
+    Array,
+    Object,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum ProcessResponseAs {
     Object {
@@ -71,7 +76,8 @@ pub enum ProcessResponseAs {
     },
     CommandResponse {
         command_name: Arc<metadata_resolve::Qualified<open_dds::commands::CommandName>>,
-        type_container: ast::TypeContainer<ast::TypeName>,
+        is_nullable: bool,
+        return_kind: CommandReturnKind,
         // how to process a command response
         response_config: Option<Arc<metadata_resolve::data_connectors::CommandsResponseConfig>>,
     },
@@ -82,8 +88,8 @@ impl ProcessResponseAs {
     pub fn is_nullable(&self) -> bool {
         match self {
             ProcessResponseAs::Object { is_nullable }
-            | ProcessResponseAs::Array { is_nullable } => *is_nullable,
-            ProcessResponseAs::CommandResponse { type_container, .. } => type_container.nullable,
+            | ProcessResponseAs::Array { is_nullable }
+            | ProcessResponseAs::CommandResponse { is_nullable, .. } => *is_nullable,
             ProcessResponseAs::Aggregates { .. } => false,
         }
     }

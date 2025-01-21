@@ -10,7 +10,6 @@ bench = false
 [dependencies]
 json-ext = { path = "../utils/json-ext" }
 open-dds = { path = "../open-dds" }
-lang-graphql = { path = "../graphql/lang-graphql" }
 metadata-resolve = { path = "../metadata-resolve" }
 
 derive_more = { workspace = true }

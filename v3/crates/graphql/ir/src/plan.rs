@@ -23,8 +23,8 @@ use indexmap::IndexMap;
 use lang_graphql as gql;
 pub use metadata_resolve::Metadata;
 use plan_types::{
-    ExecutionTree, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
-    ProcessResponseAs, QueryExecutionPlan, UniqueNumber,
+    CommandReturnKind, ExecutionTree, NDCMutationExecution, NDCQueryExecution,
+    NDCSubscriptionExecution, ProcessResponseAs, QueryExecutionPlan, UniqueNumber,
 };
 use std::sync::Arc;
 pub use types::{
@@ -134,7 +134,12 @@ fn plan_mutation<'n, 's>(
             field_span_attribute: ir.command_info.field_name.to_string(),
             process_response_as: ProcessResponseAs::CommandResponse {
                 command_name: ir.command_info.command_name.clone(),
-                type_container: ir.command_info.type_container.clone(),
+                is_nullable: ir.command_info.type_container.nullable,
+                return_kind: if ir.command_info.type_container.is_list() {
+                    CommandReturnKind::Array
+                } else {
+                    CommandReturnKind::Object
+                },
                 response_config: ir.command_info.data_connector.response_config.clone(),
             },
         },
@@ -512,7 +517,12 @@ fn plan_query<'n, 's, 'ir>(
                     field_span_attribute: ir.command_info.field_name.to_string(),
                     process_response_as: ProcessResponseAs::CommandResponse {
                         command_name: ir.command_info.command_name.clone(),
-                        type_container: ir.command_info.type_container.clone(),
+                        is_nullable: ir.command_info.type_container.nullable,
+                        return_kind: if ir.command_info.type_container.is_list() {
+                            CommandReturnKind::Array
+                        } else {
+                            CommandReturnKind::Object
+                        },
                         response_config: ir.command_info.data_connector.response_config.clone(),
                     },
                 },

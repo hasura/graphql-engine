@@ -10,8 +10,8 @@ mod variable_name;
 
 pub use execution_plan::{
     AggregateFieldSelection, AggregateFieldsSelection, AggregateSelectionSet, Argument,
-    ExecutionTree, Field, FieldsSelection, JoinLocations, JoinNode, Location, LocationKind,
-    MutationArgument, MutationExecutionPlan, NDCMutationExecution, NDCQueryExecution,
+    CommandReturnKind, ExecutionTree, Field, FieldsSelection, JoinLocations, JoinNode, Location,
+    LocationKind, MutationArgument, MutationExecutionPlan, NDCMutationExecution, NDCQueryExecution,
     NDCSubscriptionExecution, NestedArray, NestedField, NestedObject, PredicateQueryTree,
     PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryNodeNew, Relationship,
     RelationshipArgument, RemoteJoin, RemoteJoinArgument, RemoteJoinType, RemotePredicateKey,

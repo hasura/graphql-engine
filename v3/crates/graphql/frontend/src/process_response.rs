@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use base64::{engine::general_purpose, Engine};
 use indexmap::IndexMap;
-use lang_graphql::ast::common::{self as ast, Alias, TypeContainer, TypeName};
+use lang_graphql::ast::common::{self as ast, Alias, TypeName};
 use lang_graphql::normalized_ast;
 use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
@@ -18,8 +18,8 @@ use graphql_ir::{global_id_col_format, GLOBAL_ID_VERSION};
 use graphql_schema::{AggregateOutputAnnotation, Annotation, GlobalID, OutputAnnotation, GDS};
 use metadata_resolve::data_connectors;
 use metadata_resolve::Qualified;
-use plan_types::ProcessResponseAs;
 use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
+use plan_types::{CommandReturnKind, ProcessResponseAs};
 
 trait KeyValueResponse {
     fn remove(&mut self, key: &str) -> Option<json::Value>;
@@ -194,6 +194,12 @@ where
                         OutputAnnotation::RelationshipToCommand(
                             command_relationship_annotation,
                         ) => {
+                            let is_nullable = field.type_container.nullable;
+                            let return_kind = if field.type_container.is_list() {
+                                CommandReturnKind::Array
+                            } else {
+                                CommandReturnKind::Object
+                            };
                             let field_json_value_result = row
                                 .remove(field.alias.0.as_str())
                                 .ok_or_else(|| execute::NDCUnexpectedError::BadNDCResponse {
@@ -213,7 +219,8 @@ where
                                         &command_relationship_annotation.command_name,
                                         rows_set.rows,
                                         &field.selection_set,
-                                        &field.type_container,
+                                        is_nullable,
+                                        return_kind,
                                         response_config,
                                     )
                                     .map(|v| match v {
@@ -312,7 +319,8 @@ pub fn process_command_rows(
     command_name: &Qualified<CommandName>,
     rows: Option<Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue, RandomState>>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    type_container: &TypeContainer<TypeName>,
+    is_nullable: bool,
+    return_kind: CommandReturnKind,
     response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<Option<ProcessedResponse>, execute::FieldError> {
     match rows {
@@ -337,7 +345,8 @@ pub fn process_command_rows(
                     process_command_response_row(
                         row,
                         selection_set,
-                        type_container,
+                        is_nullable,
+                        return_kind,
                         response_config,
                     )
                 })
@@ -350,7 +359,8 @@ pub fn process_command_rows(
 fn process_command_response_row(
     mut row: IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    type_container: &TypeContainer<TypeName>,
+    is_nullable: bool,
+    return_kind: CommandReturnKind,
     response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<ProcessedResponse, execute::FieldError> {
     let field_value_result = row
@@ -363,7 +373,8 @@ fn process_command_response_row(
     let field_result = process_command_field_value(
         ndc_result.response,
         selection_set,
-        type_container,
+        is_nullable,
+        return_kind,
         response_config,
     )?;
     Ok(ProcessedResponse {
@@ -375,7 +386,8 @@ fn process_command_response_row(
 fn process_command_field_value(
     field_value_result: serde_json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    type_container: &TypeContainer<TypeName>,
+    is_nullable: bool,
+    return_kind: CommandReturnKind,
     response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<json::Value, execute::FieldError> {
     // When no selection set for commands, return back the value from the
@@ -389,7 +401,7 @@ fn process_command_field_value(
         // value.
         match field_value_result {
             json::Value::Null => {
-                if type_container.nullable {
+                if is_nullable {
                     Ok(json::Value::Null)
                 } else {
                     Err(execute::NDCUnexpectedError::BadNDCResponse {
@@ -397,12 +409,11 @@ fn process_command_field_value(
                     })?
                 }
             }
-            json::Value::Object(result_map) => {
-                if type_container.is_list() {
-                    Err(execute::NDCUnexpectedError::BadNDCResponse {
-                        summary: "Unable to parse response from NDC, object value expected".into(),
-                    })?
-                } else {
+            json::Value::Object(result_map) => match return_kind {
+                CommandReturnKind::Array => Err(execute::NDCUnexpectedError::BadNDCResponse {
+                    summary: "Unable to parse response from NDC, object value expected".into(),
+                })?,
+                CommandReturnKind::Object => {
                     let index_map: IndexMap<ndc_models::FieldName, json::Value> =
                         json::from_value(json::Value::Object(result_map))?;
                     let value = process_single_query_response_row(
@@ -412,9 +423,9 @@ fn process_command_field_value(
                     )?;
                     Ok(json::to_value(value)?)
                 }
-            }
-            json::Value::Array(values) => {
-                if type_container.is_list() {
+            },
+            json::Value::Array(values) => match return_kind {
+                CommandReturnKind::Array => {
                     let array_values: Vec<IndexMap<ndc_models::FieldName, json::Value>> =
                         json::from_value(json::Value::Array(values))?;
 
@@ -425,13 +436,11 @@ fn process_command_field_value(
                         )?;
 
                     Ok(json::to_value(r)?)
-                } else {
-                    Err(execute::NDCUnexpectedError::BadNDCResponse {
-                        summary: "Unable to parse response from NDC, array value expected"
-                            .to_string(),
-                    })?
                 }
-            }
+                CommandReturnKind::Object => Err(execute::NDCUnexpectedError::BadNDCResponse {
+                    summary: "Unable to parse response from NDC, object value expected".to_string(),
+                })?,
+            },
             _ => Err(execute::NDCUnexpectedError::BadNDCResponse {
                 summary:
                     "Unable to parse response from NDC, either null, object or array value expected"
@@ -535,14 +544,16 @@ pub fn process_response(
                 }
                 ProcessResponseAs::CommandResponse {
                     command_name,
-                    type_container,
+                    is_nullable,
+                    return_kind,
                     response_config,
                 } => {
                     let result = process_command_rows(
                         command_name,
                         row_set.rows,
                         selection_set,
-                        type_container,
+                        *is_nullable,
+                        *return_kind,
                         response_config.as_ref(),
                     )?;
                     match result {
@@ -569,7 +580,8 @@ pub fn process_response(
 pub fn process_command_mutation_response(
     mutation_result: ndc_models::MutationOperationResults,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    type_container: &TypeContainer<TypeName>,
+    is_nullable: bool,
+    return_kind: CommandReturnKind,
     response_config: Option<&Arc<data_connectors::CommandsResponseConfig>>,
 ) -> Result<ProcessedResponse, execute::FieldError> {
     match mutation_result {
@@ -578,7 +590,8 @@ pub fn process_command_mutation_response(
             let field_result = process_command_field_value(
                 ndc_result.response,
                 selection_set,
-                type_container,
+                is_nullable,
+                return_kind,
                 response_config,
             )?;
             Ok(ProcessedResponse {
@@ -616,12 +629,14 @@ pub fn process_mutation_response(
             match process_response_as {
                 ProcessResponseAs::CommandResponse {
                     command_name: _,
-                    type_container,
+                    is_nullable,
+                    return_kind,
                     response_config,
                 } => process_command_mutation_response(
                     mutation_results,
                     selection_set,
-                    type_container,
+                    *is_nullable,
+                    *return_kind,
                     response_config.as_ref(),
                 ),
                 _ => Err(execute::FieldInternalError::InternalGeneric {
