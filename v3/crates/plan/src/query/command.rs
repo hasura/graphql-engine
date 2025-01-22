@@ -79,6 +79,8 @@ fn from_command_output_type(
     request_headers: &reqwest::header::HeaderMap,
     command_source: &metadata_resolve::CommandSource,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    remote_join_executions: &mut JoinLocations,
+    remote_predicates: &mut PredicateQueryTrees,
     unique_number: &mut UniqueNumber,
 ) -> Result<
     (
@@ -97,6 +99,8 @@ fn from_command_output_type(
             request_headers,
             command_source,
             relationships,
+            remote_join_executions,
+            remote_predicates,
             unique_number,
         ),
         OutputShape::Object {
@@ -117,6 +121,8 @@ fn from_command_output_type(
                 &command_source.data_connector,
                 command_selection_set,
                 relationships,
+                remote_join_executions,
+                remote_predicates,
                 unique_number,
             )?;
 
@@ -154,6 +160,8 @@ pub(crate) fn from_command_selection(
 ) -> Result<FromCommand, PlanError> {
     let mut relationships = BTreeMap::new();
     let mut usage_counts = plan_types::UsagesCounts::default();
+    let mut remote_join_executions = JoinLocations::new();
+    let mut remote_predicates = PredicateQueryTrees::new();
 
     let output_shape = return_type_shape(&command.command.output_type, metadata)?;
     let (ndc_fields, extract_response_from) = from_command_output_type(
@@ -164,6 +172,8 @@ pub(crate) fn from_command_selection(
         request_headers,
         command_source,
         &mut relationships,
+        &mut remote_join_executions,
+        &mut remote_predicates,
         unique_number,
     )?;
 
@@ -202,8 +212,8 @@ pub(crate) fn from_command_selection(
 
     let command_plan = match &command_source.source {
         DataConnectorCommand::Function(function_name) => CommandPlan::Function(ExecutionTree {
-            remote_predicates: PredicateQueryTrees::new(),
-            remote_join_executions: JoinLocations::new(),
+            remote_predicates,
+            remote_join_executions,
             query_execution_plan: QueryExecutionPlan {
                 query_node: QueryNodeNew {
                     fields: Some(plan_types::FieldsSelection {
@@ -246,7 +256,6 @@ pub(crate) fn from_command_selection(
                     })
                     .collect(),
                 procedure_fields: Some(wrap_procedure_ndc_fields(&output_shape, ndc_fields)),
-
                 collection_relationships: relationships.clone(),
                 data_connector: command_source.data_connector.clone(),
             })

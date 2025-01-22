@@ -41,6 +41,14 @@ pub enum RelationshipError {
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
     },
+    #[error("Missing NDC column name in relationship {relationship_name} in the mapping between source field {source_field} and target field {target_field}")]
+    MissingTargetColumn {
+        relationship_name: RelationshipName,
+        source_field: FieldName,
+        target_field: FieldName,
+    },
+    #[error("{0}")]
+    RelationshipFieldMappingError(#[from] metadata_resolve::RelationshipFieldMappingError),
     #[error("{0}")]
     Other(String),
 }

@@ -206,7 +206,7 @@ fn test_relationships_model_to_model_across_namespace() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -285,7 +285,7 @@ fn test_remote_relationships_model_to_model_array() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

@@ -270,6 +270,9 @@ pub fn from_model_selection(
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<ExecutionTree, PlanError> {
+    let mut remote_predicates = PredicateQueryTrees::new();
+    let mut remote_join_executions = JoinLocations::new();
+
     let model_target = &model_selection.target;
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
@@ -308,6 +311,8 @@ pub fn from_model_selection(
         &model_source.data_connector,
         &model_selection.selection,
         &mut relationships,
+        &mut remote_join_executions,
+        &mut remote_predicates,
         unique_number,
     )?;
 
@@ -356,7 +361,7 @@ pub fn from_model_selection(
 
     Ok(ExecutionTree {
         query_execution_plan,
-        remote_predicates: PredicateQueryTrees::new(),
-        remote_join_executions: JoinLocations::new(),
+        remote_predicates,
+        remote_join_executions,
     })
 }
