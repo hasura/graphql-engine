@@ -192,6 +192,7 @@ pub fn select_many_generate_ir<'n, 's>(
                     )
                 })
                 .transpose()?;
+
             let order_by = match order_by_input {
                 None => vec![],
                 Some(order_by_input) => build_order_by_open_dd_ir(

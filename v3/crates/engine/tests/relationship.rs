@@ -53,7 +53,7 @@ fn test_local_relationships_model_to_model_array() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, common_metadata_graphql_config],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -307,7 +307,7 @@ fn test_remote_relationships_model_to_command_array() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -322,7 +322,7 @@ fn test_remote_relationships_model_to_multiple_commands_not_nested() -> anyhow::
     common::test_execution_expectation(
         test_path_string,
         &[multiple_commands_metadata, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -364,7 +364,7 @@ fn test_remote_mutually_recursive_relationships_model_to_command() -> anyhow::Re
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -375,7 +375,7 @@ fn test_remote_relationships_model_to_model_array_with_arguments() -> anyhow::Re
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -408,7 +408,7 @@ fn test_remote_relationships_model_to_command_remote_in_local() -> anyhow::Resul
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -452,7 +452,7 @@ fn test_relationships_permissions_target_model_type_permission() -> anyhow::Resu
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -463,7 +463,7 @@ fn test_relationships_permissions_source_type_permission() -> anyhow::Result<()>
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -474,7 +474,7 @@ fn test_relationships_nested_selection() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -505,7 +505,7 @@ fn test_relationships_permissions_target_model_type_field_not_selectable() -> an
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -517,7 +517,7 @@ fn test_relationships_permissions_target_model_not_selectable() -> anyhow::Resul
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -541,12 +541,12 @@ fn test_relationships_with_same_name() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
 #[test]
 fn test_relationship_with_no_relationship_capability() -> anyhow::Result<()> {
     let test_path_string: &str = "execute/relationships/no_relationship_capability";
-    common::test_execution_expectation(test_path_string, &[], common::TestOpenDDPipeline::Skip)
+    common::test_execution_expectation(test_path_string, &[], common::TestOpenDDPipeline::YesPlease)
 }

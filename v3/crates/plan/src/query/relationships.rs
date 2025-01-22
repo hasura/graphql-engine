@@ -1,16 +1,20 @@
 use crate::types::{PlanError, RelationshipError};
 use indexmap::IndexMap;
-use metadata_resolve::{Qualified, RelationshipModelMapping, TypeMapping};
+use metadata_resolve::{
+    Qualified, RelationshipCommandMapping, RelationshipModelMapping, TypeMapping,
+};
 use open_dds::{
+    arguments::ArgumentName,
+    commands::CommandName,
     data_connector::{CollectionName, DataConnectorColumnName},
-    query::{Alias, ModelSelection, ObjectSubSelection},
+    query::{Alias, CommandSelection, ModelSelection, ObjectSubSelection},
     relationships::{RelationshipName, RelationshipType},
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use plan_types::{
-    ComparisonTarget, ComparisonValue, Field, LocalCommandRelationshipInfo, LocalFieldComparison,
-    LocalModelRelationshipInfo, NdcFieldAlias, Relationship, ResolvedFilterExpression,
-    SourceFieldAlias, TargetField, VariableName,
+    Argument, ComparisonTarget, ComparisonValue, Field, LocalCommandRelationshipInfo,
+    LocalFieldComparison, LocalModelRelationshipInfo, NdcFieldAlias, Relationship,
+    ResolvedFilterExpression, SourceFieldAlias, TargetField, VariableName,
 };
 use std::collections::{BTreeMap, HashMap};
 
@@ -137,7 +141,88 @@ pub fn process_command_relationship_definition(
     Ok(relationship)
 }
 
-pub struct RemoteRelationshipParts {
+pub struct CommandRemoteRelationshipParts {
+    pub join_mapping: HashMap<FieldName, (SourceFieldAlias, TargetField)>,
+    pub phantom_fields: BTreeMap<NdcFieldAlias, Field>,
+    pub arguments: IndexMap<DataConnectorArgumentName, Argument>,
+}
+
+pub fn calculate_remote_relationship_fields_for_command_target(
+    object_type_name: &Qualified<CustomTypeName>,
+    relationship_name: &RelationshipName,
+    command_name: &Qualified<CommandName>,
+    relationship_command_mappings: &Vec<RelationshipCommandMapping>,
+    source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    relationship_target_command_selection: &CommandSelection,
+    target_argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
+) -> Result<CommandRemoteRelationshipParts, RelationshipError> {
+    let mut join_mapping = HashMap::new();
+    let mut phantom_fields = BTreeMap::new();
+    let mut arguments = IndexMap::new();
+
+    for metadata_resolve::RelationshipCommandMapping {
+        source_field,
+        argument_name,
+    } in relationship_command_mappings
+    {
+        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+            source_type_mappings,
+            object_type_name,
+            relationship_name,
+            &source_field.field_name,
+        )
+        .map_err(RelationshipError::RelationshipFieldMappingError)?;
+
+        if let Some(selection) = &relationship_target_command_selection.selection {
+            let ProcessedRemoteRelationship {
+                source_field_alias: ndc_field_alias,
+                field: processed_field,
+            } = process_remote_relationship_field_mapping(selection, &source_column.column);
+
+            if let Some((ndc_field_alias, processed_field)) = processed_field {
+                phantom_fields.insert(ndc_field_alias, processed_field);
+            }
+
+            // add argument referencing variable
+            let target_value_variable = VariableName(format!("${}", argument_name.as_str()));
+
+            let data_connector_argument_name =
+                target_argument_mappings.get(argument_name).ok_or_else(|| {
+                    RelationshipError::MissingArgumentMappingInCommandRelationship {
+                        source_type: object_type_name.clone(),
+                        relationship_name: relationship_name.clone(),
+                        command_name: command_name.clone(),
+                        argument_name: argument_name.clone(),
+                    }
+                })?;
+
+            // collect these as we go
+            arguments.insert(
+                data_connector_argument_name.clone(),
+                Argument::Variable {
+                    name: target_value_variable,
+                },
+            );
+
+            // add join mapping
+            join_mapping.insert(
+                source_field.field_name.clone(),
+                (
+                    ndc_field_alias,
+                    TargetField::CommandField(argument_name.clone()),
+                ),
+            );
+        }
+    }
+
+    Ok(CommandRemoteRelationshipParts {
+        join_mapping,
+        phantom_fields,
+        arguments,
+    })
+}
+
+pub struct ModelRemoteRelationshipParts {
     pub join_mapping: HashMap<FieldName, (SourceFieldAlias, TargetField)>,
     pub phantom_fields: BTreeMap<NdcFieldAlias, Field>,
     pub relationship_join_filter_expressions: Vec<ResolvedFilterExpression>,
@@ -149,7 +234,7 @@ pub fn calculate_remote_relationship_fields_for_model_target(
     relationship_model_mappings: &Vec<RelationshipModelMapping>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     relationship_target_model_selection: &ModelSelection,
-) -> Result<RemoteRelationshipParts, RelationshipError> {
+) -> Result<ModelRemoteRelationshipParts, RelationshipError> {
     let mut join_mapping = HashMap::new();
     let mut phantom_fields = BTreeMap::new();
     let mut relationship_join_filter_expressions = vec![];
@@ -220,7 +305,7 @@ pub fn calculate_remote_relationship_fields_for_model_target(
         ));
     }
 
-    Ok(RemoteRelationshipParts {
+    Ok(ModelRemoteRelationshipParts {
         join_mapping,
         phantom_fields,
         relationship_join_filter_expressions,

@@ -47,6 +47,8 @@ pub enum RelationshipError {
         source_field: FieldName,
         target_field: FieldName,
     },
+    #[error("Procedure relationships are not supported: {relationship_name}")]
+    ProcedureRelationshipsNotSupported { relationship_name: RelationshipName },
     #[error("{0}")]
     RelationshipFieldMappingError(#[from] metadata_resolve::RelationshipFieldMappingError),
     #[error("{0}")]
