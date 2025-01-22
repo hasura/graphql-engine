@@ -7,7 +7,6 @@ use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
     data_connector::{CollectionName, DataConnectorColumnName},
-    query::{Alias, CommandSelection, ModelSelection, ObjectSubSelection},
     relationships::{RelationshipName, RelationshipType},
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
@@ -153,7 +152,6 @@ pub fn calculate_remote_relationship_fields_for_command_target(
     command_name: &Qualified<CommandName>,
     relationship_command_mappings: &Vec<RelationshipCommandMapping>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    relationship_target_command_selection: &CommandSelection,
     target_argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
 ) -> Result<CommandRemoteRelationshipParts, RelationshipError> {
     let mut join_mapping = HashMap::new();
@@ -173,46 +171,42 @@ pub fn calculate_remote_relationship_fields_for_command_target(
         )
         .map_err(RelationshipError::RelationshipFieldMappingError)?;
 
-        if let Some(selection) = &relationship_target_command_selection.selection {
-            let ProcessedRemoteRelationship {
-                source_field_alias: ndc_field_alias,
-                field: processed_field,
-            } = process_remote_relationship_field_mapping(selection, &source_column.column);
+        let ProcessedRemoteRelationship {
+            source_field_alias: ndc_field_alias,
+            field: processed_field,
+        } = process_remote_relationship_field_mapping(&source_column.column);
 
-            if let Some((ndc_field_alias, processed_field)) = processed_field {
-                phantom_fields.insert(ndc_field_alias, processed_field);
-            }
+        phantom_fields.insert(processed_field.0, processed_field.1);
 
-            // add argument referencing variable
-            let target_value_variable = VariableName(format!("${}", argument_name.as_str()));
+        // add argument referencing variable
+        let target_value_variable = VariableName(format!("${}", argument_name.as_str()));
 
-            let data_connector_argument_name =
-                target_argument_mappings.get(argument_name).ok_or_else(|| {
-                    RelationshipError::MissingArgumentMappingInCommandRelationship {
-                        source_type: object_type_name.clone(),
-                        relationship_name: relationship_name.clone(),
-                        command_name: command_name.clone(),
-                        argument_name: argument_name.clone(),
-                    }
-                })?;
+        let data_connector_argument_name =
+            target_argument_mappings.get(argument_name).ok_or_else(|| {
+                RelationshipError::MissingArgumentMappingInCommandRelationship {
+                    source_type: object_type_name.clone(),
+                    relationship_name: relationship_name.clone(),
+                    command_name: command_name.clone(),
+                    argument_name: argument_name.clone(),
+                }
+            })?;
 
-            // collect these as we go
-            arguments.insert(
-                data_connector_argument_name.clone(),
-                Argument::Variable {
-                    name: target_value_variable,
-                },
-            );
+        // collect these as we go
+        arguments.insert(
+            data_connector_argument_name.clone(),
+            Argument::Variable {
+                name: target_value_variable,
+            },
+        );
 
-            // add join mapping
-            join_mapping.insert(
-                source_field.field_name.clone(),
-                (
-                    ndc_field_alias,
-                    TargetField::CommandField(argument_name.clone()),
-                ),
-            );
-        }
+        // add join mapping
+        join_mapping.insert(
+            source_field.field_name.clone(),
+            (
+                ndc_field_alias,
+                TargetField::CommandField(argument_name.clone()),
+            ),
+        );
     }
 
     Ok(CommandRemoteRelationshipParts {
@@ -233,7 +227,6 @@ pub fn calculate_remote_relationship_fields_for_model_target(
     relationship_name: &RelationshipName,
     relationship_model_mappings: &Vec<RelationshipModelMapping>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    relationship_target_model_selection: &ModelSelection,
 ) -> Result<ModelRemoteRelationshipParts, RelationshipError> {
     let mut join_mapping = HashMap::new();
     let mut phantom_fields = BTreeMap::new();
@@ -256,14 +249,9 @@ pub fn calculate_remote_relationship_fields_for_model_target(
         let ProcessedRemoteRelationship {
             source_field_alias: ndc_field_alias,
             field: processed_field,
-        } = process_remote_relationship_field_mapping(
-            &relationship_target_model_selection.selection,
-            &source_column.column,
-        );
+        } = process_remote_relationship_field_mapping(&source_column.column);
 
-        if let Some((ndc_field_alias, processed_field)) = processed_field {
-            phantom_fields.insert(ndc_field_alias, processed_field);
-        }
+        phantom_fields.insert(processed_field.0, processed_field.1);
 
         let target_ndc_column =
             target_ndc_column
@@ -314,55 +302,25 @@ pub fn calculate_remote_relationship_fields_for_model_target(
 
 struct ProcessedRemoteRelationship {
     source_field_alias: SourceFieldAlias,
-    field: Option<(NdcFieldAlias, Field)>,
+    field: (NdcFieldAlias, Field),
 }
 
 /// Processes a remote relationship field mapping, and returns the alias used in
 /// the NDC IR for that field
-///
-/// - if the selection set DOES NOT contain the field, insert it into the NDC IR
-///   (with an internal alias), and return the alias
-/// - if the selection set already contains the field, do not insert the field
-///   in NDC IR, and return the existing alias
-///
-/// TODO: I don't think looking in selection_fields will ever find anything, we can probably
-/// simplify this, let's do this once more tests are passing though
 fn process_remote_relationship_field_mapping(
-    selection_fields: &IndexMap<Alias, ObjectSubSelection>,
     ndc_column_name: &DataConnectorColumnName,
 ) -> ProcessedRemoteRelationship {
-    let found = selection_fields
-        .iter()
-        .find_map(|(alias, field)| match field {
-            ObjectSubSelection::Field(column) => {
-                if column.target.field_name.as_str() == ndc_column_name.as_str() {
-                    Some(alias.clone())
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        });
-
-    match found {
-        None => {
-            let internal_alias = make_hasura_phantom_field(ndc_column_name);
-            ProcessedRemoteRelationship {
-                source_field_alias: SourceFieldAlias(internal_alias.clone()),
-                field: Some((
-                    NdcFieldAlias::from(internal_alias.as_str()),
-                    Field::Column {
-                        column: ndc_column_name.clone(),
-                        fields: None,
-                        arguments: BTreeMap::new(),
-                    },
-                )),
-            }
-        }
-        Some(field_alias) => ProcessedRemoteRelationship {
-            source_field_alias: SourceFieldAlias(field_alias.as_str().to_owned()),
-            field: None,
-        },
+    let internal_alias = make_hasura_phantom_field(ndc_column_name);
+    ProcessedRemoteRelationship {
+        source_field_alias: SourceFieldAlias(internal_alias.clone()),
+        field: (
+            NdcFieldAlias::from(internal_alias.as_str()),
+            Field::Column {
+                column: ndc_column_name.clone(),
+                fields: None,
+                arguments: BTreeMap::new(),
+            },
+        ),
     }
 }
 

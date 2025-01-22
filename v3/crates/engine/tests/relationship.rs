@@ -218,7 +218,7 @@ fn test_relationships_command_to_model_across_namespace() -> anyhow::Result<()> 
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -230,7 +230,7 @@ fn test_relationships_command_to_command_across_namespace() -> anyhow::Result<()
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -250,7 +250,7 @@ fn test_remote_mutually_recursive_relationships_to_command_across_namespace() ->
                 vec!["execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v02.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
 
     )
 }
@@ -263,7 +263,7 @@ fn test_remote_relationships_remote_object_in_local_array_1() -> anyhow::Result<
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -274,7 +274,7 @@ fn test_remote_relationships_remote_object_in_local_array_2() -> anyhow::Result<
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -337,7 +337,7 @@ fn test_remote_relationships_model_to_multiple_commands_nested() -> anyhow::Resu
     common::test_execution_expectation(
         test_path_string,
         &[multiple_commands_metadata, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -352,7 +352,7 @@ fn test_remote_relationships_model_to_multiple_commands_very_nested() -> anyhow:
     common::test_execution_expectation(
         test_path_string,
         &[multiple_commands_metadata, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -386,7 +386,7 @@ fn test_remote_relationships_remote_in_local() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

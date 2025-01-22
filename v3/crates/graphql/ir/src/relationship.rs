@@ -190,8 +190,6 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
         order_by,
     };
 
-    // we're not worrying about local / remote relationships at this point, we'll see if that's
-    // the thing to do
     let relationship_selection = open_dds::query::RelationshipSelection {
         selection: Some(selection),
         target,

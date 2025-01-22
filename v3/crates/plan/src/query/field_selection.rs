@@ -28,8 +28,8 @@ use open_dds::{
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use plan_types::{
-    CommandReturnKind, ExecutionTree, Field, JoinLocations, JoinNode, Location, NdcFieldAlias,
-    NestedArray, NestedField, NestedObject, PredicateQueryTrees, ProcessResponseAs,
+    CommandReturnKind, ExecutionTree, Field, JoinLocations, JoinNode, Location, LocationKind,
+    NdcFieldAlias, NestedArray, NestedField, NestedObject, PredicateQueryTrees, ProcessResponseAs,
     QueryExecutionPlan, RemoteJoin, RemoteJoinType, ResolvedFilterExpression, UniqueNumber,
 };
 
@@ -451,7 +451,6 @@ fn from_model_relationship(
                 relationship_name,
                 &model_relationship_target.mappings,
                 source_type_mappings,
-                &relationship_target_model_selection,
             )
             .map_err(PlanError::Relationship)?;
 
@@ -535,10 +534,14 @@ fn from_model_relationship(
             // Collect relationships from the generated query above
             collect_relationships.append(&mut ndc_relationships);
 
-            // Collect remote joins
-            remote_join_executions
-                .locations
-                .extend(new_remote_join_executions.locations);
+            // Collect remote joins, adding local relationship context to them
+            remote_join_executions.locations.insert(
+                relationship_name.to_string(),
+                Location {
+                    join_node: JoinNode::Local(LocationKind::LocalRelationship),
+                    rest: new_remote_join_executions,
+                },
+            );
 
             // Collect remote predicates
             remote_predicates.0.extend(new_remote_predicates.0);
@@ -662,7 +665,6 @@ fn from_command_relationship(
                 command_name,
                 &command_relationship_target.mappings,
                 source_type_mappings,
-                &command_selection,
                 &command_source.argument_mappings,
             )
             .map_err(PlanError::Relationship)?;
@@ -763,9 +765,15 @@ fn from_command_relationship(
             // collect all relationships / joins etc
             collect_relationships.append(&mut ndc_relationships);
             remote_predicates.0.extend(new_remote_predicates.0);
-            remote_join_executions
-                .locations
-                .extend(new_remote_join_executions.locations);
+
+            // Collect any remote joins, adding local relationship context
+            remote_join_executions.locations.insert(
+                relationship_name.to_string(),
+                Location {
+                    join_node: JoinNode::Local(LocationKind::LocalRelationship),
+                    rest: new_remote_join_executions,
+                },
+            );
 
             let ndc_field = Field::Relationship {
                 relationship: ndc_relationship_name,

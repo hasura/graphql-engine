@@ -164,6 +164,7 @@ pub(crate) fn from_command_selection(
     let mut remote_predicates = PredicateQueryTrees::new();
 
     let output_shape = return_type_shape(&command.command.output_type, metadata)?;
+
     let (ndc_fields, extract_response_from) = from_command_output_type(
         &output_shape,
         command_selection,
@@ -197,6 +198,7 @@ pub(crate) fn from_command_selection(
         &command_source.type_mappings,
         &command_source.data_connector,
     )?;
+
     // add any preset arguments from model permissions
     let unresolved_arguments = process_argument_presets_for_command(
         unresolved_arguments,
