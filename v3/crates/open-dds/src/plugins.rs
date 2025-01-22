@@ -256,6 +256,9 @@ pub struct LifecyclePreRoutePluginHookConfig {
     pub match_methods: Vec<LifecyclePreRoutePluginHookIncomingHTTPMethod>,
     /// Configuration for the request to the lifecycle plugin hook.
     pub request: LifecyclePreRoutePluginHookConfigRequest,
+    #[serde(default)]
+    /// Configuration for the response to the lifecycle plugin hook.
+    pub response: Option<LifecyclePreRoutePluginHookConfigResponse>,
 }
 
 #[derive(
@@ -301,6 +304,18 @@ pub struct PreRouteRequestConfig {
     pub query: Option<LeafConfig>,
     /// Configuration for adding/excluding the body of the incoming request
     pub body: Option<LeafConfig>,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreRoutePluginHookConfigResponse")]
+/// Configuration for a lifecycle plugin hook response.
+pub struct LifecyclePreRoutePluginHookConfigResponse {
+    /// Configuration for the headers in the response from the engine.
+    pub headers: Option<LifecyclePluginHookHeadersConfig>,
 }
 
 #[test]

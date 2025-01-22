@@ -31,6 +31,10 @@ pub enum Error {
     PluginRequestParseError(serde_json::error::Error),
     #[error("HTTP method {0} not supported")]
     UnsupportedHTTPMethod(String),
+    #[error("Invalid header name {0}")]
+    InvalidHeaderName(String),
+    #[error("Invalid header value {0}")]
+    InvalidHeaderValue(String),
     #[error("Not found")]
     NotFound,
 }
@@ -96,7 +100,7 @@ impl IntoResponse for ErrorResponse {
 
 #[derive(Debug, Clone)]
 pub enum PreRoutePluginResponse {
-    Return(Vec<u8>),
+    Return(Vec<u8>, HeaderMap),
     ReturnError {
         plugin_name: String,
         error: ErrorResponse,
@@ -133,7 +137,7 @@ impl Traceable for PreRoutePluginResponse {
                 plugin_name: _,
                 error,
             } => Some(error.clone()),
-            PreRoutePluginResponse::Return(_) => None,
+            PreRoutePluginResponse::Return(..) => None,
         }
     }
 }
@@ -141,11 +145,18 @@ impl Traceable for PreRoutePluginResponse {
 impl IntoResponse for PreRoutePluginResponse {
     fn into_response(self) -> axum::response::Response {
         match self {
-            PreRoutePluginResponse::Return(body) => axum::response::Response::builder()
-                .status(StatusCode::OK)
-                .header("content-type", "application/json")
-                .body(axum::body::Body::from(body))
-                .unwrap(),
+            PreRoutePluginResponse::Return(body, headers) => {
+                let mut response_builder = axum::response::Response::builder();
+                for (key, value) in headers {
+                    if let Some(key) = key {
+                        response_builder = response_builder.header(key, value);
+                    }
+                }
+                response_builder
+                    .status(StatusCode::OK)
+                    .body(axum::body::Body::from(body))
+                    .unwrap()
+            }
             PreRoutePluginResponse::ReturnError {
                 plugin_name: _,
                 error,
@@ -284,8 +295,32 @@ pub async fn execute_plugin(
         .await?;
     match response.status() {
         reqwest::StatusCode::OK => {
+            let response_headers = response.headers().clone();
             let body = response.bytes().await.map_err(Error::ReqwestError)?;
-            Ok(PreRoutePluginResponse::Return(body.to_vec()))
+            let mut headers = HeaderMap::new();
+            if let Some(response_config) = &plugin.config.response {
+                if let Some(header_config) = &response_config.headers {
+                    if let Some(additional_headers) = &header_config.additional {
+                        for (key, value) in &additional_headers.0 {
+                            let header_name = HeaderName::from_str(key)
+                                .map_err(|_| Error::InvalidHeaderName(key.clone()))?;
+                            let header_value = value
+                                .value
+                                .parse()
+                                .map_err(|_| Error::InvalidHeaderValue(value.value.clone()))?;
+                            headers.insert(header_name, header_value);
+                        }
+                    }
+                    for header in &header_config.forward {
+                        if let Some(header_value) = response_headers.get(header) {
+                            let header_name = HeaderName::from_str(header)
+                                .map_err(|_| Error::InvalidHeaderName(header.to_string()))?;
+                            headers.insert(header_name, header_value.clone());
+                        }
+                    }
+                }
+            }
+            Ok(PreRoutePluginResponse::Return(body.to_vec(), headers))
         }
         reqwest::StatusCode::INTERNAL_SERVER_ERROR => {
             let body = response.json().await.map_err(Error::ReqwestError)?;

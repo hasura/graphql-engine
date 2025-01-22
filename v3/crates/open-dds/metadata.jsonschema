@@ -2358,6 +2358,18 @@
               "$ref": "#/definitions/LifecyclePreRoutePluginHookConfigRequest"
             }
           ]
+        },
+        "response": {
+          "description": "Configuration for the response to the lifecycle plugin hook.",
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreRoutePluginHookConfigResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -2406,6 +2418,26 @@
         "GET",
         "POST"
       ]
+    },
+    "LifecyclePreRoutePluginHookConfigResponse": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreRoutePluginHookConfigResponse",
+      "title": "LifecyclePreRoutePluginHookConfigResponse",
+      "description": "Configuration for a lifecycle plugin hook response.",
+      "type": "object",
+      "properties": {
+        "headers": {
+          "description": "Configuration for the headers in the response from the engine.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LifecyclePluginHookHeadersConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "LifecyclePreRoutePluginHookIncomingHTTPMethod": {
       "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreRoutePluginHookIncomingHTTPMethod",
