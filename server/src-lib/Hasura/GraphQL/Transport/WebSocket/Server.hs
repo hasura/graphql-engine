@@ -556,6 +556,25 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                 $ "Client exception: "
                 <> show e
               throwIO e,
+            Handler $ \case
+              -- This represents a clean shutdown at the websocket layer by client, without a
+              -- graceful 'Complete' message at the graphql-ws layer. Raised from receiveData.
+              -- This might get raised if Presumably we have correctly cleaned up by this point:
+              WS.CloseRequest {} -> pure ()
+              -- This is quite common, and easy to induce with `websocat --no-close` and CTRL-C
+              WS.ConnectionClosed ->
+                writeLog
+                  $ L.UnstructuredLog L.LevelDebug
+                  $ fromString
+                  $ "Websocket client closed without sending the proper close control messages"
+              -- I haven't observed these, so make them INFO-level
+              e ->
+                writeLog
+                  $ L.UnstructuredLog L.LevelInfo
+                  $ fromString
+                  $ "A Websocket client may be misbehaving. This was raised while handling the connection: "
+                  <> show e,
+            -- Anything not caught above will be re-raised:
             Handler $ \(e :: SomeException) -> do
               writeLog
                 $ L.UnstructuredLog L.LevelError
