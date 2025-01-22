@@ -75,13 +75,17 @@ stop-docker:
 test *ARGS: start-docker-test-deps
     #!/usr/bin/env bash
     if command -v cargo-nextest; then
-      COMMAND=(cargo nextest run)
+      # make sure to run doctests too. See: https://github.com/nextest-rs/nextest/issues/16
+      cargo nextest run --no-fail-fast "$@" &&\
+      cargo test --doc --no-fail-fast "$@"
     else
-      COMMAND=(cargo test)
+      # Let's just standardize on this, since it's the configuration we
+      # run in CI
+      echo "Please 'cargo install cargo-nextest' and re-run this."
+      echo "At least on linux it is much faster than just 'cargo test'"
+      echo "If you're on mac you can speed things up with: https://nexte.st/docs/installation/macos/"
+      exit 1
     fi
-    COMMAND+=(--no-fail-fast "$@")
-    echo "${COMMAND[*]}"
-    "${COMMAND[@]}"
 
 # run a watch process that runs the tests locally
 watch: start-docker-test-deps start-docker-run-deps
