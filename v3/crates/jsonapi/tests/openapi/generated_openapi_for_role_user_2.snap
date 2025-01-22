@@ -62,6 +62,18 @@ expression: generated_openapi
               "example": "Author,AuthorFromCommand"
             },
             {
+              "name": "filter",
+              "in": "query",
+              "description": "Filter expression for Articles",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/default_article_bool_exp"
+                  }
+                }
+              }
+            },
+            {
               "name": "fields[Article]",
               "in": "query",
               "description": "Optional list of fields from Article type to include in response. If no fields are provided, all fields are returned",
@@ -296,6 +308,75 @@ expression: generated_openapi
               "type": "object"
             }
           }
+        },
+        "default_article_bool_exp": {
+          "title": "default_article_bool_exp",
+          "description": "Filter expression for Articles",
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/default_article_bool_exp"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/default_article_bool_exp"
+              }
+            },
+            "article_id": {
+              "title": "article_id",
+              "description": "Filter expression for filtering on article_id",
+              "type": "object"
+            },
+            "author_id": {
+              "title": "author_id",
+              "description": "Filter expression for filtering on author_id",
+              "type": "object",
+              "properties": {
+                "$_eq": {}
+              }
+            },
+            "title": {
+              "title": "title",
+              "description": "Filter expression for filtering on title",
+              "type": "object",
+              "properties": {
+                "$_like": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "oneOf": [
+            {
+              "required": [
+                "article_id"
+              ]
+            },
+            {
+              "required": [
+                "author_id"
+              ]
+            },
+            {
+              "required": [
+                "title"
+              ]
+            },
+            {
+              "required": [
+                "$and"
+              ]
+            },
+            {
+              "required": [
+                "$or"
+              ]
+            }
+          ]
         },
         "default_commandAuthor": {
           "type": "object",

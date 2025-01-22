@@ -1,8 +1,9 @@
-use metadata_resolve::Qualified;
+use metadata_resolve::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 use open_dds::types::CustomTypeName;
 
-use super::shared::{array_schema, enum_schema, int_schema, string_schema};
+use super::shared::{array_schema, enum_schema, int_schema, pretty_typename, string_schema};
 use crate::catalog::{Model, ObjectType, Type};
+use crate::schema::shared::json_schema;
 use std::collections::BTreeMap;
 use std::string::ToString;
 
@@ -232,4 +233,228 @@ pub fn include_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec:
         style: None,
         required: None,
     }
+}
+
+// Generate "filter" parameter for the given model with a given object type
+pub fn filter_parameters(
+    model: &Model,
+    // We don't need this right away, this will be used once we start supporting nested filters
+    _object_type: &ObjectType,
+    schemas: &mut BTreeMap<String, oas3::spec::ObjectOrReference<oas3::spec::ObjectSchema>>,
+    // We don't need this right away, this will be used once we start supporting nested filters
+    _filter_boolean_expression_types: &BTreeMap<
+        String,
+        metadata_resolve::ResolvedObjectBooleanExpressionType,
+    >,
+) -> Option<oas3::spec::Parameter> {
+    // only include a filter if the model has a `BooleanExpressionType`
+    match &model.filter_expression_type {
+        Some(boolean_expression_type) => {
+            if schemas
+                .get(&pretty_typename(&boolean_expression_type.name))
+                .is_none()
+            {
+                // Add basic information about the filter
+                let mut filter_schema = oas3::spec::ObjectSchema {
+                    title: Some(pretty_typename(&boolean_expression_type.name)),
+                    description: Some(format!("Filter expression for {}", model.name.name)),
+                    schema_type: Some(oas3::spec::SchemaTypeSet::Single(
+                        oas3::spec::SchemaType::Object,
+                    )),
+                    ..Default::default()
+                };
+
+                // Keep track of the keys we add to the schema so we can add the `oneOf`
+                let mut filter_schema_keys = Vec::new();
+
+                // Add the filter schema for each scalar field
+                for (field_name, field_comparison) in &boolean_expression_type.fields.scalar_fields
+                {
+                    // Add basic information about the filter field
+                    let mut field_schema = oas3::spec::ObjectSchema {
+                        title: Some(field_name.to_string()),
+                        description: Some(format!(
+                            "Filter expression for filtering on {field_name}"
+                        )),
+                        schema_type: Some(oas3::spec::SchemaTypeSet::Single(
+                            oas3::spec::SchemaType::Object,
+                        )),
+                        ..Default::default()
+                    };
+
+                    // Add the operators
+                    for (operator_name, operator_type) in &field_comparison.operators {
+                        field_schema.properties.insert(
+                            format!("${operator_name}"),
+                            oas3::spec::ObjectOrReference::Object(type_schema(operator_type)),
+                        );
+                    }
+                    filter_schema.properties.insert(
+                        field_name.to_string(),
+                        oas3::spec::ObjectOrReference::Object(field_schema),
+                    );
+                    filter_schema_keys.push(field_name.to_string());
+                }
+
+                // Add the filter schema for each object field
+                for field_name in boolean_expression_type.fields.object_fields.keys() {
+                    filter_schema.properties.insert(
+                        field_name.to_string(),
+                        // TODO: Get the valid filter schema for the object type
+                        oas3::spec::ObjectOrReference::Object(json_schema()),
+                    );
+                }
+
+                // UNCOMMENT this once we start supporting nested filters. This will add the filter schema for each
+                // relationship field
+                //
+                // for (field_name, field_comparison) in
+                //     &boolean_expression_type.fields.relationship_fields
+                // {
+                //     // only include the filter if the object type has the relationship
+                //     if object_type
+                //         .type_relationships
+                //         .contains_key(&field_comparison.relationship_name)
+                //     {
+                //         if let Some(filter_boolean_expression_type) =
+                //             filter_boolean_expression_types
+                //                 .get(&pretty_typename(&field_comparison.boolean_expression_type))
+                //         {
+                //             filter_schema.properties.insert(
+                //                 field_name.to_string(),
+                //                 oas3::spec::ObjectOrReference::Ref {
+                //                     ref_path: format!(
+                //                         "#/components/schemas/{}",
+                //                         pretty_typename(&filter_boolean_expression_type.name)
+                //                     ),
+                //                 },
+                //             );
+                //         }
+                //     }
+                // }
+
+                // Add the filter schema for $and
+                filter_schema.properties.insert(
+                    "$and".into(),
+                    oas3::spec::ObjectOrReference::Object(array_schema(
+                        oas3::spec::ObjectOrReference::Ref {
+                            ref_path: format!(
+                                "#/components/schemas/{}",
+                                pretty_typename(&boolean_expression_type.name)
+                            ),
+                        },
+                    )),
+                );
+                filter_schema_keys.push("$and".into());
+
+                // Add the filter schema for $or
+                filter_schema.properties.insert(
+                    "$or".into(),
+                    oas3::spec::ObjectOrReference::Object(array_schema(
+                        oas3::spec::ObjectOrReference::Ref {
+                            ref_path: format!(
+                                "#/components/schemas/{}",
+                                pretty_typename(&boolean_expression_type.name)
+                            ),
+                        },
+                    )),
+                );
+                filter_schema_keys.push("$or".into());
+
+                // Add the oneOf
+                filter_schema.one_of = filter_schema_keys
+                    .into_iter()
+                    .map(|key| {
+                        oas3::spec::ObjectOrReference::Object(oas3::spec::ObjectSchema {
+                            required: vec![key],
+                            ..oas3::spec::ObjectSchema::default()
+                        })
+                    })
+                    .collect();
+                schemas.insert(
+                    pretty_typename(&boolean_expression_type.name),
+                    oas3::spec::ObjectOrReference::Object(filter_schema.clone()),
+                );
+            };
+
+            // Note: We are using the content field here because the filter is a JSON object. We cannot use schema here.
+            let mut content = BTreeMap::new();
+            content.insert(
+                // This is how we tell OpenAPI that this is a JSON media object
+                "application/json".into(),
+                oas3::spec::MediaType {
+                    encoding: BTreeMap::new(),
+                    examples: None,
+                    // This is the schema for the filter
+                    schema: Some(oas3::spec::ObjectOrReference::Ref {
+                        ref_path: format!(
+                            "#/components/schemas/{}",
+                            pretty_typename(&boolean_expression_type.name)
+                        ),
+                    }),
+                },
+            );
+            Some(oas3::spec::Parameter {
+                name: "filter".into(),
+                allow_empty_value: None,
+                allow_reserved: None,
+                content: Some(content),
+                deprecated: None,
+                description: Some(format!("Filter expression for {}", model.name.name)),
+                example: None,
+                explode: None,
+                // TODO: add examples
+                examples: BTreeMap::new(),
+                extensions: BTreeMap::new(),
+                location: oas3::spec::ParameterIn::Query,
+                schema: None,
+                style: None,
+                required: None,
+            })
+        }
+        None => None,
+    }
+}
+
+// Generate schema for the given type
+fn type_schema(ty: &QualifiedTypeReference) -> oas3::spec::ObjectSchema {
+    let mut schema = oas3::spec::ObjectSchema::default();
+    match &ty.underlying_type {
+        QualifiedBaseType::List(type_reference) => {
+            schema.items = Some(Box::new(oas3::spec::ObjectOrReference::Object(
+                type_schema(type_reference),
+            )));
+            schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
+                oas3::spec::SchemaType::Array,
+            ));
+        }
+        QualifiedBaseType::Named(type_name) => match type_name {
+            QualifiedTypeName::Inbuilt(inbuilt_type) => match inbuilt_type {
+                open_dds::types::InbuiltType::ID | open_dds::types::InbuiltType::String => {
+                    schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
+                        oas3::spec::SchemaType::String,
+                    ));
+                }
+                open_dds::types::InbuiltType::Int => {
+                    schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
+                        oas3::spec::SchemaType::Integer,
+                    ));
+                }
+                open_dds::types::InbuiltType::Float => {
+                    schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
+                        oas3::spec::SchemaType::Number,
+                    ));
+                }
+                open_dds::types::InbuiltType::Boolean => {
+                    schema.schema_type = Some(oas3::spec::SchemaTypeSet::Single(
+                        oas3::spec::SchemaType::Boolean,
+                    ));
+                }
+            },
+            QualifiedTypeName::Custom(_custom_type_name) => {
+                schema.schema_type = None;
+            }
+        },
+    }
+    schema
 }

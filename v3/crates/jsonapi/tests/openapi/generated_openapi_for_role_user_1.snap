@@ -64,6 +64,18 @@ expression: generated_openapi
               "example": "MovieFromCommand"
             },
             {
+              "name": "filter",
+              "in": "query",
+              "description": "Filter expression for Actors",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/default_actor_boolexp"
+                  }
+                }
+              }
+            },
+            {
               "name": "fields[actor]",
               "in": "query",
               "description": "Optional list of fields from actor type to include in response. If no fields are provided, all fields are returned",
@@ -249,6 +261,18 @@ expression: generated_openapi
                 }
               },
               "example": "Artist,Tracks"
+            },
+            {
+              "name": "filter",
+              "in": "query",
+              "description": "Filter expression for Album",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/default_album_bool_exp"
+                  }
+                }
+              }
             },
             {
               "name": "fields[Album]",
@@ -557,6 +581,18 @@ expression: generated_openapi
               "example": "Author,AuthorFromCommand"
             },
             {
+              "name": "filter",
+              "in": "query",
+              "description": "Filter expression for Articles",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/default_article_bool_exp"
+                  }
+                }
+              }
+            },
+            {
               "name": "fields[Article]",
               "in": "query",
               "description": "Optional list of fields from Article type to include in response. If no fields are provided, all fields are returned",
@@ -853,6 +889,192 @@ expression: generated_openapi
               "type": "string"
             }
           }
+        },
+        "default_actor_boolexp": {
+          "title": "default_actor_boolexp",
+          "description": "Filter expression for Actors",
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/default_actor_boolexp"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/default_actor_boolexp"
+              }
+            },
+            "actor_id": {
+              "title": "actor_id",
+              "description": "Filter expression for filtering on actor_id",
+              "type": "object",
+              "properties": {
+                "$_eq": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "oneOf": [
+            {
+              "required": [
+                "actor_id"
+              ]
+            },
+            {
+              "required": [
+                "$and"
+              ]
+            },
+            {
+              "required": [
+                "$or"
+              ]
+            }
+          ]
+        },
+        "default_album_bool_exp": {
+          "title": "default_album_bool_exp",
+          "description": "Filter expression for Album",
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/default_album_bool_exp"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/default_album_bool_exp"
+              }
+            },
+            "AlbumId": {
+              "title": "AlbumId",
+              "description": "Filter expression for filtering on AlbumId",
+              "type": "object",
+              "properties": {
+                "$eq": {}
+              }
+            },
+            "ArtistId": {
+              "title": "ArtistId",
+              "description": "Filter expression for filtering on ArtistId",
+              "type": "object",
+              "properties": {
+                "$eq": {}
+              }
+            },
+            "Title": {
+              "title": "Title",
+              "description": "Filter expression for filtering on Title",
+              "type": "object",
+              "properties": {
+                "$eq": {},
+                "$like": {}
+              }
+            }
+          },
+          "oneOf": [
+            {
+              "required": [
+                "AlbumId"
+              ]
+            },
+            {
+              "required": [
+                "ArtistId"
+              ]
+            },
+            {
+              "required": [
+                "Title"
+              ]
+            },
+            {
+              "required": [
+                "$and"
+              ]
+            },
+            {
+              "required": [
+                "$or"
+              ]
+            }
+          ]
+        },
+        "default_article_bool_exp": {
+          "title": "default_article_bool_exp",
+          "description": "Filter expression for Articles",
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/default_article_bool_exp"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/default_article_bool_exp"
+              }
+            },
+            "article_id": {
+              "title": "article_id",
+              "description": "Filter expression for filtering on article_id",
+              "type": "object"
+            },
+            "author_id": {
+              "title": "author_id",
+              "description": "Filter expression for filtering on author_id",
+              "type": "object",
+              "properties": {
+                "$_eq": {}
+              }
+            },
+            "title": {
+              "title": "title",
+              "description": "Filter expression for filtering on title",
+              "type": "object",
+              "properties": {
+                "$_like": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "oneOf": [
+            {
+              "required": [
+                "article_id"
+              ]
+            },
+            {
+              "required": [
+                "author_id"
+              ]
+            },
+            {
+              "required": [
+                "title"
+              ]
+            },
+            {
+              "required": [
+                "$and"
+              ]
+            },
+            {
+              "required": [
+                "$or"
+              ]
+            }
+          ]
         },
         "default_commandArticle": {
           "type": "object",

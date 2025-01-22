@@ -54,6 +54,11 @@ fn get_route_for_model(
     model: &Model,
     object_type: &ObjectType,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
+    schemas: &mut BTreeMap<String, oas3::spec::ObjectOrReference<oas3::spec::ObjectSchema>>,
+    filter_boolean_expression_types: &BTreeMap<
+        String,
+        metadata_resolve::ResolvedObjectBooleanExpressionType,
+    >,
 ) -> oas3::spec::Operation {
     let mut parameters = vec![
         oas3::spec::ObjectOrReference::Object(parameters::page_limit_parameter()),
@@ -61,6 +66,11 @@ fn get_route_for_model(
         oas3::spec::ObjectOrReference::Object(parameters::ordering_parameter(model, object_type)),
         oas3::spec::ObjectOrReference::Object(parameters::include_parameter(model, object_type)),
     ];
+    if let Some(filter_parameter) =
+        parameters::filter_parameters(model, object_type, schemas, filter_boolean_expression_types)
+    {
+        parameters.push(oas3::spec::ObjectOrReference::Object(filter_parameter));
+    }
 
     let fields_parameters =
         parameters::fields_parameters(&model.data_type, object_type, object_types)
@@ -131,13 +141,32 @@ pub fn openapi_schema(state: &State) -> Result<oas3::Spec, SchemaError> {
     };
 
     let mut paths = BTreeMap::new();
+    let mut schemas = BTreeMap::new();
+
+    // get all the filter boolean expression types that we need to include in the schema
+    let mut filter_boolean_expression_types = BTreeMap::new();
+    for model in state.routes.values() {
+        if let Some(boolean_expression_type) = &model.filter_expression_type {
+            filter_boolean_expression_types.insert(
+                pretty_typename(&boolean_expression_type.name),
+                boolean_expression_type.clone(),
+            );
+        }
+    }
+
     for (route_name, model) in &state.routes {
         let object_type = state
             .object_types
             .get(&model.data_type)
             .ok_or_else(|| SchemaError::ObjectNotFound(model.data_type.clone()))?;
 
-        let get = get_route_for_model(model, object_type, &state.object_types);
+        let get = get_route_for_model(
+            model,
+            object_type,
+            &state.object_types,
+            &mut schemas,
+            &filter_boolean_expression_types,
+        );
 
         let full_route_path = format!("/v1/rest{route_name}");
 
@@ -161,6 +190,13 @@ pub fn openapi_schema(state: &State) -> Result<oas3::Spec, SchemaError> {
         paths.insert(full_route_path, path_item);
     }
 
+    for (object_type_name, object_type) in &state.object_types {
+        schemas.insert(
+            pretty_typename(object_type_name),
+            oas3::spec::ObjectOrReference::Object(object_schema_for_object_type(object_type)),
+        );
+    }
+
     // we'll need to generate a named object for each object type that we can reference in our
     // models etc
     let components = oas3::spec::Components {
@@ -173,18 +209,7 @@ pub fn openapi_schema(state: &State) -> Result<oas3::Spec, SchemaError> {
         path_items: BTreeMap::new(),
         request_bodies: BTreeMap::new(),
         responses: BTreeMap::new(),
-        schemas: state
-            .object_types
-            .iter()
-            .map(|(object_type_name, object_type)| {
-                (
-                    pretty_typename(object_type_name),
-                    oas3::spec::ObjectOrReference::Object(object_schema_for_object_type(
-                        object_type,
-                    )),
-                )
-            })
-            .collect(),
+        schemas,
         security_schemes: BTreeMap::new(),
     };
 
