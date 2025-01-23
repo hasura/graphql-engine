@@ -204,7 +204,7 @@ fn test_model_select_many_nested_select_with_relationship() -> anyhow::Result<()
     common::test_execution_expectation(
         test_path_string,
         &common_metadata_paths,
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -541,7 +541,7 @@ fn test_model_select_many_select_with_args() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -552,7 +552,7 @@ fn test_model_select_many_select_with_args_filter() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -564,7 +564,7 @@ fn test_model_select_many_select_with_args_with_graphql_config() -> anyhow::Resu
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1098,7 +1098,7 @@ fn test_relay_node_model_select_permissions_with_role_without_model_select_permi
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1611,7 +1611,7 @@ fn test_boolean_expression_command_argument_combined_with_type_permissions() -> 
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
 
     )
 }
@@ -1694,7 +1694,7 @@ fn test_input_type_field_presets_on_model_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1829,7 +1829,7 @@ fn test_model_select_many_relationship_predicate_on_two_fields() -> anyhow::Resu
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1856,7 +1856,7 @@ fn test_model_select_many_relationship_predicate_object_two_relationship_fields(
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2043,7 +2043,7 @@ fn test_graphql_descriptions() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2055,7 +2055,7 @@ fn test_apollo_federation_service_sdl() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, common_apollo_metadata],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2166,7 +2166,7 @@ fn test_aggregates_relationship_field_simple_select() -> anyhow::Result<()> {
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
