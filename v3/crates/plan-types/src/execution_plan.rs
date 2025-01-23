@@ -9,7 +9,7 @@ mod relationships;
 mod remote_joins;
 use std::sync::Arc;
 
-pub use aggregates::{AggregateFieldSelection, AggregateSelectionSet};
+pub use aggregates::{AggregateFieldSelection, AggregateSelectionSet, Dimension, Grouping};
 pub use arguments::{Argument, MutationArgument};
 pub use field::{Field, NestedArray, NestedField, NestedObject};
 pub use filter::ResolvedFilterExpression;

@@ -603,6 +603,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,
                                             aggregate_count_scalar_type: None,
+                                            supports_grouping: None,
                                         },
                                     ),
                                     supports_query_variables: true,

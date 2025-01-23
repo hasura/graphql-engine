@@ -918,7 +918,6 @@ fn from_relationship_aggregate_selection(
                 request_headers,
                 unique_number,
             )?;
-
             // Collect relationships from the generated query above
             collect_relationships.append(&mut ndc_relationships);
             remote_join_executions

@@ -23,6 +23,9 @@ pub enum NdcV01CompatibilityError {
 
     #[error("Comparisons against elements in scalar arrays are not supported in NDC v0.1.x")]
     NestedScalarArrayComparisonsNotSupported,
+
+    #[error("Groupings are not supported in NDC v0.1.x")]
+    GroupByNotSupported,
 }
 
 pub fn make_query_request(
@@ -82,6 +85,15 @@ fn make_variables(
 }
 
 fn make_query(query_node: QueryNodeNew) -> Result<ndc_models_v01::Query, FieldError> {
+    // Group by is not supported in 0.1.x
+    if query_node.group_by.is_some() {
+        return Err(FieldError::InternalError(
+            FieldInternalError::NdcV01CompatibilityError(
+                NdcV01CompatibilityError::GroupByNotSupported,
+            ),
+        ));
+    }
+
     let ndc_predicate = query_node.predicate.map(make_expression).transpose()?;
 
     let ndc_fields = query_node

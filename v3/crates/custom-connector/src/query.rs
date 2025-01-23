@@ -5,6 +5,7 @@ use std::{
 
 use axum::{http::StatusCode, Json};
 use indexmap::IndexMap;
+use itertools::Itertools;
 use ndc_models;
 use regex::Regex;
 
@@ -159,6 +160,12 @@ fn execute_query(
         })
         .transpose()?;
 
+    let groups = query
+        .groups
+        .as_ref()
+        .map(|grouping| eval_groups(grouping, &paginated))
+        .transpose()?;
+
     let rows = query
         .fields
         .as_ref()
@@ -175,7 +182,7 @@ fn execute_query(
     Ok(ndc_models::RowSet {
         aggregates,
         rows,
-        groups: None,
+        groups,
     })
 }
 
@@ -276,6 +283,234 @@ fn eval_aggregate(aggregate: &ndc_models::Aggregate, rows: &[Row]) -> Result<ser
                 .collect::<Result<Vec<_>>>()?;
             eval_aggregate_function(function, &values)
         }
+    }
+}
+
+struct Chunk {
+    pub dimensions: Vec<serde_json::Value>,
+    pub rows: Vec<Row>,
+}
+
+fn eval_groups(
+    grouping: &ndc_models::Grouping,
+    paginated: &[Row],
+) -> Result<Vec<ndc_models::Group>> {
+    let chunks: Vec<Chunk> = paginated
+        .iter()
+        .chunk_by(|row| eval_dimensions(row, &grouping.dimensions).expect("cannot eval dimensions"))
+        .into_iter()
+        .map(|(dimensions, rows)| Chunk {
+            dimensions,
+            rows: rows.cloned().collect(),
+        })
+        .collect();
+
+    let sorted = group_sort(chunks, grouping.order_by.as_ref())?;
+
+    let mut groups: Vec<ndc_models::Group> = vec![];
+
+    for chunk in &sorted {
+        let dimensions = chunk.dimensions.clone();
+
+        let mut aggregates: IndexMap<String, serde_json::Value> = IndexMap::new();
+        for (aggregate_name, aggregate) in &grouping.aggregates {
+            aggregates.insert(
+                aggregate_name.clone(),
+                eval_aggregate(aggregate, &chunk.rows)?,
+            );
+        }
+        if let Some(predicate) = &grouping.predicate {
+            if eval_group_expression(predicate, &chunk.rows)? {
+                groups.push(ndc_models::Group {
+                    dimensions,
+                    aggregates,
+                });
+            }
+        } else {
+            groups.push(ndc_models::Group {
+                dimensions,
+                aggregates,
+            });
+        }
+    }
+
+    let paginated: Vec<ndc_models::Group> =
+        paginate(groups.into_iter(), grouping.limit, grouping.offset);
+
+    Ok(paginated)
+}
+
+fn eval_group_expression(expr: &ndc_models::GroupExpression, rows: &[Row]) -> Result<bool> {
+    match expr {
+        ndc_models::GroupExpression::And { expressions } => {
+            for expr in expressions {
+                if !eval_group_expression(expr, rows)? {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        }
+        ndc_models::GroupExpression::Or { expressions } => {
+            for expr in expressions {
+                if eval_group_expression(expr, rows)? {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        }
+        ndc_models::GroupExpression::Not { expression } => {
+            let b = eval_group_expression(expression, rows)?;
+            Ok(!b)
+        }
+        ndc_models::GroupExpression::BinaryComparisonOperator {
+            target,
+            operator,
+            value,
+        } => {
+            let left_val = eval_group_comparison_target(target, rows)?;
+            let right_vals = eval_aggregate_comparison_value(value)?;
+            match operator.as_str() {
+                "_eq" => {
+                    for right_val in &right_vals {
+                        if left_val == *right_val {
+                            return Ok(true);
+                        }
+                    }
+
+                    Ok(false)
+                }
+                _ => Err((
+                    StatusCode::NOT_IMPLEMENTED,
+                    Json(ndc_models::ErrorResponse {
+                        message:
+                            "Comparison operators other than _eq are not implemented for group by"
+                                .into(),
+                        details: serde_json::Value::Null,
+                    }),
+                )),
+            }
+        }
+        ndc_models::GroupExpression::UnaryComparisonOperator { target, operator } => match operator
+        {
+            ndc_models::UnaryComparisonOperator::IsNull => {
+                let val = eval_group_comparison_target(target, rows)?;
+                Ok(val.is_null())
+            }
+        },
+    }
+}
+
+fn group_sort(
+    groups: Vec<Chunk>,
+    order_by: Option<&ndc_models::GroupOrderBy>,
+) -> Result<Vec<Chunk>> {
+    match order_by {
+        None => Ok(groups),
+        Some(order_by) => {
+            let mut copy: Vec<Chunk> = vec![];
+            for item_to_insert in groups {
+                let mut index = 0;
+                for other in &copy {
+                    if let Ordering::Greater =
+                        eval_group_order_by(order_by, other, &item_to_insert)?
+                    {
+                        break;
+                    }
+                    index += 1;
+                }
+                copy.insert(index, item_to_insert);
+            }
+            Ok(copy)
+        }
+    }
+}
+
+fn eval_group_order_by(
+    order_by: &ndc_models::GroupOrderBy,
+    t1: &Chunk,
+    t2: &Chunk,
+) -> Result<Ordering> {
+    let mut result = Ordering::Equal;
+
+    for element in &order_by.elements {
+        let v1 = eval_group_order_by_element(element, t1)?;
+        let v2 = eval_group_order_by_element(element, t2)?;
+        let x = match element.order_direction {
+            ndc_models::OrderDirection::Asc => compare(v1, v2)?,
+            ndc_models::OrderDirection::Desc => compare(v2, v1)?,
+        };
+        result = result.then(x);
+    }
+
+    Ok(result)
+}
+
+fn eval_group_order_by_element(
+    element: &ndc_models::GroupOrderByElement,
+    group: &Chunk,
+) -> Result<serde_json::Value> {
+    match element.target.clone() {
+        ndc_models::GroupOrderByTarget::Dimension { index } => {
+            group.dimensions.get(index).cloned().ok_or((
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: "dimension index out of range".into(),
+                    details: serde_json::Value::Null,
+                }),
+            ))
+        }
+        ndc_models::GroupOrderByTarget::Aggregate { aggregate } => {
+            eval_aggregate(&aggregate, &group.rows)
+        }
+    }
+}
+
+fn eval_dimensions(
+    row: &Row,
+    dimensions: &[ndc_models::Dimension],
+) -> Result<Vec<serde_json::Value>> {
+    let mut values = vec![];
+    for dimension in dimensions {
+        let value = eval_dimension(row, dimension)?;
+        values.push(value);
+    }
+    Ok(values)
+}
+
+fn eval_group_comparison_target(
+    target: &ndc_models::GroupComparisonTarget,
+    rows: &[Row],
+) -> Result<serde_json::Value> {
+    match target {
+        ndc_models::GroupComparisonTarget::Aggregate { aggregate } => {
+            eval_aggregate(aggregate, rows)
+        }
+    }
+}
+
+fn eval_aggregate_comparison_value(
+    comparison_value: &ndc_models::GroupComparisonValue,
+) -> Result<Vec<serde_json::Value>> {
+    match comparison_value {
+        ndc_models::GroupComparisonValue::Scalar { value } => Ok(vec![value.clone()]),
+        ndc_models::GroupComparisonValue::Variable { name: _ } => Err((
+            StatusCode::NOT_IMPLEMENTED,
+            Json(ndc_models::ErrorResponse {
+                details: serde_json::Value::Null,
+                message: "Variables in group by filters not supported".into(),
+            }),
+        )),
+    }
+}
+
+fn eval_dimension(row: &Row, dimension: &ndc_models::Dimension) -> Result<serde_json::Value> {
+    match dimension {
+        ndc_models::Dimension::Column {
+            column_name,
+            arguments: _,
+            field_path,
+            path: _,
+        } => eval_column_field_path(row, column_name, field_path.as_ref()),
     }
 }
 
@@ -468,11 +703,7 @@ fn sort(
     }
 }
 
-fn paginate<I: Iterator<Item = Row>>(
-    collection: I,
-    limit: Option<u32>,
-    offset: Option<u32>,
-) -> Vec<Row> {
+fn paginate<I: Iterator>(collection: I, limit: Option<u32>, offset: Option<u32>) -> Vec<I::Item> {
     let start = offset.unwrap_or(0).try_into().unwrap();
     match limit {
         Some(n) => collection.skip(start).take(n.try_into().unwrap()).collect(),

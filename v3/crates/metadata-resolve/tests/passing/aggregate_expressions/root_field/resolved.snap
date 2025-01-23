@@ -1710,6 +1710,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                     "int8",
                                                 ),
                                             ),
+                                            supports_grouping: None,
                                         },
                                     ),
                                     supports_query_variables: true,

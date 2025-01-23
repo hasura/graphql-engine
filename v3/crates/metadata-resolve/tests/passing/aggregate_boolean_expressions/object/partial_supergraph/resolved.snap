@@ -436,6 +436,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,
                                             aggregate_count_scalar_type: None,
+                                            supports_grouping: None,
                                         },
                                     ),
                                     supports_query_variables: false,

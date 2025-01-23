@@ -501,6 +501,19 @@ pub struct DataConnectorAggregateCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub aggregate_count_scalar_type: Option<DataConnectorScalarType>,
+
+    /// Whether or not grouping operations are supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_grouping: Option<DataConnectorGroupingCapabilities>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorGroupingCapabilities {
+    /// Whether not paginating groups is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_pagination: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -558,6 +571,7 @@ fn mk_ndc_01_capabilities(
                     .aggregates
                     .is_some(),
                 aggregate_count_scalar_type: None,
+                supports_grouping: None,
             }
         }),
         supports_query_variables: capabilities.query.variables.is_some(),
@@ -596,7 +610,7 @@ fn mk_ndc_02_capabilities(
             .exists
             .nested_scalar_collections
             .is_some(),
-        supports_aggregates: capabilities.query.aggregates.as_ref().map(|_agg| {
+        supports_aggregates: capabilities.query.aggregates.as_ref().map(|aggregates| {
             DataConnectorAggregateCapabilities {
                 supports_nested_object_aggregations: capabilities
                     .query
@@ -612,6 +626,12 @@ fn mk_ndc_02_capabilities(
                             aggregate_capabilities.count_scalar_type.as_str(),
                         )
                     }),
+
+                supports_grouping: aggregates.group_by.as_ref().map(|groupby_capabilities| {
+                    DataConnectorGroupingCapabilities {
+                        supports_pagination: groupby_capabilities.paginate.is_some(),
+                    }
+                }),
             }
         }),
         supports_query_variables: capabilities.query.variables.is_some(),

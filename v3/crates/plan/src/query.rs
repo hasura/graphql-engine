@@ -17,7 +17,7 @@ pub use filter::{
     build_relationship_comparison_expression, get_field_mapping_of_field_name, plan_expression,
 };
 use indexmap::IndexMap;
-pub use model::{from_model_aggregate_selection, from_model_selection};
+pub use model::{from_model_aggregate_selection, from_model_group_by, from_model_selection};
 pub use permissions::process_model_predicate;
 pub use relationships::{
     process_command_relationship_definition, process_model_relationship_definition,
@@ -116,18 +116,9 @@ where
             Ok(SingleNodeExecutionPlan::Query(execution_tree))
         }
         open_dds::query::Query::ModelAggregate(model_aggregate) => {
-            // we have to use `String` rather than `Alias` in the planning code so not to restrict ourselves to aliases
-            // that are valid GraphQL types. Probably want to change `Alias` in OpenDD to something
-            // less frontend specific, then we can avoid this cloning.
-            let selection = model_aggregate
-                .selection
-                .iter()
-                .map(|(k, v)| (k.as_str().to_string(), v.clone()))
-                .collect();
-
             let execution_tree = model::from_model_aggregate_selection(
                 &model_aggregate.target,
-                &selection,
+                &model_aggregate.selection,
                 metadata,
                 session,
                 request_headers,

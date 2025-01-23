@@ -3,6 +3,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common::Alias;
 use lang_graphql::normalized_ast;
 use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::query::Name;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, FieldName};
 use plan_types::NdcFieldAlias;
 use serde::Serialize;
@@ -480,14 +481,14 @@ pub fn generate_selection_set_open_dd_ir(
 /// Builds the OpenDD IR from a normalized selection set
 pub fn generate_aggregate_selection_set_open_dd_ir(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-) -> Result<IndexMap<open_dds::query::Alias, open_dds::query::Aggregate>, error::Error> {
+) -> Result<IndexMap<Name, open_dds::query::Aggregate>, error::Error> {
     let mut fields = IndexMap::new();
     collect_aggregate_fields(&mut fields, None, &[], selection_set)?;
     Ok(fields)
 }
 
 fn collect_aggregate_fields(
-    aggregate_fields: &mut IndexMap<open_dds::query::Alias, open_dds::query::Aggregate>,
+    aggregate_fields: &mut IndexMap<Name, open_dds::query::Aggregate>,
     operand: Option<&open_dds::query::Operand>,
     graphql_field_path: &[&Alias], // For generating the alias for the aggregate field
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
@@ -542,7 +543,7 @@ fn collect_aggregate_fields(
                             },
                         };
                         aggregate_fields.insert(
-                            field_alias,
+                            Name::from(field_alias.as_str().to_owned()),
                             open_dds::query::Aggregate {
                                 function,
                                 operand: operand.cloned(),

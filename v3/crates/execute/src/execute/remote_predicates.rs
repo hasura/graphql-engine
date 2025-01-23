@@ -88,6 +88,7 @@ fn replace_predicates_in_query_node(
             .predicate
             .map(|predicate| replace_predicates_in_filter_expression(predicate, predicates))
             .transpose()?,
+        group_by: query_node.group_by,
     })
 }
 

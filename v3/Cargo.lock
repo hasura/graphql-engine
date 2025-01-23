@@ -803,6 +803,7 @@ dependencies = [
  "axum-ext",
  "env_logger",
  "indexmap 2.7.0",
+ "itertools 0.13.0",
  "ndc-models 0.2.0",
  "regex",
  "serde",

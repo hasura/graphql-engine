@@ -14,6 +14,8 @@ use crate::{
 
 str_newtype!(Alias over Identifier | doc "Alias to refer to a particular query or selection in the response.");
 
+str_newtype!(Name | doc "The name of an OpenDDS field, aggregate, dimension etc., which is not required to be an Identifier");
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "version")]
@@ -59,7 +61,26 @@ pub struct ModelAggregateSelection {
     #[serde(flatten)]
     pub target: ModelTarget,
     /// What metrics aggregated across the model's objects to retrieve.
-    pub selection: IndexMap<Alias, Aggregate>,
+    pub selection: IndexMap<Name, Aggregate>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelDimensions {
+    pub dimensions: IndexMap<Name, Dimension>,
+    // pub filter: Option<BooleanExpression>,
+    // #[serde(default)]
+    // pub order_by: Vec<OrderByElement>,
+    pub limit: Option<usize>,
+    pub offset: Option<usize>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum Dimension {
+    /// Group by a field of the current object or a related object
+    /// Note: Operand::RelationshipAggregate will not be valid here.
+    Field(Operand),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -111,7 +132,7 @@ pub struct RelationshipAggregateSelection {
     #[serde(flatten)]
     pub target: RelationshipTarget,
     /// What aggregated metrics to select.
-    pub selection: IndexMap<String, Aggregate>,
+    pub selection: IndexMap<Name, Aggregate>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

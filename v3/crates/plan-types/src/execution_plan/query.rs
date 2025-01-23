@@ -105,6 +105,8 @@ pub struct QueryNodeNew {
     pub aggregates: Option<aggregates::AggregateSelectionSet>,
     /// Fields of the query
     pub fields: Option<FieldsSelection>,
+
+    pub group_by: Option<aggregates::Grouping>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

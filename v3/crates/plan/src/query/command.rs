@@ -229,6 +229,7 @@ pub(crate) fn from_command_selection(
                     offset: None,
                     order_by: None,
                     predicate: None,
+                    group_by: None,
                 },
                 collection: CollectionName::from(function_name.as_str()),
                 arguments: resolved_arguments,

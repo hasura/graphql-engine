@@ -1,3 +1,5 @@
+use core::option::Option::None;
+
 use ndc_models;
 
 use crate::{collections, functions, procedures, state::AppState, types};
@@ -31,7 +33,11 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
                 explain: None,
                 aggregates: Some(ndc_models::AggregateCapabilities {
                     filter_by: None,
-                    group_by: None,
+                    group_by: Some(ndc_models::GroupByCapabilities {
+                        filter: Some(ndc_models::LeafCapability {}),
+                        order: Some(ndc_models::LeafCapability {}),
+                        paginate: Some(ndc_models::LeafCapability {}),
+                    }),
                 }),
                 variables: Some(ndc_models::LeafCapability {}),
                 nested_fields: ndc_models::NestedFieldCapabilities {

@@ -387,13 +387,7 @@ pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
         order_by: vec![],
     };
 
-    Ok(open_dds::query::RelationshipAggregateSelection {
-        selection: selection
-            .into_iter()
-            .map(|(alias, aggregate)| (alias.to_string(), aggregate))
-            .collect(),
-        target,
-    })
+    Ok(open_dds::query::RelationshipAggregateSelection { selection, target })
 }
 
 pub fn generate_model_aggregate_relationship_ir<'s>(

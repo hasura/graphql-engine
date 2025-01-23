@@ -1198,6 +1198,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,
                                             aggregate_count_scalar_type: None,
+                                            supports_grouping: None,
                                         },
                                     ),
                                     supports_query_variables: true,

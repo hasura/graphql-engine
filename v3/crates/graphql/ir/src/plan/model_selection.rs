@@ -74,6 +74,7 @@ pub(crate) fn plan_query_node(
         predicate,
         aggregates: ir.aggregate_selection.clone(),
         fields: query_fields.map(|fields| FieldsSelection { fields }),
+        group_by: None,
     };
 
     Ok(Plan {

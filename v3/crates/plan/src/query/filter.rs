@@ -200,6 +200,7 @@ pub fn plan_remote_predicate<'a>(
         fields: Some(FieldsSelection {
             fields: build_ndc_query_fields(ndc_column_mapping),
         }),
+        group_by: None,
     };
 
     Ok((query_node, remote_predicates, relationships))

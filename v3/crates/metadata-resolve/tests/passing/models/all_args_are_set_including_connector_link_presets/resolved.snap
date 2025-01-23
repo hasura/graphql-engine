@@ -323,6 +323,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                                         DataConnectorAggregateCapabilities {
                                             supports_nested_object_aggregations: false,
                                             aggregate_count_scalar_type: None,
+                                            supports_grouping: None,
                                         },
                                     ),
                                     supports_query_variables: true,

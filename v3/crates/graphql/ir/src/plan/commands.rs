@@ -67,6 +67,7 @@ pub(crate) fn plan_query_node(
                         },
                     )]),
                 }),
+                group_by: None,
                 limit: None,
                 offset: None,
                 order_by: None,
