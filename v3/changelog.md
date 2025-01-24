@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2025.01.24]
+
+### Added
+
 - Added configuration for headers in response to client for requests handled by
   the pre-route plugin hook.
 - Added OpenAPI schema for filter parameters in JSONAPI
@@ -14,8 +22,6 @@
   was inside a nested array.
 - Fixed a bug where TypePermissions field presets would be ignored if recursive
   types were used.
-
-### Changed
 
 ## [v2025.01.17]
 
@@ -1038,7 +1044,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.01.17...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.01.24...HEAD
+[v2025.01.24]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.24
 [v2025.01.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.17
 [v2025.01.09]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.09
 [v2025.01.06]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.06

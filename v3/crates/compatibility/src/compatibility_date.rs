@@ -114,6 +114,8 @@ pub const fn new_compatibility_date(year: i32, month: u32, day: u32) -> Compatib
 // Adding a flag? Don't forget to add it to the docs: https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/
 pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> {
     match flag {
+        // AllowPartialSupergraph is not triggered by compatibility date, instead it is set by the build settings (ie. using a /partial endpoint)
+        Flag::AllowPartialSupergraph => None,
         Flag::RequireGraphqlConfig => Some(new_compatibility_date(2024, 6, 30)),
         Flag::BypassRelationComparisonsNdcCapability => Some(new_compatibility_date(2024, 9, 3)),
         Flag::RequireNestedArrayFilteringCapability => Some(new_compatibility_date(2024, 9, 18)),
@@ -150,8 +152,8 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         | Flag::DisallowDuplicateNamesAcrossTypesAndExpressions => {
             Some(new_compatibility_date(2025, 1, 7))
         }
-        // AllowPartialSupergraph is not triggered by compatibility date, instead it is set by the build settings (ie. using a /partial endpoint)
-        Flag::AllowPartialSupergraph
-        | Flag::DisallowDuplicateAggregateFunctionDefinitionsForScalarType => None,
+        Flag::DisallowDuplicateAggregateFunctionDefinitionsForScalarType => {
+            Some(new_compatibility_date(2025, 1, 25))
+        }
     }
 }
