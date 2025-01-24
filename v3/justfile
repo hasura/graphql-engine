@@ -62,7 +62,7 @@ start-engine:
 # pull / build all docker deps
 docker-refresh: stop-docker
     docker compose -f ci.docker-compose.yaml pull postgres_connector
-    docker compose -f ci.docker-compose.yaml build custom_connector
+    docker compose -f ci.docker-compose.yaml build custom_connector custom_connector_no_relationships auth_hook
 
 alias refresh-docker := docker-refresh
 
