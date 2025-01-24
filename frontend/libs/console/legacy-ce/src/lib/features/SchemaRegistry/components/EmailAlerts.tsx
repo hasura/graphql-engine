@@ -30,11 +30,9 @@ export const EmailAlerts: React.FC<EmailAlertsProps> = ({ onClose }) => {
 
   const { kind } = fetchAlertConfigResponse;
   const alertConfig =
-    kind === 'success' &&
-    fetchAlertConfigResponse.response.alert_config_service.length
-      ? fetchAlertConfigResponse.response.alert_config_service[0].rules
-      : defaultAlertConfig;
-
+    (kind === 'success' &&
+      fetchAlertConfigResponse.response?.alert_config_service?.[0]?.rules) ||
+    defaultAlertConfig;
   const { setEmailAlertMutation } = useSetEmailAlertConfig(onClose);
 
   const onSet = React.useCallback(() => {
