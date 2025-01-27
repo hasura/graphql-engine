@@ -202,7 +202,7 @@ Update the definition of your action by adding the action secret as a header:
        handler: http://localhost:3000
        forward_client_headers: true
        headers:
-         - name: ACTION_SECRET
+         - name: ACTION-SECRET
            value_from_env: ACTION_SECRET_ENV
 ```
 
@@ -228,7 +228,7 @@ X-Hasura-Role: admin
       "type": "query",
       "headers": [
         {
-          "name": "ACTION_SECRET",
+          "name": "ACTION-SECRET",
           "value_from_env": "ACTION_SECRET_ENV"
         }
       ],
@@ -301,7 +301,7 @@ function authorizationMiddleware(req, res, next) {
 // check if the secret sent in the header equals to the secret stored as an env variable
 function correctSecretProvided(req) {
   const requiredSecret = process.env.ACTION_SECRET_ENV;
-  const providedSecret = req.headers['ACTION_SECRET'];
+  const providedSecret = req.headers['ACTION-SECRET'];
   return requiredSecret === providedSecret;
 }
 
