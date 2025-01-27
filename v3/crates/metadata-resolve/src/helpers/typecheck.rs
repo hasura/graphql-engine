@@ -1,4 +1,8 @@
 //! Functions for typechecking JSON literals against expected types
+use std::collections::BTreeMap;
+
+use crate::stages::object_types;
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph;
 use thiserror::Error;
 
@@ -18,20 +22,49 @@ pub enum TypecheckError {
     NullInNonNullableColumn,
 }
 
+#[derive(Error, Debug, PartialEq)]
+/// Issues that can occur when typechecking a value against an object type
+pub enum TypecheckIssue {
+    #[error("Expected an object value of type {expected:} but got value {actual:}")]
+    ObjectTypeMismatch {
+        expected: subgraph::Qualified<open_dds::types::CustomTypeName>,
+        actual: serde_json::Value,
+    },
+
+    #[error("Typecheck failed for field {field_name:} in object type {object_type:}: {error:}")]
+    ObjectTypeField {
+        field_name: open_dds::types::FieldName,
+        object_type: subgraph::Qualified<open_dds::types::CustomTypeName>,
+        error: TypecheckError,
+    },
+}
+
+impl ShouldBeAnError for TypecheckIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        flags.contains(open_dds::flags::Flag::TypecheckObjectTypeValuesInPresets)
+    }
+}
+
 /// These are run at metadata resolve time, so that we can warn the user against
 /// using the wrong types in their engine metadata.
 /// If the values are passed in a session variable then there is nothing we can do at this point
 /// and we must rely on run time casts
 pub fn typecheck_value_expression(
+    object_types: &BTreeMap<
+        &subgraph::Qualified<open_dds::types::CustomTypeName>,
+        &object_types::ObjectTypeRepresentation,
+    >,
     ty: &subgraph::QualifiedTypeReference,
     value_expression: &open_dds::permissions::ValueExpression,
-) -> Result<(), TypecheckError> {
+) -> Result<Vec<TypecheckIssue>, TypecheckError> {
+    let mut issues = Vec::new();
     match &value_expression {
-        open_dds::permissions::ValueExpression::SessionVariable(_) => Ok(()),
+        open_dds::permissions::ValueExpression::SessionVariable(_) => {}
         open_dds::permissions::ValueExpression::Literal(json_value) => {
-            typecheck_qualified_type_reference(ty, json_value)
+            typecheck_qualified_type_reference(object_types, ty, json_value, &mut issues)?;
         }
     }
+    Ok(issues)
 }
 
 /// These are run at schema resolve time, so that we can warn the user against
@@ -39,24 +72,35 @@ pub fn typecheck_value_expression(
 /// If the values are passed in a session variable then there is nothing we can do at this point
 /// and we must rely on run time casts
 pub fn typecheck_value_expression_or_predicate(
+    object_types: &BTreeMap<
+        &subgraph::Qualified<open_dds::types::CustomTypeName>,
+        &object_types::ObjectTypeRepresentation,
+    >,
     ty: &subgraph::QualifiedTypeReference,
     value_expression: &open_dds::permissions::ValueExpressionOrPredicate,
-) -> Result<(), TypecheckError> {
+) -> Result<Vec<TypecheckIssue>, TypecheckError> {
+    let mut issues = Vec::new();
     match &value_expression {
         open_dds::permissions::ValueExpressionOrPredicate::SessionVariable(_)
-        | open_dds::permissions::ValueExpressionOrPredicate::BooleanExpression(_) => Ok(()),
+        | open_dds::permissions::ValueExpressionOrPredicate::BooleanExpression(_) => {}
         open_dds::permissions::ValueExpressionOrPredicate::Literal(json_value) => {
-            typecheck_qualified_type_reference(ty, json_value)
+            typecheck_qualified_type_reference(object_types, ty, json_value, &mut issues)?;
         }
     }
+    Ok(issues)
 }
 
 /// check whether a serde_json::Value matches our expected type
 /// currently only works for primitive types (Int, String, etc)
 /// and arrays of those types
-pub fn typecheck_qualified_type_reference(
+fn typecheck_qualified_type_reference(
+    object_types: &BTreeMap<
+        &subgraph::Qualified<open_dds::types::CustomTypeName>,
+        &object_types::ObjectTypeRepresentation,
+    >,
     ty: &subgraph::QualifiedTypeReference,
     value: &serde_json::Value,
+    issues: &mut Vec<TypecheckIssue>,
 ) -> Result<(), TypecheckError> {
     match (&ty.underlying_type, value) {
         // check null values are allowed
@@ -74,11 +118,10 @@ pub fn typecheck_qualified_type_reference(
         // check each item in an array
         (subgraph::QualifiedBaseType::List(inner_type), serde_json::Value::Array(array_values)) => {
             array_values.iter().try_for_each(|array_value| {
-                typecheck_qualified_type_reference(inner_type, array_value).map_err(|inner_error| {
-                    TypecheckError::ArrayItemMismatch {
+                typecheck_qualified_type_reference(object_types, inner_type, array_value, issues)
+                    .map_err(|inner_error| TypecheckError::ArrayItemMismatch {
                         inner_error: Box::new(inner_error),
-                    }
-                })
+                    })
             })
         }
         // array expected, non-array value
@@ -86,8 +129,14 @@ pub fn typecheck_qualified_type_reference(
             value: value.clone(),
         }),
 
-        // we don't current check custom named types, so we just assume the values are OK
-        (subgraph::QualifiedBaseType::Named(subgraph::QualifiedTypeName::Custom(_)), _) => Ok(()),
+        // check custom types
+        (
+            subgraph::QualifiedBaseType::Named(subgraph::QualifiedTypeName::Custom(custom_type)),
+            _,
+        ) => {
+            typecheck_custom_type(object_types, custom_type, value, issues);
+            Ok(())
+        }
     }
 }
 
@@ -113,10 +162,66 @@ fn typecheck_inbuilt_type(
     }
 }
 
+/// check a JSON value matches an expected custom type.
+fn typecheck_custom_type(
+    object_types: &BTreeMap<
+        &subgraph::Qualified<open_dds::types::CustomTypeName>,
+        &object_types::ObjectTypeRepresentation,
+    >,
+    custom_type: &subgraph::Qualified<open_dds::types::CustomTypeName>,
+    value: &serde_json::Value,
+    issues: &mut Vec<TypecheckIssue>,
+) {
+    // If the type is an object type, typecheck the value against the object type fields
+    // If the type is a scalar type, ignore.
+    if let Some(object_type) = object_types.get(custom_type) {
+        if let serde_json::Value::Object(object_value) = value {
+            for (field_name, field_definition) in &object_type.fields {
+                let field_value = object_value
+                    .get(field_name.as_str())
+                    .unwrap_or_else(|| &serde_json::Value::Null);
+                if let Err(e) = typecheck_qualified_type_reference(
+                    object_types,
+                    &field_definition.field_type,
+                    field_value,
+                    issues,
+                ) {
+                    issues.push(TypecheckIssue::ObjectTypeField {
+                        field_name: field_name.clone(),
+                        object_type: custom_type.clone(),
+                        error: e,
+                    });
+                }
+            }
+        } else {
+            // Raise an issue if the value is not an object
+            issues.push(TypecheckIssue::ObjectTypeMismatch {
+                expected: custom_type.clone(),
+                actual: value.clone(),
+            });
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::{subgraph, typecheck_qualified_type_reference, TypecheckError};
+    use crate::stages::object_types;
+    use indexmap::IndexMap;
+    use open_dds::{
+        identifier::{Identifier, SubgraphName},
+        types::{CustomTypeName, FieldName},
+    };
     use serde_json::json;
+
+    fn empty_object_types<'a>() -> BTreeMap<
+        &'a subgraph::Qualified<open_dds::types::CustomTypeName>,
+        &'a object_types::ObjectTypeRepresentation,
+    > {
+        BTreeMap::new()
+    }
 
     fn int_type(nullable: bool) -> subgraph::QualifiedTypeReference {
         subgraph::QualifiedTypeReference {
@@ -176,7 +281,10 @@ mod tests {
         // `Int` accepts any JSON number
         let value = json!(1);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
+        assert_eq!(
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            Ok(())
+        );
     }
 
     #[test]
@@ -185,7 +293,10 @@ mod tests {
         // `Float` accepts any JSON number
         let value = json!(123.123);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
+        assert_eq!(
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            Ok(())
+        );
     }
 
     #[test]
@@ -193,7 +304,10 @@ mod tests {
         let ty = string_type();
         let value = json!("dog");
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
+        assert_eq!(
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            Ok(())
+        );
     }
 
     #[test]
@@ -201,7 +315,10 @@ mod tests {
         let ty = boolean_type();
         let value = json!(true);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
+        assert_eq!(
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            Ok(())
+        );
     }
 
     #[test]
@@ -209,7 +326,10 @@ mod tests {
         let ty = id_type();
         let value = json!("12312312sdwfdsff123123");
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
+        assert_eq!(
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            Ok(())
+        );
     }
 
     #[test]
@@ -217,7 +337,10 @@ mod tests {
         let ty = array_of(boolean_type());
         let value = json!([true, false]);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
+        assert_eq!(
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            Ok(())
+        );
     }
 
     #[test]
@@ -225,7 +348,10 @@ mod tests {
         let ty = array_of(array_of(boolean_type()));
         let value = json!([[true, false]]);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
+        assert_eq!(
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            Ok(())
+        );
     }
 
     #[test]
@@ -234,7 +360,7 @@ mod tests {
         let value = json!([true, 123]);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&ty, &value),
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
             Err(TypecheckError::ArrayItemMismatch {
                 inner_error: Box::new(TypecheckError::ScalarTypeMismatch {
                     expected: open_dds::types::InbuiltType::Boolean,
@@ -250,7 +376,7 @@ mod tests {
         let value = json!(true);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&ty, &value),
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
             Err(TypecheckError::NonArrayValue { value })
         );
     }
@@ -261,7 +387,7 @@ mod tests {
         let value = json!(null);
 
         assert_eq!(
-            typecheck_qualified_type_reference(&ty, &value),
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
             Err(TypecheckError::NullInNonNullableColumn)
         );
     }
@@ -271,7 +397,10 @@ mod tests {
         let ty = int_type(true);
         let value = json!(null);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
+        assert_eq!(
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
+            Ok(())
+        );
     }
 
     #[test]
@@ -280,11 +409,117 @@ mod tests {
         let value = json!("dog");
 
         assert_eq!(
-            typecheck_qualified_type_reference(&ty, &value),
+            typecheck_qualified_type_reference(&empty_object_types(), &ty, &value, &mut vec![]),
             Err(TypecheckError::ScalarTypeMismatch {
                 expected: open_dds::types::InbuiltType::Int,
                 actual: value.clone()
             })
+        );
+    }
+
+    fn create_test_object_type() -> (
+        subgraph::Qualified<open_dds::types::CustomTypeName>,
+        object_types::ObjectTypeRepresentation,
+    ) {
+        let custom_type = subgraph::Qualified {
+            subgraph: SubgraphName::new_inline_static("default"),
+            name: CustomTypeName(Identifier::new("Person").unwrap()),
+        };
+
+        let mut fields = IndexMap::new();
+        fields.insert(
+            FieldName::new(Identifier::new("name").unwrap()),
+            object_types::FieldDefinition {
+                field_type: string_type(),
+                description: None,
+                deprecated: None,
+                field_arguments: IndexMap::new(),
+            },
+        );
+        fields.insert(
+            FieldName::new(Identifier::new("age").unwrap()),
+            object_types::FieldDefinition {
+                field_type: int_type(false),
+                description: None,
+                deprecated: None,
+                field_arguments: IndexMap::new(),
+            },
+        );
+
+        let object_type = object_types::ObjectTypeRepresentation {
+            fields,
+            global_id_fields: vec![],
+            apollo_federation_config: None,
+            graphql_output_type_name: None,
+            graphql_input_type_name: None,
+            description: None,
+        };
+
+        (custom_type, object_type)
+    }
+
+    #[test]
+    fn test_typecheck_custom_object_type() {
+        let (custom_type, object_type) = create_test_object_type();
+
+        // Create object_types map with our test type
+        let mut object_types = BTreeMap::new();
+        object_types.insert(&custom_type, &object_type);
+
+        // Create the qualified type reference for our custom type
+        let ty = subgraph::QualifiedTypeReference {
+            nullable: false,
+            underlying_type: subgraph::QualifiedBaseType::Named(
+                subgraph::QualifiedTypeName::Custom(custom_type.clone()),
+            ),
+        };
+
+        // Test valid object
+        let valid_value = json!({
+            "name": "John Doe",
+            "age": 30
+        });
+
+        assert_eq!(
+            typecheck_qualified_type_reference(&object_types, &ty, &valid_value, &mut vec![]),
+            Ok(())
+        );
+
+        // Test invalid object (wrong type for age)
+        let invalid_value = json!({
+            "name": "John Doe",
+            "age": "thirty"
+        });
+        let mut issues = vec![];
+        typecheck_qualified_type_reference(&object_types, &ty, &invalid_value, &mut issues)
+            .unwrap();
+        assert_eq!(
+            issues.into_iter().next().unwrap().to_string(),
+            format!("Typecheck failed for field age in object type Person (in subgraph default): Expected a value of type Int but got value \"thirty\"")
+        );
+
+        // Test invalid object (missing required field)
+        let missing_field_value = json!({
+            "name": "John Doe"
+        });
+
+        let mut issues = vec![];
+        typecheck_qualified_type_reference(&object_types, &ty, &missing_field_value, &mut issues)
+            .unwrap();
+        assert_eq!(
+            issues.into_iter().next().unwrap().to_string(),
+            format!("Typecheck failed for field age in object type Person (in subgraph default): Expected a non-null value but received null")
+        );
+
+        // Test non-object value
+        let non_object_value = json!("not an object");
+
+        let mut issues = vec![];
+        typecheck_qualified_type_reference(&object_types, &ty, &non_object_value, &mut issues)
+            .unwrap();
+        assert_eq!(
+            issues.into_iter().next().unwrap().to_string(),
+            format!("Expected an object value of type Person (in subgraph default) but got value \"not an object\"")
         );
     }
 }

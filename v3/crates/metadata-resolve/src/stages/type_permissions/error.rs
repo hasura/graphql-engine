@@ -1,5 +1,5 @@
-use crate::helpers::typecheck;
-use crate::types::error::Error;
+use crate::helpers::typecheck::{self, TypecheckIssue};
+use crate::types::error::{Error, ShouldBeAnError};
 use open_dds::types::{CustomTypeName, FieldName};
 
 use crate::types::subgraph::Qualified;
@@ -65,5 +65,25 @@ pub enum TypePermissionError {
 impl From<TypePermissionError> for Error {
     fn from(val: TypePermissionError) -> Self {
         Error::TypePermissionError(val)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum TypePermissionIssue {
+    #[error("Type error in field preset of {field_name:}, for input type permissions definition of type {type_name:}: {typecheck_issue:}")]
+    FieldPresetTypecheckIssue {
+        field_name: FieldName,
+        type_name: CustomTypeName,
+        typecheck_issue: TypecheckIssue,
+    },
+}
+
+impl ShouldBeAnError for TypePermissionIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            TypePermissionIssue::FieldPresetTypecheckIssue {
+                typecheck_issue, ..
+            } => typecheck_issue.should_be_an_error(flags),
+        }
     }
 }

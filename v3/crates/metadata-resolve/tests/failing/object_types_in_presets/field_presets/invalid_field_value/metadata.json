@@ -1,0 +1,105 @@
+{
+  "version": "v2",
+  "flags": {
+    "typecheck_object_type_values_in_presets": true
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Institution",
+            "fields": [
+              {
+                "name": "Departments",
+                "type": "[String!]!",
+                "description": "The institution's departments"
+              },
+              {
+                "name": "Id",
+                "type": "Int",
+                "description": "The institution's primary key"
+              },
+              {
+                "name": "Location",
+                "type": "Location!",
+                "description": "The institution's location"
+              },
+              {
+                "name": "Name",
+                "type": "String!",
+                "description": "The institution's name"
+              }
+            ],
+            "description": "An institution",
+            "graphql": {
+              "typeName": "Institution"
+            },
+            "dataConnectorTypeMapping": []
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Location",
+            "fields": [
+              {
+                "name": "Campuses",
+                "type": "[String!]!",
+                "description": "The location's campuses"
+              },
+              {
+                "name": "City",
+                "type": "String!",
+                "description": "The location's city"
+              },
+              {
+                "name": "Country",
+                "type": "String!",
+                "description": "The location's city"
+              }
+            ],
+            "description": "A location",
+            "graphql": {
+              "typeName": "Location"
+            },
+            "dataConnectorTypeMapping": []
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Institution",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["Departments", "Id", "Location", "Name"]
+                },
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "Location",
+                      "value": {
+                        "literal": {
+                          "Campuses": ["Main"],
+                          "City": "San Francisco",
+                          "Country": 123
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

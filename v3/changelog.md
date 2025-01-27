@@ -4,6 +4,10 @@
 
 ### Added
 
+- Added type checking for object-type values in field presets within type
+  permissions and for argument presets in model or command permissions.
+- Allow environment variables to be used in permission filters.
+
 ### Fixed
 
 ### Changed
@@ -15,7 +19,6 @@
 - Added configuration for headers in response to client for requests handled by
   the pre-route plugin hook.
 - Added OpenAPI schema for filter parameters in JSONAPI
-- Allow environment variables to be used in permission filters.
 
 ### Fixed
 

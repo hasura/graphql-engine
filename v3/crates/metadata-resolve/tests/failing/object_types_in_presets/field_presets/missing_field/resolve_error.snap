@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/field_presets/missing_field/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+Type error in field preset of Location, for input type permissions definition of type Institution: Typecheck failed for field Country in object type Location (in subgraph default): Expected a non-null value but received null

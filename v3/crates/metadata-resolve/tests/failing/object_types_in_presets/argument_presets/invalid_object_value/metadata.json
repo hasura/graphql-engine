@@ -1,0 +1,777 @@
+{
+  "version": "v3",
+  "flags": {
+    "typecheck_object_type_values_in_presets": true
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "pg",
+            "url": {
+              "readWriteUrls": {
+                "read": {
+                  "value": "http://local.hasura.dev:8080"
+                },
+                "write": {
+                  "value": "http://local.hasura.dev:8080"
+                }
+              }
+            },
+            "headers": {
+              "Authorization": {
+                "value": "Bearer RPDvzYG6hYoZGJxtIRdD8g=="
+              }
+            },
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "bool": {
+                    "representation": {
+                      "type": "boolean"
+                    },
+                    "aggregate_functions": {
+                      "bool_and": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "bool"
+                          }
+                        }
+                      },
+                      "bool_or": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "bool"
+                          }
+                        }
+                      },
+                      "every": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "bool"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      }
+                    }
+                  },
+                  "int4": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "bit_and": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "bit_or": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "bit_xor": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "stddev": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "stddev_pop": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "stddev_samp": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int8"
+                          }
+                        }
+                      },
+                      "var_pop": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "var_samp": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "variance": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  },
+                  "varchar": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_ilike": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_iregex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_like": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_nilike": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_niregex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_nlike": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_nregex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "_regex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "starts_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "ts_match_tt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      }
+                    }
+                  }
+                },
+                "object_types": {
+                  "album": {
+                    "fields": {
+                      "album_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "artist_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "title": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      }
+                    }
+                  },
+                  "insert_album_object": {
+                    "fields": {
+                      "album_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "artist_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "title": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "record_label": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "record_label"
+                          }
+                        }
+                      },
+                      "discs": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "array",
+                            "element_type": {
+                              "type": "named",
+                              "name": "disc"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "insert_album_response": {
+                    "description": "Responses from the 'insert_album' procedure",
+                    "fields": {
+                      "affected_rows": {
+                        "description": "The number of rows affected by the mutation",
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "returning": {
+                        "description": "Data from rows affected by the mutation",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "album"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "record_label": {
+                    "fields": {
+                      "name": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "exclusive_rights": {
+                        "type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      }
+                    }
+                  },
+                  "disc": {
+                    "fields": {
+                      "name": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "length_mins": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [],
+                "functions": [],
+                "procedures": [
+                  {
+                    "name": "insert_album",
+                    "description": "Insert into the album table",
+                    "arguments": {
+                      "objects": {
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "insert_album_object"
+                          }
+                        }
+                      },
+                      "post_check": {
+                        "description": "Insert permission predicate over the 'album' collection",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "predicate",
+                            "object_type_name": "album"
+                          }
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "insert_album_response"
+                    }
+                  }
+                ]
+              },
+              "capabilities": {
+                "version": "0.1.6",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    },
+                    "exists": {
+                      "nested_collections": {}
+                    }
+                  },
+                  "mutation": {
+                    "transactional": {},
+                    "explain": {}
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
+              }
+            },
+            "argumentPresets": [],
+            "responseHeaders": null
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "InsertAlbum",
+            "outputType": "InsertAlbumResponse!",
+            "arguments": [
+              {
+                "name": "objects",
+                "type": "[InsertAlbumObject!]!",
+                "description": null
+              }
+            ],
+            "source": {
+              "dataConnectorName": "pg",
+              "dataConnectorCommand": {
+                "procedure": "insert_album"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "insertAlbum",
+              "rootFieldKind": "Mutation",
+              "deprecated": null
+            },
+            "description": "Insert into the album table"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "InsertAlbumResponse",
+            "fields": [
+              {
+                "name": "affectedRows",
+                "type": "Int4!",
+                "description": "The number of rows affected by the mutation",
+                "deprecated": null,
+                "arguments": []
+              },
+              {
+                "name": "returning",
+                "type": "[Album!]!",
+                "description": "Data from rows affected by the mutation",
+                "deprecated": null,
+                "arguments": []
+              }
+            ],
+            "globalIdFields": null,
+            "graphql": {
+              "typeName": "InsertAlbumResponse",
+              "inputTypeName": "InsertAlbumResponseInput",
+              "apolloFederation": null
+            },
+            "description": "Responses from the 'insert_album' procedure",
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "pg",
+                "dataConnectorObjectType": "insert_album_response",
+                "fieldMapping": {
+                  "affectedRows": {
+                    "column": {
+                      "name": "affected_rows",
+                      "argumentMapping": null
+                    }
+                  },
+                  "returning": {
+                    "column": {
+                      "name": "returning",
+                      "argumentMapping": null
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "InsertAlbumObject",
+            "fields": [
+              {
+                "name": "albumId",
+                "type": "Int4!"
+              },
+              {
+                "name": "artistId",
+                "type": "Int4!"
+              },
+              {
+                "name": "title",
+                "type": "Varchar!"
+              },
+              {
+                "name": "recordLabel",
+                "type": "RecordLabel"
+              },
+              {
+                "name": "discs",
+                "type": "[Disc!]"
+              }
+            ],
+            "globalIdFields": null,
+            "graphql": {
+              "typeName": "InsertAlbumObject",
+              "inputTypeName": "InsertAlbumObjectInput",
+              "apolloFederation": null
+            },
+            "description": null,
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "pg",
+                "dataConnectorObjectType": "insert_album_object",
+                "fieldMapping": {
+                  "albumId": {
+                    "column": {
+                      "name": "album_id",
+                      "argumentMapping": null
+                    }
+                  },
+                  "artistId": {
+                    "column": {
+                      "name": "artist_id",
+                      "argumentMapping": null
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title",
+                      "argumentMapping": null
+                    }
+                  },
+                  "recordLabel": {
+                    "column": {
+                      "name": "record_label",
+                      "argumentMapping": null
+                    }
+                  },
+                  "discs": {
+                    "column": {
+                      "name": "discs",
+                      "argumentMapping": null
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "InsertAlbum",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "objects",
+                    "value": {
+                      "literal": ["Invalid object value"]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

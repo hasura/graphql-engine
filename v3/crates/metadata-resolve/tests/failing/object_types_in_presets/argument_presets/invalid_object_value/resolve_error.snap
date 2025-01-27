@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/argument_presets/invalid_object_value/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+Type error in preset argument objects for command InsertAlbum (in subgraph default): Expected an object value of type InsertAlbumObject (in subgraph default) but got value "Invalid object value"

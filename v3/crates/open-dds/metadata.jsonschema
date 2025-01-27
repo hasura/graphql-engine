@@ -3708,6 +3708,10 @@
         "disallow_duplicate_aggregate_function_definitions_for_scalar_type": {
           "default": false,
           "type": "boolean"
+        },
+        "typecheck_object_type_values_in_presets": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

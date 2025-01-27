@@ -2,7 +2,9 @@ use std::collections::BTreeMap;
 
 mod error;
 mod types;
-pub use error::{TypeInputPermissionError, TypeOutputPermissionError, TypePermissionError};
+pub use error::{
+    TypeInputPermissionError, TypeOutputPermissionError, TypePermissionError, TypePermissionIssue,
+};
 use open_dds::permissions::{FieldPreset, Role, TypeOutputPermission, TypePermissionsV1};
 pub use types::{
     FieldPresetInfo, ObjectTypeWithPermissions, ObjectTypesWithPermissions, TypeInputPermission,
@@ -18,20 +20,15 @@ use crate::ValueExpression;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     object_types: object_types::ObjectTypesWithTypeMappings,
-) -> Result<ObjectTypesWithPermissions, TypePermissionError> {
-    let mut object_types_with_permissions = BTreeMap::new();
-    for (object_type_name, object_type) in object_types.0 {
-        object_types_with_permissions.insert(
-            object_type_name.clone(),
-            ObjectTypeWithPermissions {
-                object_type: object_type.object_type,
-                type_mappings: object_type.type_mappings,
-                type_input_permissions: BTreeMap::new(),
-                type_output_permissions: BTreeMap::new(),
-            },
-        );
-    }
-
+) -> Result<(ObjectTypesWithPermissions, Vec<TypePermissionIssue>), TypePermissionError> {
+    let mut issues = Vec::new();
+    let object_types_context = object_types
+        .0
+        .iter()
+        .map(|(k, v)| (k, &v.object_type))
+        .collect();
+    // A temporary map to store the resolved permissions
+    let mut type_permissions = BTreeMap::new();
     // resolve type permissions
     for open_dds::accessor::QualifiedObject {
         path: _,
@@ -41,7 +38,7 @@ pub fn resolve(
     {
         let qualified_type_name =
             Qualified::new(subgraph.clone(), output_type_permission.type_name.clone());
-        match object_types_with_permissions.get_mut(&qualified_type_name) {
+        match object_types.0.get(&qualified_type_name) {
             None => {
                 return Err(TypePermissionError::from(
                     TypeOutputPermissionError::UnknownTypeInOutputPermissionsDefinition {
@@ -50,19 +47,47 @@ pub fn resolve(
                 ))
             }
             Some(object_type) => {
-                object_type.type_output_permissions = resolve_output_type_permission(
+                let type_output_permissions = resolve_output_type_permission(
                     &object_type.object_type,
                     output_type_permission,
                 )?;
-                object_type.type_input_permissions = resolve_input_type_permission(
+                let type_input_permissions = resolve_input_type_permission(
                     &metadata_accessor.flags,
+                    &object_types_context,
                     &object_type.object_type,
                     output_type_permission,
+                    &mut issues,
                 )?;
+                type_permissions.insert(
+                    qualified_type_name,
+                    (type_output_permissions, type_input_permissions),
+                );
             }
         }
     }
-    Ok(ObjectTypesWithPermissions(object_types_with_permissions))
+    // Stitch the permissions back onto the object types
+    let object_types_with_permissions = object_types
+        .0
+        .into_iter()
+        .map(|(qualified_type_name, object_type)| {
+            let (type_output_permissions, type_input_permissions) = type_permissions
+                .remove(&qualified_type_name)
+                .unwrap_or_else(|| (BTreeMap::new(), BTreeMap::new())); // Assume no permissions if not found in the map
+            (
+                qualified_type_name,
+                ObjectTypeWithPermissions {
+                    object_type: object_type.object_type,
+                    type_mappings: object_type.type_mappings,
+                    type_output_permissions,
+                    type_input_permissions,
+                },
+            )
+        })
+        .collect();
+    Ok((
+        ObjectTypesWithPermissions(object_types_with_permissions),
+        issues,
+    ))
 }
 
 pub fn resolve_output_type_permission(
@@ -100,8 +125,13 @@ pub fn resolve_output_type_permission(
 
 pub(crate) fn resolve_input_type_permission(
     flags: &open_dds::flags::OpenDdFlags,
+    object_types: &BTreeMap<
+        &Qualified<open_dds::types::CustomTypeName>,
+        &object_types::ObjectTypeRepresentation,
+    >,
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
+    issues: &mut Vec<TypePermissionIssue>,
 ) -> Result<BTreeMap<Role, TypeInputPermission>, TypeInputPermissionError> {
     let mut resolved_type_permissions = BTreeMap::new();
 
@@ -117,14 +147,26 @@ pub(crate) fn resolve_input_type_permission(
                 let field_definition = match object_type_representation.fields.get(field_name) {
                     Some(field_definition) => {
                         // check if the value is provided typechecks
-                        typecheck::typecheck_value_expression(&field_definition.field_type, value)
-                            .map_err(|type_error| {
-                                TypeInputPermissionError::FieldPresetTypeError {
-                                    field_name: field_name.clone(),
-                                    type_name: type_permissions.type_name.clone(),
-                                    type_error,
-                                }
-                            })?;
+                        let new_issues = typecheck::typecheck_value_expression(
+                            object_types,
+                            &field_definition.field_type,
+                            value,
+                        )
+                        .map_err(|type_error| {
+                            TypeInputPermissionError::FieldPresetTypeError {
+                                field_name: field_name.clone(),
+                                type_name: type_permissions.type_name.clone(),
+                                type_error,
+                            }
+                        })?;
+                        // Convert typecheck issues into type permission issues and collect them
+                        for issue in new_issues {
+                            issues.push(TypePermissionIssue::FieldPresetTypecheckIssue {
+                                field_name: field_name.clone(),
+                                type_name: type_permissions.type_name.clone(),
+                                typecheck_issue: issue,
+                            });
+                        }
                         field_definition
                     }
                     None => {

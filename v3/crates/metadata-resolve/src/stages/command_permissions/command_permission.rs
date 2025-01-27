@@ -16,7 +16,7 @@ use crate::helpers::argument::resolve_value_expression_for_argument;
 
 use open_dds::permissions::CommandPermissionsV1;
 
-use super::types::CommandPermission;
+use super::types::{CommandPermission, CommandPermissionIssue};
 use crate::helpers::typecheck;
 use std::collections::BTreeMap;
 
@@ -54,6 +54,7 @@ pub fn resolve_command_permissions(
         data_connector_scalar_types::DataConnectorScalars,
     >,
     subgraph: &SubgraphName,
+    issues: &mut Vec<CommandPermissionIssue>,
 ) -> Result<BTreeMap<Role, CommandPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
     for command_permission in &permissions.permissions {
@@ -111,7 +112,11 @@ pub fn resolve_command_permissions(
                     // additionally typecheck literals
                     // we do this outside the argument resolve so that we can emit a command-specific error
                     // on typechecking failure
-                    typecheck::typecheck_value_expression_or_predicate(
+                    let new_issues = typecheck::typecheck_value_expression_or_predicate(
+                        &object_types
+                            .iter()
+                            .map(|(field_name, object_type)| (field_name, &object_type.object_type))
+                            .collect(), // Convert &BTreeMap<field_name, object_type> to BTreeMap<&field_name, &object_type>
                         &argument.argument_type,
                         &argument_preset.value,
                     )
@@ -122,6 +127,17 @@ pub fn resolve_command_permissions(
                             type_error,
                         }
                     })?;
+
+                    // Convert typecheck issues into command permission issues and collect them
+                    for issue in new_issues {
+                        issues.push(
+                            CommandPermissionIssue::CommandArgumentPresetTypecheckIssue {
+                                command_name: command.name.clone(),
+                                argument_name: argument_preset.argument.clone(),
+                                typecheck_issue: issue,
+                            },
+                        );
+                    }
 
                     argument_presets.insert(
                         argument_preset.argument.clone(),
