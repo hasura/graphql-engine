@@ -6395,6 +6395,19 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "title": "ValueFromEnv",
+          "type": "object",
+          "required": [
+            "valueFromEnv"
+          ],
+          "properties": {
+            "valueFromEnv": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },
@@ -6436,6 +6449,19 @@
           "properties": {
             "booleanExpression": {
               "$ref": "#/definitions/ModelPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "ValueFromEnv",
+          "type": "object",
+          "required": [
+            "valueFromEnv"
+          ],
+          "properties": {
+            "valueFromEnv": {
+              "type": "string"
             }
           },
           "additionalProperties": false

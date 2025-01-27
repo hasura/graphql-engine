@@ -15,6 +15,7 @@
 - Added configuration for headers in response to client for requests handled by
   the pre-route plugin hook.
 - Added OpenAPI schema for filter parameters in JSONAPI
+- Allow environment variables to be used in permission filters.
 
 ### Fixed
 

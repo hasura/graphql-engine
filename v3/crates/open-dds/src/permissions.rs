@@ -6,6 +6,7 @@ use serde_json::Value as JsonValue;
 use crate::{
     arguments::ArgumentName,
     commands::CommandName,
+    impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
     relationships::RelationshipName,
     session_variables::SessionVariableName,
@@ -634,32 +635,127 @@ impl ModelPredicate {
     }
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-#[schemars(title = "ValueExpression")]
 /// An expression which evaluates to a value that can be used in permissions and
 /// various presets.
+// If you are adding a new variant, make sure to add it to the `ValueExpressionImpl` enum as well.
 pub enum ValueExpression {
+    #[serde(alias = "value")]
+    Literal(JsonValue),
+    SessionVariable(SessionVariableName),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+/// An expression which evaluates to a value that can be used in permissions and
+/// various presets.
+// If you are adding a new variant, make sure to add it to the `ValueExpressionOrPredicateImpl` enum as well.
+pub enum ValueExpressionOrPredicate {
+    #[serde(alias = "value")]
+    Literal(JsonValue),
+    SessionVariable(SessionVariableName),
+    BooleanExpression(Box<ModelPredicate>),
+}
+
+// Similar to `EnvironmentValue`, but for ValueExpression.
+// We want to add environment variables to ValueExpression and be consistent with how we define environment variables in other places.
+// Specifically, we want to be able to define environment variables in the metadata as:
+// ```json
+// {
+//     "valueFromEnv": "ENV_VAR1"
+// }
+// ```
+
+/// An expression which evaluates to a value that can be used in permissions and
+/// various presets.
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+#[schemars(title = "ValueExpression")]
+// Either a literal value or a session variable or a reference to a Hasura secret
+pub enum ValueExpressionImpl {
     #[schemars(title = "Literal")]
     Literal(JsonValue),
     #[schemars(title = "SessionVariable")]
     SessionVariable(SessionVariableName),
+    #[schemars(title = "ValueFromEnv")]
+    ValueFromEnv(String),
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
-#[serde(rename_all = "camelCase")]
-#[schemars(title = "ValueExpressionOrPredicate")]
+// Similar to `ValueExpressionImpl`, but for ValueExpressionOrPredicate.
 /// An expression which evaluates to a value that can be used in permissions and
 /// various presets.
-pub enum ValueExpressionOrPredicate {
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+#[schemars(title = "ValueExpressionOrPredicate")]
+// Either a literal value or a session variable or a boolean expression or a reference to a Hasura secret
+pub enum ValueExpressionOrPredicateImpl {
     #[schemars(title = "Literal")]
     Literal(JsonValue),
     #[schemars(title = "SessionVariable")]
     SessionVariable(SessionVariableName),
     #[schemars(title = "BooleanExpression")]
     BooleanExpression(Box<ModelPredicate>),
+    #[schemars(title = "ValueFromEnv")]
+    ValueFromEnv(String),
 }
+
+impl traits::OpenDd for ValueExpression {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, traits::OpenDdDeserializeError> {
+        serde_path_to_error::deserialize(json).map_err(|e| traits::OpenDdDeserializeError {
+            path: jsonpath::JSONPath::from_serde_path(e.path()),
+            error: e.into_inner(),
+        })
+    }
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut s = ValueExpressionImpl::json_schema(gen);
+        if let schemars::schema::Schema::Object(o) = &mut s {
+            if let Some(m) = &mut o.metadata {
+                m.id = Some("https://hasura.io/jsonschemas/metadata/ValueExpression".into());
+            }
+        }
+        s
+    }
+    fn _schema_name() -> String {
+        "ValueExpression".to_owned()
+    }
+    fn _schema_is_referenceable() -> bool {
+        true
+    }
+}
+
+impl_JsonSchema_with_OpenDd_for!(ValueExpression);
+
+impl traits::OpenDd for ValueExpressionOrPredicate {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, traits::OpenDdDeserializeError> {
+        serde_path_to_error::deserialize(json).map_err(|e| traits::OpenDdDeserializeError {
+            path: jsonpath::JSONPath::from_serde_path(e.path()),
+            error: e.into_inner(),
+        })
+    }
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut s = ValueExpressionOrPredicateImpl::json_schema(gen);
+        if let schemars::schema::Schema::Object(o) = &mut s {
+            if let Some(m) = &mut o.metadata {
+                m.id = Some(
+                    "https://hasura.io/jsonschemas/metadata/ValueExpressionOrPredicate".into(),
+                );
+            }
+        }
+        s
+    }
+    fn _schema_name() -> String {
+        "ValueExpressionOrPredicate".to_owned()
+    }
+    fn _schema_is_referenceable() -> bool {
+        true
+    }
+}
+
+impl_JsonSchema_with_OpenDd_for!(ValueExpressionOrPredicate);
