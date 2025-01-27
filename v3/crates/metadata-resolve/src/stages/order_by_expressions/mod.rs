@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -10,7 +10,6 @@ use open_dds::relationships::{
 };
 use open_dds::types::{CustomTypeName, FieldName, TypeName};
 mod error;
-use crate::helpers::types::store_new_graphql_type;
 use crate::{mk_name, Error, Qualified, QualifiedBaseType, QualifiedTypeName};
 
 use crate::types::subgraph::mk_qualified_type_name;
@@ -19,7 +18,7 @@ pub use error::OrderByExpressionError;
 mod types;
 pub use types::*;
 
-use crate::stages::{object_types, relationships, scalar_types, type_permissions};
+use crate::stages::{graphql_config, object_types, relationships, scalar_types, type_permissions};
 
 /// Resolve order by expressions.
 /// Returns the map of OrderByExpressions and updated graphql_types.
@@ -28,7 +27,7 @@ pub fn resolve(
     object_types: &type_permissions::ObjectTypesWithPermissions,
     relationships: &relationships::Relationships,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    mut graphql_types: BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<OrderByExpressionsOutput, Error> {
     let mut resolved_order_by_expressions = OrderByExpressions {
         objects: BTreeMap::new(),
@@ -67,7 +66,7 @@ pub fn resolve(
                     scalar_operand,
                     order_by_expression.graphql.as_ref(),
                     order_by_expression.description.as_ref(),
-                    &mut graphql_types,
+                    graphql_types,
                 )
                 .map_err(|error| Error::OrderByExpressionError {
                     order_by_expression_name: Qualified::new(
@@ -105,7 +104,7 @@ pub fn resolve(
                         order_by_expression.graphql.as_ref(),
                         order_by_expression.description.as_ref(),
                         relationships,
-                        &mut graphql_types,
+                        graphql_types,
                     )
                     .map_err(|error| Error::OrderByExpressionError {
                         order_by_expression_name: Qualified::new(
@@ -132,7 +131,6 @@ pub fn resolve(
 
     Ok(OrderByExpressionsOutput {
         order_by_expressions: resolved_order_by_expressions,
-        graphql_types,
         issues,
     })
 }
@@ -147,7 +145,7 @@ fn resolve_scalar_order_by_expression(
         &order_by_expression::OrderByExpressionGraphQlConfiguration,
     >,
     description: Option<&String>,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<ScalarOrderByExpression, OrderByExpressionError> {
     // because we essentially enforce all orderable fields have 'allow all', we don't actually
     // generate GraphQL types for ordering. If we change this we will need to actually generate all
@@ -180,14 +178,14 @@ fn resolve_graphql(
     order_by_expression_graphql: Option<
         &order_by_expression::OrderByExpressionGraphQlConfiguration,
     >,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<Option<OrderByExpressionGraphqlConfig>, OrderByExpressionError> {
     order_by_expression_graphql
         .as_ref()
         .map(|config| {
             let expression_type_name =
                 mk_name(config.expression_type_name.as_str()).map(ast::TypeName)?;
-            store_new_graphql_type(graphql_types, Some(&expression_type_name))?;
+            graphql_types.store(Some(&expression_type_name))?;
             Ok::<_, OrderByExpressionError>(OrderByExpressionGraphqlConfig {
                 expression_type_name,
             })
@@ -210,7 +208,7 @@ fn resolve_object_order_by_expression(
     >,
     description: Option<&String>,
     relationships: &relationships::Relationships,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<(ObjectOrderByExpression, Vec<OrderByExpressionIssue>), OrderByExpressionError> {
     let identifier = Qualified::new(
         subgraph.clone(),

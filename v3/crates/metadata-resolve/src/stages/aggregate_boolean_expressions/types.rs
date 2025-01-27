@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use lang_graphql::ast::common as ast;
 use open_dds::{
@@ -24,7 +24,6 @@ pub struct AggregateBooleanExpressionsOutput {
     pub object_aggregates: BTreeMap<Qualified<CustomTypeName>, ObjectAggregateBooleanExpression>,
 
     pub issues: Vec<NamedAggregateBooleanExpressionIssue>,
-    pub graphql_types: BTreeSet<ast::TypeName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

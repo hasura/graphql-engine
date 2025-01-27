@@ -10,7 +10,7 @@ use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, Fie
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::borrow::Borrow;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::ops::Deref;
 
 use crate::types::subgraph::Qualified;
@@ -113,7 +113,6 @@ impl Deref for ObjectTypesWithTypeMappings {
 
 /// output of `object_types` step
 pub struct ObjectTypesOutput {
-    pub graphql_types: BTreeSet<ast::TypeName>,
     pub global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
         BTreeMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,

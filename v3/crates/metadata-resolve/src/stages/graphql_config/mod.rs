@@ -15,7 +15,7 @@ use crate::helpers::types::mk_name;
 pub use error::GraphqlConfigError;
 pub use types::{
     AggregateGraphqlConfig, FilterInputGraphqlConfig, FilterInputOperatorNames,
-    GlobalGraphqlConfig, GraphqlConfig, MultipleOrderByInputObjectFields,
+    GlobalGraphqlConfig, GraphqlConfig, GraphqlTypeNames, MultipleOrderByInputObjectFields,
     OrderByInputGraphqlConfig, QueryGraphqlConfig,
 };
 

@@ -22,23 +22,6 @@ pub struct NdcColumnForComparison {
     pub equal_operator: DataConnectorOperatorName,
 }
 
-/// try to add `new_graphql_type` to `existing_graphql_types`, returning an error
-/// if there is a name conflict
-pub fn store_new_graphql_type(
-    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
-    new_graphql_type: Option<&ast::TypeName>,
-) -> Result<(), graphql_config::GraphqlConfigError> {
-    if let Some(new_graphql_type) = new_graphql_type {
-        // Fail on conflicting graphql type names
-        if !(existing_graphql_types.insert(new_graphql_type.clone())) {
-            return Err(graphql_config::GraphqlConfigError::ConflictingGraphQlType {
-                graphql_type_name: new_graphql_type.clone(),
-            });
-        }
-    }
-    Ok(())
-}
-
 /// Track the root fields of the GraphQL schema while resolving the metadata.
 /// This is used to ensure that the schema has unique root fields for Query, Mutation and Subscription.
 // NOTE: The `ast::Name` is cheap to clone, so storing them directly without references

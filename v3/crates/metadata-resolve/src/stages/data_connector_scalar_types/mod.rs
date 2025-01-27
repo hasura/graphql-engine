@@ -2,10 +2,8 @@ mod error;
 mod types;
 pub use error::DataConnectorScalarTypesError;
 use open_dds::identifier::SubgraphName;
-use std::collections::{BTreeMap, BTreeSet};
-pub use types::{
-    DataConnectorScalars, DataConnectorWithScalarsOutput, ScalarTypeWithRepresentationInfo,
-};
+use std::collections::BTreeMap;
+pub use types::{DataConnectorScalars, ScalarTypeWithRepresentationInfo};
 
 use lang_graphql::ast::common as ast;
 
@@ -16,15 +14,18 @@ use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 use crate::helpers::types::mk_name;
 use crate::types::subgraph::Qualified;
 
-use crate::stages::{data_connectors, scalar_boolean_expressions, scalar_types};
+use crate::stages::{data_connectors, graphql_config, scalar_boolean_expressions, scalar_types};
 
 /// resolve data connector scalar representations
 pub fn resolve<'a>(
     metadata_accessor: &'a open_dds::accessor::MetadataAccessor,
     data_connectors: &'a data_connectors::DataConnectors,
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    mut graphql_types: BTreeSet<ast::TypeName>,
-) -> Result<DataConnectorWithScalarsOutput<'a>, DataConnectorScalarTypesError> {
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
+) -> Result<
+    BTreeMap<Qualified<DataConnectorName>, DataConnectorScalars<'a>>,
+    DataConnectorScalarTypesError,
+> {
     // we convert data from the old types to the new types and then start mutating everything
     // there is no doubt room for improvement here, but at least we are keeping the mutation
     // contained to this resolving stage
@@ -114,19 +115,12 @@ pub fn resolve<'a>(
 
         // We are allowing conflicting graphql types for scalar comparison expressions, but we still want the typename
         // to not conflict with other graphql type names
-        //
-        // TODO: This means that comparison expression names conflicting with already encountered graphql type names
-        // will pass through. They'll eventually be caught during schema generation but only if the expression was
-        // reachable in the graphql API. Ideally, we should just fail the build here.
         if let Some(new_graphql_type) = &scalar_type_by_ndc_type.comparison_expression_name {
-            graphql_types.insert(new_graphql_type.clone());
+            let _ = graphql_types.store(Some(new_graphql_type));
         };
     }
 
-    Ok(DataConnectorWithScalarsOutput {
-        data_connector_scalars,
-        graphql_types,
-    })
+    Ok(data_connector_scalars)
 }
 
 fn validate_type_name(

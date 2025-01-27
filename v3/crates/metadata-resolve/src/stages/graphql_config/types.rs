@@ -1,5 +1,7 @@
+use super::error::GraphqlConfigError;
 use lang_graphql::ast::common as ast;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct GraphqlConfig {
@@ -73,4 +75,33 @@ pub struct AggregateGraphqlConfig {
     pub filter_input_field_name: ast::Name,
     pub count_field_name: ast::Name,
     pub count_distinct_field_name: ast::Name,
+}
+
+pub struct GraphqlTypeNames {
+    type_names: BTreeSet<ast::TypeName>,
+}
+
+impl GraphqlTypeNames {
+    pub fn new() -> Self {
+        GraphqlTypeNames {
+            type_names: BTreeSet::new(),
+        }
+    }
+
+    /// try to add `new_graphql_type` to `existing_graphql_types`, returning an error
+    /// if there is a name conflict
+    pub fn store(
+        &mut self,
+        new_graphql_type_name: Option<&ast::TypeName>,
+    ) -> Result<(), GraphqlConfigError> {
+        if let Some(new_graphql_type_name) = new_graphql_type_name {
+            // Fail on conflicting graphql type names
+            if !(self.type_names.insert(new_graphql_type_name.clone())) {
+                return Err(GraphqlConfigError::ConflictingGraphQlType {
+                    graphql_type_name: new_graphql_type_name.clone(),
+                });
+            }
+        }
+        Ok(())
+    }
 }

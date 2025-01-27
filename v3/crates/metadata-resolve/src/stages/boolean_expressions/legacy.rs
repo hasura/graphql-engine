@@ -11,7 +11,6 @@ use crate::stages::{
 };
 use crate::types::subgraph::mk_qualified_type_name;
 use crate::{Qualified, ScalarComparisonKind};
-use lang_graphql::ast::common::{self as ast};
 use open_dds::{
     data_connector::DataConnectorName,
     models::ModelName,
@@ -46,8 +45,8 @@ pub(crate) fn resolve_object_boolean_expression_type(
     raw_models: &BTreeMap<Qualified<ModelName>, &open_dds::models::Model>,
     object_boolean_expression_type_names: &BTreeSet<Qualified<CustomTypeName>>,
     graphql_config: &graphql_config::GraphqlConfig,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
     flags: &open_dds::flags::OpenDdFlags,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<
     (
         ResolvedObjectBooleanExpressionType,

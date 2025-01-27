@@ -1,16 +1,17 @@
-use crate::helpers::types::store_new_graphql_type;
 use crate::Warning;
 use crate::{mk_name, QualifiedTypeName};
 use lang_graphql::ast::common as ast;
 use open_dds::types::CustomTypeName;
 
-use crate::stages::{models, object_relationships, order_by_expressions, scalar_types};
+use crate::stages::{
+    graphql_config, models, object_relationships, order_by_expressions, scalar_types,
+};
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 
 use open_dds::{models::ModelName, types::GraphQlTypeName};
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use super::order_by_expressions::{
     OrderByExpressionError, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
@@ -26,8 +27,8 @@ pub fn resolve_order_by_expression(
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
     order_by_expressions: &mut OrderByExpressions,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<Warning>,
 ) -> Result<Option<Qualified<OrderByExpressionIdentifier>>, models::ModelsError> {
     match &model.raw.order_by {
@@ -51,8 +52,8 @@ pub fn resolve_order_by_expression(
                 object_type_representation,
                 models,
                 scalar_types,
-                graphql_types,
                 order_by_expressions,
+                graphql_types,
                 issues,
             )?))
         }
@@ -81,8 +82,8 @@ pub fn make_order_by_expression(
     object_type_representation: &object_relationships::ObjectTypeWithRelationships,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
     order_by_expressions: &mut OrderByExpressions,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<Warning>,
 ) -> Result<Qualified<OrderByExpressionIdentifier>, models::ModelsError> {
     let identifier = Qualified::new(
@@ -231,7 +232,7 @@ pub fn make_order_by_expression(
         .as_ref()
         .map(|type_name| {
             let expression_type_name = mk_name(type_name.as_str()).map(ast::TypeName)?;
-            store_new_graphql_type(graphql_types, Some(&expression_type_name))?;
+            graphql_types.store(Some(&expression_type_name))?;
             Ok::<_, models::ModelsError>(OrderByExpressionGraphqlConfig {
                 expression_type_name,
             })

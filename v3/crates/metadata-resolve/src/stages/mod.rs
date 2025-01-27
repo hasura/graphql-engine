@@ -54,6 +54,7 @@ fn resolve_internal(
     // all issues raised throughout metadata-resolve. These will be turned into `warnings` or
     // `errors` at the end of this function, depending on OpenDDS flags.
     let mut all_issues = vec![];
+    let mut graphql_types = graphql_config::GraphqlTypeNames::new();
 
     // Create a empty tracked root fields
     let mut track_root_fields = TrackGraphQLRootFields::new();
@@ -76,48 +77,42 @@ fn resolve_internal(
 
     // Validate object types defined in metadata
     let object_types::ObjectTypesOutput {
-        graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         object_types,
         issues,
-    } = object_types::resolve(&metadata_accessor, &data_connectors)?;
+    } = object_types::resolve(&metadata_accessor, &data_connectors, &mut graphql_types)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Validate custom defined scalar types
     let scalar_types::ScalarTypesOutput {
         scalar_types,
-        graphql_types,
         issues,
-    } = scalar_types::resolve(&metadata_accessor, graphql_types)?;
+    } = scalar_types::resolve(&metadata_accessor, &mut graphql_types)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Validate `DataConnectorScalarType` metadata.
-    let data_connector_scalar_types::DataConnectorWithScalarsOutput {
-        data_connector_scalars,
-        graphql_types,
-    } = data_connector_scalar_types::resolve(
+    let data_connector_scalars = data_connector_scalar_types::resolve(
         &metadata_accessor,
         &data_connectors,
         &scalar_types,
-        graphql_types,
+        &mut graphql_types,
     )?;
 
     // Validate scalar `BooleanExpressionType`s
     let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {
-        graphql_types,
         boolean_expression_scalar_types,
         issues,
     } = scalar_boolean_expressions::resolve(
         &metadata_accessor,
-        graphql_types,
         &data_connectors,
         &data_connector_scalars,
         &object_types,
         &scalar_types,
         &graphql_config,
+        &mut graphql_types,
     )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
@@ -133,7 +128,6 @@ fn resolve_internal(
     // Check aggregate expressions
     let aggregates::AggregateExpressionsOutput {
         aggregate_expressions,
-        graphql_types,
         issues,
     } = aggregates::resolve(
         &metadata_accessor,
@@ -141,8 +135,8 @@ fn resolve_internal(
         &data_connector_scalars,
         &object_types_with_permissions,
         &scalar_types,
-        graphql_types,
         &graphql_config,
+        &mut graphql_types,
     )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
@@ -151,7 +145,6 @@ fn resolve_internal(
         scalar_aggregates,
         object_aggregates,
         issues,
-        graphql_types,
     } = aggregate_boolean_expressions::resolve(
         &configuration.unstable_features,
         &metadata_accessor,
@@ -161,7 +154,7 @@ fn resolve_internal(
         &object_types_with_permissions,
         &scalar_types,
         &graphql_config,
-        graphql_types,
+        &mut graphql_types,
     )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
@@ -169,33 +162,31 @@ fn resolve_internal(
     // Resolve object boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
         boolean_expression_types,
-        graphql_types,
         issues,
     } = boolean_expressions::resolve(
         &metadata_accessor,
         boolean_expression_scalar_types,
         object_aggregates,
         scalar_aggregates,
-        graphql_types,
         &data_connectors,
         &data_connector_scalars,
         &graphql_config,
         &object_types_with_permissions,
         &relationships,
+        &mut graphql_types,
     )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
     let order_by_expressions::OrderByExpressionsOutput {
         mut order_by_expressions,
-        graphql_types,
         issues,
     } = order_by_expressions::resolve(
         &metadata_accessor,
         &object_types_with_permissions,
         &relationships,
         &scalar_types,
-        graphql_types,
+        &mut graphql_types,
     )?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
@@ -269,11 +260,11 @@ fn resolve_internal(
         &models,
         &object_types_with_relationships,
         &boolean_expression_types,
-        graphql_types,
         &mut track_root_fields,
         &graphql_config,
         &scalar_types,
         &mut order_by_expressions,
+        &mut graphql_types,
     )?;
 
     all_issues.extend(issues);

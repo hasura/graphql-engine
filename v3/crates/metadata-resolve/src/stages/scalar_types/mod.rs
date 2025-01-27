@@ -1,11 +1,12 @@
-use crate::helpers::types::{mk_name, store_new_graphql_type};
+use crate::helpers::types::mk_name;
 use crate::types::subgraph::Qualified;
 use lang_graphql::ast::common as ast;
 use open_dds::types::InbuiltType;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 mod error;
 pub use error::ScalarTypesError;
 pub mod types;
+use crate::stages::graphql_config;
 use std::sync::LazyLock;
 use strum::IntoEnumIterator;
 pub use types::{ScalarTypeRepresentation, ScalarTypesIssue, ScalarTypesOutput};
@@ -20,7 +21,7 @@ static BUILT_IN_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
 /// resolve scalar types
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    mut graphql_types: BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<ScalarTypesOutput, ScalarTypesError> {
     let mut scalar_types = BTreeMap::new();
     let mut issues = vec![];
@@ -62,12 +63,12 @@ pub fn resolve(
                 name: qualified_scalar_type_name,
             });
         }
-        store_new_graphql_type(&mut graphql_types, graphql_type_name.as_ref())
+        graphql_types
+            .store(graphql_type_name.as_ref())
             .map_err(ScalarTypesError::GraphqlConfigError)?;
     }
     Ok(ScalarTypesOutput {
         scalar_types,
-        graphql_types,
         issues,
     })
 }

@@ -1,6 +1,6 @@
 mod types;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use super::{
     aggregates::{AggregateCountDefinition, AggregateExpression, CountAggregateType},
@@ -10,11 +10,9 @@ use super::{
     type_permissions::ObjectTypeWithPermissions,
 };
 use crate::{
-    configuration::UnstableFeatures,
-    helpers::{check_for_duplicates, types::store_new_graphql_type},
-    mk_name,
-    types::subgraph::mk_qualified_type_name,
-    Qualified, QualifiedBaseType, QualifiedTypeName, ResolvedScalarBooleanExpressionType,
+    configuration::UnstableFeatures, helpers::check_for_duplicates, mk_name,
+    types::subgraph::mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeName,
+    ResolvedScalarBooleanExpressionType,
 };
 use lang_graphql::ast::common as ast;
 use open_dds::{
@@ -40,13 +38,12 @@ pub fn resolve(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
-    graphql_types: BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<AggregateBooleanExpressionsOutput, NamedAggregateBooleanExpressionError> {
     let mut output = AggregateBooleanExpressionsOutput {
         scalar_aggregates: BTreeMap::new(),
         object_aggregates: BTreeMap::new(),
         issues: vec![],
-        graphql_types,
     };
 
     for open_dds::accessor::QualifiedObject {
@@ -78,7 +75,7 @@ pub fn resolve(
                     scalar_types,
                     object_types,
                     graphql_config,
-                    &mut output.graphql_types,
+                    graphql_types,
                     &mut issues,
                 )
                 .map_err(|error| NamedAggregateBooleanExpressionError {
@@ -116,7 +113,7 @@ pub fn resolve(
                     aggregate_expressions,
                     scalar_types,
                     graphql_config,
-                    &mut output.graphql_types,
+                    graphql_types,
                     &mut issues,
                 )
                 .map_err(|error| NamedAggregateBooleanExpressionError {
@@ -180,7 +177,7 @@ fn resolve_scalar_aggregate_boolean_expression(
     aggregate_expressions: &BTreeMap<Qualified<AggregateExpressionName>, AggregateExpression>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<AggregateBooleanExpressionIssue>,
 ) -> Result<ScalarAggregateBooleanExpression, AggregateBooleanExpressionError> {
     // Check if the specified operand type is actually a scalar type
@@ -321,7 +318,7 @@ fn resolve_scalar_aggregate_boolean_expression(
 
 fn resolve_aggregate_bool_exp_graphql_config(
     boolean_expression: &open_dds::boolean_expression::BooleanExpressionTypeV1,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<Option<AggregateBooleanExpressionGraphqlConfig>, AggregateBooleanExpressionError> {
     boolean_expression
         .graphql
@@ -330,7 +327,7 @@ fn resolve_aggregate_bool_exp_graphql_config(
             let boolean_expression_graphql_name =
                 mk_name(graphql.type_name.as_ref()).map(ast::TypeName)?;
 
-            store_new_graphql_type(graphql_types, Some(&boolean_expression_graphql_name))?;
+            graphql_types.store(Some(&boolean_expression_graphql_name))?;
 
             Ok(AggregateBooleanExpressionGraphqlConfig {
                 type_name: boolean_expression_graphql_name,
@@ -341,7 +338,7 @@ fn resolve_aggregate_bool_exp_graphql_config(
 
 fn resolve_aggregate_predicate_bool_exp_graphql_config(
     object_aggregate_operand: &open_dds::boolean_expression::BooleanExpressionObjectAggregateOperand,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<Option<AggregatePredicateGraphqlConfig>, AggregateBooleanExpressionError> {
     object_aggregate_operand
         .graphql
@@ -350,7 +347,7 @@ fn resolve_aggregate_predicate_bool_exp_graphql_config(
             let predicate_graphql_name =
                 mk_name(graphql.predicate_type_name.as_ref()).map(ast::TypeName)?;
 
-            store_new_graphql_type(graphql_types, Some(&predicate_graphql_name))?;
+            graphql_types.store(Some(&predicate_graphql_name))?;
 
             Ok(AggregatePredicateGraphqlConfig {
                 type_name: predicate_graphql_name,
@@ -446,7 +443,7 @@ fn resolve_object_aggregate_boolean_expression(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>,
     graphql_config: &graphql_config::GraphqlConfig,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<AggregateBooleanExpressionIssue>,
 ) -> Result<ObjectAggregateBooleanExpression, AggregateBooleanExpressionError> {
     // Check if the specified operand type is actually an object type

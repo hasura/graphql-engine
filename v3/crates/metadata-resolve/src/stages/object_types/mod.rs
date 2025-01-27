@@ -5,7 +5,7 @@ pub use error::{ObjectTypesError, TypeMappingValidationError};
 use open_dds::aggregates::DataConnectorAggregationFunctionName;
 use open_dds::identifier::SubgraphName;
 use std::borrow::Cow;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use open_dds::commands::ArgumentMapping;
 use open_dds::{
@@ -20,8 +20,8 @@ pub use types::{
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
-use crate::helpers::types::{mk_name, store_new_graphql_type};
-use crate::stages::{apollo, data_connectors};
+use crate::helpers::types::mk_name;
+use crate::stages::{apollo, data_connectors, graphql_config};
 
 use crate::types::subgraph::{mk_qualified_type_reference, Qualified};
 
@@ -32,9 +32,9 @@ use lang_graphql::ast::common as ast;
 pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<ObjectTypesOutput, ObjectTypesError> {
     let mut object_types = BTreeMap::new();
-    let mut graphql_types = BTreeSet::new();
     let mut global_id_enabled_types = BTreeMap::new();
     let mut apollo_federation_entity_enabled_types = BTreeMap::new();
     let mut issues = Vec::new();
@@ -50,7 +50,7 @@ pub(crate) fn resolve(
 
         let resolved_object_type = resolve_object_type(
             object_type_definition,
-            &mut graphql_types,
+            graphql_types,
             &qualified_object_type_name,
             subgraph,
             &mut global_id_enabled_types,
@@ -108,7 +108,6 @@ pub(crate) fn resolve(
 
     Ok(ObjectTypesOutput {
         issues,
-        graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         object_types: ObjectTypesWithTypeMappings(object_types),
@@ -147,7 +146,7 @@ fn resolve_field(
 
 pub fn resolve_object_type(
     object_type_definition: &open_dds::types::ObjectTypeV1,
-    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     qualified_type_name: &Qualified<CustomTypeName>,
     subgraph: &SubgraphName,
     global_id_enabled_types: &mut BTreeMap<
@@ -271,8 +270,8 @@ pub fn resolve_object_type(
             }
         }?;
 
-    store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
-    store_new_graphql_type(existing_graphql_types, graphql_input_type_name.as_ref())?;
+    graphql_types.store(graphql_type_name.as_ref())?;
+    graphql_types.store(graphql_input_type_name.as_ref())?;
 
     Ok(ObjectTypeRepresentation {
         fields: resolved_fields,

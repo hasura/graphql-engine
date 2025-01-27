@@ -2,7 +2,7 @@ use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::Qualified;
 use lang_graphql::ast::common as ast;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use open_dds::types::CustomTypeName;
 
@@ -16,7 +16,6 @@ pub struct ScalarTypeRepresentation {
 
 pub struct ScalarTypesOutput {
     pub scalar_types: BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
-    pub graphql_types: BTreeSet<ast::TypeName>,
     pub issues: Vec<ScalarTypesIssue>,
 }
 

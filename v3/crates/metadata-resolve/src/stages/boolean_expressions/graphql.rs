@@ -9,7 +9,7 @@ pub use super::{
     BooleanExpressionTypeIdentifier, ComparableFieldKind, ObjectBooleanExpressionGraphqlConfig,
     ScalarBooleanExpressionGraphqlConfig,
 };
-use crate::helpers::types::{mk_name, store_new_graphql_type};
+use crate::helpers::types::mk_name;
 use crate::stages::{
     graphql_config,
     scalar_boolean_expressions::{self, LogicalOperatorsGraphqlConfig},
@@ -17,7 +17,7 @@ use crate::stages::{
 use crate::Qualified;
 use lang_graphql::ast::common::{self as ast};
 use open_dds::types::{CustomTypeName, FieldName, GraphQlTypeName};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 // validate graphql config
 // we use the raw boolean expression types for lookup
@@ -33,13 +33,13 @@ pub(crate) fn resolve_object_boolean_graphql(
     >,
     raw_boolean_expression_types: &super::object::RawBooleanExpressionTypes,
     graphql_config: &graphql_config::GraphqlConfig,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<BooleanExpressionIssue>,
 ) -> Result<BooleanExpressionGraphqlConfig, BooleanExpressionError> {
     let boolean_expression_graphql_name =
         mk_name(boolean_expression_graphql_name.as_ref()).map(ast::TypeName)?;
 
-    store_new_graphql_type(graphql_types, Some(&boolean_expression_graphql_name))?;
+    graphql_types.store(Some(&boolean_expression_graphql_name))?;
 
     let mut scalar_fields = BTreeMap::new();
 

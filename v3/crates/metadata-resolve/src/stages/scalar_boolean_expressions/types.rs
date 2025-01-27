@@ -5,7 +5,7 @@ use crate::{
 };
 use open_dds::types::{GraphQlTypeName, OperatorName};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use lang_graphql::ast::common as ast;
 use serde_with::serde_as;
@@ -16,7 +16,6 @@ pub struct ScalarBooleanExpressionsOutput {
         boolean_expressions::BooleanExpressionTypeIdentifier,
         ResolvedScalarBooleanExpressionType,
     >,
-    pub graphql_types: BTreeSet<ast::TypeName>,
     pub issues: Vec<super::error::ScalarBooleanExpressionTypeIssue>,
 }
 

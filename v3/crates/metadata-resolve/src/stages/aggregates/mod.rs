@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use lang_graphql::ast::common as ast;
 use open_dds::aggregates::{AggregateExpressionName, AggregationFunctionName};
@@ -7,7 +7,7 @@ use open_dds::identifier::SubgraphName;
 use open_dds::types::{CustomTypeName, InbuiltType, TypeName};
 
 use crate::helpers::check_for_duplicates;
-use crate::helpers::types::{store_new_graphql_type, unwrap_qualified_type_name};
+use crate::helpers::types::unwrap_qualified_type_name;
 use crate::stages::{data_connector_scalar_types, graphql_config, scalar_types, type_permissions};
 use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
 use crate::{mk_name, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
@@ -26,8 +26,8 @@ pub fn resolve(
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    mut existing_graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<AggregateExpressionsOutput, AggregateExpressionError> {
     let mut resolved_aggregate_expressions =
         BTreeMap::<Qualified<AggregateExpressionName>, AggregateExpression>::new();
@@ -58,10 +58,10 @@ pub fn resolve(
             data_connector_scalars,
             object_types,
             scalar_types,
-            &mut existing_graphql_types,
             graphql_config,
             &aggregate_expression_name,
             aggregate_expression,
+            graphql_types,
             &mut issues,
         )?;
 
@@ -71,7 +71,6 @@ pub fn resolve(
 
     Ok(AggregateExpressionsOutput {
         aggregate_expressions: resolved_aggregate_expressions,
-        graphql_types: existing_graphql_types,
         issues,
     })
 }
@@ -85,10 +84,10 @@ fn resolve_aggregate_expression(
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     aggregate_expression: &open_dds::aggregates::AggregateExpressionV1,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<AggregateExpressionIssue>,
 ) -> Result<AggregateExpression, AggregateExpressionError> {
     let operand = match &aggregate_expression.operand {
@@ -109,12 +108,12 @@ fn resolve_aggregate_expression(
     }?;
 
     let graphql = resolve_aggregate_expression_graphql_config(
-        existing_graphql_types,
         graphql_config,
         aggregate_expression_name,
         &operand,
         aggregate_expression.graphql.as_ref(),
         issues,
+        graphql_types,
     )?;
 
     let count = resolve_aggregate_count(
@@ -623,7 +622,6 @@ fn get_underlying_aggregatable_type(
 }
 
 fn resolve_aggregate_expression_graphql_config(
-    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     aggregate_operand: &AggregateOperand,
@@ -631,6 +629,7 @@ fn resolve_aggregate_expression_graphql_config(
         &open_dds::aggregates::AggregateExpressionGraphQlDefinition,
     >,
     issues: &mut Vec<AggregateExpressionIssue>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<Option<AggregateExpressionGraphqlConfig>, AggregateExpressionError> {
     let select_type_name = aggregate_expression_graphql_definition
         .as_ref()
@@ -643,12 +642,14 @@ fn resolve_aggregate_expression_graphql_config(
             },
         )?;
 
-    store_new_graphql_type(existing_graphql_types, select_type_name.as_ref()).map_err(
-        |graphql_config_error| AggregateExpressionError::GraphqlConfigError {
-            aggregate_expression_name: aggregate_expression_name.clone(),
-            graphql_config_error,
-        },
-    )?;
+    graphql_types
+        .store(select_type_name.as_ref())
+        .map_err(
+            |graphql_config_error| AggregateExpressionError::GraphqlConfigError {
+                aggregate_expression_name: aggregate_expression_name.clone(),
+                graphql_config_error,
+            },
+        )?;
 
     let graphql_config = match (select_type_name, &graphql_config.query.aggregate_config) {
         (None, _) => None,

@@ -5,9 +5,8 @@ mod types;
 
 use crate::Warning;
 use indexmap::IndexMap;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
-use lang_graphql::ast::common as ast;
 use open_dds::{models::ModelName, types::CustomTypeName};
 
 use crate::helpers::types::TrackGraphQLRootFields;
@@ -34,11 +33,11 @@ pub fn resolve(
         object_relationships::ObjectTypeWithRelationships,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    mut existing_graphql_types: BTreeSet<ast::TypeName>,
     track_root_fields: &mut TrackGraphQLRootFields,
     graphql_config: &graphql_config::GraphqlConfig,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     order_by_expressions: &mut order_by_expressions::OrderByExpressions,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<ModelsWithGraphqlOutput, Error> {
     let mut output = ModelsWithGraphqlOutput {
         models_with_graphql: IndexMap::new(),
@@ -86,8 +85,8 @@ pub fn resolve(
             object_types,
             models,
             scalar_types,
-            &mut existing_graphql_types,
             order_by_expressions,
+            graphql_types,
             &mut output.issues,
         )?;
 
@@ -96,13 +95,13 @@ pub fn resolve(
                 metadata_accessor,
                 model_graphql_definition,
                 &model,
-                &mut existing_graphql_types,
                 track_root_fields,
                 model.raw.description.as_ref(),
                 model.aggregate_expression.as_ref(),
                 order_by_expression.as_ref(),
                 order_by_expressions,
                 graphql_config,
+                graphql_types,
                 &mut output.issues,
             )?,
             None => types::ModelGraphQlApi::default(),

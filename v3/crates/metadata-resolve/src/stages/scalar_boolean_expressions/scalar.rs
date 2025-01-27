@@ -5,7 +5,7 @@ use super::types::{
     IsNullOperator, IsNullOperatorGraphqlConfig, LogicalOperators, LogicalOperatorsGraphqlConfig,
     ResolvedScalarBooleanExpressionType,
 };
-use crate::helpers::types::{mk_name, store_new_graphql_type, unwrap_qualified_type_name};
+use crate::helpers::types::{mk_name, unwrap_qualified_type_name};
 use crate::stages::{data_connectors, graphql_config, object_types, scalar_types};
 use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
 use crate::{Qualified, QualifiedTypeName, QualifiedTypeReference};
@@ -15,7 +15,7 @@ use open_dds::{
     boolean_expression::{BooleanExpressionScalarOperand, BooleanExpressionTypeV1},
     types::CustomTypeName,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 /// Resolves a given scalar boolean expression type
 pub(crate) fn resolve_scalar_boolean_expression_type(
@@ -28,7 +28,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
     flags: &open_dds::flags::OpenDdFlags,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<ScalarBooleanExpressionTypeIssue>,
 ) -> Result<ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionTypeError> {
     let mut data_connector_operator_mappings = BTreeMap::new();
@@ -123,7 +123,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
         .map(|name| mk_name(name.as_str()).map(ast::TypeName))
         .transpose()?;
 
-    store_new_graphql_type(graphql_types, graphql_type.as_ref())?;
+    graphql_types.store(graphql_type.as_ref())?;
 
     let logical_operators =
         if flags.contains(open_dds::flags::Flag::LogicalOperatorsInScalarBooleanExpressions) {

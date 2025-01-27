@@ -13,7 +13,7 @@ use open_dds::{
 use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fmt::Display;
 
 #[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
@@ -122,7 +122,6 @@ pub struct BooleanExpressionTypes {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionsOutput {
     pub boolean_expression_types: BooleanExpressionTypes,
-    pub graphql_types: BTreeSet<ast::TypeName>,
     pub issues: Vec<BooleanExpressionIssue>,
 }
 

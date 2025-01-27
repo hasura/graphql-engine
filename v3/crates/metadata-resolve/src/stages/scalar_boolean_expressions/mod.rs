@@ -12,9 +12,8 @@ pub use types::{
     ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionsOutput,
 };
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
-use lang_graphql::ast::common as ast;
 use open_dds::{
     boolean_expression::BooleanExpressionOperand, data_connector::DataConnectorName,
     types::CustomTypeName,
@@ -28,7 +27,6 @@ use crate::Qualified;
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    mut graphql_types: BTreeSet<ast::TypeName>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -37,6 +35,7 @@ pub fn resolve(
     object_types: &object_types::ObjectTypesWithTypeMappings,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<ScalarBooleanExpressionsOutput, ScalarBooleanExpressionTypeError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
     let mut issues = vec![];
@@ -74,7 +73,7 @@ pub fn resolve(
                 scalar_types,
                 graphql_config,
                 &metadata_accessor.flags,
-                &mut graphql_types,
+                graphql_types,
                 &mut issues,
             )?;
 
@@ -116,7 +115,6 @@ pub fn resolve(
     Ok(ScalarBooleanExpressionsOutput {
         boolean_expression_scalar_types,
         // TODO: make sure we are adding new types to graphql_types
-        graphql_types,
         issues,
     })
 }

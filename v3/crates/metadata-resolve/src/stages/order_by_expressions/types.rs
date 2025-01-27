@@ -8,7 +8,7 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fmt::Display;
 
 use crate::Qualified;
@@ -48,7 +48,6 @@ pub struct OrderByExpressions {
 #[derive(Debug)]
 pub struct OrderByExpressionsOutput {
     pub order_by_expressions: OrderByExpressions,
-    pub graphql_types: BTreeSet<ast::TypeName>,
     pub issues: Vec<OrderByExpressionIssue>,
 }
 

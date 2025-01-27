@@ -7,7 +7,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use lang_graphql::ast::common::{self as ast};
 
@@ -16,7 +16,6 @@ use crate::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AggregateExpressionsOutput {
     pub aggregate_expressions: BTreeMap<Qualified<AggregateExpressionName>, AggregateExpression>,
-    pub graphql_types: BTreeSet<ast::TypeName>,
     pub issues: Vec<AggregateExpressionIssue>,
 }
 

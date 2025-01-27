@@ -10,7 +10,7 @@ use super::types::{
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
     SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
-use crate::helpers::types::{mk_name, store_new_graphql_type, TrackGraphQLRootFields};
+use crate::helpers::types::{mk_name, TrackGraphQLRootFields};
 use crate::stages::order_by_expressions::{OrderByExpressionIdentifier, OrderByExpressions};
 use crate::stages::{graphql_config, models, object_types};
 use crate::types::error::Error;
@@ -19,19 +19,19 @@ use crate::Warning;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 pub(crate) fn resolve_model_graphql_api(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     model_graphql_definition: &ModelGraphQlDefinitionV2,
     model: &models::Model,
-    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     track_root_fields: &mut TrackGraphQLRootFields,
     model_description: Option<&String>,
     aggregate_expression_name: Option<&Qualified<AggregateExpressionName>>,
     order_by_expression_identifier: Option<&Qualified<OrderByExpressionIdentifier>>,
     order_by_expressions: &OrderByExpressions,
     graphql_config: &graphql_config::GraphqlConfig,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<Warning>,
 ) -> Result<ModelGraphQlApi, Error> {
     let model_name = &model.name;
@@ -211,7 +211,9 @@ pub(crate) fn resolve_model_graphql_api(
         .as_ref()
         .map(|filter_input_type_name| mk_name(filter_input_type_name.as_str()).map(ast::TypeName))
         .transpose()?;
-    store_new_graphql_type(existing_graphql_types, filter_input_type_name.as_ref())?;
+
+    graphql_types.store(filter_input_type_name.as_ref())?;
+
     graphql_api.filter_input_type_name = filter_input_type_name;
 
     let aggregates_are_used_with_this_model_type = aggregate_expression_name.is_some()
@@ -308,7 +310,7 @@ pub(crate) fn resolve_model_graphql_api(
             None => Ok(None),
             Some(type_name) => mk_name(type_name.as_str()).map(ast::TypeName).map(Some),
         }?;
-        store_new_graphql_type(existing_graphql_types, arguments_input_type_name.as_ref())?;
+        graphql_types.store(arguments_input_type_name.as_ref())?;
 
         if let Some(type_name) = arguments_input_type_name {
             let argument_input_field_name = graphql_config

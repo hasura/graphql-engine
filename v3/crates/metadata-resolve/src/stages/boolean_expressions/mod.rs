@@ -7,7 +7,6 @@ mod types;
 pub use error::BooleanExpressionError;
 use std::collections::{BTreeMap, BTreeSet};
 
-use lang_graphql::ast::common as ast;
 use open_dds::{
     boolean_expression::BooleanExpressionOperand, data_connector::DataConnectorName,
     types::CustomTypeName,
@@ -44,7 +43,6 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         aggregate_boolean_expressions::ScalarAggregateBooleanExpression,
     >,
-    mut graphql_types: BTreeSet<ast::TypeName>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -53,6 +51,7 @@ pub fn resolve(
     graphql_config: &graphql_config::GraphqlConfig,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     relationships: &relationships::Relationships,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
     let mut issues = Vec::new();
@@ -129,8 +128,8 @@ pub fn resolve(
                 &raw_models,
                 &object_boolean_expression_type_names,
                 graphql_config,
-                &mut graphql_types,
                 &metadata_accessor.flags,
+                graphql_types,
             )?;
 
         issues.extend(boolean_expression_issues);
@@ -160,8 +159,8 @@ pub fn resolve(
                     &raw_models,
                     &object_boolean_expression_type_names,
                     graphql_config,
-                    &mut graphql_types,
                     &metadata_accessor.flags,
+                    graphql_types,
                 )?;
 
             issues.extend(boolean_expression_issues);
@@ -180,7 +179,6 @@ pub fn resolve(
             scalar_aggregates: boolean_expression_scalar_aggregate_types,
         },
         // TODO: make sure we are adding new types to graphql_types
-        graphql_types,
         issues,
     })
 }
