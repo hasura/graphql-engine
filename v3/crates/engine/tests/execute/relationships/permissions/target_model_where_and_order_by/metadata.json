@@ -1,0 +1,521 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "text",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "int4",
+            "representation": "Int"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "OpenDD_author",
+            "fields": [
+              {
+                "name": "author_id",
+                "type": "Int!"
+              },
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Author"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "author",
+                "fieldMapping": {
+                  "author_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "OpenDD_Authors",
+            "objectType": "OpenDD_author",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "author"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AuthorByID",
+                  "uniqueIdentifier": ["author_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "AuthorMany"
+              }
+            },
+            "orderableFields": [
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "first_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "last_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "OpenDD_author",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["author_id", "first_name", "last_name"]
+                }
+              },
+              {
+                "role": "user1",
+                "output": {
+                  "allowedFields": ["author_id", "first_name", "last_name"]
+                }
+              },
+              {
+                "role": "user2",
+                "output": {
+                  "allowedFields": ["author_id", "first_name", "last_name"]
+                }
+              },
+              {
+                "role": "user3",
+                "output": {
+                  "allowedFields": ["author_id", "first_name", "last_name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "OpenDD_Authors",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user1",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user2",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user3",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "OpenDD_article",
+            "fields": [
+              {
+                "name": "article_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "author_id",
+                "type": "Int!"
+              }
+            ],
+            "globalIdFields": ["article_id"],
+            "graphql": {
+              "typeName": "Article"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "OpenDD_Articles",
+            "objectType": "OpenDD_article",
+            "globalIdSource": true,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "article"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleByID",
+                  "uniqueIdentifier": ["article_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Articles"
+              },
+              "orderByExpressionType": "Article_Order_By"
+            },
+            "filterExpressionType": "ArticleBoolExp",
+            "orderableFields": [
+              {
+                "fieldName": "article_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "ArticleBoolExp",
+            "operand": {
+              "object": {
+                "type": "OpenDD_article",
+                "comparableFields": [
+                  {
+                    "fieldName": "article_id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "title",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "author_id",
+                    "booleanExpressionType": "int_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "ArticleBooleanExpression"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_like",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "text",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_Bool_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "int4",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "OpenDD_article",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["article_id", "title", "author_id"]
+                }
+              },
+              {
+                "role": "user1",
+                "output": {
+                  "allowedFields": ["title", "author_id", "article_id"]
+                }
+              },
+              {
+                "role": "user2",
+                "output": {
+                  "allowedFields": ["author_id", "article_id"]
+                }
+              },
+              {
+                "role": "user3",
+                "output": {
+                  "allowedFields": ["title", "author_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "OpenDD_Articles",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user1",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "author_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "role": "user2",
+                "select": {
+                  "filter": {
+                    "and": [
+                      {
+                        "fieldComparison": {
+                          "field": "article_id",
+                          "operator": "_eq",
+                          "value": {
+                            "sessionVariable": "x-hasura-user-id"
+                          }
+                        }
+                      },
+                      {
+                        "fieldComparison": {
+                          "field": "title",
+                          "operator": "_like",
+                          "value": {
+                            "literal": "Peter"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "role": "user3",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "author_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "OpenDD_author",
+            "name": "Articles",
+            "target": {
+              "model": {
+                "name": "OpenDD_Articles",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

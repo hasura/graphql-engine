@@ -509,6 +509,24 @@ fn test_relationships_permissions_target_model_type_field_not_selectable() -> an
     )
 }
 
+// What is being tested?
+// Where and Order By on the target model fields
+// Testing permissions behavior when using where and order_by clauses in array relationships:
+// 1. With admin role: Full access to filter and order articles
+// 2. With user1 role: Can only see own articles (author_id = user-id) with filtering/ordering
+// 3. With user2 role: Fails because 'title' field is not in allowed fields
+// 4. With user3 role: Fails because 'article_id' field is not in allowed fields for ordering
+#[test]
+fn test_relationship_permission_target_model_where_and_order_by() -> anyhow::Result<()> {
+    let test_path_string = "execute/relationships/permissions/target_model_where_and_order_by";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
 // TODO: This should ideally be a schema test
 #[test]
 fn test_relationships_permissions_target_model_not_selectable() -> anyhow::Result<()> {

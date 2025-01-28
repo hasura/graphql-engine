@@ -1,0 +1,65 @@
+[
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "Articles": [
+            {
+              "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjo0fX0=",
+              "article_id": 4
+            },
+            {
+              "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjoxfX0=",
+              "article_id": 1
+            }
+          ]
+        },
+        {
+          "Articles": [
+            {
+              "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjozfX0=",
+              "article_id": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "Articles": [
+            {
+              "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjo0fX0=",
+              "article_id": 4
+            },
+            {
+              "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjoxfX0=",
+              "article_id": 1
+            }
+          ]
+        },
+        {
+          "Articles": []
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: the field title on type ArticleBooleanExpression is not found"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: the field article_id on type Article_Order_By is not found"
+      }
+    ]
+  }
+]

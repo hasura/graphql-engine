@@ -1,0 +1,11 @@
+query MyQuery {
+  AuthorMany {
+    Articles(
+      where: { title: { _like: "The%" } }
+      order_by: { article_id: Desc }
+    ) {
+      id
+      article_id
+    }
+  }
+}
