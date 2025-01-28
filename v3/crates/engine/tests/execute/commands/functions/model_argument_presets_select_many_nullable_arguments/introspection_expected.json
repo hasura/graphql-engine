@@ -1,0 +1,67 @@
+[
+  {
+    "data": {
+      "__type": {
+        "name": "ActorsByMovieArgs",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "ignore_me",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__type": {
+        "name": "ActorsByMovieArgs",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "ignore_me",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__type": {
+        "name": "ActorsByMovieArgs",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "ignore_me",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "movie_id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+]

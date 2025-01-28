@@ -1,0 +1,12 @@
+query MyQuery {
+  ActorsByMovieMany(args: {}) {
+    actor_id
+    movie_id
+    name
+  }
+  noargs: ActorsByMovieMany {
+    actor_id
+    movie_id
+    name
+  }
+}

@@ -158,7 +158,12 @@ pub fn add_model_arguments_field(
                     return false;
                 }
             }
-            true
+            // is the argument nullable? if so we don't _need_ it to be provided
+            model
+                .model
+                .arguments
+                .get(*argument_name)
+                .is_some_and(|argument| !argument.argument_type.nullable)
         })
         .collect();
 

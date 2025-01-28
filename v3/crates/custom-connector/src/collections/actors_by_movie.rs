@@ -14,13 +14,24 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
         name: "actors_by_movie".into(),
         description: Some("Actors parameterized by movie".into()),
         collection_type: "actor".into(),
-        arguments: BTreeMap::from_iter([(
-            "movie_id".into(),
-            ndc_models::ArgumentInfo {
-                argument_type: ndc_models::Type::Named { name: "Int".into() },
-                description: None,
-            },
-        )]),
+        arguments: BTreeMap::from_iter([
+            (
+                "movie_id".into(),
+                ndc_models::ArgumentInfo {
+                    argument_type: ndc_models::Type::Named { name: "Int".into() },
+                    description: None,
+                },
+            ),
+            (
+                "ignore_me".into(),
+                ndc_models::ArgumentInfo {
+                    argument_type: ndc_models::Type::Nullable {
+                        underlying_type: Box::new(ndc_models::Type::Named { name: "Int".into() }),
+                    },
+                    description: None,
+                },
+            ),
+        ]),
         uniqueness_constraints: BTreeMap::new(),
     }
 }

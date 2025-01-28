@@ -949,6 +949,15 @@
                     "name": "actors_by_movie",
                     "description": "Actors parameterized by movie",
                     "arguments": {
+                      "ignore_me": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
                       "movie_id": {
                         "type": {
                           "type": "named",
@@ -1455,7 +1464,13 @@
                 "version": "0.2.0",
                 "capabilities": {
                   "query": {
-                    "aggregates": {},
+                    "aggregates": {
+                      "group_by": {
+                        "filter": {},
+                        "order": {},
+                        "paginate": {}
+                      }
+                    },
                     "variables": {},
                     "nested_fields": {
                       "filter_by": {},

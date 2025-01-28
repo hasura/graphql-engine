@@ -10,6 +10,31 @@
 
 ### Fixed
 
+- The `args` field for a model is now optional if all arguments are nullable or
+  preset.
+
+Previously, this would be necessary:
+
+```graphql
+query MyQuery {
+  customers(args: {}) {
+    # `args` is mandatory, even if it is empty
+    email
+  }
+}
+```
+
+Now, if all fields are nullable or preset, this is acceptable:
+
+```graphql
+query MyQuery {
+  customers {
+    # `args` is no longer mandatory
+    email
+  }
+}
+```
+
 ### Changed
 
 ## [v2025.01.24]

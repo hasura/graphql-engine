@@ -1637,6 +1637,23 @@ fn test_model_argument_presets_select_many() -> anyhow::Result<()> {
     )
 }
 
+// Also check that when all fields are nullable or preset, we can omit the 'args' in GraphQL
+#[test]
+fn test_model_argument_presets_select_many_2() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/model_argument_presets_select_many_nullable_arguments",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            // `actors_by_movie` not supported in v0.1.x connector
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::YesPlease,
+    )
+}
+
 // Tests a select one query command with preset arguments on the model:
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]

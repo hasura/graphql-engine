@@ -29,6 +29,21 @@ fn test_introspect_model_with_preset_arguments_select_many() -> anyhow::Result<(
     )
 }
 
+// this test has an additional nullable argument
+#[test]
+fn test_introspect_model_with_preset_arguments_select_many_2() -> anyhow::Result<()> {
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+
+    common::test_introspection_expectation(
+        "execute/commands/functions/model_argument_presets_select_many_nullable_arguments/",
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
 #[test]
 fn test_introspect_model_with_preset_arguments_select_one() -> anyhow::Result<()> {
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
