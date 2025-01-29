@@ -85,44 +85,44 @@ enum EnvironmentValueImpl {
 #[opendd(as_kind)]
 pub enum OpenDdSubgraphObject {
     // Data connector
-    DataConnectorLink(data_connector::DataConnectorLink),
+    DataConnectorLink(Spanned<data_connector::DataConnectorLink>),
 
     // GraphQL "super-graph" level config
     // This is boxed because it bloats the enum's size
     // See: https://rust-lang.github.io/rust-clippy/master/index.html#large_enum_variant
-    GraphqlConfig(Box<graphql_config::GraphqlConfig>),
+    GraphqlConfig(Spanned<graphql_config::GraphqlConfig>),
 
     // Types
-    ObjectType(types::ObjectType),
-    ScalarType(types::ScalarType),
-    ObjectBooleanExpressionType(types::ObjectBooleanExpressionType),
-    BooleanExpressionType(boolean_expression::BooleanExpressionType),
+    ObjectType(Spanned<types::ObjectType>),
+    ScalarType(Spanned<types::ScalarType>),
+    ObjectBooleanExpressionType(Spanned<types::ObjectBooleanExpressionType>),
+    BooleanExpressionType(Spanned<boolean_expression::BooleanExpressionType>),
 
     // OrderBy Expressions
-    OrderByExpression(order_by_expression::OrderByExpression),
+    OrderByExpression(Spanned<order_by_expression::OrderByExpression>),
 
     // Data Connector Scalar Representation
-    DataConnectorScalarRepresentation(types::DataConnectorScalarRepresentation),
+    DataConnectorScalarRepresentation(Spanned<types::DataConnectorScalarRepresentation>),
 
     // Aggregate Expressions
-    AggregateExpression(aggregates::AggregateExpression),
+    AggregateExpression(Spanned<aggregates::AggregateExpression>),
 
     // Models
     Model(Spanned<models::Model>),
 
     // Commands
-    Command(commands::Command),
+    Command(Spanned<commands::Command>),
 
     // Relationships
-    Relationship(relationships::Relationship),
+    Relationship(Spanned<relationships::Relationship>),
 
     // Permissions
-    TypePermissions(permissions::TypePermissions),
-    ModelPermissions(permissions::ModelPermissions),
-    CommandPermissions(permissions::CommandPermissions),
+    TypePermissions(Spanned<permissions::TypePermissions>),
+    ModelPermissions(Spanned<permissions::ModelPermissions>),
+    CommandPermissions(Spanned<permissions::CommandPermissions>),
 
     // Plugin
-    LifecyclePluginHook(plugins::LifecyclePluginHook),
+    LifecyclePluginHook(Spanned<plugins::LifecyclePluginHook>),
 }
 
 /// All of the metadata required to run Hasura v3 engine.
