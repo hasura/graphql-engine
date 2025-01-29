@@ -155,7 +155,8 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowDuplicateAggregateFunctionDefinitionsForScalarType => {
             Some(new_compatibility_date(2025, 1, 25))
         }
-        Flag::TypecheckObjectTypeValuesInPresets => {
+        Flag::TypecheckObjectTypeValuesInPresets
+        | Flag::DisallowDataConnectorScalarTypesMismatch => {
             // TODO Set a compatibility date during the next release.
             None
         }

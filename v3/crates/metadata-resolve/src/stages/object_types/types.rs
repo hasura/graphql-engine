@@ -1,6 +1,6 @@
 use super::error::ObjectTypesError;
 use crate::types::error::ShouldBeAnError;
-use crate::types::subgraph::QualifiedTypeReference;
+use crate::types::subgraph::{QualifiedTypeName, QualifiedTypeReference};
 use crate::NdcVersion;
 use indexmap::IndexMap;
 use open_dds::aggregates::DataConnectorAggregationFunctionName;
@@ -425,6 +425,14 @@ pub enum ObjectTypesIssue {
         function_name: String,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error("the field {field_name:} in {type_name:} should have the type {expected:} for data connector {data_connector:} but the field has type {provided:}")]
+    FieldTypeMismatch {
+        field_name: FieldName,
+        type_name: Qualified<CustomTypeName>,
+        data_connector: Qualified<DataConnectorName>,
+        expected: QualifiedTypeName,
+        provided: QualifiedTypeName,
+    },
 }
 
 impl ShouldBeAnError for ObjectTypesIssue {
@@ -435,6 +443,9 @@ impl ShouldBeAnError for ObjectTypesIssue {
             ObjectTypesIssue::DuplicateAggregateFunctionsDefined { .. } => flags.contains(
                 open_dds::flags::Flag::DisallowDuplicateAggregateFunctionDefinitionsForScalarType,
             ),
+            ObjectTypesIssue::FieldTypeMismatch { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowDataConnectorScalarTypesMismatch)
+            }
         }
     }
 }

@@ -38,6 +38,7 @@ pub enum Flag {
     DisallowDuplicateNamesAcrossTypesAndExpressions,
     DisallowDuplicateAggregateFunctionDefinitionsForScalarType,
     TypecheckObjectTypeValuesInPresets,
+    DisallowDataConnectorScalarTypesMismatch,
 }
 
 impl Flag {
@@ -99,6 +100,9 @@ impl Flag {
                 "disallow_duplicate_aggregate_function_definitions_for_scalar_type"
             }
             Flag::TypecheckObjectTypeValuesInPresets => "typecheck_object_type_values_in_presets",
+            Flag::DisallowDataConnectorScalarTypesMismatch => {
+                "disallow_data_connector_scalar_types_mismatch"
+            }
         }
     }
 }

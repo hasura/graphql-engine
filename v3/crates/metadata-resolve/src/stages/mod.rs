@@ -75,16 +75,6 @@ fn resolve_internal(
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
-    // Validate object types defined in metadata
-    let object_types::ObjectTypesOutput {
-        global_id_enabled_types,
-        apollo_federation_entity_enabled_types,
-        object_types,
-        issues,
-    } = object_types::resolve(&metadata_accessor, &data_connectors, &mut graphql_types)?;
-
-    all_issues.extend(issues.into_iter().map(Warning::from));
-
     // Validate custom defined scalar types
     let scalar_types::ScalarTypesOutput {
         scalar_types,
@@ -100,6 +90,21 @@ fn resolve_internal(
         &scalar_types,
         &mut graphql_types,
     )?;
+
+    // Validate object types defined in metadata
+    let object_types::ObjectTypesOutput {
+        global_id_enabled_types,
+        apollo_federation_entity_enabled_types,
+        object_types,
+        issues,
+    } = object_types::resolve(
+        &metadata_accessor,
+        &data_connectors,
+        &data_connector_scalars,
+        &mut graphql_types,
+    )?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Validate scalar `BooleanExpressionType`s
     let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {

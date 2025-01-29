@@ -44,6 +44,8 @@ query MyQuery {
 - Added configuration for headers in response to client for requests handled by
   the pre-route plugin hook.
 - Added OpenAPI schema for filter parameters in JSONAPI
+- Added checks that the fields of an `ObjectType` match the underlying column
+  types exposed by the data connector.
 
 ### Fixed
 

@@ -20,10 +20,10 @@ pub use types::{
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
-use crate::helpers::types::mk_name;
-use crate::stages::{apollo, data_connectors, graphql_config};
+use crate::helpers::types::{mk_name, unwrap_qualified_type_name};
+use crate::stages::{apollo, data_connector_scalar_types, data_connectors, graphql_config};
 
-use crate::types::subgraph::{mk_qualified_type_reference, Qualified};
+use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference, Qualified};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -32,6 +32,10 @@ use lang_graphql::ast::common as ast;
 pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalar_types: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<ObjectTypesOutput, ObjectTypesError> {
     let mut object_types = BTreeMap::new();
@@ -71,6 +75,7 @@ pub(crate) fn resolve(
                 subgraph,
                 &resolved_object_type,
                 data_connectors,
+                data_connector_scalar_types,
             )
             .map_err(|type_validation_error| {
                 ObjectTypesError::DataConnectorTypeMappingValidationError {
@@ -290,6 +295,10 @@ pub fn resolve_data_connector_type_mapping(
     subgraph: &SubgraphName,
     type_representation: &ObjectTypeRepresentation,
     data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalar_types: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
 ) -> Result<(TypeMapping, Vec<ObjectTypesIssue>), TypeMappingValidationError> {
     let mut issues = Vec::new();
     let qualified_data_connector_name = Qualified::new(
@@ -299,6 +308,13 @@ pub fn resolve_data_connector_type_mapping(
 
     let data_connector_context = data_connectors
         .0
+        .get(&qualified_data_connector_name)
+        .ok_or_else(|| TypeMappingValidationError::UnknownDataConnector {
+            data_connector: qualified_data_connector_name.clone(),
+            type_name: qualified_type_name.clone(),
+        })?;
+
+    let data_connector_scalars = data_connector_scalar_types
         .get(&qualified_data_connector_name)
         .ok_or_else(|| TypeMappingValidationError::UnknownDataConnector {
             data_connector: qualified_data_connector_name.clone(),
@@ -330,7 +346,7 @@ pub fn resolve_data_connector_type_mapping(
         .iter()
         .collect::<BTreeMap<_, _>>();
     let mut resolved_field_mappings = BTreeMap::new();
-    for field_name in type_representation.fields.keys() {
+    for (field_name, field_definition) in &type_representation.fields {
         let (resolved_field_mapping_column, resolved_argument_mappings) =
             if let Some(field_mapping) = unconsumed_field_mappings.remove(field_name) {
                 match field_mapping {
@@ -355,6 +371,28 @@ pub fn resolve_data_connector_type_mapping(
             .schema
             .scalar_types
             .get(underlying_column_type.as_str());
+
+        // we may know what type should be underlying this, in which case
+        // check it against what is defined in the field for the ObjectType itself
+        if let Some(data_connector_scalar_representation) = data_connector_scalars
+            .by_ndc_type
+            .get(underlying_column_type.as_str())
+            .and_then(|scalar_type| scalar_type.representation.as_ref())
+        {
+            let ndc_field_type =
+                mk_qualified_type_name(data_connector_scalar_representation, subgraph);
+            let opendd_field_type = unwrap_qualified_type_name(&field_definition.field_type);
+
+            if ndc_field_type != *opendd_field_type {
+                issues.push(ObjectTypesIssue::FieldTypeMismatch {
+                    data_connector: qualified_data_connector_name.clone(),
+                    expected: ndc_field_type,
+                    provided: opendd_field_type.clone(),
+                    field_name: field_name.clone(),
+                    type_name: qualified_type_name.clone(),
+                });
+            };
+        }
 
         let column_type_representation = scalar_type.map(|ty| ty.representation.clone());
 

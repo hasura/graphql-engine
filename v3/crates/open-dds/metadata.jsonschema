@@ -3712,6 +3712,10 @@
         "typecheck_object_type_values_in_presets": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_data_connector_scalar_types_mismatch": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
