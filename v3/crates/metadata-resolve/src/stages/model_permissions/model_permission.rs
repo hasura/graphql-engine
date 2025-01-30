@@ -39,7 +39,6 @@ fn resolve_model_predicate_with_model(
     boolean_expression_fields: Option<
         &boolean_expressions::ResolvedObjectBooleanExpressionTypeFields,
     >,
-    data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -53,31 +52,29 @@ fn resolve_model_predicate_with_model(
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
 ) -> Result<ModelPredicate, Error> {
-    let model_source = model
-        .source
-        .clone()
-        .ok_or(Error::ModelSourceRequiredForPredicate {
-            model_name: model.name.clone(),
-        })?;
-
-    let data_connector_name = &model_source.data_connector.name;
+    let model_source =
+        model
+            .source
+            .clone()
+            .ok_or_else(|| Error::ModelSourceRequiredForPredicate {
+                model_name: model.name.clone(),
+            })?;
 
     // get available scalars defined for this data connector
-    let scalars =
-        data_connector_scalars
-            .get(data_connector_name)
-            .ok_or(Error::TypePredicateError {
-                type_predicate_error: TypePredicateError::UnknownTypeDataConnector {
-                    type_name: model.data_type.clone(),
-                    data_connector: data_connector_name.clone(),
-                },
-            })?;
+    let scalars = data_connector_scalars
+        .get(&model_source.data_connector.name)
+        .ok_or_else(|| Error::TypePredicateError {
+            type_predicate_error: TypePredicateError::UnknownTypeDataConnector {
+                type_name: model.data_type.clone(),
+                data_connector: model_source.data_connector.name.clone(),
+            },
+        })?;
 
     // get the type that the expression is based on
     let object_type_representation =
         object_types
             .get(&model.data_type)
-            .ok_or(Error::UnknownType {
+            .ok_or_else(|| Error::UnknownType {
                 data_type: model.data_type.clone(),
             })?;
 
@@ -85,24 +82,11 @@ fn resolve_model_predicate_with_model(
     let object_types::TypeMapping::Object { field_mappings, .. } = model_source
         .type_mappings
         .get(&model.data_type)
-        .ok_or(models::ModelsError::TypeMappingRequired {
+        .ok_or_else(|| models::ModelsError::TypeMappingRequired {
             model_name: model.name.clone(),
             type_name: model.data_type.clone(),
             data_connector: model_source.data_connector.name.clone(),
         })?;
-
-    let data_connector_core_info = data_connectors.0.get(data_connector_name).ok_or_else(|| {
-        models::ModelsError::UnknownModelDataConnector {
-            model_name: model.name.clone(),
-            data_connector: data_connector_name.clone(),
-            data_connector_path: None,
-        }
-    })?;
-
-    let data_connector_link = data_connectors::DataConnectorLink::new(
-        data_connector_name.clone(),
-        data_connector_core_info,
-    )?;
 
     resolve_model_predicate_with_type(
         flags,
@@ -111,7 +95,7 @@ fn resolve_model_predicate_with_model(
         object_type_representation,
         boolean_expression_fields,
         field_mappings,
-        &data_connector_link,
+        &model_source.data_connector,
         subgraph,
         scalars,
         object_types,
@@ -172,7 +156,6 @@ pub fn resolve_model_select_permissions(
                         model,
                         subgraph,
                         boolean_expression_fields,
-                        data_connectors,
                         data_connector_scalars,
                         &model.type_fields,
                         object_types,
@@ -202,7 +185,7 @@ pub fn resolve_model_select_permissions(
                     .source
                     .as_ref()
                     .map(|source| &source.data_connector.name)
-                    .ok_or(Error::ModelSourceRequiredForPredicate {
+                    .ok_or_else(|| Error::ModelSourceRequiredForPredicate {
                         model_name: model.name.clone(),
                     })?;
 

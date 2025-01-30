@@ -284,7 +284,6 @@ fn resolve_internal(
         &scalar_types,
         &boolean_expression_types,
         &models_with_graphql,
-        &data_connectors,
         &data_connector_scalars,
     )?;
 
