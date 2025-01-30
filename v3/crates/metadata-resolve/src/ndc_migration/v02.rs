@@ -77,6 +77,7 @@ pub fn migrate_scalar_type_from_v01(
                 )
             })
             .collect(),
+        extraction_functions: BTreeMap::new(), // v0.1.x did not have extraction functions
     }
 }
 

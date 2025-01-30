@@ -14,7 +14,7 @@ pub fn get_schema() -> ndc_models::SchemaResponse {
         capabilities: Some(ndc_models::CapabilitySchemaInfo {
             query: Some(ndc_models::QueryCapabilitiesSchemaInfo {
                 aggregates: Some(ndc_models::AggregateCapabilitiesSchemaInfo {
-                    count_scalar_type: "Int".to_owned(),
+                    count_scalar_type: ndc_models::ScalarTypeName::from("Int"),
                 }),
             }),
         }),

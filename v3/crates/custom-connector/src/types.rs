@@ -85,6 +85,7 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                         },
                     ),
                 ]),
+                extraction_functions: BTreeMap::new(),
             },
         ),
         (
@@ -99,6 +100,7 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                     "_eq".into(),
                     ndc_models::ComparisonOperatorDefinition::Equal,
                 )]),
+                extraction_functions: BTreeMap::new(),
             },
         ),
         (
@@ -114,6 +116,7 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                         },
                     },
                 )]),
+                extraction_functions: BTreeMap::new(),
             },
         ),
         (
@@ -122,6 +125,7 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                 representation: ndc_models::TypeRepresentation::String,
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::new(),
+                extraction_functions: BTreeMap::new(),
             },
         ),
         (
@@ -130,6 +134,7 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                 representation: ndc_models::TypeRepresentation::JSON,
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::new(),
+                extraction_functions: BTreeMap::new(),
             },
         ),
     ])

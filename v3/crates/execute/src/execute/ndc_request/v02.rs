@@ -462,10 +462,7 @@ fn make_relationship(relationship: Relationship) -> ndc_models_v02::Relationship
 fn make_group_by(grouping: plan_types::Grouping) -> ndc_models_v02::Grouping {
     let aggregates = make_aggregates(plan_types::AggregateSelectionSet {
         fields: grouping.aggregates,
-    })
-    .into_iter()
-    .map(|(field_name, aggregate)| (field_name.as_str().to_owned(), aggregate))
-    .collect::<IndexMap<String, ndc_models_v02::Aggregate>>();
+    });
     let dimensions = grouping
         .dimensions
         .into_iter()
@@ -488,6 +485,7 @@ fn make_group_by(grouping: plan_types::Grouping) -> ndc_models_v02::Grouping {
                     column_name,
                     path: vec![],
                     field_path,
+                    extraction: None,
                 }
             }
         })

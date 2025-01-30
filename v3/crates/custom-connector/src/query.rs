@@ -312,7 +312,7 @@ fn eval_groups(
     for chunk in &sorted {
         let dimensions = chunk.dimensions.clone();
 
-        let mut aggregates: IndexMap<String, serde_json::Value> = IndexMap::new();
+        let mut aggregates: IndexMap<ndc_models::FieldName, serde_json::Value> = IndexMap::new();
         for (aggregate_name, aggregate) in &grouping.aggregates {
             aggregates.insert(
                 aggregate_name.clone(),
@@ -510,6 +510,7 @@ fn eval_dimension(row: &Row, dimension: &ndc_models::Dimension) -> Result<serde_
             arguments: _,
             field_path,
             path: _,
+            extraction: _,
         } => eval_column_field_path(row, column_name, field_path.as_ref()),
     }
 }
