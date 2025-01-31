@@ -101,6 +101,7 @@ fn resolve_internal(
         &metadata_accessor,
         &data_connectors,
         &data_connector_scalars,
+        &scalar_types,
         &mut graphql_types,
     )?;
 

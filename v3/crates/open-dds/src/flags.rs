@@ -39,6 +39,7 @@ pub enum Flag {
     DisallowDuplicateAggregateFunctionDefinitionsForScalarType,
     TypecheckObjectTypeValuesInPresets,
     DisallowDataConnectorScalarTypesMismatch,
+    CheckObjectTypeFieldsExist,
 }
 
 impl Flag {
@@ -103,6 +104,7 @@ impl Flag {
             Flag::DisallowDataConnectorScalarTypesMismatch => {
                 "disallow_data_connector_scalar_types_mismatch"
             }
+            Flag::CheckObjectTypeFieldsExist => "check_object_type_fields_exist",
         }
     }
 }

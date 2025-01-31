@@ -3716,6 +3716,10 @@
         "disallow_data_connector_scalar_types_mismatch": {
           "default": false,
           "type": "boolean"
+        },
+        "check_object_type_fields_exist": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

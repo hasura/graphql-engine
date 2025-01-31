@@ -563,6 +563,209 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
         roles: {},
     },
     [
+        ObjectTypesIssue(
+            FieldTypeNotFound {
+                field_type: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Varchar",
+                        ),
+                    ),
+                },
+                object_type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Invoice",
+                        ),
+                    ),
+                },
+                field_name: FieldName(
+                    Identifier(
+                        "billingAddress",
+                    ),
+                ),
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNotFound {
+                field_type: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Varchar",
+                        ),
+                    ),
+                },
+                object_type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Invoice",
+                        ),
+                    ),
+                },
+                field_name: FieldName(
+                    Identifier(
+                        "billingCity",
+                    ),
+                ),
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNotFound {
+                field_type: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Varchar",
+                        ),
+                    ),
+                },
+                object_type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Invoice",
+                        ),
+                    ),
+                },
+                field_name: FieldName(
+                    Identifier(
+                        "billingCountry",
+                    ),
+                ),
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNotFound {
+                field_type: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Varchar",
+                        ),
+                    ),
+                },
+                object_type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Invoice",
+                        ),
+                    ),
+                },
+                field_name: FieldName(
+                    Identifier(
+                        "billingPostalCode",
+                    ),
+                ),
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNotFound {
+                field_type: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Varchar",
+                        ),
+                    ),
+                },
+                object_type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Invoice",
+                        ),
+                    ),
+                },
+                field_name: FieldName(
+                    Identifier(
+                        "billingState",
+                    ),
+                ),
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNotFound {
+                field_type: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Timestamp",
+                        ),
+                    ),
+                },
+                object_type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Invoice",
+                        ),
+                    ),
+                },
+                field_name: FieldName(
+                    Identifier(
+                        "invoiceDate",
+                    ),
+                ),
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNotFound {
+                field_type: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Numeric",
+                        ),
+                    ),
+                },
+                object_type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Invoice",
+                        ),
+                    ),
+                },
+                field_name: FieldName(
+                    Identifier(
+                        "total",
+                    ),
+                ),
+            },
+        ),
         AggregateExpressionIssue(
             ConfigMissingFromGraphQlConfig {
                 name: Qualified {

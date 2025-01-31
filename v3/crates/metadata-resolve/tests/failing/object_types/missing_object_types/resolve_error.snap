@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/object_types/missing_object_types/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+Field type Dog (in subgraph default) could not be found in field dogs for object type Zoo (in subgraph default)

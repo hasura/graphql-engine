@@ -37,6 +37,8 @@ query MyQuery {
 
 ### Changed
 
+- Check that all named types referenced in object type fields exist.
+
 ## [v2025.01.24]
 
 ### Added

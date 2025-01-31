@@ -156,7 +156,8 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
             Some(new_compatibility_date(2025, 1, 25))
         }
         Flag::TypecheckObjectTypeValuesInPresets
-        | Flag::DisallowDataConnectorScalarTypesMismatch => {
+        | Flag::DisallowDataConnectorScalarTypesMismatch
+        | Flag::CheckObjectTypeFieldsExist => {
             // TODO Set a compatibility date during the next release.
             None
         }

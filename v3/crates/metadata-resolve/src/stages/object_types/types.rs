@@ -462,6 +462,12 @@ pub enum ObjectTypesIssue {
         expected: QualifiedTypeName,
         provided: QualifiedTypeName,
     },
+    #[error("Field type {field_type} could not be found in field {field_name} for object type {object_type_name}")]
+    FieldTypeNotFound {
+        field_type: Qualified<CustomTypeName>,
+        object_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
 }
 
 impl ShouldBeAnError for ObjectTypesIssue {
@@ -475,6 +481,9 @@ impl ShouldBeAnError for ObjectTypesIssue {
             ObjectTypesIssue::DuplicateExtractionFunctionsDefined { .. } => true,
             ObjectTypesIssue::FieldTypeMismatch { .. } => {
                 flags.contains(open_dds::flags::Flag::DisallowDataConnectorScalarTypesMismatch)
+            }
+            ObjectTypesIssue::FieldTypeNotFound { .. } => {
+                flags.contains(open_dds::flags::Flag::CheckObjectTypeFieldsExist)
             }
         }
     }
