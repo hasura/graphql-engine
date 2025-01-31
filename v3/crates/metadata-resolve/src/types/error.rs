@@ -127,8 +127,6 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
-    #[error("a source must be defined for model {model:} in order to use filter expressions")]
-    CannotUseFilterExpressionsWithoutSource { model: Qualified<ModelName> },
     #[error("graphql config must be defined for a filter expression to be used in a {model:}")]
     CannotUseFilterExpressionsWithoutGraphQlConfig {
         model: Qualified<ModelName>,

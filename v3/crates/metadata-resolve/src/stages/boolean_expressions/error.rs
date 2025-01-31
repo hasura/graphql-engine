@@ -3,6 +3,7 @@ use crate::helpers::type_mappings::TypeMappingCollectionError;
 use crate::stages::{
     boolean_expressions, data_connectors, graphql_config, relationships, scalar_boolean_expressions,
 };
+use crate::types::error::TypePredicateError;
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use crate::QualifiedTypeReference;
 use open_dds::{
@@ -116,6 +117,9 @@ pub enum BooleanExpressionError {
     #[error("Field level comparison operator configuration is not fully supported yet. Please add all fields in filterable_fields.")]
     FieldLevelComparisonOperatorNeedsAllFields,
 
+    #[error("a source must be defined for model {model:} in order to use filter expressions")]
+    CannotUseFilterExpressionsWithoutSource { model: Qualified<ModelName> },
+
     #[error(
         "Target model {model_name:} not found, referenced in relationship {relationship_name:}"
     )]
@@ -137,6 +141,9 @@ pub enum BooleanExpressionError {
         boolean_expression_name: Qualified<CustomTypeName>,
         data_connector_error: data_connectors::NamedDataConnectorError,
     },
+
+    #[error("{0}")]
+    TypePredicateError(#[from] TypePredicateError),
 
     #[error("{0}")]
     RelationshipError(#[from] relationships::RelationshipError),

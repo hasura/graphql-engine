@@ -1,4 +1,4 @@
-use crate::types::error::{Error, TypePredicateError};
+use crate::types::error::TypePredicateError;
 
 use crate::stages::{
     boolean_expressions, data_connectors, models, object_relationships, object_types,
@@ -31,7 +31,10 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     flags: &open_dds::flags::OpenDdFlags,
-) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
+) -> Result<
+    Vec<boolean_expressions::BooleanExpressionIssue>,
+    boolean_expressions::BooleanExpressionError,
+> {
     // collect any issues found whilst resolving
     let mut issues = vec![];
 
@@ -42,13 +45,12 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                 .objects
                 .get(&object_comparison_expression_info.boolean_expression_type_name)
                 .ok_or_else(|| {
-                    Error::from(boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+                    boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
                         parent_boolean_expression: object_boolean_expression_type.name.clone(),
                         child_boolean_expression: object_comparison_expression_info
                             .boolean_expression_type_name
                             .clone(),
-                    },
-                )
+                    }
                 })?;
 
             match object_comparison_expression_info.field_kind {
@@ -61,12 +63,12 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                             object_types,
                             object_boolean_expression_type,
                         )?;
-                        return Err(Error::from(boolean_expressions::BooleanExpressionError::DataConnectorDoesNotSupportNestedObjectFiltering {
+                        return Err(boolean_expressions::BooleanExpressionError::DataConnectorDoesNotSupportNestedObjectFiltering {
                             data_connector_name: data_connector.name.clone(),
                             boolean_expression_type_name: object_boolean_expression_type.name.clone(),
                             field_name: field_name.clone(),
                             field_type: field_type.clone(),
-                            }));
+                            });
                     }
                 }
                 boolean_expressions::ObjectComparisonKind::ObjectArray => {
@@ -107,12 +109,12 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                     .relationship_fields
                     .is_empty()
             {
-                return Err(Error::from(boolean_expressions::BooleanExpressionError::DataConnectorDoesNotSupportNestedRelationshipFiltering {
+                return Err(boolean_expressions::BooleanExpressionError::DataConnectorDoesNotSupportNestedRelationshipFiltering {
                     data_connector_name: data_connector.name.clone(),
                     parent_boolean_expression_type_name: object_boolean_expression_type.name.clone(),
                     field_name: field_name.clone(),
                     nested_boolean_expression_type_name: object_comparison_expression_info.boolean_expression_type_name.clone(),
-                }));
+                });
             }
 
             // continue checking the nested object...
@@ -137,10 +139,10 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                     .scalars
                     .get(boolean_expression_type_name)
                     .ok_or_else(|| {
-                        Error::from(boolean_expressions::BooleanExpressionError::ScalarBooleanExpressionCouldNotBeFound {
+                        boolean_expressions::BooleanExpressionError::ScalarBooleanExpressionCouldNotBeFound {
                             parent_boolean_expression: object_boolean_expression_type.name.clone(),
                             child_boolean_expression: boolean_expression_type_name.clone(),
-                        })
+                        }
                     })?;
 
             match comparison_expression_info.field_kind {
@@ -199,13 +201,15 @@ fn get_field_type<'a>(
         object_relationships::ObjectTypeWithRelationships,
     >,
     object_boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
-) -> Result<&'a QualifiedTypeReference, Error> {
-    let operand_object_type = object_types.get(&object_boolean_expression_type.object_type).ok_or_else(|| {
-        Error::from(boolean_expressions::BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
-            type_name: object_boolean_expression_type.name.clone(),
-            boolean_expression_type_name: object_boolean_expression_type.name.clone(),
-        })
-    })?;
+) -> Result<&'a QualifiedTypeReference, boolean_expressions::BooleanExpressionError> {
+    let operand_object_type = object_types
+        .get(&object_boolean_expression_type.object_type)
+        .ok_or_else(|| {
+            boolean_expressions::BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
+                type_name: object_boolean_expression_type.name.clone(),
+                boolean_expression_type_name: object_boolean_expression_type.name.clone(),
+            }
+        })?;
 
     operand_object_type
         .object_type
@@ -213,10 +217,10 @@ fn get_field_type<'a>(
         .get(field_name)
         .map(|field_definition| &field_definition.field_type)
         .ok_or_else(|| {
-            Error::from(boolean_expressions::BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
+            boolean_expressions::BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
                 field_name: field_name.clone(),
                 object_boolean_expression_type: object_boolean_expression_type.name.clone(),
-            })
+            }
         })
 }
 
@@ -233,21 +237,22 @@ fn validate_data_connector_with_comparable_relationship(
         object_relationships::ObjectTypeWithRelationships,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-) -> Result<(), Error> {
+) -> Result<(), boolean_expressions::BooleanExpressionError> {
     let underlying_object = object_types
         .get(&object_boolean_expression_type.object_type)
-        .ok_or_else(|| Error::UnknownType {
-            data_type: object_boolean_expression_type.object_type.clone(),
+        .ok_or_else(|| {
+            boolean_expressions::BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
+                type_name: object_boolean_expression_type.object_type.clone(),
+                boolean_expression_type_name: object_boolean_expression_type.name.clone(),
+            }
         })?;
 
     let relationship = underlying_object
         .relationship_fields
         .get(&comparable_relationship.relationship_name)
-        .ok_or_else(|| Error::TypePredicateError {
-            type_predicate_error: TypePredicateError::UnknownRelationshipInTypePredicate {
-                relationship_name: comparable_relationship.relationship_name.clone(),
-                type_name: object_boolean_expression_type.object_type.clone(),
-            },
+        .ok_or_else(|| TypePredicateError::UnknownRelationshipInTypePredicate {
+            relationship_name: comparable_relationship.relationship_name.clone(),
+            type_name: object_boolean_expression_type.object_type.clone(),
         })?;
 
     if let object_relationships::RelationshipTarget::Model(relationship_target_model) =
@@ -255,14 +260,13 @@ fn validate_data_connector_with_comparable_relationship(
     {
         let target_model = models
             .get(&relationship_target_model.model_name)
-            .ok_or_else(|| Error::TypePredicateError {
-                type_predicate_error:
-                    TypePredicateError::UnknownModelUsedInRelationshipTypePredicate {
-                        type_name: object_boolean_expression_type.object_type.clone(),
-                        target_model_name: relationship_target_model.model_name.clone(),
-                        relationship_name: comparable_relationship.relationship_name.clone(),
-                    },
-            })?;
+            .ok_or_else(
+                || TypePredicateError::UnknownModelUsedInRelationshipTypePredicate {
+                    type_name: object_boolean_expression_type.object_type.clone(),
+                    target_model_name: relationship_target_model.model_name.clone(),
+                    relationship_name: comparable_relationship.relationship_name.clone(),
+                },
+            )?;
 
         match &target_model.source {
             Some(target_model_source) => {
@@ -271,11 +275,9 @@ fn validate_data_connector_with_comparable_relationship(
                 if data_connector.name != target_model_source.data_connector.name {
                     let type_mapping = source_type_mappings
                         .get(&object_boolean_expression_type.object_type)
-                        .ok_or_else(|| Error::TypePredicateError {
-                            type_predicate_error: TypePredicateError::UnknownTypeMapping {
-                                type_name: object_boolean_expression_type.object_type.clone(),
-                                data_connector_name: data_connector.name.clone(),
-                            },
+                        .ok_or_else(|| TypePredicateError::UnknownTypeMapping {
+                            type_name: object_boolean_expression_type.object_type.clone(),
+                            data_connector_name: data_connector.name.clone(),
                         })?;
                     let field_mappings = match type_mapping {
                         object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
@@ -287,12 +289,10 @@ fn validate_data_connector_with_comparable_relationship(
                             comparison_operators,
                             ..
                         } = field_mappings.get(source_field).ok_or_else(|| {
-                            Error::TypePredicateError {
-                                type_predicate_error: TypePredicateError::UnknownFieldMapping {
-                                    type_name: object_boolean_expression_type.object_type.clone(),
-                                    field_name: source_field.clone(),
-                                    data_connector_name: data_connector.name.clone(),
-                                },
+                            TypePredicateError::UnknownFieldMapping {
+                                type_name: object_boolean_expression_type.object_type.clone(),
+                                field_name: source_field.clone(),
+                                data_connector_name: data_connector.name.clone(),
                             }
                         })?;
 
@@ -302,27 +302,28 @@ fn validate_data_connector_with_comparable_relationship(
                             .unwrap_or_default();
 
                         if equal_operators.is_none() {
-                            return Err(Error::TypePredicateError {
-                                type_predicate_error: TypePredicateError::MissingEqualOperator {
-                                    location: format!(
-                                        "While resolving comparable relationship {0}",
-                                        comparable_relationship.relationship_name
-                                    ),
-                                    type_name: object_boolean_expression_type.object_type.clone(),
-                                    field_name: source_field.clone(),
-                                    ndc_column: source_ndc_column.clone(),
-                                    data_connector_name: data_connector.name.clone(),
-                                },
-                            });
+                            return Err(TypePredicateError::MissingEqualOperator {
+                                location: format!(
+                                    "While resolving comparable relationship {0}",
+                                    comparable_relationship.relationship_name
+                                ),
+                                type_name: object_boolean_expression_type.object_type.clone(),
+                                field_name: source_field.clone(),
+                                ndc_column: source_ndc_column.clone(),
+                                data_connector_name: data_connector.name.clone(),
+                            }
+                            .into());
                         }
                     }
                 };
             }
             None => {
                 // no source for target model, explode!
-                return Err(Error::CannotUseFilterExpressionsWithoutSource {
-                    model: target_model.name.clone(),
-                });
+                return Err(
+                    boolean_expressions::BooleanExpressionError::CannotUseFilterExpressionsWithoutSource {
+                        model: target_model.name.clone(),
+                    },
+                );
             }
         }
     };
@@ -335,18 +336,18 @@ fn validate_data_connector_with_scalar_boolean_expression_type(
     parent_boolean_expression_type_name: &Qualified<CustomTypeName>,
     data_connector: &data_connectors::DataConnectorLink,
     field_name: &FieldName,
-) -> Result<(), Error> {
+) -> Result<(), boolean_expressions::BooleanExpressionError> {
     if !scalar_boolean_expression_type
         .data_connector_operator_mappings
         .contains_key(&data_connector.name)
     {
-        return Err(Error::from(
+        return Err(
             boolean_expressions::BooleanExpressionError::DataConnectorMappingMissingForField {
                 field: field_name.clone(),
                 boolean_expression_name: parent_boolean_expression_type_name.clone(),
                 data_connector_name: data_connector.name.clone(),
             },
-        ));
+        );
     };
     Ok(())
 }

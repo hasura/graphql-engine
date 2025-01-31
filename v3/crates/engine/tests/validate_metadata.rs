@@ -252,9 +252,9 @@ fn test_disallow_filter_expression_without_source() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: metadata_resolve::WithContext::Raw(
-                    ResolveError::CannotUseFilterExpressionsWithoutSource { .. }
-                )
+                error: metadata_resolve::WithContext::Raw(ResolveError::BooleanExpressionError(
+                    BooleanExpressionError::CannotUseFilterExpressionsWithoutSource { .. }
+                ))
             })
         ),
         "actual: {gds:?}"

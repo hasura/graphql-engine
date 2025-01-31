@@ -51,9 +51,9 @@ pub fn resolve(
                 // throw an error if this is not the case
                 let model_source = match model.source {
                     Some(ref source) => Ok(source),
-                    None => Err(Error::CannotUseFilterExpressionsWithoutSource {
+                    None => Err(Error::from(boolean_expressions::BooleanExpressionError::CannotUseFilterExpressionsWithoutSource {
                         model: model.name.clone(),
-                    }),
+                    })),
                 }?;
 
                 let (filter_expression_type, filter_issues) =
