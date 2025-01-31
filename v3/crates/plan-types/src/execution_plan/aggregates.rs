@@ -2,7 +2,8 @@ use crate::NdcFieldAlias;
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
 use open_dds::{
-    aggregates::DataConnectorAggregationFunctionName, data_connector::DataConnectorColumnName,
+    aggregates::{DataConnectorAggregationFunctionName, DataConnectorExtractionFunctionName},
+    data_connector::DataConnectorColumnName,
 };
 use serde::Serialize;
 use std::hash::Hash;
@@ -19,6 +20,7 @@ pub struct Grouping {
 pub enum Dimension {
     Column {
         column_path: NonEmpty<DataConnectorColumnName>,
+        extraction: Option<DataConnectorExtractionFunctionName>,
     },
 }
 

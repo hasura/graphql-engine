@@ -557,6 +557,21 @@
                                                               "max",
                                                               "min"
                                                             ]
+                                                          },
+                                                          "extraction_functions": {
+                                                            "year_function": null,
+                                                            "month_function": null,
+                                                            "day_function": null,
+                                                            "nanosecond_function": null,
+                                                            "microsecond_function": null,
+                                                            "second_function": null,
+                                                            "minute_function": null,
+                                                            "hour_function": null,
+                                                            "week_function": null,
+                                                            "quarter_function": null,
+                                                            "day_of_week_function": null,
+                                                            "day_of_year_function": null,
+                                                            "other_functions": []
                                                           }
                                                         },
                                                         "first_name": {
@@ -598,6 +613,21 @@
                                                             "max_function": null,
                                                             "avg_function": null,
                                                             "other_functions": []
+                                                          },
+                                                          "extraction_functions": {
+                                                            "year_function": null,
+                                                            "month_function": null,
+                                                            "day_function": null,
+                                                            "nanosecond_function": null,
+                                                            "microsecond_function": null,
+                                                            "second_function": null,
+                                                            "minute_function": null,
+                                                            "hour_function": null,
+                                                            "week_function": null,
+                                                            "quarter_function": null,
+                                                            "day_of_week_function": null,
+                                                            "day_of_year_function": null,
+                                                            "other_functions": []
                                                           }
                                                         },
                                                         "last_name": {
@@ -638,6 +668,21 @@
                                                             "min_function": null,
                                                             "max_function": null,
                                                             "avg_function": null,
+                                                            "other_functions": []
+                                                          },
+                                                          "extraction_functions": {
+                                                            "year_function": null,
+                                                            "month_function": null,
+                                                            "day_function": null,
+                                                            "nanosecond_function": null,
+                                                            "microsecond_function": null,
+                                                            "second_function": null,
+                                                            "minute_function": null,
+                                                            "hour_function": null,
+                                                            "week_function": null,
+                                                            "quarter_function": null,
+                                                            "day_of_week_function": null,
+                                                            "day_of_year_function": null,
                                                             "other_functions": []
                                                           }
                                                         }
@@ -716,6 +761,21 @@
                                                                 "var_samp",
                                                                 "variance"
                                                               ]
+                                                            },
+                                                            "extraction_functions": {
+                                                              "year_function": null,
+                                                              "month_function": null,
+                                                              "day_function": null,
+                                                              "nanosecond_function": null,
+                                                              "microsecond_function": null,
+                                                              "second_function": null,
+                                                              "minute_function": null,
+                                                              "hour_function": null,
+                                                              "week_function": null,
+                                                              "quarter_function": null,
+                                                              "day_of_week_function": null,
+                                                              "day_of_year_function": null,
+                                                              "other_functions": []
                                                             }
                                                           },
                                                           "author_id": {
@@ -756,6 +816,21 @@
                                                                 "var_samp",
                                                                 "variance"
                                                               ]
+                                                            },
+                                                            "extraction_functions": {
+                                                              "year_function": null,
+                                                              "month_function": null,
+                                                              "day_function": null,
+                                                              "nanosecond_function": null,
+                                                              "microsecond_function": null,
+                                                              "second_function": null,
+                                                              "minute_function": null,
+                                                              "hour_function": null,
+                                                              "week_function": null,
+                                                              "quarter_function": null,
+                                                              "day_of_week_function": null,
+                                                              "day_of_year_function": null,
+                                                              "other_functions": []
                                                             }
                                                           },
                                                           "title": {
@@ -796,6 +871,21 @@
                                                               "min_function": null,
                                                               "max_function": null,
                                                               "avg_function": null,
+                                                              "other_functions": []
+                                                            },
+                                                            "extraction_functions": {
+                                                              "year_function": null,
+                                                              "month_function": null,
+                                                              "day_function": null,
+                                                              "nanosecond_function": null,
+                                                              "microsecond_function": null,
+                                                              "second_function": null,
+                                                              "minute_function": null,
+                                                              "hour_function": null,
+                                                              "week_function": null,
+                                                              "quarter_function": null,
+                                                              "day_of_week_function": null,
+                                                              "day_of_year_function": null,
                                                               "other_functions": []
                                                             }
                                                           }
@@ -906,6 +996,21 @@
                                                     "var_samp",
                                                     "variance"
                                                   ]
+                                                },
+                                                "extraction_functions": {
+                                                  "year_function": null,
+                                                  "month_function": null,
+                                                  "day_function": null,
+                                                  "nanosecond_function": null,
+                                                  "microsecond_function": null,
+                                                  "second_function": null,
+                                                  "minute_function": null,
+                                                  "hour_function": null,
+                                                  "week_function": null,
+                                                  "quarter_function": null,
+                                                  "day_of_week_function": null,
+                                                  "day_of_year_function": null,
+                                                  "other_functions": []
                                                 }
                                               },
                                               "author_id": {
@@ -946,6 +1051,21 @@
                                                     "var_samp",
                                                     "variance"
                                                   ]
+                                                },
+                                                "extraction_functions": {
+                                                  "year_function": null,
+                                                  "month_function": null,
+                                                  "day_function": null,
+                                                  "nanosecond_function": null,
+                                                  "microsecond_function": null,
+                                                  "second_function": null,
+                                                  "minute_function": null,
+                                                  "hour_function": null,
+                                                  "week_function": null,
+                                                  "quarter_function": null,
+                                                  "day_of_week_function": null,
+                                                  "day_of_year_function": null,
+                                                  "other_functions": []
                                                 }
                                               },
                                               "title": {
@@ -986,6 +1106,21 @@
                                                   "min_function": null,
                                                   "max_function": null,
                                                   "avg_function": null,
+                                                  "other_functions": []
+                                                },
+                                                "extraction_functions": {
+                                                  "year_function": null,
+                                                  "month_function": null,
+                                                  "day_function": null,
+                                                  "nanosecond_function": null,
+                                                  "microsecond_function": null,
+                                                  "second_function": null,
+                                                  "minute_function": null,
+                                                  "hour_function": null,
+                                                  "week_function": null,
+                                                  "quarter_function": null,
+                                                  "day_of_week_function": null,
+                                                  "day_of_year_function": null,
                                                   "other_functions": []
                                                 }
                                               }
@@ -1054,6 +1189,21 @@
                                                       "max",
                                                       "min"
                                                     ]
+                                                  },
+                                                  "extraction_functions": {
+                                                    "year_function": null,
+                                                    "month_function": null,
+                                                    "day_function": null,
+                                                    "nanosecond_function": null,
+                                                    "microsecond_function": null,
+                                                    "second_function": null,
+                                                    "minute_function": null,
+                                                    "hour_function": null,
+                                                    "week_function": null,
+                                                    "quarter_function": null,
+                                                    "day_of_week_function": null,
+                                                    "day_of_year_function": null,
+                                                    "other_functions": []
                                                   }
                                                 },
                                                 "first_name": {
@@ -1095,6 +1245,21 @@
                                                     "max_function": null,
                                                     "avg_function": null,
                                                     "other_functions": []
+                                                  },
+                                                  "extraction_functions": {
+                                                    "year_function": null,
+                                                    "month_function": null,
+                                                    "day_function": null,
+                                                    "nanosecond_function": null,
+                                                    "microsecond_function": null,
+                                                    "second_function": null,
+                                                    "minute_function": null,
+                                                    "hour_function": null,
+                                                    "week_function": null,
+                                                    "quarter_function": null,
+                                                    "day_of_week_function": null,
+                                                    "day_of_year_function": null,
+                                                    "other_functions": []
                                                   }
                                                 },
                                                 "last_name": {
@@ -1135,6 +1300,21 @@
                                                     "min_function": null,
                                                     "max_function": null,
                                                     "avg_function": null,
+                                                    "other_functions": []
+                                                  },
+                                                  "extraction_functions": {
+                                                    "year_function": null,
+                                                    "month_function": null,
+                                                    "day_function": null,
+                                                    "nanosecond_function": null,
+                                                    "microsecond_function": null,
+                                                    "second_function": null,
+                                                    "minute_function": null,
+                                                    "hour_function": null,
+                                                    "week_function": null,
+                                                    "quarter_function": null,
+                                                    "day_of_week_function": null,
+                                                    "day_of_year_function": null,
                                                     "other_functions": []
                                                   }
                                                 }
@@ -1245,6 +1425,21 @@
                                           "var_samp",
                                           "variance"
                                         ]
+                                      },
+                                      "extraction_functions": {
+                                        "year_function": null,
+                                        "month_function": null,
+                                        "day_function": null,
+                                        "nanosecond_function": null,
+                                        "microsecond_function": null,
+                                        "second_function": null,
+                                        "minute_function": null,
+                                        "hour_function": null,
+                                        "week_function": null,
+                                        "quarter_function": null,
+                                        "day_of_week_function": null,
+                                        "day_of_year_function": null,
+                                        "other_functions": []
                                       }
                                     },
                                     "author_id": {
@@ -1285,6 +1480,21 @@
                                           "var_samp",
                                           "variance"
                                         ]
+                                      },
+                                      "extraction_functions": {
+                                        "year_function": null,
+                                        "month_function": null,
+                                        "day_function": null,
+                                        "nanosecond_function": null,
+                                        "microsecond_function": null,
+                                        "second_function": null,
+                                        "minute_function": null,
+                                        "hour_function": null,
+                                        "week_function": null,
+                                        "quarter_function": null,
+                                        "day_of_week_function": null,
+                                        "day_of_year_function": null,
+                                        "other_functions": []
                                       }
                                     },
                                     "title": {
@@ -1325,6 +1535,21 @@
                                         "min_function": null,
                                         "max_function": null,
                                         "avg_function": null,
+                                        "other_functions": []
+                                      },
+                                      "extraction_functions": {
+                                        "year_function": null,
+                                        "month_function": null,
+                                        "day_function": null,
+                                        "nanosecond_function": null,
+                                        "microsecond_function": null,
+                                        "second_function": null,
+                                        "minute_function": null,
+                                        "hour_function": null,
+                                        "week_function": null,
+                                        "quarter_function": null,
+                                        "day_of_week_function": null,
+                                        "day_of_year_function": null,
                                         "other_functions": []
                                       }
                                     }
@@ -1403,6 +1628,21 @@
                                             "var_samp",
                                             "variance"
                                           ]
+                                        },
+                                        "extraction_functions": {
+                                          "year_function": null,
+                                          "month_function": null,
+                                          "day_function": null,
+                                          "nanosecond_function": null,
+                                          "microsecond_function": null,
+                                          "second_function": null,
+                                          "minute_function": null,
+                                          "hour_function": null,
+                                          "week_function": null,
+                                          "quarter_function": null,
+                                          "day_of_week_function": null,
+                                          "day_of_year_function": null,
+                                          "other_functions": []
                                         }
                                       },
                                       "author_id": {
@@ -1443,6 +1683,21 @@
                                             "var_samp",
                                             "variance"
                                           ]
+                                        },
+                                        "extraction_functions": {
+                                          "year_function": null,
+                                          "month_function": null,
+                                          "day_function": null,
+                                          "nanosecond_function": null,
+                                          "microsecond_function": null,
+                                          "second_function": null,
+                                          "minute_function": null,
+                                          "hour_function": null,
+                                          "week_function": null,
+                                          "quarter_function": null,
+                                          "day_of_week_function": null,
+                                          "day_of_year_function": null,
+                                          "other_functions": []
                                         }
                                       },
                                       "title": {
@@ -1483,6 +1738,21 @@
                                           "min_function": null,
                                           "max_function": null,
                                           "avg_function": null,
+                                          "other_functions": []
+                                        },
+                                        "extraction_functions": {
+                                          "year_function": null,
+                                          "month_function": null,
+                                          "day_function": null,
+                                          "nanosecond_function": null,
+                                          "microsecond_function": null,
+                                          "second_function": null,
+                                          "minute_function": null,
+                                          "hour_function": null,
+                                          "week_function": null,
+                                          "quarter_function": null,
+                                          "day_of_week_function": null,
+                                          "day_of_year_function": null,
                                           "other_functions": []
                                         }
                                       }

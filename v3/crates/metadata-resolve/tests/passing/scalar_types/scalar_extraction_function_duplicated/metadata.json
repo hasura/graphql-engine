@@ -1,0 +1,146 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "MyObject",
+            "fields": [
+              {
+                "name": "id",
+                "type": "MyInt!"
+              }
+            ],
+            "graphql": {
+              "typeName": "MyObject"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "my_object",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "MyInt",
+            "graphql": {
+              "typeName": "MyInt"
+            },
+            "description": null
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "Int",
+            "representation": "MyInt",
+            "graphql": {}
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "custom",
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:8103"
+              }
+            },
+            "headers": {},
+            "argumentPresets": [
+              {
+                "argument": "_headers",
+                "value": {
+                  "httpHeaders": {
+                    "forward": ["cookie", "authorization", "x-hasura-role"],
+                    "additional": {}
+                  }
+                }
+              }
+            ],
+            "responseHeaders": {
+              "headersField": "headers",
+              "resultField": "response",
+              "forwardHeaders": ["set-cookie"]
+            },
+            "schema": {
+              "version": "v0.2",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {},
+                    "extraction_functions": {
+                      "year": {
+                        "type": "year",
+                        "result_type": "Int"
+                      }
+                    },
+                    "comparison_operators": {}
+                  }
+                },
+                "object_types": {
+                  "my_object": {
+                    "description": "An actor",
+                    "fields": {
+                      "id": {
+                        "description": "",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {}
+                      }
+                    },
+                    "foreign_keys": {}
+                  }
+                },
+                "collections": [],
+                "functions": [],
+                "procedures": [],
+                "capabilities": {
+                  "query": {
+                    "aggregates": {
+                      "count_scalar_type": "Int"
+                    }
+                  }
+                }
+              },
+              "capabilities": {
+                "version": "0.2.0",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {
+                      "group_by": {}
+                    }
+                  },
+                  "mutation": {}
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

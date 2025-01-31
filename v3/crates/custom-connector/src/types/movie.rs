@@ -46,6 +46,16 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     arguments: BTreeMap::new(),
                 },
             ),
+            (
+                "release_date".into(),
+                ndc_models::ObjectField {
+                    description: Some("The movie's release date".into()),
+                    r#type: ndc_models::Type::Named {
+                        name: "Date".into(),
+                    },
+                    arguments: BTreeMap::new(),
+                },
+            ),
         ]),
         foreign_keys: BTreeMap::new(),
     }

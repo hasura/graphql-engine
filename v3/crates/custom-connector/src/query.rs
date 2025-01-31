@@ -510,8 +510,86 @@ fn eval_dimension(row: &Row, dimension: &ndc_models::Dimension) -> Result<serde_
             arguments: _,
             field_path,
             path: _,
-            extraction: _,
-        } => eval_column_field_path(row, column_name, field_path.as_ref()),
+            extraction,
+        } => {
+            let value = eval_column_field_path(row, column_name, field_path.as_ref())?;
+            eval_extraction(extraction.as_ref(), value)
+        }
+    }
+}
+
+fn eval_extraction(
+    extraction: Option<&ndc_models::ExtractionFunctionName>,
+    value: serde_json::Value,
+) -> Result<serde_json::Value> {
+    match extraction {
+        None => Ok(value),
+        Some(extraction) => {
+            let iso8601::Date::YMD { year, month, day } = iso8601::date(value.as_str().ok_or({
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ndc_models::ErrorResponse {
+                        details: serde_json::Value::Null,
+                        message: "Expected date".into(),
+                    }),
+                )
+            })?)
+            .map_err(|_| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ndc_models::ErrorResponse {
+                        details: serde_json::Value::Null,
+                        message: "Unable to parse date".into(),
+                    }),
+                )
+            })?
+            else {
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ndc_models::ErrorResponse {
+                        details: serde_json::Value::Null,
+                        message: "Invalid date format".into(),
+                    }),
+                ));
+            };
+
+            match extraction.as_str() {
+                "year" => serde_json::to_value(year).map_err(|_| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(ndc_models::ErrorResponse {
+                            details: serde_json::Value::Null,
+                            message: "Cannot encode year date part".into(),
+                        }),
+                    )
+                }),
+                "month" => serde_json::to_value(month).map_err(|_| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(ndc_models::ErrorResponse {
+                            details: serde_json::Value::Null,
+                            message: "Cannot encode month date part".into(),
+                        }),
+                    )
+                }),
+                "day" => serde_json::to_value(day).map_err(|_| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(ndc_models::ErrorResponse {
+                            details: serde_json::Value::Null,
+                            message: "Cannot encode day date part".into(),
+                        }),
+                    )
+                }),
+                _ => Err((
+                    StatusCode::BAD_REQUEST,
+                    Json(ndc_models::ErrorResponse {
+                        details: serde_json::Value::Null,
+                        message: "Unknown extraction function".into(),
+                    }),
+                )),
+            }
+        }
     }
 }
 

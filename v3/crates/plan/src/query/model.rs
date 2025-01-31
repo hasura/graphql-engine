@@ -12,9 +12,10 @@ use open_dds::identifier::SubgraphName;
 use std::collections::BTreeMap;
 
 use hasura_authn_core::Session;
-use metadata_resolve::{Metadata, NdcVersion, Qualified};
+use metadata_resolve::{FieldMapping, Metadata, NdcVersion, Qualified};
 use open_dds::query::{
-    Aggregate, AggregationFunction, ModelDimensions, ModelSelection, ModelTarget, Name, Operand,
+    Aggregate, AggregationFunction, ExtractionFunction, ModelDimensions, ModelSelection,
+    ModelTarget, Name, Operand,
 };
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, ExecutionTree, FieldsSelection, Grouping,
@@ -61,7 +62,14 @@ pub fn from_model_group_by(
 
     let mut dimensions: IndexMap<NdcFieldAlias, plan_types::Dimension> = IndexMap::new();
 
-    for (field_alias, open_dds::query::Dimension::Field(operand)) in &model_dimensions.dimensions {
+    for (
+        field_alias,
+        open_dds::query::Dimension::Field {
+            column: operand,
+            extraction,
+        },
+    ) in &model_dimensions.dimensions
+    {
         let dimension = match operand {
             Operand::Field(operand) => {
                 let column = to_resolved_column(
@@ -71,11 +79,112 @@ pub fn from_model_group_by(
                     model_object_type,
                     operand,
                 )?;
+                let field_mapping: FieldMapping = column.field_mapping;
+                let extraction_functions = field_mapping
+                    .extraction_functions
+                    .ok_or_else(|| PlanError::Internal("no extraction functions".to_string()))?;
+                let extraction = match extraction {
+                    None => None,
+                    Some(extraction) => Some(match extraction {
+                        ExtractionFunction::Year => {
+                            extraction_functions.year_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "year extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Month => {
+                            extraction_functions.month_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "month extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Day => {
+                            extraction_functions.day_function.ok_or_else(|| {
+                                PlanError::Internal("day extraction function not found".to_string())
+                            })
+                        }
+                        ExtractionFunction::Nanosecond => {
+                            extraction_functions.nanosecond_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "nanosecond extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Microsecond => {
+                            extraction_functions.microsecond_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "microsecond extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Second => {
+                            extraction_functions.second_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "second extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Minute => {
+                            extraction_functions.minute_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "minute extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Hour => {
+                            extraction_functions.hour_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "hour extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Week => {
+                            extraction_functions.week_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "week extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Quarter => {
+                            extraction_functions.quarter_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "quarter extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::DayOfWeek => {
+                            extraction_functions.day_of_week_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "day_of_week extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::DayOfYear => {
+                            extraction_functions.day_of_year_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "day_of_year extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Custom { name } => extraction_functions
+                            .other_functions
+                            .into_iter()
+                            .find(|f| f.as_str() == name.as_str())
+                            .ok_or_else(|| {
+                                PlanError::Internal(format!(
+                                    "unsupported extraction function {name:?}"
+                                ))
+                            }),
+                    }?),
+                };
                 Ok(plan_types::Dimension::Column {
                     column_path: nonempty::NonEmpty {
                         head: column.column_name,
                         tail: column.field_path,
                     },
+                    extraction,
                 })
             }
             _ => Err(PlanError::Internal(format!(
@@ -316,24 +425,27 @@ fn to_ndc_aggregate(
         | AggregationFunction::Min
         | AggregationFunction::Max
         | AggregationFunction::Average => {
-            let resolved_column = resolved_column.ok_or(PlanError::Internal(
+            let resolved_column = resolved_column.ok_or_else(|| {
+                PlanError::Internal(
                 "column shouldn't be empty for aggregation function {aggregation_function_name}"
                     .into(),
-            ))?;
+            )
+            })?;
             let Some(column_path) = NonEmpty::from_vec(column_path) else {
                 Err(PlanError::Internal(
                                     "column path shouldn't be empty for aggregation function {aggregation_function_name}"
                                         .into(),
                                 ))?
             };
-            let aggregate_functions =
-                resolved_column
-                    .field_mapping
-                    .aggregate_functions
-                    .ok_or(PlanError::Internal(format!(
+            let aggregate_functions = resolved_column
+                .field_mapping
+                .aggregate_functions
+                .ok_or_else(|| {
+                    PlanError::Internal(format!(
                         "no aggregate functions defined for field {}",
                         field_alias.as_str()
-                    )))?;
+                    ))
+                })?;
             let data_connector_function_name = match &aggregate.function {
                 AggregationFunction::Sum => aggregate_functions
                     .get_sum_function(ndc_version)

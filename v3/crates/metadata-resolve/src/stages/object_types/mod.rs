@@ -2,7 +2,9 @@ mod error;
 pub mod types;
 
 pub use error::{ObjectTypesError, TypeMappingValidationError};
-use open_dds::aggregates::DataConnectorAggregationFunctionName;
+use open_dds::aggregates::{
+    DataConnectorAggregationFunctionName, DataConnectorExtractionFunctionName,
+};
 use open_dds::identifier::SubgraphName;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -13,10 +15,11 @@ use open_dds::{
     types::CustomTypeName,
 };
 pub use types::{
-    AggregateFunctions, ComparisonOperators, DataConnectorTypeMappingsForObject, FieldArgumentInfo,
-    FieldDefinition, FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings,
-    ObjectTypesIssue, ObjectTypesOutput, ObjectTypesWithTypeMappings,
-    ResolvedApolloFederationObjectKey, ResolvedObjectApolloFederationConfig, TypeMapping,
+    AggregateFunctions, ComparisonOperators, DataConnectorTypeMappingsForObject,
+    ExtractionFunctions, FieldArgumentInfo, FieldDefinition, FieldMapping,
+    ObjectTypeRepresentation, ObjectTypeWithTypeMappings, ObjectTypesIssue, ObjectTypesOutput,
+    ObjectTypesWithTypeMappings, ResolvedApolloFederationObjectKey,
+    ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
@@ -414,12 +417,21 @@ pub fn resolve_data_connector_type_mapping(
             c
         });
 
+        let extraction_functions = scalar_type.map(|ty| {
+            let (c, new_issues) =
+                make_extraction_functions(&scalar_type_name, ty, &qualified_data_connector_name);
+
+            issues.extend(new_issues);
+            c
+        });
+
         let resolved_field_mapping = FieldMapping {
             column: resolved_field_mapping_column.into_owned(),
             column_type: source_column.r#type.clone(),
             column_type_representation,
             comparison_operators,
             aggregate_functions,
+            extraction_functions,
             argument_mappings: resolved_argument_mappings.0,
         };
 
@@ -705,6 +717,183 @@ pub(crate) fn make_aggregate_functions(
     }
 
     (aggregate_functions, issues)
+}
+
+fn make_extraction_functions(
+    scalar_type_name: &ndc_models::ScalarTypeName,
+    scalar_type: &ndc_models::ScalarType,
+    data_connector_name: &Qualified<DataConnectorName>,
+) -> (ExtractionFunctions, Vec<ObjectTypesIssue>) {
+    let mut extraction_functions = ExtractionFunctions::default();
+    let mut issues = Vec::new();
+
+    for (function_name, definition) in &scalar_type.extraction_functions {
+        match definition {
+            ndc_models::ExtractionFunctionDefinition::Year { result_type: _ } => {
+                if extraction_functions.year_function.is_none() {
+                    extraction_functions.year_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateExtractionFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "year".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Month { result_type: _ } => {
+                if extraction_functions.month_function.is_none() {
+                    extraction_functions.month_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "month".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Day { result_type: _ } => {
+                if extraction_functions.day_function.is_none() {
+                    extraction_functions.day_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "day".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Nanosecond { result_type: _ } => {
+                if extraction_functions.nanosecond_function.is_none() {
+                    extraction_functions.nanosecond_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "nanosecond".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Microsecond { result_type: _ } => {
+                if extraction_functions.microsecond_function.is_none() {
+                    extraction_functions.microsecond_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "microsecond".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Second { result_type: _ } => {
+                if extraction_functions.second_function.is_none() {
+                    extraction_functions.second_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "second".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Minute { result_type: _ } => {
+                if extraction_functions.minute_function.is_none() {
+                    extraction_functions.minute_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "minute".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Hour { result_type: _ } => {
+                if extraction_functions.hour_function.is_none() {
+                    extraction_functions.hour_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "hour".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Week { result_type: _ } => {
+                if extraction_functions.week_function.is_none() {
+                    extraction_functions.week_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "week".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Quarter { result_type: _ } => {
+                if extraction_functions.quarter_function.is_none() {
+                    extraction_functions.quarter_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "quarter".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::DayOfWeek { result_type: _ } => {
+                if extraction_functions.day_of_week_function.is_none() {
+                    extraction_functions.day_of_week_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "day_of_week".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::DayOfYear { result_type: _ } => {
+                if extraction_functions.day_of_year_function.is_none() {
+                    extraction_functions.day_of_year_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "day_of_year".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Custom { result_type: _ } => {
+                extraction_functions.other_functions.push(
+                    DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                );
+            }
+        }
+    }
+
+    (extraction_functions, issues)
 }
 
 fn get_column<'a>(

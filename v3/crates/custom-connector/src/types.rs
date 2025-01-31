@@ -89,6 +89,37 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
             },
         ),
         (
+            "Date".into(),
+            ndc_models::ScalarType {
+                representation: ndc_models::TypeRepresentation::Date,
+                aggregate_functions: BTreeMap::from_iter([]),
+                comparison_operators: BTreeMap::from_iter([(
+                    "_eq".into(),
+                    ndc_models::ComparisonOperatorDefinition::Equal,
+                )]),
+                extraction_functions: BTreeMap::from_iter([
+                    (
+                        "year".into(),
+                        ndc_models::ExtractionFunctionDefinition::Year {
+                            result_type: ndc_models::ScalarTypeName::from("Int"),
+                        },
+                    ),
+                    (
+                        "month".into(),
+                        ndc_models::ExtractionFunctionDefinition::Month {
+                            result_type: ndc_models::ScalarTypeName::from("Int"),
+                        },
+                    ),
+                    (
+                        "day".into(),
+                        ndc_models::ExtractionFunctionDefinition::Day {
+                            result_type: ndc_models::ScalarTypeName::from("Int"),
+                        },
+                    ),
+                ]),
+            },
+        ),
+        (
             "Int".into(),
             ndc_models::ScalarType {
                 representation: ndc_models::TypeRepresentation::Int32,

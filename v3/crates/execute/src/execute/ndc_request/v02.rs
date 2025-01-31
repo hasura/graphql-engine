@@ -1,4 +1,4 @@
-use core::iter::IntoIterator;
+use core::{convert::From, iter::IntoIterator};
 use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
@@ -467,7 +467,10 @@ fn make_group_by(grouping: plan_types::Grouping) -> ndc_models_v02::Grouping {
         .dimensions
         .into_iter()
         .map(|(_dim_name, dimension)| match dimension {
-            plan_types::Dimension::Column { column_path } => {
+            plan_types::Dimension::Column {
+                column_path,
+                extraction,
+            } => {
                 let column_name = ndc_models_v02::FieldName::from(column_path.head.as_str());
                 let field_path = column_path.tail();
                 let field_path = if field_path.is_empty() {
@@ -485,7 +488,8 @@ fn make_group_by(grouping: plan_types::Grouping) -> ndc_models_v02::Grouping {
                     column_name,
                     path: vec![],
                     field_path,
-                    extraction: None,
+                    extraction: extraction
+                        .map(|e| ndc_models_v02::ExtractionFunctionName::from(e.as_str())),
                 }
             }
         })

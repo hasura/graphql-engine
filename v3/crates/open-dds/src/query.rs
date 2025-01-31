@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::arguments::ArgumentName;
 use crate::{
-    aggregates::{AggregateExpressionName, AggregationFunctionName},
+    aggregates::{AggregateExpressionName, AggregationFunctionName, ExtractionFunctionName},
     commands::CommandName,
     identifier::{Identifier, SubgraphName},
     models::{ModelName, OrderByDirection},
@@ -80,7 +80,49 @@ pub struct ModelDimensions {
 pub enum Dimension {
     /// Group by a field of the current object or a related object
     /// Note: Operand::RelationshipAggregate will not be valid here.
-    Field(Operand),
+    Field {
+        column: Operand,
+        extraction: Option<ExtractionFunction>,
+    },
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+/// An extraction function to evaluate.
+pub enum ExtractionFunction {
+    Nanosecond,
+    Microsecond,
+    Second,
+    Minute,
+    Hour,
+    Day,
+    Week,
+    Month,
+    Quarter,
+    Year,
+    DayOfWeek,
+    DayOfYear,
+    Custom { name: ExtractionFunctionName },
+}
+
+impl core::fmt::Display for ExtractionFunction {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ExtractionFunction::Nanosecond => write!(f, "NANOSECOND"),
+            ExtractionFunction::Microsecond => write!(f, "MICROSECOND"),
+            ExtractionFunction::Second => write!(f, "SECOND"),
+            ExtractionFunction::Minute => write!(f, "MINUTE"),
+            ExtractionFunction::Hour => write!(f, "HOUR"),
+            ExtractionFunction::Day => write!(f, "DAY"),
+            ExtractionFunction::Week => write!(f, "WEEK"),
+            ExtractionFunction::Month => write!(f, "MONTH"),
+            ExtractionFunction::Quarter => write!(f, "QUARTER"),
+            ExtractionFunction::Year => write!(f, "YEAR"),
+            ExtractionFunction::DayOfWeek => write!(f, "DAYOFWEEK"),
+            ExtractionFunction::DayOfYear => write!(f, "DAYOFYEAR"),
+            ExtractionFunction::Custom { name } => write!(f, "{name}"),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

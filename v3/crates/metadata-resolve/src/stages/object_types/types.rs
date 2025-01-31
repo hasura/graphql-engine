@@ -3,7 +3,9 @@ use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{QualifiedTypeName, QualifiedTypeReference};
 use crate::NdcVersion;
 use indexmap::IndexMap;
-use open_dds::aggregates::DataConnectorAggregationFunctionName;
+use open_dds::aggregates::{
+    DataConnectorAggregationFunctionName, DataConnectorExtractionFunctionName,
+};
 use open_dds::arguments::ArgumentName;
 use open_dds::models::ModelName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, FieldName};
@@ -180,6 +182,9 @@ pub struct FieldMapping {
     pub column_type_representation: Option<ndc_models::TypeRepresentation>,
     pub comparison_operators: Option<ComparisonOperators>,
     pub aggregate_functions: Option<AggregateFunctions>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub extraction_functions: Option<ExtractionFunctions>,
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
@@ -401,6 +406,23 @@ impl AggregateFunctions {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub struct ExtractionFunctions {
+    pub year_function: Option<DataConnectorExtractionFunctionName>,
+    pub month_function: Option<DataConnectorExtractionFunctionName>,
+    pub day_function: Option<DataConnectorExtractionFunctionName>,
+    pub nanosecond_function: Option<DataConnectorExtractionFunctionName>,
+    pub microsecond_function: Option<DataConnectorExtractionFunctionName>,
+    pub second_function: Option<DataConnectorExtractionFunctionName>,
+    pub minute_function: Option<DataConnectorExtractionFunctionName>,
+    pub hour_function: Option<DataConnectorExtractionFunctionName>,
+    pub week_function: Option<DataConnectorExtractionFunctionName>,
+    pub quarter_function: Option<DataConnectorExtractionFunctionName>,
+    pub day_of_week_function: Option<DataConnectorExtractionFunctionName>,
+    pub day_of_year_function: Option<DataConnectorExtractionFunctionName>,
+    pub other_functions: Vec<DataConnectorExtractionFunctionName>,
+}
+
 /// Mapping from an object to their fields, which contain types.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum TypeMapping {
@@ -411,6 +433,7 @@ pub enum TypeMapping {
     },
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, thiserror::Error)]
 pub enum ObjectTypesIssue {
     #[error("Multiple {operator_name} operators found for type {scalar_type} in data connector {data_connector_name}")]
@@ -421,6 +444,12 @@ pub enum ObjectTypesIssue {
     },
     #[error("Multiple {function_name} aggregate functions found for type {scalar_type} in data connector {data_connector_name}")]
     DuplicateAggregateFunctionsDefined {
+        scalar_type: ndc_models::ScalarTypeName,
+        function_name: String,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("Multiple {function_name} extraction functions found for type {scalar_type} in data connector {data_connector_name}")]
+    DuplicateExtractionFunctionsDefined {
         scalar_type: ndc_models::ScalarTypeName,
         function_name: String,
         data_connector_name: Qualified<DataConnectorName>,
@@ -443,6 +472,7 @@ impl ShouldBeAnError for ObjectTypesIssue {
             ObjectTypesIssue::DuplicateAggregateFunctionsDefined { .. } => flags.contains(
                 open_dds::flags::Flag::DisallowDuplicateAggregateFunctionDefinitionsForScalarType,
             ),
+            ObjectTypesIssue::DuplicateExtractionFunctionsDefined { .. } => true,
             ObjectTypesIssue::FieldTypeMismatch { .. } => {
                 flags.contains(open_dds::flags::Flag::DisallowDataConnectorScalarTypesMismatch)
             }

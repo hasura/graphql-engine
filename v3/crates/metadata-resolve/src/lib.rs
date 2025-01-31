@@ -50,7 +50,7 @@ pub use stages::object_relationships::{
     RelationshipField, RelationshipModelMapping, RelationshipTarget,
 };
 pub use stages::object_types::{
-    AggregateFunctions, ComparisonOperators, FieldArgumentInfo, FieldMapping,
+    AggregateFunctions, ComparisonOperators, ExtractionFunctions, FieldArgumentInfo, FieldMapping,
     ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::order_by_expressions::{
