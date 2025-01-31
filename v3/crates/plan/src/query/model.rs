@@ -10,7 +10,6 @@ use open_dds::aggregates::{
 };
 use open_dds::identifier::SubgraphName;
 use std::collections::BTreeMap;
-use std::sync::Arc;
 
 use hasura_authn_core::Session;
 use metadata_resolve::{Metadata, NdcVersion, Qualified};
@@ -28,7 +27,7 @@ pub fn from_model_group_by(
     selection: &IndexMap<Name, Aggregate>,
     model_dimensions: &ModelDimensions,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<ExecutionTree, PlanError> {
@@ -181,7 +180,7 @@ pub fn from_model_aggregate_selection(
     model_target: &ModelTarget,
     selection: &IndexMap<Name, Aggregate>,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<ExecutionTree, PlanError> {
@@ -444,7 +443,7 @@ fn get_ndc_aggregation_function(
 pub fn from_model_selection(
     model_selection: &ModelSelection,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<ExecutionTree, PlanError> {

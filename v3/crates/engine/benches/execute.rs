@@ -179,13 +179,7 @@ pub fn bench_execute(
         &(&runtime),
         |b, runtime| {
             b.to_async(*runtime).iter(|| async {
-                generate_request_plan(
-                    &ir,
-                    &resolved_metadata,
-                    &session.clone().into(),
-                    &request_headers,
-                )
-                .unwrap()
+                generate_request_plan(&ir, &resolved_metadata, &session, &request_headers).unwrap()
             });
         },
     );
@@ -196,13 +190,8 @@ pub fn bench_execute(
         &(&runtime),
         |b, runtime| {
             b.to_async(*runtime).iter(|| async {
-                match generate_request_plan(
-                    &ir,
-                    &resolved_metadata,
-                    &session.clone().into(),
-                    &request_headers,
-                )
-                .unwrap()
+                match generate_request_plan(&ir, &resolved_metadata, &session, &request_headers)
+                    .unwrap()
                 {
                     RequestPlan::QueryPlan(query_plan) => {
                         execute_query_plan(&http_context, query_plan, None).await

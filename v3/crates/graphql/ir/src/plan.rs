@@ -26,7 +26,6 @@ use plan_types::{
     CommandReturnKind, ExecutionTree, NDCMutationExecution, NDCQueryExecution,
     NDCSubscriptionExecution, ProcessResponseAs, QueryExecutionPlan, UniqueNumber,
 };
-use std::sync::Arc;
 pub use types::{
     ApolloFederationSelect, MutationPlan, MutationSelect, NodeQueryPlan, Plan, QueryPlan,
     RequestPlan, SubscriptionSelect,
@@ -37,7 +36,7 @@ pub use types::{
 pub fn generate_request_plan<'n, 's, 'ir>(
     ir: &'ir IR<'n, 's>,
     metadata: &'s Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<RequestPlan<'n, 's, 'ir>, error::Error> {
     let mut unique_number = UniqueNumber::new();
@@ -102,7 +101,7 @@ fn plan_mutation<'n, 's>(
     selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
     ir: &ProcedureBasedCommand<'s>,
     metadata: &'s Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<MutationSelect<'n, 's>, error::Error> {
@@ -149,7 +148,7 @@ fn plan_mutation<'n, 's>(
 fn plan_subscription<'s, 'ir>(
     root_field: &'ir SubscriptionRootField<'_, 's>,
     metadata: &'s Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<SubscriptionSelect<'s, 'ir>, error::Error> {
@@ -312,7 +311,7 @@ fn reject_remote_joins(tree: ExecutionTree) -> Result<QueryExecutionPlan, error:
 fn plan_query<'n, 's, 'ir>(
     ir: &'ir QueryRootField<'n, 's>,
     metadata: &'s Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<NodeQueryPlan<'n, 's, 'ir>, error::Error> {

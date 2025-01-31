@@ -102,7 +102,7 @@ fn validate_route<'a>(state: &'a State, uri: &'a Uri) -> Option<&'a Model> {
 async fn query_engine_execute(
     query_ir: &open_dds::query::QueryRequest,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     http_context: &Arc<HttpContext>,
     request_headers: &HeaderMap,
 ) -> Result<Vec<ndc_models::RowSet>, RequestError> {

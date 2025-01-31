@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use super::arguments;
 use super::commands;
 use super::model_selection;
@@ -26,7 +24,7 @@ pub(crate) fn plan_nested_selection(
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     metadata: &'_ Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<Plan<NestedField>, error::Error> {
@@ -86,7 +84,7 @@ pub(crate) fn plan_selection_set(
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     metadata: &'_ Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<Plan<IndexMap<NdcFieldAlias, Field>>, error::Error> {

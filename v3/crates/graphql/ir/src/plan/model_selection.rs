@@ -15,7 +15,6 @@ use plan_types::{
     QueryExecutionPlan, QueryNodeNew, Relationship, UniqueNumber,
 };
 use std::collections::BTreeMap;
-use std::sync::Arc;
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
 // #[async_recursion]
@@ -23,7 +22,7 @@ pub(crate) fn plan_query_node(
     ir: &ModelSelection<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     metadata: &'_ Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<Plan<QueryNodeNew>, error::Error> {
@@ -88,7 +87,7 @@ pub(crate) fn plan_query_node(
 pub(crate) fn plan_query_execution(
     ir: &ModelSelection<'_>,
     metadata: &'_ Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<ExecutionTree, error::Error> {

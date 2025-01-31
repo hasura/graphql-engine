@@ -20,7 +20,6 @@ use plan_types::{
 };
 use plan_types::{UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME};
 use std::collections::BTreeMap;
-use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum CommandPlan {
@@ -36,7 +35,7 @@ pub struct FromCommand {
 pub fn from_command(
     command_selection: &CommandSelection,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<FromCommand, PlanError> {
@@ -75,7 +74,7 @@ fn from_command_output_type(
     output_shape: &OutputShape,
     command_selection: &CommandSelection,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     command_source: &metadata_resolve::CommandSource,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
@@ -151,7 +150,7 @@ fn from_command_output_type(
 pub(crate) fn from_command_selection(
     command_selection: &CommandSelection,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     qualified_command_name: &Qualified<CommandName>,
     command: &metadata_resolve::CommandWithPermissions,

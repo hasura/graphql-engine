@@ -22,7 +22,6 @@ pub use permissions::process_model_predicate;
 pub use relationships::{
     process_command_relationship_definition, process_model_relationship_definition,
 };
-use std::sync::Arc;
 
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
@@ -44,7 +43,7 @@ pub enum ExecutionPlan {
 pub fn plan_query_request<'req, 'metadata>(
     query_request: &'req QueryRequest,
     metadata: &'metadata Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<ExecutionPlan, PlanError>
 where
@@ -96,7 +95,7 @@ where
 pub fn query_to_plan<'req, 'metadata>(
     query: &'req Query,
     metadata: &'metadata Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<SingleNodeExecutionPlan, PlanError>

@@ -2,7 +2,6 @@ use crate::types::{PlanError, RelationshipError};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
-use std::sync::Arc;
 
 use super::{
     relationships::{
@@ -35,7 +34,7 @@ use plan_types::{
 
 pub fn resolve_field_selection(
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
@@ -130,7 +129,7 @@ pub fn resolve_field_selection(
 
 fn from_field_selection(
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -230,7 +229,7 @@ fn resolve_field_arguments(
 
 fn resolve_nested_field_selection(
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -315,7 +314,7 @@ fn resolve_nested_field_selection(
 fn from_relationship_selection(
     relationship_selection: &RelationshipSelection,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
@@ -369,7 +368,7 @@ fn from_relationship_selection(
 
 fn from_model_relationship(
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     relationship_selection: &RelationshipSelection,
@@ -564,7 +563,7 @@ enum RelationshipFields {
 
 fn from_command_relationship(
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     relationship_selection: &RelationshipSelection,
@@ -833,7 +832,7 @@ pub fn reject_remote_relationship(
 fn from_relationship_aggregate_selection(
     relationship_aggregate_selection: &RelationshipAggregateSelection,
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &metadata_resolve::ObjectTypeWithRelationships,
@@ -953,7 +952,7 @@ fn get_relationship_field<'a>(
 
 fn ndc_nested_field_selection_for(
     metadata: &Metadata,
-    session: &Arc<Session>,
+    session: &Session,
     column_name: &FieldName,
     column_type: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
