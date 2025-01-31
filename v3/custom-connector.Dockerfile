@@ -1,7 +1,7 @@
 # This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
 FROM rust:1.83.0
 
-WORKDIR app
+WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive
 
