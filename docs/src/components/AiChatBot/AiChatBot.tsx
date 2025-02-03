@@ -123,6 +123,7 @@ export function AiChatBot({ style }) {
     const queryDevToken = process.env.NODE_ENV === 'development' && DEV_TOKEN ? `&devToken=${DEV_TOKEN}` : '';
 
     const connectWebSocket = () => {
+      if (!isOpen) return;
       websocket = new WebSocket(
         encodeURI(`${docsBotEndpointURL}?version=${hasuraVersion}&userId=${storedUserID}${queryDevToken}`)
       );
@@ -150,6 +151,9 @@ export function AiChatBot({ style }) {
             setMessages((prevMessages: Message[]) => [...prevMessages, currentMessageRef.current]);
             setCurrentMessage({ userMessage: '', botResponse: '' });
             setIsResponding(false);
+            if (isOpen) {
+              reconnectInterval = setTimeout(connectWebSocket, 3000); // attempt to reconnect every 3 seconds
+            }
             break;
           }
           case 'responsePart': {
@@ -191,14 +195,19 @@ export function AiChatBot({ style }) {
       setWs(websocket);
     };
 
-    connectWebSocket();
+    if (isOpen) {
+      connectWebSocket();
+    }
+
     return () => {
       clearTimeout(reconnectInterval);
       if (websocket) {
         websocket.close();
+        setWs(null);
+        setIsConnecting(true);
       }
     };
-  }, []);
+  }, [isOpen]); // Only re-run when isOpen changes
 
   // Send the query to the websocket when the user submits the form
   const handleSubmit = async () => {
