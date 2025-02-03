@@ -21,6 +21,8 @@
 
 ### Fixed
 
+- Reduce errors for unnecessary GraphQL configuration in aggregates to warnings
+
 - The `args` field for a model is now optional if all arguments are nullable or
   preset.
 

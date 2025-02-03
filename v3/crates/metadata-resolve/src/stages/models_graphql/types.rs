@@ -142,12 +142,19 @@ pub enum ModelGraphqlIssue {
         model_name: Qualified<ModelName>,
         error: DuplicateRootFieldError,
     },
+
+    #[error("model arguments graphql input configuration has been specified for model {model_name:} that does not have arguments")]
+    UnnecessaryModelArgumentsGraphQlInputConfiguration { model_name: Qualified<ModelName> },
+    #[error("an unnecessary filter input type name graphql configuration has been specified for model {model_name:} that does not use aggregates")]
+    UnnecessaryFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
 }
 
 impl ShouldBeAnError for ModelGraphqlIssue {
     fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
         match self {
-            ModelGraphqlIssue::MissingAggregateFilterInputFieldNameInGraphqlConfig { .. } => false,
+            ModelGraphqlIssue::MissingAggregateFilterInputFieldNameInGraphqlConfig { .. }
+            | ModelGraphqlIssue::UnnecessaryModelArgumentsGraphQlInputConfiguration { .. }
+            | ModelGraphqlIssue::UnnecessaryFilterInputTypeNameGraphqlConfiguration { .. } => false,
             ModelGraphqlIssue::DuplicateRootField { .. } => {
                 flags.contains(open_dds::flags::Flag::RequireUniqueModelGraphqlNames)
             }

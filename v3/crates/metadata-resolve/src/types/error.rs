@@ -111,10 +111,6 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         argument_name: ArgumentName,
     },
-    #[error("model arguments graphql input configuration has been specified for model {model_name:} that does not have arguments")]
-    UnnecessaryModelArgumentsGraphQlInputConfiguration { model_name: Qualified<ModelName> },
-    #[error("an unnecessary filter input type name graphql configuration has been specified for model {model_name:} that does not use aggregates")]
-    UnnecessaryFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
     #[error("filter input type name graphql configuration must be specified for model {model_name:} because aggregates are used with it")]
     MissingFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
     #[error("unknown field {field_name:} in unique identifier defined for model {model_name:}")]
