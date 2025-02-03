@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2025.02.03]
+
+### Added
+
 - Allow environment variables to be used in permission filters.
 - Added a OpenDD flag (`disallow_order_by_fields_with_field_arguments`) to
   disallow fields with field arguments in order by expressions
@@ -1077,7 +1085,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.01.24...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.03...HEAD
+[v2025.02.03]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.03
 [v2025.01.24]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.24
 [v2025.01.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.17
 [v2025.01.09]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.09

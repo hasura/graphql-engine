@@ -157,9 +157,6 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         }
         Flag::DisallowDataConnectorScalarTypesMismatch
         | Flag::CheckObjectTypeFieldsExist
-        | Flag::DisallowOrderByFieldsWithFieldArguments => {
-            // TODO Set a compatibility date during the next release.
-            None
-        }
+        | Flag::DisallowOrderByFieldsWithFieldArguments => Some(new_compatibility_date(2025, 2, 4)),
     }
 }
