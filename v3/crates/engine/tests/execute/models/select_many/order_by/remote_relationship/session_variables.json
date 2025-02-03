@@ -1,0 +1,9 @@
+[
+  {
+    "x-hasura-role": "admin"
+  },
+  {
+    "x-hasura-role": "user",
+    "x-hasura-institution-id": "1"
+  }
+]

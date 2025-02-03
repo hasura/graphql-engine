@@ -1,0 +1,18 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "internal error: Remote relationships are not supported in order_by"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "internal error: Remote relationships are not supported in order_by"
+      }
+    ]
+  }
+]

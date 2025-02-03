@@ -1,0 +1,17 @@
+query MyQuery {
+  # This should fail - attempting to order by a remote relationship
+  InstitutionMany(
+    order_by: [
+      { location: { location_country_remote: { name: Desc } } }
+      { id: Desc }
+    ]
+  ) {
+    id
+    location {
+      location_country_remote {
+        id
+        name
+      }
+    }
+  }
+}

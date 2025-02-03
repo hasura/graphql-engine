@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/order_by_expressions/disallow_field_with_field_arguments_in_order_by_expressions/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+The orderable field "name" has field arguments and cannot be used in order by expressions.
