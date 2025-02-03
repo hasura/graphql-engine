@@ -40,6 +40,7 @@ pub enum Flag {
     TypecheckObjectTypeValuesInPresets,
     DisallowDataConnectorScalarTypesMismatch,
     CheckObjectTypeFieldsExist,
+    DisallowOrderByFieldsWithFieldArguments,
 }
 
 impl Flag {
@@ -105,6 +106,9 @@ impl Flag {
                 "disallow_data_connector_scalar_types_mismatch"
             }
             Flag::CheckObjectTypeFieldsExist => "check_object_type_fields_exist",
+            Flag::DisallowOrderByFieldsWithFieldArguments => {
+                "disallow_order_by_fields_with_field_arguments"
+            }
         }
     }
 }

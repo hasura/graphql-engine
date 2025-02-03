@@ -3720,6 +3720,10 @@
         "check_object_type_fields_exist": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_order_by_fields_with_field_arguments": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

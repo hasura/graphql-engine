@@ -223,6 +223,7 @@ fn resolve_object_order_by_expression(
         &ordered_type,
         order_by_expression_names_and_types,
         &object_operand.orderable_fields,
+        &mut issues,
     )?;
 
     let mut orderable_relationships = BTreeMap::new();
@@ -271,6 +272,7 @@ pub fn resolve_orderable_fields(
     ordered_type: &Qualified<CustomTypeName>,
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, TypeName>,
     orderable_fields: &[order_by_expression::OrderByExpressionOrderableField],
+    issues: &mut Vec<OrderByExpressionIssue>,
 ) -> Result<BTreeMap<FieldName, OrderableField>, OrderByExpressionError> {
     let object_type_representation = get_object_type_representation(object_types, ordered_type)?;
     orderable_fields
@@ -283,6 +285,7 @@ pub fn resolve_orderable_fields(
                 scalar_types,
                 order_by_expression_names_and_types,
                 o,
+                issues,
             )
         })
         .collect::<Result<_, OrderByExpressionError>>()
@@ -311,6 +314,7 @@ fn resolve_orderable_field(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, TypeName>,
     orderable_field: &order_by_expression::OrderByExpressionOrderableField,
+    issues: &mut Vec<OrderByExpressionIssue>,
 ) -> Result<(FieldName, OrderableField), OrderByExpressionError> {
     // Check for unknown orderable field
     let field_definition = type_fields
@@ -318,6 +322,13 @@ fn resolve_orderable_field(
         .ok_or_else(|| OrderByExpressionError::UnknownFieldInOrderByExpression {
             field_name: orderable_field.field_name.clone(),
         })?;
+
+    // fields with field arguments are not allowed in order by expressions
+    if !field_definition.field_arguments.is_empty() {
+        issues.push(OrderByExpressionIssue::OrderByFieldWithFieldArguments {
+            field_name: orderable_field.field_name.clone(),
+        });
+    }
 
     let resolved_orderable_field =
         match order_by_expression_names_and_types.get(&orderable_field.order_by_expression) {

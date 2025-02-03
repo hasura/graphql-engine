@@ -113,6 +113,8 @@ pub enum OrderByExpressionIssue {
         order_by_expression: Qualified<OrderByExpressionIdentifier>,
         relationship_name: RelationshipName,
     },
+    #[error("The orderable field \"{field_name}\" has field arguments and cannot be used in order by expressions.")]
+    OrderByFieldWithFieldArguments { field_name: FieldName },
 }
 
 impl ShouldBeAnError for OrderByExpressionIssue {
@@ -122,6 +124,9 @@ impl ShouldBeAnError for OrderByExpressionIssue {
                 .contains(open_dds::flags::Flag::DisallowDuplicateNamesAcrossTypesAndExpressions),
             OrderByExpressionIssue::CannotOrderByAnArrayRelationship { .. } => {
                 flags.contains(open_dds::flags::Flag::DisallowArrayRelationshipInOrderBy)
+            }
+            OrderByExpressionIssue::OrderByFieldWithFieldArguments { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowOrderByFieldsWithFieldArguments)
             }
         }
     }
