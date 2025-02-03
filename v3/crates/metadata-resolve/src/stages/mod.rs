@@ -25,6 +25,8 @@ pub mod scalar_types;
 pub mod type_permissions;
 mod types;
 
+use command_permissions::CommandPermissionsOutput;
+use model_permissions::ModelPermissionsOutput;
 use open_dds::flags;
 pub use types::Metadata;
 
@@ -122,8 +124,9 @@ fn resolve_internal(
     all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Fetch and validate permissions, and attach them to the relevant object types
-    let object_types_with_permissions =
+    let (object_types_with_permissions, type_permission_issues) =
         type_permissions::resolve(&metadata_accessor, object_types)?;
+    all_issues.extend(type_permission_issues.into_iter().map(Warning::from));
 
     // collect raw relationships information
     let relationships = relationships::resolve(&metadata_accessor, &object_types_with_permissions)?;
@@ -272,7 +275,10 @@ fn resolve_internal(
 
     all_issues.extend(issues);
 
-    let commands_with_permissions = command_permissions::resolve(
+    let CommandPermissionsOutput {
+        permissions: commands_with_permissions,
+        issues: command_permission_issues,
+    } = command_permissions::resolve(
         &metadata_accessor,
         &commands,
         &object_types_with_relationships,
@@ -282,7 +288,12 @@ fn resolve_internal(
         &data_connector_scalars,
     )?;
 
-    let models_with_permissions = model_permissions::resolve(
+    all_issues.extend(command_permission_issues.into_iter().map(Warning::from));
+
+    let ModelPermissionsOutput {
+        permissions: models_with_permissions,
+        issues: model_permission_issues,
+    } = model_permissions::resolve(
         &metadata_accessor,
         &data_connectors,
         &data_connector_scalars,
@@ -291,6 +302,8 @@ fn resolve_internal(
         &models_with_graphql,
         &boolean_expression_types,
     )?;
+
+    all_issues.extend(model_permission_issues.into_iter().map(Warning::from));
 
     let roles = roles::resolve(
         &object_types_with_relationships,

@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added type checking for object-type values in field presets within type
+  permissions and for argument presets in model or command permissions.
+
 ### Fixed
 
 ### Changed

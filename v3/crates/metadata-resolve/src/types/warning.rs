@@ -3,9 +3,9 @@ use open_dds::{flags, types::CustomTypeName};
 
 use crate::{
     stages::{
-        aggregate_boolean_expressions, aggregates, boolean_expressions, commands, data_connectors,
-        models, models_graphql, object_types, order_by_expressions, scalar_boolean_expressions,
-        scalar_types,
+        aggregate_boolean_expressions, aggregates, boolean_expressions, command_permissions,
+        commands, data_connectors, model_permissions, models, models_graphql, object_types,
+        order_by_expressions, scalar_boolean_expressions, scalar_types, type_permissions,
     },
     Qualified,
 };
@@ -18,6 +18,8 @@ use super::error::ShouldBeAnError;
 pub enum Warning {
     #[error("{0}")]
     ObjectTypesIssue(#[from] object_types::ObjectTypesIssue),
+    #[error("{0}")]
+    TypePermissionIssue(#[from] type_permissions::TypePermissionIssue),
     #[error("{0}")]
     DataConnectorIssue(#[from] data_connectors::NamedDataConnectorIssue),
     #[error("{0}")]
@@ -37,7 +39,11 @@ pub enum Warning {
     #[error("{0}")]
     ModelGraphqlIssue(#[from] models_graphql::ModelGraphqlIssue),
     #[error("{0}")]
+    ModelPermissionIssue(#[from] model_permissions::ModelPermissionIssue),
+    #[error("{0}")]
     CommandIssue(#[from] commands::CommandsIssue),
+    #[error("{0}")]
+    CommandPermissionIssue(#[from] command_permissions::CommandPermissionIssue),
     #[error("{0}")]
     AggregateExpressionIssue(#[from] aggregates::AggregateExpressionIssue),
     #[error("{0}")]
@@ -58,6 +64,9 @@ impl ShouldBeAnError for Warning {
             Warning::CommandIssue(issue) => issue.should_be_an_error(flags),
             Warning::ScalarBooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ModelIssue(issue) => issue.should_be_an_error(flags),
+            Warning::ModelPermissionIssue(issue) => issue.should_be_an_error(flags),
+            Warning::TypePermissionIssue(issue) => issue.should_be_an_error(flags),
+            Warning::CommandPermissionIssue(issue) => issue.should_be_an_error(flags),
             _ => false,
         }
     }

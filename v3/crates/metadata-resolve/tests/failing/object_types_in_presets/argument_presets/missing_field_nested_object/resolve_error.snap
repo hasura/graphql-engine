@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/argument_presets/missing_field_nested_object/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+Type error in preset argument objects for command InsertAlbum (in subgraph default): Typecheck failed for field name in object type RecordLabel (in subgraph default): Expected a non-null value but received null

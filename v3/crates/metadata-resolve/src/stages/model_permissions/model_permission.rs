@@ -1,3 +1,4 @@
+use super::types::ModelPermissionIssue;
 use super::types::{
     FilterPermission, ModelPredicate, ModelTargetSource, PredicateRelationshipInfo,
     SelectPermission,
@@ -142,6 +143,7 @@ pub fn resolve_model_select_permissions(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    issues: &mut Vec<ModelPermissionIssue>,
 ) -> Result<BTreeMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
     for model_permission in &model_permissions.permissions {
@@ -213,7 +215,13 @@ pub fn resolve_model_select_permissions(
                         // additionally typecheck literals
                         // we do this outside the argument resolve so that we can emit a model-specific error
                         // on typechecking failure
-                        typecheck::typecheck_value_expression_or_predicate(
+                        let new_issues = typecheck::typecheck_value_expression_or_predicate(
+                            &object_types
+                                .iter()
+                                .map(|(field_name, object_type)| {
+                                    (field_name, &object_type.object_type)
+                                })
+                                .collect(), // Convert &BTreeMap<field_name, object_type> to BTreeMap<&field_name, &object_type>
                             &argument.argument_type,
                             &argument_preset.value,
                         )
@@ -224,6 +232,15 @@ pub fn resolve_model_select_permissions(
                                 type_error,
                             }
                         })?;
+
+                        // Convert typecheck issues into model permission issues and collect them
+                        for issue in new_issues {
+                            issues.push(ModelPermissionIssue::ModelArgumentPresetTypecheckIssue {
+                                model_name: model.name.clone(),
+                                argument_name: argument_preset.argument.clone(),
+                                typecheck_issue: issue,
+                            });
+                        }
 
                         argument_presets.insert(
                             argument_preset.argument.clone(),
@@ -361,7 +378,14 @@ pub(crate) fn resolve_model_predicate_with_type(
             })?;
 
             // typecheck the `open_dds::permissions::ValueExpression` with the field
-            typecheck_value_expression(&field_definition.field_type, value)?;
+            typecheck_value_expression(
+                &object_types
+                    .iter()
+                    .map(|(field_name, object_type)| (field_name, &object_type.object_type))
+                    .collect(), // Convert &BTreeMap<field_name, object_type> to BTreeMap<&field_name, &object_type>
+                &field_definition.field_type,
+                value,
+            )?;
 
             let value_expression = match value {
                 open_dds::permissions::ValueExpression::Literal(json_value) => {
