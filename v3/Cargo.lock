@@ -176,7 +176,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6266ea7ab3ce41585e16caa0e1e8d97de37827227950820fdab6b69d9c09a63a"
 dependencies = [
  "bytes",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "serde",
  "serde_json",
 ]
@@ -414,7 +414,7 @@ dependencies = [
  "base64 0.13.1",
  "bitvec",
  "hex",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "js-sys",
  "once_cell",
  "rand",
@@ -802,7 +802,7 @@ dependencies = [
  "axum",
  "axum-ext",
  "env_logger",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "iso8601",
  "itertools 0.13.0",
  "ndc-models 0.2.0",
@@ -1057,7 +1057,7 @@ dependencies = [
  "hasura-authn-core",
  "hasura-authn-noauth",
  "http-body-util",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "json_value_merge",
  "jsonapi 0.7.0",
  "jsonapi 3.0.0",
@@ -1159,7 +1159,7 @@ dependencies = [
  "bytes",
  "engine-types",
  "graphql-schema",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "json-ext",
  "lang-graphql",
  "metadata-resolve",
@@ -1429,7 +1429,7 @@ dependencies = [
  "graphql-ir",
  "graphql-schema",
  "hasura-authn-core",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "json-ext",
  "lang-graphql",
  "metadata-resolve",
@@ -1453,7 +1453,7 @@ dependencies = [
  "base64 0.22.1",
  "graphql-schema",
  "hasura-authn-core",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "json-ext",
  "lang-graphql",
  "metadata-resolve",
@@ -1485,7 +1485,7 @@ name = "graphql-schema"
 version = "3.0.0"
 dependencies = [
  "hasura-authn-core",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "insta",
  "json-ext",
  "jsonpath",
@@ -1513,7 +1513,7 @@ dependencies = [
  "graphql-schema",
  "hasura-authn",
  "hasura-authn-core",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "lang-graphql",
  "metadata-resolve",
  "nonempty",
@@ -1554,7 +1554,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http 0.2.12",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "slab",
  "tokio",
  "tokio-util",
@@ -1573,7 +1573,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "http 1.1.0",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "slab",
  "tokio",
  "tokio-util",
@@ -2119,9 +2119,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.7.0"
+version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62f822373a4fe84d4bb149bf54e584a7f4abec90e072ed49cda0edea5b95471f"
+checksum = "8c9c992b02b5b4c94ea26e32fe5bccb7aa7d9f390ab5c1221ff895bc7ea8b652"
 dependencies = [
  "equivalent",
  "hashbrown 0.15.1",
@@ -2221,7 +2221,7 @@ dependencies = [
 name = "json-ext"
 version = "3.0.0"
 dependencies = [
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "serde",
  "serde_json",
 ]
@@ -2258,7 +2258,7 @@ dependencies = [
  "engine-types",
  "execute",
  "hasura-authn-core",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "insta",
  "jsonapi 0.7.0",
  "jsonpath",
@@ -2353,7 +2353,7 @@ dependencies = [
  "graphql-parser",
  "http 1.1.0",
  "human_bytes",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "json-ext",
  "lexical-core",
  "nonempty",
@@ -2520,7 +2520,7 @@ dependencies = [
  "derive_more",
  "error-context",
  "hasura-authn-core",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "insta",
  "jsonpath",
  "lang-graphql",
@@ -2652,7 +2652,7 @@ name = "ndc-models"
 version = "0.1.6"
 source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.1.6#d1be19e9cdd86ac7b6ad003ff82b7e5b4e96b84f"
 dependencies = [
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "ref-cast",
  "schemars",
  "serde",
@@ -2666,7 +2666,7 @@ name = "ndc-models"
 version = "0.2.0"
 source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.2.0-rc.3#9c202b92fd72be93b6a180f6b8dbf70607eca7b4"
 dependencies = [
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "ref-cast",
  "schemars",
  "serde",
@@ -2798,7 +2798,7 @@ version = "3.0.0"
 dependencies = [
  "derive_more",
  "goldenfile",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "jsonpath",
  "jsonschema-tidying",
  "ndc-models 0.1.6",
@@ -3138,7 +3138,7 @@ version = "3.0.0"
 dependencies = [
  "derive_more",
  "hasura-authn-core",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "metadata-resolve",
  "nonempty",
  "open-dds",
@@ -3155,7 +3155,7 @@ name = "plan-types"
 version = "3.0.0"
 dependencies = [
  "derive_more",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "json-ext",
  "metadata-resolve",
  "nonempty",
@@ -3698,7 +3698,7 @@ checksum = "09c024468a378b7e36765cd36702b7a90cc3cba11654f6685c8f233408e89e92"
 dependencies = [
  "dyn-clone",
  "indexmap 1.9.3",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "schemars_derive",
  "serde",
  "serde_json",
@@ -3766,7 +3766,7 @@ dependencies = [
 name = "serde-ext"
 version = "3.0.0"
 dependencies = [
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
 ]
 
 [[package]]
@@ -3806,7 +3806,7 @@ version = "1.0.137"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "930cfb6e6abf99298aaad7d29abbef7a9999a9a8806a40088f55f0dcec03146b"
 dependencies = [
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "itoa",
  "memchr",
  "ryu",
@@ -3845,7 +3845,7 @@ dependencies = [
  "chrono",
  "hex",
  "indexmap 1.9.3",
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "serde",
  "serde_derive",
  "serde_json",
@@ -3871,7 +3871,7 @@ version = "0.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59e2dd588bf1597a252c3b920e0143eb99b0f76e4e082f4c92ce34fbc9e71ddd"
 dependencies = [
- "indexmap 2.7.0",
+ "indexmap 2.7.1",
  "itoa",
  "libyml",
  "memchr",
