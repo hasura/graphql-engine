@@ -29,11 +29,13 @@ use open_dds::query::{Alias, Query, QueryRequest};
 use plan_types::{ExecutionTree, UniqueNumber};
 
 // these types should probably live in `plan-types`
+#[derive(Debug)]
 pub enum SingleNodeExecutionPlan {
     Query(plan_types::ExecutionTree),
     Mutation(plan_types::MutationExecutionPlan),
 }
 
+#[derive(Debug)]
 pub enum ExecutionPlan {
     Queries(IndexMap<Alias, ExecutionTree>),
     Mutation(plan_types::MutationExecutionPlan), // currently only support a single mutation

@@ -1,0 +1,24 @@
+{
+  "version": "v1",
+  "queries": {
+    "authors": {
+      "model": {
+        "subgraph": "default",
+        "modelName": "Album",
+        "limit": 5,
+        "selection": {
+          "album_id": {
+            "field": {
+              "fieldName": "AlbumId"
+            }
+          },
+          "album_title": {
+            "field": {
+              "fieldName": "Title"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -3138,6 +3138,8 @@ version = "3.0.0"
 dependencies = [
  "hasura-authn-core",
  "indexmap 2.7.1",
+ "insta",
+ "jsonpath",
  "metadata-resolve",
  "nonempty",
  "open-dds",

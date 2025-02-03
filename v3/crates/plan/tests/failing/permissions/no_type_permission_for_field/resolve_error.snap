@@ -1,0 +1,6 @@
+---
+source: crates/plan/tests/plan_golden_tests.rs
+expression: msg
+input_file: crates/plan/tests/failing/permissions/no_type_permission_for_field/query.json
+---
+role admin does not have permission to select the field Invented from type Album (in subgraph default)
