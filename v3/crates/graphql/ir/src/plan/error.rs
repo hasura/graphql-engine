@@ -2,7 +2,7 @@ use tracing_util::TraceableError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("internal: {0}")]
+    #[error("{0}")]
     Internal(#[from] InternalError),
 
     #[error("remote joins are not supported in subscriptions")]

@@ -64,11 +64,11 @@ impl RequestError {
             RequestError::NotFound => {
                 serde_json::json!({"error": "invalid route or path"})
             }
-            RequestError::InternalError(InternalError::EmptyQuerySet) => {
-                serde_json::json!({"error": "Internal error"})
-            }
-            RequestError::PlanError(plan::PlanError::Internal(msg)) => {
-                serde_json::json!({"error": msg })
+            RequestError::InternalError(InternalError::EmptyQuerySet)
+            | RequestError::PlanError(
+                plan::PlanError::Internal(_) | plan::PlanError::InternalError(_),
+            ) => {
+                serde_json::json!({"error": "Internal error" })
             }
             RequestError::PlanError(plan::PlanError::Relationship(_error)) => {
                 serde_json::json!({"error": "Internal error" })

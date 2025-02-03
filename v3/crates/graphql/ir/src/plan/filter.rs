@@ -65,12 +65,7 @@ pub(crate) fn plan_filter_expression(
             relationships,
             &mut remote_predicates,
             unique_number,
-        )
-        .map_err(|plan_error| {
-            plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
-                description: plan_error.to_string(),
-            })
-        })?;
+        )?;
 
         expressions.push(planned_expression);
     }

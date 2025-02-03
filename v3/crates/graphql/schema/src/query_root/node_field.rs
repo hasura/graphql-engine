@@ -75,6 +75,7 @@ pub(crate) fn relay_node_field(
                 .insert(
                     output_typename.type_name().clone(),
                     NodeFieldTypeNameMapping {
+                        model_name: model.model.name.clone(),
                         type_name: model.model.data_type.clone(),
                         model_source: model.model.source.clone(),
                         global_id_fields_ndc_mapping: global_id_source.ndc_mapping.clone(),

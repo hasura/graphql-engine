@@ -1,3 +1,4 @@
+use crate::error::InternalError;
 use metadata_resolve::Qualified;
 use open_dds::{
     arguments::ArgumentName,
@@ -7,22 +8,33 @@ use open_dds::{
 };
 use tracing_util::{ErrorVisibility, TraceableError};
 
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug, thiserror::Error)]
 pub enum PlanError {
-    Internal(String),   // equivalent to DataFusionError::Internal
+    #[error("{0}")]
+    Internal(String), // equivalent to DataFusionError::Internal
+    #[error("{0}")]
     Permission(String), // equivalent to DataFusionError::Plan
+    #[error("{0}")]
     Relationship(RelationshipError),
+    #[error("{0}")]
     OrderBy(OrderByError),
+    #[error("{0}")]
+    InternalError(InternalError),
+    #[error("{0}")]
     External(Box<dyn std::error::Error + Send + Sync>), //equivalent to DataFusionError::External
 }
 
 impl TraceableError for PlanError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::Internal(_internal) => ErrorVisibility::Internal,
-            Self::Permission(_) | Self::External(_) => ErrorVisibility::User,
+            Self::InternalError(InternalError::Developer(_))
+            | Self::Permission(_)
+            | Self::External(_) => ErrorVisibility::User,
             Self::Relationship(relationship_error) => relationship_error.visibility(),
             Self::OrderBy(order_by_error) => order_by_error.visibility(),
+            Self::InternalError(InternalError::Engine(_)) | Self::Internal(_) => {
+                ErrorVisibility::Internal
+            }
         }
     }
 }

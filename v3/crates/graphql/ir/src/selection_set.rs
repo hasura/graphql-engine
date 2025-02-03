@@ -86,12 +86,34 @@ impl ResultSelectionSet<'_> {
     }
 }
 
-// TODO: placeholder: this needs implementing with the new types
 fn build_global_id_fields_for_open_dd_ir(
-    _global_id_fields: &[FieldName],
-    _field_alias: &Alias,
-    _fields: &mut IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>,
+    global_id_fields: &[FieldName],
+    field_alias: &Alias,
+    fields: &mut IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>,
 ) {
+    for field_name in global_id_fields {
+        // Prefix the global column id with something that will be unlikely to be chosen
+        // by the user,
+        //  to not have any conflicts with any of the fields
+        // in the selection set.
+        let global_col_id_alias = global_id::global_id_col_format(field_alias, field_name);
+
+        let field_selection =
+            open_dds::query::ObjectSubSelection::Field(open_dds::query::ObjectFieldSelection {
+                selection: None,
+                target: open_dds::query::ObjectFieldTarget {
+                    arguments: IndexMap::new(),
+                    field_name: field_name.clone(),
+                },
+            });
+
+        fields.insert(
+            open_dds::query::Alias::from(
+                open_dds::identifier::Identifier::new(global_col_id_alias.as_str()).unwrap(),
+            ),
+            field_selection,
+        );
+    }
 }
 
 fn build_global_id_fields(

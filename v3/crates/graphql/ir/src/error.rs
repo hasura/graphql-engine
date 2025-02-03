@@ -93,7 +93,7 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
     },
 
-    #[error("internal: {0}")]
+    #[error("{0}")]
     Internal(#[from] InternalError),
 }
 

@@ -11,7 +11,7 @@
     "data": null,
     "errors": [
       {
-        "message": "internal: Required session variable not found in the request: x-hasura-guest-id"
+        "message": "Required session variable not found in the request: x-hasura-guest-id"
       }
     ]
   }

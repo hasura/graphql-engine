@@ -16,7 +16,7 @@ pub enum RequestError {
     #[error("{0}")]
     IRConversionError(#[from] graphql_ir::Error),
 
-    #[error("error while generating GraphQL plan: {0}")]
+    #[error("{0}")]
     GraphQlPlanError(#[from] graphql_ir::PlanError),
 
     #[error("explain error: {0}")]

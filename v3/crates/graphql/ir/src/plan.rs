@@ -484,7 +484,26 @@ fn plan_query<'n, 's, 'ir>(
                             unique_number,
                         )
                     }
-                    ModelNodeSelection::OpenDd(_) => todo!("Plan NodeSelect for OpenDd"),
+                    ModelNodeSelection::OpenDd(ref model_selection) => {
+                        // TODO: expose more specific function in `plan` for just model selections
+                        let single_node_execution_plan = plan::query_to_plan(
+                            &open_dds::query::Query::Model(model_selection.clone()),
+                            metadata,
+                            session,
+                            request_headers,
+                            unique_number,
+                        )?;
+                        match single_node_execution_plan {
+                            plan::SingleNodeExecutionPlan::Query(execution_tree) => {
+                                Ok(execution_tree)
+                            }
+                            plan::SingleNodeExecutionPlan::Mutation(_) => {
+                                // we should use a more specific planning function to avoid
+                                // this as it _should not_ happen
+                                Err(error::Error::PlanExpectedQueryGotMutation)
+                            }
+                        }
+                    }
                 }?;
 
                 NodeQueryPlan::RelayNodeSelect(Some((

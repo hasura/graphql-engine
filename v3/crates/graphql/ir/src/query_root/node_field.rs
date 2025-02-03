@@ -105,24 +105,30 @@ pub(crate) fn relay_node_ir<'n, 's>(
         .expected_argument(&lang_graphql::mk_name!("id"))?
         .value
         .as_id()?;
+
     let decoded_id_value = general_purpose::STANDARD
         .decode(id_arg_value.clone())
         .map_err(|e| error::Error::FailureDecodingGlobalId {
             encoded_value: id_arg_value.clone(),
             decoding_error: e.to_string(),
         })?;
+
     let global_id: GlobalID = serde_json::from_slice(decoded_id_value.as_slice())?;
+
     let typename_permissions: &'s HashMap<
         Qualified<CustomTypeName>,
         metadata_resolve::FilterPermission,
     > = &get_relay_node_namespace_typename_mappings(field_call)?.0;
+
     let typename_mapping = typename_mappings.get(&global_id.typename).ok_or(
         error::InternalDeveloperError::TypenameMappingNotFound {
             type_name: global_id.typename.clone(),
             mapping_kind: "Global ID",
         },
     )?;
+
     let role_model_select_permission = typename_permissions.get(&typename_mapping.type_name);
+
     match role_model_select_permission {
         // When a role doesn't have any model select permissions on the model
         // that is the Global ID source for the object type, we just return `null`.
@@ -135,68 +141,107 @@ pub(crate) fn relay_node_ir<'n, 's>(
                 },
             )?;
 
-            let filter_clause_expressions = global_id
-                .id
-                .iter()
-                .map(|(field_name, val)| {
-                    let field_mapping = typename_mapping
-                        .global_id_fields_ndc_mapping
-                        .get(field_name)
-                        .ok_or_else(|| error::InternalEngineError::InternalGeneric {
-                            description: format!(
-                                "Global ID field mapping for type {} missing field {}",
-                                global_id.typename, field_name
-                            ),
-                        })?;
-                    Ok(Expression::LocalField(
-                        LocalFieldComparison::BinaryComparison {
-                            column: ComparisonTarget::Column {
-                                name: field_mapping.column.clone(),
-                                field_path: vec![],
-                            },
-                            operator: field_mapping.equal_operator.clone(),
-                            value: ComparisonValue::Scalar { value: val.clone() },
-                        },
-                    ))
-                })
-                .collect::<Result<_, error::Error>>()?;
-
             let new_selection_set = field
                 .selection_set
-                .filter_field_calls_by_typename(global_id.typename);
+                .filter_field_calls_by_typename(global_id.typename.clone());
 
             let mut usage_counts = UsagesCounts::new();
 
-            let query_filter = filter::QueryFilter {
-                where_clause: None,
-                additional_filter: Some(Expression::mk_and(filter_clause_expressions)),
-            };
+            let model_selection = match request_pipeline {
+                GraphqlRequestPipeline::OpenDd => {
+                    let filter_clause_expressions = global_id
+                        .id
+                        .iter()
+                        .map(
+                            |(field_name, val)| open_dds::query::BooleanExpression::Comparison {
+                                operand: open_dds::query::Operand::Field(
+                                    open_dds::query::ObjectFieldOperand {
+                                        target: Box::new(open_dds::query::ObjectFieldTarget {
+                                            field_name: field_name.clone(),
+                                            arguments: IndexMap::new(),
+                                        }),
+                                        nested: None,
+                                    },
+                                ),
+                                operator: open_dds::query::ComparisonOperator::Equals,
+                                argument: Box::new(open_dds::query::Value::Literal(val.clone())),
+                            },
+                        )
+                        .collect();
+                    let boolean_expression =
+                        open_dds::query::BooleanExpression::And(filter_clause_expressions);
 
-            if request_pipeline == GraphqlRequestPipeline::OpenDd {
-                todo!("NodeSelect for OpenDd")
-            };
+                    ModelNodeSelection::OpenDd(model_selection::model_selection_open_dd_ir(
+                        &new_selection_set,
+                        &typename_mapping.model_name,
+                        models,
+                        &model_source.type_mappings,
+                        None, // arguments
+                        Some(boolean_expression),
+                        vec![], // order_by
+                        None,   // limit
+                        None,   // offset
+                        &session.variables,
+                        request_headers,
+                        // Get all the models/commands that were used as relationships
+                        &mut usage_counts,
+                    )?)
+                }
+                GraphqlRequestPipeline::Old => {
+                    let filter_clause_expressions = global_id
+                        .id
+                        .iter()
+                        .map(|(field_name, val)| {
+                            let field_mapping = typename_mapping
+                                .global_id_fields_ndc_mapping
+                                .get(field_name)
+                                .ok_or_else(|| error::InternalEngineError::InternalGeneric {
+                                    description: format!(
+                                        "Global ID field mapping for type {} missing field {}",
+                                        global_id.typename, field_name
+                                    ),
+                                })?;
+                            Ok(Expression::LocalField(
+                                LocalFieldComparison::BinaryComparison {
+                                    column: ComparisonTarget::Column {
+                                        name: field_mapping.column.clone(),
+                                        field_path: vec![],
+                                    },
+                                    operator: field_mapping.equal_operator.clone(),
+                                    value: ComparisonValue::Scalar { value: val.clone() },
+                                },
+                            ))
+                        })
+                        .collect::<Result<_, error::Error>>()?;
 
-            let model_selection = model_selection::model_selection_ir(
-                &new_selection_set,
-                &typename_mapping.type_name,
-                model_source,
-                BTreeMap::new(),
-                query_filter,
-                role_model_select_permission,
-                None, // limit
-                None, // offset
-                None, // order_by
-                models,
-                commands,
-                object_types,
-                session,
-                request_headers,
-                // Get all the models/commands that were used as relationships
-                &mut usage_counts,
-            )?;
+                    let query_filter = filter::QueryFilter {
+                        where_clause: None,
+                        additional_filter: Some(Expression::mk_and(filter_clause_expressions)),
+                    };
+
+                    ModelNodeSelection::Ir(model_selection::model_selection_ir(
+                        &new_selection_set,
+                        &typename_mapping.type_name,
+                        model_source,
+                        BTreeMap::new(),
+                        query_filter,
+                        role_model_select_permission,
+                        None, // limit
+                        None, // offset
+                        None, // order_by
+                        models,
+                        commands,
+                        object_types,
+                        session,
+                        request_headers,
+                        // Get all the models/commands that were used as relationships
+                        &mut usage_counts,
+                    )?)
+                }
+            };
             Ok(Some(NodeSelect {
                 field_name: &field_call.name,
-                model_selection: ModelNodeSelection::Ir(model_selection),
+                model_selection,
                 selection_set: new_selection_set,
                 usage_counts,
             }))

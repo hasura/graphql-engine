@@ -128,13 +128,12 @@ async fn handle_rest_request(
                 axum::http::StatusCode::NOT_FOUND,
                 Json(serde_json::json!({"error": "invalid route or path"})),
             ),
-            jsonapi::RequestError::InternalError(jsonapi::InternalError::EmptyQuerySet) => (
+            jsonapi::RequestError::InternalError(jsonapi::InternalError::EmptyQuerySet)
+            | jsonapi::RequestError::PlanError(
+                plan::PlanError::Internal(_) | plan::PlanError::InternalError(_),
+            ) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error"})),
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::Internal(msg)) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": msg })),
+                Json(serde_json::json!({"error": "Internal error" })),
             ),
             jsonapi::RequestError::PlanError(plan::PlanError::External(_err)) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,

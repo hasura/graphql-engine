@@ -55,6 +55,7 @@ pub struct GlobalID {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct NodeFieldTypeNameMapping {
+    pub model_name: Qualified<models::ModelName>,
     pub type_name: Qualified<types::CustomTypeName>,
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
