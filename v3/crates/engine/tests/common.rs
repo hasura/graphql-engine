@@ -173,7 +173,7 @@ pub(crate) fn test_introspection_expectation(
             )
             .await;
 
-            compare_graphql_responses(&response, &open_dd_response.inner());
+            compare_graphql_responses(&response, &open_dd_response.inner(), "OpenDD pipeline");
 
             responses.push(response);
         }
@@ -363,7 +363,11 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             None,
                         )
                         .await;
-                        compare_graphql_responses(&http_response, &graphql_ws_response);
+                        compare_graphql_responses(
+                            &http_response,
+                            &graphql_ws_response,
+                            "websockets",
+                        );
 
                         // we'll switch on OpenDD pipeline tests for each test case
                         // as we fix stuff. eventually we'll skip this check and run it every time.
@@ -386,6 +390,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                                 compare_graphql_responses(
                                     &http_response,
                                     &open_dd_response.inner(),
+                                    "OpenDD pipeline",
                                 );
                             }
                         }
@@ -425,7 +430,11 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             None,
                         )
                         .await;
-                        compare_graphql_responses(&http_response, &graphql_ws_response);
+                        compare_graphql_responses(
+                            &http_response,
+                            &graphql_ws_response,
+                            "websockets",
+                        );
 
                         // we'll switch on OpenDD pipeline tests for each test case
                         // as we fix stuff. eventually we'll skip this check and run it every time.
@@ -448,6 +457,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                                 compare_graphql_responses(
                                     &http_response,
                                     &open_dd_response.inner(),
+                                    "OpenDD pipeline",
                                 );
                             }
                         }
@@ -612,21 +622,22 @@ fn read_to_string(path: &Path) -> anyhow::Result<String> {
 fn compare_graphql_responses(
     http_response: &lang_graphql::http::Response,
     other_response: &lang_graphql::http::Response,
+    description: &str,
 ) {
     assert_eq!(
         http_response.status_code, other_response.status_code,
-        "HTTP status codes do not match {}, {}",
+        "HTTP status codes for {description} do not match {}, {}",
         http_response.status_code, other_response.status_code,
     );
 
     assert_eq!(
         http_response.errors, other_response.errors,
-        "Errors do not match",
+        "Errors for {description} do not match regular queries",
     );
 
     assert_eq!(
         http_response.data, other_response.data,
-        "Data does not match"
+        "Data for {description} does not match regular queries"
     );
 }
 
