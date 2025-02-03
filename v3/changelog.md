@@ -4,8 +4,6 @@
 
 ### Added
 
-- Added type checking for object-type values in field presets within type
-  permissions and for argument presets in model or command permissions.
 - Allow environment variables to be used in permission filters.
 - Added a OpenDD flag (`disallow_order_by_fields_with_field_arguments`) to
   disallow fields with field arguments in order by expressions

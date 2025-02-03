@@ -15,7 +15,7 @@ use crate::types::subgraph::Qualified;
 
 use std::collections::BTreeMap;
 mod types;
-pub use types::{CommandPermissionIssue, CommandPermissionsOutput, CommandWithPermissions};
+pub use types::CommandWithPermissions;
 
 /// resolve command permissions
 pub fn resolve(
@@ -32,8 +32,7 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
     >,
-) -> Result<CommandPermissionsOutput, Error> {
-    let mut issues = Vec::new();
+) -> Result<IndexMap<Qualified<CommandName>, CommandWithPermissions>, Error> {
     let mut commands_with_permissions: IndexMap<Qualified<CommandName>, CommandWithPermissions> =
         commands
             .iter()
@@ -72,7 +71,6 @@ pub fn resolve(
                 models,
                 data_connector_scalars,
                 subgraph,
-                &mut issues,
             )?;
         } else {
             return Err(Error::DuplicateCommandPermission {
@@ -80,8 +78,5 @@ pub fn resolve(
             });
         }
     }
-    Ok(CommandPermissionsOutput {
-        permissions: commands_with_permissions,
-        issues,
-    })
+    Ok(commands_with_permissions)
 }

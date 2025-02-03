@@ -7,8 +7,8 @@ use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 pub use types::{
-    FilterPermission, ModelPermissionIssue, ModelPermissionsOutput, ModelPredicate,
-    ModelTargetSource, ModelWithPermissions, SelectPermission, UnaryComparisonOperator,
+    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
+    UnaryComparisonOperator,
 };
 mod model_permission;
 pub(crate) use model_permission::resolve_model_predicate_with_type;
@@ -32,8 +32,7 @@ pub fn resolve(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<ModelPermissionsOutput, Error> {
-    let mut issues = Vec::new();
+) -> Result<IndexMap<Qualified<ModelName>, ModelWithPermissions>, Error> {
     let mut models_with_permissions: IndexMap<Qualified<ModelName>, ModelWithPermissions> = models
         .iter()
         .map(|(model_name, model)| {
@@ -83,7 +82,6 @@ pub fn resolve(
                 scalar_types,
                 models, // This is required to get the model for the relationship target
                 boolean_expression_types,
-                &mut issues,
             )?;
 
             model.select_permissions = select_permissions;
@@ -93,8 +91,5 @@ pub fn resolve(
             });
         }
     }
-    Ok(ModelPermissionsOutput {
-        permissions: models_with_permissions,
-        issues,
-    })
+    Ok(models_with_permissions)
 }
