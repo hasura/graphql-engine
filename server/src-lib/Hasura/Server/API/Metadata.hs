@@ -615,7 +615,7 @@ runBulkAtomic cmds = do
 
   -- Try building the schema cache using the combined modifiers. If we run into
   -- any inconsistencies, we should fail and roll back.
-  inconsistencies <- tryBuildSchemaCacheWithModifiers mdModifiers
+  inconsistencies <- tryBuildSchemaCacheWithModifiers [] mdModifiers
 
   unless (null inconsistencies)
     $ throw400WithDetail BadRequest "Schema inconsistency"
