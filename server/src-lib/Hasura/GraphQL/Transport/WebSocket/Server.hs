@@ -505,6 +505,7 @@ websocketConnectionReaper getLatestConfig getSchemaCache ws@(WSServer _ userConf
                 (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures, ssucDefaultNamingCase = currDefaultNamingCase})
           | otherwise -> pure ()
 
+-- | This is called for each client websocket connection
 createServerApp ::
   (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m, MonadGetPolicies m) =>
   IO MetricsConfig ->

@@ -557,6 +557,13 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
       ParameterizedQueryHash ->
       STM.STM (IO ())
     cleanHandlerC cohortMap pollerState ioState cohort parameterizedQueryHash = do
+      -- In certain cases the sinkId is not to be found, in which case we want
+      -- to avoid decrementing the subscribers metric. TODO understand this better
+      deletedSomething <- do
+        -- just below...
+        deletedExisting <- isJust <$> TMap.lookup sinkId (_cExistingSubscribers cohort)
+        deletedNew <- isJust <$> TMap.lookup sinkId (_cNewSubscribers cohort)
+        pure (deletedExisting || deletedNew)
       TMap.delete sinkId (_cExistingSubscribers cohort)
       TMap.delete sinkId (_cNewSubscribers cohort)
 
@@ -604,11 +611,12 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
                     $ pmSubscriptionMetrics prometheusMetrics
                   Prometheus.Gauge.dec $ submActiveStreamingPollers $ pmSubscriptionMetrics prometheusMetrics
                   let numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
-                  recordMetricWithLabel
-                    granularPrometheusMetricsState
-                    True
-                    (GaugeVector.dec numSubscriptionMetric promMetricGranularLabel)
-                    (GaugeVector.dec numSubscriptionMetric promMetricLabel)
+                  when deletedSomething
+                    $ recordMetricWithLabel
+                      granularPrometheusMetricsState
+                      True
+                      (GaugeVector.dec numSubscriptionMetric promMetricGranularLabel)
+                      (GaugeVector.dec numSubscriptionMetric promMetricLabel)
               -- This would seem to imply addStreamSubscriptionQuery broke or a bug
               -- elsewhere. Be paranoid and log:
               Nothing ->
@@ -623,6 +631,7 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
         else do
           let numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
           return
+            $ when deletedSomething
             $ recordMetricWithLabel
               granularPrometheusMetricsState
               True

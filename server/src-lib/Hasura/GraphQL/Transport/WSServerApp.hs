@@ -48,6 +48,7 @@ import Hasura.Tracing qualified as Tracing
 import Network.WebSockets qualified as WS
 import System.Metrics.Gauge qualified as EKG.Gauge
 
+-- | This is called for each client websocket connection
 createWSServerApp ::
   ( MonadIO m,
     MonadFail m, -- only due to https://gitlab.haskell.org/ghc/ghc/-/issues/15681
