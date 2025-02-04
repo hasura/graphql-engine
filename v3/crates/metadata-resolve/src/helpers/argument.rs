@@ -1,8 +1,10 @@
 use super::ndc_validation::{unwrap_nullable_type, NDCValidationError};
-
 use crate::data_connectors::DataConnectorContext;
 use crate::helpers::ndc_validation;
 use crate::helpers::type_mappings;
+use crate::helpers::typecheck::{
+    typecheck_qualified_type_reference, TypecheckError, TypecheckIssue,
+};
 use crate::helpers::types::{
     get_object_type_for_boolean_expression, get_type_representation, unwrap_custom_type_name,
     TypeRepresentation,
@@ -15,6 +17,7 @@ use crate::types::error::{Error, TypeError, TypePredicateError};
 use crate::types::permission::ValueExpressionOrPredicate;
 use crate::types::subgraph::{ArgumentInfo, ArgumentKind, Qualified, QualifiedTypeReference};
 
+use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
@@ -237,6 +240,7 @@ pub fn get_argument_mappings<'a>(
 /// type to validate it against to ensure the fields it refers to
 /// exist etc
 pub(crate) fn resolve_value_expression_for_argument(
+    role: &Role,
     flags: &open_dds::flags::OpenDdFlags,
     argument_name: &open_dds::arguments::ArgumentName,
     value_expression: &open_dds::permissions::ValueExpressionOrPredicate,
@@ -255,18 +259,75 @@ pub(crate) fn resolve_value_expression_for_argument(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
     >,
-) -> Result<ValueExpressionOrPredicate, Error> {
+    type_error_mapper: impl Fn(TypecheckError) -> Error,
+) -> Result<(ValueExpressionOrPredicate, Vec<TypecheckIssue>), Error> {
     match value_expression {
         open_dds::permissions::ValueExpressionOrPredicate::SessionVariable(session_variable) => {
-            Ok::<ValueExpressionOrPredicate, Error>(ValueExpressionOrPredicate::SessionVariable(
-                hasura_authn_core::SessionVariableReference {
-                    name: session_variable.clone(),
-                    passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
-                },
+            Ok::<(ValueExpressionOrPredicate, Vec<TypecheckIssue>), Error>((
+                ValueExpressionOrPredicate::SessionVariable(
+                    hasura_authn_core::SessionVariableReference {
+                        name: session_variable.clone(),
+                        passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
+                    },
+                ),
+                vec![],
             ))
         }
         open_dds::permissions::ValueExpressionOrPredicate::Literal(json_value) => {
-            Ok(ValueExpressionOrPredicate::Literal(json_value.clone()))
+            let mut issues = vec![];
+
+            // first typecheck the values
+            typecheck_qualified_type_reference(
+                &object_types
+                    .iter()
+                    .map(|(field_name, object_type)| (field_name, &object_type.object_type))
+                    .collect(), // Convert &BTreeMap<field_name, object_type> to BTreeMap<&field_name, &object_type>
+                argument_type,
+                json_value,
+                &mut issues,
+            )
+            .map_err(&type_error_mapper)?;
+
+            // now we have a small problem - our user may be providing us a partial value to fill
+            // it with presets etc
+            // if they do, let's look at the presets and see if they're going to be filled in later
+            let mut filtered_issues = vec![];
+
+            for issue in issues {
+                if match issue {
+                    TypecheckIssue::ObjectTypeField {
+                        error: TypecheckError::NullInNonNullableColumn,
+                        ref field_name,
+                        ref object_type,
+                    } => {
+                        let object_type_representation =
+                            object_types.get(object_type).ok_or_else(|| {
+                                Error::UnknownObjectType {
+                                    data_type: object_type.clone(),
+                                }
+                            })?;
+
+                        // is there a preset for this role and this field?
+                        let has_preset = object_type_representation
+                            .type_input_permissions
+                            .get(role)
+                            .is_some_and(|type_input_permission| {
+                                type_input_permission.field_presets.contains_key(field_name)
+                            });
+
+                        // if the field has no preset, then keep the error as it's legitimate
+                        !has_preset
+                    }
+                    _ => true,
+                } {
+                    filtered_issues.push(issue);
+                }
+            }
+
+            Ok((
+                ValueExpressionOrPredicate::Literal(json_value.clone()),
+                filtered_issues,
+            ))
         }
         open_dds::permissions::ValueExpressionOrPredicate::BooleanExpression(bool_exp) => {
             // get underlying object type name from argument type (ie, unwrap
@@ -354,9 +415,10 @@ pub(crate) fn resolve_value_expression_for_argument(
                 &object_type_representation.object_type.fields,
             )?;
 
-            Ok(ValueExpressionOrPredicate::BooleanExpression(Box::new(
-                resolved_model_predicate,
-            )))
+            Ok((
+                ValueExpressionOrPredicate::BooleanExpression(Box::new(resolved_model_predicate)),
+                vec![],
+            ))
         }
     }
 }

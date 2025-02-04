@@ -6,7 +6,6 @@ use super::types::{
 
 use crate::helpers::argument::resolve_value_expression_for_argument;
 use crate::helpers::type_mappings;
-use crate::helpers::typecheck;
 use crate::helpers::typecheck::typecheck_value_expression;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, models, models_graphql,
@@ -131,7 +130,6 @@ pub fn resolve_model_select_permissions(
     boolean_expression_fields: Option<
         &boolean_expressions::ResolvedObjectBooleanExpressionTypeFields,
     >,
-    data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -181,61 +179,41 @@ pub fn resolve_model_select_permissions(
                 let source_argument_type =
                     get_model_source_argument(&argument_preset.argument, model);
 
-                let data_connector_name = model
-                    .source
-                    .as_ref()
-                    .map(|source| &source.data_connector.name)
-                    .ok_or_else(|| Error::ModelSourceRequiredForPredicate {
+                let model_source = model.source.as_ref().ok_or_else(|| {
+                    Error::ModelSourceRequiredForPredicate {
                         model_name: model.name.clone(),
-                    })?;
-
-                let data_connector_core_info = data_connectors.0.get(data_connector_name).unwrap();
-                let data_connector_link = data_connectors::DataConnectorLink::new(
-                    data_connector_name.clone(),
-                    data_connector_core_info,
-                )?;
+                    }
+                })?;
 
                 match model.arguments.get(&argument_preset.argument) {
                     Some(argument) => {
-                        let value_expression = resolve_value_expression_for_argument(
+                        let error_mapper = |type_error| Error::ModelArgumentPresetTypeError {
+                            role: model_permission.role.clone(),
+                            model_name: model.name.clone(),
+                            argument_name: argument_preset.argument.clone(),
+                            type_error,
+                        };
+                        let (value_expression, new_issues) = resolve_value_expression_for_argument(
+                            &model_permission.role,
                             flags,
                             &argument_preset.argument,
                             &argument_preset.value,
                             &argument.argument_type,
                             source_argument_type,
-                            &data_connector_link,
+                            &model_source.data_connector,
                             subgraph,
                             object_types,
                             scalar_types,
                             boolean_expression_types,
                             models,
                             data_connector_scalars,
+                            error_mapper,
                         )?;
-
-                        // additionally typecheck literals
-                        // we do this outside the argument resolve so that we can emit a model-specific error
-                        // on typechecking failure
-                        let new_issues = typecheck::typecheck_value_expression_or_predicate(
-                            &object_types
-                                .iter()
-                                .map(|(field_name, object_type)| {
-                                    (field_name, &object_type.object_type)
-                                })
-                                .collect(), // Convert &BTreeMap<field_name, object_type> to BTreeMap<&field_name, &object_type>
-                            &argument.argument_type,
-                            &argument_preset.value,
-                        )
-                        .map_err(|type_error| {
-                            Error::ModelArgumentPresetTypeError {
-                                model_name: model.name.clone(),
-                                argument_name: argument_preset.argument.clone(),
-                                type_error,
-                            }
-                        })?;
 
                         // Convert typecheck issues into model permission issues and collect them
                         for issue in new_issues {
                             issues.push(ModelPermissionIssue::ModelArgumentPresetTypecheckIssue {
+                                role: model_permission.role.clone(),
                                 model_name: model.name.clone(),
                                 argument_name: argument_preset.argument.clone(),
                                 typecheck_issue: issue,

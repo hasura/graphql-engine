@@ -67,33 +67,10 @@ pub fn typecheck_value_expression(
     Ok(issues)
 }
 
-/// These are run at schema resolve time, so that we can warn the user against
-/// using the wrong types in their engine metadata.
-/// If the values are passed in a session variable then there is nothing we can do at this point
-/// and we must rely on run time casts
-pub fn typecheck_value_expression_or_predicate(
-    object_types: &BTreeMap<
-        &subgraph::Qualified<open_dds::types::CustomTypeName>,
-        &object_types::ObjectTypeRepresentation,
-    >,
-    ty: &subgraph::QualifiedTypeReference,
-    value_expression: &open_dds::permissions::ValueExpressionOrPredicate,
-) -> Result<Vec<TypecheckIssue>, TypecheckError> {
-    let mut issues = Vec::new();
-    match &value_expression {
-        open_dds::permissions::ValueExpressionOrPredicate::SessionVariable(_)
-        | open_dds::permissions::ValueExpressionOrPredicate::BooleanExpression(_) => {}
-        open_dds::permissions::ValueExpressionOrPredicate::Literal(json_value) => {
-            typecheck_qualified_type_reference(object_types, ty, json_value, &mut issues)?;
-        }
-    }
-    Ok(issues)
-}
-
 /// check whether a serde_json::Value matches our expected type
 /// currently only works for primitive types (Int, String, etc)
 /// and arrays of those types
-fn typecheck_qualified_type_reference(
+pub fn typecheck_qualified_type_reference(
     object_types: &BTreeMap<
         &subgraph::Qualified<open_dds::types::CustomTypeName>,
         &object_types::ObjectTypeRepresentation,

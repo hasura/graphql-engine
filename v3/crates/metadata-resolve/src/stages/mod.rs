@@ -295,7 +295,6 @@ fn resolve_internal(
         issues: model_permission_issues,
     } = model_permissions::resolve(
         &metadata_accessor,
-        &data_connectors,
         &data_connector_scalars,
         &object_types_with_relationships,
         &scalar_types,

@@ -141,8 +141,9 @@ impl ModelTargetSource {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelPermissionIssue {
-    #[error("Type error in preset argument {argument_name:} for model {model_name:}: {typecheck_issue:}")]
+    #[error("Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {typecheck_issue:}")]
     ModelArgumentPresetTypecheckIssue {
+        role: Role,
         model_name: Qualified<ModelName>,
         argument_name: ArgumentName,
         typecheck_issue: typecheck::TypecheckIssue,

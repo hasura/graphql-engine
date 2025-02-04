@@ -5,4 +5,4 @@ input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/argume
 ---
 The following issues were raised but disallowed by compatibility configuration:
 
-Type error in preset argument objects for command InsertAlbum (in subgraph default): Expected an object value of type RecordLabel (in subgraph default) but got value "Record Label 1"
+Type error in preset argument objects for role admin in command InsertAlbum (in subgraph default): Expected an object value of type RecordLabel (in subgraph default) but got value "Record Label 1"

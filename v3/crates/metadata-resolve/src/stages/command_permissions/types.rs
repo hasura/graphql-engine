@@ -28,8 +28,9 @@ pub struct CommandPermission {
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandPermissionIssue {
-    #[error("Type error in preset argument {argument_name:} for command {command_name:}: {typecheck_issue:}")]
+    #[error("Type error in preset argument {argument_name:} for role {role:} in command {command_name:}: {typecheck_issue:}")]
     CommandArgumentPresetTypecheckIssue {
+        role: Role,
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
         typecheck_issue: typecheck::TypecheckIssue,

@@ -5,4 +5,4 @@ input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/argume
 ---
 The following issues were raised but disallowed by compatibility configuration:
 
-Type error in preset argument objects for command InsertAlbum (in subgraph default): Typecheck failed for field title in object type InsertAlbumObject (in subgraph default): Expected a non-null value but received null
+Type error in preset argument objects for role admin in command InsertAlbum (in subgraph default): Typecheck failed for field title in object type InsertAlbumObject (in subgraph default): Expected a non-null value but received null

@@ -1,4 +1,7 @@
 use crate::helpers::typecheck::TypecheckError;
+use crate::helpers::{
+    ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
+};
 use crate::stages::{
     aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo,
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
@@ -6,6 +9,7 @@ use crate::stages::{
     scalar_types, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::flags;
@@ -19,10 +23,6 @@ use open_dds::{
     types::{CustomTypeName, FieldName, OperatorName},
 };
 use std::fmt::Display;
-
-use crate::helpers::{
-    ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
-};
 
 // Eventually, we'll just delete the `Raw` variant and this will become a regular struct when all
 // errors have all the relevant path information.
@@ -260,17 +260,19 @@ pub enum Error {
         data_type: Qualified<CustomTypeName>,
     },
     #[error(
-        "Type error in preset argument {argument_name:} for command {command_name:}: {type_error:}"
+        "Type error in preset argument {argument_name:} for role {role:} in command {command_name:}: {type_error:}"
     )]
     CommandArgumentPresetTypeError {
+        role: Role,
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
         type_error: typecheck::TypecheckError,
     },
     #[error(
-        "Type error in preset argument {argument_name:} for model {model_name:}: {type_error:}"
+        "Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {type_error:}"
     )]
     ModelArgumentPresetTypeError {
+        role: Role,
         model_name: Qualified<ModelName>,
         argument_name: ArgumentName,
         type_error: typecheck::TypecheckError,

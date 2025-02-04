@@ -1,7 +1,7 @@
 mod types;
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, models_graphql,
-    object_relationships, scalar_types,
+    boolean_expressions, data_connector_scalar_types, models_graphql, object_relationships,
+    scalar_types,
 };
 use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
@@ -20,7 +20,6 @@ use crate::types::subgraph::Qualified;
 /// resolve model permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -77,7 +76,6 @@ pub fn resolve(
                 subgraph,
                 permissions,
                 boolean_expression_fields,
-                data_connectors,
                 data_connector_scalars,
                 object_types,
                 scalar_types,

@@ -17,7 +17,6 @@ use crate::helpers::argument::resolve_value_expression_for_argument;
 use open_dds::permissions::CommandPermissionsV1;
 
 use super::types::{CommandPermission, CommandPermissionIssue};
-use crate::helpers::typecheck;
 use std::collections::BTreeMap;
 
 // get the ndc_models::Type for an argument if it is available
@@ -78,7 +77,14 @@ pub fn resolve_command_permissions(
 
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
-                    let value_expression = resolve_value_expression_for_argument(
+                    let error_mapper = |type_error| Error::CommandArgumentPresetTypeError {
+                        role: command_permission.role.clone(),
+                        command_name: command.name.clone(),
+                        argument_name: argument_preset.argument.clone(),
+                        type_error,
+                    };
+                    let (value_expression, new_issues) = resolve_value_expression_for_argument(
+                        &command_permission.role,
                         flags,
                         &argument_preset.argument,
                         &argument_preset.value,
@@ -91,31 +97,14 @@ pub fn resolve_command_permissions(
                         boolean_expression_types,
                         models,
                         data_connector_scalars,
+                        error_mapper,
                     )?;
-
-                    // additionally typecheck literals
-                    // we do this outside the argument resolve so that we can emit a command-specific error
-                    // on typechecking failure
-                    let new_issues = typecheck::typecheck_value_expression_or_predicate(
-                        &object_types
-                            .iter()
-                            .map(|(field_name, object_type)| (field_name, &object_type.object_type))
-                            .collect(), // Convert &BTreeMap<field_name, object_type> to BTreeMap<&field_name, &object_type>
-                        &argument.argument_type,
-                        &argument_preset.value,
-                    )
-                    .map_err(|type_error| {
-                        Error::CommandArgumentPresetTypeError {
-                            command_name: command.name.clone(),
-                            argument_name: argument_preset.argument.clone(),
-                            type_error,
-                        }
-                    })?;
 
                     // Convert typecheck issues into command permission issues and collect them
                     for issue in new_issues {
                         issues.push(
                             CommandPermissionIssue::CommandArgumentPresetTypecheckIssue {
+                                role: command_permission.role.clone(),
                                 command_name: command.name.clone(),
                                 argument_name: argument_preset.argument.clone(),
                                 typecheck_issue: issue,
