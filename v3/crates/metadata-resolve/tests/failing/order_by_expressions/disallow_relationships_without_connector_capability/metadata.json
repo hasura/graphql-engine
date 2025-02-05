@@ -1,0 +1,301 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "RowType",
+            "fields": [
+              {
+                "name": "test",
+                "type": "String!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "myconnector",
+                "dataConnectorObjectType": "row_type",
+                "fieldMapping": {
+                  "test": {
+                    "column": {
+                      "name": "test"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "SecondRowTypeRelationship",
+            "sourceType": "RowType",
+            "target": {
+              "model": {
+                "name": "mysecondmodel",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "test"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "test"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "MyOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "RowType",
+                "orderableFields": [],
+                "orderableRelationships": [
+                  {
+                    "relationshipName": "SecondRowTypeRelationship"
+                  }
+                ]
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "mycollection_order_by"
+            },
+            "description": "Order by expression for mycollection RowType"
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "mymodel",
+            "objectType": "RowType",
+            "arguments": [],
+            "source": {
+              "dataConnectorName": "myconnector",
+              "collection": "mycollection",
+              "argumentMapping": {}
+            },
+            "orderByExpression": "MyOrderByExpression",
+            "graphql": {
+              "selectMany": {
+                "queryRootField": "mycollection"
+              },
+              "selectUniques": []
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "SecondRowType",
+            "fields": [
+              {
+                "name": "test",
+                "type": "String!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "myconnector",
+                "dataConnectorObjectType": "second_row_type",
+                "fieldMapping": {
+                  "test": {
+                    "column": {
+                      "name": "test"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "MySecondOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "SecondRowType",
+                "orderableFields": [],
+                "orderableRelationships": []
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "mysecondcollection_order_by"
+            },
+            "description": "Order by expression for mysecondcollection RowType"
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "mysecondmodel",
+            "objectType": "SecondRowType",
+            "arguments": [],
+            "source": {
+              "dataConnectorName": "myconnector",
+              "collection": "mysecondcollection",
+              "argumentMapping": {}
+            },
+            "orderByExpression": "MySecondOrderByExpression",
+            "graphql": {
+              "selectMany": {
+                "queryRootField": "mysecondcollection"
+              },
+              "selectUniques": []
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "myconnector",
+            "url": {
+              "readWriteUrls": {
+                "read": {
+                  "value": "http://local-dev.hasura.me:8080"
+                },
+                "write": {
+                  "value": "http://local-dev.hasura.me:8080"
+                }
+              }
+            },
+            "argumentPresets": [],
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  },
+                  "String": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    }
+                  }
+                },
+                "object_types": {
+                  "row_type": {
+                    "fields": {
+                      "test": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "second_row_type": {
+                    "fields": {
+                      "test": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "mycollection",
+                    "arguments": {},
+                    "type": "row_type",
+                    "foreign_keys": {},
+                    "uniqueness_constraints": {}
+                  },
+                  {
+                    "name": "mysecondcollection",
+                    "arguments": {},
+                    "type": "second_row_type",
+                    "foreign_keys": {},
+                    "uniqueness_constraints": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "version": "0.1.0",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {}
+                  },
+                  "mutation": {
+                    "transactional": {},
+                    "explain": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "myconnector_String_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "myconnector_Int_comparisonexp"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "disallow_unsupported_orderable_relationships": true
+  }
+}

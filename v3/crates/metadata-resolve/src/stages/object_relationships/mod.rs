@@ -122,8 +122,11 @@ pub fn resolve(
     Ok(object_types_with_relationships)
 }
 
+/// Tests whether a relationship in a field selection should be evaluated as a local or a remote relationship.
+/// Note that this function is not suitable to be used to evaluate if a relationship is local or remote
+/// in filtering or ordering contexts, only for in field selection!
 #[allow(clippy::match_single_binding)]
-pub fn relationship_execution_category(
+pub fn field_selection_relationship_execution_category(
     relationship_field_nestedness: FieldNestedness,
     source_connector: &data_connectors::DataConnectorLink,
     target_connector: &data_connectors::DataConnectorLink,

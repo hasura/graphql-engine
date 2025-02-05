@@ -11,6 +11,10 @@
 
 - Invalid JSON pointers provided in AuthConfig's `jwt.claimsConfig.locations`
   now raise a build error, whereas previously they were silently ignored.
+- Orderable relationships in OrderByExpressions will now produce a build error
+  if the relationship is a remote relationship, or if the data connector does
+  not support relationships, or if the target of the relationship does not have
+  a source.
 
 ### Changed
 

@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
+use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier::SubgraphName;
 use open_dds::models::EnableAllOrSpecific;
 use open_dds::order_by_expression::{self, OrderByExpressionName, OrderByExpressionOperand};
@@ -10,10 +11,11 @@ use open_dds::relationships::{
 };
 use open_dds::types::{CustomTypeName, FieldName, TypeName};
 mod error;
+use crate::stages::data_connectors;
 use crate::{mk_name, Error, Qualified, QualifiedBaseType, QualifiedTypeName};
 
 use crate::types::subgraph::mk_qualified_type_name;
-pub use error::OrderByExpressionError;
+pub use error::{OrderByExpressionError, OrderableRelationshipError};
 
 mod types;
 pub use types::*;
@@ -482,4 +484,46 @@ fn resolve_orderable_relationship(
             })
         }
     }
+}
+
+pub fn validate_orderable_relationship(
+    orderable_type: &Qualified<CustomTypeName>,
+    relationship_name: &RelationshipName,
+    relationship_field_nestedness: OrderableFieldNestedness,
+    source_connector: &data_connectors::DataConnectorLink,
+    target_connector_name: &Qualified<DataConnectorName>,
+) -> Result<(), OrderableRelationshipError> {
+    if source_connector.name != *target_connector_name {
+        return Err(
+            OrderableRelationshipError::RemoteRelationshipsNotSupported {
+                orderable_type: orderable_type.clone(),
+                relationship_name: relationship_name.clone(),
+            },
+        );
+    }
+
+    if let Some(relationship_capabilities) = &source_connector.capabilities.supports_relationships {
+        if relationship_field_nestedness == OrderableFieldNestedness::ObjectNested
+            && !relationship_capabilities
+                .supports_nested_relationships
+                .as_ref()
+                .is_some_and(|n| n.supports_nested_in_ordering)
+        {
+            return Err(
+                OrderableRelationshipError::NestedRelationshipsNotSupported {
+                    orderable_type: orderable_type.clone(),
+                    relationship_name: relationship_name.clone(),
+                    data_connector_name: source_connector.name.clone(),
+                },
+            );
+        }
+    } else {
+        return Err(OrderableRelationshipError::RelationshipsNotSupported {
+            orderable_type: orderable_type.clone(),
+            relationship_name: relationship_name.clone(),
+            data_connector_name: source_connector.name.clone(),
+        });
+    }
+
+    Ok(())
 }

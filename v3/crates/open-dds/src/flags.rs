@@ -41,6 +41,7 @@ pub enum Flag {
     DisallowDataConnectorScalarTypesMismatch,
     CheckObjectTypeFieldsExist,
     DisallowOrderByFieldsWithFieldArguments,
+    DisallowUnsupportedOrderableRelationships,
 }
 
 impl Flag {
@@ -108,6 +109,9 @@ impl Flag {
             Flag::CheckObjectTypeFieldsExist => "check_object_type_fields_exist",
             Flag::DisallowOrderByFieldsWithFieldArguments => {
                 "disallow_order_by_fields_with_field_arguments"
+            }
+            Flag::DisallowUnsupportedOrderableRelationships => {
+                "disallow_unsupported_orderable_relationships"
             }
         }
     }

@@ -135,7 +135,6 @@ pub fn select_many_generate_ir<'n, 's>(
                         &mut usage_counts,
                         &model_source.type_mappings,
                         &model_source.data_connector,
-                        data_type,
                     )?);
                     // For opendd execution pipeline
                     order_by_input = Some(&argument.value);
@@ -199,7 +198,6 @@ pub fn select_many_generate_ir<'n, 's>(
                     order_by_input,
                     &mut usage_counts,
                     &model_source.data_connector,
-                    data_type,
                 )?,
             };
 

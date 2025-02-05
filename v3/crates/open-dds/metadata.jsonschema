@@ -3724,6 +3724,10 @@
         "disallow_order_by_fields_with_field_arguments": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_unsupported_orderable_relationships": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

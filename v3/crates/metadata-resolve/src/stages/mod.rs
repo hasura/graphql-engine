@@ -264,6 +264,7 @@ fn resolve_internal(
     } = models_graphql::resolve(
         &metadata_accessor,
         &models,
+        &commands,
         &object_types_with_relationships,
         &boolean_expression_types,
         &mut track_root_fields,

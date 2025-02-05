@@ -4,7 +4,7 @@ use crate::data_connectors::ArgumentPresetValue;
 use crate::helpers::argument::ArgumentMappingIssue;
 use crate::helpers::types::NdcColumnForComparison;
 use crate::stages::order_by_expressions::OrderByExpressionIdentifier;
-use crate::stages::{data_connectors, object_types};
+use crate::stages::{data_connectors, object_types, order_by_expressions};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
@@ -12,6 +12,7 @@ use crate::types::subgraph::{
 use crate::QualifiedTypeReference;
 
 use indexmap::IndexMap;
+use open_dds::commands::CommandName;
 use open_dds::data_connector::{CollectionName, DataConnectorName};
 use open_dds::{
     aggregates::AggregateExpressionName,
@@ -115,12 +116,25 @@ pub enum ModelsIssue {
         nested_field_name: FieldName,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("The data connector '{data_connector_name}' used in model '{model_name}' does not support ordering by nested relationships; the orderable relationship '{relationship_name}' from the OrderByExpression '{order_by_expression_identifier}' is nested")]
-    OrderByExpressionContainsUnsupportedNestedRelationship {
-        data_connector_name: Qualified<DataConnectorName>,
+    #[error("Issue in order by expression '{order_by_expression_identifier}' used by model '{model_name}': {error}")]
+    OrderableRelationshipError {
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
+        model_name: Qualified<ModelName>,
+        error: order_by_expressions::OrderableRelationshipError,
+    },
+    #[error("The target model '{target_model_name}' of the orderable relationship '{relationship_name}' in order by expression '{order_by_expression_identifier}' used in model '{model_name}' must have a source")]
+    OrderableRelationshipTargetModelMustHaveASource {
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         model_name: Qualified<ModelName>,
         relationship_name: open_dds::relationships::RelationshipName,
+        target_model_name: Qualified<ModelName>,
+    },
+    #[error("The target command '{target_command_name}' of the orderable relationship '{relationship_name}' in order by expression '{order_by_expression_identifier}' used in model '{model_name}' must have a source")]
+    OrderableRelationshipTargetCommandMustHaveASource {
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
+        model_name: Qualified<ModelName>,
+        relationship_name: open_dds::relationships::RelationshipName,
+        target_command_name: Qualified<CommandName>,
     },
 }
 
@@ -133,8 +147,17 @@ impl ShouldBeAnError for ModelsIssue {
                 flags.contains(open_dds::flags::Flag::DisallowModelV1OrderingNonScalarFields)
             }
             ModelsIssue::OrderByExpressionContainsUnsupportedNestedField { .. }
-            | ModelsIssue::OrderByExpressionContainsUnsupportedNestedRelationship { .. } => {
-                flags.contains(open_dds::flags::Flag::RequireNestedSupportForOrderByExpressions)
+            | ModelsIssue::OrderableRelationshipError {
+                error:
+                    order_by_expressions::OrderableRelationshipError::NestedRelationshipsNotSupported {
+                        ..
+                    },
+                ..
+            } => flags.contains(open_dds::flags::Flag::RequireNestedSupportForOrderByExpressions),
+            ModelsIssue::OrderableRelationshipError { .. }
+            | ModelsIssue::OrderableRelationshipTargetModelMustHaveASource { .. }
+            | ModelsIssue::OrderableRelationshipTargetCommandMustHaveASource { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowUnsupportedOrderableRelationships)
             }
         }
     }

@@ -5,7 +5,9 @@ use crate::stages::{
 };
 use crate::types::error::ContextualError;
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
+use crate::OrderByExpressionIdentifier;
 
+use open_dds::commands::CommandName;
 use open_dds::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
@@ -25,6 +27,10 @@ pub enum ModelsError {
     },
     #[error("the model {model_name:} could not be found")]
     ModelNotFound { model_name: Qualified<ModelName> },
+    #[error("the command {command_name:} could not be found")]
+    CommandNotFound {
+        command_name: Qualified<CommandName>,
+    },
     #[error("source for the following model is defined more than once: {model_name:}")]
     DuplicateModelSourceDefinition { model_name: Qualified<ModelName> },
     #[error(
@@ -87,9 +93,9 @@ pub enum ModelsError {
     },
     #[error("the following model is defined more than once: {name:}")]
     DuplicateModelDefinition { name: Qualified<ModelName> },
-    #[error("Error in order by expression {order_by_expression_name}: {error}")]
+    #[error("Error in order by expression {order_by_expression_identifier}: {error}")]
     OrderByExpressionError {
-        order_by_expression_name: Qualified<OrderByExpressionName>,
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         error: order_by_expressions::OrderByExpressionError,
     },
     #[error("Error in orderable fields of model {model_name}: {error}")]

@@ -238,6 +238,9 @@ pub enum InternalEngineError {
     #[error("{0}")]
     PlanInternalEngineError(plan::InternalEngineError),
 
+    #[error("{0}")]
+    OrderableRelationshipError(#[from] metadata_resolve::OrderableRelationshipError),
+
     #[error("internal error: {description}")]
     InternalGeneric { description: String },
 }

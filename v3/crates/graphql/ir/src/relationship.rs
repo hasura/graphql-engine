@@ -113,7 +113,6 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                                 &argument.value,
                                 usage_counts,
                                 &target_model_source.data_connector,
-                                &relationship_annotation.target_type,
                             )?);
                         }
                         _ => {
@@ -275,7 +274,6 @@ pub fn generate_model_relationship_ir<'s>(
                                     usage_counts,
                                     &target_source.type_mappings,
                                     source_data_connector,
-                                    &relationship_annotation.source_type,
                                 )?);
                             }
                             _ => {
@@ -336,7 +334,7 @@ pub fn generate_model_relationship_ir<'s>(
         usage_counts,
     )?;
 
-    match metadata_resolve::relationship_execution_category(
+    match metadata_resolve::field_selection_relationship_execution_category(
         relationship_field_nestedness,
         source_data_connector,
         &target_source.data_connector,
@@ -452,7 +450,7 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
         usage_counts,
     )?;
 
-    match metadata_resolve::relationship_execution_category(
+    match metadata_resolve::field_selection_relationship_execution_category(
         relationship_field_nestedness,
         source_data_connector,
         &target_source.data_connector,
@@ -587,7 +585,7 @@ pub fn generate_command_relationship_ir<'s>(
         }
     })?;
 
-    match metadata_resolve::relationship_execution_category(
+    match metadata_resolve::field_selection_relationship_execution_category(
         relationship_field_nestedness,
         source_data_connector,
         &target_source.data_connector,

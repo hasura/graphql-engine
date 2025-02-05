@@ -3,7 +3,7 @@
     "data": null,
     "errors": [
       {
-        "message": "internal error: Remote relationships are not supported in order_by"
+        "message": "The orderable relationship 'location_country_remote' defined for 'location (in subgraph default)' is a remote relationship and remote relationships are not supported in ordering"
       }
     ]
   },
@@ -11,7 +11,7 @@
     "data": null,
     "errors": [
       {
-        "message": "internal error: Remote relationships are not supported in order_by"
+        "message": "The orderable relationship 'location_country_remote' defined for 'location (in subgraph default)' is a remote relationship and remote relationships are not supported in ordering"
       }
     ]
   }

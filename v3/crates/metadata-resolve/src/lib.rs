@@ -44,19 +44,19 @@ pub use stages::models_graphql::{
     SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
 pub use stages::object_relationships::{
-    relationship_execution_category, AggregateRelationship, CommandRelationshipTarget,
-    FieldNestedness, ModelRelationshipTarget, ObjectTypeWithRelationships,
-    RelationshipCapabilities, RelationshipCommandMapping, RelationshipExecutionCategory,
-    RelationshipField, RelationshipModelMapping, RelationshipTarget,
+    field_selection_relationship_execution_category, AggregateRelationship,
+    CommandRelationshipTarget, FieldNestedness, ModelRelationshipTarget,
+    ObjectTypeWithRelationships, RelationshipCapabilities, RelationshipCommandMapping,
+    RelationshipExecutionCategory, RelationshipField, RelationshipModelMapping, RelationshipTarget,
 };
 pub use stages::object_types::{
     AggregateFunctions, ComparisonOperators, ExtractionFunctions, FieldArgumentInfo, FieldMapping,
     ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::order_by_expressions::{
-    ObjectOrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
-    OrderByExpressions, OrderableField, OrderableObjectField, OrderableRelationship,
-    OrderableScalarField,
+    validate_orderable_relationship, ObjectOrderByExpression, OrderByExpressionGraphqlConfig,
+    OrderByExpressionIdentifier, OrderByExpressions, OrderableField, OrderableFieldNestedness,
+    OrderableObjectField, OrderableRelationship, OrderableRelationshipError, OrderableScalarField,
 };
 pub use stages::plugins::LifecyclePluginConfigs;
 pub use stages::scalar_boolean_expressions::{

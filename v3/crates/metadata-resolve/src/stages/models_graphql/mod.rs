@@ -7,11 +7,11 @@ use crate::Warning;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
 
-use open_dds::{models::ModelName, types::CustomTypeName};
+use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
 use crate::helpers::types::TrackGraphQLRootFields;
 use crate::stages::{
-    boolean_expressions, graphql_config, models, object_relationships, scalar_types,
+    boolean_expressions, commands, graphql_config, models, object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -28,6 +28,7 @@ use super::order_by_expressions;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
+    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -84,6 +85,7 @@ pub fn resolve(
             model.source.as_ref().map(AsRef::as_ref),
             object_types,
             models,
+            commands,
             scalar_types,
             order_by_expressions,
             graphql_types,

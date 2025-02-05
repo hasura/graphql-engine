@@ -218,7 +218,6 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
                     order_by_input,
                     &mut usage_counts,
                     &model_source.data_connector,
-                    data_type,
                 )?,
             };
 

@@ -34,7 +34,6 @@ pub fn build_ndc_order_by<'s>(
         metadata_resolve::TypeMapping,
     >,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    data_type: &metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
 ) -> Result<OrderBy<'s>, error::Error> {
     match &args_field.value {
         normalized_ast::Value::List(arguments) => {
@@ -52,7 +51,6 @@ pub fn build_ndc_order_by<'s>(
                     usage_counts,
                     type_mappings,
                     data_connector_link,
-                    data_type,
                 )?;
                 order_by_elements.extend(order_by_element);
             }
@@ -106,7 +104,6 @@ pub fn build_ndc_order_by_element<'s>(
         metadata_resolve::TypeMapping,
     >,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    data_type: &metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
 ) -> Result<Vec<OrderByElement<Expression<'s>>>, error::Error> {
     let input_object_fields = input_field_value.as_object()?;
     let mut order_by_elements = Vec::new();
@@ -198,7 +195,7 @@ pub fn build_ndc_order_by_element<'s>(
                         relationship_name,
                         relationship_type,
                         source_type,
-                        object_type_name,
+                        object_type_name: _,
                         target_source,
                         target_type,
                         target_model_name,
@@ -208,78 +205,74 @@ pub fn build_ndc_order_by_element<'s>(
                     },
                 ),
             )) => {
-                let relationship_field_nestedness = if *data_type == *object_type_name {
-                    metadata_resolve::FieldNestedness::NotNested
+                let relationship_field_nestedness = if column_path.is_empty() {
+                    metadata_resolve::OrderableFieldNestedness::NotNested
                 } else {
-                    metadata_resolve::FieldNestedness::ObjectNested
+                    metadata_resolve::OrderableFieldNestedness::ObjectNested
                 };
-                if let metadata_resolve::RelationshipExecutionCategory::Local =
-                    metadata_resolve::relationship_execution_category(
-                        relationship_field_nestedness,
-                        data_connector_link,
-                        &target_source.model.data_connector,
-                        &target_source.capabilities,
-                    )
-                {
-                    let ndc_relationship_name =
-                        NdcRelationshipName::new(source_type, relationship_name);
-                    relationships.insert(
-                        ndc_relationship_name.clone(),
-                        LocalModelRelationshipInfo {
-                            relationship_name,
-                            relationship_type,
-                            source_type,
-                            source_data_connector: data_connector_link,
-                            source_type_mappings: type_mappings,
-                            target_source: &target_source.model,
-                            target_type,
-                            mappings,
-                        },
-                    );
 
-                    // Add the target model being used in the usage counts
-                    count_model(target_model_name, usage_counts);
+                metadata_resolve::validate_orderable_relationship(
+                    source_type,
+                    relationship_name,
+                    relationship_field_nestedness,
+                    data_connector_link,
+                    &target_source.model.data_connector.name,
+                )
+                .map_err(crate::InternalEngineError::OrderableRelationshipError)?;
 
-                    let filter_permission =
-                        permissions::get_select_filter_predicate(&object_field.info)?;
-                    let filter_predicate = permissions::build_model_permissions_filter_predicate(
-                        &target_source.model.data_connector,
-                        &target_source.model.type_mappings,
-                        filter_permission,
-                        session_variables,
-                        usage_counts,
-                    )?;
+                let ndc_relationship_name =
+                    NdcRelationshipName::new(source_type, relationship_name);
+                relationships.insert(
+                    ndc_relationship_name.clone(),
+                    LocalModelRelationshipInfo {
+                        relationship_name,
+                        relationship_type,
+                        source_type,
+                        source_data_connector: data_connector_link,
+                        source_type_mappings: type_mappings,
+                        target_source: &target_source.model,
+                        target_type,
+                        mappings,
+                    },
+                );
 
-                    // Add the current relationship to the relationship path.
-                    let relationship_path_element = RelationshipPathElement {
-                        field_path: column_path.iter().copied().cloned().collect(),
-                        relationship_name: ndc_relationship_name,
-                        filter_predicate,
-                    };
-                    let new_relationship_path = relationship_path
-                        .iter()
-                        .copied()
-                        .chain([&relationship_path_element])
-                        .collect::<Vec<_>>();
+                // Add the target model being used in the usage counts
+                count_model(target_model_name, usage_counts);
 
-                    let new_order_by_elements = build_ndc_order_by_element(
-                        &object_field.value,
-                        *multiple_input_properties,
-                        &[], // Field path resets as we pass through a relationship
-                        &new_relationship_path,
-                        relationships,
-                        session_variables,
-                        usage_counts,
-                        &target_source.model.type_mappings,
-                        data_connector_link,
-                        data_type,
-                    )?;
-                    order_by_elements.extend(new_order_by_elements);
-                } else {
-                    Err(error::InternalEngineError::InternalGeneric {
-                        description: "Remote relationships are not supported in order_by".into(),
-                    })?;
-                }
+                let filter_permission =
+                    permissions::get_select_filter_predicate(&object_field.info)?;
+                let filter_predicate = permissions::build_model_permissions_filter_predicate(
+                    &target_source.model.data_connector,
+                    &target_source.model.type_mappings,
+                    filter_permission,
+                    session_variables,
+                    usage_counts,
+                )?;
+
+                // Add the current relationship to the relationship path.
+                let relationship_path_element = RelationshipPathElement {
+                    field_path: column_path.iter().copied().cloned().collect(),
+                    relationship_name: ndc_relationship_name,
+                    filter_predicate,
+                };
+                let new_relationship_path = relationship_path
+                    .iter()
+                    .copied()
+                    .chain([&relationship_path_element])
+                    .collect::<Vec<_>>();
+
+                let new_order_by_elements = build_ndc_order_by_element(
+                    &object_field.value,
+                    *multiple_input_properties,
+                    &[], // Field path resets as we pass through a relationship
+                    &new_relationship_path,
+                    relationships,
+                    session_variables,
+                    usage_counts,
+                    &target_source.model.type_mappings,
+                    data_connector_link,
+                )?;
+                order_by_elements.extend(new_order_by_elements);
             }
             Annotation::Input(InputAnnotation::Model(
                 graphql_schema::ModelInputAnnotation::ModelOrderByNestedExpression {
@@ -324,7 +317,6 @@ pub fn build_ndc_order_by_element<'s>(
                             usage_counts,
                             type_mappings,
                             data_connector_link,
-                            data_type,
                         )?;
                         order_by_elements.extend(order_by_element);
                     }
@@ -343,7 +335,6 @@ pub fn build_ndc_order_by_element<'s>(
                                 usage_counts,
                                 type_mappings,
                                 data_connector_link,
-                                data_type,
                             )?;
                             order_by_elements.extend(order_by_element);
                         }
@@ -363,7 +354,6 @@ pub fn build_order_by_open_dd_ir<'s>(
     args_input: &Value<'s, GDS>,
     usage_counts: &mut UsagesCounts,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    data_type: &metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
 ) -> Result<Vec<open_dds::query::OrderByElement>, error::Error> {
     match args_input {
         normalized_ast::Value::List(arguments) => {
@@ -371,10 +361,10 @@ pub fn build_order_by_open_dd_ir<'s>(
             for argument in arguments {
                 let order_by_element = build_order_by_element_open_dd_ir(
                     argument,
+                    metadata_resolve::OrderableFieldNestedness::NotNested,
                     metadata_resolve::MultipleOrderByInputObjectFields::Disallow,
                     usage_counts,
                     data_connector_link,
-                    data_type,
                 )?;
                 order_by_elements.extend(order_by_element);
             }
@@ -456,10 +446,10 @@ pub fn build_order_by_open_dd_ir<'s>(
 
 pub fn build_order_by_element_open_dd_ir<'s>(
     input_field_value: &Value<'s, GDS>,
+    field_nestedness: metadata_resolve::OrderableFieldNestedness,
     multiple_input_fields: metadata_resolve::MultipleOrderByInputObjectFields,
     usage_counts: &mut UsagesCounts,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
-    data_type: &metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
 ) -> Result<Vec<open_dds::query::OrderByElement>, error::Error> {
     let input_object_fields = input_field_value.as_object()?;
     let mut order_by_elements = Vec::new();
@@ -527,8 +517,8 @@ pub fn build_order_by_element_open_dd_ir<'s>(
                     OrderByRelationshipAnnotation {
                         relationship_name,
                         relationship_type: _,
-                        source_type: _,
-                        object_type_name,
+                        source_type,
+                        object_type_name: _,
                         target_source,
                         target_type: _,
                         target_model_name,
@@ -538,56 +528,47 @@ pub fn build_order_by_element_open_dd_ir<'s>(
                     },
                 ),
             )) => {
-                let relationship_field_nestedness = if *data_type == *object_type_name {
-                    metadata_resolve::FieldNestedness::NotNested
-                } else {
-                    metadata_resolve::FieldNestedness::ObjectNested
+                metadata_resolve::validate_orderable_relationship(
+                    source_type,
+                    relationship_name,
+                    field_nestedness,
+                    data_connector_link,
+                    &target_source.model.data_connector.name,
+                )
+                .map_err(crate::InternalEngineError::OrderableRelationshipError)?;
+
+                // Add the target model being used in the usage counts
+                count_model(target_model_name, usage_counts);
+
+                let relationship_target = open_dds::query::RelationshipTarget {
+                    relationship_name: relationship_name.clone(),
+                    arguments: IndexMap::new(),
+                    // Following parameters are not applicable in the order_by input.
+                    filter: None, // NOTE: Permission filters are handled during OpenDd query planning.
+                    order_by: vec![],
+                    limit: None,
+                    offset: None,
                 };
-                if let metadata_resolve::RelationshipExecutionCategory::Local =
-                    metadata_resolve::relationship_execution_category(
-                        relationship_field_nestedness,
-                        data_connector_link,
-                        &target_source.model.data_connector,
-                        &target_source.capabilities,
-                    )
-                {
-                    // Add the target model being used in the usage counts
-                    count_model(target_model_name, usage_counts);
 
-                    let relationship_target = open_dds::query::RelationshipTarget {
-                        relationship_name: relationship_name.clone(),
-                        arguments: IndexMap::new(),
-                        // Following parameters are not applicable in the order_by input.
-                        filter: None, // NOTE: Permission filters are handled during OpenDd query planning.
-                        order_by: vec![],
-                        limit: None,
-                        offset: None,
-                    };
+                let new_order_by_elements = build_order_by_element_open_dd_ir(
+                    &object_field.value,
+                    metadata_resolve::OrderableFieldNestedness::NotNested, // Field nestedness resets as we pass through a relationship
+                    *multiple_input_properties,
+                    usage_counts,
+                    data_connector_link,
+                )?;
 
-                    let new_order_by_elements = build_order_by_element_open_dd_ir(
-                        &object_field.value,
-                        *multiple_input_properties,
-                        usage_counts,
-                        data_connector_link,
-                        data_type,
-                    )?;
-
-                    for element in new_order_by_elements {
-                        let operand = open_dds::query::Operand::Relationship(
-                            open_dds::query::RelationshipOperand {
-                                target: Box::new(relationship_target.clone()),
-                                nested: Some(Box::new(element.operand)),
-                            },
-                        );
-                        order_by_elements.push(open_dds::query::OrderByElement {
-                            direction: element.direction,
-                            operand,
-                        });
-                    }
-                } else {
-                    Err(error::InternalEngineError::InternalGeneric {
-                        description: "Remote relationships are not supported in order_by".into(),
-                    })?;
+                for element in new_order_by_elements {
+                    let operand = open_dds::query::Operand::Relationship(
+                        open_dds::query::RelationshipOperand {
+                            target: Box::new(relationship_target.clone()),
+                            nested: Some(Box::new(element.operand)),
+                        },
+                    );
+                    order_by_elements.push(open_dds::query::OrderByElement {
+                        direction: element.direction,
+                        operand,
+                    });
                 }
             }
             Annotation::Input(InputAnnotation::Model(
@@ -601,10 +582,10 @@ pub fn build_order_by_element_open_dd_ir<'s>(
                     metadata_resolve::MultipleOrderByInputObjectFields::Disallow => {
                         let new_order_by_elements = build_order_by_element_open_dd_ir(
                             &object_field.value,
+                            metadata_resolve::OrderableFieldNestedness::ObjectNested,
                             *multiple_input_properties,
                             usage_counts,
                             data_connector_link,
-                            data_type,
                         )?;
 
                         for element in new_order_by_elements {
@@ -630,10 +611,10 @@ pub fn build_order_by_element_open_dd_ir<'s>(
                         for argument in argument_list {
                             let new_order_by_elements = build_order_by_element_open_dd_ir(
                                 argument,
+                                metadata_resolve::OrderableFieldNestedness::ObjectNested,
                                 *multiple_input_properties,
                                 usage_counts,
                                 data_connector_link,
-                                data_type,
                             )?;
                             for element in new_order_by_elements {
                                 let operand = open_dds::query::Operand::Field(

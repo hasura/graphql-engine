@@ -46,3 +46,25 @@ pub enum OrderByExpressionError {
     #[error("{message}")]
     UnsupportedFeature { message: String },
 }
+
+#[derive(Debug, thiserror::Error)]
+#[allow(clippy::enum_variant_names)]
+pub enum OrderableRelationshipError {
+    #[error("The orderable relationship '{relationship_name}' defined for '{orderable_type}' is a remote relationship and remote relationships are not supported in ordering")]
+    RemoteRelationshipsNotSupported {
+        orderable_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+    },
+    #[error("The orderable relationship '{relationship_name}' defined for '{orderable_type}' is not supported in ordering because the data connector '{data_connector_name}' does not support relationships")]
+    RelationshipsNotSupported {
+        orderable_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        data_connector_name: Qualified<open_dds::data_connector::DataConnectorName>,
+    },
+    #[error("The orderable relationship '{relationship_name}' defined for '{orderable_type}' is not supported in ordering because the data connector '{data_connector_name}' does not support nested relationships in ordering")]
+    NestedRelationshipsNotSupported {
+        orderable_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        data_connector_name: Qualified<open_dds::data_connector::DataConnectorName>,
+    },
+}

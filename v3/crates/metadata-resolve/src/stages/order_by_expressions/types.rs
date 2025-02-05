@@ -131,3 +131,9 @@ impl ShouldBeAnError for OrderByExpressionIssue {
         }
     }
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum OrderableFieldNestedness {
+    NotNested,
+    ObjectNested,
+}

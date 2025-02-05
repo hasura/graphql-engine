@@ -405,7 +405,7 @@ fn from_model_relationship(
     };
 
     // is it local or remote?
-    match metadata_resolve::relationship_execution_category(
+    match metadata_resolve::field_selection_relationship_execution_category(
         relationship_field_nestedness,
         source_data_connector,
         &target_model_source.data_connector,
@@ -618,7 +618,7 @@ fn from_command_relationship(
     )?;
 
     // is it local or remote?
-    match metadata_resolve::relationship_execution_category(
+    match metadata_resolve::field_selection_relationship_execution_category(
         relationship_field_nestedness,
         source_data_connector,
         &command_source.data_connector,
