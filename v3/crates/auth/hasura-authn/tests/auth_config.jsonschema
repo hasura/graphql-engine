@@ -308,6 +308,9 @@
             }
           ]
         }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/JWTClaimsMappingEntry_for_SessionVariableValue"
       }
     },
     "JWTClaimsMappingEntry_for_Role": {

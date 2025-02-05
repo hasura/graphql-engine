@@ -9,6 +9,9 @@
 
 ### Fixed
 
+- Invalid JSON pointers provided in AuthConfig's `jwt.claimsConfig.locations`
+  now raise a build error, whereas previously they were silently ignored.
+
 ### Changed
 
 ## [v2025.02.03]

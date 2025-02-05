@@ -267,6 +267,9 @@ pub enum JWTClaimsMappingEntry<T> {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, JsonSchema, Debug)]
 #[schemars(title = "JWTClaimsMap")]
+// This causes the flattened custom_claims to be included in the JSON schema (see https://github.com/GREsau/schemars/issues/259)
+// It is only required in v0.8 and is apparently fixed in v1.0 (which is in alpha at time of writing)
+#[schemars(deny_unknown_fields)]
 /// Can be used when Hasura claims are not all present in the single object, but individual
 /// claims are provided a JSON pointer within the decoded JWT and optionally a default value.
 pub struct JWTClaimsMap {
@@ -280,7 +283,7 @@ pub struct JWTClaimsMap {
     /// A dictionary of the custom claims, where the key is the name of the claim and the value
     /// is the JSON pointer to lookup the custom claims within the decoded JWT.
     pub custom_claims:
-        Option<HashMap<SessionVariableName, JWTClaimsMappingEntry<JsonSessionVariableValue>>>,
+        HashMap<SessionVariableName, JWTClaimsMappingEntry<JsonSessionVariableValue>>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, JsonSchema, Debug)]
@@ -601,17 +604,14 @@ pub(crate) async fn decode_and_parse_hasura_claims(
             })?;
             let mut custom_claims = HashMap::new();
 
-            claims_mappings.custom_claims.map(|custom_claim_mappings| {
-                for (claim_name, claims_mapping_entry) in custom_claim_mappings {
-                    let claim_value = get_claims_mapping_entry_value(
-                        claim_name.to_string(),
-                        claims_mapping_entry,
-                        &claims,
-                    )?;
-                    claim_value.map(|claim_val| custom_claims.insert(claim_name, claim_val));
-                }
-                Ok::<(), Error>(())
-            });
+            for (claim_name, claims_mapping_entry) in claims_mappings.custom_claims {
+                let claim_value = get_claims_mapping_entry_value(
+                    claim_name.to_string(),
+                    claims_mapping_entry,
+                    &claims,
+                )?;
+                claim_value.map(|claim_val| custom_claims.insert(claim_name, claim_val));
+            }
 
             HasuraClaims {
                 default_role,
@@ -1075,6 +1075,130 @@ mod tests {
         let decoded_claims =
             decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims).await?;
         assert_eq!(hasura_claims, decoded_claims);
+        Ok(())
+    }
+
+    #[tokio::test]
+    // This test emulates a scenario where each location of the Hasura claims is specified explicitly, but no custom claims are present
+    async fn test_jwt_claims_mapping_with_no_custom_claims() -> anyhow::Result<()> {
+        let alg = jwt::Algorithm::HS256;
+
+        let jwt_secret_config_json = json!(
+            {
+               "key": {
+                 "fixed": {
+                    "algorithm": "HS256",
+                    "key": {
+                       "value": "token"
+                    }
+                 }
+               },
+               "tokenLocation": {
+                  "type": "BearerAuthorization"
+               },
+               "claimsConfig": {
+                 "locations": {
+                     "x-hasura-default-role": {
+                        "path": {
+                           "path": "/roles/2",
+                           "default": "user"
+                         }
+                     },
+                     "x-hasura-allowed-roles": {
+                        "path": {
+                          "path": "/roles"
+                        }
+                     }
+                  }
+               }
+            }
+        );
+
+        let jwt_config = serde_json::from_value(jwt_secret_config_json)?;
+
+        let mut hasura_claims = get_default_hasura_claims();
+        hasura_claims.custom_claims.clear();
+
+        let claims_json = json!(
+            {
+                "sub": "1234567890",
+                "name": "John Doe",
+                "iat": 1693439022,
+                "exp": 1916239022,
+                "roles": [
+                     "foo",
+                     "bar",
+                     "user"
+                ]
+            }
+        );
+        let claims: Claims = serde_json::from_value(claims_json)?;
+        let jwt_header = jwt::Header {
+            alg,
+            ..Default::default()
+        };
+        let encoded_claims = encode(
+            &jwt_header,
+            &claims,
+            &EncodingKey::from_secret("token".as_ref()),
+        )?;
+
+        let http_client = reqwest::Client::new();
+
+        let decoded_claims =
+            decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims).await?;
+        assert_eq!(hasura_claims, decoded_claims);
+        Ok(())
+    }
+
+    #[tokio::test]
+    // This test emulates a scenario where the location of the claim is a malformed json pointer
+    async fn test_jwt_claims_mapping_with_malformed_json_pointer() -> anyhow::Result<()> {
+        let jwt_secret_config_json = json!(
+            {
+               "key": {
+                 "fixed": {
+                    "algorithm": "HS256",
+                    "key": {
+                       "value": "token"
+                    }
+                 }
+               },
+               "tokenLocation": {
+                  "type": "BearerAuthorization"
+               },
+               "claimsConfig": {
+                 "locations": {
+                     "x-hasura-default-role": {
+                        "path": {
+                           "path": "/roles/2",
+                           "default": "user"
+                         }
+                     },
+                     "x-hasura-allowed-roles": {
+                        "path": {
+                          "path": "/roles"
+                        }
+                     },
+                     "x-hasura-user-id": {
+                        "path": {
+                            "path": "custom_claims/user_id" // This is missing a leading slash
+                        }
+                     }
+                  }
+               }
+            }
+        );
+
+        let jwt_config_result = serde_json::from_value::<JWTConfig>(jwt_secret_config_json);
+        assert!(
+            jwt_config_result.is_err(),
+            "jwt_config_result should have been an error: {jwt_config_result:?}"
+        );
+        assert_eq!(
+            jwt_config_result.unwrap_err().to_string(),
+            "json pointer \"custom_claims/user_id\" is malformed due to missing starting slash"
+        );
         Ok(())
     }
 
