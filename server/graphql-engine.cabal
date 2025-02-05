@@ -740,6 +740,7 @@ library
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
+                     , Hasura.CpuDetect
 
                      , Hasura.LogicalModelResolver.Codec
                      , Hasura.LogicalModelResolver.Lenses
