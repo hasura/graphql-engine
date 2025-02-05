@@ -1,10 +1,11 @@
 use super::types::PlanError;
-use std::collections::BTreeMap;
-
+use crate::metadata_accessor::OutputObjectTypeView;
+use hasura_authn_core::Role;
 use metadata_resolve::{
     FieldMapping, Qualified, QualifiedBaseType, QualifiedTypeName, TypeMapping,
 };
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone)]
 pub struct ResolvedColumn {
@@ -18,10 +19,11 @@ pub struct ResolvedColumn {
 /// that additional mapping data (e.g. operators) can be extracted.
 #[allow(clippy::assigning_clones)]
 pub fn to_resolved_column(
+    role: &Role,
     metadata: &metadata_resolve::Metadata,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
-    model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    model_object_type: &OutputObjectTypeView,
     operand: &open_dds::query::ObjectFieldOperand,
 ) -> Result<ResolvedColumn, PlanError> {
     let TypeMapping::Object {
@@ -52,16 +54,7 @@ pub fn to_resolved_column(
     // Keep track of the rest of the tree to consider:
     let mut nested = operand.nested.clone();
 
-    let field_type = model_object_type
-        .object_type
-        .fields
-        .get(&operand.target.field_name)
-        .ok_or_else(|| {
-            PlanError::Internal(format!(
-                "can't find object field definition for field {} in type: {}",
-                operand.target.field_name, type_name
-            ))
-        })?;
+    let field_type = model_object_type.get_field(&operand.target.field_name, role)?;
 
     // Keep track of the type of the current field under consideration
     // (this will be an object type until we reach the bottom of the tree):
@@ -97,22 +90,14 @@ pub fn to_resolved_column(
                     )));
                 };
 
-                let Some(object_type) = metadata.object_types.get(&object_type_name) else {
-                    return Err(PlanError::Internal(format!(
-                        "field access on non-object type: {type_name:?}"
-                    )));
-                };
+                let object_type = crate::metadata_accessor::get_output_object_type(
+                    metadata,
+                    &object_type_name,
+                    role,
+                )?;
 
-                let field_defn =
-                    object_type
-                        .object_type
-                        .fields
-                        .get(field_name)
-                        .ok_or_else(|| {
-                            PlanError::Internal(format!(
-                    "can't find object field definition for field {field_name} in type: {type_name}"
-                ))
-                        })?;
+                let field_defn = object_type.get_field(field_name, role)?;
+
                 let field_type = &field_defn.field_type.underlying_type;
 
                 let TypeMapping::Object {

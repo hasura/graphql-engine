@@ -5,8 +5,8 @@ input_file: crates/jsonapi/tests/failing/include/Customer.txt
 ---
 Err(
     PlanError(
-        Permission(
-            "role admin does not have select permission for model Employee (in subgraph default)",
+        Internal(
+            "couldn't find the relationship Employee in the type Customer (in subgraph default)",
         ),
     ),
 )

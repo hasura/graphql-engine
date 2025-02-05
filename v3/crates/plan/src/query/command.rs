@@ -1,7 +1,8 @@
 use super::arguments::{get_unresolved_arguments, resolve_arguments};
 use super::{field_selection, process_argument_presets_for_command};
-use crate::PlanError;
-use hasura_authn_core::Session;
+use crate::metadata_accessor::OutputObjectTypeView;
+use crate::{PermissionError, PlanError};
+use hasura_authn_core::{Role, Session};
 use indexmap::IndexMap;
 use metadata_resolve::{
     Metadata, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
@@ -162,7 +163,7 @@ pub(crate) fn from_command_selection(
     let mut remote_join_executions = JoinLocations::new();
     let mut remote_predicates = PredicateQueryTrees::new();
 
-    let output_shape = return_type_shape(&command.command.output_type, metadata)?;
+    let output_shape = return_type_shape(&command.command.output_type, metadata, &session.role)?;
 
     let (ndc_fields, extract_response_from) = from_command_output_type(
         &output_shape,
@@ -182,10 +183,10 @@ pub(crate) fn from_command_selection(
         .get(&session.role)
         .map_or(false, |permission| permission.allow_execution)
     {
-        Err(PlanError::Permission(format!(
+        Err(PlanError::Permission(PermissionError::Other(format!(
             "role {} does not have permission for command {}",
             session.role, qualified_command_name
-        )))?;
+        ))))?;
     };
 
     // resolve arguments, adding in presets
@@ -287,13 +288,13 @@ fn wrap_procedure_ndc_fields(
     }
 }
 
-enum OutputShape {
+enum OutputShape<'metadata> {
     Object {
         object_name: Qualified<CustomTypeName>,
-        object: metadata_resolve::ObjectTypeWithRelationships,
+        object: OutputObjectTypeView<'metadata>,
     },
     Array {
-        inner: Box<OutputShape>,
+        inner: Box<OutputShape<'metadata>>,
     },
     ScalarType {
         _custom_scalar_type: Option<metadata_resolve::ScalarTypeRepresentation>,
@@ -340,32 +341,33 @@ fn wrap_scalar_select(nested_fields: Option<NestedField>) -> IndexMap<NdcFieldAl
 //
 // This is somewhat a duplicate of a similar function in the `sql` catalog, but with the catalog
 // specific parts removed. We should consider bringing them together if possible.
-fn return_type_shape(
-    output_type: &QualifiedTypeReference,
-    metadata: &Metadata,
-) -> Result<OutputShape, PlanError> {
+fn return_type_shape<'metadata>(
+    output_type: &'metadata QualifiedTypeReference,
+    metadata: &'metadata Metadata,
+    role: &'_ Role,
+) -> Result<OutputShape<'metadata>, PlanError> {
     match &output_type.underlying_type {
         QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(_)) => Ok(OutputShape::ScalarType {
             _custom_scalar_type: None,
         }),
         QualifiedBaseType::Named(QualifiedTypeName::Custom(custom_type)) => {
-            match metadata.object_types.get(custom_type) {
-                Some(output_object_type) => Ok(OutputShape::Object {
+            match metadata.scalar_types.get(custom_type) {
+                Some(output_scalar_type) => Ok(OutputShape::ScalarType {
+                    _custom_scalar_type: Some(output_scalar_type.clone()),
+                }),
+                None => Ok(crate::metadata_accessor::get_output_object_type(
+                    metadata,
+                    custom_type,
+                    role,
+                )
+                .map(|output_object_type| OutputShape::Object {
                     object_name: custom_type.clone(),
                     object: output_object_type.clone(),
-                }),
-                None => match metadata.scalar_types.get(custom_type) {
-                    Some(output_scalar_type) => Ok(OutputShape::ScalarType {
-                        _custom_scalar_type: Some(output_scalar_type.clone()),
-                    }),
-                    None => Err(PlanError::Internal(format!(
-                        "Did not recognise type {custom_type}"
-                    ))),
-                },
+                })?),
             }
         }
         QualifiedBaseType::List(type_reference) => {
-            let inner = return_type_shape(type_reference, metadata)?;
+            let inner = return_type_shape(type_reference, metadata, role)?;
             Ok(OutputShape::Array {
                 inner: Box::new(inner),
             })

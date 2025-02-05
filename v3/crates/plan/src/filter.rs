@@ -1,7 +1,8 @@
 use crate::process_model_predicate;
 
 use super::column::{to_resolved_column, ResolvedColumn};
-use super::types::PlanError;
+use super::types::{PermissionError, PlanError};
+use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
 use metadata_resolve::{DataConnectorLink, Qualified, TypeMapping};
 use open_dds::{
@@ -13,9 +14,10 @@ use std::collections::BTreeMap;
 
 pub fn to_resolved_filter_expr(
     metadata: &metadata_resolve::Metadata,
+    session: &Session,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
-    model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    model_object_type: &OutputObjectTypeView,
     boolean_expression_type: Option<&metadata_resolve::ResolvedObjectBooleanExpressionType>,
     expr: &BooleanExpression,
     data_connector: &DataConnectorLink,
@@ -27,6 +29,7 @@ pub fn to_resolved_filter_expr(
                 .map(|expr| {
                     to_resolved_filter_expr(
                         metadata,
+                        session,
                         type_mappings,
                         type_name,
                         model_object_type,
@@ -43,6 +46,7 @@ pub fn to_resolved_filter_expr(
                 .map(|expr| {
                     to_resolved_filter_expr(
                         metadata,
+                        session,
                         type_mappings,
                         type_name,
                         model_object_type,
@@ -56,6 +60,7 @@ pub fn to_resolved_filter_expr(
         BooleanExpression::Not(expr) => {
             Ok(ResolvedFilterExpression::mk_not(to_resolved_filter_expr(
                 metadata,
+                session,
                 type_mappings,
                 type_name,
                 model_object_type,
@@ -69,7 +74,14 @@ pub fn to_resolved_filter_expr(
                 column_name,
                 field_path,
                 ..
-            } = to_resolved_column(metadata, type_mappings, type_name, model_object_type, field)?;
+            } = to_resolved_column(
+                &session.role,
+                metadata,
+                type_mappings,
+                type_name,
+                model_object_type,
+                field,
+            )?;
             Ok(ResolvedFilterExpression::LocalFieldComparison(
                 plan_types::LocalFieldComparison::UnaryComparison {
                     column: plan_types::ComparisonTarget::Column {
@@ -89,7 +101,14 @@ pub fn to_resolved_filter_expr(
                 column_name,
                 field_path,
                 field_mapping,
-            } = to_resolved_column(metadata, type_mappings, type_name, model_object_type, field)?;
+            } = to_resolved_column(
+                &session.role,
+                metadata,
+                type_mappings,
+                type_name,
+                model_object_type,
+                field,
+            )?;
 
             let value = match argument.as_ref() {
                 open_dds::query::Value::Literal(value) => Ok(plan_types::ComparisonValue::Scalar {
@@ -356,10 +375,10 @@ pub(crate) fn resolve_model_permission_filter(
 ) -> Result<Option<ResolvedFilterExpression>, PlanError> {
     let model_name = &model.model.name;
     let model_select_permission = model.select_permissions.get(&session.role).ok_or_else(|| {
-        PlanError::Permission(format!(
+        PlanError::Permission(PermissionError::Other(format!(
             "role {} does not have select permission for model {model_name}",
             session.role
-        ))
+        )))
     })?;
 
     match &model_select_permission.filter {

@@ -77,7 +77,7 @@ test *ARGS: start-docker-test-deps
 watch: start-docker-test-deps
     RUST_LOG=DEBUG \
     cargo watch -i "**/*.snap.new" \
-     -x 'nextest run' \
+     -x 'nextest run --no-fail-fast' \
      -x 'clippy --no-deps' \
      -x 'run --bin ddn-engine-local-dev -- \
       --otlp-endpoint http://localhost:4317 \

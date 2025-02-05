@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
 use super::types::{OrderByError, PlanError};
+use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
-use metadata_resolve::{ObjectTypeWithRelationships, Qualified, RelationshipTarget, TypeMapping};
+use metadata_resolve::{Qualified, RelationshipTarget, TypeMapping};
 use open_dds::{
     data_connector::DataConnectorColumnName, query::OrderByElement, types::CustomTypeName,
 };
@@ -13,7 +14,7 @@ pub fn to_resolved_order_by_element(
     session: &Session,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
-    model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    model_object_type: &OutputObjectTypeView,
     data_connector: &metadata_resolve::DataConnectorLink,
     element: &OrderByElement,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
@@ -49,7 +50,7 @@ fn from_operand(
     session: &Session,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
-    object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    object_type: &OutputObjectTypeView,
     data_connector: &metadata_resolve::DataConnectorLink,
     operand: &open_dds::query::Operand,
     relationship_path: Vec<plan_types::RelationshipPathElement<ResolvedFilterExpression>>,
@@ -103,7 +104,7 @@ fn resolve_field_operand(
     session: &Session,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
-    object_type: &ObjectTypeWithRelationships,
+    object_type: &OutputObjectTypeView,
     data_connector: &metadata_resolve::DataConnectorLink,
     operand: &open_dds::query::ObjectFieldOperand,
     relationship_path: Vec<plan_types::RelationshipPathElement<ResolvedFilterExpression>>,
@@ -134,7 +135,6 @@ fn resolve_field_operand(
 
     if let Some(nested_operand) = &operand.nested {
         let field = object_type
-            .object_type
             .fields
             .get(&operand.target.field_name)
             .ok_or_else(|| {
@@ -157,13 +157,8 @@ fn resolve_field_operand(
                 .into_plan_error()
             })?;
 
-        let field_object_type = metadata.object_types.get(field_type).ok_or_else(|| {
-            OrderByError::NestedOrderByNotSupported(format!(
-                "field {} is not an object type",
-                operand.target.field_name,
-            ))
-            .into_plan_error()
-        })?;
+        let field_object_type =
+            crate::metadata_accessor::get_output_object_type(metadata, field_type, &session.role)?;
 
         field_path.push(column_name);
         from_operand(
@@ -171,7 +166,7 @@ fn resolve_field_operand(
             session,
             type_mappings,
             field_type,
-            field_object_type,
+            &field_object_type,
             data_connector,
             nested_operand,
             relationship_path,
@@ -203,7 +198,7 @@ fn resolve_relationship_operand(
     session: &Session,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
-    object_type: &ObjectTypeWithRelationships,
+    object_type: &OutputObjectTypeView,
     data_connector: &metadata_resolve::DataConnectorLink,
     operand: &open_dds::query::RelationshipOperand,
     mut relationship_path: Vec<plan_types::RelationshipPathElement<ResolvedFilterExpression>>,
@@ -293,12 +288,11 @@ fn resolve_relationship_operand(
             relationship_path.push(path_element);
             field_path = vec![]; // Field path resets as we pass through a relationship
 
-            let target_object_type = metadata.object_types.get(target_type).ok_or_else(|| {
-                OrderByError::Internal(format!(
-                    "target object type {target_type} not found in metadata"
-                ))
-                .into_plan_error()
-            })?;
+            let target_output_object_type = crate::metadata_accessor::get_output_object_type(
+                metadata,
+                target_type,
+                &session.role,
+            )?;
 
             // Handle nested operand
             match operand.nested.as_ref() {
@@ -307,7 +301,7 @@ fn resolve_relationship_operand(
                     session,
                     target_type_mappings,
                     target_type,
-                    target_object_type,
+                    &target_output_object_type,
                     data_connector,
                     nested_operand,
                     relationship_path,

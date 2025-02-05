@@ -2,13 +2,13 @@ use super::arguments::{get_unresolved_arguments, resolve_arguments};
 use super::process_argument_presets_for_model;
 use super::types::NDCQuery;
 use crate::filter::{resolve_model_permission_filter, to_resolved_filter_expr};
+use crate::metadata_accessor::OutputObjectTypeView;
 use crate::order_by::to_resolved_order_by_element;
 use crate::types::PlanError;
-use std::collections::BTreeMap;
-
 use hasura_authn_core::Session;
 use open_dds::query::ModelTarget;
 use plan_types::{Relationship, ResolvedFilterExpression, UniqueNumber};
+use std::collections::BTreeMap;
 
 pub fn model_target_to_ndc_query(
     model_target: &ModelTarget,
@@ -19,7 +19,7 @@ pub fn model_target_to_ndc_query(
     // at all call sites anyway:
     model: &metadata_resolve::ModelWithPermissions,
     model_source: &metadata_resolve::ModelSource,
-    model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    model_object_type: &OutputObjectTypeView,
     unique_number: &mut UniqueNumber,
 ) -> Result<NDCQuery, PlanError> {
     let mut usage_counts = plan_types::UsagesCounts::default();
@@ -58,17 +58,18 @@ pub fn model_target_to_ndc_query(
         resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
 
     let model_filter = match &model_target.filter {
-        Some(expr) => Ok(Some(to_resolved_filter_expr(
+        Some(expr) => Some(to_resolved_filter_expr(
             metadata,
+            session,
             &model_source.type_mappings,
             &model.model.data_type,
             model_object_type,
             model.filter_expression_type.as_ref(),
             expr,
             &model_source.data_connector,
-        )?)),
-        _ => Ok(None),
-    }?;
+        )?),
+        _ => None,
+    };
 
     let filter = match (model_filter, permission_filter) {
         (None, filter) | (filter, None) => filter,

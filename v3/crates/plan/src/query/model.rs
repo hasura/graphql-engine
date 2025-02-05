@@ -47,15 +47,11 @@ pub fn from_model_group_by(
         PlanError::Internal(format!("model {qualified_model_name} has no source"))
     })?;
 
-    let model_object_type = metadata
-        .object_types
-        .get(&model.model.data_type)
-        .ok_or_else(|| {
-            PlanError::Internal(format!(
-                "object type {} not found in metadata",
-                model.model.data_type
-            ))
-        })?;
+    let model_object_type = crate::metadata_accessor::get_output_object_type(
+        metadata,
+        &model.model.data_type,
+        &session.role,
+    )?;
 
     let data_connector = &model_source.data_connector;
     let ndc_version = data_connector.capabilities.supported_ndc_version;
@@ -73,10 +69,11 @@ pub fn from_model_group_by(
         let dimension = match operand {
             Operand::Field(operand) => {
                 let column = to_resolved_column(
+                    &session.role,
                     metadata,
                     &model_source.type_mappings,
                     &model.model.data_type,
-                    model_object_type,
+                    &model_object_type,
                     operand,
                 )?;
                 let field_mapping: FieldMapping = column.field_mapping;
@@ -202,10 +199,11 @@ pub fn from_model_group_by(
             None => Ok(None),
             Some(Operand::Field(operand)) => {
                 let column = to_resolved_column(
+                    &session.role,
                     metadata,
                     &model_source.type_mappings,
                     &model.model.data_type,
-                    model_object_type,
+                    &model_object_type,
                     operand,
                 )?;
                 Ok(Some(column))
@@ -233,7 +231,7 @@ pub fn from_model_group_by(
         request_headers,
         model,
         model_source,
-        model_object_type,
+        &model_object_type,
         unique_number,
     )?;
 
@@ -308,15 +306,12 @@ pub fn from_model_aggregate_selection(
         PlanError::Internal(format!("model {qualified_model_name} has no source"))
     })?;
 
-    let model_object_type = metadata
-        .object_types
-        .get(&model.model.data_type)
-        .ok_or_else(|| {
-            PlanError::Internal(format!(
-                "object type {} not found in metadata",
-                model.model.data_type
-            ))
-        })?;
+    //... and use them to check permissoins when fetching the object type
+    let model_object_type = crate::metadata_accessor::get_output_object_type(
+        metadata,
+        &model.model.data_type,
+        &session.role,
+    )?;
 
     let data_connector = &model_source.data_connector;
     let ndc_version = data_connector.capabilities.supported_ndc_version;
@@ -328,10 +323,11 @@ pub fn from_model_aggregate_selection(
             None => Ok(None),
             Some(Operand::Field(operand)) => {
                 let column = to_resolved_column(
+                    &session.role,
                     metadata,
                     &model_source.type_mappings,
                     &model.model.data_type,
-                    model_object_type,
+                    &model_object_type,
                     operand,
                 )?;
                 Ok(Some(column))
@@ -359,7 +355,7 @@ pub fn from_model_aggregate_selection(
         request_headers,
         model,
         model_source,
-        model_object_type,
+        &model_object_type,
         unique_number,
     )?;
 
@@ -578,15 +574,11 @@ pub fn from_model_selection(
         PlanError::Internal(format!("model {qualified_model_name} has no source"))
     })?;
 
-    let model_object_type = metadata
-        .object_types
-        .get(&model.model.data_type)
-        .ok_or_else(|| {
-            PlanError::Internal(format!(
-                "object type {} not found in metadata",
-                model.model.data_type
-            ))
-        })?;
+    let model_object_type = crate::metadata_accessor::get_output_object_type(
+        metadata,
+        &model.model.data_type,
+        &session.role,
+    )?;
 
     let mut relationships = BTreeMap::new();
 
@@ -595,7 +587,7 @@ pub fn from_model_selection(
         session,
         request_headers,
         &model.model.data_type,
-        model_object_type,
+        &model_object_type,
         &model_source.type_mappings,
         &model_source.data_connector,
         &model_selection.selection,
@@ -612,7 +604,7 @@ pub fn from_model_selection(
         request_headers,
         model,
         model_source,
-        model_object_type,
+        &model_object_type,
         unique_number,
     )?;
 

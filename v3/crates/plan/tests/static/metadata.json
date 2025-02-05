@@ -1896,6 +1896,18 @@
           "kind": "DataConnectorScalarRepresentation",
           "version": "v1",
           "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "customIntComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
             "dataConnectorName": "db",
             "dataConnectorScalarType": "int4",
             "representation": "int4",
@@ -7651,7 +7663,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": ["actor_id", "name", "movie_id"]
+                  "allowedFields": ["actor_id", "name"]
                 }
               },
               {
@@ -7661,6 +7673,53 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
+            "name": "actor_aggregate_exp",
+            "operand": {
+              "object": {
+                "aggregatedType": "actor",
+                "aggregatableFields": [
+                  {
+                    "fieldName": "movie_id",
+                    "aggregateExpression": "int_aggregate_exp"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
+            "name": "int_aggregate_exp",
+            "operand": {
+              "scalar": {
+                "aggregatedType": "Int",
+                "aggregationFunctions": [
+                  {
+                    "name": "_max",
+                    "returnType": "Int"
+                  }
+                ],
+                "dataConnectorAggregationFunctionMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "functionMapping": {
+                      "_max": {
+                        "name": "max"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -7674,7 +7733,9 @@
               "collection": "actors"
             },
             "filterExpressionType": "actor_boolexp",
+            "aggregateExpression": "actor_aggregate_exp",
             "graphql": {
+              "filterInputTypeName": "actor_filter",
               "selectUniques": [],
               "selectMany": {
                 "queryRootField": "ActorMany"
