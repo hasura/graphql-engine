@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/data_connector_link/incompatible_capabilities_for_local_relationship/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+The data connector db (in subgraph default) does not support relationships or variables, so it cannot be used for relationship Articles on type author (in subgraph default)

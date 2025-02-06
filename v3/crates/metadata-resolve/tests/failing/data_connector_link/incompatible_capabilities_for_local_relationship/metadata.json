@@ -1,0 +1,838 @@
+{
+  "version": "V2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "definition": {
+            "name": "db",
+            "url": {
+              "singleUrl": {
+                "value": "http://local.hasura.dev:8080"
+              }
+            },
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "int4": {
+                    "representation": {
+                      "type": "json"
+                    },
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "bit_and": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "bit_or": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "bit_xor": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "stddev": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "stddev_pop": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "stddev_samp": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int8"
+                          }
+                        }
+                      },
+                      "var_pop": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "var_samp": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      },
+                      "variance": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "numeric"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  },
+                  "text": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_ilike": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_iregex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_like": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_nilike": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_niregex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_nlike": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_nregex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "_regex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "st_coveredby": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "st_covers": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "st_intersects": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "st_relatematch": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "starts_with": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      },
+                      "ts_match_tt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "text"
+                        }
+                      }
+                    }
+                  }
+                },
+                "object_types": {
+                  "article": {
+                    "fields": {
+                      "author_id": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "title": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "author": {
+                    "fields": {
+                      "first_name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      },
+                      "id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "last_name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "article",
+                    "arguments": {},
+                    "type": "article",
+                    "uniqueness_constraints": {
+                      "article_pkey": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "author",
+                    "arguments": {},
+                    "type": "author",
+                    "uniqueness_constraints": {
+                      "author_pkey": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "version": "0.1.6",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "explain": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    },
+                    "exists": {
+                      "nested_collections": {}
+                    }
+                  },
+                  "mutation": {
+                    "transactional": {},
+                    "explain": {}
+                  }
+                }
+              }
+            }
+          },
+          "version": "v1",
+          "kind": "DataConnectorLink"
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "int4",
+            "graphql": {
+              "typeName": "int4"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "text",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "textComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "int4",
+            "representation": "int4",
+            "graphql": {
+              "comparisonExpressionTypeName": "int4ComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "article",
+            "fields": [
+              {
+                "name": "article_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "author_id",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Article"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "article",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["article_id", "title", "author_id"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["article_id", "author_id"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["article_id", "title"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "author",
+            "description": "author description",
+            "fields": [
+              {
+                "name": "author_id",
+                "type": "Int!",
+                "description": "author_id description"
+              },
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Author"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "author",
+                "fieldMapping": {
+                  "author_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "author",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["author_id", "first_name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Articles",
+            "objectType": "article",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "article"
+            },
+            "orderableFields": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleByID",
+                  "uniqueIdentifier": ["article_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "ArticleMany"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Articles",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "author_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "role": "user_2",
+                "select": {
+                  "filter": {
+                    "and": [
+                      {
+                        "fieldComparison": {
+                          "field": "title",
+                          "operator": "_like",
+                          "value": {
+                            "literal": "%Functional%"
+                          }
+                        }
+                      },
+                      {
+                        "not": {
+                          "fieldIsNull": {
+                            "field": "author_id"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Authors",
+            "objectType": "author",
+            "description": "top level Authors model description",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "author"
+            },
+            "orderableFields": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AuthorByID",
+                  "description": "AuthorByID description",
+                  "uniqueIdentifier": ["author_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "AuthorMany"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Authors",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "author",
+            "name": "Articles",
+            "target": {
+              "model": {
+                "name": "Articles",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "GraphqlConfig",
+          "version": "v1",
+          "definition": {
+            "query": {
+              "rootOperationTypeName": "Query",
+              "argumentsInput": {
+                "fieldName": "args"
+              },
+              "limitInput": {
+                "fieldName": "limit"
+              },
+              "offsetInput": {
+                "fieldName": "offset"
+              },
+              "filterInput": {
+                "fieldName": "where",
+                "operatorNames": {
+                  "and": "_and",
+                  "or": "_or",
+                  "not": "_not",
+                  "isNull": "_is_null"
+                }
+              },
+              "orderByInput": {
+                "fieldName": "order_by",
+                "enumDirectionValues": {
+                  "asc": "Asc",
+                  "desc": "Desc"
+                },
+                "enumTypeNames": [
+                  {
+                    "directions": ["Asc", "Desc"],
+                    "typeName": "OrderByAscDesc"
+                  }
+                ]
+              }
+            },
+            "mutation": {
+              "rootOperationTypeName": "Mutation"
+            },
+            "apolloFederation": {
+              "enableRootFields": true
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "disallow_local_relationships_on_data_connectors_without_relationships_or_variables": true
+  }
+}

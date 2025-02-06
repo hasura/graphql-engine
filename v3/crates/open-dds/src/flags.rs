@@ -42,6 +42,7 @@ pub enum Flag {
     CheckObjectTypeFieldsExist,
     DisallowOrderByFieldsWithFieldArguments,
     DisallowUnsupportedOrderableRelationships,
+    DisallowLocalRelationshipsOnDataConnectorsWithoutRelationshipsOrVariables,
 }
 
 impl Flag {
@@ -112,6 +113,9 @@ impl Flag {
             }
             Flag::DisallowUnsupportedOrderableRelationships => {
                 "disallow_unsupported_orderable_relationships"
+            }
+            Flag::DisallowLocalRelationshipsOnDataConnectorsWithoutRelationshipsOrVariables => {
+                "disallow_local_relationships_on_data_connectors_without_relationships_or_variables"
             }
         }
     }

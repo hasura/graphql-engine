@@ -4,8 +4,9 @@ use open_dds::{flags, types::CustomTypeName};
 use crate::{
     stages::{
         aggregate_boolean_expressions, aggregates, boolean_expressions, command_permissions,
-        commands, data_connectors, model_permissions, models, models_graphql, object_types,
-        order_by_expressions, scalar_boolean_expressions, scalar_types, type_permissions,
+        commands, data_connectors, model_permissions, models, models_graphql, object_relationships,
+        object_types, order_by_expressions, scalar_boolean_expressions, scalar_types,
+        type_permissions,
     },
     Qualified,
 };
@@ -50,6 +51,8 @@ pub enum Warning {
     ScalarTypesIssue(#[from] scalar_types::ScalarTypesIssue),
     #[error("{0}")]
     ConflictingNameAcrossTypes(ConflictingNameAcrossTypes),
+    #[error("{0}")]
+    ObjectRelationshipsIssue(#[from] object_relationships::ObjectRelationshipsIssue),
 }
 
 impl ShouldBeAnError for Warning {
@@ -67,6 +70,7 @@ impl ShouldBeAnError for Warning {
             Warning::ModelPermissionIssue(issue) => issue.should_be_an_error(flags),
             Warning::TypePermissionIssue(issue) => issue.should_be_an_error(flags),
             Warning::CommandPermissionIssue(issue) => issue.should_be_an_error(flags),
+            Warning::ObjectRelationshipsIssue(issue) => issue.should_be_an_error(flags),
             _ => false,
         }
     }

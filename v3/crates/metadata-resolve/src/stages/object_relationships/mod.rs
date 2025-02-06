@@ -23,9 +23,9 @@ use crate::types::subgraph::Qualified;
 
 pub use types::{
     AggregateRelationship, CommandRelationshipTarget, FieldNestedness, ModelRelationshipTarget,
-    ObjectTypeWithRelationships, RelationshipCapabilities, RelationshipCommandMapping,
-    RelationshipExecutionCategory, RelationshipField, RelationshipModelMapping, RelationshipTarget,
-    RelationshipTargetName,
+    ObjectRelationshipsIssue, ObjectRelationshipsOutput, ObjectTypeWithRelationships,
+    RelationshipCapabilities, RelationshipCommandMapping, RelationshipExecutionCategory,
+    RelationshipField, RelationshipModelMapping, RelationshipTarget, RelationshipTargetName,
 };
 
 /// resolve relationships
@@ -45,7 +45,9 @@ pub fn resolve(
         aggregates::AggregateExpression,
     >,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>, Error> {
+) -> Result<ObjectRelationshipsOutput, Error> {
+    let mut issues = Vec::new();
+
     // For each object type, get all its relationships and resolve them into the fields
     // we add to the object type that represent the relationship navigation
     let mut object_type_relationship_fields = object_types_with_permissions
@@ -69,6 +71,7 @@ pub fn resolve(
                             &object_types_with_permissions,
                             graphql_config,
                             &object_type_with_permissions.object_type,
+                            &mut issues,
                         )?;
                         let field_name = resolved_relationship_field.field_name.clone();
                         if relationship_fields
@@ -119,7 +122,10 @@ pub fn resolve(
         })
         .collect::<BTreeMap<_, _>>();
 
-    Ok(object_types_with_relationships)
+    Ok(ObjectRelationshipsOutput {
+        object_types: object_types_with_relationships,
+        issues,
+    })
 }
 
 /// Tests whether a relationship in a field selection should be evaluated as a local or a remote relationship.
@@ -399,6 +405,7 @@ fn get_relationship_capabilities(
     data_connectors: &data_connectors::DataConnectors,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
+    issues: &mut Vec<ObjectRelationshipsIssue>,
 ) -> Result<Option<RelationshipCapabilities>, Error> {
     let Some(data_connector) = source_data_connector else {
         return Ok(None);
@@ -451,6 +458,18 @@ fn get_relationship_capabilities(
             },
         });
     };
+
+    // if relationship is local, error if relationship and variables capabilities are not available
+    if Some(&data_connector.name) == target_data_connector.as_ref()
+        && !capabilities.supports_query_variables
+        && capabilities.supports_relationships.is_none()
+    {
+        issues.push(ObjectRelationshipsIssue::LocalRelationshipDataConnectorDoesNotSupportRelationshipsOrVariables {
+            type_name: type_name.clone(),
+            relationship_name: relationship_name.clone(),
+            data_connector_name: data_connector.name.clone(),
+        });
+    }
 
     Ok(Some(RelationshipCapabilities {
         foreach: (),
@@ -563,6 +582,7 @@ fn resolve_model_relationship_fields(
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
+    issues: &mut Vec<ObjectRelationshipsIssue>,
 ) -> Result<RelationshipField, Error> {
     let qualified_target_model_name = Qualified::new(
         target_model
@@ -591,6 +611,7 @@ fn resolve_model_relationship_fields(
         data_connectors,
         models,
         &IndexMap::new(),
+        issues,
     )?;
 
     let mappings = resolve_relationship_mappings_model(
@@ -644,6 +665,7 @@ fn resolve_command_relationship_field(
     source_type_name: &Qualified<CustomTypeName>,
     relationship: &RelationshipV1,
     source_type: &object_types::ObjectTypeRepresentation,
+    issues: &mut Vec<ObjectRelationshipsIssue>,
 ) -> Result<RelationshipField, Error> {
     let qualified_target_command_name = Qualified::new(
         target_command
@@ -683,6 +705,7 @@ fn resolve_command_relationship_field(
         data_connectors,
         &IndexMap::new(),
         commands,
+        issues,
     )?;
 
     let field_name = mk_name(relationship.name.as_str())?;
@@ -714,6 +737,7 @@ fn resolve_relationship_field(
     object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
     source_type: &object_types::ObjectTypeRepresentation,
+    issues: &mut Vec<ObjectRelationshipsIssue>,
 ) -> Result<RelationshipField, Error> {
     match &relationship.target {
         open_dds::relationships::RelationshipTarget::Model(target_model) => {
@@ -728,6 +752,7 @@ fn resolve_relationship_field(
                 aggregate_expressions,
                 object_types,
                 graphql_config,
+                issues,
             )
         }
         open_dds::relationships::RelationshipTarget::Command(target_command) => {
@@ -738,6 +763,7 @@ fn resolve_relationship_field(
                 source_type_name,
                 relationship,
                 source_type,
+                issues,
             )?;
             Ok(command_relationship_field)
         }

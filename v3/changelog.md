@@ -6,6 +6,10 @@
 
 - Added type checking for object-type values in field presets within type
   permissions and for argument presets in model or command permissions.
+- Added a OpenDD flag
+  (`disallow_local_relationships_on_data_connectors_without_relationships_or_variables`)
+  to disallow local relationships on data connectors without the `relationships`
+  and `variables` capabilities.
 
 ### Fixed
 

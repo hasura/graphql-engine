@@ -232,7 +232,10 @@ fn resolve_internal(
 
     relay::resolve(global_id_enabled_types)?;
 
-    let object_types_with_relationships = object_relationships::resolve(
+    let object_relationships::ObjectRelationshipsOutput {
+        object_types: object_types_with_relationships,
+        issues,
+    } = object_relationships::resolve(
         object_types_with_permissions,
         &relationships,
         &data_connectors,
@@ -242,6 +245,8 @@ fn resolve_internal(
         &aggregate_expressions,
         &graphql_config,
     )?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // now we know about relationships, we can check our arguments (particularly, any
     // boolean expressions they use and whether their relationships are valid)

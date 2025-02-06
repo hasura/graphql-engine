@@ -1,7 +1,9 @@
 use crate::stages::{data_connectors, object_types, type_permissions};
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use indexmap::IndexMap;
 use open_dds::aggregates::AggregateExpressionName;
+use open_dds::data_connector::DataConnectorName;
 use open_dds::permissions::Role;
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use serde::{Deserialize, Serialize};
@@ -13,6 +15,11 @@ use std::collections::BTreeMap;
 
 use open_dds::relationships::{FieldAccess, RelationshipName, RelationshipType};
 use open_dds::types::Deprecated;
+
+pub struct ObjectRelationshipsOutput {
+    pub object_types: BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    pub issues: Vec<ObjectRelationshipsIssue>,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectTypeWithRelationships {
@@ -126,4 +133,24 @@ pub enum FieldNestedness {
     ObjectNested,
     /// The fields are on an object type that that has a nested array ancestor
     ArrayNested,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ObjectRelationshipsIssue {
+    #[error("The data connector {data_connector_name} does not support relationships or variables, so it cannot be used for relationship {relationship_name} on type {type_name}")]
+    LocalRelationshipDataConnectorDoesNotSupportRelationshipsOrVariables {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+}
+
+impl ShouldBeAnError for ObjectRelationshipsIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            ObjectRelationshipsIssue::LocalRelationshipDataConnectorDoesNotSupportRelationshipsOrVariables { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowLocalRelationshipsOnDataConnectorsWithoutRelationshipsOrVariables)
+            }
+        }
+    }
 }
