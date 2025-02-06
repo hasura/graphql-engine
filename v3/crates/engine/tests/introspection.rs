@@ -158,7 +158,7 @@ fn test_introspect_aggregates_root_field_simple_select() -> anyhow::Result<()> {
     common::test_introspection_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -171,7 +171,7 @@ fn test_introspect_aggregates_root_field_filtering() -> anyhow::Result<()> {
     common::test_introspection_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -184,7 +184,7 @@ fn test_introspect_aggregates_root_field_nested_object() -> anyhow::Result<()> {
     common::test_introspection_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/custom_connector_v02_schema.json",
+            "execute/common_metadata/custom_connector_v02_schema.json",
             "execute/aggregates/common_metadata/custom_connector_vBoth_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -197,7 +197,7 @@ fn test_introspect_aggregates_root_field_custom_count_return_type() -> anyhow::R
     common::test_introspection_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/custom_connector_v02_schema.json",
+            "execute/common_metadata/custom_connector_v02_schema.json",
             "execute/aggregates/common_metadata/custom_connector_v02_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -210,7 +210,7 @@ fn test_introspect_aggregates_relationship_field_simple_select() -> anyhow::Resu
     common::test_introspection_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -223,7 +223,7 @@ fn test_introspect_aggregates_relationship_field_filtering() -> anyhow::Result<(
     common::test_introspection_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],

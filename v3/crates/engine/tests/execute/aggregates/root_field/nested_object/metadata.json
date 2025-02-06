@@ -11,7 +11,7 @@
             "name": "Institution",
             "objectType": "Institution",
             "source": {
-              "dataConnectorName": "custom_connector",
+              "dataConnectorName": "custom",
               "collection": "institutions"
             },
             "aggregateExpression": "Institution_aggregate_exp",
@@ -150,7 +150,7 @@
                 ],
                 "dataConnectorAggregationFunctionMapping": [
                   {
-                    "dataConnectorName": "custom_connector",
+                    "dataConnectorName": "custom",
                     "dataConnectorScalarType": "Int",
                     "functionMapping": {
                       "_min": {
@@ -198,7 +198,7 @@
                 ],
                 "dataConnectorAggregationFunctionMapping": [
                   {
-                    "dataConnectorName": "custom_connector",
+                    "dataConnectorName": "custom",
                     "dataConnectorScalarType": "String",
                     "functionMapping": {
                       "_min": {

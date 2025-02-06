@@ -2,7 +2,7 @@
   "version": "v2",
   "subgraphs": [
     {
-      "name": "author_namespace",
+      "name": "connector_1",
       "objects": [
         {
           "kind": "DataConnectorScalarRepresentation",
@@ -182,7 +182,7 @@
       ]
     },
     {
-      "name": "article_namespace",
+      "name": "connector_2",
       "objects": [
         {
           "kind": "DataConnectorScalarRepresentation",
@@ -363,7 +363,7 @@
             "target": {
               "model": {
                 "name": "Authors",
-                "subgraph": "author_namespace",
+                "subgraph": "connector_1",
                 "relationshipType": "Object"
               }
             },

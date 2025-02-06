@@ -8,7 +8,7 @@
           "kind": "DataConnectorLink",
           "version": "v1",
           "definition": {
-            "name": "db",
+            "name": "remote_db",
             "url": {
               "singleUrl": {
                 "value": "http://localhost:8080"

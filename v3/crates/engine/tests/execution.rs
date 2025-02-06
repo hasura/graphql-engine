@@ -746,12 +746,14 @@ fn test_model_select_many_where_object_relationship_nested() -> anyhow::Result<(
 fn test_model_select_many_where_remote_array_relationship_simple() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/array/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/where/remote_relationships/boolean_expression_type/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -762,12 +764,14 @@ fn test_model_select_many_where_remote_array_relationship_simple() -> anyhow::Re
 fn test_model_select_many_where_remote_array_relationship_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/array/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/where/remote_relationships/boolean_expression_type/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -780,12 +784,14 @@ fn test_model_select_many_where_remote_array_relationship_nested() -> anyhow::Re
 fn test_model_select_many_where_remote_object_relationship_simple() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/object/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/where/remote_relationships/boolean_expression_type/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -796,12 +802,14 @@ fn test_model_select_many_where_remote_object_relationship_simple() -> anyhow::R
 fn test_model_select_many_where_remote_object_relationship_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/object/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/where/remote_relationships/boolean_expression_type/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -1895,12 +1903,15 @@ fn test_model_select_many_relationship_predicate_object_two_relationship_fields(
 fn test_model_select_many_remote_relationship_predicate_array_simple() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/remote_relationship_predicates/array/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -1914,12 +1925,15 @@ fn test_model_select_many_remote_relationship_predicate_array_simple() -> anyhow
 fn test_model_select_many_remote_relationship_predicate_array_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/remote_relationship_predicates/array/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -1933,12 +1947,15 @@ fn test_model_select_many_remote_relationship_predicate_array_nested_multiple_fi
     let test_path_string =
         "execute/models/select_many/remote_relationship_predicates/array/nested_multiple_fields";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -1952,12 +1969,15 @@ fn test_model_select_many_remote_relationship_predicate_object_simple() -> anyho
     let test_path_string =
         "execute/models/select_many/remote_relationship_predicates/object/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -1971,12 +1991,15 @@ fn test_model_select_many_remote_relationship_predicate_object_nested() -> anyho
     let test_path_string =
         "execute/models/select_many/remote_relationship_predicates/object/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -2015,12 +2038,15 @@ fn test_model_select_many_remote_relationship_predicate_on_two_fields() -> anyho
     let test_path_string =
         "execute/models/select_many/remote_relationship_predicates/on_two_fields";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -2042,12 +2068,15 @@ fn test_model_select_many_remote_relationship_predicate_object_two_relationship_
     let test_path_string =
         "execute/models/select_many/remote_relationship_predicates/object/two_relationship_fields";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let remote_db_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v01.json";
     let boolean_exp_rel_metadata_path_string =
         "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
+            remote_db_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
         common::TestOpenDDPipeline::Skip,
@@ -2106,7 +2135,7 @@ fn test_aggregates_root_field_simple_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -2120,7 +2149,7 @@ fn test_aggregates_root_field_filtering() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -2140,11 +2169,11 @@ fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
         BTreeMap::from([
             (
                 NdcVersion::V01,
-                vec!["execute/aggregates/common_metadata/custom_connector_v01_schema.json"],
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
             ),
             (
                 NdcVersion::V02,
-                vec!["execute/aggregates/common_metadata/custom_connector_v02_schema.json"],
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
         common::TestOpenDDPipeline::Skip,
@@ -2164,7 +2193,7 @@ fn test_aggregates_root_field_custom_count_return_type() -> anyhow::Result<()> {
             // This test can't use the old NDC v0.1.x connector, it does not support custom count return types
             (
                 NdcVersion::V02,
-                vec!["execute/aggregates/common_metadata/custom_connector_v02_schema.json"],
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
         common::TestOpenDDPipeline::YesPlease,
@@ -2177,7 +2206,7 @@ fn test_aggregates_root_field_typename() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -2191,7 +2220,7 @@ fn test_aggregates_relationship_field_simple_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -2205,7 +2234,7 @@ fn test_aggregates_relationship_field_filtering() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_schema.json",
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
