@@ -20,6 +20,9 @@
   not support relationships, or if the target of the relationship does not have
   a source.
 
+- Fixed a bug causing queries to fail when filter expressions included remote
+  relationships from nested fields.
+
 ### Changed
 
 ## [v2025.02.03]

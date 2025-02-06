@@ -330,8 +330,15 @@ pub fn build_source_column_comparisons(
             column_comparisons.push(ResolvedFilterExpression::LocalFieldComparison(
                 plan_types::LocalFieldComparison::BinaryComparison {
                     column: plan_types::ComparisonTarget::Column {
-                        name: source_column.clone(),
-                        field_path: field_path.clone(),
+                        // The column name is the root column
+                        name: field_path.first().unwrap_or(source_column).clone(),
+                        // The field path is the nesting path inside the root column, if any
+                        field_path: field_path
+                            .iter()
+                            .chain([source_column])
+                            .skip(1)
+                            .cloned()
+                            .collect(),
                     },
                     operator: eq_operator.clone(),
                     value: plan_types::ComparisonValue::Scalar {
