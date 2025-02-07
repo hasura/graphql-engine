@@ -548,6 +548,10 @@ class TestRunSQL:
         check_query_f(hge_ctx, self.dir() + '/sql_alter_test_id.yaml')
         hge_ctx.may_skip_test_teardown = True
 
+    def test_sql_no_tx(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_no_tx.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
     @classmethod
     def dir(cls):
         return "queries/v1/run_sql"

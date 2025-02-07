@@ -223,12 +223,55 @@ not consider Metadata dependencies.
 ### Args syntax {#schema-run-sql-syntax}
 
 | Key                          | Required | Supported databases        | Schema  | Description                                                                                                                                                                                                                        |
-| ---------------------------- | -------- | -------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|------------------------------|----------|----------------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `sql`                        | true     | _all_                      | String  | The sql to be executed                                                                                                                                                                                                             |
 | `source`                     | false    | _all_                      | String  | The database on which the sql is to be executed (default: 'default' database)                                                                                                                                                      |
 | `cascade`                    | false    | Postgres and MS SQL Server | Boolean | When set to `true`, the effect (if possible) is cascaded to any hasuradb dependent objects (relationships, permissions, templates).                                                                                                |
 | `check_metadata_consistency` | false    | Postgres and MS SQL Server | Boolean | When set to `false`, the sql is executed without checking Metadata dependencies.                                                                                                                                                   |
 | `read_only`                  | false    | Postgres                   | Boolean | When set to `true`, the request will be run in `READ ONLY` transaction access mode which means only `select` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant. |
+| `no_transaction`             | false    | Postgres                   | Boolean | When set to `true`, statements are executed outside transaction blocks. Useful for operations like `CREATE INDEX CONCURRENTLY` that cannot run within transactions (default: `false`)                                              |
+
+### no_transaction flag
+
+The `no_transaction` flag controls how SQL statements are executed:
+
+- When `false` (default):
+  - Statements are executed within a transaction block
+  - Multiple statements are executed as a single batch
+  - If any statement fails, all changes are rolled back
+  - Provides ACID guarantees
+  - Will fail for operations that cannot run in transactions (e.g. `CREATE INDEX CONCURRENTLY`)
+
+- When `true`:
+  - Statements are executed outside any transaction block
+  - Multiple statements are split and executed individually
+  - If a statement fails, previous successful statements are not rolled back
+  - Returns result of the last successful statement
+  - Allows running operations that cannot be executed in transactions
+
+Example using `no_transaction`:
+
+```http
+POST /v2/query HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "run_sql",
+    "args": {
+        "source": "default",
+        "sql": "CREATE INDEX CONCURRENTLY idx_user_email ON users(email);",
+        "no_transaction": true
+    }
+}
+```
+
+:::info Multiple Statements
+
+By default, PostgreSQL executes multiple SQL statements (separated by semicolons) as a single transaction, even when not explicitly wrapped in a transaction block.
+The `no_transaction` flag overcomes this limitation by executing each statement independently, allowing operations that cannot run within transactions.
+See [PostgreSQL docs](https://www.postgresql.org/docs/current/protocol-flow.html#PROTOCOL-FLOW-MULTI-STATEMENT) for more details.
+:::
 
 ### Response
 

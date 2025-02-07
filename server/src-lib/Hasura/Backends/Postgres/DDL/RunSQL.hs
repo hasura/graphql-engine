@@ -16,6 +16,9 @@ module Hasura.Backends.Postgres.DDL.RunSQL
     RunSQL (..),
     isReadOnly,
     isSchemaCacheBuildRequiredRunSQL,
+
+    -- * Export for tests
+    splitSQLStatements,
   )
 where
 
@@ -24,6 +27,7 @@ import Data.Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
 import Hasura.Authentication.User (UserInfoM (..))
@@ -67,7 +71,8 @@ data RunSQL = RunSQL
     rSource :: SourceName,
     rCascade :: Bool,
     rCheckMetadataConsistency :: Maybe Bool,
-    rTxAccessMode :: PG.TxAccess
+    rTxAccessMode :: PG.TxAccess,
+    rNoTransaction :: Bool
   }
   deriving (Show, Eq)
 
@@ -78,6 +83,7 @@ instance FromJSON RunSQL where
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
     readOnly <- o .:? "read_only" .!= False
+    rNoTransaction <- o .:? "no_transaction" .!= False
     let rTxAccessMode = if readOnly then PG.ReadOnly else PG.ReadWrite
     pure RunSQL {..}
 
@@ -91,7 +97,8 @@ instance ToJSON RunSQL where
         "read_only"
           .= case rTxAccessMode of
             PG.ReadOnly -> True
-            PG.ReadWrite -> False
+            PG.ReadWrite -> False,
+        "no_transaction" .= rNoTransaction
       ]
 
 -- | Check for known schema-mutating keywords in the raw SQL text.
@@ -222,19 +229,110 @@ runRunSQL sqlGen q@RunSQL {..} = do
   if (isSchemaCacheBuildRequiredRunSQL q)
     then do
       -- see Note [Checking metadata consistency in run_sql]
-      withMetadataCheck @pgKind sqlGen rSource rCascade rTxAccessMode
+      withMetadataCheck @pgKind sqlGen rSource rCascade pgExecTxType
         $ withTraceContext traceCtx
         $ withUserInfo userInfo
-        $ execRawSQL rSql
+        $ execSQL rSql
     else do
-      runTxWithCtx pgExecCtx (Tx rTxAccessMode Nothing) RunSQLQuery $ execRawSQL rSql
+      runTxWithCtx pgExecCtx pgExecTxType RunSQLQuery $ execSQL rSql
   where
+    execSQL :: (MonadTx n) => Text -> n EncJSON
+    execSQL =
+      if rNoTransaction
+        then -- If the SQL contains multiple statements separated by ';', Postgres will execute them in a single transaction.
+        -- Ref: https://www.postgresql.org/docs/current/protocol-flow.html#PROTOCOL-FLOW-MULTI-STATEMENT
+        -- Hence, it is defeating the purpose of no_transaction. To avoid this, split the SQL into multiple statements
+        -- and execute them one by one.
+          execMultipleStatements
+        else execRawSQL
+
     execRawSQL :: (MonadTx n) => Text -> n EncJSON
     execRawSQL =
       fmap (encJFromJValue @RunSQLRes) . liftTx . PG.multiQE rawSqlErrHandler . PG.fromText
-      where
-        rawSqlErrHandler txe =
-          (err400 PostgresError "query execution failed") {qeInternal = Just $ ExtraInternal $ toJSON txe}
+
+    execMultipleStatements :: (MonadTx n) => Text -> n EncJSON
+    execMultipleStatements sql = do
+      -- If the SQL contains multiple statements, execute them one by one.
+      -- And return the result of the last statement.
+      let go [] = execRawSQL sql -- If no statements, execute the whole SQL
+          go [sql'] = execRawSQL sql' -- This is the last statement, return its result
+          go (sql' : sqls') = do
+            _ <- execRawSQL sql'
+            go sqls'
+      go $ splitSQLStatements sql
+
+    rawSqlErrHandler :: PG.PGTxErr -> QErr
+    rawSqlErrHandler txe =
+      (err400 PostgresError "query execution failed") {qeInternal = Just $ ExtraInternal $ toJSON txe}
+
+    pgExecTxType :: PGExecTxType
+    pgExecTxType =
+      if rNoTransaction
+        then case rTxAccessMode of
+          PG.ReadOnly -> NoTxRead
+          PG.ReadWrite -> NoTxReadWrite
+        else Tx rTxAccessMode Nothing
+
+-- | Splits SQL input into separate statements while handling comments and strings.
+splitSQLStatements :: Text -> [Text]
+splitSQLStatements = filter (not . T.null) . map T.strip . process T.empty False Nothing False
+  where
+    process :: Text -> Bool -> Maybe Text -> Bool -> Text -> [Text]
+    process acc inString dollarTag inComment txt =
+      case T.uncons txt of
+        Nothing -> [acc | not (T.null acc)]
+        Just (c, rest) ->
+          case c of
+            '-'
+              | "--" `T.isPrefixOf` txt ->
+                  let rest' = T.dropWhile (/= '\n') rest
+                      rest'' = case T.uncons rest' of
+                        Just ('\n', rs) -> rs
+                        _ -> rest'
+                   in process acc inString dollarTag False rest''
+            '/'
+              | "/*" `T.isPrefixOf` txt ->
+                  process acc inString dollarTag False (dropBlockComment rest)
+            '\'' | isNothing dollarTag && not inComment ->
+              case T.uncons rest of
+                Just ('\'', rest') ->
+                  process (acc <> "''") inString dollarTag inComment rest'
+                _ ->
+                  process (T.snoc acc '\'') (not inString) dollarTag inComment rest
+            '$' ->
+              case dollarTag of
+                Just tag
+                  | tag `T.isPrefixOf` txt ->
+                      process (acc <> tag <> "$") inString Nothing inComment (T.drop (T.length tag + 1) txt)
+                _
+                  | not (inString || inComment) ->
+                      let (tag', remaining) = readDollarTag txt
+                       in if T.null tag'
+                            then process (T.snoc acc '$') inString dollarTag inComment rest
+                            else process (acc <> tag' <> "$") inString (Just tag') inComment remaining
+                  | otherwise ->
+                      process (T.snoc acc '$') inString dollarTag inComment rest
+            ';'
+              | not inString && isNothing dollarTag && not inComment ->
+                  acc : process T.empty inString dollarTag inComment rest
+            _ ->
+              process (T.snoc acc c) inString dollarTag inComment rest
+
+    dropBlockComment :: Text -> Text
+    dropBlockComment txt =
+      case T.breakOn "*/" txt of
+        (_before, after) -> if "*/" `T.isPrefixOf` after then T.drop 2 after else ""
+
+    readDollarTag :: Text -> (Text, Text)
+    readDollarTag txt =
+      let afterDollar = T.drop 1 txt
+          tagBody = T.takeWhile (/= '$') afterDollar
+       in if T.length afterDollar
+            > T.length tagBody
+            && T.index afterDollar (T.length tagBody)
+            == '$'
+            then ("$" <> tagBody, T.drop (T.length tagBody + 2) txt)
+            else ("", T.drop 1 txt)
 
 -- | @'withMetadataCheck' source cascade txAccess runSQLQuery@ executes @runSQLQuery@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
@@ -255,14 +353,14 @@ withMetadataCheck ::
   SQLGenCtx ->
   SourceName ->
   Bool ->
-  PG.TxAccess ->
+  PGExecTxType ->
   PG.TxET QErr m a ->
   m a
-withMetadataCheck sqlGen source cascade txAccess runSQLQuery = do
+withMetadataCheck sqlGen source cascade txType runSQLQuery = do
   SourceInfo {..} <- askSourceInfo @('Postgres pgKind) source
 
   -- Run SQL query and metadata checker in a transaction
-  (queryResult, metadataUpdater) <- runTxWithMetadataCheck source _siConfiguration txAccess _siTables _siFunctions cascade runSQLQuery
+  (queryResult, metadataUpdater) <- runTxWithMetadataCheck source _siConfiguration txType _siTables _siFunctions cascade runSQLQuery
 
   -- Build schema cache with updated metadata
   withNewInconsistentObjsCheck
@@ -305,18 +403,19 @@ runTxWithMetadataCheck ::
   ) =>
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
-  PG.TxAccess ->
+  PGExecTxType ->
   TableCache ('Postgres pgKind) ->
   FunctionCache ('Postgres pgKind) ->
   Bool ->
   PG.TxET QErr m a ->
   m (a, MetadataModifier)
-runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx =
+runTxWithMetadataCheck source sourceConfig txType tableCache functionCache cascadeDependencies tx =
   liftEitherM
     $ runExceptT
-    $ _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo (Tx txAccess Nothing) RunSQLQuery)
+    $ _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo txType RunSQLQuery)
     $ do
-      -- Running in a transaction helps to rollback the @'tx' execution in case of any exceptions
+      -- Following steps maybe executed in a transaction depending on @'txType'.
+      -- Running in a transaction helps to rollback the @'tx' execution in case of any exceptions.
 
       -- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.
       let tableNames = HashMap.keysSet tableCache
