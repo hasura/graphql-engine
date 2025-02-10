@@ -405,7 +405,7 @@ fn test_remote_relationships_from_nested() -> anyhow::Result<()> {
             "execute/common_metadata/postgres_connector_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -431,7 +431,7 @@ fn test_remote_relationships_mutually_recursive() -> anyhow::Result<()> {
             "execute/common_metadata/postgres_connector_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -444,7 +444,7 @@ fn test_remote_relationships_mutually_recursive_with_where() -> anyhow::Result<(
             "execute/common_metadata/postgres_connector_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -457,7 +457,7 @@ fn test_remote_relationships_multi_field_mapping() -> anyhow::Result<()> {
             "execute/common_metadata/postgres_connector_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -502,7 +502,7 @@ fn test_relationships_nested_selection_no_nested_capability() -> anyhow::Result<
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -539,7 +539,7 @@ fn test_relationship_permission_target_model_where_and_order_by() -> anyhow::Res
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

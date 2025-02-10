@@ -155,6 +155,8 @@ fn from_field_selection(
         ))
     })?;
 
+    let mut nested_remote_join_executions = JoinLocations::new();
+
     let fields = resolve_nested_field_selection(
         metadata,
         session,
@@ -164,10 +166,22 @@ fn from_field_selection(
         field_selection,
         field_type,
         relationships,
-        remote_join_executions,
+        &mut nested_remote_join_executions,
         remote_predicates,
         unique_number,
     )?;
+
+    if !nested_remote_join_executions.locations.is_empty() {
+        // take any remote joins from the inner selection
+        // and wrap them in nesting
+        remote_join_executions.locations.insert(
+            field_name.to_string(),
+            Location {
+                join_node: JoinNode::Local(LocationKind::NestedData),
+                rest: nested_remote_join_executions,
+            },
+        );
+    }
 
     let field_arguments = resolve_field_arguments(field_name, arguments, field_mapping)?;
 

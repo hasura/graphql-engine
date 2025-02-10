@@ -177,7 +177,6 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
         })
         .transpose()?;
 
-    // TODO: append select permissions etc
     let filter = where_clause;
 
     let target = open_dds::query::RelationshipTarget {
