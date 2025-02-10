@@ -1,0 +1,59 @@
+{
+  "version": "v2",
+  "flags": {
+    "check_object_type_fields_exist": true
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "DogBoolExp",
+            "operand": {
+              "object": {
+                "type": "Dog",
+                "comparableFields": [],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Dog",
+            "fields": [
+              {
+                "name": "age",
+                "type": "Int!"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Zoo",
+            "fields": [
+              {
+                "name": "dogs_filter",
+                "type": "DogBoolExp!"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -6,7 +6,7 @@ use open_dds::aggregates::{
     DataConnectorAggregationFunctionName, DataConnectorExtractionFunctionName,
 };
 use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use open_dds::commands::ArgumentMapping;
 use open_dds::{
@@ -60,12 +60,31 @@ pub(crate) fn resolve(
         raw_object_types.insert(qualified_object_type_name, object_type_definition);
     }
 
+    // collect names of all object boolean expression types
+    let mut object_boolean_expression_type_names = BTreeSet::new();
+    for open_dds::accessor::QualifiedObject {
+        path: _,
+        subgraph,
+        object: boolean_expression_type,
+    } in &metadata_accessor.boolean_expression_types
+    {
+        if let open_dds::boolean_expression::BooleanExpressionOperand::Object(_) =
+            boolean_expression_type.operand
+        {
+            object_boolean_expression_type_names.insert(Qualified::new(
+                subgraph.clone(),
+                boolean_expression_type.name.clone(),
+            ));
+        }
+    }
+
     for (qualified_object_type_name, object_type_definition) in &raw_object_types {
         let resolved_object_type = resolve_object_type(
             object_type_definition,
             qualified_object_type_name,
             &raw_object_types,
             scalar_types,
+            &object_boolean_expression_type_names,
             graphql_types,
             &mut global_id_enabled_types,
             &mut apollo_federation_entity_enabled_types,
@@ -134,15 +153,17 @@ fn resolve_field(
     qualified_type_name: &Qualified<CustomTypeName>,
     raw_object_types: &BTreeMap<Qualified<CustomTypeName>, &open_dds::types::ObjectTypeV1>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_type_names: &BTreeSet<Qualified<CustomTypeName>>,
     issues: &mut Vec<ObjectTypesIssue>,
 ) -> Result<FieldDefinition, ObjectTypesError> {
     let qualified_type_reference =
         mk_qualified_type_reference(&field.field_type, &qualified_type_name.subgraph);
 
-    // let's check that any object or scalar types used in this field exist
+    // let's check that any object, scalar or object boolean expression types used in this field exist
     if let Some(custom_type_name) = unwrap_custom_type_name(&qualified_type_reference) {
         if raw_object_types.get(custom_type_name).is_none()
             && scalar_types.get(custom_type_name).is_none()
+            && !object_boolean_expression_type_names.contains(custom_type_name)
         {
             issues.push(ObjectTypesIssue::FieldTypeNotFound {
                 field_name: field.name.clone(),
@@ -185,6 +206,7 @@ pub fn resolve_object_type(
     qualified_type_name: &Qualified<CustomTypeName>,
     raw_object_types: &BTreeMap<Qualified<CustomTypeName>, &open_dds::types::ObjectTypeV1>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_type_names: &BTreeSet<Qualified<CustomTypeName>>,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
     global_id_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
@@ -208,6 +230,7 @@ pub fn resolve_object_type(
                     qualified_type_name,
                     raw_object_types,
                     scalar_types,
+                    object_boolean_expression_type_names,
                     issues,
                 )?,
             )

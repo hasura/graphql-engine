@@ -6,6 +6,9 @@
 
 ### Fixed
 
+- Loosen restriction on `ObjectType` fields to allow them to refer to
+  `BooleanExpressionType` with the `object` operand.
+
 ### Changed
 
 ## [v2025.02.07]
