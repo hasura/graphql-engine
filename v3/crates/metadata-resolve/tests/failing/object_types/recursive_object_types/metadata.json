@@ -1,0 +1,71 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "create_person",
+            "arguments": [
+              {
+                "name": "person",
+                "type": "PersonInput!"
+              }
+            ],
+            "outputType": "Boolean",
+            "graphql": {
+              "rootFieldName": "createPerson",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "PersonInput",
+            "fields": [
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "address",
+                "type": "AddressInput!"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "PersonInput"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "AddressInput",
+            "fields": [
+              {
+                "name": "street",
+                "type": "String!"
+              },
+              {
+                "name": "resident",
+                "type": "PersonInput!"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "AddressInput"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "disallow_recursive_object_types": true
+  }
+}

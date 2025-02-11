@@ -86,6 +86,11 @@ impl QualifiedTypeReference {
         }
     }
 
+    /// Check if this type is an array type
+    pub fn is_array_type(&self) -> bool {
+        matches!(self.underlying_type, QualifiedBaseType::List(_))
+    }
+
     pub fn is_multidimensional_array_type(&self) -> bool {
         match &self.underlying_type {
             QualifiedBaseType::List(inner_type) => {

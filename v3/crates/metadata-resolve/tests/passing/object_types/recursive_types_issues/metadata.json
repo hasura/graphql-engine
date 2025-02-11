@@ -1,0 +1,184 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "create_person",
+            "arguments": [
+              {
+                "name": "person",
+                "type": "PersonInput!"
+              }
+            ],
+            "outputType": "Boolean",
+            "graphql": {
+              "rootFieldName": "createPerson",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "PersonInput",
+            "fields": [
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "address",
+                "type": "AddressInput!"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "PersonInput"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "AddressInput",
+            "fields": [
+              {
+                "name": "street",
+                "type": "String!"
+              },
+              {
+                "name": "resident",
+                "type": "PersonInput!"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "AddressInput"
+            }
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "create_company",
+            "arguments": [
+              {
+                "name": "company",
+                "type": "CompanyInput!"
+              }
+            ],
+            "outputType": "Boolean",
+            "graphql": {
+              "rootFieldName": "createCompany",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "CompanyInput",
+            "fields": [
+              {
+                "name": "companyName",
+                "type": "String!"
+              },
+              {
+                "name": "employee",
+                "type": "EmployeeInput!"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "CompanyInput"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "EmployeeInput",
+            "fields": [
+              {
+                "name": "employeeName",
+                "type": "String!"
+              },
+              {
+                "name": "department",
+                "type": "DepartmentInput!"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "EmployeeInput"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "DepartmentInput",
+            "fields": [
+              {
+                "name": "departmentName",
+                "type": "String!"
+              },
+              {
+                "name": "company",
+                "type": "CompanyInput!"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "DepartmentInput"
+            }
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "create_category",
+            "arguments": [
+              {
+                "name": "category",
+                "type": "CategoryInput!"
+              }
+            ],
+            "outputType": "Boolean",
+            "graphql": {
+              "rootFieldName": "createCategory",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "CategoryInput",
+            "fields": [
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "parent",
+                "type": "CategoryInput!"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "CategoryInput"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

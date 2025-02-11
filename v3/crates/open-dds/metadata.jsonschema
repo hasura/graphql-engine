@@ -3732,6 +3732,10 @@
         "disallow_local_relationships_on_data_connectors_without_relationships_or_variables": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_recursive_object_types": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

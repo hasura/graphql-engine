@@ -9,6 +9,12 @@
 - Loosen restriction on `ObjectType` fields to allow them to refer to
   `BooleanExpressionType` with the `object` operand.
 
+- Restrict `ObjectType`s that contain infinite recursion through non-nullable
+  field paths. Warnings are emitted while creating a build. Projects created or
+  with a
+  [compatibility date](https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/)
+  after this release date are affected.
+
 ### Changed
 
 ## [v2025.02.07]

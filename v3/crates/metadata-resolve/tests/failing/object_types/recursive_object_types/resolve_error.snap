@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/object_types/recursive_object_types/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+Recursive reference detected for object type 'AddressInput (in subgraph default)' through non-null field path: AddressInput (in subgraph default).resident → PersonInput (in subgraph default).address → AddressInput (in subgraph default)

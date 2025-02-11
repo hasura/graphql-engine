@@ -1,0 +1,771 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_issues/metadata.json
+---
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "AddressInput",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "street",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "resident",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "PersonInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "AddressInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {},
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "CategoryInput",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "parent",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "CategoryInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "CategoryInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {},
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "CompanyInput",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "companyName",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "employee",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "EmployeeInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "CompanyInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {},
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "DepartmentInput",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "departmentName",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "company",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "CompanyInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "DepartmentInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {},
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "EmployeeInput",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "employeeName",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "department",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "DepartmentInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "EmployeeInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {},
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "PersonInput",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "address",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "AddressInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: Some(
+                        TypeName(
+                            Name(
+                                "PersonInput",
+                            ),
+                        ),
+                    ),
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {},
+                },
+            },
+        },
+        scalar_types: {},
+        models: {},
+        commands: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CommandName(
+                    Identifier(
+                        "create_person",
+                    ),
+                ),
+            }: CommandWithPermissions {
+                command: Command {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CommandName(
+                            Identifier(
+                                "create_person",
+                            ),
+                        ),
+                    },
+                    output_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Inbuilt(
+                                Boolean,
+                            ),
+                        ),
+                        nullable: true,
+                    },
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "person",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "PersonInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                        },
+                    },
+                    graphql_api: Some(
+                        CommandGraphQlApi {
+                            root_field_kind: Mutation,
+                            root_field_name: Name(
+                                "createPerson",
+                            ),
+                            deprecated: None,
+                        },
+                    ),
+                    source: None,
+                    description: None,
+                },
+                permissions: {},
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CommandName(
+                    Identifier(
+                        "create_company",
+                    ),
+                ),
+            }: CommandWithPermissions {
+                command: Command {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CommandName(
+                            Identifier(
+                                "create_company",
+                            ),
+                        ),
+                    },
+                    output_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Inbuilt(
+                                Boolean,
+                            ),
+                        ),
+                        nullable: true,
+                    },
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "company",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "CompanyInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                        },
+                    },
+                    graphql_api: Some(
+                        CommandGraphQlApi {
+                            root_field_kind: Mutation,
+                            root_field_name: Name(
+                                "createCompany",
+                            ),
+                            deprecated: None,
+                        },
+                    ),
+                    source: None,
+                    description: None,
+                },
+                permissions: {},
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CommandName(
+                    Identifier(
+                        "create_category",
+                    ),
+                ),
+            }: CommandWithPermissions {
+                command: Command {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CommandName(
+                            Identifier(
+                                "create_category",
+                            ),
+                        ),
+                    },
+                    output_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Inbuilt(
+                                Boolean,
+                            ),
+                        ),
+                        nullable: true,
+                    },
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "category",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "CategoryInput",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                        },
+                    },
+                    graphql_api: Some(
+                        CommandGraphQlApi {
+                            root_field_kind: Mutation,
+                            root_field_name: Name(
+                                "createCategory",
+                            ),
+                            deprecated: None,
+                        },
+                    ),
+                    source: None,
+                    description: None,
+                },
+                permissions: {},
+            },
+        },
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {},
+            scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
+        },
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+            scalars: {},
+        },
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "order_by",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
+        },
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {},
+    },
+    [
+        ObjectTypesIssue(
+            RecursiveObjectType {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "AddressInput",
+                        ),
+                    ),
+                },
+                field_path: "AddressInput (in subgraph default).resident → PersonInput (in subgraph default).address → AddressInput (in subgraph default)",
+            },
+        ),
+        ObjectTypesIssue(
+            RecursiveObjectType {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "CategoryInput",
+                        ),
+                    ),
+                },
+                field_path: "CategoryInput (in subgraph default).parent → CategoryInput (in subgraph default)",
+            },
+        ),
+        ObjectTypesIssue(
+            RecursiveObjectType {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "CompanyInput",
+                        ),
+                    ),
+                },
+                field_path: "CompanyInput (in subgraph default).employee → EmployeeInput (in subgraph default).department → DepartmentInput (in subgraph default).company → CompanyInput (in subgraph default)",
+            },
+        ),
+    ],
+)

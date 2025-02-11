@@ -1,4 +1,5 @@
 mod error;
+mod recursive_types;
 pub mod types;
 
 pub use error::{ObjectTypesError, TypeMappingValidationError};
@@ -139,6 +140,9 @@ pub(crate) fn resolve(
             });
         }
     }
+
+    // Check for recursive object types
+    issues.extend(recursive_types::check_recursive_object_types(&object_types));
 
     Ok(ObjectTypesOutput {
         issues,

@@ -468,6 +468,11 @@ pub enum ObjectTypesIssue {
         object_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
+    #[error("Recursive reference detected for object type '{type_name}' through non-null field path: {field_path}")]
+    RecursiveObjectType {
+        type_name: Qualified<CustomTypeName>,
+        field_path: String,
+    },
 }
 
 impl ShouldBeAnError for ObjectTypesIssue {
@@ -484,6 +489,9 @@ impl ShouldBeAnError for ObjectTypesIssue {
             }
             ObjectTypesIssue::FieldTypeNotFound { .. } => {
                 flags.contains(open_dds::flags::Flag::CheckObjectTypeFieldsExist)
+            }
+            ObjectTypesIssue::RecursiveObjectType { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowRecursiveObjectTypes)
             }
         }
     }
