@@ -108,7 +108,7 @@ jsonptr = "0.4"
 jsonwebkey = { version = "0.3", features = ["generate", "jsonwebtoken","pkcs-convert"] }
 jsonwebtoken = "8"
 lazy_static = "1.5.0"
-lexical-core = "0.8"
+lexical-core = "1"
 mimalloc = "0.1"
 mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http v1
 nonempty = { version = "0.10", features = ["serialize"] }
