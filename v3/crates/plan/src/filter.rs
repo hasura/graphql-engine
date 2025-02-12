@@ -9,25 +9,27 @@ use open_dds::{
     query::{BooleanExpression, ComparisonOperator},
     types::CustomTypeName,
 };
-use plan_types::{ResolvedFilterExpression, UniqueNumber, UsagesCounts};
+use plan_types::{Expression, ResolvedFilterExpression, UniqueNumber, UsagesCounts};
 use std::collections::BTreeMap;
 
-pub fn to_resolved_filter_expr(
-    metadata: &metadata_resolve::Metadata,
-    session: &Session,
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &Qualified<CustomTypeName>,
-    model_object_type: &OutputObjectTypeView,
-    boolean_expression_type: Option<&metadata_resolve::ResolvedObjectBooleanExpressionType>,
-    expr: &BooleanExpression,
-    data_connector: &DataConnectorLink,
-) -> Result<ResolvedFilterExpression, PlanError> {
+pub fn to_filter_expression<'metadata>(
+    metadata: &'metadata metadata_resolve::Metadata,
+    session: &'_ Session,
+    type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    type_name: &'_ Qualified<CustomTypeName>,
+    model_object_type: &'metadata OutputObjectTypeView,
+    boolean_expression_type: Option<
+        &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
+    >,
+    expr: &'_ BooleanExpression,
+    data_connector: &'metadata DataConnectorLink,
+) -> Result<Expression<'metadata>, PlanError> {
     match expr {
-        BooleanExpression::And(exprs) => Ok(ResolvedFilterExpression::mk_and(
+        BooleanExpression::And(exprs) => Ok(Expression::mk_and(
             exprs
                 .iter()
                 .map(|expr| {
-                    to_resolved_filter_expr(
+                    to_filter_expression(
                         metadata,
                         session,
                         type_mappings,
@@ -40,11 +42,11 @@ pub fn to_resolved_filter_expr(
                 })
                 .collect::<Result<Vec<_>, PlanError>>()?,
         )),
-        BooleanExpression::Or(exprs) => Ok(ResolvedFilterExpression::mk_or(
+        BooleanExpression::Or(exprs) => Ok(Expression::mk_or(
             exprs
                 .iter()
                 .map(|expr| {
-                    to_resolved_filter_expr(
+                    to_filter_expression(
                         metadata,
                         session,
                         type_mappings,
@@ -57,18 +59,16 @@ pub fn to_resolved_filter_expr(
                 })
                 .collect::<Result<Vec<_>, PlanError>>()?,
         )),
-        BooleanExpression::Not(expr) => {
-            Ok(ResolvedFilterExpression::mk_not(to_resolved_filter_expr(
-                metadata,
-                session,
-                type_mappings,
-                type_name,
-                model_object_type,
-                boolean_expression_type,
-                expr,
-                data_connector,
-            )?))
-        }
+        BooleanExpression::Not(expr) => Ok(Expression::mk_not(to_filter_expression(
+            metadata,
+            session,
+            type_mappings,
+            type_name,
+            model_object_type,
+            boolean_expression_type,
+            expr,
+            data_connector,
+        )?)),
         BooleanExpression::IsNull(open_dds::query::Operand::Field(field)) => {
             let ResolvedColumn {
                 column_name,
@@ -82,7 +82,7 @@ pub fn to_resolved_filter_expr(
                 model_object_type,
                 field,
             )?;
-            Ok(ResolvedFilterExpression::LocalFieldComparison(
+            Ok(Expression::LocalField(
                 plan_types::LocalFieldComparison::UnaryComparison {
                     column: plan_types::ComparisonTarget::Column {
                         name: column_name,
@@ -140,7 +140,7 @@ pub fn to_resolved_filter_expr(
                             ))
                         })?;
 
-                    let eq_expr = ResolvedFilterExpression::LocalFieldComparison(
+                    let eq_expr = Expression::LocalField(
                         plan_types::LocalFieldComparison::BinaryComparison {
                             column: plan_types::ComparisonTarget::Column {
                                 name: column_name,
@@ -153,11 +153,11 @@ pub fn to_resolved_filter_expr(
 
                     match operator {
                         ComparisonOperator::Equals => Ok(eq_expr),
-                        ComparisonOperator::NotEquals => Ok(ResolvedFilterExpression::Not {
+                        ComparisonOperator::NotEquals => Ok(Expression::Not {
                             expression: Box::new(eq_expr),
                         }),
                         _ => {
-                            panic!("invalid pattern match in to_resolved_filter_expr: {operator:?}")
+                            panic!("invalid pattern match in to_filter_expression: {operator:?}")
                         }
                     }
                 }
@@ -252,10 +252,10 @@ pub fn to_resolved_filter_expr(
                                     ))
                                 }),
 
-                            _ => {panic!("invalid pattern match in to_resolved_filter_expr: {operator:?}")}
+                            _ => {panic!("invalid pattern match in to_filter_expression: {operator:?}")}
                     }?;
 
-                    Ok(ResolvedFilterExpression::LocalFieldComparison(
+                    Ok(Expression::LocalField(
                         plan_types::LocalFieldComparison::BinaryComparison {
                             column: plan_types::ComparisonTarget::Column {
                                 name: column_name,
@@ -288,7 +288,7 @@ pub fn to_resolved_filter_expr(
                             ))
                         })?;
 
-                    let expr = ResolvedFilterExpression::LocalFieldComparison(
+                    let expr = Expression::LocalField(
                         plan_types::LocalFieldComparison::BinaryComparison {
                             column: plan_types::ComparisonTarget::Column {
                                 name: column_name,

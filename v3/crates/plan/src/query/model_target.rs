@@ -1,9 +1,10 @@
 use super::arguments::{get_unresolved_arguments, resolve_arguments};
 use super::process_argument_presets_for_model;
 use super::types::NDCQuery;
-use crate::filter::{resolve_model_permission_filter, to_resolved_filter_expr};
+use crate::filter::{resolve_model_permission_filter, to_filter_expression};
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::order_by::to_resolved_order_by_element;
+use crate::query::filter::resolve_filter_expression;
 use crate::types::PlanError;
 use hasura_authn_core::Session;
 use open_dds::query::ModelTarget;
@@ -54,20 +55,29 @@ pub fn model_target_to_ndc_query(
         &mut usage_counts,
     )
     .map_err(|e| PlanError::Internal(e.to_string()))?;
+
     let resolved_arguments =
         resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
 
     let model_filter = match &model_target.filter {
-        Some(expr) => Some(to_resolved_filter_expr(
-            metadata,
-            session,
-            &model_source.type_mappings,
-            &model.model.data_type,
-            model_object_type,
-            model.filter_expression_type.as_ref(),
-            expr,
-            &model_source.data_connector,
-        )?),
+        Some(expr) => {
+            let expression = to_filter_expression(
+                metadata,
+                session,
+                &model_source.type_mappings,
+                &model.model.data_type,
+                model_object_type,
+                model.filter_expression_type.as_ref(),
+                expr,
+                &model_source.data_connector,
+            )?;
+
+            // TODO: don't ignore remote predicates
+            let (resolved_filter_expression, _remote_predicates) =
+                resolve_filter_expression(&expression, &mut relationships, unique_number)?;
+
+            Some(resolved_filter_expression)
+        }
         _ => None,
     };
 

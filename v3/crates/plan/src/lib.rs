@@ -9,7 +9,6 @@ mod types;
 
 pub use column::{to_resolved_column, ResolvedColumn};
 pub use error::{InternalDeveloperError, InternalEngineError, InternalError};
-pub use filter::to_resolved_filter_expr;
 pub use metadata_accessor::{get_output_object_type, FieldView, OutputObjectTypeView};
 pub use model_tracking::{count_command, count_model, extend_usage_count};
 pub use order_by::to_resolved_order_by_element;
