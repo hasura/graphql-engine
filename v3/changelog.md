@@ -14,6 +14,9 @@
   with a
   [compatibility date](https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/)
   after this release date are affected.
+- Avoid infinite recursion when validating `BooleanExpressionType` for
+  `ObjectType`s that contain self references through nested fields during build
+  creation.
 
 ### Changed
 

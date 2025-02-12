@@ -1,0 +1,1742 @@
+{
+  "version": "v3",
+  "subgraphs": [
+    {
+      "name": "app",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Folder",
+            "fields": [
+              {
+                "name": "id",
+                "type": "ObjectId!",
+                "description": null,
+                "deprecated": null,
+                "arguments": []
+              },
+              {
+                "name": "children",
+                "type": "[Folder!]",
+                "description": null,
+                "deprecated": null,
+                "arguments": []
+              },
+              {
+                "name": "createdAt",
+                "type": "Date",
+                "description": null,
+                "deprecated": null,
+                "arguments": []
+              },
+              {
+                "name": "name",
+                "type": "String",
+                "description": null,
+                "deprecated": null,
+                "arguments": []
+              },
+              {
+                "name": "path",
+                "type": "String",
+                "description": null,
+                "deprecated": null,
+                "arguments": []
+              },
+              {
+                "name": "type",
+                "type": "String",
+                "description": null,
+                "deprecated": null,
+                "arguments": []
+              }
+            ],
+            "globalIdFields": null,
+            "graphql": {
+              "typeName": "Folder",
+              "inputTypeName": "FolderInput",
+              "apolloFederation": null
+            },
+            "description": null,
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "mongo",
+                "dataConnectorObjectType": "Folder",
+                "fieldMapping": {
+                  "children": {
+                    "column": {
+                      "name": "children",
+                      "argumentMapping": null
+                    }
+                  },
+                  "createdAt": {
+                    "column": {
+                      "name": "created_at",
+                      "argumentMapping": null
+                    }
+                  },
+                  "id": {
+                    "column": {
+                      "name": "_id",
+                      "argumentMapping": null
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name",
+                      "argumentMapping": null
+                    }
+                  },
+                  "path": {
+                    "column": {
+                      "name": "path",
+                      "argumentMapping": null
+                    }
+                  },
+                  "type": {
+                    "column": {
+                      "name": "type",
+                      "argumentMapping": null
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Folder",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "children",
+                    "createdAt",
+                    "name",
+                    "path",
+                    "type"
+                  ]
+                },
+                "input": null
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "FolderBoolExp",
+            "operand": {
+              "object": {
+                "type": "Folder",
+                "comparableFields": [
+                  {
+                    "fieldName": "id",
+                    "booleanExpressionType": "ObjectIdBoolExp"
+                  },
+                  {
+                    "fieldName": "children",
+                    "booleanExpressionType": "FolderBoolExp"
+                  },
+                  {
+                    "fieldName": "createdAt",
+                    "booleanExpressionType": "DateBoolExp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "StringBoolExp"
+                  },
+                  {
+                    "fieldName": "path",
+                    "booleanExpressionType": "StringBoolExp"
+                  },
+                  {
+                    "fieldName": "type",
+                    "booleanExpressionType": "StringBoolExp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "FolderBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "GetFolderTree",
+            "objectType": "Folder",
+            "globalIdSource": false,
+            "arguments": [
+              {
+                "name": "folderId",
+                "type": "ObjectId!",
+                "description": null
+              }
+            ],
+            "source": {
+              "dataConnectorName": "mongo",
+              "collection": "getFolderTree",
+              "argumentMapping": {}
+            },
+            "filterExpressionType": "FolderBoolExp",
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "getFolderTreeById",
+                  "uniqueIdentifier": ["id"],
+                  "description": null,
+                  "deprecated": null,
+                  "subscription": {
+                    "rootField": "getFolderTreeById",
+                    "description": null,
+                    "deprecated": null,
+                    "pollingIntervalMs": 1000
+                  }
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "getFolderTree",
+                "description": null,
+                "deprecated": null,
+                "subscription": {
+                  "rootField": "getFolderTree",
+                  "description": null,
+                  "deprecated": null,
+                  "pollingIntervalMs": 1000
+                }
+              },
+              "argumentsInputType": "GetFolderTreeArguments",
+              "apolloFederation": null,
+              "aggregate": {
+                "queryRootField": "getFolderTreeAggregate",
+                "description": null,
+                "deprecated": null,
+                "subscription": {
+                  "rootField": "getFolderTreeAggregate",
+                  "description": null,
+                  "deprecated": null,
+                  "pollingIntervalMs": 1000
+                }
+              }
+            },
+            "description": "Get a folder and its children recursively"
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "GetFolderTree",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null,
+                  "argumentPresets": [],
+                  "allowSubscriptions": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "ObjectId",
+            "graphql": {
+              "typeName": "ObjectId"
+            },
+            "description": null
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "ObjectIdBoolExp",
+            "operand": {
+              "scalar": {
+                "type": "ObjectId",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "ObjectId!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[ObjectId!]!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "ObjectId!"
+                  },
+                  {
+                    "name": "_nin",
+                    "argumentType": "[ObjectId!]!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "mongo",
+                    "dataConnectorScalarType": "ObjectId",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "ObjectIdBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "mongo",
+            "dataConnectorScalarType": "ObjectId",
+            "representation": "ObjectId",
+            "graphql": {
+              "comparisonExpressionTypeName": "ObjectIdComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Date",
+            "graphql": {
+              "typeName": "Date"
+            },
+            "description": null
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "DateBoolExp",
+            "operand": {
+              "scalar": {
+                "type": "Date",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Date!"
+                  },
+                  {
+                    "name": "_gt",
+                    "argumentType": "Date!"
+                  },
+                  {
+                    "name": "_gte",
+                    "argumentType": "Date!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[Date!]!"
+                  },
+                  {
+                    "name": "_lt",
+                    "argumentType": "Date!"
+                  },
+                  {
+                    "name": "_lte",
+                    "argumentType": "Date!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "Date!"
+                  },
+                  {
+                    "name": "_nin",
+                    "argumentType": "[Date!]!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "mongo",
+                    "dataConnectorScalarType": "Date",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "DateBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "mongo",
+            "dataConnectorScalarType": "Date",
+            "representation": "Date",
+            "graphql": {
+              "comparisonExpressionTypeName": "DateComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Bool",
+            "graphql": {
+              "typeName": "Bool"
+            },
+            "description": null
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "BoolBoolExp",
+            "operand": {
+              "scalar": {
+                "type": "Bool",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Bool!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[Bool!]!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "Bool!"
+                  },
+                  {
+                    "name": "_nin",
+                    "argumentType": "[Bool!]!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "mongo",
+                    "dataConnectorScalarType": "Bool",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "BoolBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "mongo",
+            "dataConnectorScalarType": "Bool",
+            "representation": "Bool",
+            "graphql": {
+              "comparisonExpressionTypeName": "BoolComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "mongo",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "StringComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "StringBoolExp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_gt",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_gte",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[String!]!"
+                  },
+                  {
+                    "name": "_iregex",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_lt",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_lte",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_nin",
+                    "argumentType": "[String!]!"
+                  },
+                  {
+                    "name": "_regex",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "mongo",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "StringBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "mongo",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "IntComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "IntBoolExp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_gt",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_gte",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[Int!]!"
+                  },
+                  {
+                    "name": "_lt",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_lte",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_nin",
+                    "argumentType": "[Int!]!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "mongo",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "IntBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "mongo",
+            "url": {
+              "readWriteUrls": {
+                "read": {
+                  "value": "http://local.hasura.dev:4688"
+                },
+                "write": {
+                  "value": "http://local.hasura.dev:4688"
+                }
+              }
+            },
+            "headers": {
+              "Authorization": {
+                "value": "Bearer RandomTokenValue"
+              }
+            },
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Bool": {
+                    "representation": {
+                      "type": "boolean"
+                    },
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Bool"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "Bool"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Date": {
+                    "representation": {
+                      "type": "timestamp"
+                    },
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Date"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Date"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Date"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Date"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Date"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Date"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Date"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "Date"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "DbPointer": {
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "DbPointer"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "DbPointer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Decimal": {
+                    "representation": {
+                      "type": "bigdecimal"
+                    },
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Decimal"
+                          }
+                        }
+                      },
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Decimal"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Decimal"
+                          }
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Decimal"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Decimal"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Decimal"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Decimal"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Decimal"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Decimal"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "Decimal"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Double": {
+                    "representation": {
+                      "type": "float64"
+                    },
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Double"
+                          }
+                        }
+                      },
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Double"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Double"
+                          }
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Double"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Double"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Double"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Double"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Double"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Double"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "Double"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "ExtendedJSON": {
+                    "representation": {
+                      "type": "json"
+                    },
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "_in": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "_iregex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "ExtendedJSON"
+                        }
+                      },
+                      "_regex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Javascript": {
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {}
+                  },
+                  "JavascriptWithScope": {
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {}
+                  },
+                  "Long": {
+                    "representation": {
+                      "type": "int64"
+                    },
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Long"
+                          }
+                        }
+                      },
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Long"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Long"
+                          }
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Long"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Long"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Long"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Long"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Long"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Long"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "Long"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "MaxKey": {
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "MaxKey"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "MaxKey"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "MinKey": {
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "MinKey"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "MinKey"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Null": {
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Null"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "Null"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "ObjectId": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "ObjectId"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "ObjectId"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Regex": {
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "comparison_operators": {}
+                  },
+                  "String": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {
+                      "count": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_gte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_in": {
+                        "type": "in"
+                      },
+                      "_iregex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_lt": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_lte": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_neq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_nin": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "_regex": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "object_types": {
+                  "Folder": {
+                    "fields": {
+                      "_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "ObjectId"
+                        }
+                      },
+                      "children": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "array",
+                            "element_type": {
+                              "type": "named",
+                              "name": "Folder"
+                            }
+                          }
+                        }
+                      },
+                      "created_at": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Date"
+                          }
+                        }
+                      },
+                      "name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "path": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "type": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "getFolderTree",
+                    "description": "Get a folder and its children recursively",
+                    "arguments": {
+                      "folderId": {
+                        "type": {
+                          "type": "named",
+                          "name": "ObjectId"
+                        }
+                      }
+                    },
+                    "type": "Folder",
+                    "uniqueness_constraints": {
+                      "getFolderTree_id": {
+                        "unique_columns": ["_id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "version": "0.1.6",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {},
+                      "aggregates": {}
+                    },
+                    "exists": {
+                      "nested_collections": {}
+                    }
+                  },
+                  "mutation": {},
+                  "relationships": {
+                    "relation_comparisons": {}
+                  }
+                }
+              }
+            },
+            "argumentPresets": [],
+            "responseHeaders": null
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "require_graphql_config": false,
+    "require_valid_ndc_v01_version": true,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true,
+    "require_unique_command_graphql_names": true,
+    "allow_partial_supergraph": false,
+    "json_session_variables": true,
+    "disallow_array_field_compared_with_scalar_boolean_type": true,
+    "allow_boolean_expression_fields_without_graphql": true,
+    "require_unique_model_graphql_names": true,
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true,
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true,
+    "require_nested_support_for_order_by_expressions": true,
+    "disallow_model_v1_ordering_non_scalar_fields": true,
+    "disallow_recursive_object_types": true
+  }
+}

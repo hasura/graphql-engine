@@ -12,7 +12,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 // we want to ensure that our `BooleanExpressionType` (and all it's leaves)
 // are compatible with our data connector
@@ -35,8 +35,44 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
     Vec<boolean_expressions::BooleanExpressionIssue>,
     boolean_expressions::BooleanExpressionError,
 > {
+    // Keep track of visited boolean expression types to avoid infinite recursion
+    // of circular references of nested fields in the object boolean expressions
+    let mut visited_object_boolean_expressions = HashSet::new();
+    validate_data_connector_with_object_boolean_expression_type_internal(
+        data_connector,
+        source_type_mappings,
+        object_boolean_expression_type,
+        boolean_expression_types,
+        object_types,
+        models,
+        flags,
+        &mut visited_object_boolean_expressions,
+    )
+}
+
+fn validate_data_connector_with_object_boolean_expression_type_internal(
+    data_connector: &data_connectors::DataConnectorLink,
+    source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
+    object_boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    flags: &open_dds::flags::OpenDdFlags,
+    visited_object_boolean_expressions: &mut HashSet<Qualified<CustomTypeName>>,
+) -> Result<
+    Vec<boolean_expressions::BooleanExpressionIssue>,
+    boolean_expressions::BooleanExpressionError,
+> {
     // collect any issues found whilst resolving
     let mut issues = vec![];
+
+    // Only validate once per object boolean expression
+    if !visited_object_boolean_expressions.insert(object_boolean_expression_type.name.clone()) {
+        return Ok(issues);
+    }
 
     if let Some(fields) = object_boolean_expression_type.get_fields(flags) {
         for (field_name, object_comparison_expression_info) in &fields.object_fields {
@@ -118,15 +154,18 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
             }
 
             // continue checking the nested object...
-            issues.extend(validate_data_connector_with_object_boolean_expression_type(
-                data_connector,
-                source_type_mappings,
-                leaf_boolean_expression,
-                boolean_expression_types,
-                object_types,
-                models,
-                flags,
-            )?);
+            issues.extend(
+                validate_data_connector_with_object_boolean_expression_type_internal(
+                    data_connector,
+                    source_type_mappings,
+                    leaf_boolean_expression,
+                    boolean_expression_types,
+                    object_types,
+                    models,
+                    flags,
+                    visited_object_boolean_expressions,
+                )?,
+            );
         }
 
         for (field_name, comparison_expression_info) in
