@@ -20,6 +20,11 @@
 
 ### Changed
 
+- When JWKs are configured to be read from a URL in AuthConfig, we now no longer
+  require the JWT to specify the `alg` property. We will validate the signature
+  in a JWT so long as the algorithm used is supported by the JWK retrieved from
+  the URL.
+
 ## [v2025.02.07]
 
 ### Added

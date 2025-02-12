@@ -465,7 +465,7 @@ async fn get_decoding_key_from_jwk_url(
     http_client: &reqwest::Client,
     jwk_url: Url,
     jwt_authorization_header: &str,
-) -> Result<(jwt::Algorithm, jwt::DecodingKey), Error> {
+) -> Result<(Vec<jwt::Algorithm>, jwt::DecodingKey), Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async("fetch_jwk", "Fetch JWK", SpanVisibility::Internal, || {
@@ -494,17 +494,40 @@ async fn get_decoding_key_from_jwk_url(
                         .ok_or(InternalError::NoMatchingJWKFound { kid })?;
                     let decoding_key = jwt::DecodingKey::from_jwk(jwk)
                         .map_err(InternalError::JWTDecodingKeyError)?;
-                    let algorithm = jwk
-                        .common
-                        .algorithm
-                        .ok_or(InternalError::AlgorithmNotFoundInJWK)?;
-                    Ok((algorithm, decoding_key))
+                    let acceptable_algorithms = get_acceptable_algorithms_for_key(jwk);
+                    Ok((acceptable_algorithms, decoding_key))
                 } else {
                     Err(InternalError::UnsuccessfulJWKFetch(jwk_response.status()))?
                 }
             })
         })
         .await
+}
+
+fn get_acceptable_algorithms_for_key(jwk: &jwt::jwk::Jwk) -> Vec<jwt::Algorithm> {
+    match &jwk.algorithm {
+        // Elliptic curve family algorithms
+        jsonwebtoken::jwk::AlgorithmParameters::EllipticCurve(_) => {
+            vec![jwt::Algorithm::ES256, jwt::Algorithm::ES384]
+        }
+        // RSA family algorithms
+        jsonwebtoken::jwk::AlgorithmParameters::RSA(_) => vec![
+            jwt::Algorithm::RS256,
+            jwt::Algorithm::RS384,
+            jwt::Algorithm::RS512,
+            jwt::Algorithm::PS256,
+            jwt::Algorithm::PS384,
+            jwt::Algorithm::PS512,
+        ],
+        // HMAC family algorithms
+        jsonwebtoken::jwk::AlgorithmParameters::OctetKey(_) => vec![
+            jwt::Algorithm::HS256,
+            jwt::Algorithm::HS384,
+            jwt::Algorithm::HS512,
+        ],
+        // Edwards-curve algorithms
+        jsonwebtoken::jwk::AlgorithmParameters::OctetKeyPair(_) => vec![jwt::Algorithm::EdDSA],
+    }
 }
 
 fn get_claims_mapping_entry_value<T: for<'de> serde::Deserialize<'de>>(
@@ -531,14 +554,15 @@ pub(crate) async fn decode_and_parse_hasura_claims(
     jwt_config: JWTConfig,
     jwt: String,
 ) -> Result<HasuraClaims, Error> {
-    let (alg, decoding_key) = match jwt_config.key {
-        JWTKey::Fixed(conf) => (conf.algorithm, get_decoding_key(&conf)?),
+    let (acceptable_algorithms, decoding_key) = match jwt_config.key {
+        JWTKey::Fixed(conf) => (vec![conf.algorithm], get_decoding_key(&conf)?),
         JWTKey::JwkFromUrl(jwk_url) => {
             get_decoding_key_from_jwk_url(http_client, jwk_url, &jwt).await?
         }
     };
 
-    let mut validation = Validation::new(alg);
+    let mut validation = Validation::default();
+    validation.algorithms = acceptable_algorithms;
 
     // Additional validations according to the `jwt_config`.
     if let Some(aud) = jwt_config.audience {
