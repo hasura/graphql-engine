@@ -25,8 +25,14 @@ pub async fn handle_connection_init<M: WebSocketMetrics>(
                     let context = &connection.context;
                     let mut state = connection.protocol_init_state.write().await;
 
-                    match initialize(&state, &context.http_context, &context.auth_config, payload)
-                        .await
+                    match initialize(
+                        &state,
+                        &context.http_context,
+                        &context.handshake_headers,
+                        &context.auth_config,
+                        payload,
+                    )
+                    .await
                     {
                         Ok((session, headers)) => {
                             // Update state to Initialized and send a connection acknowledgment
@@ -59,6 +65,7 @@ pub async fn handle_connection_init<M: WebSocketMetrics>(
 async fn initialize(
     init_state: &ConnectionInitState,
     http_context: &HttpContext,
+    client_headers: &http::HeaderMap,
     auth_config: &AuthConfig,
     payload: Option<InitPayload>,
 ) -> Result<(Session, http::HeaderMap), ConnectionInitError> {
@@ -73,10 +80,16 @@ async fn initialize(
                     match init_state {
                         ConnectionInitState::NotInitialized => {
                             // Parse the headers from the payload
-                            let headers = match payload {
+                            let mut headers = match payload {
                                 Some(payload) => parse_headers(payload.headers)?,
                                 None => http::HeaderMap::new(),
                             };
+                            // Extend the headers with the client headers received from the handshake request.
+                            // NOTE: In case of conflicts, headers provided during the handshake will take precedence over those in the `connection_init` payload.
+                            // The `connection_init` message is sent while the WebSocket session is still unauthenticated, meaning clients could manipulate sensitive
+                            // headers injected by an upstream gateway or proxy during the initial handshake. By prioritizing handshake headers, we ensure that any
+                            // dynamically injected authentication or routing information remains intact.
+                            headers.extend(client_headers.clone());
                             // Authenticate the client based on headers and context
                             let identity =
                                 authenticate(&headers, &http_context.client, auth_config).await?;

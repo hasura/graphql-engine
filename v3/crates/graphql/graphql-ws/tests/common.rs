@@ -1,3 +1,4 @@
+use axum::http::HeaderMap;
 use axum::{extract::State, response::IntoResponse, routing::get};
 use engine_types::{ExposeInternalErrors, HttpContext};
 use futures_util::{SinkExt, StreamExt};
@@ -37,21 +38,35 @@ pub(crate) async fn ws_handler(
     State(state): State<Arc<ServerState<graphql_ws::NoOpWebSocketMetrics>>>,
     ws: axum::extract::ws::WebSocketUpgrade,
 ) -> impl IntoResponse {
-    let context = state.context.clone();
+    let mut context = state.context.clone();
+    context.handshake_headers = Arc::new(headers);
     state
         .ws_server
-        .upgrade_and_handle_websocket("127.0.0.1:8080".parse().unwrap(), ws, &headers, context)
+        .upgrade_and_handle_websocket("127.0.0.1:8080".parse().unwrap(), ws, context)
         .into_response()
 }
 
 #[allow(dead_code)]
 pub(crate) async fn start_websocket_server() -> TestServer {
-    start_websocket_server_expiry(graphql_ws::ConnectionExpiry::Never).await
+    start_websocket_server_inner(graphql_ws::ConnectionExpiry::Never, HeaderMap::new()).await
 }
 
 #[allow(dead_code)]
 pub(crate) async fn start_websocket_server_expiry(
     expiry: graphql_ws::ConnectionExpiry,
+) -> TestServer {
+    start_websocket_server_inner(expiry, HeaderMap::new()).await
+}
+
+#[allow(dead_code)]
+pub(crate) async fn start_websocket_server_headers(headers: HeaderMap) -> TestServer {
+    start_websocket_server_inner(graphql_ws::ConnectionExpiry::Never, headers).await
+}
+
+#[allow(dead_code)]
+async fn start_websocket_server_inner(
+    expiry: graphql_ws::ConnectionExpiry,
+    headers: HeaderMap,
 ) -> TestServer {
     // Create a TCP listener
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -98,6 +113,7 @@ pub(crate) async fn start_websocket_server_expiry(
         auth_config: Arc::new(auth_config),
         plugin_configs: Arc::new(plugin_configs),
         metrics: graphql_ws::NoOpWebSocketMetrics,
+        handshake_headers: Arc::new(HeaderMap::new()), // Will be populated in "ws_handler"
     };
 
     let connections = graphql_ws::Connections::new();
@@ -125,6 +141,7 @@ pub(crate) async fn start_websocket_server_expiry(
         graphql_ws::SEC_WEBSOCKET_PROTOCOL,
         GRAPHQL_WS_PROTOCOL.parse().unwrap(),
     );
+    request.headers_mut().extend(headers);
     let (socket, _response) = connect_async(request)
         .await
         .expect("Failed to connect to WebSocket server");
@@ -251,7 +268,7 @@ pub(crate) fn subscribe_article_by_id(operation_id: &str) -> serde_json::Value {
 }
 
 #[allow(dead_code)]
-pub(crate) async fn graphql_ws_connection_init(
+pub(crate) async fn assert_graphql_ws_connection_init(
     socket: &mut WebSocketStream<MaybeTlsStream<TcpStream>>,
     init_payload: serde_json::Value,
 ) {

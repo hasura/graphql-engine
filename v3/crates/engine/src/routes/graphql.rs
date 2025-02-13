@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{ConnectInfo, State},
     response::IntoResponse,
@@ -106,9 +108,10 @@ pub async fn handle_websocket_request(
         auth_config: engine_state.auth_config,
         plugin_configs: engine_state.plugin_configs,
         metrics: graphql_ws::NoOpWebSocketMetrics, // No metrics implementation
+        handshake_headers: Arc::new(headers), // Preserve the headers received during this handshake request.
     };
 
     engine_state
         .graphql_websocket_server
-        .upgrade_and_handle_websocket(client_address, ws, &headers, context)
+        .upgrade_and_handle_websocket(client_address, ws, context)
 }

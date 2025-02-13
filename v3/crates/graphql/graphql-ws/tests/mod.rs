@@ -1,5 +1,6 @@
 mod common;
 
+use axum::http::HeaderMap;
 use common::*;
 use futures_util::SinkExt;
 use tokio_tungstenite::tungstenite;
@@ -119,6 +120,32 @@ async fn test_graphql_ws_connection_init_no_headers() {
 }
 
 #[tokio::test]
+async fn test_graphql_ws_connection_init_client_headers() {
+    let mut headers = HeaderMap::new();
+    headers.insert("x-hasura-role", "admin".parse().unwrap());
+    // Start server and inititate a connection with headers
+    let TestServer {
+        connections,
+        mut socket,
+        server_handle,
+    } = start_websocket_server_headers(headers).await;
+    // Send connection init without headers.
+    let connection_init_no_headers = serde_json::json!({
+        "type": "connection_init",
+        "payload": {
+            "headers": {}
+        }
+    });
+    // Connection init still should succeed because headers are provided by the client
+    assert_graphql_ws_connection_init(&mut socket, connection_init_no_headers).await;
+    // Close the connection
+    socket.close(None).await.unwrap();
+    // Assert zero connections
+    assert_zero_connections_timeout(connections).await;
+    server_handle.abort();
+}
+
+#[tokio::test]
 async fn test_graphql_ws_too_many_connection_inits() {
     let TestServer {
         connections,
@@ -126,7 +153,7 @@ async fn test_graphql_ws_too_many_connection_inits() {
         server_handle,
     } = start_websocket_server().await;
     // Send connection_init and check ack
-    graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
+    assert_graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
     // Sending connection_init again results in connection closure
     let json_message = serde_json::to_string(&connection_init_admin()).unwrap();
     socket
@@ -156,7 +183,7 @@ async fn test_graphql_ws_subscribe_admin() {
         server_handle,
     } = start_websocket_server().await;
     // Send connection_init and check ack
-    graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
+    assert_graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
 
     // Send a subscription
     let operation_id = "some-operation-id";
@@ -225,7 +252,7 @@ async fn test_graphql_ws_subscribe_user_1() {
         server_handle,
     } = start_websocket_server().await;
     // Send connection_init and check ack
-    graphql_ws_connection_init(&mut socket, connection_init_user_1_id_2()).await;
+    assert_graphql_ws_connection_init(&mut socket, connection_init_user_1_id_2()).await;
 
     // Send a subscription
     let operation_id = "some-operation-id";
@@ -318,7 +345,7 @@ async fn test_graphql_ws_subscribe_user_1_validation_error() {
         server_handle,
     } = start_websocket_server().await;
     // Send connection_init and check ack
-    graphql_ws_connection_init(&mut socket, connection_init_user_1_id_2()).await;
+    assert_graphql_ws_connection_init(&mut socket, connection_init_user_1_id_2()).await;
 
     // Send a subscription
     let operation_id = "some-operation-id";
@@ -390,7 +417,7 @@ async fn test_graphql_ws_connection_expiry() {
         server_handle,
     } = start_websocket_server_expiry(expiry).await;
     // Send connection_init and check ack
-    graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
+    assert_graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
     // Wait for the connection to expire
     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     // Wait for a close message
@@ -414,7 +441,7 @@ async fn test_graphql_ws_keepalive() {
         server_handle,
     } = start_websocket_server().await;
     // Send connection_init and check ack
-    graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
+    assert_graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
     // Wait for a text message
     let message = expect_text_message(&mut socket).await;
     // Check for a keepalive message

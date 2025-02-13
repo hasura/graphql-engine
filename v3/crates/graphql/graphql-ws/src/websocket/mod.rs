@@ -48,7 +48,6 @@ impl<M> WebSocketServer<M> {
         &self,
         client_address: std::net::SocketAddr,
         ws_upgrade: ws::WebSocketUpgrade,
-        headers: &HeaderMap,
         context: types::Context<M>,
     ) -> Response
     where
@@ -77,7 +76,7 @@ impl<M> WebSocketServer<M> {
                 )];
                 tracing_util::run_with_baggage(trace_baggage, || {
                     // Check if headers contain graphql-transport-ws protocol
-                    check_protocol_in_headers(headers)?;
+                    check_protocol_in_headers(&context.handshake_headers)?;
                     let connections = self.connections.clone();
                     // Upgrade the WebSocket connection and handle it
                     let span_link = tracing_util::SpanLink::from_current_span();

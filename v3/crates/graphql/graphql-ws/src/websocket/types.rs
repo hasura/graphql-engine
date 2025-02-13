@@ -1,4 +1,5 @@
 use axum::extract::ws;
+use axum::http::HeaderMap;
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
 use graphql_ir::GraphqlRequestPipeline;
 use hasura_authn::AuthConfig;
@@ -27,6 +28,7 @@ pub struct Context<M> {
     pub auth_config: Arc<AuthConfig>,
     pub plugin_configs: Arc<LifecyclePluginConfigs>,
     pub metrics: M,
+    pub handshake_headers: Arc<HeaderMap>,
 }
 
 /// Represents a WebSocket connection ID.
