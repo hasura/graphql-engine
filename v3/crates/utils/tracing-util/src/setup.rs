@@ -46,7 +46,7 @@ pub enum ExportTracesStdout {
 /// provides itself.
 pub fn initialize_tracing(
     endpoint: Option<&str>,
-    service_name: &'static str,
+    service_name: String,
     service_version: Option<&'static str>,
     propagate_caller_baggage: PropagateBaggage,
     enable_stdout_export: ExportTracesStdout,

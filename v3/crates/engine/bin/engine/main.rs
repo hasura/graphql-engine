@@ -14,6 +14,7 @@ use tracing_util::{add_event_on_active_span, set_attribute_on_active_span, SpanV
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+static DEFAULT_OTEL_SERVICE_NAME: &str = "ddn-engine";
 const DEFAULT_PORT: u16 = 3000;
 
 #[allow(clippy::struct_excessive_bools)] // booleans are pretty useful here
@@ -69,6 +70,10 @@ struct ServerOptions {
     /// Log traces to stdout.
     #[arg(long, env = "EXPORT_TRACES_STDOUT")]
     export_traces_stdout: bool,
+
+    /// Service name output in OpenTelemetry traces
+    #[arg(long, env = "OTEL_SERVICE_NAME")]
+    otel_service_name: Option<String>,
 }
 
 #[tokio::main]
@@ -81,9 +86,14 @@ async fn main() {
         tracing_util::ExportTracesStdout::Disable
     };
 
+    let otel_service_name = match &server_options.otel_service_name {
+        Some(otel_service_name) => otel_service_name,
+        None => DEFAULT_OTEL_SERVICE_NAME,
+    };
+
     tracing_util::initialize_tracing(
         server_options.otlp_endpoint.as_deref(),
-        "ddn-engine",
+        otel_service_name.to_string(),
         Some(VERSION),
         tracing_util::PropagateBaggage::Disable,
         export_traces_stdout,

@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
 
         tracing_util::initialize_tracing(
             Some(&otlp_endpoint),
-            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_NAME").to_string(),
             None,
             tracing_util::PropagateBaggage::Enable,
             export_traces_stdout,

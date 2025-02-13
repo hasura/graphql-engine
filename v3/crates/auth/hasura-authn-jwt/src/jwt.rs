@@ -1236,7 +1236,7 @@ mod tests {
     async fn test_jwk() -> anyhow::Result<()> {
         tracing_util::initialize_tracing(
             None,
-            "test_jwk",
+            "test_jwk".to_string(),
             None,
             tracing_util::PropagateBaggage::Disable,
             tracing_util::ExportTracesStdout::Disable,
