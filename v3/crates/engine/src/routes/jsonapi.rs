@@ -130,7 +130,9 @@ async fn handle_rest_request(
             ),
             jsonapi::RequestError::InternalError(jsonapi::InternalError::EmptyQuerySet)
             | jsonapi::RequestError::PlanError(
-                plan::PlanError::Internal(_) | plan::PlanError::InternalError(_),
+                plan::PlanError::Internal(_)
+                | plan::PlanError::InternalError(_)
+                | plan::PlanError::ArgumentPresetExecutionError(_),
             ) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": "Internal error" })),

@@ -1,7 +1,7 @@
 use super::boolean_expression;
 use super::filter::resolve_filter_expression;
 use super::permissions;
-use hasura_authn_core::{Session, SessionVariables};
+use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
 use metadata_resolve::{
@@ -11,7 +11,9 @@ use metadata_resolve::{
 };
 use open_dds::{
     arguments::ArgumentName,
-    types::{CustomTypeName, DataConnectorArgumentName},
+    commands::CommandName,
+    models::ModelName,
+    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use plan_types::{Argument, Expression, Relationship, UniqueNumber, UsagesCounts};
 use reqwest::header::HeaderMap;
@@ -19,7 +21,6 @@ use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
-use crate::error::{InternalDeveloperError, InternalEngineError, InternalError};
 use crate::PlanError;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
@@ -40,22 +41,22 @@ pub fn process_argument_presets_for_model<'s>(
     session: &Session,
     request_headers: &HeaderMap,
     usage_counts: &mut UsagesCounts,
-) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, InternalError> {
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     let model_source = model.model.source.as_ref().ok_or_else(|| {
-        InternalEngineError::ArgumentPresetExecution {
-            description: format!("Model source not found for model '{}'", model.model.name),
+        ArgumentPresetExecutionError::ModelSourceNotFound {
+            model_name: model.model.name.clone(),
         }
     })?;
 
     let argument_presets = &model
         .select_permissions
         .get(&session.role)
-        .ok_or_else(|| InternalEngineError::ArgumentPresetExecution {
-            description: format!(
-                "Select permissions not found for role '{}' for model '{}'",
-                session.role, model.model.name
-            ),
-        })?
+        .ok_or_else(
+            || ArgumentPresetExecutionError::ModelArgumentPresetsNotFound {
+                model_name: model.model.name.clone(),
+                role: session.role.clone(),
+            },
+        )?
         .argument_presets;
 
     process_argument_presets(
@@ -80,25 +81,22 @@ pub fn process_argument_presets_for_command<'s>(
     session: &Session,
     request_headers: &HeaderMap,
     usage_counts: &mut UsagesCounts,
-) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, InternalError> {
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     let command_source = command.command.source.as_ref().ok_or_else(|| {
-        InternalEngineError::ArgumentPresetExecution {
-            description: format!(
-                "Command source not found for command '{}'",
-                command.command.name
-            ),
+        ArgumentPresetExecutionError::CommandSourceNotFound {
+            command_name: command.command.name.clone(),
         }
     })?;
 
     let argument_presets = &command
         .permissions
         .get(&session.role)
-        .ok_or_else(|| InternalEngineError::ArgumentPresetExecution {
-            description: format!(
-                "Command permissions not found for role '{}' for command '{}'",
-                session.role, command.command.name
-            ),
-        })?
+        .ok_or_else(
+            || ArgumentPresetExecutionError::CommandArgumentPresetsNotFound {
+                command_name: command.command.name.clone(),
+                role: session.role.clone(),
+            },
+        )?
         .argument_presets;
 
     process_argument_presets(
@@ -131,7 +129,7 @@ fn process_argument_presets<'s>(
     session: &Session,
     request_headers: &HeaderMap,
     usage_counts: &mut UsagesCounts,
-) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, InternalError> {
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     // Preset arguments from `DataConnectorLink` argument presets
     for (argument_name, value) in process_connector_link_presets(
         data_connector_link_argument_presets,
@@ -145,8 +143,8 @@ fn process_argument_presets<'s>(
     for (argument_name, (field_type, argument_value)) in argument_presets {
         let data_connector_argument_name =
             argument_mappings.get(argument_name).ok_or_else(|| {
-                InternalEngineError::ArgumentPresetExecution {
-                    description: format!("argument mapping not found for '{argument_name}'"),
+                ArgumentPresetExecutionError::ArgumentMappingNotFound {
+                    argument_name: argument_name.clone(),
                 }
             })?;
 
@@ -166,8 +164,8 @@ fn process_argument_presets<'s>(
     for (argument_name, argument_info) in argument_infos {
         let data_connector_argument_name =
             argument_mappings.get(argument_name).ok_or_else(|| {
-                InternalEngineError::ArgumentPresetExecution {
-                    description: format!("argument mapping not found for '{argument_name}'"),
+                ArgumentPresetExecutionError::ArgumentMappingNotFound {
+                    argument_name: argument_name.clone(),
                 }
             })?;
 
@@ -198,7 +196,7 @@ fn apply_input_field_presets_to_value(
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session: &Session,
-) -> Result<(), InternalError> {
+) -> Result<(), PlanError> {
     match &type_reference.underlying_type {
         QualifiedBaseType::List(list_element_type) => {
             let Some(array_elements) = get_value_array_or_null(value, type_reference)? else {
@@ -256,26 +254,29 @@ fn apply_input_field_presets_to_value(
             // Get the data connector type mapping for this object type
             let TypeMapping::Object { field_mappings, .. } = type_mappings
                 .get(object_type_name)
-                .ok_or_else(|| InternalEngineError::ArgumentPresetExecution {
-                    description: format!(
-                        "no data connector type mapping found for object type '{object_type_name}'"
-                    ),
+                .ok_or_else(|| ArgumentPresetExecutionError::TypeMappingNotFound {
+                    object_type_name: object_type_name.clone(),
                 })?;
 
             // Apply all input field presets to the object value
             for (field_name, field_preset) in field_presets.as_ref() {
                 // Get the data connector field mapping for this field
                 let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
-                    InternalEngineError::ArgumentPresetExecution {
-                        description: format!("no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'"),
+                    ArgumentPresetExecutionError::FieldMappingNotFound {
+                        field_name: field_name.clone(),
+                        object_type_name: object_type_name.clone(),
                     }
                 })?;
+
                 // Get the type information about the field
-                let field_info = object_type_info.object_type.fields.get(field_name).ok_or_else(|| {
-                    InternalEngineError::ArgumentPresetExecution {
-                        description: format!("no field definition found for field '{field_name}' of object type '{object_type_name}'"),
-                    }
-                })?;
+                let field_info = object_type_info
+                    .object_type
+                    .fields
+                    .get(field_name)
+                    .ok_or_else(|| ArgumentPresetExecutionError::FieldDefinitionNotFound {
+                        field_name: field_name.clone(),
+                        object_type_name: object_type_name.clone(),
+                    })?;
 
                 let argument_value = permissions::make_argument_from_value_expression(
                     &field_preset.value,
@@ -290,8 +291,9 @@ fn apply_input_field_presets_to_value(
             for (field_name, field_info) in &object_type_info.object_type.fields {
                 // Get the data connector field mapping for this field
                 let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
-                    InternalEngineError::ArgumentPresetExecution {
-                        description: format!("no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'"),
+                    ArgumentPresetExecutionError::DataConnectorFieldMappingNotFound {
+                        field_name: field_name.clone(),
+                        object_type_name: object_type_name.clone(),
                     }
                 })?;
 
@@ -329,55 +331,114 @@ fn apply_input_field_presets_to_value(
     Ok(())
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum ArgumentPresetExecutionError {
+    #[error("expected {expected_type} but got a boolean")]
+    GotBoolean {
+        expected_type: QualifiedTypeReference,
+    },
+    #[error("expected {expected_type} but got a number")]
+    GotNumber {
+        expected_type: QualifiedTypeReference,
+    },
+    #[error("expected {expected_type} but got a string")]
+    GotString {
+        expected_type: QualifiedTypeReference,
+    },
+    #[error("expected {expected_type} but got an object")]
+    GotObject {
+        expected_type: QualifiedTypeReference,
+    },
+    #[error("expected {expected_type} but got an array")]
+    GotArray {
+        expected_type: QualifiedTypeReference,
+    },
+    #[error("could not convert the provided header value to string as it contains non-visible ASCII characters")]
+    IllegalCharactersInHeaderValue,
+    #[error("Model source not found for model '{model_name}'")]
+    ModelSourceNotFound { model_name: Qualified<ModelName> },
+    #[error("Model permissions for model {model_name} not found for role {role}")]
+    ModelArgumentPresetsNotFound {
+        role: Role,
+        model_name: Qualified<ModelName>,
+    },
+
+    #[error("command {command_name} does not have a source defined")]
+    CommandSourceNotFound {
+        command_name: Qualified<CommandName>,
+    },
+    #[error("command permissions for command {command_name} not found for role {role}")]
+    CommandArgumentPresetsNotFound {
+        command_name: Qualified<CommandName>,
+        role: Role,
+    },
+    #[error("argument mapping not found for {argument_name}")]
+    ArgumentMappingNotFound { argument_name: ArgumentName },
+    #[error("type mapping not found for object {object_type_name}")]
+    TypeMappingNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+    },
+    #[error("no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'")]
+    FieldMappingNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+    #[error(
+        "no field definition found for field '{field_name}' of object type '{object_type_name}'"
+    )]
+    FieldDefinitionNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+    #[error("no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'")]
+    DataConnectorFieldMappingNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+}
+
 fn get_value_array_or_null<'a>(
     value: &'a mut serde_json::Value,
     expected_type: &QualifiedTypeReference,
-) -> Result<Option<&'a mut Vec<serde_json::Value>>, InternalError> {
+) -> Result<Option<&'a mut Vec<serde_json::Value>>, ArgumentPresetExecutionError> {
     match value {
         serde_json::Value::Array(array) => Ok(Some(array)),
         serde_json::Value::Null => Ok(None),
-        serde_json::Value::Bool(_) => Err(InternalEngineError::ArgumentPresetExecution {
-            description: format!("expected {expected_type}, but got a boolean"),
-        }
-        .into()),
-        serde_json::Value::Number(_) => Err(InternalEngineError::ArgumentPresetExecution {
-            description: format!("expected {expected_type}, but got a number"),
-        }
-        .into()),
-        serde_json::Value::String(_) => Err(InternalEngineError::ArgumentPresetExecution {
-            description: format!("expected {expected_type}, but got a string"),
-        }
-        .into()),
-        serde_json::Value::Object(_) => Err(InternalEngineError::ArgumentPresetExecution {
-            description: format!("expected {expected_type}, but got an object"),
-        }
-        .into()),
+        serde_json::Value::Bool(_) => Err(ArgumentPresetExecutionError::GotBoolean {
+            expected_type: expected_type.clone(),
+        }),
+        serde_json::Value::Number(_) => Err(ArgumentPresetExecutionError::GotNumber {
+            expected_type: expected_type.clone(),
+        }),
+        serde_json::Value::String(_) => Err(ArgumentPresetExecutionError::GotString {
+            expected_type: expected_type.clone(),
+        }),
+        serde_json::Value::Object(_) => Err(ArgumentPresetExecutionError::GotObject {
+            expected_type: expected_type.clone(),
+        }),
     }
 }
 
 fn get_value_object_or_null<'a>(
     value: &'a mut serde_json::Value,
     expected_type: &QualifiedTypeReference,
-) -> Result<Option<&'a mut serde_json::Map<String, serde_json::Value>>, InternalError> {
+) -> Result<Option<&'a mut serde_json::Map<String, serde_json::Value>>, ArgumentPresetExecutionError>
+{
     match value {
         serde_json::Value::Object(map) => Ok(Some(map)),
         serde_json::Value::Null => Ok(None),
-        serde_json::Value::Bool(_) => Err(InternalEngineError::ArgumentPresetExecution {
-            description: format!("expected {expected_type}, but got a boolean"),
-        }
-        .into()),
-        serde_json::Value::Number(_) => Err(InternalEngineError::ArgumentPresetExecution {
-            description: format!("expected {expected_type}, but got a number"),
-        }
-        .into()),
-        serde_json::Value::String(_) => Err(InternalEngineError::ArgumentPresetExecution {
-            description: format!("expected {expected_type}, but got a string"),
-        }
-        .into()),
-        serde_json::Value::Array(_) => Err(InternalEngineError::ArgumentPresetExecution {
-            description: format!("expected {expected_type}, but got an array"),
-        }
-        .into()),
+        serde_json::Value::Bool(_) => Err(ArgumentPresetExecutionError::GotBoolean {
+            expected_type: expected_type.clone(),
+        }),
+        serde_json::Value::Number(_) => Err(ArgumentPresetExecutionError::GotNumber {
+            expected_type: expected_type.clone(),
+        }),
+        serde_json::Value::String(_) => Err(ArgumentPresetExecutionError::GotString {
+            expected_type: expected_type.clone(),
+        }),
+        serde_json::Value::Array(_) => Err(ArgumentPresetExecutionError::GotArray {
+            expected_type: expected_type.clone(),
+        }),
     }
 }
 
@@ -386,7 +447,7 @@ pub fn process_connector_link_presets(
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     session_variables: &SessionVariables,
     request_headers: &HeaderMap,
-) -> Result<BTreeMap<DataConnectorArgumentName, serde_json::Value>, InternalError> {
+) -> Result<BTreeMap<DataConnectorArgumentName, serde_json::Value>, PlanError> {
     let mut arguments = BTreeMap::new();
     // preset arguments from `DataConnectorLink` argument presets
     for (dc_argument_preset_name, dc_argument_preset_value) in data_connector_link_argument_presets
@@ -400,7 +461,7 @@ pub fn process_connector_link_presets(
                 // ASCII characters: https://docs.rs/reqwest/latest/reqwest/header/struct.HeaderValue.html#method.to_str
                 let string_value = header_value
                     .to_str()
-                    .map_err(|_| InternalDeveloperError::IllegalCharactersInHeaderValue)?;
+                    .map_err(|_| ArgumentPresetExecutionError::IllegalCharactersInHeaderValue)?;
 
                 // we make no attempt to parse it and pass it along as a JSON string
                 let json_value = serde_json::Value::String(string_value.into());

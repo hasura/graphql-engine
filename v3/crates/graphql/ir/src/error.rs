@@ -94,6 +94,9 @@ pub enum Error {
     },
 
     #[error("{0}")]
+    PlanError(#[from] plan::PlanError),
+
+    #[error("{0}")]
     Internal(#[from] InternalError),
 }
 
@@ -182,7 +185,7 @@ pub enum InternalDeveloperError {
     },
 
     #[error("{0}")]
-    RelationshipFieldMappingError(#[from] metadata_resolve::RelationshipFieldMappingError),
+    RelationshipFieldMappingError(#[from] plan::RelationshipFieldMappingError),
 
     #[error("Argument mapping not found for the argument {argument_name:} while executing the relationship {relationship_name:}")]
     ArgumentMappingNotFoundForRelationship {

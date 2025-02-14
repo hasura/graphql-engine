@@ -24,14 +24,11 @@ use plan_types::UsagesCounts;
 pub fn resolve_model_arguments_input_opendd<'s>(
     arguments: &IndexMap<Name, InputField<'s, GDS>>,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>, error::Error> {
     arguments
         .values()
-        .map(|argument| {
-            resolve_argument_opendd(argument, type_mappings, session_variables, usage_counts)
-        })
+        .map(|argument| resolve_argument_opendd(argument, type_mappings, usage_counts))
         .collect::<Result<IndexMap<_, _>, _>>()
 }
 
@@ -39,7 +36,6 @@ pub fn resolve_model_arguments_input_opendd<'s>(
 pub fn resolve_argument_opendd<'s>(
     argument: &InputField<'s, GDS>,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<(open_dds::query::ArgumentName, open_dds::query::Value), error::Error> {
     let (argument_name, argument_type, argument_kind) = match argument.info.generic {
@@ -71,12 +67,10 @@ pub fn resolve_argument_opendd<'s>(
                 .map(open_dds::query::Value::Literal)?
         }
 
-        ArgumentKind::NDCExpression => filter::resolve_filter_expression_open_dd(
-            argument.value.as_object()?,
-            session_variables,
-            usage_counts,
-        )
-        .map(open_dds::query::Value::BooleanExpression)?,
+        ArgumentKind::NDCExpression => {
+            filter::resolve_filter_expression_open_dd(argument.value.as_object()?, usage_counts)
+                .map(open_dds::query::Value::BooleanExpression)?
+        }
     };
     Ok((argument_name.clone(), mapped_argument_value))
 }
@@ -85,7 +79,6 @@ pub fn resolve_argument_opendd<'s>(
 pub fn build_argument_as_value<'s>(
     argument: &InputField<'s, GDS>,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<(ArgumentName, open_dds::query::Value), error::Error> {
     let (argument_type, argument_kind) = match argument.info.generic {
@@ -115,12 +108,10 @@ pub fn build_argument_as_value<'s>(
                 .map(open_dds::query::Value::Literal)?
         }
 
-        ArgumentKind::NDCExpression => filter::resolve_filter_expression_open_dd(
-            argument.value.as_object()?,
-            session_variables,
-            usage_counts,
-        )
-        .map(open_dds::query::Value::BooleanExpression)?,
+        ArgumentKind::NDCExpression => {
+            filter::resolve_filter_expression_open_dd(argument.value.as_object()?, usage_counts)
+                .map(open_dds::query::Value::BooleanExpression)?
+        }
     };
 
     let argument_name = ArgumentName::new(Identifier::new(argument.name.as_str()).unwrap());

@@ -196,7 +196,6 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
             let where_clause = match where_input {
                 Some(where_input) => Some(filter::resolve_filter_expression_open_dd(
                     where_input,
-                    &session.variables,
                     &mut usage_counts,
                 )?),
                 None => None,
@@ -206,7 +205,6 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
                     arguments::resolve_model_arguments_input_opendd(
                         arguments_input,
                         &model_source.type_mappings,
-                        &session.variables,
                         &mut usage_counts,
                     )
                 })

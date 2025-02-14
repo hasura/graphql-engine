@@ -104,11 +104,11 @@ pub fn get_output_object_type<'metadata>(
 pub struct Model {}
 
 // fetch a model from metadata, ensuring we have ModelPermissions
-// and permissions to access the underlying type
-fn get_model(
+// and permissions to access the underlying type, and that it has a source
+pub fn get_model(
     metadata: &Metadata,
-    model_name: &'_ Qualified<ModelName>,
-    role: &'_ Role,
+    model_name: &Qualified<ModelName>,
+    role: &Role,
 ) -> Result<Model, PermissionError> {
     let model = metadata
         .models

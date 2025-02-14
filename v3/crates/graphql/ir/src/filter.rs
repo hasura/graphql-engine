@@ -1,12 +1,3 @@
-use hasura_authn_core::SessionVariables;
-use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
-use lang_graphql::normalized_ast;
-use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
-use serde::Serialize;
-use std::collections::BTreeMap;
-use std::ops::Deref;
-
 use crate::{error, permissions};
 use graphql_schema::{self};
 use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind};
@@ -14,15 +5,24 @@ use graphql_schema::{
     FilterRelationshipAnnotation, ObjectBooleanExpressionField, ScalarBooleanExpressionField,
 };
 use graphql_schema::{LogicalOperatorField, GDS};
+use hasura_authn_core::SessionVariables;
+use indexmap::IndexMap;
+use lang_graphql::ast::common as ast;
+use lang_graphql::normalized_ast;
+use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName},
 };
 use plan::count_model;
+use plan::{InternalDeveloperError, InternalError};
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
     EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
 };
+use serde::Serialize;
+use std::collections::BTreeMap;
+use std::ops::Deref;
 
 /// Filter expression to be applied on a model/command selection set
 #[derive(Debug, Serialize, Clone)]
@@ -47,16 +47,14 @@ pub struct QueryFilter<'s> {
 /// Generate the OpenDD IR for GraphQL 'where' boolean expression
 pub fn resolve_filter_expression_open_dd(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'_, GDS>>,
-    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
-    resolve_object_boolean_expression_open_dd(fields, &[], session_variables, usage_counts)
+    resolve_object_boolean_expression_open_dd(fields, &[], usage_counts)
 }
 
 fn resolve_object_boolean_expression_open_dd(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'_, GDS>>,
     field_path: &[&FieldName],
-    session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
     let field_expressions = fields
@@ -78,7 +76,6 @@ fn resolve_object_boolean_expression_open_dd(
                             resolve_object_boolean_expression_open_dd(
                                 value_object,
                                 field_path,
-                                session_variables,
                                 usage_counts,
                             )
                         })
@@ -98,7 +95,6 @@ fn resolve_object_boolean_expression_open_dd(
                             resolve_object_boolean_expression_open_dd(
                                 value_object,
                                 field_path,
-                                session_variables,
                                 usage_counts,
                             )
                         })
@@ -114,7 +110,6 @@ fn resolve_object_boolean_expression_open_dd(
                     let not_filter_expression = resolve_object_boolean_expression_open_dd(
                         not_value,
                         field_path,
-                        session_variables,
                         usage_counts,
                     )?;
                     open_dds::query::BooleanExpression::Not(Box::new(not_filter_expression))
@@ -139,7 +134,6 @@ fn resolve_object_boolean_expression_open_dd(
                             resolve_object_boolean_expression_open_dd(
                                 field_value,
                                 &new_field_path,
-                                session_variables,
                                 usage_counts,
                             )?
                         }
@@ -147,7 +141,6 @@ fn resolve_object_boolean_expression_open_dd(
                             let _inner_expression = resolve_object_boolean_expression_open_dd(
                                 field_value,
                                 &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
-                                session_variables,
                                 usage_counts,
                             )?;
 
@@ -202,66 +195,13 @@ fn resolve_object_boolean_expression_open_dd(
                     }
                 }
                 ObjectBooleanExpressionField::RelationshipField(FilterRelationshipAnnotation {
-                    relationship_name: _,
-                    relationship_type: _,
-                    source_type: _,
-                    target_source,
-                    target_type: _,
                     target_model_name,
-                    mappings: _,
-                    deprecated: _,
+                    ..
                 }) => {
                     // Add the target model being used in the usage counts
                     count_model(target_model_name, usage_counts);
 
-                    // Get the filter permissions for the target model
-                    let filter_permission = permissions::get_select_filter_predicate(&field.info)?;
-                    let filter_predicate = permissions::build_model_permissions_filter_predicate(
-                        &target_source.model.data_connector,
-                        &target_source.model.type_mappings,
-                        filter_permission,
-                        session_variables,
-                        usage_counts,
-                    )?;
-
-                    // This map contains the relationships or the columns of the
-                    // relationship that needs to be used for ordering.
-                    let filter_object = field.value.as_object()?;
-
-                    // The predicate being applied across the relationship
-                    let relationship_predicate = resolve_object_boolean_expression(
-                        filter_object,
-                        &target_source.model.data_connector,
-                        &target_source.model.type_mappings,
-                        &[], // We're traversing across the relationship, so we reset the field path
-                        session_variables,
-                        usage_counts,
-                    )?;
-
-                    // Combine the filter predicate and the relationship predicate
-                    let _predicate = match filter_predicate {
-                        Some(filter_predicate) => {
-                            Expression::mk_and(vec![filter_predicate, relationship_predicate])
-                        }
-                        None => relationship_predicate,
-                    };
-
-                    todo!("resolve_object_boolean_expression_open_dd relationships");
-                    /*
-                    // build and return relationshp comparison expression
-                    plan::build_relationship_comparison_expression(
-                        type_mappings,
-                        column_path,
-                        data_connector_link,
-                        relationship_name,
-                        relationship_type,
-                        source_type,
-                        target_model_name,
-                        target_source,
-                        target_type,
-                        mappings,
-                        predicate,
-                    )?*/
+                    todo!("filter_relationship_annotation");
                 }
             };
 
@@ -371,11 +311,8 @@ fn resolve_object_boolean_expression<'s>(
                     object_field_kind,
                     deprecated: _,
                 } => {
-                    let FieldMapping { column, .. } = plan::get_field_mapping_of_field_name(
-                        type_mappings,
-                        object_type,
-                        field_name,
-                    )?;
+                    let FieldMapping { column, .. } =
+                        get_field_mapping_of_field_name(type_mappings, object_type, field_name)?;
 
                     let field_value = field.value.as_object()?;
 
@@ -506,11 +443,13 @@ fn resolve_object_boolean_expression<'s>(
                         relationship_type,
                         source_type,
                         target_model_name,
-                        target_source,
+                        &target_source.model,
+                        &target_source.capabilities,
                         target_type,
                         mappings,
                         predicate,
-                    )?
+                    )
+                    .map_err(plan::PlanError::Relationship)?
                 }
             };
 
@@ -519,6 +458,27 @@ fn resolve_object_boolean_expression<'s>(
         .collect::<Result<Vec<Expression>, error::Error>>()?;
 
     Ok(Expression::mk_and(field_expressions))
+}
+
+/// get column name for field name
+pub fn get_field_mapping_of_field_name<'a>(
+    type_mappings: &'a BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    type_name: &Qualified<CustomTypeName>,
+    field_name: &FieldName,
+) -> Result<&'a metadata_resolve::FieldMapping, InternalError> {
+    let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
+        InternalDeveloperError::TypeMappingNotFound {
+            type_name: type_name.clone(),
+        }
+    })?;
+    match type_mapping {
+        metadata_resolve::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
+            .get(field_name)
+            .ok_or_else(|| InternalDeveloperError::FieldMappingNotFound {
+                type_name: type_name.clone(),
+                field_name: field_name.clone(),
+            })?),
+    }
 }
 
 fn extract_object_boolean_expression_field_annotation(

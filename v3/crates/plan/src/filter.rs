@@ -390,8 +390,7 @@ pub(crate) fn resolve_model_permission_filter(
                 filter,
                 &session.variables,
                 usage_counts,
-            )
-            .map_err(PlanError::InternalError)?;
+            )?;
 
             let (filter, _remote_predicates) = super::query::filter::resolve_filter_expression(
                 &filter_ir,

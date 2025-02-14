@@ -10,17 +10,17 @@ mod relationships;
 mod types;
 use crate::types::PlanError;
 pub use arguments::{
-    process_argument_presets_for_command, process_argument_presets_for_model, UnresolvedArgument,
+    process_argument_presets_for_command, process_argument_presets_for_model,
+    ArgumentPresetExecutionError, UnresolvedArgument,
 };
 pub use command::{from_command, CommandPlan, FromCommand};
-pub use filter::{
-    build_relationship_comparison_expression, get_field_mapping_of_field_name, plan_expression,
-};
+pub use filter::{build_relationship_comparison_expression, plan_expression};
 use indexmap::IndexMap;
 pub use model::{from_model_aggregate_selection, from_model_group_by, from_model_selection};
 pub use permissions::process_model_predicate;
 pub use relationships::{
-    process_command_relationship_definition, process_model_relationship_definition,
+    get_relationship_field_mapping_of_field_name, process_command_relationship_definition,
+    process_model_relationship_definition, RelationshipFieldMappingError,
 };
 
 use hasura_authn_core::Session;

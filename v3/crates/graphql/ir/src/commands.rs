@@ -201,7 +201,6 @@ pub fn generate_command_info_open_dd<'n, 's>(
         let (argument_name, argument_value) = arguments::build_argument_as_value(
             argument,
             &command_source.type_mappings,
-            session_variables,
             usage_counts,
         )?;
 

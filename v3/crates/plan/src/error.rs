@@ -59,7 +59,7 @@ pub enum InternalDeveloperError {
     },
 
     #[error("{0}")]
-    RelationshipFieldMappingError(#[from] metadata_resolve::RelationshipFieldMappingError),
+    RelationshipFieldMappingError(#[from] crate::query::RelationshipFieldMappingError),
 
     #[error("Could not convert the provided header value to string as it contains non-visible ASCII characters")]
     IllegalCharactersInHeaderValue,

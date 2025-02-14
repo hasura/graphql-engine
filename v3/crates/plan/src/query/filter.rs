@@ -1,13 +1,14 @@
-use super::relationships::process_model_relationship_definition;
-use crate::error::{InternalDeveloperError, InternalEngineError, InternalError};
-use crate::types::PlanError;
+use super::relationships::{
+    get_relationship_field_mapping_of_field_name, process_model_relationship_definition,
+};
+use crate::types::{PlanError, RelationshipError};
 use indexmap::IndexMap;
 use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified, RelationshipCapabilities};
 use open_dds::{
     data_connector::DataConnectorColumnName,
     models::ModelName,
     relationships::{RelationshipName, RelationshipType},
-    types::{CustomTypeName, FieldName},
+    types::CustomTypeName,
 };
 use plan_types::{
     ExecutionTree, Expression, Field, FieldsSelection, JoinLocations, LocalModelRelationshipInfo,
@@ -238,16 +239,17 @@ pub fn build_relationship_comparison_expression<'s>(
     relationship_type: &'s RelationshipType,
     source_type: &'s Qualified<CustomTypeName>,
     target_model_name: &'s Qualified<ModelName>,
-    target_source: &'s metadata_resolve::ModelTargetSource,
+    target_model_source: &'s metadata_resolve::ModelSource,
+    target_capabilities: &'s RelationshipCapabilities,
     target_type: &'s Qualified<CustomTypeName>,
     mappings: &'s Vec<metadata_resolve::RelationshipModelMapping>,
     relationship_predicate: Expression<'s>,
-) -> Result<Expression<'s>, InternalError> {
+) -> Result<Expression<'s>, RelationshipError> {
     // Determine whether the relationship is local or remote
     match get_relationship_predicate_execution_strategy(
         data_connector_link,
-        &target_source.model.data_connector,
-        &target_source.capabilities,
+        &target_model_source.data_connector,
+        target_capabilities,
     ) {
         RelationshipPredicateExecutionStrategy::NDCPushdown => {
             let ndc_relationship_name = NdcRelationshipName::new(source_type, relationship_name);
@@ -258,7 +260,7 @@ pub fn build_relationship_comparison_expression<'s>(
                 source_type,
                 source_data_connector: data_connector_link,
                 source_type_mappings: type_mappings,
-                target_source: &target_source.model,
+                target_source: target_model_source,
                 target_type,
                 mappings,
             };
@@ -282,7 +284,12 @@ pub fn build_relationship_comparison_expression<'s>(
                     column: source_column,
                     comparison_operators,
                     ..
-                } = get_field_mapping_of_field_name(type_mappings, source_type, source_field)?;
+                } = get_relationship_field_mapping_of_field_name(
+                    type_mappings,
+                    source_type,
+                    relationship_name,
+                    source_field,
+                )?;
 
                 let equal_operator = comparison_operators
                     .as_ref()
@@ -290,12 +297,10 @@ pub fn build_relationship_comparison_expression<'s>(
                     .unwrap_or_default();
 
                 let eq_operator = equal_operator.as_ref().clone().ok_or_else(|| {
-                    InternalEngineError::InternalGeneric {
-                        description: format!(
-                            "Cannot use relationship '{relationship_name}' \
-                             in filter predicate. NDC column {source_column} (used by \
-                             source field '{source_field}') needs to implement an EQUAL comparison operator"
-                        ),
+                    RelationshipError::SourceColumnMissingEqualComparisonOperator {
+                        relationship_name: relationship_name.clone(),
+                        source_field: source_field.clone(),
+                        source_column: source_column.clone(),
                     }
                 })?;
 
@@ -308,8 +313,10 @@ pub fn build_relationship_comparison_expression<'s>(
                 let target_ndc_column = &relationship_mapping
                     .target_ndc_column
                     .as_ref()
-                    .ok_or_else(|| InternalEngineError::InternalGeneric {
-                        description: "Target NDC column not found".to_string(),
+                    .ok_or_else(|| RelationshipError::MissingTargetColumn {
+                        relationship_name: relationship_name.clone(),
+                        source_field: source_field.clone(),
+                        target_field: relationship_mapping.target_field.field_name.clone(),
                     })?
                     .column;
 
@@ -322,7 +329,7 @@ pub fn build_relationship_comparison_expression<'s>(
             Ok(Expression::RelationshipRemoteComparison {
                 relationship: relationship_name.clone(),
                 target_model_name,
-                target_model_source: target_source.model.clone(),
+                target_model_source: target_model_source.clone().into(),
                 ndc_column_mapping,
                 predicate: Box::new(relationship_predicate),
             })
@@ -347,27 +354,6 @@ fn get_relationship_predicate_execution_strategy(
         RelationshipPredicateExecutionStrategy::NDCPushdown
     } else {
         RelationshipPredicateExecutionStrategy::InEngine
-    }
-}
-
-/// get column name for field name
-pub fn get_field_mapping_of_field_name<'a>(
-    type_mappings: &'a BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    type_name: &Qualified<CustomTypeName>,
-    field_name: &FieldName,
-) -> Result<&'a metadata_resolve::FieldMapping, InternalError> {
-    let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
-        InternalDeveloperError::TypeMappingNotFound {
-            type_name: type_name.clone(),
-        }
-    })?;
-    match type_mapping {
-        metadata_resolve::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
-            .get(field_name)
-            .ok_or_else(|| InternalDeveloperError::FieldMappingNotFound {
-                type_name: type_name.clone(),
-                field_name: field_name.clone(),
-            })?),
     }
 }
 

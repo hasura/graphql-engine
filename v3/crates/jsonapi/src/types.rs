@@ -66,17 +66,13 @@ impl RequestError {
             }
             RequestError::InternalError(InternalError::EmptyQuerySet)
             | RequestError::PlanError(
-                plan::PlanError::Internal(_) | plan::PlanError::InternalError(_),
+                plan::PlanError::Internal(_)
+                | plan::PlanError::InternalError(_)
+                | plan::PlanError::ArgumentPresetExecutionError(_)
+                | plan::PlanError::Relationship(_)
+                | plan::PlanError::OrderBy(_)
+                | plan::PlanError::External(_),
             ) => {
-                serde_json::json!({"error": "Internal error" })
-            }
-            RequestError::PlanError(plan::PlanError::Relationship(_error)) => {
-                serde_json::json!({"error": "Internal error" })
-            }
-            RequestError::PlanError(plan::PlanError::OrderBy(_error)) => {
-                serde_json::json!({"error": "Internal error" })
-            }
-            RequestError::PlanError(plan::PlanError::External(_err)) => {
                 serde_json::json!({"error": "Internal error" })
             }
             RequestError::PlanError(plan::PlanError::Permission(_msg)) => {

@@ -6,7 +6,6 @@ use crate::helpers::types::{object_type_exists, unwrap_custom_type_name};
 use crate::types::subgraph::Qualified;
 
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
-use open_dds::relationships::RelationshipName;
 use open_dds::types::{CustomTypeName, FieldName};
 
 use std::collections::BTreeMap;
@@ -226,49 +225,5 @@ fn unwrap_ndc_object_type_name(
         ndc_models::Type::Predicate { .. } => {
             Err(TypeMappingCollectionError::PredicateAsResponseType)
         }
-    }
-}
-
-// moved from `graphql_ir` to avoid cycles,
-// not sure if this is the right home for it.
-#[derive(Debug, thiserror::Error)]
-pub enum RelationshipFieldMappingError {
-    #[error("Type mapping not found for the type name {type_name:} while executing the relationship {relationship_name:}")]
-    TypeMappingNotFoundForRelationship {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-    },
-
-    #[error("Field mapping not found for the field {field_name:} of type {type_name:} while executing the relationship {relationship_name:}")]
-    FieldMappingNotFoundForRelationship {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-        field_name: FieldName,
-    },
-}
-
-pub fn get_field_mapping_of_field_name(
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
-    type_name: &Qualified<CustomTypeName>,
-    relationship_name: &RelationshipName,
-    field_name: &FieldName,
-) -> Result<object_types::FieldMapping, RelationshipFieldMappingError> {
-    let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
-        RelationshipFieldMappingError::TypeMappingNotFoundForRelationship {
-            type_name: type_name.clone(),
-            relationship_name: relationship_name.clone(),
-        }
-    })?;
-    match type_mapping {
-        object_types::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
-            .get(field_name)
-            .ok_or_else(
-                || RelationshipFieldMappingError::FieldMappingNotFoundForRelationship {
-                    type_name: type_name.clone(),
-                    relationship_name: relationship_name.clone(),
-                    field_name: field_name.clone(),
-                },
-            )?
-            .clone()),
     }
 }

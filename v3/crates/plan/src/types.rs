@@ -1,9 +1,11 @@
 use crate::error::InternalError;
+use crate::query::RelationshipFieldMappingError;
 use hasura_authn_core::Role;
 use metadata_resolve::Qualified;
 use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
+    data_connector::DataConnectorColumnName,
     models::ModelName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
@@ -21,6 +23,8 @@ pub enum PlanError {
     #[error("{0}")]
     OrderBy(#[from] OrderByError),
     #[error("{0}")]
+    ArgumentPresetExecutionError(#[from] crate::query::ArgumentPresetExecutionError),
+    #[error("{0}")]
     InternalError(InternalError),
     #[error("{0}")]
     External(Box<dyn std::error::Error + Send + Sync>), //equivalent to DataFusionError::External
@@ -29,9 +33,9 @@ pub enum PlanError {
 impl TraceableError for PlanError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::InternalError(InternalError::Developer(_)) | Self::External(_) => {
-                ErrorVisibility::User
-            }
+            Self::InternalError(InternalError::Developer(_))
+            | Self::ArgumentPresetExecutionError(_)
+            | Self::External(_) => ErrorVisibility::User,
             Self::Permission(permission_error) => permission_error.visibility(),
             Self::Relationship(relationship_error) => relationship_error.visibility(),
             Self::OrderBy(order_by_error) => order_by_error.visibility(),
@@ -55,11 +59,13 @@ pub enum PermissionError {
     },
     #[error("model {model_name:} could not be found")]
     ModelNotFound { model_name: Qualified<ModelName> },
+
     #[error("role {role:} does not have permission to select from model {model_name:}")]
     ModelNotAccessible {
         model_name: Qualified<ModelName>,
         role: Role,
     },
+
     #[error("object type {object_type_name:} could not be found")]
     ObjectTypeNotFound {
         object_type_name: Qualified<CustomTypeName>,
@@ -114,10 +120,17 @@ pub enum RelationshipError {
         source_field: FieldName,
         target_field: FieldName,
     },
+    #[error("Cannot use relationship '{relationship_name}' in filter predicate. NDC column {source_column} (used by source field '{source_field}') needs to implement an EQUAL comparison operator")]
+    SourceColumnMissingEqualComparisonOperator {
+        relationship_name: RelationshipName,
+        source_field: FieldName,
+        source_column: DataConnectorColumnName,
+    },
+
     #[error("Procedure relationships are not supported: {relationship_name}")]
     ProcedureRelationshipsNotSupported { relationship_name: RelationshipName },
     #[error("{0}")]
-    RelationshipFieldMappingError(#[from] metadata_resolve::RelationshipFieldMappingError),
+    RelationshipFieldMappingError(#[from] RelationshipFieldMappingError),
     #[error("{0}")]
     Other(String),
 }

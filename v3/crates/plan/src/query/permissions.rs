@@ -1,8 +1,7 @@
-use hasura_authn_core::{SessionVariableName, SessionVariableValue, SessionVariables};
-use std::collections::BTreeMap;
-
 use super::arguments::UnresolvedArgument;
 use crate::error::{InternalDeveloperError, InternalEngineError, InternalError};
+use crate::types::PlanError;
+use hasura_authn_core::{SessionVariableName, SessionVariableValue, SessionVariables};
 use metadata_resolve::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, TypeMapping,
     UnaryComparisonOperator,
@@ -14,6 +13,7 @@ use open_dds::{
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
+use std::collections::BTreeMap;
 
 pub fn process_model_predicate<'s>(
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
@@ -21,7 +21,7 @@ pub fn process_model_predicate<'s>(
     model_predicate: &'s metadata_resolve::ModelPredicate,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
-) -> Result<Expression<'s>, InternalError> {
+) -> Result<Expression<'s>, PlanError> {
     match model_predicate {
         metadata_resolve::ModelPredicate::UnaryFieldComparison {
             ndc_column,
@@ -67,7 +67,7 @@ pub fn process_model_predicate<'s>(
                         usage_counts,
                     )
                 })
-                .collect::<Result<Vec<_>, InternalError>>()?;
+                .collect::<Result<Vec<_>, PlanError>>()?;
             Ok(Expression::And { expressions: exprs })
         }
         metadata_resolve::ModelPredicate::Or(predicates) => {
@@ -82,7 +82,7 @@ pub fn process_model_predicate<'s>(
                         usage_counts,
                     )
                 })
-                .collect::<Result<Vec<_>, InternalError>>()?;
+                .collect::<Result<Vec<_>, PlanError>>()?;
             Ok(Expression::Or { expressions: exprs })
         }
         metadata_resolve::ModelPredicate::Relationship {
@@ -101,7 +101,7 @@ pub fn process_model_predicate<'s>(
             )?;
 
             // build and return relationshp comparison expression
-            super::filter::build_relationship_comparison_expression(
+            Ok(super::filter::build_relationship_comparison_expression(
                 type_mappings,
                 &Vec::new(), // Field path is empty for now
                 data_connector_link,
@@ -109,11 +109,12 @@ pub fn process_model_predicate<'s>(
                 &relationship_info.relationship_type,
                 &relationship_info.source_type,
                 &relationship_info.target_model_name,
-                &relationship_info.target_source,
+                &relationship_info.target_source.model,
+                &relationship_info.target_source.capabilities,
                 &relationship_info.target_type,
                 &relationship_info.mappings,
                 relationship_predicate,
-            )
+            )?)
         }
     }
 }
@@ -124,7 +125,7 @@ fn make_permission_binary_boolean_expression<'s>(
     operator: &DataConnectorOperatorName,
     value_expression: &'s metadata_resolve::ValueExpression,
     session_variables: &SessionVariables,
-) -> Result<Expression<'s>, InternalError> {
+) -> Result<Expression<'s>, PlanError> {
     let ndc_expression_value =
         make_argument_from_value_expression(value_expression, argument_type, session_variables)?;
     Ok(Expression::LocalField(
@@ -158,15 +159,16 @@ pub fn make_argument_from_value_expression(
     val_expr: &metadata_resolve::ValueExpression,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
-) -> Result<serde_json::Value, InternalError> {
+) -> Result<serde_json::Value, PlanError> {
     match val_expr {
         metadata_resolve::ValueExpression::Literal(val) => Ok(val.clone()),
         metadata_resolve::ValueExpression::SessionVariable(session_var) => {
-            let value = session_variables.get(&session_var.name).ok_or_else(|| {
-                InternalDeveloperError::MissingSessionVariable {
+            let value = session_variables
+                .get(&session_var.name)
+                .ok_or_else(|| InternalDeveloperError::MissingSessionVariable {
                     session_variable: session_var.name.clone(),
-                }
-            })?;
+                })
+                .map_err(|e| PlanError::InternalError(InternalError::Developer(e)))?;
 
             typecast_session_variable(
                 &session_var.name,
@@ -174,6 +176,7 @@ pub fn make_argument_from_value_expression(
                 session_var.passed_as_json,
                 value_type,
             )
+            .map_err(PlanError::InternalError)
         }
     }
 }
@@ -185,17 +188,18 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
-) -> Result<UnresolvedArgument<'s>, InternalError> {
+) -> Result<UnresolvedArgument<'s>, PlanError> {
     match val_expr {
         metadata_resolve::ValueExpressionOrPredicate::Literal(val) => {
             Ok(UnresolvedArgument::Literal { value: val.clone() })
         }
         metadata_resolve::ValueExpressionOrPredicate::SessionVariable(session_var) => {
-            let value = session_variables.get(&session_var.name).ok_or_else(|| {
-                InternalDeveloperError::MissingSessionVariable {
+            let value = session_variables
+                .get(&session_var.name)
+                .ok_or_else(|| InternalDeveloperError::MissingSessionVariable {
                     session_variable: session_var.name.clone(),
-                }
-            })?;
+                })
+                .map_err(|e| PlanError::InternalError(InternalError::Developer(e)))?;
 
             Ok(UnresolvedArgument::Literal {
                 value: typecast_session_variable(
@@ -203,7 +207,8 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
                     value,
                     session_var.passed_as_json,
                     value_type,
-                )?,
+                )
+                .map_err(PlanError::InternalError)?,
             })
         }
         metadata_resolve::ValueExpressionOrPredicate::BooleanExpression(model_predicate) => {

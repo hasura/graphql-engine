@@ -44,13 +44,13 @@ pub fn process_model_relationship_definition(
             ))
         })?;
 
-        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+        let source_column = get_relationship_field_mapping_of_field_name(
             source_type_mappings,
             source_type,
             relationship_name,
             &source_field_path.field_name,
         )
-        .map_err(|e| PlanError::Internal(e.to_string()))?;
+        .map_err(RelationshipError::RelationshipFieldMappingError)?;
 
         if column_mapping
             .insert(source_column.column, target_column.column.clone())
@@ -92,13 +92,13 @@ pub fn process_command_relationship_definition(
         argument_name: target_argument,
     } in mappings
     {
-        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+        let source_column = get_relationship_field_mapping_of_field_name(
             source_type_mappings,
             source_type,
             relationship_name,
             &source_field_path.field_name,
         )
-        .map_err(|e| PlanError::Internal(e.to_string()))?;
+        .map_err(RelationshipError::RelationshipFieldMappingError)?;
 
         let relationship_argument = plan_types::RelationshipArgument::Column {
             name: source_column.column,
@@ -163,7 +163,7 @@ pub fn calculate_remote_relationship_fields_for_command_target(
         argument_name,
     } in relationship_command_mappings
     {
-        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+        let source_column = get_relationship_field_mapping_of_field_name(
             source_type_mappings,
             object_type_name,
             relationship_name,
@@ -238,7 +238,7 @@ pub fn calculate_remote_relationship_fields_for_model_target(
         target_ndc_column,
     } in relationship_model_mappings
     {
-        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+        let source_column = get_relationship_field_mapping_of_field_name(
             source_type_mappings,
             object_type_name,
             relationship_name,
@@ -326,4 +326,46 @@ fn process_remote_relationship_field_mapping(
 
 fn make_hasura_phantom_field(ndc_column_name: &DataConnectorColumnName) -> String {
     format!("__hasura_phantom_field__{}", ndc_column_name.as_str())
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum RelationshipFieldMappingError {
+    #[error("Type mapping not found for the type name {type_name:} while executing the relationship {relationship_name:}")]
+    TypeMappingNotFoundForRelationship {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+    },
+
+    #[error("Field mapping not found for the field {field_name:} of type {type_name:} while executing the relationship {relationship_name:}")]
+    FieldMappingNotFoundForRelationship {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        field_name: FieldName,
+    },
+}
+
+pub fn get_relationship_field_mapping_of_field_name(
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    type_name: &Qualified<CustomTypeName>,
+    relationship_name: &RelationshipName,
+    field_name: &FieldName,
+) -> Result<metadata_resolve::FieldMapping, RelationshipFieldMappingError> {
+    let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
+        RelationshipFieldMappingError::TypeMappingNotFoundForRelationship {
+            type_name: type_name.clone(),
+            relationship_name: relationship_name.clone(),
+        }
+    })?;
+    match type_mapping {
+        metadata_resolve::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
+            .get(field_name)
+            .ok_or_else(
+                || RelationshipFieldMappingError::FieldMappingNotFoundForRelationship {
+                    type_name: type_name.clone(),
+                    relationship_name: relationship_name.clone(),
+                    field_name: field_name.clone(),
+                },
+            )?
+            .clone()),
+    }
 }

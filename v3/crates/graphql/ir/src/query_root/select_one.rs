@@ -165,7 +165,6 @@ pub fn select_one_generate_ir<'n, 's>(
                     arguments::resolve_argument_opendd(
                         argument,
                         &model_source.type_mappings,
-                        &session.variables,
                         &mut usage_counts,
                     )
                 })

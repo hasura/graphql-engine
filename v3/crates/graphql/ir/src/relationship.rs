@@ -149,7 +149,6 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
     let where_clause = match where_input {
         Some(where_input) => Some(filter::resolve_filter_expression_open_dd(
             where_input,
-            session_variables,
             usage_counts,
         )?),
         None => None,
@@ -733,7 +732,7 @@ pub fn build_remote_relationship<'s>(
         target_ndc_column,
     } in target_mappings
     {
-        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+        let source_column = plan::get_relationship_field_mapping_of_field_name(
             source_type_mappings,
             source_type,
             relationship_name,
@@ -815,7 +814,7 @@ pub fn build_remote_command_relationship<'n, 's>(
         argument_name: target_argument_name,
     } in &annotation.mappings
     {
-        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+        let source_column = plan::get_relationship_field_mapping_of_field_name(
             type_mappings,
             &annotation.source_type,
             &annotation.relationship_name,

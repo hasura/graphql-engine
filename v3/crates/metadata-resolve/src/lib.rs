@@ -14,7 +14,6 @@ mod types;
 
 pub use helpers::http;
 pub use helpers::ndc_validation::NDCValidationError;
-pub use helpers::type_mappings::{get_field_mapping_of_field_name, RelationshipFieldMappingError};
 pub use helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
     NdcColumnForComparison, TypeRepresentation,
