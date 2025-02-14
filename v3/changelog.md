@@ -7,6 +7,7 @@
 - GraphQL WebSocket connections now include client headers from the initial
   handshake request, in addition to those from the `connection_init` message.
   These headers are forwarded to auth webhooks, plugins and data connectors.
+- Remote relationships are now available in the JSONAPI.
 
 ### Fixed
 

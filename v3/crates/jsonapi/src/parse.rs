@@ -15,6 +15,7 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 mod filter;
 mod include;
+use super::helpers::get_object_type;
 use crate::catalog::{Model, ObjectType, RelationshipTarget, Type};
 use metadata_resolve::{unwrap_custom_type_name, Qualified};
 use std::collections::BTreeMap;
@@ -27,15 +28,6 @@ pub enum ParseError {
     InvalidSubgraph(String),
     PathLengthMustBeAtLeastTwo,
     CannotFindObjectType(Qualified<CustomTypeName>),
-}
-
-fn get_object_type<'a>(
-    object_types: &'a BTreeMap<Qualified<CustomTypeName>, ObjectType>,
-    object_type_name: &Qualified<CustomTypeName>,
-) -> Result<&'a ObjectType, ParseError> {
-    object_types
-        .get(object_type_name)
-        .ok_or_else(|| ParseError::CannotFindObjectType(object_type_name.clone()))
 }
 
 pub struct QueryIR {
@@ -280,7 +272,7 @@ fn resolve_include_relationships(
                     match unwrap_custom_type_name(type_reference) {
                         Some(object_type) => (
                             object_type,
-                            crate::type_reference_to_relationship_type(type_reference),
+                            crate::helpers::type_reference_to_relationship_type(type_reference),
                         ),
                         None => {
                             return Err(RequestError::BadRequest(

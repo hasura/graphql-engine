@@ -102,7 +102,7 @@ fn jsonapi_relationships_property(object_type: &ObjectType) -> Option<ObjectSche
                 match unwrap_custom_type_name(type_reference) {
                     Some(type_name) => (
                         type_name,
-                        &crate::type_reference_to_relationship_type(type_reference),
+                        &crate::helpers::type_reference_to_relationship_type(type_reference),
                     ),
                     None => continue, // Skip command relationships with built-in output types
                 }

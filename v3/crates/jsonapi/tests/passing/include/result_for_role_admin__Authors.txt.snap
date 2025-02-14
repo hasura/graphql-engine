@@ -1,0 +1,71 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/include/Authors.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_Author",
+                    id: "1",
+                    attributes: {
+                        "author_id": Number(1),
+                        "first_name": String("Peter"),
+                    },
+                    relationships: Some(
+                        {
+                            "articles_remote": Relationship {
+                                data: Some(
+                                    Multiple(
+                                        [
+                                            ResourceIdentifier {
+                                                _type: "default_Article",
+                                                id: "2",
+                                            },
+                                            ResourceIdentifier {
+                                                _type: "default_Article",
+                                                id: "3",
+                                            },
+                                        ],
+                                    ),
+                                ),
+                                links: None,
+                            },
+                        },
+                    ),
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: Some(
+        [
+            Resource {
+                _type: "default_Article",
+                id: "2",
+                attributes: {
+                    "title": String("The Next 700 Programming Languages"),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+            Resource {
+                _type: "default_Article",
+                id: "3",
+                attributes: {
+                    "title": String("The Mechanical Evaluation of Expressions"),
+                },
+                relationships: None,
+                links: None,
+                meta: None,
+            },
+        ],
+    ),
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

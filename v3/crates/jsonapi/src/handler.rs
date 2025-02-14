@@ -77,11 +77,13 @@ pub async fn handler_internal<'metadata>(
                 "Process response",
                 SpanVisibility::User,
                 || {
-                    Ok(process_response::process_result(
+                    process_response::process_result(
                         rowsets,
                         &query_ir.root_type_name,
                         &relationship_tree,
-                    ))
+                        &query_string,
+                        &state.object_types,
+                    )
                 },
             )
         }

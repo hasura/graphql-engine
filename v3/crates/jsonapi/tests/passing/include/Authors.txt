@@ -1,0 +1,1 @@
+fields[Author]=author_id,first_name&fields[Article]=title&page[limit]=1&include=articles_remote
