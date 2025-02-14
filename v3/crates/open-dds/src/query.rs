@@ -38,7 +38,7 @@ pub struct QueryRequestV1 {
 pub enum Query {
     Model(ModelSelection),
     ModelAggregate(ModelAggregateSelection),
-    // ModelGroups(ModelGroupsSelection),
+    ModelGroups(ModelGroupsSelection),
     Command(CommandSelection),
     // CommandAggregate(CommandAggregateSelection),
     // CommandGroups(CommandGroupsSelection),
@@ -62,6 +62,17 @@ pub struct ModelAggregateSelection {
     pub target: ModelTarget,
     /// What metrics aggregated across the model's objects to retrieve.
     pub selection: IndexMap<Name, Aggregate>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+/// Query selecting metrics aggregated over the objects of a model and grouped.
+pub struct ModelGroupsSelection {
+    #[serde(flatten)]
+    pub target: ModelTarget,
+    /// What metrics aggregated across the model's objects to retrieve.
+    pub selection: IndexMap<Name, Aggregate>,
+    pub dimensions: ModelDimensions,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

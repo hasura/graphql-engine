@@ -1,0 +1,29 @@
+{
+  "version": "v1",
+  "queries": {
+    "authors": {
+      "modelGroups": {
+        "subgraph": "default",
+        "modelName": "Actors",
+        "selection": {
+          "biggest_movie_id": {
+            "function": {
+              "custom": {
+                "name": "_max",
+                "expression": "int_aggregate_exp"
+              }
+            },
+            "operand": {
+              "field": {
+                "fieldName": "movie_id"
+              }
+            }
+          }
+        },
+        "dimensions": {
+          "dimensions": {}
+        }
+      }
+    }
+  }
+}

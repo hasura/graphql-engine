@@ -128,7 +128,19 @@ where
 
             Ok(SingleNodeExecutionPlan::Query(execution_tree))
         }
+        open_dds::query::Query::ModelGroups(model_groups) => {
+            let execution_tree = model::from_model_group_by(
+                &model_groups.target,
+                &model_groups.selection,
+                &model_groups.dimensions,
+                metadata,
+                session,
+                request_headers,
+                unique_number,
+            )?;
 
+            Ok(SingleNodeExecutionPlan::Query(execution_tree))
+        }
         open_dds::query::Query::Command(command_selection) => {
             let command::FromCommand {
                 command_plan,
