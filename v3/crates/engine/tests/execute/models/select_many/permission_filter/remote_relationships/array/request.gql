@@ -1,0 +1,7 @@
+query MyQuery {
+  Album {
+    AlbumId
+    Title
+    ArtistId
+  }
+}

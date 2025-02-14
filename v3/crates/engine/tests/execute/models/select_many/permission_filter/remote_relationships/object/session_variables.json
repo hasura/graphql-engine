@@ -1,0 +1,20 @@
+[
+  {
+    "x-hasura-role": "user_relationship"
+  },
+  {
+    "x-hasura-role": "user_relationship_and"
+  },
+  {
+    "x-hasura-role": "user_relationship_or"
+  },
+  {
+    "x-hasura-role": "user_nested_relationship"
+  },
+  {
+    "x-hasura-role": "user_nested_relationship_and"
+  },
+  {
+    "x-hasura-role": "user_nested_relationship_or"
+  }
+]

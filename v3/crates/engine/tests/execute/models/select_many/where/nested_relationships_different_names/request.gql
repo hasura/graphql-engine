@@ -1,0 +1,19 @@
+query MyQuery {
+  InstitutionMany(
+    where: {
+      location_opendd: {
+        country_object: { area_km2_opendd: { _eq_opendd: 244376 } }
+      }
+    }
+  ) {
+    name: name_opendd
+    location: location_opendd {
+      country_id
+      country_object {
+        country_id: country_id_opendd
+        name: name_opendd
+        area_km2: area_km2_opendd
+      }
+    }
+  }
+}

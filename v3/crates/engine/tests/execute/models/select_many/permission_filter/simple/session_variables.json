@@ -1,0 +1,18 @@
+[
+  {
+    "x-hasura-role": "user",
+    "x-hasura-author-id": "2"
+  },
+  {
+    "x-hasura-role": "user_not"
+  },
+  {
+    "x-hasura-role": "user_or"
+  },
+  {
+    "x-hasura-role": "user_and"
+  },
+  {
+    "x-hasura-role": "user_or_and"
+  }
+]

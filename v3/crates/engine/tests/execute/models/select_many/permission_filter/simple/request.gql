@@ -1,0 +1,6 @@
+query {
+  AuthorMany {
+    author_id
+    first_name
+  }
+}

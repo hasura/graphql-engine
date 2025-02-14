@@ -1,0 +1,5 @@
+query MyQuery {
+  Track {
+    TrackId
+  }
+}

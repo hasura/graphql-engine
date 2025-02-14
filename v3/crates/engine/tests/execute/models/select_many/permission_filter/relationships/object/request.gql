@@ -1,0 +1,7 @@
+query MyQuery {
+  Track {
+    TrackId_opendd
+    AlbumId
+    Name
+  }
+}

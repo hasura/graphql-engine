@@ -939,6 +939,26 @@ fn test_model_select_many_where_nested_remote_relationships() -> anyhow::Result<
 }
 
 #[test]
+fn test_model_select_many_where_nested_relationships_different_names() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/where/nested_relationships_different_names",
+        &[],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, it does not support nested relationships in predicates
+            // (
+            //     NdcVersion::V01,
+            //     vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            // ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
+#[test]
 fn test_model_select_many_where_nested_scalar_array() -> anyhow::Result<()> {
     common::test_execution_expectation_for_multiple_ndc_versions(
         "execute/models/select_many/where/nested_scalar_array",
@@ -1009,6 +1029,69 @@ fn test_model_select_many_offset() -> anyhow::Result<()> {
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
         common::TestOpenDDPipeline::YesPlease,
+    )
+}
+
+// ---------- Model Permission Tests
+#[test]
+fn test_model_select_many_permission_filter_simple() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/permission_filter/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::YesPlease,
+    )
+}
+
+#[test]
+fn test_model_select_many_permission_filter_relationships_object() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/permission_filter/relationships/object";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::YesPlease,
+    )
+}
+
+#[test]
+fn test_model_select_many_permission_filter_relationships_array() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/permission_filter/relationships/array";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::YesPlease,
+    )
+}
+
+#[test]
+fn test_model_select_many_permission_filter_remote_relationships_object() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/permission_filter/remote_relationships/object";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
+#[test]
+fn test_model_select_many_permission_filter_remote_relationships_array() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/permission_filter/remote_relationships/array";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
