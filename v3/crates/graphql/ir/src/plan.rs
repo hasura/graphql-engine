@@ -23,8 +23,8 @@ use indexmap::IndexMap;
 use lang_graphql as gql;
 pub use metadata_resolve::Metadata;
 use plan_types::{
-    CommandReturnKind, ExecutionTree, NDCMutationExecution, NDCQueryExecution,
-    NDCSubscriptionExecution, ProcessResponseAs, QueryExecutionPlan, UniqueNumber,
+    CommandReturnKind, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
+    ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree, UniqueNumber,
 };
 pub use types::{
     ApolloFederationSelect, MutationPlan, MutationSelect, NodeQueryPlan, Plan, QueryPlan,
@@ -105,11 +105,7 @@ fn plan_mutation<'n, 's>(
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<MutationSelect<'n, 's>, error::Error> {
-    let Plan {
-        inner: ndc_ir,
-        join_locations,
-        remote_predicates,
-    } = commands::plan_mutation_execution(
+    let execution_tree = commands::plan_mutation_execution(
         ir.procedure_name,
         ir,
         metadata,
@@ -118,18 +114,12 @@ fn plan_mutation<'n, 's>(
         unique_number,
     )?;
 
-    // _should not_ happen but let's fail rather than do a query with missing filters
-    if !remote_predicates.0.is_empty() {
-        return Err(error::Error::RemotePredicatesAreNotSupportedInMutations);
-    }
-
     Ok(MutationSelect {
         selection_set,
         mutation_execution: NDCMutationExecution {
-            execution_node: ndc_ir,
-            join_locations,
+            execution_tree,
             data_connector: ir.command_info.data_connector.clone(),
-            execution_span_attribute: "execute_command".into(),
+            execution_span_attribute: "execute_command",
             field_span_attribute: ir.command_info.field_name.to_string(),
             process_response_as: ProcessResponseAs::CommandResponse {
                 command_name: ir.command_info.command_name.clone(),
@@ -300,7 +290,7 @@ fn plan_subscription<'s, 'ir>(
     }
 }
 
-fn reject_remote_joins(tree: ExecutionTree) -> Result<QueryExecutionPlan, error::Error> {
+fn reject_remote_joins(tree: QueryExecutionTree) -> Result<QueryExecutionPlan, error::Error> {
     if !tree.remote_join_executions.is_empty() {
         return Err(error::Error::RemoteJoinsAreNotSupportedSubscriptions);
     }

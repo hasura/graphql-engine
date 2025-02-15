@@ -11,6 +11,8 @@
 
 ### Fixed
 
+- Support execution of remote joins from mutations/procedures
+
 - Loosen restriction on `ObjectType` fields to allow them to refer to
   `BooleanExpressionType` with the `object` operand.
 

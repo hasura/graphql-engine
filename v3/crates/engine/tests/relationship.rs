@@ -300,6 +300,36 @@ fn test_remote_relationships_model_to_model_array_aggregate() -> anyhow::Result<
     )
 }
 
+// Test remote joins with a Procedure LHS. This exercises:
+//  - join to a model (object relationship), with permissions
+//  - join to a collection
+//    - ...with a nested join
+//
+// (adapted from test_command_procedures_multiple_arguments and
+// test_select_many_model_arguments_without_arguments_input_type)
+#[test]
+fn test_remote_join_procedure_to_model() -> anyhow::Result<()> {
+    let test_path_string = "execute/remote_relationships/command/procedures";
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        test_path_string,
+        &[
+            "execute/common_metadata/command_metadata.json",
+            "execute/common_metadata/postgres_connector_schema.json",
+        ],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::YesPlease,
+    )
+}
+
 #[test]
 fn test_remote_relationships_model_to_command_array() -> anyhow::Result<()> {
     let test_path_string = "execute/remote_relationships/command/model_to_command";

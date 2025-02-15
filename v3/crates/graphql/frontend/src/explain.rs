@@ -305,7 +305,10 @@ pub(crate) async fn explain_mutation_plan(
             // so there won't be any steps here
             let predicate_explain_steps = vec![];
 
-            let resolved_execution_plan = ndc_mutation_execution.mutation_execution.execution_node;
+            let resolved_execution_plan = ndc_mutation_execution
+                .mutation_execution
+                .execution_tree
+                .mutation_execution_plan;
 
             let mutation_request = execute::make_ndc_mutation_request(resolved_execution_plan)
                 .map_err(|e| crate::RequestError::ExplainError(e.to_string()))?;
@@ -317,7 +320,10 @@ pub(crate) async fn explain_mutation_plan(
                 &ndc_mutation_execution
                     .mutation_execution
                     .process_response_as,
-                ndc_mutation_execution.mutation_execution.join_locations,
+                ndc_mutation_execution
+                    .mutation_execution
+                    .execution_tree
+                    .remote_join_executions,
                 types::NDCRequest::Mutation(mutation_request),
                 &ndc_mutation_execution.mutation_execution.data_connector,
             )

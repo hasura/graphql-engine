@@ -18,8 +18,8 @@ use open_dds::query::{
     ModelTarget, Name, Operand,
 };
 use plan_types::{
-    AggregateFieldSelection, AggregateSelectionSet, ExecutionTree, FieldsSelection, Grouping,
-    JoinLocations, NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
+    AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, Grouping, JoinLocations,
+    NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNodeNew,
     UniqueNumber,
 };
 
@@ -31,7 +31,7 @@ pub fn from_model_group_by(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<ExecutionTree, PlanError> {
+) -> Result<QueryExecutionTree, PlanError> {
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
         model_target.model_name.clone(),
@@ -276,7 +276,7 @@ pub fn from_model_group_by(
         data_connector: query.data_connector,
     };
 
-    Ok(ExecutionTree {
+    Ok(QueryExecutionTree {
         query_execution_plan,
         remote_predicates: PredicateQueryTrees::new(),
         remote_join_executions: JoinLocations::new(),
@@ -290,7 +290,7 @@ pub fn from_model_aggregate_selection(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<ExecutionTree, PlanError> {
+) -> Result<QueryExecutionTree, PlanError> {
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
         model_target.model_name.clone(),
@@ -391,7 +391,7 @@ pub fn from_model_aggregate_selection(
         data_connector: query.data_connector,
     };
 
-    Ok(ExecutionTree {
+    Ok(QueryExecutionTree {
         query_execution_plan,
         remote_predicates: PredicateQueryTrees::new(),
         remote_join_executions: JoinLocations::new(),
@@ -554,7 +554,7 @@ pub fn from_model_selection(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<ExecutionTree, PlanError> {
+) -> Result<QueryExecutionTree, PlanError> {
     let mut remote_predicates = PredicateQueryTrees::new();
     let mut remote_join_executions = JoinLocations::new();
 
@@ -641,7 +641,7 @@ pub fn from_model_selection(
         data_connector: query.data_connector.clone(),
     };
 
-    Ok(ExecutionTree {
+    Ok(QueryExecutionTree {
         query_execution_plan,
         remote_predicates,
         remote_join_executions,

@@ -9,7 +9,7 @@ Queries(
             Identifier(
                 "authors",
             ),
-        ): ExecutionTree {
+        ): QueryExecutionTree {
             remote_predicates: PredicateQueryTrees(
                 {},
             ),

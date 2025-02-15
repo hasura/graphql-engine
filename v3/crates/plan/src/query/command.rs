@@ -15,17 +15,17 @@ use open_dds::{
     types::CustomTypeName,
 };
 use plan_types::{
-    Argument, ExecutionTree, Field, JoinLocations, MutationArgument, MutationExecutionPlan,
+    Argument, Field, JoinLocations, MutationArgument, MutationExecutionPlan, MutationExecutionTree,
     NdcFieldAlias, NdcRelationshipName, NestedArray, NestedField, NestedObject,
-    PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew, Relationship,
+    PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNodeNew, Relationship,
 };
 use plan_types::{UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME};
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub enum CommandPlan {
-    Function(ExecutionTree),
-    Procedure(MutationExecutionPlan),
+    Function(QueryExecutionTree),
+    Procedure(MutationExecutionTree),
 }
 
 pub struct FromCommand {
@@ -213,33 +213,35 @@ pub(crate) fn from_command_selection(
         resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
 
     let command_plan = match &command_source.source {
-        DataConnectorCommand::Function(function_name) => CommandPlan::Function(ExecutionTree {
-            remote_predicates,
-            remote_join_executions,
-            query_execution_plan: QueryExecutionPlan {
-                query_node: QueryNodeNew {
-                    fields: Some(plan_types::FieldsSelection {
-                        fields: wrap_scalar_select(wrap_function_ndc_field(
-                            &output_shape,
-                            ndc_fields,
-                        )),
-                    }),
-                    aggregates: None,
-                    limit: None,
-                    offset: None,
-                    order_by: None,
-                    predicate: None,
-                    group_by: None,
+        DataConnectorCommand::Function(function_name) => {
+            CommandPlan::Function(QueryExecutionTree {
+                remote_predicates,
+                remote_join_executions,
+                query_execution_plan: QueryExecutionPlan {
+                    query_node: QueryNodeNew {
+                        fields: Some(plan_types::FieldsSelection {
+                            fields: wrap_scalar_select(wrap_function_ndc_field(
+                                &output_shape,
+                                ndc_fields,
+                            )),
+                        }),
+                        aggregates: None,
+                        limit: None,
+                        offset: None,
+                        order_by: None,
+                        predicate: None,
+                        group_by: None,
+                    },
+                    collection: CollectionName::from(function_name.as_str()),
+                    arguments: resolved_arguments,
+                    collection_relationships: relationships.clone(),
+                    variables: None,
+                    data_connector: command_source.data_connector.clone(),
                 },
-                collection: CollectionName::from(function_name.as_str()),
-                arguments: resolved_arguments,
-                collection_relationships: relationships.clone(),
-                variables: None,
-                data_connector: command_source.data_connector.clone(),
-            },
-        }),
+            })
+        }
         DataConnectorCommand::Procedure(procedure_name) => {
-            CommandPlan::Procedure(MutationExecutionPlan {
+            let mutation_execution_plan = MutationExecutionPlan {
                 procedure_name: procedure_name.clone(),
                 procedure_arguments: resolved_arguments
                     .into_iter()
@@ -261,6 +263,10 @@ pub(crate) fn from_command_selection(
                 procedure_fields: Some(wrap_procedure_ndc_fields(&output_shape, ndc_fields)),
                 collection_relationships: relationships.clone(),
                 data_connector: command_source.data_connector.clone(),
+            };
+            CommandPlan::Procedure(MutationExecutionTree {
+                mutation_execution_plan,
+                remote_join_executions,
             })
         }
     };

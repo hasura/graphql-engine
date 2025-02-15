@@ -1,0 +1,20 @@
+mutation MyMutation {
+  # procedure
+  updateActorNameById(id: 1, name: "Chris Hemsworth") {
+    actor_id
+    movie_id
+    name
+    # remote join (to db2 connector) to a collection
+    Actors {
+      name
+      # ...and with another nested join
+      RemoteJoinBackToAnalytics {
+        movie_id
+      }
+    }
+    # remote join (from custom to db) to a command (object type join)
+    Analytics {
+      movie_id
+    }
+  }
+}

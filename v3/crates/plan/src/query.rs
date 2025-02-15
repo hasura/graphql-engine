@@ -26,19 +26,19 @@ pub use relationships::{
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use open_dds::query::{Alias, Query, QueryRequest};
-use plan_types::{ExecutionTree, UniqueNumber};
+use plan_types::{QueryExecutionTree, UniqueNumber};
 
 // these types should probably live in `plan-types`
 #[derive(Debug)]
 pub enum SingleNodeExecutionPlan {
-    Query(plan_types::ExecutionTree),
-    Mutation(plan_types::MutationExecutionPlan),
+    Query(plan_types::QueryExecutionTree),
+    Mutation(plan_types::MutationExecutionTree),
 }
 
 #[derive(Debug)]
 pub enum ExecutionPlan {
-    Queries(IndexMap<Alias, ExecutionTree>),
-    Mutation(plan_types::MutationExecutionPlan), // currently only support a single mutation
+    Queries(IndexMap<Alias, QueryExecutionTree>),
+    Mutation(plan_types::MutationExecutionTree), // currently only support a single mutation
 }
 
 // make a query execution plan from OpenDD IR
@@ -70,13 +70,13 @@ where
             SingleNodeExecutionPlan::Query(execution_tree) => {
                 queries.insert(alias.clone(), execution_tree);
             }
-            SingleNodeExecutionPlan::Mutation(mutation_execution_plan) => {
+            SingleNodeExecutionPlan::Mutation(execution_tree) => {
                 if mutation.is_some() {
                     return Err(PlanError::Internal(
                         "Multiple mutations not currently supported in OpenDD pipeline".into(),
                     ));
                 }
-                mutation = Some(mutation_execution_plan);
+                mutation = Some(execution_tree);
             }
         }
     }
@@ -144,7 +144,7 @@ where
         open_dds::query::Query::Command(command_selection) => {
             let command::FromCommand {
                 command_plan,
-                extract_response_from: _,
+                extract_response_from: _, // TODO something for commands that return headers here?
             } = command::from_command(
                 command_selection,
                 metadata,
@@ -156,8 +156,8 @@ where
                 command::CommandPlan::Function(execution_tree) => {
                     Ok(SingleNodeExecutionPlan::Query(execution_tree))
                 }
-                command::CommandPlan::Procedure(mutation_execution_plan) => {
-                    Ok(SingleNodeExecutionPlan::Mutation(mutation_execution_plan))
+                command::CommandPlan::Procedure(execution_tree) => {
+                    Ok(SingleNodeExecutionPlan::Mutation(execution_tree))
                 }
             }
         }

@@ -1,0 +1,74 @@
+[
+  {
+    "data": {
+      "updateActorNameById": {
+        "actor_id": 1,
+        "movie_id": 1,
+        "name": "Chris Hemsworth",
+        "Actors": [
+          {
+            "name": "Leonardo DiCaprio",
+            "RemoteJoinBackToAnalytics": {
+              "movie_id": 1
+            }
+          },
+          {
+            "name": "Kate Winslet",
+            "RemoteJoinBackToAnalytics": {
+              "movie_id": 1
+            }
+          }
+        ],
+        "Analytics": {
+          "movie_id": 1
+        }
+      }
+    }
+  },
+  {
+    "data": {
+      "updateActorNameById": {
+        "actor_id": 1,
+        "movie_id": 1,
+        "name": "Chris Hemsworth",
+        "Actors": [
+          {
+            "name": "Leonardo DiCaprio",
+            "RemoteJoinBackToAnalytics": {
+              "movie_id": 1
+            }
+          },
+          {
+            "name": "Kate Winslet",
+            "RemoteJoinBackToAnalytics": {
+              "movie_id": 1
+            }
+          }
+        ],
+        "Analytics": {
+          "movie_id": 1
+        }
+      }
+    }
+  },
+  {
+    "data": {
+      "updateActorNameById": {
+        "actor_id": 1,
+        "movie_id": 1,
+        "name": "Chris Hemsworth",
+        "Actors": [
+          {
+            "name": "Leonardo DiCaprio",
+            "RemoteJoinBackToAnalytics": null
+          },
+          {
+            "name": "Kate Winslet",
+            "RemoteJoinBackToAnalytics": null
+          }
+        ],
+        "Analytics": null
+      }
+    }
+  }
+]

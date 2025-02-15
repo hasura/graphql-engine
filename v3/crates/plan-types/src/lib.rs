@@ -10,13 +10,13 @@ mod variable_name;
 
 pub use execution_plan::{
     AggregateFieldSelection, AggregateFieldsSelection, AggregateSelectionSet, Argument,
-    CommandReturnKind, Dimension, ExecutionTree, Field, FieldsSelection, Grouping, JoinLocations,
-    JoinNode, Location, LocationKind, MutationArgument, MutationExecutionPlan,
+    CommandReturnKind, Dimension, Field, FieldsSelection, Grouping, JoinLocations, JoinNode,
+    Location, LocationKind, MutationArgument, MutationExecutionPlan, MutationExecutionTree,
     NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution, NestedArray, NestedField,
     NestedObject, PredicateQueryTree, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan,
-    QueryNodeNew, Relationship, RelationshipArgument, RemoteJoin, RemoteJoinArgument,
-    RemoteJoinType, RemotePredicateKey, ResolvedFilterExpression, SourceFieldAlias, TargetField,
-    UniqueNumber,
+    QueryExecutionTree, QueryNodeNew, Relationship, RelationshipArgument, RemoteJoin,
+    RemoteJoinArgument, RemoteJoinType, RemotePredicateKey, ResolvedFilterExpression,
+    SourceFieldAlias, TargetField, UniqueNumber,
 };
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,

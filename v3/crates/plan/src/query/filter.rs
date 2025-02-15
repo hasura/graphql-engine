@@ -11,9 +11,9 @@ use open_dds::{
     types::CustomTypeName,
 };
 use plan_types::{
-    ExecutionTree, Expression, Field, FieldsSelection, JoinLocations, LocalModelRelationshipInfo,
-    NdcFieldAlias, NdcRelationshipName, PredicateQueryTree, PredicateQueryTrees,
-    QueryExecutionPlan, QueryNodeNew, Relationship, RelationshipColumnMapping,
+    Expression, Field, FieldsSelection, JoinLocations, LocalModelRelationshipInfo, NdcFieldAlias,
+    NdcRelationshipName, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan,
+    QueryExecutionTree, QueryNodeNew, Relationship, RelationshipColumnMapping,
     ResolvedFilterExpression, SourceNdcColumn, UniqueNumber,
 };
 use std::borrow::Cow;
@@ -153,7 +153,7 @@ pub fn plan_expression<'a>(
             let predicate_query_tree = PredicateQueryTree {
                 ndc_column_mapping: ndc_column_mapping.clone(),
                 target_model_name: (*target_model_name).clone(),
-                query: ExecutionTree {
+                query: QueryExecutionTree {
                     query_execution_plan,
                     remote_predicates: PredicateQueryTrees::new(),
                     remote_join_executions: JoinLocations::new(),

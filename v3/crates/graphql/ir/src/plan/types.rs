@@ -23,6 +23,7 @@ pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir
 /// transactional requests. In a mutation plan, we group nodes by connector, allowing us to issue
 /// transactional commands to connectors whose capabilities allow for transactional mutations.
 /// Otherwise, we can just send them one-by-one (though still sequentially).
+#[derive(Debug)]
 pub struct MutationPlan<'n, 's> {
     pub nodes: IndexMap<
         Arc<metadata_resolve::DataConnectorLink>,
@@ -31,6 +32,7 @@ pub struct MutationPlan<'n, 's> {
     pub type_names: IndexMap<ast::Alias, ast::TypeName>,
 }
 
+#[derive(Debug)]
 pub struct MutationSelect<'n, 's> {
     pub mutation_execution: NDCMutationExecution,
     pub selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
@@ -38,12 +40,14 @@ pub struct MutationSelect<'n, 's> {
 
 // At least for now, requests are _either_ queries or mutations, and a mix of the two can be
 // treated as an invalid request. We may want to change this in the future.
+#[derive(Debug)]
 pub enum RequestPlan<'n, 's, 'ir> {
     QueryPlan(QueryPlan<'n, 's, 'ir>),
     MutationPlan(MutationPlan<'n, 's>),
     SubscriptionPlan(ast::Alias, SubscriptionSelect<'s, 'ir>),
 }
 
+#[derive(Debug)]
 pub struct SubscriptionSelect<'ir, 's> {
     pub subscription_execution: NDCSubscriptionExecution,
     pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,

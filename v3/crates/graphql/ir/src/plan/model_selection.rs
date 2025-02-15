@@ -11,8 +11,8 @@ use crate::ModelSelection;
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use plan_types::{
-    ExecutionTree, FieldsSelection, JoinLocations, NdcRelationshipName, PredicateQueryTrees,
-    QueryExecutionPlan, QueryNodeNew, Relationship, UniqueNumber,
+    FieldsSelection, JoinLocations, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan,
+    QueryExecutionTree, QueryNodeNew, Relationship, UniqueNumber,
 };
 use std::collections::BTreeMap;
 
@@ -90,7 +90,7 @@ pub(crate) fn plan_query_execution(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<ExecutionTree, error::Error> {
+) -> Result<QueryExecutionTree, error::Error> {
     let mut collection_relationships = BTreeMap::new();
     let Plan {
         inner: query,
@@ -121,7 +121,7 @@ pub(crate) fn plan_query_execution(
         variables: None,
         data_connector: ir.data_connector.clone(),
     };
-    Ok(ExecutionTree {
+    Ok(QueryExecutionTree {
         query_execution_plan,
         remote_join_executions,
         remote_predicates,

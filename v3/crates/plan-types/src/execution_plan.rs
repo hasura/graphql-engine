@@ -28,7 +28,7 @@ pub use remote_joins::{
 
 #[derive(Debug)]
 pub struct NDCQueryExecution {
-    pub execution_tree: ExecutionTree,
+    pub execution_tree: QueryExecutionTree,
     pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs,
@@ -36,10 +36,9 @@ pub struct NDCQueryExecution {
 
 #[derive(Debug)]
 pub struct NDCMutationExecution {
-    pub execution_node: mutation::MutationExecutionPlan,
-    pub join_locations: JoinLocations,
+    pub execution_tree: MutationExecutionTree,
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
-    pub execution_span_attribute: String,
+    pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs,
 }
@@ -54,9 +53,15 @@ pub struct NDCSubscriptionExecution {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ExecutionTree {
+pub struct QueryExecutionTree {
     pub remote_predicates: PredicateQueryTrees,
     pub query_execution_plan: query::QueryExecutionPlan,
+    pub remote_join_executions: remote_joins::JoinLocations,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MutationExecutionTree {
+    pub mutation_execution_plan: mutation::MutationExecutionPlan,
     pub remote_join_executions: remote_joins::JoinLocations,
 }
 

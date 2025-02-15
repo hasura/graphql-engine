@@ -12,9 +12,10 @@ use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use open_dds::commands::ProcedureName;
 use plan_types::{
-    Argument, ExecutionTree, Field, FieldsSelection, JoinLocations, MutationExecutionPlan,
-    NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
-    Relationship, UniqueNumber, VariableName, FUNCTION_IR_VALUE_COLUMN_NAME,
+    Argument, Field, FieldsSelection, JoinLocations, MutationExecutionPlan, MutationExecutionTree,
+    NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan,
+    QueryExecutionTree, QueryNodeNew, Relationship, UniqueNumber, VariableName,
+    FUNCTION_IR_VALUE_COLUMN_NAME,
 };
 
 pub(crate) fn plan_query_node(
@@ -87,7 +88,7 @@ pub(crate) fn plan_query_execution(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<ExecutionTree, error::Error> {
+) -> Result<QueryExecutionTree, error::Error> {
     let mut collection_relationships = BTreeMap::new();
     match &ir.command_info.selection {
         CommandSelection::OpenDd { selection } => {
@@ -148,7 +149,7 @@ pub(crate) fn plan_query_execution(
                 variables: None,
                 data_connector: ir.command_info.data_connector.clone(),
             };
-            Ok(ExecutionTree {
+            Ok(QueryExecutionTree {
                 query_execution_plan,
                 remote_join_executions,
                 remote_predicates,
@@ -164,12 +165,7 @@ pub(crate) fn plan_mutation_execution(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<Plan<MutationExecutionPlan>, error::Error> {
-    let mut ndc_nested_field = None;
-    let mut join_locations = JoinLocations::new();
-    let mut remote_predicates = PredicateQueryTrees::new();
-    let mut collection_relationships = BTreeMap::new();
-
+) -> Result<MutationExecutionTree, error::Error> {
     match &ir.command_info.selection {
         CommandSelection::OpenDd { selection } => {
             let single_node_execution_plan = plan::query_to_plan(
@@ -185,11 +181,7 @@ pub(crate) fn plan_mutation_execution(
                     // invoking yet
                     Err(error::Error::PlanExpectedMutationGotQuery)
                 }
-                plan::SingleNodeExecutionPlan::Mutation(mutation_execution_plan) => Ok(Plan {
-                    inner: mutation_execution_plan,
-                    join_locations,
-                    remote_predicates,
-                }),
+                plan::SingleNodeExecutionPlan::Mutation(execution_tree) => Ok(execution_tree),
             }
         }
 
@@ -197,11 +189,14 @@ pub(crate) fn plan_mutation_execution(
             selection,
             arguments,
         } => {
+            let mut ndc_nested_field = None;
+            let mut join_locations = JoinLocations::new();
+            let mut collection_relationships = BTreeMap::new();
             if let Some(nested_selection) = &selection {
                 let Plan {
                     inner: fields,
                     join_locations: nested_join_locations,
-                    remote_predicates: nested_remote_predicates,
+                    remote_predicates,
                 } = selection_set::plan_nested_selection(
                     nested_selection,
                     ir.command_info
@@ -216,9 +211,12 @@ pub(crate) fn plan_mutation_execution(
                 )?;
                 ndc_nested_field = Some(fields);
                 join_locations = nested_join_locations;
-                remote_predicates = nested_remote_predicates;
+                // _should not_ happen but let's fail rather than do a query with missing filters
+                if !remote_predicates.0.is_empty() {
+                    return Err(error::Error::RemotePredicatesAreNotSupportedInMutations);
+                }
             }
-            let mutation_request = MutationExecutionPlan {
+            let mutation_execution_plan = MutationExecutionPlan {
                 procedure_name: procedure_name.clone(),
                 procedure_arguments: arguments::plan_mutation_arguments(
                     arguments,
@@ -229,10 +227,9 @@ pub(crate) fn plan_mutation_execution(
                 collection_relationships,
                 data_connector: ir.command_info.data_connector.clone(),
             };
-            Ok(Plan {
-                inner: mutation_request,
-                join_locations,
-                remote_predicates,
+            Ok(MutationExecutionTree {
+                mutation_execution_plan,
+                remote_join_executions: join_locations,
             })
         }
     }

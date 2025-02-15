@@ -7,15 +7,17 @@ mod remote_joins;
 mod remote_predicates;
 use crate::error::FieldError;
 use crate::ndc;
+use crate::FieldInternalError;
 use async_recursion::async_recursion;
 use engine_types::{HttpContext, ProjectId};
+use indexmap::IndexMap;
 pub use ndc_request::{
     make_ndc_mutation_request, make_ndc_query_request, v01::NdcV01CompatibilityError,
 };
 use plan_types::{
-    ExecutionTree, JoinLocations, NDCMutationExecution, NDCQueryExecution,
-    NDCSubscriptionExecution, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan,
-    RemotePredicateKey, ResolvedFilterExpression,
+    JoinLocations, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
+    PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree,
+    RemotePredicateKey, ResolvedFilterExpression, FUNCTION_IR_VALUE_COLUMN_NAME,
 };
 pub use remote_predicates::replace_predicates_in_query_execution_plan;
 use std::collections::BTreeMap;
@@ -33,7 +35,7 @@ pub async fn resolve_ndc_query_execution(
         process_response_as,
     } = ndc_query;
 
-    execute_execution_tree(
+    execute_query_execution_tree(
         http_context,
         execution_tree,
         field_span_attribute,
@@ -76,7 +78,7 @@ pub async fn execute_remote_predicates(
 
         // execute our remote predicate, including everything we have learned
         // from the child predicates
-        let result_row_set = execute_execution_tree(
+        let result_row_set = execute_query_execution_tree(
             http_context,
             remote_predicate.query.clone(),
             field_span_attribute,
@@ -114,9 +116,9 @@ pub(crate) fn get_single_rowset(
 }
 
 #[async_recursion]
-async fn execute_execution_tree<'s>(
+async fn execute_query_execution_tree<'s>(
     http_context: &HttpContext,
-    execution_tree: ExecutionTree,
+    execution_tree: QueryExecutionTree,
     field_span_attribute: &str,
     execution_span_attribute: &'static str,
     process_response_as: &ProcessResponseAs,
@@ -229,16 +231,15 @@ pub async fn resolve_ndc_mutation_execution(
     project_id: Option<&ProjectId>,
 ) -> Result<ndc_models::MutationResponse, FieldError> {
     let NDCMutationExecution {
-        execution_node,
+        execution_tree,
         data_connector,
         execution_span_attribute,
         field_span_attribute,
-        process_response_as: _,
-        // TODO: remote joins are not handled for mutations
-        join_locations: _,
+        process_response_as,
     } = ndc_mutation_execution;
 
-    let mutation_request = ndc_request::make_ndc_mutation_request(execution_node)?;
+    let mutation_request =
+        ndc_request::make_ndc_mutation_request(execution_tree.mutation_execution_plan)?;
 
     let mutation_response = ndc::execute_ndc_mutation(
         http_context,
@@ -251,7 +252,93 @@ pub async fn resolve_ndc_mutation_execution(
     .await?
     .as_latest();
 
+    let mutation_response_as_query_response =
+        mutation_response_to_query_response(mutation_response);
+    let response_rowsets = run_remote_joins(
+        http_context,
+        execution_tree.remote_join_executions,
+        execution_span_attribute,
+        &process_response_as,
+        project_id,
+        mutation_response_as_query_response.0,
+    )
+    .await?;
+    let mutation_response =
+        query_response_back_to_mutation_response(ndc_models::QueryResponse(response_rowsets))?;
+
     Ok(mutation_response)
+}
+
+/// Kludge-ily make a `MutationResponse` look like a `QueryResponse` so we can pass it to the
+/// remote join execution code. `query_response_back_to_mutation_response` does the
+/// inverse operation
+/// TODO refactor (ENG-1587)
+fn mutation_response_to_query_response(
+    mutation_response: ndc_models::MutationResponse,
+) -> ndc_models::QueryResponse {
+    let row_sets: Vec<ndc_models::RowSet> = mutation_response
+        .operation_results
+        .into_iter()
+        .map(
+            |ndc_models::MutationOperationResults::Procedure { result }| {
+                // make this the same shape as the result of a Function
+                let rows = Some(vec![IndexMap::from_iter([(
+                    ndc_models::FieldName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
+                    ndc_models::RowFieldValue(result),
+                )])]);
+                // TODO it looks possible to refactor `run_remote_joins` so it takes a mutable
+                // reference to `rows`, so we could avoid this. Pass a mutable slice to ensure the
+                // length doesn't change?
+                ndc_models::RowSet {
+                    aggregates: None,
+                    rows,
+                    groups: None,
+                }
+            },
+        )
+        .collect::<Vec<_>>();
+
+    ndc_models::QueryResponse(row_sets)
+}
+fn query_response_back_to_mutation_response(
+    query_response: ndc_models::QueryResponse,
+) -> Result<ndc_models::MutationResponse, FieldError> {
+    let operation_results = query_response
+        .0
+        .into_iter()
+        .map(|row_set| {
+            match row_set
+                .rows
+                .as_ref()
+                .ok_or_else(|| {
+                    FieldError::InternalError(FieldInternalError::InternalGeneric {
+                        description: "Unexpected structure: rows were None".to_string(),
+                    })
+                })?
+                .as_slice()
+            {
+                [singleton_map]
+                    if singleton_map.len() == 1
+                        && singleton_map.contains_key(&ndc_models::FieldName::from(
+                            FUNCTION_IR_VALUE_COLUMN_NAME,
+                        )) =>
+                {
+                    let result = singleton_map
+                        [&ndc_models::FieldName::from(FUNCTION_IR_VALUE_COLUMN_NAME)]
+                        .0
+                        .clone();
+                    Ok(ndc_models::MutationOperationResults::Procedure { result })
+                }
+                _ => Err(FieldError::InternalError(
+                    FieldInternalError::InternalGeneric {
+                        description: "Unexpected structure: non-singleton rowset".to_string(),
+                    },
+                )),
+            }
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(ndc_models::MutationResponse { operation_results })
 }
 
 /// A subscription NDC query.

@@ -12,8 +12,8 @@ use metadata_resolve::{FieldMapping, Metadata};
 use open_dds::data_connector::DataConnectorColumnName;
 use plan::{process_command_relationship_definition, process_model_relationship_definition};
 use plan_types::{
-    CommandReturnKind, ExecutionTree, Field, JoinLocations, JoinNode, Location, LocationKind,
-    NestedArray, NestedField, NestedObject, PredicateQueryTrees, RemoteJoin, RemoteJoinType,
+    CommandReturnKind, Field, JoinLocations, JoinNode, Location, LocationKind, NestedArray,
+    NestedField, NestedObject, PredicateQueryTrees, QueryExecutionTree, RemoteJoin, RemoteJoinType,
     SourceFieldAlias, TargetField,
 };
 use plan_types::{NdcFieldAlias, NdcRelationshipName, Relationship, UniqueNumber};
@@ -273,7 +273,7 @@ pub(crate) fn plan_selection_set(
                     );
                 }
                 // Construct the `JoinLocations` tree
-                let ExecutionTree {
+                let QueryExecutionTree {
                     query_execution_plan: query_execution,
                     remote_join_executions: sub_join_locations,
                     remote_predicates: model_remote_predicates,
@@ -325,7 +325,7 @@ pub(crate) fn plan_selection_set(
                     );
                 }
                 // Construct the `JoinLocations` tree
-                let ExecutionTree {
+                let QueryExecutionTree {
                     query_execution_plan: ndc_ir,
                     remote_join_executions: sub_join_locations,
                     remote_predicates: command_remote_predicates,

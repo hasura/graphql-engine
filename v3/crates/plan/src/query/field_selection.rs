@@ -26,9 +26,10 @@ use open_dds::{
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use plan_types::{
-    CommandReturnKind, ExecutionTree, Field, JoinLocations, JoinNode, Location, LocationKind,
-    NdcFieldAlias, NestedArray, NestedField, NestedObject, PredicateQueryTrees, ProcessResponseAs,
-    QueryExecutionPlan, RemoteJoin, RemoteJoinType, ResolvedFilterExpression, UniqueNumber,
+    CommandReturnKind, Field, JoinLocations, JoinNode, Location, LocationKind, NdcFieldAlias,
+    NestedArray, NestedField, NestedObject, PredicateQueryTrees, ProcessResponseAs,
+    QueryExecutionPlan, QueryExecutionTree, RemoteJoin, RemoteJoinType, ResolvedFilterExpression,
+    UniqueNumber,
 };
 use std::collections::BTreeMap;
 
@@ -438,7 +439,7 @@ fn from_model_relationship(
             )
             .map_err(PlanError::Relationship)?;
 
-            let ExecutionTree {
+            let QueryExecutionTree {
                 query_execution_plan: mut query_execution,
                 remote_join_executions: sub_join_locations,
                 remote_predicates: new_remote_predicates,
@@ -495,7 +496,7 @@ fn from_model_relationship(
                 collect_relationships,
             )?;
 
-            let ExecutionTree {
+            let QueryExecutionTree {
                 query_execution_plan:
                     QueryExecutionPlan {
                         query_node,
@@ -541,6 +542,7 @@ fn from_model_relationship(
     }
 }
 
+#[derive(Debug)]
 enum RelationshipFields {
     Local(Field),
     Remote(BTreeMap<NdcFieldAlias, Field>),
@@ -653,7 +655,7 @@ fn from_command_relationship(
             )
             .map_err(PlanError::Relationship)?;
 
-            let ExecutionTree {
+            let QueryExecutionTree {
                 mut query_execution_plan,
                 remote_predicates: new_remote_predicates,
                 remote_join_executions: new_remote_join_executions,
@@ -722,7 +724,7 @@ fn from_command_relationship(
                 process_command_relationship_definition(&local_command_relationship_info)?,
             );
 
-            let ExecutionTree {
+            let QueryExecutionTree {
                 query_execution_plan:
                     QueryExecutionPlan {
                         query_node,
@@ -882,7 +884,7 @@ fn from_relationship_aggregate_selection(
                 offset: *offset,
             };
 
-            let ExecutionTree {
+            let QueryExecutionTree {
                 query_execution_plan:
                     QueryExecutionPlan {
                         query_node,

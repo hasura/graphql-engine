@@ -2,7 +2,7 @@ use super::{aggregates, arguments, field, filter, relationships};
 use crate::NdcFieldAlias;
 use crate::OrderByElement;
 use crate::{
-    AggregateFieldSelection, ExecutionTree, NdcRelationshipName, RelationshipColumnMapping,
+    AggregateFieldSelection, NdcRelationshipName, QueryExecutionTree, RelationshipColumnMapping,
     VariableName,
 };
 use indexmap::IndexMap;
@@ -36,7 +36,7 @@ pub struct QueryExecutionPlan {
 pub struct PredicateQueryTree {
     pub ndc_column_mapping: Vec<RelationshipColumnMapping>,
     pub target_model_name: Qualified<ModelName>,
-    pub query: ExecutionTree,
+    pub query: QueryExecutionTree,
     pub children: PredicateQueryTrees,
 }
 

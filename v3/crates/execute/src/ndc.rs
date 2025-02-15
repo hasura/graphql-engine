@@ -108,7 +108,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_context: &HttpContext,
     query: &NdcMutationRequest,
     data_connector: &Arc<metadata_resolve::DataConnectorLink>,
-    execution_span_attribute: String,
+    execution_span_attribute: &'static str,
     field_span_attribute: String,
     project_id: Option<&ProjectId>,
 ) -> Result<NdcMutationResponse, error::FieldError> {

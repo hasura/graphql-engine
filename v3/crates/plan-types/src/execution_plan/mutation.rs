@@ -7,7 +7,7 @@ use super::arguments;
 use super::field;
 use super::relationships;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MutationExecutionPlan {
     /// The name of a procedure
     pub procedure_name: ProcedureName,
