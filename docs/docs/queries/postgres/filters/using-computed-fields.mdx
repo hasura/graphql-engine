@@ -31,6 +31,31 @@ query {
 }
 ```
 
+:::info Limitation
+
+GraphQL does not allow arguments on input fields, unlike output fields. This limits the use of computed fields with arguments in `where` clauses.
+
+For example, the `get_articles` computed field on the `author` table maps to the SQL function:
+
+```sql
+get_articles(table_input author, search text)
+```
+Here, `search` is passed as a GraphQL argument:
+```graphql
+query {
+    author {
+        id
+        name
+        get_articles(search: "graphql") {
+            title
+            content
+        }
+    }
+}
+```
+Computed fields with additional arguments (like `search` in this example) cannot currently be used for filtering.
+:::
+
 The behavior of the comparison operators depends on whether the computed fields return scalar type values or set of
 table rows.
 
