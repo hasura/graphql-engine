@@ -39,7 +39,7 @@ fn build_allowed_roles(
 /// with the `JWTSecretConfig` and returns `hasura_authn_core::Identity`
 pub async fn authenticate_request(
     http_client: &reqwest::Client,
-    jwt_config: JWTConfig,
+    jwt_config: &JWTConfig,
     headers: &HeaderMap,
     allow_role_emulation_for: Option<&Role>,
 ) -> Result<Identity, Error> {
@@ -225,7 +225,7 @@ mod tests {
 
         let authenticated_identity = authenticate_request(
             &http_client,
-            jwt_config,
+            &jwt_config,
             &header_map,
             Some(&Role::new("admin")),
         )
@@ -322,7 +322,7 @@ mod tests {
 
         let authenticated_identity = authenticate_request(
             &http_client,
-            jwt_config,
+            &jwt_config,
             &header_map,
             Some(&Role::new("admin")),
         )

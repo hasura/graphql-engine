@@ -463,7 +463,7 @@ fn get_decoding_key(secret_config: &JWTKeyConfig) -> Result<DecodingKey, Error> 
 
 async fn get_decoding_key_from_jwk_url(
     http_client: &reqwest::Client,
-    jwk_url: Url,
+    jwk_url: &Url,
     jwt_authorization_header: &str,
 ) -> Result<(Vec<jwt::Algorithm>, jwt::DecodingKey), Error> {
     let tracer = tracing_util::global_tracer();
@@ -471,7 +471,7 @@ async fn get_decoding_key_from_jwk_url(
         .in_span_async("fetch_jwk", "Fetch JWK", SpanVisibility::Internal, || {
             Box::pin(async {
                 let jwk_request = http_client
-                    .get(jwk_url)
+                    .get(jwk_url.clone())
                     .headers(tracing_util::get_trace_headers())
                     .timeout(Duration::from_secs(60))
                     .build()
@@ -530,20 +530,20 @@ fn get_acceptable_algorithms_for_key(jwk: &jwt::jwk::Jwk) -> Vec<jwt::Algorithm>
     }
 }
 
-fn get_claims_mapping_entry_value<T: for<'de> serde::Deserialize<'de>>(
+fn get_claims_mapping_entry_value<T: for<'de> serde::Deserialize<'de> + Clone>(
     claim_name: String,
-    claims_mapping_entry: JWTClaimsMappingEntry<T>,
+    claims_mapping_entry: &JWTClaimsMappingEntry<T>,
     json_value: &serde_json::Value,
 ) -> Result<Option<T>, Error> {
     match claims_mapping_entry {
-        JWTClaimsMappingEntry::Literal(literal_value) => Ok(Some(literal_value)),
+        JWTClaimsMappingEntry::Literal(literal_value) => Ok(Some(literal_value.clone())),
         JWTClaimsMappingEntry::Path(JWTClaimsMappingPathEntry { path, default }) => {
-            Ok(match json_value.pointer(&path) {
+            Ok(match json_value.pointer(path) {
                 Some(v) => Some(
                     serde_json::from_value(v.clone())
                         .map_err(|e| Error::ParseClaimsMapEntryError { claim_name, err: e })?,
                 ),
-                None => default,
+                None => default.clone(),
             })
         }
     }
@@ -551,11 +551,11 @@ fn get_claims_mapping_entry_value<T: for<'de> serde::Deserialize<'de>>(
 
 pub(crate) async fn decode_and_parse_hasura_claims(
     http_client: &reqwest::Client,
-    jwt_config: JWTConfig,
+    jwt_config: &JWTConfig,
     jwt: String,
 ) -> Result<HasuraClaims, Error> {
-    let (acceptable_algorithms, decoding_key) = match jwt_config.key {
-        JWTKey::Fixed(conf) => (vec![conf.algorithm], get_decoding_key(&conf)?),
+    let (acceptable_algorithms, decoding_key) = match &jwt_config.key {
+        JWTKey::Fixed(conf) => (vec![conf.algorithm], get_decoding_key(conf)?),
         JWTKey::JwkFromUrl(jwk_url) => {
             get_decoding_key_from_jwk_url(http_client, jwk_url, &jwt).await?
         }
@@ -565,11 +565,11 @@ pub(crate) async fn decode_and_parse_hasura_claims(
     validation.algorithms = acceptable_algorithms;
 
     // Additional validations according to the `jwt_config`.
-    if let Some(aud) = jwt_config.audience {
-        validation.set_audience(&aud.into_iter().collect::<Vec<_>>());
+    if let Some(aud) = &jwt_config.audience {
+        validation.set_audience(&aud.iter().collect::<Vec<_>>());
     };
 
-    if let Some(issuer) = jwt_config.issuer {
+    if let Some(issuer) = &jwt_config.issuer {
         validation.set_issuer(&[issuer]);
     };
 
@@ -581,7 +581,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
         .map_err(InternalError::JWTDecodingError)?
         .claims;
 
-    let hasura_claims = match jwt_config.claims_config {
+    let hasura_claims = match &jwt_config.claims_config {
         // This case can be avoided, if we can use serde's `Default` and `Flatten`
         // together, but unfortunately that is not possible at the moment.
         // https://github.com/serde-rs/serde/issues/1626
@@ -589,7 +589,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
             claims_format,
             location: claims_namespace_path,
         }) => {
-            let unprocessed_hasura_claims = claims.pointer(&claims_namespace_path).ok_or(
+            let unprocessed_hasura_claims = claims.pointer(claims_namespace_path).ok_or(
                 InternalError::HasuraClaimsNotFound {
                     path: claims_namespace_path.to_string(),
                 },
@@ -611,7 +611,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
         JWTClaimsConfig::Locations(claims_mappings) => {
             let default_role = get_claims_mapping_entry_value(
                 "x-hasura-default-role".to_string(),
-                claims_mappings.default_role,
+                &claims_mappings.default_role,
                 &claims,
             )?
             .ok_or(Error::RequiredClaimNotFound {
@@ -620,7 +620,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
 
             let allowed_roles = get_claims_mapping_entry_value(
                 "x-hasura-allowed-roles".to_string(),
-                claims_mappings.allowed_roles,
+                &claims_mappings.allowed_roles,
                 &claims,
             )?
             .ok_or(Error::RequiredClaimNotFound {
@@ -628,13 +628,13 @@ pub(crate) async fn decode_and_parse_hasura_claims(
             })?;
             let mut custom_claims = HashMap::new();
 
-            for (claim_name, claims_mapping_entry) in claims_mappings.custom_claims {
+            for (claim_name, claims_mapping_entry) in &claims_mappings.custom_claims {
                 let claim_value = get_claims_mapping_entry_value(
                     claim_name.to_string(),
                     claims_mapping_entry,
                     &claims,
                 )?;
-                claim_value.map(|claim_val| custom_claims.insert(claim_name, claim_val));
+                claim_value.map(|claim_val| custom_claims.insert(claim_name.clone(), claim_val));
             }
 
             HasuraClaims {
@@ -905,7 +905,7 @@ mod tests {
         let http_client = reqwest::Client::new();
 
         let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims).await?;
+            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -958,7 +958,7 @@ mod tests {
         let http_client = reqwest::Client::new();
 
         let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims).await?;
+            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1023,7 +1023,7 @@ mod tests {
         let http_client = reqwest::Client::new();
 
         let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims).await?;
+            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1097,7 +1097,7 @@ mod tests {
         let http_client = reqwest::Client::new();
 
         let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims).await?;
+            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1170,7 +1170,7 @@ mod tests {
         let http_client = reqwest::Client::new();
 
         let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims).await?;
+            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1261,10 +1261,10 @@ mod tests {
         let non_empty = mockito::Matcher::Regex(".+".to_string());
         let mock = server
             .mock("GET", "/jwk")
-            // check W3C trace headrs are present
+            // check W3C trace headers are present
             .match_header("traceparent", non_empty.clone())
             .match_header("tracestate", mockito::Matcher::Any)
-            // check B3 trace headrs are present
+            // check B3 trace headers are present
             .match_header("x-b3-traceid", non_empty.clone())
             .match_header("x-b3-spanid", non_empty)
             .with_status(200)
@@ -1311,7 +1311,7 @@ mod tests {
         let jwt_config: JWTConfig = serde_json::from_value(jwt_config_json)?;
 
         let decoded_hasura_claims =
-            decode_and_parse_hasura_claims(&http_client, jwt_config.clone(), authorization_token_1)
+            decode_and_parse_hasura_claims(&http_client, &jwt_config, authorization_token_1)
                 .await?;
 
         mock.assert();
@@ -1332,7 +1332,7 @@ mod tests {
         )?;
 
         assert_eq!(
-            decode_and_parse_hasura_claims(&http_client, jwt_config, authorization_token_2)
+            decode_and_parse_hasura_claims(&http_client, &jwt_config, authorization_token_2)
                 .await
                 .unwrap_err()
                 .to_string(),
@@ -1524,7 +1524,7 @@ mod tests {
         let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
         let http_client = reqwest::Client::new();
         let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims)
+            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims)
                 .await
                 .unwrap();
         assert_eq!(hasura_claims, decoded_claims);

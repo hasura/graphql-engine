@@ -11,6 +11,7 @@ bench = false
 hasura-authn-core = { path = "../hasura-authn-core" }
 lang-graphql = { path = "../../graphql/lang-graphql" }
 open-dds = { path = "../../open-dds" }
+serde-ext = { path = "../../utils/serde-ext" }
 tracing-util = { path = "../../utils/tracing-util" }
 
 axum = { workspace = true }

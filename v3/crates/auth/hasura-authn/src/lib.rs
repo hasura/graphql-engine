@@ -31,15 +31,58 @@ pub enum AuthConfig {
     /// Definition of the authentication configuration v2, used by the API server.
     #[opendd(json_schema(title = "AuthConfigV2"))]
     V2(AuthConfigV2),
+    // Definition of the authentication configuration v3, used by the API server.
+    #[opendd(json_schema(title = "AuthConfigV3"))]
+    V3(AuthConfigV3),
 }
 
-impl AuthConfig {
-    pub fn upgrade(self) -> AuthConfigV2 {
-        match self {
-            AuthConfig::V1(v1) => AuthConfigV2 { mode: v1.mode },
-            AuthConfig::V2(v2) => v2,
-        }
+#[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "AuthConfigV3")]
+#[schemars(example = "AuthConfigV3::example")]
+/// Definition of the authentication configuration v3, used by the API server.
+pub struct AuthConfigV3 {
+    pub mode: AuthModeConfigV3,
+}
+
+impl AuthConfigV3 {
+    fn example() -> Self {
+        open_dds::traits::OpenDd::deserialize(
+            serde_json::json!(
+                {
+                    "mode": {
+                        "webhook": {
+                            "method": "GET",
+                            "url": {
+                                "value": "http://auth_hook:3050/validate-request"
+                            },
+                            "customHeadersConfig": {
+                                "headers": {
+                                    "forward": ["Authorization"],
+                                    "additional": {
+                                        "user-agent": "hasura-ddn"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ),
+            jsonpath::JSONPath::new(),
+        )
+        .unwrap()
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[schemars(title = "AuthModeConfigV3")]
+/// The configuration for the authentication mode to use - webhook, JWT or NoAuth.
+pub enum AuthModeConfigV3 {
+    Webhook(webhook::AuthHookConfigV3),
+    Jwt(Box<jwt::JWTConfig>),
+    NoAuth(noauth::NoAuthConfig),
 }
 
 #[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd, Deserialize)]
@@ -106,8 +149,16 @@ impl AuthConfigV1 {
 /// These are things that don't break the build, but may do so in future
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum Warning {
-    #[error("AuthConfig v1 is deprecated. `allowRoleEmulationBy` has been removed. Please consider upgrading to AuthConfig v2.")]
-    PleaseUpgradeToV2,
+    #[error("AuthConfig v1 is deprecated. `allowRoleEmulationBy` has been removed. Please consider upgrading to AuthConfig v3.")]
+    PleaseUpgradeV1ToV3,
+    #[error("AuthConfig v2 is deprecated. Please consider upgrading to AuthConfig v3.")]
+    PleaseUpgradeV2ToV3,
+}
+
+#[derive(Debug, thiserror::Error, PartialEq)]
+pub enum Error {
+    #[error("Invalid URL for auth webhook: {0}")]
+    InvalidAuthWebhookUrl(String),
 }
 
 /// Resolve `AuthConfig` which is not part of metadata. Hence we resolve/build
@@ -119,17 +170,24 @@ pub fn resolve_auth_config(
         serde_json::from_str(raw_auth_config)?,
         jsonpath::JSONPath::new(),
     )?;
-    let warnings = validate_auth_config(&auth_config);
+    let warnings = validate_auth_config(&auth_config)?;
     Ok((auth_config, warnings))
 }
 
-pub fn validate_auth_config(auth_config: &AuthConfig) -> Vec<Warning> {
+pub fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error> {
     let mut warnings = vec![];
     match auth_config {
-        AuthConfig::V1(_) => warnings.push(Warning::PleaseUpgradeToV2),
-        AuthConfig::V2(_) => (),
+        AuthConfig::V1(_) => warnings.push(Warning::PleaseUpgradeV1ToV3),
+        AuthConfig::V2(_) => warnings.push(Warning::PleaseUpgradeV2ToV3),
+        AuthConfig::V3(conf) => {
+            if let AuthModeConfigV3::Webhook(config) = &conf.mode {
+                // Validate the URL is valid
+                reqwest::Url::parse(config.get_url())
+                    .map_err(|e| Error::InvalidAuthWebhookUrl(e.to_string()))?;
+            }
+        }
     }
-    warnings
+    Ok(warnings)
 }
 
 /// Errors that can occur during authentication
@@ -159,6 +217,11 @@ impl axum::response::IntoResponse for AuthError {
     }
 }
 
+pub enum PossibleAuthModeConfig<'a> {
+    V1V2(&'a AuthModeConfig),
+    V3(&'a AuthModeConfigV3),
+}
+
 /// Authenticate the user based on the headers and the auth config
 pub async fn authenticate(
     headers_map: &HeaderMap,
@@ -169,30 +232,50 @@ pub async fn authenticate(
     // support role emulation
     let (auth_mode, allow_role_emulation_by) = match auth_config {
         AuthConfig::V1(auth_config) => (
-            &auth_config.mode,
+            &PossibleAuthModeConfig::V1V2(&auth_config.mode),
             auth_config.allow_role_emulation_by.as_ref(),
         ),
         // There is no role emulation in AuthConfig::V2
-        AuthConfig::V2(auth_config) => (&auth_config.mode, None),
+        AuthConfig::V2(auth_config) => (&PossibleAuthModeConfig::V1V2(&auth_config.mode), None),
+        // There is no role emulation in AuthConfig::V3
+        AuthConfig::V3(auth_config) => (&PossibleAuthModeConfig::V3(&auth_config.mode), None),
     };
-    match auth_mode {
-        AuthModeConfig::NoAuth(no_auth_config) => Ok(noauth::identity_from_config(no_auth_config)),
-        AuthModeConfig::Webhook(webhook_config) => webhook::authenticate_request(
-            client,
-            webhook_config,
-            headers_map,
-            allow_role_emulation_by,
-        )
-        .await
-        .map_err(AuthError::from),
-        AuthModeConfig::Jwt(jwt_secret_config) => jwt_auth::authenticate_request(
-            client,
-            *jwt_secret_config.clone(),
-            headers_map,
-            allow_role_emulation_by,
-        )
-        .await
-        .map_err(AuthError::from),
+    match &auth_mode {
+        PossibleAuthModeConfig::V1V2(AuthModeConfig::NoAuth(no_auth_config))
+        | PossibleAuthModeConfig::V3(AuthModeConfigV3::NoAuth(no_auth_config)) => {
+            Ok(noauth::identity_from_config(no_auth_config))
+        }
+        PossibleAuthModeConfig::V1V2(AuthModeConfig::Webhook(webhook_config)) => {
+            webhook::authenticate_request(
+                client,
+                webhook_config,
+                headers_map,
+                allow_role_emulation_by,
+            )
+            .await
+            .map_err(AuthError::from)
+        }
+        PossibleAuthModeConfig::V3(AuthModeConfigV3::Webhook(webhook_config)) => {
+            webhook::authenticate_request_v2(
+                client,
+                webhook_config,
+                headers_map,
+                allow_role_emulation_by,
+            )
+            .await
+            .map_err(AuthError::from)
+        }
+        PossibleAuthModeConfig::V1V2(AuthModeConfig::Jwt(jwt_secret_config))
+        | PossibleAuthModeConfig::V3(AuthModeConfigV3::Jwt(jwt_secret_config)) => {
+            jwt_auth::authenticate_request(
+                client,
+                jwt_secret_config,
+                headers_map,
+                allow_role_emulation_by,
+            )
+            .await
+            .map_err(AuthError::from)
+        }
     }
 }
 

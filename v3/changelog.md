@@ -4,6 +4,38 @@
 
 ### Added
 
+#### AuthConfig v3
+
+AuthConfig v3 is a new version of the AuthConfig that allows for more
+flexibility in the configuration of the authentication webhook.
+
+The following is an example of the OpenDD metadata for the AuthConfig v3:
+
+```yaml
+version: v3
+definition:
+  mode:
+    webhook:
+      method: GET
+      url:
+        valueFromEnv: AUTH_HOOK_URL
+      customHeadersConfig:
+        headers:
+          forward:
+            - Authorization
+          additional:
+            user-agent: hasura-ddn
+```
+
+For the above example, the following headers will be sent to the auth hook:
+
+- `Authorization` header from the original request
+- `user-agent` header with the value `hasura-ddn`
+
+The AuthConfig v3 is backwards compatible with the AuthConfig v2.
+
+#### Other
+
 - GraphQL WebSocket connections now include client headers from the initial
   handshake request, in addition to those from the `connection_init` message.
   These headers are forwarded to auth webhooks, plugins and data connectors.

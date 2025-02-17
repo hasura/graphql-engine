@@ -1706,6 +1706,7 @@ dependencies = [
  "reqwest",
  "schemars",
  "serde",
+ "serde-ext",
  "serde_json",
  "thiserror",
  "tokio",
