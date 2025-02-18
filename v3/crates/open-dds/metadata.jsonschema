@@ -3736,6 +3736,10 @@
         "disallow_recursive_object_types": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_unknown_values_in_arguments": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

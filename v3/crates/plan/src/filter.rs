@@ -4,7 +4,7 @@ use super::column::{to_resolved_column, ResolvedColumn};
 use super::types::{PermissionError, PlanError};
 use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
-use metadata_resolve::{DataConnectorLink, Qualified, TypeMapping};
+use metadata_resolve::{DataConnectorLink, ObjectTypeWithRelationships, Qualified, TypeMapping};
 use open_dds::{
     query::{BooleanExpression, ComparisonOperator},
     types::CustomTypeName,
@@ -369,6 +369,7 @@ pub(crate) fn resolve_model_permission_filter(
     session: &Session,
     model: &metadata_resolve::ModelWithPermissions,
     model_source: &metadata_resolve::ModelSource,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     unique_number: &mut UniqueNumber,
     usage_counts: &mut UsagesCounts,
@@ -389,6 +390,7 @@ pub(crate) fn resolve_model_permission_filter(
                 &model_source.type_mappings,
                 filter,
                 &session.variables,
+                object_types,
                 usage_counts,
             )?;
 

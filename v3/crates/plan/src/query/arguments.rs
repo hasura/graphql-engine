@@ -5,9 +5,9 @@ use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
 use metadata_resolve::{
-    unwrap_custom_type_name, ArgumentInfo, CommandWithPermissions, Metadata, ModelWithPermissions,
-    ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeReference, TypeMapping,
-    ValueExpressionOrPredicate,
+    unwrap_custom_type_name, ArgumentInfo, CommandWithPermissions, FieldMapping, Metadata,
+    ModelWithPermissions, ObjectTypeWithRelationships, Qualified, QualifiedBaseType,
+    QualifiedTypeName, QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate,
 };
 use open_dds::{
     arguments::ArgumentName,
@@ -20,6 +20,7 @@ use reqwest::header::HeaderMap;
 use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
+use tracing_util::{ErrorVisibility, TraceableError};
 
 use crate::PlanError;
 
@@ -135,6 +136,8 @@ fn process_argument_presets<'s>(
         data_connector_link_argument_presets,
         &session.variables,
         request_headers,
+        type_mappings,
+        object_types,
     )? {
         arguments.insert(argument_name, UnresolvedArgument::Literal { value });
     }
@@ -154,6 +157,7 @@ fn process_argument_presets<'s>(
             argument_value,
             field_type,
             &session.variables,
+            object_types,
             usage_counts,
         )?;
 
@@ -282,6 +286,8 @@ fn apply_input_field_presets_to_value(
                     &field_preset.value,
                     &field_info.field_type,
                     &session.variables,
+                    type_mappings,
+                    object_types,
                 )?;
 
                 object_value.insert(field_mapping.column.as_str().to_owned(), argument_value);
@@ -395,6 +401,31 @@ pub enum ArgumentPresetExecutionError {
         object_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
+    #[error("{0}")]
+    MapFieldNamesError(#[from] MapFieldNamesError),
+}
+
+impl TraceableError for ArgumentPresetExecutionError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::MapFieldNamesError(error) => error.visibility(),
+            Self::ModelSourceNotFound { .. }
+            | Self::ModelArgumentPresetsNotFound { .. }
+            | Self::CommandSourceNotFound { .. }
+            | Self::CommandArgumentPresetsNotFound { .. }
+            | Self::TypeMappingNotFound { .. }
+            | Self::FieldMappingNotFound { .. }
+            | Self::FieldDefinitionNotFound { .. }
+            | Self::ArgumentMappingNotFound { .. }
+            | Self::DataConnectorFieldMappingNotFound { .. } => ErrorVisibility::Internal,
+            Self::GotBoolean { .. }
+            | Self::GotArray { .. }
+            | Self::GotNumber { .. }
+            | Self::GotString { .. }
+            | Self::GotObject { .. }
+            | Self::IllegalCharactersInHeaderValue => ErrorVisibility::User,
+        }
+    }
 }
 
 fn get_value_array_or_null<'a>(
@@ -447,6 +478,8 @@ pub fn process_connector_link_presets(
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     session_variables: &SessionVariables,
     request_headers: &HeaderMap,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 ) -> Result<BTreeMap<DataConnectorArgumentName, serde_json::Value>, PlanError> {
     let mut arguments = BTreeMap::new();
     // preset arguments from `DataConnectorLink` argument presets
@@ -485,6 +518,8 @@ pub fn process_connector_link_presets(
                 value_expression,
                 &string_type,
                 session_variables,
+                type_mappings,
+                object_types,
             )?;
             headers_argument.insert(header_name.0.to_string(), value);
         }
@@ -574,6 +609,154 @@ pub fn resolve_arguments(
     Ok(resolved_arguments)
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum MapFieldNamesError {
+    #[error("Value did not match array type, was expecting {expected_type}")]
+    ExpectedAnArray {
+        expected_type: QualifiedTypeReference,
+    },
+    #[error("Value did not match object type, was expecting {expected_type}")]
+    ExpectedAnObject {
+        expected_type: QualifiedTypeReference,
+    },
+    #[error("Type mappings not found for object type {object_type_name}")]
+    TypeMappingsNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+    },
+    #[error("Field mapping {field_name} not found for object type {object_type_name}")]
+    FieldMappingNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+    #[error("Unknown fields found in object type {object_type_name}: {fields:?}")]
+    UnknownFieldsInObject {
+        object_type_name: Qualified<CustomTypeName>,
+        fields: Vec<String>,
+    },
+}
+
+impl TraceableError for MapFieldNamesError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::ExpectedAnArray { .. }
+            | Self::ExpectedAnObject { .. }
+            | Self::UnknownFieldsInObject { .. } => ErrorVisibility::User,
+            Self::TypeMappingsNotFound { .. } | Self::FieldMappingNotFound { .. } => {
+                ErrorVisibility::Internal
+            }
+        }
+    }
+}
+
+// objects in argument presets are provided with OpenDD names, so
+// let's traverse through and replace them with their NDC equivalents
+pub fn map_field_names_to_ndc_field_names(
+    value: &mut serde_json::Value,
+    type_reference: &QualifiedTypeReference,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    disallow_unknown_fields: bool,
+) -> Result<(), MapFieldNamesError> {
+    match &type_reference.underlying_type {
+        QualifiedBaseType::List(item_type) => {
+            // unwrap value as list (or explode)
+            let value_items =
+                value
+                    .as_array_mut()
+                    .ok_or_else(|| MapFieldNamesError::ExpectedAnArray {
+                        expected_type: type_reference.clone(),
+                    })?;
+
+            // recurse on each item with the type of the list item
+            for value_item in value_items {
+                map_field_names_to_ndc_field_names(
+                    value_item,
+                    item_type,
+                    type_mappings,
+                    object_types,
+                    disallow_unknown_fields,
+                )?;
+            }
+
+            Ok(())
+        }
+        QualifiedBaseType::Named(named) => {
+            match named {
+                QualifiedTypeName::Inbuilt(_) => Ok(()),
+                QualifiedTypeName::Custom(custom_type_name) => {
+                    // if it's an object type, let's start renaming fields...
+                    if let Some(object_type) = object_types.get(custom_type_name) {
+                        let value_map = value.as_object_mut().ok_or_else(|| {
+                            MapFieldNamesError::ExpectedAnObject {
+                                expected_type: type_reference.clone(),
+                            }
+                        })?;
+
+                        let TypeMapping::Object { field_mappings, .. } = type_mappings
+                            .get(custom_type_name)
+                            .ok_or_else(|| MapFieldNamesError::TypeMappingsNotFound {
+                                object_type_name: custom_type_name.clone(),
+                            })?;
+
+                        // we create a new map and move items across to it
+                        let mut new_value_map = serde_json::Map::new();
+
+                        // look through all the fields in the object, removing all the things we
+                        // need
+                        for (open_dd_field_name, field) in &object_type.object_type.fields {
+                            // if there is a value for this field, switch the key for the one
+                            // in the mappings
+                            if let Some(mut old_value) =
+                                value_map.remove(open_dd_field_name.as_str())
+                            {
+                                // recurse through the value making any further updates
+                                map_field_names_to_ndc_field_names(
+                                    &mut old_value,
+                                    &field.field_type,
+                                    type_mappings,
+                                    object_types,
+                                    disallow_unknown_fields,
+                                )?;
+
+                                // lookup NDC field name in field mappings
+                                let FieldMapping { column, .. } = field_mappings
+                                    .get(open_dd_field_name)
+                                    .ok_or_else(|| MapFieldNamesError::FieldMappingNotFound {
+                                        object_type_name: custom_type_name.clone(),
+                                        field_name: open_dd_field_name.clone(),
+                                    })?;
+
+                                // reinsert item with NDC key
+                                new_value_map.insert(column.to_string(), old_value);
+                            }
+                        }
+
+                        // the new featured flagged behaviour - any unknown fields means an error
+                        if disallow_unknown_fields && !value_map.is_empty() {
+                            return Err(MapFieldNamesError::UnknownFieldsInObject {
+                                object_type_name: custom_type_name.clone(),
+                                fields: value_map.keys().cloned().collect(),
+                            });
+                        }
+
+                        // compatibility behaviour is that we add all the unknown fields on anyway
+                        new_value_map.extend(
+                            value_map
+                                .iter()
+                                .map(|(k, v)| (k.clone(), v.clone()))
+                                .collect::<Vec<_>>(),
+                        );
+
+                        // replace old value map
+                        *value_map = new_value_map;
+                    }
+                    Ok(())
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use hasura_authn_core::{
@@ -613,7 +796,9 @@ mod test {
             super::process_connector_link_presets(
                 &data_connector_link_argument_presets,
                 &session_variables,
-                &request_headers
+                &request_headers,
+                &BTreeMap::new(),
+                &BTreeMap::new(),
             )
             .unwrap(),
             expected
@@ -651,7 +836,9 @@ mod test {
             super::process_connector_link_presets(
                 &data_connector_link_argument_presets,
                 &session_variables,
-                &request_headers
+                &request_headers,
+                &BTreeMap::new(),
+                &BTreeMap::new(),
             )
             .unwrap(),
             expected
@@ -670,6 +857,7 @@ mod test {
             ValueExpression::SessionVariable(SessionVariableReference {
                 name: SessionVariableName::from_str("x-name").unwrap(),
                 passed_as_json: false,
+                disallow_unknown_fields: false,
             }),
         );
         let http_headers = HttpHeadersPreset {
@@ -702,7 +890,9 @@ mod test {
             super::process_connector_link_presets(
                 &data_connector_link_argument_presets,
                 &session_variables,
-                &request_headers
+                &request_headers,
+                &BTreeMap::new(),
+                &BTreeMap::new(),
             )
             .unwrap(),
             expected

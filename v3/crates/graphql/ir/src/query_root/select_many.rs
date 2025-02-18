@@ -115,6 +115,7 @@ pub fn select_many_generate_ir<'n, 's>(
                                 &field_call.name,
                                 argument,
                                 &model_source.type_mappings,
+                                object_types,
                                 &model_source.data_connector,
                                 &session.variables,
                                 &mut usage_counts,
@@ -134,6 +135,7 @@ pub fn select_many_generate_ir<'n, 's>(
                         &session.variables,
                         &mut usage_counts,
                         &model_source.type_mappings,
+                        object_types,
                         &model_source.data_connector,
                     )?);
                     // For opendd execution pipeline
@@ -204,6 +206,7 @@ pub fn select_many_generate_ir<'n, 's>(
                 model_name,
                 models,
                 &model_source.type_mappings,
+                object_types,
                 model_arguments,
                 where_clause,
                 order_by,
@@ -221,6 +224,7 @@ pub fn select_many_generate_ir<'n, 's>(
                     where_input,
                     &model_source.data_connector,
                     &model_source.type_mappings,
+                    object_types,
                     &session.variables,
                     &mut usage_counts,
                 )?),

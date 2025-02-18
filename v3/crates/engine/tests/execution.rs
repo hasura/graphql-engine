@@ -1739,6 +1739,60 @@ fn test_boolean_expression_command_argument_combined_with_type_permissions() -> 
     )
 }
 
+#[test]
+fn test_boolean_expression_command_argument_combined_with_type_permissions_more_presets(
+) -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/boolean_expression_command_argument/combined_with_type_permissions_more_presets",
+        &[],
+        BTreeMap::from([
+            // EvalInstitutions function not supported in v0.1.x connector
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::YesPlease,
+
+    )
+}
+
+#[test]
+fn test_boolean_expression_command_argument_combined_with_type_permissions_more_presets_flag_off(
+) -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/boolean_expression_command_argument/combined_with_type_permissions_more_presets_flag_off",
+        &[],
+        BTreeMap::from([
+            // EvalInstitutions function not supported in v0.1.x connector
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::YesPlease,
+
+    )
+}
+
+#[test]
+fn test_boolean_expression_command_argument_combined_with_type_permissions_disallow_bad_values(
+) -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/boolean_expression_command_argument/combined_with_type_permissions_disallow_bad_values",
+        &[],
+        BTreeMap::from([
+            // EvalInstitutions function not supported in v0.1.x connector
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::YesPlease,
+
+    )
+}
+
 // Tests a select many query command with preset arguments on the model:
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]

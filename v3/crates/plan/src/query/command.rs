@@ -207,8 +207,8 @@ pub(crate) fn from_command_selection(
         session,
         request_headers,
         &mut usage_counts,
-    )
-    .map_err(|e| PlanError::Internal(e.to_string()))?;
+    )?;
+
     let resolved_arguments =
         resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
 

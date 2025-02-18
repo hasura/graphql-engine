@@ -1,10 +1,13 @@
-use super::arguments::UnresolvedArgument;
+use hasura_authn_core::{SessionVariableName, SessionVariableValue, SessionVariables};
+use std::collections::BTreeMap;
+
+use super::arguments::{map_field_names_to_ndc_field_names, UnresolvedArgument};
 use crate::error::{InternalDeveloperError, InternalEngineError, InternalError};
 use crate::types::PlanError;
-use hasura_authn_core::{SessionVariableName, SessionVariableValue, SessionVariables};
+use crate::ArgumentPresetExecutionError;
 use metadata_resolve::{
-    Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, TypeMapping,
-    UnaryComparisonOperator,
+    ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeName,
+    QualifiedTypeReference, TypeMapping, UnaryComparisonOperator,
 };
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
@@ -13,13 +16,13 @@ use open_dds::{
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
-use std::collections::BTreeMap;
 
 pub fn process_model_predicate<'s>(
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     model_predicate: &'s metadata_resolve::ModelPredicate,
     session_variables: &SessionVariables,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'s>, PlanError> {
     match model_predicate {
@@ -42,6 +45,8 @@ pub fn process_model_predicate<'s>(
             operator,
             value,
             session_variables,
+            type_mappings,
+            object_types,
         )?),
         metadata_resolve::ModelPredicate::Not(predicate) => {
             let expr = process_model_predicate(
@@ -49,6 +54,7 @@ pub fn process_model_predicate<'s>(
                 type_mappings,
                 predicate,
                 session_variables,
+                object_types,
                 usage_counts,
             )?;
             Ok(Expression::Not {
@@ -64,6 +70,7 @@ pub fn process_model_predicate<'s>(
                         type_mappings,
                         predicate,
                         session_variables,
+                        object_types,
                         usage_counts,
                     )
                 })
@@ -79,6 +86,7 @@ pub fn process_model_predicate<'s>(
                         type_mappings,
                         predicate,
                         session_variables,
+                        object_types,
                         usage_counts,
                     )
                 })
@@ -97,6 +105,7 @@ pub fn process_model_predicate<'s>(
                 &relationship_info.target_source.model.type_mappings,
                 predicate,
                 session_variables,
+                object_types,
                 usage_counts,
             )?;
 
@@ -125,9 +134,16 @@ fn make_permission_binary_boolean_expression<'s>(
     operator: &DataConnectorOperatorName,
     value_expression: &'s metadata_resolve::ValueExpression,
     session_variables: &SessionVariables,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 ) -> Result<Expression<'s>, PlanError> {
-    let ndc_expression_value =
-        make_argument_from_value_expression(value_expression, argument_type, session_variables)?;
+    let ndc_expression_value = make_argument_from_value_expression(
+        value_expression,
+        argument_type,
+        session_variables,
+        type_mappings,
+        object_types,
+    )?;
     Ok(Expression::LocalField(
         LocalFieldComparison::BinaryComparison {
             column: ComparisonTarget::Column {
@@ -159,6 +175,8 @@ pub fn make_argument_from_value_expression(
     val_expr: &metadata_resolve::ValueExpression,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 ) -> Result<serde_json::Value, PlanError> {
     match val_expr {
         metadata_resolve::ValueExpression::Literal(val) => Ok(val.clone()),
@@ -174,7 +192,10 @@ pub fn make_argument_from_value_expression(
                 &session_var.name,
                 value,
                 session_var.passed_as_json,
+                session_var.disallow_unknown_fields,
                 value_type,
+                type_mappings,
+                object_types,
             )
             .map_err(PlanError::InternalError)
         }
@@ -187,11 +208,24 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
     val_expr: &'s metadata_resolve::ValueExpressionOrPredicate,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<UnresolvedArgument<'s>, PlanError> {
     match val_expr {
         metadata_resolve::ValueExpressionOrPredicate::Literal(val) => {
-            Ok(UnresolvedArgument::Literal { value: val.clone() })
+            let mut value = val.clone();
+
+            map_field_names_to_ndc_field_names(
+                &mut value,
+                value_type,
+                type_mappings,
+                object_types,
+                false, // we have already statically validated values so don't need runtime
+                       // checking
+            )
+            .map_err(ArgumentPresetExecutionError::MapFieldNamesError)?;
+
+            Ok(UnresolvedArgument::Literal { value })
         }
         metadata_resolve::ValueExpressionOrPredicate::SessionVariable(session_var) => {
             let value = session_variables
@@ -206,7 +240,10 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
                     &session_var.name,
                     value,
                     session_var.passed_as_json,
+                    session_var.disallow_unknown_fields,
                     value_type,
+                    type_mappings,
+                    object_types,
                 )
                 .map_err(PlanError::InternalError)?,
             })
@@ -217,6 +254,7 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
                 type_mappings,
                 model_predicate,
                 session_variables,
+                object_types,
                 usage_counts,
             )?;
             Ok(UnresolvedArgument::BooleanExpression {
@@ -231,10 +269,20 @@ fn typecast_session_variable(
     session_var_name: &SessionVariableName,
     session_var_value_wrapped: &SessionVariableValue,
     passed_as_json: bool,
+    disallow_unknown_fields: bool,
     to_type: &QualifiedTypeReference,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 ) -> Result<serde_json::Value, InternalError> {
     if passed_as_json {
-        typecast_session_variable_v2(session_var_name, session_var_value_wrapped, to_type)
+        typecast_session_variable_v2(
+            session_var_name,
+            session_var_value_wrapped,
+            to_type,
+            type_mappings,
+            object_types,
+            disallow_unknown_fields,
+        )
     } else {
         typecast_session_variable_v1(session_var_name, session_var_value_wrapped, to_type)
     }
@@ -335,6 +383,9 @@ fn typecast_session_variable_v2(
     session_var_name: &SessionVariableName,
     session_var_value: &SessionVariableValue,
     to_type: &QualifiedTypeReference,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    disallow_unknown_fields: bool,
 ) -> Result<serde_json::Value, InternalError> {
     match &to_type.underlying_type {
         QualifiedBaseType::Named(type_name) => match type_name {
@@ -388,13 +439,24 @@ fn typecast_session_variable_v2(
                     Ok(serde_json::Value::String(value.to_string()))
                 }
             },
-            QualifiedTypeName::Custom(_) => {
-                let value = session_var_value.as_value().map_err(|parse_error| {
+            QualifiedTypeName::Custom(_custom_type_name) => {
+                let mut value = session_var_value.as_value().map_err(|parse_error| {
                     InternalDeveloperError::VariableExpectedJson {
                         session_variable: session_var_name.clone(),
                         parse_error,
                     }
                 })?;
+
+                // mutate `value` to fix the field names
+                map_field_names_to_ndc_field_names(
+                    &mut value,
+                    to_type,
+                    type_mappings,
+                    object_types,
+                    disallow_unknown_fields,
+                )
+                .map_err(InternalDeveloperError::MapFieldNamesError)?;
+
                 Ok(value)
             }
         },
@@ -420,6 +482,9 @@ fn typecast_session_variable_v2(
                         session_var_name,
                         &SessionVariableValue::Parsed(element.clone()),
                         element_type,
+                        type_mappings,
+                        object_types,
+                        disallow_unknown_fields,
                     )
                 })
                 .collect::<Result<Vec<_>, _>>()?;

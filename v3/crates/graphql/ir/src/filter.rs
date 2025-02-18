@@ -1,3 +1,12 @@
+use hasura_authn_core::SessionVariables;
+use indexmap::IndexMap;
+use lang_graphql::ast::common as ast;
+use lang_graphql::normalized_ast;
+use metadata_resolve::{DataConnectorLink, FieldMapping, ObjectTypeWithRelationships, Qualified};
+use serde::Serialize;
+use std::collections::BTreeMap;
+use std::ops::Deref;
+
 use crate::{error, permissions};
 use graphql_schema::{self};
 use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind};
@@ -5,11 +14,6 @@ use graphql_schema::{
     FilterRelationshipAnnotation, ObjectBooleanExpressionField, ScalarBooleanExpressionField,
 };
 use graphql_schema::{LogicalOperatorField, GDS};
-use hasura_authn_core::SessionVariables;
-use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
-use lang_graphql::normalized_ast;
-use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName},
@@ -20,9 +24,6 @@ use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
     EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
 };
-use serde::Serialize;
-use std::collections::BTreeMap;
-use std::ops::Deref;
 
 /// Filter expression to be applied on a model/command selection set
 #[derive(Debug, Serialize, Clone)]
@@ -217,6 +218,7 @@ pub fn resolve_filter_expression<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'s>, error::Error> {
@@ -224,6 +226,7 @@ pub fn resolve_filter_expression<'s>(
         fields,
         data_connector_link,
         type_mappings,
+        object_types,
         &[],
         session_variables,
         usage_counts,
@@ -234,6 +237,7 @@ fn resolve_object_boolean_expression<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     column_path: &[&'s DataConnectorColumnName],
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -258,6 +262,7 @@ fn resolve_object_boolean_expression<'s>(
                                 value_object,
                                 data_connector_link,
                                 type_mappings,
+                                object_types,
                                 column_path,
                                 session_variables,
                                 usage_counts,
@@ -280,6 +285,7 @@ fn resolve_object_boolean_expression<'s>(
                                 value_object,
                                 data_connector_link,
                                 type_mappings,
+                                object_types,
                                 column_path,
                                 session_variables,
                                 usage_counts,
@@ -298,6 +304,7 @@ fn resolve_object_boolean_expression<'s>(
                         not_value,
                         data_connector_link,
                         type_mappings,
+                        object_types,
                         column_path,
                         session_variables,
                         usage_counts,
@@ -328,6 +335,7 @@ fn resolve_object_boolean_expression<'s>(
                                 field_value,
                                 data_connector_link,
                                 type_mappings,
+                                object_types,
                                 &field_path,
                                 session_variables,
                                 usage_counts,
@@ -338,6 +346,7 @@ fn resolve_object_boolean_expression<'s>(
                                 field_value,
                                 data_connector_link,
                                 type_mappings,
+                                object_types,
                                 &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
                                 session_variables,
                                 usage_counts,
@@ -409,6 +418,7 @@ fn resolve_object_boolean_expression<'s>(
                         &target_source.model.type_mappings,
                         filter_permission,
                         session_variables,
+                        object_types,
                         usage_counts,
                     )?;
 
@@ -421,6 +431,7 @@ fn resolve_object_boolean_expression<'s>(
                         filter_object,
                         &target_source.model.data_connector,
                         &target_source.model.type_mappings,
+                        object_types,
                         &[], // We're traversing across the relationship, so we reset the field path
                         session_variables,
                         usage_counts,

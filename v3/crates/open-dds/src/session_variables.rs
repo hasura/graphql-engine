@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 pub struct SessionVariableReference {
     pub name: SessionVariableName,
     pub passed_as_json: bool,
+    pub disallow_unknown_fields: bool,
 }
 
 /// Used to represent the name of a session variable, like

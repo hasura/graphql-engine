@@ -44,6 +44,7 @@ pub enum Flag {
     DisallowUnsupportedOrderableRelationships,
     DisallowLocalRelationshipsOnDataConnectorsWithoutRelationshipsOrVariables,
     DisallowRecursiveObjectTypes,
+    DisallowUnknownValuesInArguments,
 }
 
 impl Flag {
@@ -119,6 +120,7 @@ impl Flag {
                 "disallow_local_relationships_on_data_connectors_without_relationships_or_variables"
             }
             Flag::DisallowRecursiveObjectTypes => "disallow_recursive_object_types",
+            Flag::DisallowUnknownValuesInArguments => "disallow_unknown_values_in_arguments",
         }
     }
 }

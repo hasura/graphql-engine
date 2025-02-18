@@ -1,0 +1,650 @@
+{
+  "version": "v2",
+  "flags": {
+    "json_session_variables": true
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "EvalInstitutions",
+            "description": "Evaluates submitted institution objects against the provided boolean expression",
+            "arguments": [
+              {
+                "name": "check",
+                "type": "Institution_bool_exp",
+                "description": "The boolean expression to evaluate the institutions against"
+              },
+              {
+                "name": "institutions",
+                "type": "[Institution!]!",
+                "description": "The institutions to evaluate"
+              }
+            ],
+            "outputType": "[EvaluatedInstitution!]!",
+            "graphql": {
+              "rootFieldKind": "Query",
+              "rootFieldName": "EvalInstitutions"
+            },
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "eval_institutions"
+              },
+              "argumentMapping": {
+                "check": "check",
+                "institutions": "institutions"
+              }
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "EvalInstitutions",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "check",
+                    "value": {
+                      "booleanExpression": {
+                        "fieldComparison": {
+                          "field": "Name",
+                          "operator": "_eq",
+                          "value": {
+                            "literal": "Academy of Science"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "argument": "institutions",
+                    "value": {
+                      "literal": [
+                        {
+                          "id": 1,
+                          "name": "Academy of Science",
+                          "location": {
+                            "campuses": [
+                              "Mile End",
+                              "Whitechapel",
+                              "Charterhouse Square",
+                              "West Smithfield"
+                            ],
+                            "city": "London"
+                          },
+                          "staff": [
+                            {
+                              "first_name": "John"
+                            },
+                            {
+                              "first_name": "Jane"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "role": "user",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "check",
+                    "value": {
+                      "booleanExpression": {
+                        "fieldComparison": {
+                          "field": "Name",
+                          "operator": "_eq",
+                          "value": {
+                            "literal": "Academy of Philosophy"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "argument": "institutions",
+                    "value": {
+                      "sessionVariable": "institutions"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "EvaluatedInstitution",
+            "fields": [
+              {
+                "name": "EvaluationResult",
+                "type": "Boolean",
+                "description": "The result of the evaluation"
+              },
+              {
+                "name": "Institution",
+                "type": "Institution!",
+                "description": "The institution that was evaluated"
+              }
+            ],
+            "description": "An evaluated institution",
+            "graphql": {
+              "typeName": "EvaluatedInstitution"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "evaluated_institution",
+                "fieldMapping": {
+                  "EvaluationResult": {
+                    "column": {
+                      "name": "evaluation_result"
+                    }
+                  },
+                  "Institution": {
+                    "column": {
+                      "name": "institution"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "EvaluatedInstitution",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["EvaluationResult", "Institution"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["EvaluationResult", "Institution"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Institution",
+            "fields": [
+              {
+                "name": "Departments",
+                "type": "[String!]!",
+                "description": "The institution's departments"
+              },
+              {
+                "name": "Id",
+                "type": "Int",
+                "description": "The institution's primary key"
+              },
+              {
+                "name": "Location",
+                "type": "Location!",
+                "description": "The institution's location"
+              },
+              {
+                "name": "Name",
+                "type": "String!",
+                "description": "The institution's name"
+              },
+              {
+                "name": "Staff",
+                "type": "[StaffMember!]!",
+                "description": "The institution's staff"
+              }
+            ],
+            "description": "An institution",
+            "graphql": {
+              "inputTypeName": "InstitutionInput",
+              "typeName": "Institution"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "institution",
+                "fieldMapping": {
+                  "Departments": {
+                    "column": {
+                      "name": "departments"
+                    }
+                  },
+                  "Id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "Location": {
+                    "column": {
+                      "name": "location"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "Staff": {
+                    "column": {
+                      "name": "staff"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Institution",
+            "permissions": [
+              {
+                "role": "admin",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "Departments",
+                      "value": {
+                        "literal": [
+                          "Humanities and Social Sciences",
+                          "Science and Engineering",
+                          "Medicine and Dentistry"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "output": {
+                  "allowedFields": [
+                    "Departments",
+                    "Id",
+                    "Location",
+                    "Name",
+                    "Staff"
+                  ]
+                }
+              },
+              {
+                "role": "user",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "Departments",
+                      "value": {
+                        "literal": [
+                          "Objectivism",
+                          "Ethics",
+                          "Philosophy of Science"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "output": {
+                  "allowedFields": [
+                    "Departments",
+                    "Id",
+                    "Location",
+                    "Name",
+                    "Staff"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Institution_bool_exp",
+            "operand": {
+              "object": {
+                "type": "Institution",
+                "comparableFields": [
+                  {
+                    "fieldName": "Departments",
+                    "booleanExpressionType": "String_bool_exp"
+                  },
+                  {
+                    "fieldName": "Id",
+                    "booleanExpressionType": "Int_bool_exp"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "booleanExpressionType": "String_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Institution_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Location",
+            "fields": [
+              {
+                "name": "Campuses",
+                "type": "[String!]!",
+                "description": "The location's campuses"
+              },
+              {
+                "name": "City",
+                "type": "String!",
+                "description": "The location's city"
+              },
+              {
+                "name": "Country",
+                "type": "String!",
+                "description": "The location's city"
+              }
+            ],
+            "description": "A location",
+            "graphql": {
+              "inputTypeName": "LocationInput",
+              "typeName": "Location"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "location",
+                "fieldMapping": {
+                  "Campuses": {
+                    "column": {
+                      "name": "campuses"
+                    }
+                  },
+                  "City": {
+                    "column": {
+                      "name": "city"
+                    }
+                  },
+                  "Country": {
+                    "column": {
+                      "name": "country"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Location",
+            "permissions": [
+              {
+                "role": "admin",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "Country",
+                      "value": {
+                        "literal": "UK"
+                      }
+                    }
+                  ]
+                },
+                "output": {
+                  "allowedFields": ["Campuses", "City", "Country"]
+                }
+              },
+              {
+                "role": "user",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "Country",
+                      "value": {
+                        "literal": "United Kingdom"
+                      }
+                    }
+                  ]
+                },
+                "output": {
+                  "allowedFields": ["Campuses", "City", "Country"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "StaffMember",
+            "fields": [
+              {
+                "name": "FirstName",
+                "type": "String!",
+                "description": "The staff member's first name"
+              },
+              {
+                "name": "LastName",
+                "type": "String!",
+                "description": "The staff member's last name"
+              },
+              {
+                "name": "Specialities",
+                "type": "[String!]!",
+                "description": "The staff member's specialities"
+              }
+            ],
+            "description": "A staff member",
+            "graphql": {
+              "inputTypeName": "StaffMemberInput",
+              "typeName": "StaffMember"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "staff_member",
+                "fieldMapping": {
+                  "FirstName": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "LastName": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  },
+                  "Specialities": {
+                    "column": {
+                      "name": "specialities"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "StaffMember",
+            "permissions": [
+              {
+                "role": "admin",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "LastName",
+                      "value": {
+                        "literal": "Adminman"
+                      }
+                    },
+                    {
+                      "field": "Specialities",
+                      "value": {
+                        "literal": ["Science"]
+                      }
+                    }
+                  ]
+                },
+                "output": {
+                  "allowedFields": ["FirstName", "LastName", "Specialities"]
+                }
+              },
+              {
+                "role": "user",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "LastName",
+                      "value": {
+                        "literal": "Userman"
+                      }
+                    },
+                    {
+                      "field": "Specialities",
+                      "value": {
+                        "literal": ["Engineering"]
+                      }
+                    }
+                  ]
+                },
+                "output": {
+                  "allowedFields": ["FirstName", "LastName", "Specialities"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "String",
+            "representation": "String"
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "String_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": false
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": false
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int"
+          }
+        }
+      ]
+    }
+  ]
+}

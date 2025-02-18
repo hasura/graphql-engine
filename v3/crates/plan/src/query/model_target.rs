@@ -32,6 +32,7 @@ pub fn model_target_to_ndc_query(
         session,
         model,
         model_source,
+        &metadata.object_types,
         &mut relationships,
         unique_number,
         &mut usage_counts,
@@ -53,8 +54,7 @@ pub fn model_target_to_ndc_query(
         session,
         request_headers,
         &mut usage_counts,
-    )
-    .map_err(|e| PlanError::Internal(e.to_string()))?;
+    )?;
 
     let resolved_arguments =
         resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;

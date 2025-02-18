@@ -264,6 +264,7 @@ fn resolve_relationship_operand(
                 session,
                 target_model,
                 target_model_source,
+                &metadata.object_types,
                 collect_relationships,
                 unique_number,
                 usage_counts,

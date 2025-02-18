@@ -115,6 +115,7 @@ pub fn select_one_generate_ir<'n, 's>(
             &field_call.name,
             argument,
             &model_source.type_mappings,
+            object_types,
             &model_source.data_connector,
             &session.variables,
             &mut usage_counts,
@@ -175,6 +176,7 @@ pub fn select_one_generate_ir<'n, 's>(
                 model_name,
                 models,
                 &model_source.type_mappings,
+                object_types,
                 Some(model_arguments),
                 where_clause,
                 vec![], // order_by

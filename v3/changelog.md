@@ -56,6 +56,8 @@ The AuthConfig v3 is backwards compatible with the AuthConfig v2.
 - Avoid infinite recursion when validating `BooleanExpressionType` for
   `ObjectType`s that contain self references through nested fields during build
   creation.
+- Argument presets did not map OpenDD field names to the corresponding NDC field
+  names before sending values across, this is now resolved.
 
 ### Changed
 
@@ -83,7 +85,6 @@ The AuthConfig v3 is backwards compatible with the AuthConfig v2.
   if the relationship is a remote relationship, or if the data connector does
   not support relationships, or if the target of the relationship does not have
   a source.
-
 - Fixed a bug causing queries to fail when filter expressions included remote
   relationships from nested fields.
 

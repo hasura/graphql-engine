@@ -11,7 +11,7 @@ mod types;
 use crate::types::PlanError;
 pub use arguments::{
     process_argument_presets_for_command, process_argument_presets_for_model,
-    ArgumentPresetExecutionError, UnresolvedArgument,
+    ArgumentPresetExecutionError, MapFieldNamesError, UnresolvedArgument,
 };
 pub use command::{from_command, CommandPlan, FromCommand};
 pub use filter::{build_relationship_comparison_expression, plan_expression};

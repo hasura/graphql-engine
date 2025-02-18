@@ -1,0 +1,20 @@
+query MyQuery {
+  EvalInstitutions {
+    EvaluationResult
+    Institution {
+      Id
+      Name
+      Location {
+        Campuses
+        City
+        Country
+      }
+      Staff {
+        FirstName
+        LastName
+        Specialities
+      }
+      Departments
+    }
+  }
+}

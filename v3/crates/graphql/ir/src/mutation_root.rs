@@ -90,6 +90,7 @@ pub fn generate_ir<'n, 's>(
                                     GraphqlRequestPipeline::OpenDd => {
                                         commands::generate_procedure_based_command_open_dd(
                                             &metadata.models,
+                                            &metadata.object_types,
                                             name,
                                             procedure_name,
                                             field,

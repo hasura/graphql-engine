@@ -1,5 +1,5 @@
 use crate::error::InternalError;
-use crate::query::RelationshipFieldMappingError;
+use crate::query::{ArgumentPresetExecutionError, RelationshipFieldMappingError};
 use hasura_authn_core::Role;
 use metadata_resolve::Qualified;
 use open_dds::{
@@ -15,17 +15,17 @@ use tracing_util::{ErrorVisibility, TraceableError};
 #[derive(Debug, thiserror::Error)]
 pub enum PlanError {
     #[error("{0}")]
-    Internal(String), // equivalent to DataFusionError::Internal
-    #[error("{0}")]
     Permission(#[from] PermissionError),
     #[error("{0}")]
     Relationship(#[from] RelationshipError),
     #[error("{0}")]
     OrderBy(#[from] OrderByError),
     #[error("{0}")]
-    ArgumentPresetExecutionError(#[from] crate::query::ArgumentPresetExecutionError),
+    ArgumentPresetExecutionError(#[from] ArgumentPresetExecutionError),
     #[error("{0}")]
     InternalError(InternalError),
+    #[error("{0}")]
+    Internal(String), // equivalent to DataFusionError::Internal
     #[error("{0}")]
     External(Box<dyn std::error::Error + Send + Sync>), //equivalent to DataFusionError::External
 }
@@ -33,15 +33,13 @@ pub enum PlanError {
 impl TraceableError for PlanError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::InternalError(InternalError::Developer(_))
-            | Self::ArgumentPresetExecutionError(_)
-            | Self::External(_) => ErrorVisibility::User,
+            Self::InternalError(error) => error.visibility(),
+            Self::ArgumentPresetExecutionError(error) => error.visibility(),
             Self::Permission(permission_error) => permission_error.visibility(),
             Self::Relationship(relationship_error) => relationship_error.visibility(),
             Self::OrderBy(order_by_error) => order_by_error.visibility(),
-            Self::InternalError(InternalError::Engine(_)) | Self::Internal(_) => {
-                ErrorVisibility::Internal
-            }
+            Self::External(_) => ErrorVisibility::User,
+            Self::Internal(_) => ErrorVisibility::Internal,
         }
     }
 }

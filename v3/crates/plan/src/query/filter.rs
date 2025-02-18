@@ -371,8 +371,7 @@ pub fn resolve_filter_expression(
         relationships,
         &mut remote_predicates,
         unique_number,
-    )
-    .map_err(|e| PlanError::Internal(format!("error constructing permission filter plan: {e}")))?;
+    )?;
 
     Ok((resolved_filter_expression, remote_predicates))
 }
