@@ -44,11 +44,11 @@ run-local-with-shell:
 # start all the docker deps for running tests (not engine)
 start-docker-test-deps:
     # start connectors and wait for health
-    docker compose up --wait auth_hook postgres postgres_connector custom_connector custom_connector_no_relationships custom_connector_ndc_v01
+    docker compose up --wait auth_hook postgres postgres_connector postgres_connector_ndc_v01 custom_connector custom_connector_no_relationships custom_connector_ndc_v01
 
 # pull / build all docker deps
 docker-refresh: stop-docker
-    docker compose pull postgres_connector
+    docker compose pull postgres_connector postgres_connector_ndc_v01
     docker compose build custom_connector custom_connector_no_relationships auth_hook
 
 alias refresh-docker := docker-refresh
@@ -108,9 +108,10 @@ update-custom-connector-schema-in-test-metadata:
     docker compose down
 
 update-postgres-schema-in-test-metadata:
-    docker compose up --build --wait postgres postgres_connector
+    docker compose up --build --wait postgres postgres_connector postgres_connector_ndc_v01
 
     just update-schema-in-test-metadata "8080" "v0.1"
+    just update-schema-in-test-metadata "8082" "v0.2"
 
     docker compose down
 
