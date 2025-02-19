@@ -55,7 +55,7 @@ pub fn resolve_filter_expression_open_dd(
 
 fn resolve_object_boolean_expression_open_dd(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'_, GDS>>,
-    field_path: &[&FieldName],
+    field_path: &[PathItem],
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
     let field_expressions = fields
@@ -129,8 +129,11 @@ fn resolve_object_boolean_expression_open_dd(
                             // Append the current column to the column_path before descending into the nested object expression
                             let new_field_path = field_path
                                 .iter()
-                                .copied()
-                                .chain([field_name])
+                                .cloned()
+                                .chain([PathItem::Nested(open_dds::query::ObjectFieldTarget {
+                                    field_name: field_name.clone(),
+                                    arguments: IndexMap::new(),
+                                })])
                                 .collect::<Vec<_>>();
                             resolve_object_boolean_expression_open_dd(
                                 field_value,
@@ -196,13 +199,36 @@ fn resolve_object_boolean_expression_open_dd(
                     }
                 }
                 ObjectBooleanExpressionField::RelationshipField(FilterRelationshipAnnotation {
+                    relationship_name,
                     target_model_name,
                     ..
                 }) => {
                     // Add the target model being used in the usage counts
                     count_model(target_model_name, usage_counts);
 
-                    todo!("filter_relationship_annotation");
+                    // This map contains the relationships or the columns of the
+                    // relationship that needs to be used for ordering.
+                    let field_value = field.value.as_object()?;
+
+                    let relationship_path =
+                        PathItem::Relationship(open_dds::query::RelationshipTarget {
+                            relationship_name: relationship_name.clone(),
+                            arguments: IndexMap::new(),
+                            filter: None,
+                            offset: None,
+                            limit: None,
+                            order_by: vec![],
+                        });
+
+                    resolve_object_boolean_expression_open_dd(
+                        field_value,
+                        &field_path
+                            .iter()
+                            .cloned()
+                            .chain([relationship_path])
+                            .collect::<Vec<PathItem>>(),
+                        usage_counts,
+                    )?
                 }
             };
 
@@ -211,6 +237,12 @@ fn resolve_object_boolean_expression_open_dd(
         .collect::<Result<Vec<open_dds::query::BooleanExpression>, error::Error>>()?;
 
     Ok(open_dds::query::BooleanExpression::And(field_expressions))
+}
+
+#[derive(Debug, Clone)]
+enum PathItem {
+    Nested(open_dds::query::ObjectFieldTarget),
+    Relationship(open_dds::query::RelationshipTarget),
 }
 
 /// Generate the IR for GraphQL 'where' boolean expression
@@ -508,9 +540,9 @@ fn extract_object_boolean_expression_field_annotation(
     }
 }
 
-fn resolve_scalar_boolean_expression_open_dd<'s>(
-    fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
-    field_path: &[&'s FieldName],
+fn resolve_scalar_boolean_expression_open_dd(
+    fields: &IndexMap<ast::Name, normalized_ast::InputField<'_, GDS>>,
+    field_path: &[PathItem],
     field_name: &FieldName,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
     let field_expressions = fields
@@ -699,46 +731,48 @@ fn extract_scalar_boolean_expression_field_annotation(
     }
 }
 
-fn build_nested_field_path(field_path: &[FieldName]) -> Option<Box<open_dds::query::Operand>> {
+fn build_nested_field_path(field_path: &[PathItem]) -> Option<Box<open_dds::query::Operand>> {
     nonempty::NonEmpty::from_slice(field_path).map(|field_path| {
-        Box::new(open_dds::query::Operand::Field(
-            open_dds::query::ObjectFieldOperand {
-                target: Box::new(open_dds::query::ObjectFieldTarget {
-                    arguments: IndexMap::new(),
-                    field_name: (*field_path.first()).clone(),
-                }),
-                nested: build_nested_field_path(field_path.tail()),
-            },
-        ))
+        let nested = build_nested_field_path(field_path.tail());
+
+        match field_path.first() {
+            PathItem::Nested(target) => Box::new(open_dds::query::Operand::Field(
+                open_dds::query::ObjectFieldOperand {
+                    target: Box::new(target.clone()),
+                    nested,
+                },
+            )),
+            PathItem::Relationship(target) => Box::new(open_dds::query::Operand::Relationship(
+                open_dds::query::RelationshipOperand {
+                    target: Box::new(target.clone()),
+                    nested,
+                },
+            )),
+        }
     })
 }
 
 // TODO: is this reordering still the case when using `nested` in `ObjectFieldOperand`?
-fn reset_field_path(field_path: &[&FieldName], field_name: &FieldName) -> Vec<FieldName> {
+fn reset_field_path(field_path: &[PathItem], field_name: &FieldName) -> Vec<PathItem> {
     field_path
         .iter()
-        .copied()
-        .chain([field_name])
-        .skip(1)
         .cloned()
+        .chain([PathItem::Nested(open_dds::query::ObjectFieldTarget {
+            field_name: field_name.clone(),
+            arguments: IndexMap::new(),
+        })])
+        .skip(1)
         .collect()
 }
 
 /// Resolve `_is_null` GraphQL boolean operator
 fn build_is_null_expression_open_dd(
-    field_path: &[&FieldName],
+    field_path: &[PathItem],
     field_name: &FieldName,
     value: &normalized_ast::Value<'_, GDS>,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
-    let unary_comparison_expression = open_dds::query::BooleanExpression::IsNull(
-        open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
-            target: Box::new(open_dds::query::ObjectFieldTarget {
-                arguments: IndexMap::new(),
-                field_name: field_path.first().map_or(field_name, Deref::deref).clone(),
-            }),
-            nested: build_nested_field_path(&reset_field_path(field_path, field_name)),
-        }),
-    );
+    let unary_comparison_expression =
+        open_dds::query::BooleanExpression::IsNull(operand_from_field_path(field_path, field_name));
 
     let is_null = value.as_boolean()?;
     if is_null {
@@ -786,23 +820,46 @@ fn build_is_null_expression<'s>(
     }
 }
 
+fn operand_from_field_path(
+    field_path: &[PathItem],
+    field_name: &FieldName,
+) -> open_dds::query::Operand {
+    let nested = build_nested_field_path(&reset_field_path(field_path, field_name));
+    match field_path.first() {
+        Some(PathItem::Relationship(target)) => {
+            open_dds::query::Operand::Relationship(open_dds::query::RelationshipOperand {
+                target: Box::new(target.clone()),
+                nested,
+            })
+        }
+        Some(PathItem::Nested(target)) => {
+            open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
+                target: Box::new(target.clone()),
+                nested,
+            })
+        }
+
+        None => open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
+            target: Box::new(open_dds::query::ObjectFieldTarget {
+                field_name: field_name.clone(),
+                arguments: IndexMap::new(),
+            }),
+            nested,
+        }),
+    }
+}
+
 /// Generate a binary comparison operator
 fn build_binary_comparison_expression_open_dd(
     operator_name: &open_dds::types::OperatorName,
-    field_path: &[&FieldName],
+    field_path: &[PathItem],
     field_name: &FieldName,
     value: &normalized_ast::Value<'_, GDS>,
 ) -> open_dds::query::BooleanExpression {
     open_dds::query::BooleanExpression::Comparison {
         argument: Box::new(open_dds::query::Value::Literal(value.as_json())),
         operator: open_dds::query::ComparisonOperator::Custom(operator_name.clone()),
-        operand: open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
-            target: Box::new(open_dds::query::ObjectFieldTarget {
-                arguments: IndexMap::new(),
-                field_name: field_path.first().map_or(field_name, Deref::deref).clone(),
-            }),
-            nested: build_nested_field_path(&reset_field_path(field_path, field_name)),
-        }),
+        operand: operand_from_field_path(field_path, field_name),
     }
 }
 

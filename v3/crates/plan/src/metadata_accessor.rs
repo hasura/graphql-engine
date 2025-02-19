@@ -101,15 +101,17 @@ pub fn get_output_object_type<'metadata>(
     })
 }
 
-pub struct Model {}
+pub struct Model<'metadata> {
+    pub source: &'metadata metadata_resolve::ModelSource,
+}
 
 // fetch a model from metadata, ensuring we have ModelPermissions
 // and permissions to access the underlying type, and that it has a source
-pub fn get_model(
-    metadata: &Metadata,
-    model_name: &Qualified<ModelName>,
-    role: &Role,
-) -> Result<Model, PermissionError> {
+pub fn get_model<'metadata>(
+    metadata: &'metadata Metadata,
+    model_name: &'_ Qualified<ModelName>,
+    role: &'_ Role,
+) -> Result<Model<'metadata>, PermissionError> {
     let model = metadata
         .models
         .get(model_name)
@@ -120,7 +122,15 @@ pub fn get_model(
     if role_can_access_object_type(metadata, &model.model.data_type, role)
         && model.select_permissions.contains_key(role)
     {
-        Ok(Model {})
+        if let Some(model_source) = &model.model.source {
+            Ok(Model {
+                source: model_source,
+            })
+        } else {
+            Err(PermissionError::ModelHasNoSource {
+                model_name: model_name.clone(),
+            })
+        }
     } else {
         Err(PermissionError::ModelNotAccessible {
             model_name: model_name.clone(),

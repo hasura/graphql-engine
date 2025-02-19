@@ -882,7 +882,7 @@ fn test_model_select_many_where_object_boolean_array_relationship_simple() -> an
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -921,7 +921,7 @@ fn test_model_select_many_where_object_boolean_object_relationship_simple() -> a
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -940,7 +940,7 @@ fn test_model_select_many_where_object_boolean_object_relationship_nested() -> a
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1003,7 +1003,7 @@ fn test_model_select_many_where_object_relationship_simple() -> anyhow::Result<(
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2316,7 +2316,7 @@ fn test_model_select_many_relationship_predicate_array_simple() -> anyhow::Resul
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2338,7 +2338,7 @@ fn test_model_select_many_relationship_predicate_array_nested() -> anyhow::Resul
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2380,7 +2380,7 @@ fn test_model_select_many_relationship_predicate_object_simple() -> anyhow::Resu
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

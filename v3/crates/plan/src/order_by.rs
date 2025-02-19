@@ -123,12 +123,9 @@ fn resolve_field_operand(
             field_mappings,
         } => field_mappings
             .get(&operand.target.field_name)
-            .ok_or_else(|| {
-                OrderByError::Internal(format!(
-                    "can't find field mapping for {} in type: {}",
-                    operand.target.field_name, type_name
-                ))
-                .into_plan_error()
+            .ok_or_else(|| OrderByError::FieldMappingNotFound {
+                field_name: operand.target.field_name.clone(),
+                object_type_name: type_name.clone(),
             })?,
     };
     let column_name = field_mapping.column.clone();
