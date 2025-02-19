@@ -198,7 +198,9 @@ impl<'s, S: SchemaContext> Value<'s, S> {
     }
 
     pub fn is_null(&self) -> bool {
-        matches!(self, Value::SimpleValue(SimpleValue::Null))
+        // Check if the value is null.
+        matches!(self, Value::SimpleValue(SimpleValue::Null)) // Simple value comes from inbuilt scalars
+            || matches!(self, Value::Json(serde_json::Value::Null)) // JSON value comes from custom scalars
     }
 
     pub fn as_enum(&self) -> Result<&EnumValue<'s, S>> {

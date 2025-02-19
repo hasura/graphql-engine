@@ -6,6 +6,9 @@
 
 ### Fixed
 
+- GraphQL API: Using `null` for non-nullable custom scalar types now correctly
+  raises validation error.
+
 ### Changed
 
 ## [v2025.02.19]
