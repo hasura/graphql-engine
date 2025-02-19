@@ -3011,3 +3011,64 @@ fn test_session_variables_json_disabled_integer_session_variable() -> anyhow::Re
         common::TestOpenDDPipeline::YesPlease,
     )
 }
+
+// Test of non-null query variables
+#[test]
+fn test_variables_non_null_type_omit_variable() -> anyhow::Result<()> {
+    let test_path_string = "execute/variables/non_null_type_omit_variable";
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        test_path_string,
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::YesPlease,
+    )
+}
+
+#[test]
+fn test_variables_non_null_type_null_variable() -> anyhow::Result<()> {
+    let test_path_string = "execute/variables/non_null_type_null_variable";
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        test_path_string,
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::YesPlease,
+    )
+}
+
+#[test]
+fn test_variables_non_null_type_default_value() -> anyhow::Result<()> {
+    let test_path_string = "execute/variables/non_null_type_default_value";
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        test_path_string,
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+        common::TestOpenDDPipeline::YesPlease,
+    )
+}

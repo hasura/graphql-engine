@@ -58,6 +58,8 @@ The AuthConfig v3 is backwards compatible with the AuthConfig v2.
   creation.
 - Argument presets did not map OpenDD field names to the corresponding NDC field
   names before sending values across, this is now resolved.
+- GraphQL API: Validate query variables to ensure non-nullable variables are not
+  omitted or set to `null`.
 
 ### Changed
 
