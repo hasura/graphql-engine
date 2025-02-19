@@ -101,8 +101,9 @@ pub fn get_output_object_type<'metadata>(
     })
 }
 
-pub struct Model<'metadata> {
+pub struct ModelView<'metadata> {
     pub source: &'metadata metadata_resolve::ModelSource,
+    pub select_permission: &'metadata metadata_resolve::SelectPermission,
 }
 
 // fetch a model from metadata, ensuring we have ModelPermissions
@@ -111,7 +112,7 @@ pub fn get_model<'metadata>(
     metadata: &'metadata Metadata,
     model_name: &'_ Qualified<ModelName>,
     role: &'_ Role,
-) -> Result<Model<'metadata>, PermissionError> {
+) -> Result<ModelView<'metadata>, PermissionError> {
     let model = metadata
         .models
         .get(model_name)
@@ -119,27 +120,29 @@ pub fn get_model<'metadata>(
             model_name: model_name.clone(),
         })?;
 
-    if role_can_access_object_type(metadata, &model.model.data_type, role)
-        && model.select_permissions.contains_key(role)
-    {
-        if let Some(model_source) = &model.model.source {
-            Ok(Model {
-                source: model_source,
-            })
-        } else {
-            Err(PermissionError::ModelHasNoSource {
-                model_name: model_name.clone(),
-            })
+    if let Some(select_permission) = model.select_permissions.get(role) {
+        if role_can_access_object_type(metadata, &model.model.data_type, role) {
+            {
+                if let Some(model_source) = &model.model.source {
+                    return Ok(ModelView {
+                        source: model_source,
+                        select_permission,
+                    });
+                }
+                return Err(PermissionError::ModelHasNoSource {
+                    model_name: model_name.clone(),
+                });
+            }
         }
-    } else {
-        Err(PermissionError::ModelNotAccessible {
-            model_name: model_name.clone(),
-            role: role.clone(),
-        })
     }
+
+    Err(PermissionError::ModelNotAccessible {
+        model_name: model_name.clone(),
+        role: role.clone(),
+    })
 }
 
-pub struct Command {}
+pub struct CommandView {}
 
 // fetch a command from metadata, ensuring we have CommandPermissions
 // and permissions to access the return type
@@ -147,7 +150,7 @@ fn get_command(
     metadata: &Metadata,
     command_name: &'_ Qualified<CommandName>,
     role: &'_ Role,
-) -> Result<Command, PermissionError> {
+) -> Result<CommandView, PermissionError> {
     let command =
         metadata
             .commands
@@ -166,7 +169,7 @@ fn get_command(
         true
     };
     if can_access_type && command.permissions.contains_key(role) {
-        Ok(Command {})
+        Ok(CommandView {})
     } else {
         Err(PermissionError::CommandNotAccessible {
             command_name: command_name.clone(),

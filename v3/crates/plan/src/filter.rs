@@ -27,6 +27,8 @@ pub fn to_filter_expression<'metadata>(
     >,
     expr: &'_ BooleanExpression,
     data_connector: &'metadata DataConnectorLink,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     match expr {
         BooleanExpression::And(exprs) => Ok(Expression::mk_and(
@@ -42,6 +44,8 @@ pub fn to_filter_expression<'metadata>(
                         boolean_expression_type,
                         expr,
                         data_connector,
+                        object_types,
+                        usage_counts,
                     )
                 })
                 .collect::<Result<Vec<_>, PlanError>>()?,
@@ -59,6 +63,8 @@ pub fn to_filter_expression<'metadata>(
                         boolean_expression_type,
                         expr,
                         data_connector,
+                        object_types,
+                        usage_counts,
                     )
                 })
                 .collect::<Result<Vec<_>, PlanError>>()?,
@@ -72,6 +78,8 @@ pub fn to_filter_expression<'metadata>(
             boolean_expression_type,
             expr,
             data_connector,
+            object_types,
+            usage_counts,
         )?)),
         BooleanExpression::IsNull(open_dds::query::Operand::Field(field)) => {
             let ResolvedColumn {
@@ -112,6 +120,8 @@ pub fn to_filter_expression<'metadata>(
             model_object_type,
             boolean_expression_type,
             data_connector,
+            object_types,
+            usage_counts,
         ),
         BooleanExpression::IsNull(_) => Err(PlanError::Internal(format!(
             "unsupported boolean expression: {expr:?}"
@@ -133,6 +143,8 @@ fn to_comparison_expression<'metadata>(
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
     >,
     data_connector: &'metadata DataConnectorLink,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     match operand {
         open_dds::query::Operand::Field(object_field_operand) => to_field_comparison_expression(
@@ -147,6 +159,8 @@ fn to_comparison_expression<'metadata>(
             source_object_type,
             boolean_expression_type,
             data_connector,
+            object_types,
+            usage_counts,
         ),
         open_dds::query::Operand::Relationship(relationship_operand) => {
             to_relationship_comparison_expression(
@@ -160,6 +174,8 @@ fn to_comparison_expression<'metadata>(
                 source_object_type,
                 boolean_expression_type,
                 data_connector,
+                object_types,
+                usage_counts,
             )
         }
         open_dds::query::Operand::RelationshipAggregate(_) => {
@@ -181,6 +197,8 @@ fn to_relationship_comparison_expression<'metadata>(
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
     >,
     data_connector: &'metadata DataConnectorLink,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     match &field.nested {
         // the nested field here is the target of the relationship
@@ -240,6 +258,13 @@ fn to_relationship_comparison_expression<'metadata>(
                             &session.role,
                         )?;
 
+                        let model_expression = model_permission_filter_to_expression(
+                            session,
+                            &target_model_source,
+                            object_types,
+                            usage_counts,
+                        )?;
+
                         // reset column path as we're starting from root inside
                         // the relationship
                         let column_path = &[];
@@ -256,7 +281,17 @@ fn to_relationship_comparison_expression<'metadata>(
                             &target_model_object_type,
                             Some(target_boolean_expression_type),
                             data_connector,
+                            object_types,
+                            usage_counts,
                         )?;
+
+                        // include any predicates from model permissions
+                        let predicate = match model_expression {
+                            Some(model_expression) => {
+                                Expression::mk_and([inner, model_expression].to_vec())
+                            }
+                            None => inner,
+                        };
 
                         Ok(crate::build_relationship_comparison_expression(
                             type_mappings,
@@ -277,7 +312,7 @@ fn to_relationship_comparison_expression<'metadata>(
                             })?,
                             &model_target.target_typename,
                             &model_target.mappings,
-                            inner,
+                            predicate,
                         )?)
                     }
                 }
@@ -296,6 +331,26 @@ fn to_relationship_comparison_expression<'metadata>(
     }
 }
 
+// Resolve the model permission filter
+pub(crate) fn model_permission_filter_to_expression<'metadata>(
+    session: &Session,
+    model: &crate::metadata_accessor::ModelView<'metadata>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    usage_counts: &mut UsagesCounts,
+) -> Result<Option<Expression<'metadata>>, PlanError> {
+    match &model.select_permission.filter {
+        metadata_resolve::FilterPermission::AllowAll => Ok::<_, PlanError>(None),
+        metadata_resolve::FilterPermission::Filter(filter) => Ok(Some(process_model_predicate(
+            &model.source.data_connector,
+            &model.source.type_mappings,
+            filter,
+            &session.variables,
+            object_types,
+            usage_counts,
+        )?)),
+    }
+}
+
 fn to_field_comparison_expression<'metadata>(
     field: &open_dds::query::ObjectFieldOperand,
     operator: &ComparisonOperator,
@@ -310,6 +365,8 @@ fn to_field_comparison_expression<'metadata>(
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
     >,
     data_connector: &'metadata DataConnectorLink,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
     match &field.nested {
         Some(nested_field) => {
@@ -377,6 +434,8 @@ fn to_field_comparison_expression<'metadata>(
                             &target_object_type,
                             Some(nested_boolean_expression_type),
                             data_connector,
+                            object_types,
+                            usage_counts,
                         )
                     }
                     ObjectComparisonKind::ObjectArray => {
@@ -392,6 +451,8 @@ fn to_field_comparison_expression<'metadata>(
                             &target_object_type,
                             Some(nested_boolean_expression_type),
                             data_connector,
+                            object_types,
+                            usage_counts,
                         )?;
 
                         let (column, field_path) =

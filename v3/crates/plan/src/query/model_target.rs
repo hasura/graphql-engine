@@ -70,6 +70,8 @@ pub fn model_target_to_ndc_query(
                 model.filter_expression_type.as_ref(),
                 expr,
                 &model_source.data_connector,
+                &metadata.object_types,
+                &mut usage_counts,
             )?;
 
             // TODO: don't ignore remote predicates
