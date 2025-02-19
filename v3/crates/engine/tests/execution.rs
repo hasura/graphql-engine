@@ -512,7 +512,7 @@ fn test_model_select_many_order_by_object_relationship_simple() -> anyhow::Resul
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -679,7 +679,7 @@ fn test_model_select_many_where_nested_select_array() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1022,7 +1022,7 @@ fn test_model_select_many_where_object_relationship_nested() -> anyhow::Result<(
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

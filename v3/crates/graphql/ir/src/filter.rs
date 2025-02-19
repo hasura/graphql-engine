@@ -125,7 +125,7 @@ fn resolve_object_boolean_expression_open_dd(
                     let field_value = field.value.as_object()?;
 
                     match object_field_kind {
-                        ObjectFieldKind::Object => {
+                        ObjectFieldKind::Object | ObjectFieldKind::ObjectArray => {
                             // Append the current column to the column_path before descending into the nested object expression
                             let new_field_path = field_path
                                 .iter()
@@ -140,29 +140,6 @@ fn resolve_object_boolean_expression_open_dd(
                                 &new_field_path,
                                 usage_counts,
                             )?
-                        }
-                        ObjectFieldKind::ObjectArray => {
-                            let _inner_expression = resolve_object_boolean_expression_open_dd(
-                                field_value,
-                                &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
-                                usage_counts,
-                            )?;
-
-                            todo!("resolve_object_boolean_expression_open_dd for ObjectArray");
-                            /*
-                            open_dds::query::BooleanExpression::LocalNestedArray {
-                                // The column name is the root column
-                                column: column_path.first().map_or(column, Deref::deref).clone(),
-                                // The field path is the nesting path inside the root column, if any
-                                field_path: column_path
-                                    .iter()
-                                    .copied()
-                                    .chain([column])
-                                    .skip(1)
-                                    .cloned()
-                                    .collect(),
-                                predicate: Box::new(inner_expression),
-                            } */
                         }
                         ObjectFieldKind::Scalar => resolve_scalar_boolean_expression_open_dd(
                             field_value,

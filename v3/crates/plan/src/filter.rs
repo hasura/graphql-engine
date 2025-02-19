@@ -1,10 +1,13 @@
 use crate::process_model_predicate;
+mod helpers;
 
 use super::column::{to_resolved_column, ResolvedColumn};
 use super::types::{PermissionError, PlanError};
 use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
-use metadata_resolve::{DataConnectorLink, ObjectTypeWithRelationships, Qualified, TypeMapping};
+use metadata_resolve::{
+    DataConnectorLink, ObjectComparisonKind, ObjectTypeWithRelationships, Qualified, TypeMapping,
+};
 use open_dds::{
     data_connector::DataConnectorColumnName,
     query::{BooleanExpression, ComparisonOperator},
@@ -358,22 +361,49 @@ fn to_field_comparison_expression<'metadata>(
                     })?
                     .column;
 
-                let mut new_column_path = Vec::from(column_path);
-                new_column_path.push(&data_connector_column_name);
+                match object_field.field_kind {
+                    ObjectComparisonKind::Object => {
+                        let mut new_column_path = Vec::from(column_path);
+                        new_column_path.push(&data_connector_column_name);
+                        to_comparison_expression(
+                            nested_field,
+                            operator,
+                            argument,
+                            &new_column_path,
+                            metadata,
+                            session,
+                            type_mappings,
+                            &nested_boolean_expression_type.object_type,
+                            &target_object_type,
+                            Some(nested_boolean_expression_type),
+                            data_connector,
+                        )
+                    }
+                    ObjectComparisonKind::ObjectArray => {
+                        let inner = to_comparison_expression(
+                            nested_field,
+                            operator,
+                            argument,
+                            &[], // nesting "starts again" inside array
+                            metadata,
+                            session,
+                            type_mappings,
+                            &nested_boolean_expression_type.object_type,
+                            &target_object_type,
+                            Some(nested_boolean_expression_type),
+                            data_connector,
+                        )?;
 
-                to_comparison_expression(
-                    nested_field,
-                    operator,
-                    argument,
-                    &new_column_path,
-                    metadata,
-                    session,
-                    type_mappings,
-                    &nested_boolean_expression_type.object_type,
-                    &target_object_type,
-                    Some(nested_boolean_expression_type),
-                    data_connector,
-                )
+                        let (column, field_path) =
+                            helpers::with_nesting_path(&data_connector_column_name, column_path);
+
+                        Ok(Expression::LocalNestedArray {
+                            column,
+                            field_path,
+                            predicate: Box::new(inner),
+                        })
+                    }
+                }
             } else {
                 Err(PlanError::Permission(
                     PermissionError::FieldNotFoundInBooleanExpressionType {
