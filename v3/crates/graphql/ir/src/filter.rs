@@ -141,37 +141,12 @@ fn resolve_object_boolean_expression_open_dd(
                                 usage_counts,
                             )?
                         }
-                        ObjectFieldKind::Scalar => resolve_scalar_boolean_expression_open_dd(
-                            field_value,
-                            field_path,
-                            field_name,
-                        )?,
-                        ObjectFieldKind::ScalarArray => {
-                            /*
-                                                        let _inner_expression = resolve_scalar_boolean_expression_open_dd(
-                                                            field_value,
-                                                            &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
-                                                            &DataConnectorColumnName::from(
-                                                                EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
-                                                            ), // Use the value virtual column name to represent the scalar value being compared against
-                                                        )?;
-                            */
-
-                            todo!("resolve_object_boolean_expression_open_dd for ScalarArray");
-                            /*
-                            Expression::LocalNestedScalarArray {
-                                // The column name is the root column
-                                column: column_path.first().map_or(column, Deref::deref).clone(),
-                                // The field path is the nesting path inside the root column, if any
-                                field_path: column_path
-                                    .iter()
-                                    .copied()
-                                    .chain([column])
-                                    .skip(1)
-                                    .cloned()
-                                    .collect(),
-                                predicate: Box::new(inner_expression),
-                            }*/
+                        ObjectFieldKind::Scalar | ObjectFieldKind::ScalarArray => {
+                            resolve_scalar_boolean_expression_open_dd(
+                                field_value,
+                                field_path,
+                                field_name,
+                            )?
                         }
                     }
                 }

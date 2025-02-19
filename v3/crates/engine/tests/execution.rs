@@ -1275,7 +1275,7 @@ fn test_model_select_many_where_nested_scalar_array() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
