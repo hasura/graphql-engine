@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2025.02.19]
+
+### Added
+
 #### AuthConfig v3
 
 AuthConfig v3 is a new version of the AuthConfig that allows for more
@@ -1171,7 +1179,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.07...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.19...HEAD
+[v2025.02.19]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.19
 [v2025.02.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.07
 [v2025.02.03]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.03
 [v2025.01.24]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.24
