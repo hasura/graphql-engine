@@ -6,6 +6,12 @@
 
 ### Fixed
 
+### Changed
+
+## [v2025.02.20]
+
+### Fixed
+
 - GraphQL API: Using `null` for non-nullable custom scalar types now correctly
   raises validation error.
 
@@ -1182,7 +1188,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.19...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.20...HEAD
+[v2025.02.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.20
 [v2025.02.19]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.19
 [v2025.02.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.07
 [v2025.02.03]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.03
