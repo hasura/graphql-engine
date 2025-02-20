@@ -12,7 +12,7 @@ use indexmap::IndexMap;
 
 use open_dds::{models::ModelName, types::GraphQlTypeName};
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::order_by_expressions::{
     OrderByExpressionError, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
@@ -311,6 +311,7 @@ fn resolve_order_by_expression_for_model(
             models,
             commands,
             issues,
+            &mut BTreeSet::new(),
         )?;
     }
 
@@ -330,7 +331,13 @@ fn validate_data_connector_compatibility(
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     issues: &mut Vec<Warning>,
+    visited_order_by_expressions: &mut BTreeSet<Qualified<OrderByExpressionIdentifier>>,
 ) -> Result<(), models::ModelsError> {
+    // Check that we haven't already validated this order by expression (via recursive types)
+    if !visited_order_by_expressions.insert(order_by_expression.identifier.clone()) {
+        return Ok(());
+    }
+
     validate_orderable_fields(
         order_by_expression,
         model_source,
@@ -340,6 +347,7 @@ fn validate_data_connector_compatibility(
         models,
         commands,
         issues,
+        visited_order_by_expressions,
     )?;
 
     validate_orderable_relationships(
@@ -368,6 +376,7 @@ fn validate_orderable_fields(
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     issues: &mut Vec<Warning>,
+    visited_order_by_expressions: &mut BTreeSet<Qualified<OrderByExpressionIdentifier>>,
 ) -> Result<(), models::ModelsError> {
     for (field_name, orderable_field) in &order_by_expression.orderable_fields {
         match orderable_field {
@@ -398,6 +407,7 @@ fn validate_orderable_fields(
                         models,
                         commands,
                         issues,
+                        visited_order_by_expressions,
                     )?;
                 }
                 // If we don't support ordering nested fields, log an issue

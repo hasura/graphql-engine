@@ -14,7 +14,7 @@ use crate::stages::{
 use crate::types::subgraph::{mk_qualified_type_name, Qualified, QualifiedTypeName};
 use open_dds::{models::ModelName, types::CustomTypeName};
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub fn resolve_aggregate_expression(
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
@@ -73,6 +73,7 @@ pub fn resolve_aggregate_expression(
         aggregate_expressions,
         object_types,
         data_connector_scalars,
+        &mut BTreeSet::new(),
     )?;
 
     // Check that the aggregate expression does not define count_distinct, as this is
@@ -106,7 +107,13 @@ fn resolve_object_aggregate_expression_data_connector_mapping(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
     >,
+    visited_aggregate_expressions: &mut BTreeSet<Qualified<AggregateExpressionName>>,
 ) -> Result<(), ModelsError> {
+    // Check that we haven't already resolved this aggregate expression (via recursive types)
+    if !visited_aggregate_expressions.insert(aggregate_expression.name.clone()) {
+        return Ok(());
+    }
+
     // Find the object type being aggregated and its field mapping
     let object_type = object_types
         .get(object_type_name)
@@ -215,6 +222,7 @@ fn resolve_object_aggregate_expression_data_connector_mapping(
                 aggregate_expressions,
                 object_types,
                 data_connector_scalars,
+                visited_aggregate_expressions,
             )?;
         }
         // If our field contains a scalar type
@@ -226,6 +234,7 @@ fn resolve_object_aggregate_expression_data_connector_mapping(
                 data_connector_field_type,
                 data_connector_capabilities,
                 data_connector_scalars,
+                visited_aggregate_expressions,
             )?;
         }
     }
@@ -251,7 +260,13 @@ fn resolve_scalar_aggregate_expression_data_connector_mapping(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars<'_>,
     >,
+    visited_aggregate_expressions: &mut BTreeSet<Qualified<AggregateExpressionName>>,
 ) -> Result<(), ModelsError> {
+    // Check that we haven't already resolved this aggregate expression
+    if !visited_aggregate_expressions.insert(aggregate_expression.name.clone()) {
+        return Ok(());
+    }
+
     let all_functions_have_a_data_connector_mapping = aggregate_expression
         .operand
         .aggregation_functions
