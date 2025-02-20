@@ -2,6 +2,7 @@ use crate::execute::ExecuteQueryResult;
 use crate::RequestError;
 use engine_types::ExposeInternalErrors;
 use lang_graphql as gql;
+use lang_graphql::http::Response;
 use tracing_util::{ErrorVisibility, Traceable, TraceableError};
 
 #[derive(Debug)]
@@ -39,7 +40,10 @@ impl GraphQLResponse {
     }
 
     pub fn from_error(err: &RequestError, expose_internal_errors: ExposeInternalErrors) -> Self {
-        Self(err.to_graphql_response(axum::http::HeaderMap::default(), expose_internal_errors))
+        Self(Response::error(
+            err.to_graphql_error(expose_internal_errors),
+            axum::http::HeaderMap::default(),
+        ))
     }
 
     pub fn from_response(response: gql::http::Response) -> Self {
@@ -51,7 +55,7 @@ impl GraphQLResponse {
     }
 
     pub fn does_contain_internal_error(&self) -> bool {
-        match &self.0.body.errors {
+        match &self.0.errors {
             Some(errors) =>
             // if any of the errors is internal, return true
             {
@@ -72,7 +76,7 @@ impl Traceable for GraphQLResponse {
     type ErrorType<'a> = GraphQLErrors<'a>;
 
     fn get_error(&self) -> Option<GraphQLErrors<'_>> {
-        self.0.body.errors.as_ref().map(GraphQLErrors)
+        self.0.errors.as_ref().map(GraphQLErrors)
     }
 }
 

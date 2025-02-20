@@ -8,6 +8,7 @@
     }
   },
   {
+    "data": null,
     "errors": [
       {
         "message": "Required session variable not found in the request: x-hasura-guest-id"

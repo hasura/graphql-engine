@@ -43,15 +43,6 @@ impl RequestError {
             is_internal,
         }
     }
-
-    pub fn to_graphql_response(
-        &self,
-        headers: axum::http::HeaderMap,
-        expose_internal_errors: ExposeInternalErrors,
-    ) -> gql::http::Response {
-        let error = self.to_graphql_error(expose_internal_errors);
-        gql::http::Response::request_error(error, headers)
-    }
 }
 
 impl TraceableError for RequestError {

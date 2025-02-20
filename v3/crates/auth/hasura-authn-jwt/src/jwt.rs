@@ -146,7 +146,7 @@ impl IntoResponse for Error {
             | Error::MissingCookieValue { cookie_name: _ }
             | Error::ClaimMustBeAString { claim_name: _ } => false,
         };
-        lang_graphql::http::Response::request_error_message_with_status(
+        lang_graphql::http::Response::error_message_with_status(
             self.to_status_code(),
             self.to_string(),
             is_internal,

@@ -22,6 +22,7 @@
     }
   },
   {
+    "data": null,
     "errors": [
       {
         "message": "validation failed: the field campuses on type location_bool_exp is not found"

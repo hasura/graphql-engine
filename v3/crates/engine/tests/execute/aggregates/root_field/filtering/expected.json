@@ -23,6 +23,7 @@
     }
   },
   {
+    "data": null,
     "errors": [
       {
         "message": "validation failed: the field BillingCountry on type Invoice_boolexp is not found"

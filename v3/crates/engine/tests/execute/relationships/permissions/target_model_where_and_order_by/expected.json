@@ -47,6 +47,7 @@
     }
   },
   {
+    "data": null,
     "errors": [
       {
         "message": "validation failed: the field title on type ArticleBooleanExpression is not found"
@@ -54,6 +55,7 @@
     ]
   },
   {
+    "data": null,
     "errors": [
       {
         "message": "validation failed: the field article_id on type Article_Order_By is not found"

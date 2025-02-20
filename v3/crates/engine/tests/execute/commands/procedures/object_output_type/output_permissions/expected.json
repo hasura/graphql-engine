@@ -9,6 +9,7 @@
     }
   },
   {
+    "data": null,
     "errors": [
       {
         "message": "validation failed: no such field on type CommandActor: movie_id"
@@ -16,6 +17,7 @@
     ]
   },
   {
+    "data": null,
     "errors": [
       {
         "message": "validation failed: no such field on type CommandActor: name"

@@ -76,79 +76,28 @@ pub struct GraphQLError {
     pub is_internal: bool,
 }
 
-/// A GraphQL response
-pub struct Response {
-    pub status_code: http::status::StatusCode,
-    pub headers: http::HeaderMap,
-    pub body: ResponseBody,
-}
-
-/// A GraphQL response body
-/// Ref: <https://spec.graphql.org/October2021/#sec-Response-Format>
 #[derive(Serialize)]
-pub struct ResponseBody {
-    #[serde(skip_serializing_if = "ResponseData::omit")]
-    pub data: ResponseData,
+pub struct Response {
+    #[serde(skip_serializing)]
+    pub status_code: http::status::StatusCode,
+    #[serde(skip_serializing)]
+    pub headers: http::HeaderMap,
+    pub data: Option<IndexMap<ast::Alias, serde_json::Value>>,
+    /// Errors entry shouldn't be present if no errors raised
+    /// <https://spec.graphql.org/October2021/#sel-FAPHFCBUBpEm7G>
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<NonEmpty<GraphQLError>>,
 }
 
-impl ResponseBody {
-    pub fn new(
-        data: Option<IndexMap<ast::Alias, serde_json::Value>>,
-        errors: Vec<GraphQLError>,
-    ) -> Self {
-        Self {
-            data: ResponseData::Data(data),
-            errors: NonEmpty::from_vec(errors),
-        }
-    }
-    fn request_error(error: GraphQLError) -> Self {
-        // A request error shouldn't include "data" in the response
-        // Ref: https://spec.graphql.org/October2021/#sec-Errors.Request-errors
-        Self {
-            data: ResponseData::Omit,
-            errors: Some(nonempty![error]),
-        }
-    }
-
-    pub fn data(&self) -> Option<&IndexMap<ast::Alias, serde_json::Value>> {
-        match &self.data {
-            ResponseData::Omit => None,
-            ResponseData::Data(data) => data.as_ref(),
-        }
-    }
-}
-
-/// `Omit` indicates a `"data":` field in the response must be omitted, e.g. because an error was raised before execution could begin (a `request_error`)
-#[derive(Debug)]
-pub enum ResponseData {
-    Omit,
-    Data(Option<IndexMap<ast::Alias, serde_json::Value>>),
-}
-
-impl ResponseData {
-    fn omit(&self) -> bool {
-        match self {
-            Self::Omit => true,
-            Self::Data(_) => false,
-        }
-    }
-}
-
-impl Serialize for ResponseData {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            ResponseData::Omit => serializer.serialize_none(),
-            ResponseData::Data(data) => data.serialize(serializer),
-        }
-    }
-}
-
 impl Response {
+    pub fn ok(data: IndexMap<ast::Alias, serde_json::Value>) -> Self {
+        Self {
+            status_code: http::status::StatusCode::OK,
+            headers: http::HeaderMap::default(),
+            data: Some(data),
+            errors: None,
+        }
+    }
     pub fn partial(
         data: IndexMap<ast::Alias, serde_json::Value>,
         errors: Vec<GraphQLError>,
@@ -157,58 +106,89 @@ impl Response {
         Self {
             status_code: http::status::StatusCode::OK,
             headers,
-            body: ResponseBody::new(Some(data), errors),
+            data: Some(data),
+            errors: NonEmpty::from_vec(errors),
         }
     }
 
-    pub fn errors(errors: Vec<GraphQLError>, headers: http::HeaderMap) -> Self {
-        Self {
-            status_code: http::status::StatusCode::OK,
-            headers,
-            body: ResponseBody::new(None, errors),
-        }
-    }
-
-    /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>
-    pub fn request_error_with_status(
-        status_code: http::status::StatusCode,
-        error: GraphQLError,
-    ) -> Self {
+    pub fn error_with_status(status_code: http::status::StatusCode, error: GraphQLError) -> Self {
         Self {
             status_code,
             headers: http::HeaderMap::default(),
-            body: ResponseBody::request_error(error),
+            data: None,
+            errors: Some(nonempty![error]),
         }
     }
 
-    /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>
-    pub fn request_error_message_with_status(
+    pub fn error_message_with_status(
         status_code: http::status::StatusCode,
         message: String,
         is_internal: bool,
     ) -> Self {
-        Self::request_error_with_status(
+        Self {
             status_code,
-            GraphQLError {
+            headers: http::HeaderMap::default(),
+            data: None,
+            errors: Some(nonempty![GraphQLError {
                 is_internal,
                 message,
                 path: None,
                 extensions: None,
-            },
-        )
+            }]),
+        }
     }
 
-    /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>
-    pub fn request_error(error: GraphQLError, headers: http::HeaderMap) -> Self {
+    pub fn error_message_with_status_and_details(
+        status_code: http::status::StatusCode,
+        message: String,
+        details: serde_json::Value,
+        is_internal: bool,
+    ) -> Self {
+        Self {
+            status_code,
+            headers: http::HeaderMap::default(),
+            data: None,
+            errors: Some(nonempty![GraphQLError {
+                is_internal,
+                message,
+                path: None,
+                extensions: Some(Extensions { details }),
+            }]),
+        }
+    }
+
+    pub fn error(error: GraphQLError, headers: http::HeaderMap) -> Self {
         Self {
             status_code: http::status::StatusCode::OK,
             headers,
-            body: ResponseBody::request_error(error),
+            data: None,
+            errors: Some(nonempty![error]),
+        }
+    }
+
+    pub fn errors_with_status(
+        status_code: http::status::StatusCode,
+        errors: NonEmpty<GraphQLError>,
+    ) -> Self {
+        Self {
+            status_code,
+            headers: http::HeaderMap::default(),
+            data: None,
+            errors: Some(errors),
+        }
+    }
+
+    pub fn errors(errors: NonEmpty<GraphQLError>) -> Self {
+        Self {
+            status_code: http::status::StatusCode::OK,
+            headers: http::HeaderMap::default(),
+            data: None,
+            errors: Some(errors),
         }
     }
 
     pub fn does_contains_error(&self) -> bool {
-        self.body.errors.is_some()
+        self.errors.is_some()
     }
 }
 
@@ -221,7 +201,7 @@ impl axum::response::IntoResponse for Response {
             // 2. size of response headers shouldn't be a lot, so this should be inexpensive to clone.
             // 3. if this becomes expensive, we could introduce a local struct with only data and errors and serialize that.
             self.headers.clone(),
-            axum::Json(self.body),
+            axum::Json(self),
         )
             .into_response()
     }

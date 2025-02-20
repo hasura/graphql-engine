@@ -1,5 +1,6 @@
 [
   {
+    "data": null,
     "errors": [
       {
         "message": "Unknown fields found in object type Institution (in subgraph default): [\"id\", \"name\", \"location\", \"staff\"]"
