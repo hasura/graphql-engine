@@ -1,6 +1,5 @@
 [
   {
-    "data": null,
     "errors": [
       {
         "message": "The orderable relationship 'location_country_remote' defined for 'location (in subgraph default)' is a remote relationship and remote relationships are not supported in ordering"
@@ -8,7 +7,6 @@
     ]
   },
   {
-    "data": null,
     "errors": [
       {
         "message": "The orderable relationship 'location_country_remote' defined for 'location (in subgraph default)' is a remote relationship and remote relationships are not supported in ordering"

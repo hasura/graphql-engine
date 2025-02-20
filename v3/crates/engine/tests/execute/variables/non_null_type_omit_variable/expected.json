@@ -1,6 +1,5 @@
 [
   {
-    "data": null,
     "errors": [
       {
         "message": "validation failed: expected a value for non-nullable variable id of type Int! but no value was provided"

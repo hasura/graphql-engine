@@ -219,7 +219,8 @@ impl IntoResponse for SessionError {
             SessionError::Unauthorized(_) | SessionError::InvalidHeaderValue { .. } => false,
             SessionError::InternalRoleNotFound(_) => true,
         };
-        Response::error_message_with_status(code, self.to_string(), is_internal).into_response()
+        Response::request_error_message_with_status(code, self.to_string(), is_internal)
+            .into_response()
     }
 }
 

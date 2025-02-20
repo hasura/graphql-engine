@@ -22,7 +22,6 @@
     }
   },
   {
-    "data": null,
     "errors": [
       {
         "message": "validation failed: required argument actor_boolean_expression not found on field getActorsByBoolExp of type Query"

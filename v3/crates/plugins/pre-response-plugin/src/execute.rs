@@ -41,7 +41,7 @@ impl IntoResponse for Error {
             | Error::PluginRequestParseError(_)
             | Error::EngineResponseParseError(_) => true,
         };
-        lang_graphql::http::Response::error_message_with_status(
+        lang_graphql::http::Response::request_error_message_with_status(
             StatusCode::INTERNAL_SERVER_ERROR,
             self.to_string(),
             is_internal,

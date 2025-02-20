@@ -62,7 +62,6 @@
     }
   },
   {
-    "data": null,
     "errors": [
       {
         "message": "validation failed: no such field on type CommandMovie: rating"
@@ -70,7 +69,6 @@
     ]
   },
   {
-    "data": null,
     "errors": [
       {
         "message": "validation failed: no such field on type Actor: MovieFromCommand"
@@ -78,7 +76,6 @@
     ]
   },
   {
-    "data": null,
     "errors": [
       {
         "message": "validation failed: no such field on type Actor: MovieFromCommand"

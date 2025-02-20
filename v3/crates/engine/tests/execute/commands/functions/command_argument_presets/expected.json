@@ -32,7 +32,6 @@
     }
   },
   {
-    "data": null,
     "errors": [
       {
         "message": "validation failed: required argument lower_bound not found on field getActorsByMovieIdBounds of type Query"

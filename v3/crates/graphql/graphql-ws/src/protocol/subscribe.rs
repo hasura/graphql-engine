@@ -499,7 +499,7 @@ impl ResponseHash {
     }
 
     fn matches(&mut self, response: &lang_graphql::http::Response) -> bool {
-        let serialized = serde_json::to_vec(&response.data).unwrap_or_default();
+        let serialized = serde_json::to_vec(&response.body.data).unwrap_or_default();
         let mut hasher = Blake2b::new();
         hasher.update(&serialized);
         let new_hash = hasher.finalize().into();
@@ -521,7 +521,7 @@ async fn send_graphql_ok<M: WebSocketMetrics>(
     connection
         .send(ws::Message::Protocol(Box::new(ServerMessage::Next {
             id: operation_id,
-            payload: response,
+            payload: response.body,
         })))
         .await;
 }
@@ -558,9 +558,9 @@ enum GraphQLResponse {
 impl GraphQLResponse {
     fn new(response: lang_graphql::http::Response) -> Self {
         // If any error exist
-        if let Some(errors) = response.errors {
+        if let Some(errors) = response.body.errors {
             // If some data present
-            if let Some(data) = response.data {
+            if let lang_graphql::http::ResponseData::Data(Some(data)) = response.body.data {
                 // It is a partial response
                 Self::Ok(lang_graphql::http::Response::partial(
                     data,
@@ -685,7 +685,7 @@ fn run_pre_response_plugins<M: WebSocketMetrics>(
             "Running pre-response plugins",
             tracing_util::SpanVisibility::User,
             || {
-                let response_json = serde_json::to_value(response)?;
+                let response_json = serde_json::to_value(&response.body)?;
                 // Open new trace for executing pre-response plugin with linking current span
                 let plugin_execution_tracing_strategy =
                     pre_response_plugin::ExecutePluginsTracing::NewTraceWithLink {

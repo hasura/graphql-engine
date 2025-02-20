@@ -6,6 +6,8 @@
 
 ### Fixed
 
+- GraphQL API: Prevented "data" field from appearing in GraphQL responses for
+  errors raised before execution.
 - GraphQL API: Using `null` for non-nullable custom scalar types now correctly
   raises validation error.
 

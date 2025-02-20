@@ -190,6 +190,7 @@ pub(crate) fn test_introspection_expectation(
                 }
             }),
         )?;
+        let responses = responses.into_iter().map(|r| r.body).collect::<Vec<_>>();
         write!(expected, "{}", serde_json::to_string_pretty(&responses)?)?;
         Ok(())
     })
@@ -492,6 +493,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                     }
                 }),
             )?;
+            let responses = responses.into_iter().map(|r| r.body).collect::<Vec<_>>();
             write!(expected, "{}", serde_json::to_string_pretty(&responses)?)?;
         }
 
@@ -631,12 +633,13 @@ fn compare_graphql_responses(
     );
 
     assert_eq!(
-        http_response.errors, other_response.errors,
+        http_response.body.errors, other_response.body.errors,
         "Errors for {description} do not match regular queries",
     );
 
     assert_eq!(
-        http_response.data, other_response.data,
+        http_response.body.data(),
+        other_response.body.data(),
         "Data for {description} does not match regular queries"
     );
 }
@@ -723,7 +726,7 @@ async fn run_query_graphql_ws(
                 payload: errors,
             } => {
                 assert_eq!(operation_id, id);
-                lang_graphql::http::Response::errors(errors)
+                lang_graphql::http::ResponseBody::new(None, errors.into())
             }
             _ => {
                 panic!("Expected a Next or Error message")
@@ -749,7 +752,12 @@ async fn run_query_graphql_ws(
             }
         };
     }
-    response
+
+    lang_graphql::http::Response {
+        status_code: axum::http::StatusCode::OK,
+        headers: axum::http::HeaderMap::default(),
+        body: response,
+    }
 }
 
 // should we test with the OpenDD pipeline?

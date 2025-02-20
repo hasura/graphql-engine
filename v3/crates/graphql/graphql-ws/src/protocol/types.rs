@@ -79,7 +79,7 @@ pub enum ServerMessage {
     #[serde(rename = "next")]
     Next {
         id: OperationId,
-        payload: lang_graphql::http::Response,
+        payload: lang_graphql::http::ResponseBody,
     },
 
     /// Server sends errors resulting from a requested operation.

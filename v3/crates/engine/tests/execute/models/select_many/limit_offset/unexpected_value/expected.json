@@ -1,6 +1,5 @@
 [
   {
-    "data": null,
     "errors": [
       {
         "message": "Unexpected value: expecting NON-NEGATIVE 32-bit INT, but found: -10"
@@ -8,7 +7,6 @@
     ]
   },
   {
-    "data": null,
     "errors": [
       {
         "message": "Unexpected value: expecting NON-NEGATIVE 32-bit INT, but found: -10"
@@ -16,7 +14,6 @@
     ]
   },
   {
-    "data": null,
     "errors": [
       {
         "message": "Unexpected value: expecting NON-NEGATIVE 32-bit INT, but found: -10"

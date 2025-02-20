@@ -81,8 +81,8 @@ impl ExecuteQueryResult {
                     } else {
                         // If the field is not nullable, return `null` data response with the error.
                         // We return whatever headers we have collected until this point.
-                        return gql::http::Response::error(
-                            e.to_graphql_error(expose_internal_errors, Some(path)),
+                        return gql::http::Response::errors(
+                            vec![e.to_graphql_error(expose_internal_errors, Some(path))],
                             Self::merge_headers(headers),
                         );
                     }

@@ -55,7 +55,7 @@ impl TraceableError for Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        lang_graphql::http::Response::error_with_status(
+        lang_graphql::http::Response::request_error_with_status(
             StatusCode::INTERNAL_SERVER_ERROR,
             self.into_graphql_error(),
         )
@@ -325,7 +325,7 @@ pub async fn pre_parse_plugins_handler(
             let status_code = error.to_status_code();
             let graphql_error = error.into_graphql_error(&plugin_name);
             let error_response =
-                lang_graphql::http::Response::error_with_status(status_code, graphql_error)
+                lang_graphql::http::Response::request_error_with_status(status_code, graphql_error)
                     .into_response();
             response = Some(error_response);
         }
