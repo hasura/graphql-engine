@@ -1,0 +1,67 @@
+#Create a table an concurrent index in a transaction
+- url: /v1/query
+  status: 400
+  response:
+    error: query execution failed
+    path: $.args
+    code: postgres-error
+    internal:
+      arguments: []
+      error:
+        description:
+        exec_status: FatalError
+        hint:
+        message: CREATE INDEX CONCURRENTLY cannot run inside a transaction block
+        status_code: '25001'
+      prepared: false
+      statement: "CREATE TABLE users (\n    id SERIAL PRIMARY KEY,\n    name VARCHAR(100)
+        NOT NULL,\n    email VARCHAR(100) UNIQUE,\n    created_at TIMESTAMP WITHOUT
+        TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC')\n);\n-- Creating a concurrent
+        index in a transaction is not allowed\nCREATE INDEX CONCURRENTLY index_users_created_at
+        ON users (created_at);\n"
+  query:
+    type: run_sql
+    args:
+      sql: |
+        CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) UNIQUE,
+            created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC')
+        );
+        -- Creating a concurrent index in a transaction is not allowed
+        CREATE INDEX CONCURRENTLY index_users_created_at ON users (created_at);
+      no_transaction: false
+
+
+#Create a table an concurrent index without a transaction
+- url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      sql: |
+        CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) UNIQUE,
+            created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC')
+        );
+        -- Creating a concurrent index without a transaction is allowed
+        CREATE INDEX CONCURRENTLY index_users_created_at ON users (created_at);
+      no_transaction: true
+
+#Revert changes
+- url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      sql: |
+        DROP TABLE users;
