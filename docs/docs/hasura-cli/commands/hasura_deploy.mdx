@@ -17,6 +17,10 @@ keywords:
 
 When working with a Hasura instance, you'll apply Hasura Metadata and database migrations to the graphql-engine server. This command reduces the number of steps by completing the same tasks ( ``hasura metadata apply`` and ``hasura migrate apply``) in one command.
 		
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/index/#migrations-in-graphql-engine
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-metadata/
 
 
 ```bash
@@ -49,6 +53,7 @@ hasura deploy --endpoint "<endpoint>"
     --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
 -h, --help                           help for deploy
     --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
+    --no-transaction                 disable transaction for migration (env "HASURA_GRAPHQL_NO_TRANSACTION")
     --with-seeds                     apply available seeds data to databases
 ```
 

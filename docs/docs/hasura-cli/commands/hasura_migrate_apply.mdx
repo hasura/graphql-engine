@@ -17,6 +17,10 @@ Apply migrations on the database.
 
 Migrations represent the modifications needed to reach the desired state of a database schema. Running this command will apply the migrations on the database.
 
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+
+
 ```bash
 hasura migrate apply [flags]
 ```
@@ -78,6 +82,7 @@ hasura migrate apply --down all
     --type string      type of migration (up, down) to be used with version flag (default "up")
     --dry-run          print the names of migrations which are going to be applied
     --all-databases    set this flag to attempt to apply migrations on all databases present on server
+    --no-transaction   disable transaction for migration (env "HASURA_GRAPHQL_NO_TRANSACTION")
 -h, --help             help for apply
 ```
 

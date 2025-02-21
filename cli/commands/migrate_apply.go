@@ -13,6 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	migrate "github.com/hasura/graphql-engine/cli/v2/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
 )
 
@@ -79,6 +80,7 @@ Further reading:
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
+			opts.NoTransaction = ec.Viper.GetBool("no_transaction")
 			if err := opts.Run(); err != nil {
 				return herrors.E(op, err)
 			}
@@ -102,6 +104,11 @@ Further reading:
 	if err := f.MarkHidden("progressbar-logs"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
+
+	f.BoolVar(&opts.NoTransaction, "no-transaction", false, "disable transaction for migration")
+
+	util.BindPFlag(ec.Viper, "no_transaction", f.Lookup("no-transaction"))
+
 	return migrateApplyCmd
 }
 
@@ -118,6 +125,8 @@ type MigrateApplyOptions struct {
 	DryRun          bool
 	Source          cli.Source
 	ProgressBarLogs bool
+
+	NoTransaction bool
 }
 
 func (o *MigrateApplyOptions) Validate() error {
@@ -300,6 +309,7 @@ func (o *MigrateApplyOptions) Exec() error {
 	migrateDrv.SkipExecution = o.SkipExecution
 	migrateDrv.DryRun = o.DryRun
 	migrateDrv.ProgressBarLogs = o.ProgressBarLogs
+	migrateDrv.NoTransaction = o.NoTransaction
 
 	if err := ExecuteMigration(migrationType, migrateDrv, step); err != nil {
 		return herrors.E(op, err)
