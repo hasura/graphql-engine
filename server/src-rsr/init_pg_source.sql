@@ -88,8 +88,11 @@ CREATE OR REPLACE FUNCTION
     id := gen_random_uuid();
     server_version_num := current_setting('server_version_num');
     IF server_version_num >= 90600 THEN
-      session_variables := current_setting('hasura.user', 't');
-      trace_context := current_setting('hasura.tracecontext', 't');
+      -- In some cases postgres sets the setting to an empty string, which is not a valid json.
+      -- NULLIF will convert the empty string to NULL.
+      -- Ref: https://github.com/hasura/graphql-engine/issues/8498
+      session_variables := NULLIF(current_setting('hasura.user', 't'), '');
+      trace_context := NULLIF(current_setting('hasura.tracecontext', 't'), '');
     ELSE
       BEGIN
         session_variables := current_setting('hasura.user');
