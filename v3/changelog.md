@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added validation for command output types to ensure they reference valid types
+  in the schema.
+
 ### Fixed
 
 ### Changed

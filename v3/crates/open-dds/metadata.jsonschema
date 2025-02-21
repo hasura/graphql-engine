@@ -3740,6 +3740,10 @@
         "disallow_unknown_values_in_arguments": {
           "default": false,
           "type": "boolean"
+        },
+        "require_valid_command_output_type": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

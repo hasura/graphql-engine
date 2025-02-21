@@ -166,5 +166,10 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowUnknownValuesInArguments | Flag::DisallowRecursiveObjectTypes => {
             Some(new_compatibility_date(2025, 2, 20))
         }
+
+        Flag::RequireValidCommandOutputType => {
+            // TODO Set a compatibility date during the next release
+            None
+        }
     }
 }
