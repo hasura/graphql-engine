@@ -184,6 +184,9 @@ impl Tracer {
     /// Runs the tive closure `f` asynchronously by opening a span in a new trace with the given `name`, and sets a visibility attribute
     /// on the span based on `visibility` and sets the span's error attributes based on the result of the closure.
     /// The span is linked to the given `link`.
+    ///
+    /// rustc doesn't accept what clippy suggests here
+    #[allow(clippy::needless_lifetimes)]
     pub async fn new_trace_async_with_link<'a, R, F>(
         &'a self,
         name: &'static str,
@@ -259,6 +262,8 @@ impl Tracer {
             .await
     }
 
+    // rustc doesn't accept what clippy suggests here
+    #[allow(clippy::needless_lifetimes)]
     pub async fn in_span_async_with_parent_context<'a, R, F, N>(
         &'a self,
         name: N,

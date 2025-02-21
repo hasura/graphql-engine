@@ -15,7 +15,7 @@ use crate::error;
 use engine_types::{HttpContext, ProjectId};
 
 /// Executes a NDC operation
-pub async fn execute_ndc_query<'n, 's>(
+pub async fn execute_ndc_query(
     http_context: &HttpContext,
     query: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -54,7 +54,7 @@ pub async fn execute_ndc_query<'n, 's>(
         .await
 }
 
-pub async fn fetch_from_data_connector<'s>(
+pub async fn fetch_from_data_connector(
     http_context: &HttpContext,
     query_request: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -104,7 +104,7 @@ pub fn append_project_id_to_headers<'a>(
 }
 
 /// Executes a NDC mutation
-pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
+pub(crate) async fn execute_ndc_mutation(
     http_context: &HttpContext,
     query: &NdcMutationRequest,
     data_connector: &Arc<metadata_resolve::DataConnectorLink>,
@@ -147,7 +147,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
         .await
 }
 
-pub async fn fetch_from_data_connector_mutation<'s>(
+pub async fn fetch_from_data_connector_mutation(
     http_context: &HttpContext,
     query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
