@@ -553,18 +553,7 @@ class Permissions extends Component {
           dispatch(permRemoveMultipleRoles(tableSchema));
         }
       };
-      const BULK_REMOVE_ACTION = "BULK remove";
-      const BULK_ADD_ACTION = "BULK add";
-
-      const handleBulkClick = (action) => {
-        const confirmMessage =
-        'This will add all currently set permissions for the selected role(s)'; 
-      const isOk = getConfirmation(confirmMessage);
-      if(isOk){
-        dispatch(bulkPermissionModifier(tableSchema))
-      }
-
-      }
+    
 
       return (
         <div id={'bulk-section'} className={styles.activeEdit}>
