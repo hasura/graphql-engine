@@ -356,22 +356,3 @@ fn get_relationship_predicate_execution_strategy(
         RelationshipPredicateExecutionStrategy::InEngine
     }
 }
-
-// Turn a `plan_types::Expression` into `execute::ResolvedFilterExpression`
-// Currently this works by running all the remote predicates, soon it won't need to
-pub fn resolve_filter_expression(
-    filter_ir: &plan_types::Expression<'_>,
-    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
-    unique_number: &mut UniqueNumber,
-) -> Result<(ResolvedFilterExpression, PredicateQueryTrees), PlanError> {
-    let mut remote_predicates = plan_types::PredicateQueryTrees::new();
-
-    let resolved_filter_expression = plan_expression(
-        filter_ir,
-        relationships,
-        &mut remote_predicates,
-        unique_number,
-    )?;
-
-    Ok((resolved_filter_expression, remote_predicates))
-}

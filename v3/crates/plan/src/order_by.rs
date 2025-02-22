@@ -7,7 +7,7 @@ use metadata_resolve::{Qualified, RelationshipTarget, TypeMapping};
 use open_dds::{
     data_connector::DataConnectorColumnName, query::OrderByElement, types::CustomTypeName,
 };
-use plan_types::{ResolvedFilterExpression, UniqueNumber, UsagesCounts};
+use plan_types::{PredicateQueryTrees, ResolvedFilterExpression, UniqueNumber, UsagesCounts};
 
 pub fn to_resolved_order_by_element(
     metadata: &metadata_resolve::Metadata,
@@ -18,6 +18,7 @@ pub fn to_resolved_order_by_element(
     data_connector: &metadata_resolve::DataConnectorLink,
     element: &OrderByElement,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    remote_predicates: &mut PredicateQueryTrees,
     unique_number: &mut UniqueNumber,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByElement<ResolvedFilterExpression>, PlanError> {
@@ -36,6 +37,7 @@ pub fn to_resolved_order_by_element(
         vec![], // Start with empty relationship path
         vec![], // Start with empty field path
         collect_relationships,
+        remote_predicates,
         unique_number,
         usage_counts,
     )?;
@@ -56,6 +58,7 @@ fn from_operand(
     relationship_path: Vec<plan_types::RelationshipPathElement<ResolvedFilterExpression>>,
     field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    remote_predicates: &mut PredicateQueryTrees,
     unique_number: &mut UniqueNumber,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
@@ -71,6 +74,7 @@ fn from_operand(
             relationship_path,
             field_path,
             collect_relationships,
+            remote_predicates,
             unique_number,
             usage_counts,
         ),
@@ -86,6 +90,7 @@ fn from_operand(
                 relationship_path,
                 field_path,
                 collect_relationships,
+                remote_predicates,
                 unique_number,
                 usage_counts,
             )
@@ -110,6 +115,7 @@ fn resolve_field_operand(
     relationship_path: Vec<plan_types::RelationshipPathElement<ResolvedFilterExpression>>,
     mut field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    remote_predicates: &mut PredicateQueryTrees,
     unique_number: &mut UniqueNumber,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
@@ -169,6 +175,7 @@ fn resolve_field_operand(
             relationship_path,
             field_path,
             collect_relationships,
+            remote_predicates,
             unique_number,
             usage_counts,
         )
@@ -201,6 +208,7 @@ fn resolve_relationship_operand(
     mut relationship_path: Vec<plan_types::RelationshipPathElement<ResolvedFilterExpression>>,
     mut field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    remote_predicates: &mut PredicateQueryTrees,
     unique_number: &mut UniqueNumber,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
@@ -263,6 +271,7 @@ fn resolve_relationship_operand(
                 target_model_source,
                 &metadata.object_types,
                 collect_relationships,
+                remote_predicates,
                 unique_number,
                 usage_counts,
             )?;
@@ -305,6 +314,7 @@ fn resolve_relationship_operand(
                     relationship_path,
                     field_path,
                     collect_relationships,
+                    remote_predicates,
                     unique_number,
                     usage_counts,
                 ),

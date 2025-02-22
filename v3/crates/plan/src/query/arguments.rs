@@ -1,6 +1,6 @@
 use super::boolean_expression;
-use super::filter::resolve_filter_expression;
 use super::permissions;
+use crate::plan_expression;
 use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
@@ -15,7 +15,9 @@ use open_dds::{
     models::ModelName,
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
-use plan_types::{Argument, Expression, Relationship, UniqueNumber, UsagesCounts};
+use plan_types::{
+    Argument, Expression, PredicateQueryTrees, Relationship, UniqueNumber, UsagesCounts,
+};
 use reqwest::header::HeaderMap;
 use serde::Serialize;
 use std::borrow::Cow;
@@ -584,6 +586,7 @@ pub fn get_unresolved_arguments<'s>(
 pub fn resolve_arguments(
     arguments_with_presets: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'_>>,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
+    remote_predicates: &mut PredicateQueryTrees,
     unique_number: &mut UniqueNumber,
 ) -> Result<BTreeMap<DataConnectorArgumentName, Argument>, PlanError> {
     // now we turn the GraphQL IR `Arguments` type into the `execute` "resolved" argument type
@@ -592,8 +595,8 @@ pub fn resolve_arguments(
     for (argument_name, argument_value) in arguments_with_presets {
         let resolved_argument_value = match argument_value {
             UnresolvedArgument::BooleanExpression { predicate } => {
-                let (resolved_filter_expression, _remote_predicates) =
-                    resolve_filter_expression(&predicate, relationships, unique_number)?;
+                let resolved_filter_expression =
+                    plan_expression(&predicate, relationships, remote_predicates, unique_number)?;
 
                 Argument::BooleanExpression {
                     predicate: resolved_filter_expression,

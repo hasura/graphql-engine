@@ -14,7 +14,9 @@ use open_dds::{
     query::{BooleanExpression, ComparisonOperator},
     types::CustomTypeName,
 };
-use plan_types::{Expression, ResolvedFilterExpression, UniqueNumber, UsagesCounts};
+use plan_types::{
+    Expression, PredicateQueryTrees, ResolvedFilterExpression, UniqueNumber, UsagesCounts,
+};
 use std::collections::BTreeMap;
 
 pub fn to_filter_expression<'metadata>(
@@ -834,6 +836,7 @@ pub(crate) fn resolve_model_permission_filter(
     model_source: &metadata_resolve::ModelSource,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
+    remote_predicates: &mut PredicateQueryTrees,
     unique_number: &mut UniqueNumber,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<ResolvedFilterExpression>, PlanError> {
@@ -857,9 +860,10 @@ pub(crate) fn resolve_model_permission_filter(
                 usage_counts,
             )?;
 
-            let (filter, _remote_predicates) = super::query::filter::resolve_filter_expression(
+            let filter = crate::plan_expression(
                 &filter_ir,
                 collect_relationships,
+                remote_predicates,
                 unique_number,
             )?;
 

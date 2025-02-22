@@ -209,8 +209,12 @@ pub(crate) fn from_command_selection(
         &mut usage_counts,
     )?;
 
-    let resolved_arguments =
-        resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
+    let resolved_arguments = resolve_arguments(
+        unresolved_arguments,
+        &mut relationships,
+        &mut remote_predicates,
+        unique_number,
+    )?;
 
     let command_plan = match &command_source.source {
         DataConnectorCommand::Function(function_name) => {

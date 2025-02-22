@@ -1046,7 +1046,7 @@ fn test_model_select_many_where_remote_array_relationship_simple() -> anyhow::Re
                 vec!["execute/models/select_many/where/remote_relationships/boolean_expression_type/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1086,7 +1086,7 @@ fn test_model_select_many_where_remote_object_relationship_simple() -> anyhow::R
                 vec!["execute/models/select_many/where/remote_relationships/boolean_expression_type/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1105,7 +1105,7 @@ fn test_model_select_many_where_remote_object_relationship_nested() -> anyhow::R
                 vec!["execute/models/select_many/where/remote_relationships/boolean_expression_type/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1145,7 +1145,7 @@ fn test_model_select_many_where_no_capability_array_relationship_simple() -> any
             common_metadata_path_string,
             test_common_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1179,7 +1179,7 @@ fn test_model_select_many_where_no_capability_object_relationship_simple() -> an
             common_metadata_path_string,
             test_common_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1195,7 +1195,7 @@ fn test_model_select_many_where_no_capability_object_relationship_nested() -> an
             common_metadata_path_string,
             test_common_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1400,7 +1400,7 @@ fn test_model_select_many_permission_filter_remote_relationships_object() -> any
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1414,7 +1414,7 @@ fn test_model_select_many_permission_filter_remote_relationships_array() -> anyh
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2497,7 +2497,7 @@ fn test_model_select_many_remote_relationship_predicate_array_simple() -> anyhow
                 vec!["execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2519,7 +2519,7 @@ fn test_model_select_many_remote_relationship_predicate_array_nested() -> anyhow
                 vec!["execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2540,7 +2540,7 @@ fn test_model_select_many_remote_relationship_predicate_array_nested_multiple_fi
                 vec!["execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2561,7 +2561,7 @@ fn test_model_select_many_remote_relationship_predicate_object_simple() -> anyho
                 vec!["execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2582,7 +2582,7 @@ fn test_model_select_many_remote_relationship_predicate_object_nested() -> anyho
                 vec!["execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2628,7 +2628,7 @@ fn test_model_select_many_remote_relationship_predicate_on_two_fields() -> anyho
                 vec!["execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2657,7 +2657,7 @@ fn test_model_select_many_remote_relationship_predicate_object_two_relationship_
                 vec!["execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
