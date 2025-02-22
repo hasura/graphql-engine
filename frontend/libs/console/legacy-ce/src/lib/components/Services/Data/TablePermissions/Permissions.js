@@ -26,6 +26,7 @@ import {
   permCustomChecked,
   permSetBulkSelect,
   permRemoveMultipleRoles,
+  bulkPermissionModifier,
   permSetApplySamePerm,
   permDelApplySamePerm,
   permToggleBackendOnly,
@@ -552,6 +553,18 @@ class Permissions extends Component {
           dispatch(permRemoveMultipleRoles(tableSchema));
         }
       };
+      const BULK_REMOVE_ACTION = "BULK remove";
+      const BULK_ADD_ACTION = "BULK add";
+
+      const handleBulkClick = (action) => {
+        const confirmMessage =
+        'This will add all currently set permissions for the selected role(s)'; 
+      const isOk = getConfirmation(confirmMessage);
+      if(isOk){
+        dispatch(bulkPermissionModifier(tableSchema))
+      }
+
+      }
 
       return (
         <div id={'bulk-section'} className={styles.activeEdit}>
@@ -561,6 +574,9 @@ class Permissions extends Component {
             {getSelectedRoles()}
           </div>
           <div className={styles.add_mar_top + ' ' + styles.add_mar_bottom_mid}>
+          <Button onClick={handleBulkClick} mode='primary' size="sm" style={{marginRight: '5px'}}>
+              Add All Permissions
+            </Button>
             <Button onClick={handleBulkRemoveClick} color="red" size="sm">
               Remove All Permissions
             </Button>
