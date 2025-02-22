@@ -90,7 +90,7 @@ export const permValidateInputFields = (
           forward_client_headers,
           timeout: parseInt(timeout),
         },
-     }
+      }
     : undefined,
 });
 
