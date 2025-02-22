@@ -188,6 +188,9 @@ pub(crate) fn resolve_input_type_permission(
                                 name: session_variable.clone(),
                                 passed_as_json: flags
                                     .contains(open_dds::flags::Flag::JsonSessionVariables),
+                                disallow_unknown_fields: flags.contains(
+                                    open_dds::flags::Flag::DisallowUnknownValuesInArguments,
+                                ),
                             },
                         )
                     }

@@ -24,59 +24,95 @@ mod common;
 
 #[test]
 fn test_local_relationships_model_to_model_object() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/object";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/object",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
 
 #[test]
 fn test_local_relationships_model_to_model_multi_mapping() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/multi_mapping";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/multi_mapping",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
 
 #[test]
 fn test_local_relationships_model_to_model_array() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/array";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    let common_metadata_graphql_config =
-        "execute/relationships/common_metadata/graphql_config.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string, common_metadata_graphql_config],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/array",
+        &["execute/relationships/common_metadata/graphql_config.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
 
 #[test]
 fn test_local_relationships_model_to_model_array_with_arguments() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/array/arguments";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/array/arguments",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
 
 #[test]
 fn test_relationships_array_with_arguments_with_graphql_config() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/array/arguments/with_graphql_config";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    let common_metadata_graphql_config =
-        "execute/relationships/common_metadata/graphql_config.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string, common_metadata_graphql_config],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/array/arguments/with_graphql_config",
+        &["execute/relationships/common_metadata/graphql_config.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
@@ -271,7 +307,7 @@ fn test_remote_relationships_remote_object_in_local_array_2() -> anyhow::Result<
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -314,7 +350,7 @@ fn test_remote_join_procedure_to_model() -> anyhow::Result<()> {
         test_path_string,
         &[
             "execute/common_metadata/command_metadata.json",
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
         ],
         BTreeMap::from([
             (
@@ -336,7 +372,7 @@ fn test_remote_relationships_model_to_command_array() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -351,7 +387,7 @@ fn test_remote_relationships_model_to_multiple_commands_not_nested() -> anyhow::
         test_path_string,
         &[
             "execute/remote_relationships/command/model_to_command/multiple_commands/metadata.json",
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -366,7 +402,7 @@ fn test_remote_relationships_model_to_multiple_commands_nested() -> anyhow::Resu
         test_path_string,
         &[
             "execute/remote_relationships/command/model_to_command/multiple_commands/metadata.json",
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -381,7 +417,7 @@ fn test_remote_relationships_model_to_multiple_commands_very_nested() -> anyhow:
         test_path_string,
         &[
             "execute/remote_relationships/command/model_to_command/multiple_commands/metadata.json",
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -395,7 +431,7 @@ fn test_remote_mutually_recursive_relationships_model_to_command() -> anyhow::Re
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -419,7 +455,7 @@ fn test_remote_relationships_remote_in_local() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -432,7 +468,7 @@ fn test_remote_relationships_from_nested() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -445,7 +481,7 @@ fn test_remote_relationships_model_to_command_remote_in_local() -> anyhow::Resul
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -458,7 +494,7 @@ fn test_remote_relationships_mutually_recursive() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -471,7 +507,7 @@ fn test_remote_relationships_mutually_recursive_with_where() -> anyhow::Result<(
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -484,7 +520,7 @@ fn test_remote_relationships_multi_field_mapping() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[
-            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
         common::TestOpenDDPipeline::YesPlease,
@@ -494,7 +530,8 @@ fn test_remote_relationships_multi_field_mapping() -> anyhow::Result<()> {
 #[test]
 fn test_relationships_permissions_target_model_type_permission() -> anyhow::Result<()> {
     let test_path_string = "execute/relationships/permissions/target_model_type_permission";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
@@ -505,7 +542,8 @@ fn test_relationships_permissions_target_model_type_permission() -> anyhow::Resu
 #[test]
 fn test_relationships_permissions_source_type_permission() -> anyhow::Result<()> {
     let test_path_string = "execute/relationships/permissions/source_type_permission";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
@@ -515,11 +553,19 @@ fn test_relationships_permissions_source_type_permission() -> anyhow::Result<()>
 
 #[test]
 fn test_relationships_nested_selection() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/nested/selection";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/nested/selection",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
@@ -545,12 +591,19 @@ fn test_relationships_nested_selection_no_nested_capability() -> anyhow::Result<
 // TODO: This should ideally be a schema test
 #[test]
 fn test_relationships_permissions_target_model_type_field_not_selectable() -> anyhow::Result<()> {
-    let test_path_string =
-        "execute/relationships/permissions/target_model_type_field_not_selectable";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/permissions/target_model_type_field_not_selectable",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
@@ -564,11 +617,19 @@ fn test_relationships_permissions_target_model_type_field_not_selectable() -> an
 // 4. With user3 role: Fails because 'article_id' field is not in allowed fields for ordering
 #[test]
 fn test_relationship_permission_target_model_where_and_order_by() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/permissions/target_model_where_and_order_by";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/permissions/target_model_where_and_order_by",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
@@ -576,11 +637,19 @@ fn test_relationship_permission_target_model_where_and_order_by() -> anyhow::Res
 // TODO: This should ideally be a schema test
 #[test]
 fn test_relationships_permissions_target_model_not_selectable() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/permissions/target_model_not_selectable";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/permissions/target_model_not_selectable",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
@@ -600,21 +669,38 @@ fn test_relationships_permissions_target_model_not_selectable() -> anyhow::Resul
 // Ref Bug report: https://github.com/hasura/v3-engine/issues/168
 #[test]
 fn test_relationships_with_same_name() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/same_relationship_name";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/same_relationship_name",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }
 
 #[test]
 fn test_relationship_with_no_relationship_capability() -> anyhow::Result<()> {
-    let test_path_string: &str = "execute/relationships/no_relationship_capability";
-    common::test_execution_expectation(
-        test_path_string,
-        &["execute/common_metadata/postgres_connector_schema.json"],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/no_relationship_capability",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
         common::TestOpenDDPipeline::YesPlease,
     )
 }

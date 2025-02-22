@@ -1,0 +1,10 @@
+- name: pg
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url: TO_BE_FILLED
+      isolation_level: read-committed
+      pool_settings:
+        connection_lifetime: 600
+      use_prepared_statements: false
+  tables: "!include pg/tables/tables.yaml"

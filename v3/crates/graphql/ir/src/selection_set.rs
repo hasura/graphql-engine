@@ -20,6 +20,7 @@ use graphql_schema::{
     AggregateOutputAnnotation, AggregationFunctionAnnotation, InputAnnotation, TypeKind,
 };
 use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
+use metadata_resolve::{ObjectTypeWithRelationships, Qualified};
 use plan::UnresolvedArgument;
 use plan_types::{
     LocalCommandRelationshipInfo, LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts,
@@ -167,6 +168,7 @@ pub fn generate_nested_selection_open_dd_ir(
         metadata_resolve::Qualified<CustomTypeName>,
         metadata_resolve::TypeMapping,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     nested_selection_type: NestedSelectionType,
     field: &normalized_ast::Field<'_, GDS>,
     session_variables: &SessionVariables,
@@ -195,6 +197,7 @@ pub fn generate_nested_selection_open_dd_ir(
                 new_nestedness,
                 models,
                 type_mappings,
+                object_types,
                 NestedSelectionType::NestedSelection,
                 field,
                 session_variables,
@@ -215,6 +218,7 @@ pub fn generate_nested_selection_open_dd_ir(
                                 selection_set_field_nestedness,
                                 models,
                                 type_mappings,
+                                object_types,
                                 session_variables,
                                 request_headers,
                                 usage_counts,
@@ -334,6 +338,7 @@ pub fn generate_selection_set_open_dd_ir(
         metadata_resolve::Qualified<CustomTypeName>,
         metadata_resolve::TypeMapping,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -358,6 +363,7 @@ pub fn generate_selection_set_open_dd_ir(
                                 .max(metadata_resolve::FieldNestedness::ObjectNested),
                             models,
                             type_mappings,
+                            object_types,
                             NestedSelectionType::NestedSelection,
                             field,
                             session_variables,
@@ -450,6 +456,7 @@ pub fn generate_selection_set_open_dd_ir(
                                     field,
                                     models,
                                     type_mappings,
+                                    object_types,
                                     relationship_annotation,
                                     session_variables,
                                     request_headers,
@@ -479,6 +486,7 @@ pub fn generate_selection_set_open_dd_ir(
                                     relationship_annotation,
                                     models,
                                     type_mappings,
+                                    object_types,
                                     session_variables,
                                     request_headers,
                                     usage_counts,

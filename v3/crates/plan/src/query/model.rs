@@ -32,6 +32,8 @@ pub fn from_model_group_by(
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<QueryExecutionTree, PlanError> {
+    let mut remote_predicates = PredicateQueryTrees::new();
+
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
         model_target.model_name.clone(),
@@ -232,6 +234,7 @@ pub fn from_model_group_by(
         model,
         model_source,
         &model_object_type,
+        &mut remote_predicates,
         unique_number,
     )?;
 
@@ -278,7 +281,7 @@ pub fn from_model_group_by(
 
     Ok(QueryExecutionTree {
         query_execution_plan,
-        remote_predicates: PredicateQueryTrees::new(),
+        remote_predicates,
         remote_join_executions: JoinLocations::new(),
     })
 }
@@ -291,6 +294,8 @@ pub fn from_model_aggregate_selection(
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<QueryExecutionTree, PlanError> {
+    let mut remote_predicates = PredicateQueryTrees::new();
+
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
         model_target.model_name.clone(),
@@ -356,6 +361,7 @@ pub fn from_model_aggregate_selection(
         model,
         model_source,
         &model_object_type,
+        &mut remote_predicates,
         unique_number,
     )?;
 
@@ -393,7 +399,7 @@ pub fn from_model_aggregate_selection(
 
     Ok(QueryExecutionTree {
         query_execution_plan,
-        remote_predicates: PredicateQueryTrees::new(),
+        remote_predicates,
         remote_join_executions: JoinLocations::new(),
     })
 }
@@ -605,6 +611,7 @@ pub fn from_model_selection(
         model,
         model_source,
         &model_object_type,
+        &mut remote_predicates,
         unique_number,
     )?;
 

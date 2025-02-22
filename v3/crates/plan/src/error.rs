@@ -1,5 +1,6 @@
 //! this has been copied from `graphql_ir`. not quite sure where the cuts will live yet.
 //!
+use crate::query::MapFieldNamesError;
 use metadata_resolve::Qualified;
 use open_dds::{
     relationships::RelationshipName,
@@ -7,6 +8,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 use serde_json as json;
+use tracing_util::{ErrorVisibility, TraceableError};
 
 #[allow(clippy::duplicated_attributes)] // suppress spurious warnings from Clippy
 #[derive(thiserror::Error, Debug)]
@@ -15,6 +17,15 @@ pub enum InternalError {
     Developer(#[from] InternalDeveloperError),
     #[error("{0}")]
     Engine(#[from] InternalEngineError),
+}
+
+impl TraceableError for InternalError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::Developer(error) => error.visibility(),
+            Self::Engine(_) => ErrorVisibility::Internal,
+        }
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -61,20 +72,26 @@ pub enum InternalDeveloperError {
     #[error("{0}")]
     RelationshipFieldMappingError(#[from] crate::query::RelationshipFieldMappingError),
 
-    #[error("Could not convert the provided header value to string as it contains non-visible ASCII characters")]
-    IllegalCharactersInHeaderValue,
+    #[error("{0}")]
+    MapFieldNamesError(#[from] MapFieldNamesError),
 
     #[error("The relationship '{relationship_name}' is from a nested object and cannot be used in a predicate")]
     NestedObjectRelationshipInPredicate { relationship_name: RelationshipName },
+}
+
+impl TraceableError for InternalDeveloperError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::MapFieldNamesError(error) => error.visibility(),
+            _ => ErrorVisibility::User,
+        }
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum InternalEngineError {
     #[error("serialization error: {0}")]
     SerializationError(#[from] json::Error),
-
-    #[error("internal error during execution of argument presets: {description}")]
-    ArgumentPresetExecution { description: String },
 
     #[error("internal error: {description}")]
     InternalGeneric { description: String },

@@ -176,6 +176,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
                         &typename_mapping.model_name,
                         models,
                         &model_source.type_mappings,
+                        object_types,
                         None, // arguments
                         Some(boolean_expression),
                         vec![], // order_by

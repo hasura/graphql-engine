@@ -857,6 +857,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("actions.codegen.framework", "")
 	v.SetDefault("actions.codegen.output_dir", "")
 	v.SetDefault("actions.codegen.uri", "")
+	v.SetDefault("no_transaction", false)
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {

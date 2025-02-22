@@ -935,6 +935,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                                     "x-hasura-album-id",
                                                 ),
                                                 passed_as_json: true,
+                                                disallow_unknown_fields: false,
                                             },
                                         ),
                                         deprecated: None,

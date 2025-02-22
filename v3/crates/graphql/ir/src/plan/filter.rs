@@ -1,11 +1,10 @@
-use std::collections::BTreeMap;
-
 use super::error as plan_error;
 use crate::FilterExpression;
 use plan::plan_expression;
 use plan_types::{
     NdcRelationshipName, PredicateQueryTrees, Relationship, ResolvedFilterExpression, UniqueNumber,
 };
+use std::collections::BTreeMap;
 
 /// Plan the filter expression IR.
 /// This function will take the filter expression IR and convert it into a planned filter expression

@@ -1,0 +1,1907 @@
+[
+  {
+    "data": {
+      "Customer_type": {
+        "name": "Customer",
+        "description": "The record of all customers",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "Address",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "City",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Company",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Country",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "CustomerId",
+            "description": "The identifier of customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Email",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Fax",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "FirstName",
+            "description": "The first name of a customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Invoices",
+            "description": "The invoices the customer has",
+            "args": [
+              {
+                "name": "limit",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "offset",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order_by",
+                "description": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "Invoice_orderby"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_boolexp",
+                  "ofType": null
+                }
+              }
+            ],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "Invoice"
+                }
+              }
+            }
+          },
+          {
+            "name": "Invoices_aggregate",
+            "description": "An aggregation over the invoices a customer has",
+            "args": [
+              {
+                "name": "filter_input",
+                "description": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_filter_input",
+                  "ofType": null
+                }
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Invoice_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "LastName",
+            "description": "The last name of a customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Phone",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "PostalCode",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "State",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "SupportRepId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Invoice_filter_input_type": {
+        "name": "Invoice_filter_input",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "limit",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "offset",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "order_by",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_orderby"
+                }
+              }
+            }
+          },
+          {
+            "name": "where",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Invoice_boolexp",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Invoice_aggregate_exp_type": {
+        "name": "Invoice_aggregate_exp",
+        "description": "Aggregate expression for the Invoice type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "BillingAddress",
+            "description": "Aggregation over the billing address",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingCity",
+            "description": "Aggregation over the billing city",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingCountry",
+            "description": "Aggregation over the billing country",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingPostalCode",
+            "description": "Aggregation over the billing postal code",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingState",
+            "description": "Aggregation over the billing state",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "CustomerId",
+            "description": "Aggregation over the customer ID",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Int_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "InvoiceDate",
+            "description": "Aggregation over the invoice date",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Timestamp_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "InvoiceId",
+            "description": "Aggregation over the invoice ID",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Int_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Total",
+            "description": "Aggregation over the invoice total",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Numeric_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count",
+            "description": "Count of invoices",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          }
+        ]
+      },
+      "String_aggregate_exp_type": {
+        "name": "String_aggregate_exp",
+        "description": "Aggregate expression for the String type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Int_aggregate_exp_type": {
+        "name": "Int_aggregate_exp",
+        "description": "Aggregate expression for the Int type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": "Count of all non-null integers",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": "Count of all distinct non-null integers",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": "Largest integer",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": "Smallest integer",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_stddev",
+            "description": "Standard deviation across integers",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_sum",
+            "description": "Sum of all integers",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int64",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Numeric_aggregate_exp_type": {
+        "name": "Numeric_aggregate_exp",
+        "description": "Aggregate expression for the Numeric type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_stddev",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_sum",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Timestamp_aggregate_exp_type": {
+        "name": "Timestamp_aggregate_exp",
+        "description": "Aggregate expression for the Timestamp type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "Customer_type": {
+        "name": "Customer",
+        "description": "The record of all customers",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "Address",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "City",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Company",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Country",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "CustomerId",
+            "description": "The identifier of customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Email",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Fax",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "FirstName",
+            "description": "The first name of a customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Invoices",
+            "description": "The invoices the customer has",
+            "args": [
+              {
+                "name": "limit",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "offset",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order_by",
+                "description": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "Invoice_orderby"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_boolexp",
+                  "ofType": null
+                }
+              }
+            ],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "Invoice"
+                }
+              }
+            }
+          },
+          {
+            "name": "Invoices_aggregate",
+            "description": "An aggregation over the invoices a customer has",
+            "args": [
+              {
+                "name": "filter_input",
+                "description": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_filter_input",
+                  "ofType": null
+                }
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Invoice_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "LastName",
+            "description": "The last name of a customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Phone",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "PostalCode",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "State",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "SupportRepId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Invoice_filter_input_type": {
+        "name": "Invoice_filter_input",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "limit",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "offset",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "order_by",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_orderby"
+                }
+              }
+            }
+          },
+          {
+            "name": "where",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Invoice_boolexp",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Invoice_aggregate_exp_type": {
+        "name": "Invoice_aggregate_exp",
+        "description": "Aggregate expression for the Invoice type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "BillingAddress",
+            "description": "Aggregation over the billing address",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingCity",
+            "description": "Aggregation over the billing city",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingCountry",
+            "description": "Aggregation over the billing country",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingPostalCode",
+            "description": "Aggregation over the billing postal code",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingState",
+            "description": "Aggregation over the billing state",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "CustomerId",
+            "description": "Aggregation over the customer ID",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Int_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "InvoiceDate",
+            "description": "Aggregation over the invoice date",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Timestamp_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "InvoiceId",
+            "description": "Aggregation over the invoice ID",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Int_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Total",
+            "description": "Aggregation over the invoice total",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Numeric_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count",
+            "description": "Count of invoices",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          }
+        ]
+      },
+      "String_aggregate_exp_type": {
+        "name": "String_aggregate_exp",
+        "description": "Aggregate expression for the String type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Int_aggregate_exp_type": {
+        "name": "Int_aggregate_exp",
+        "description": "Aggregate expression for the Int type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": "Count of all non-null integers",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": "Count of all distinct non-null integers",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": "Largest integer",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": "Smallest integer",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_stddev",
+            "description": "Standard deviation across integers",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_sum",
+            "description": "Sum of all integers",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int64",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Numeric_aggregate_exp_type": {
+        "name": "Numeric_aggregate_exp",
+        "description": "Aggregate expression for the Numeric type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_stddev",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_sum",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Timestamp_aggregate_exp_type": {
+        "name": "Timestamp_aggregate_exp",
+        "description": "Aggregate expression for the Timestamp type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "Customer_type": {
+        "name": "Customer",
+        "description": "The record of all customers",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "Company",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Country",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "CustomerId",
+            "description": "The identifier of customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Email",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "FirstName",
+            "description": "The first name of a customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Invoices",
+            "description": "The invoices the customer has",
+            "args": [
+              {
+                "name": "limit",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "offset",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order_by",
+                "description": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "Invoice_orderby"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_boolexp",
+                  "ofType": null
+                }
+              }
+            ],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "Invoice"
+                }
+              }
+            }
+          },
+          {
+            "name": "Invoices_aggregate",
+            "description": "An aggregation over the invoices a customer has",
+            "args": [
+              {
+                "name": "filter_input",
+                "description": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_filter_input",
+                  "ofType": null
+                }
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Invoice_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "LastName",
+            "description": "The last name of a customer",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "PostalCode",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "State",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Invoice_filter_input_type": {
+        "name": "Invoice_filter_input",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "limit",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "offset",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "order_by",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Invoice_orderby"
+                }
+              }
+            }
+          },
+          {
+            "name": "where",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Invoice_boolexp",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Invoice_aggregate_exp_type": {
+        "name": "Invoice_aggregate_exp",
+        "description": "Aggregate expression for the Invoice type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "BillingPostalCode",
+            "description": "Aggregation over the billing postal code",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "BillingState",
+            "description": "Aggregation over the billing state",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "String_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "CustomerId",
+            "description": "Aggregation over the customer ID",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Int_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "InvoiceId",
+            "description": "Aggregation over the invoice ID",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Int_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "Total",
+            "description": "Aggregation over the invoice total",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Numeric_aggregate_exp",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count",
+            "description": "Count of invoices",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          }
+        ]
+      },
+      "String_aggregate_exp_type": {
+        "name": "String_aggregate_exp",
+        "description": "Aggregate expression for the String type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Int_aggregate_exp_type": {
+        "name": "Int_aggregate_exp",
+        "description": "Aggregate expression for the Int type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": "Count of all non-null integers",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": "Count of all distinct non-null integers",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": "Largest integer",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": "Smallest integer",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_stddev",
+            "description": "Standard deviation across integers",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_sum",
+            "description": "Sum of all integers",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int64",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Numeric_aggregate_exp_type": {
+        "name": "Numeric_aggregate_exp",
+        "description": "Aggregate expression for the Numeric type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_stddev",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_sum",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      "Timestamp_aggregate_exp_type": {
+        "name": "Timestamp_aggregate_exp",
+        "description": "Aggregate expression for the Timestamp type",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "_count",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_count_distinct",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "name": "_max",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_min",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  }
+]

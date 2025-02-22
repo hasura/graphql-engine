@@ -1,0 +1,26 @@
+{
+  "version": "v2",
+  "flags": {
+    "require_valid_command_output_type": true
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "testCommand",
+            "arguments": [],
+            "outputType": "NonExistentType",
+            "graphql": {
+              "rootFieldName": "testCommand",
+              "rootFieldKind": "Query"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

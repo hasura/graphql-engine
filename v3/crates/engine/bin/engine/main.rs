@@ -136,12 +136,23 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         GraphqlRequestPipeline::Old
     };
 
+    let raw_auth_config =
+        std::fs::read_to_string(&server.authn_config_path).expect("could not read auth config");
+    let raw_metadata =
+        std::fs::read_to_string(&server.metadata_path).expect("could not read metadata");
+
+    let (resolved_metadata, auth_config) = engine::resolve_metadata(
+        &raw_metadata,
+        &raw_auth_config,
+        &metadata_resolve_configuration,
+    )
+    .map_err(StartupError::ReadSchema)?;
+
     let state = engine::build_state(
         request_pipeline,
         expose_internal_errors,
-        &server.authn_config_path,
-        &server.metadata_path,
-        &metadata_resolve_configuration,
+        auth_config,
+        resolved_metadata,
     )
     .map_err(StartupError::ReadSchema)?;
 

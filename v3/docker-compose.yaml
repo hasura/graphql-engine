@@ -92,10 +92,30 @@ services:
       COLLECTOR_OTLP_ENABLED: "true"
       COLLECTOR_ZIPKIN_HOST_PORT: "9411"
 
-  postgres_connector:
+  postgres_connector_ndc_v01:
     image: ghcr.io/hasura/ndc-postgres:dev-main
     ports:
       - 8080:8080
+    environment:
+      CONNECTION_URI: "postgresql://postgres:password@postgres"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
+      OTEL_SERVICE_NAME: "ndc-postgres"
+      RUST_LOG: info
+    volumes:
+      - type: bind
+        source: ./crates/engine/tests/ndc-postgres-configuration
+        target: /etc/connector
+        read_only: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+  postgres_connector:
+    image: ghcr.io/hasura/ndc-postgres:dev-benoit-eng-362-update-ndc-postgres-to-ndc_models-020
+    ports:
+      - 8082:8080
     environment:
       CONNECTION_URI: "postgresql://postgres:password@postgres"
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"

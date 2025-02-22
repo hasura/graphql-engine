@@ -98,7 +98,7 @@ pub enum FieldNameSource {
 }
 
 #[serde_as]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub struct BooleanExpressionTypes {
     #[serde_as(as = "Vec<(_, _)>")]
     pub objects: BTreeMap<Qualified<CustomTypeName>, ResolvedObjectBooleanExpressionType>,

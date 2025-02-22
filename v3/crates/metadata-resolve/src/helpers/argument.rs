@@ -268,6 +268,8 @@ pub(crate) fn resolve_value_expression_for_argument(
                     hasura_authn_core::SessionVariableReference {
                         name: session_variable.clone(),
                         passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
+                        disallow_unknown_fields: flags
+                            .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
                     },
                 ),
                 vec![],

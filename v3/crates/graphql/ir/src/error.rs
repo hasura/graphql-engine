@@ -120,10 +120,8 @@ impl Error {
 impl TraceableError for Error {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::Internal(internal) => match internal {
-                InternalError::Developer(_) => ErrorVisibility::User,
-                InternalError::Engine(_) => ErrorVisibility::Internal,
-            },
+            Self::Internal(internal) => internal.visibility(),
+            Self::PlanError(error) => error.visibility(),
             _ => ErrorVisibility::User,
         }
     }
@@ -138,6 +136,15 @@ pub enum InternalError {
     Developer(#[from] InternalDeveloperError),
     #[error("{0}")]
     Engine(#[from] InternalEngineError),
+}
+
+impl TraceableError for InternalError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::Developer(_) => ErrorVisibility::User,
+            Self::Engine(_) => ErrorVisibility::Internal,
+        }
+    }
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -248,7 +248,8 @@ pub fn bench_execute(
 fn bench_execute_all(c: &mut Criterion) {
     // Simple select
     let test_path_string = "execute/models/select_one/simple_select";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
     bench_execute(
         c,
         test_path_string,
@@ -258,7 +259,8 @@ fn bench_execute_all(c: &mut Criterion) {
 
     // Select Many
     let test_path_string = "execute/models/select_many/simple_select";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
     bench_execute(
         c,
         test_path_string,
@@ -268,7 +270,8 @@ fn bench_execute_all(c: &mut Criterion) {
 
     // Select Many with where clause
     let test_path_string = "execute/models/select_many/where/simple";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
     bench_execute(
         c,
         test_path_string,
@@ -278,7 +281,8 @@ fn bench_execute_all(c: &mut Criterion) {
 
     // Object Relationships
     let test_path_string = "execute/relationships/object";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
     bench_execute(
         c,
         test_path_string,
@@ -288,7 +292,8 @@ fn bench_execute_all(c: &mut Criterion) {
 
     // Array Relationships
     let test_path_string = "execute/relationships/array";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
     bench_execute(
         c,
         test_path_string,
@@ -298,7 +303,8 @@ fn bench_execute_all(c: &mut Criterion) {
 
     // Relay node field
     let test_path_string = "execute/relay/relay";
-    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
     bench_execute(
         c,
         test_path_string,

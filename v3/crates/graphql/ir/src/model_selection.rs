@@ -9,8 +9,7 @@ use hasura_authn_core::{Session, SessionVariables};
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
-use metadata_resolve::Qualified;
-use metadata_resolve::QualifiedTypeName;
+use metadata_resolve::{ObjectTypeWithRelationships, Qualified, QualifiedTypeName};
 use open_dds::{
     data_connector::CollectionName,
     models::ModelName,
@@ -79,6 +78,7 @@ pub fn model_selection_open_dd_ir(
         metadata_resolve::Qualified<CustomTypeName>,
         metadata_resolve::TypeMapping,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     model_arguments: Option<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>>,
     where_clause: Option<open_dds::query::BooleanExpression>,
     order_by: Vec<open_dds::query::OrderByElement>,
@@ -93,6 +93,7 @@ pub fn model_selection_open_dd_ir(
         metadata_resolve::FieldNestedness::NotNested,
         models,
         type_mappings,
+        object_types,
         session_variables,
         request_headers,
         usage_counts,
@@ -205,6 +206,7 @@ pub fn model_selection_ir<'s>(
         &model_source.type_mappings,
         permissions_predicate,
         &session.variables,
+        object_types,
         usage_counts,
     )?;
 
@@ -263,6 +265,7 @@ pub fn generate_aggregate_model_selection_ir<'s>(
         field_call,
         model_source,
         &session.variables,
+        object_types,
         usage_counts,
     )?;
 
@@ -291,6 +294,7 @@ pub fn generate_aggregate_model_selection_ir<'s>(
         arguments.filter_input_arguments.offset,
         arguments.filter_input_arguments.order_by,
         &session.variables,
+        object_types,
         // Get all the models/commands that were used as relationships
         usage_counts,
     )
@@ -300,6 +304,10 @@ fn read_model_select_aggregate_arguments<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     model_source: &'s metadata_resolve::ModelSource,
     session_variables: &SessionVariables,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelectAggregateArguments<'s>, error::Error> {
     let mut model_arguments = None;
@@ -331,6 +339,7 @@ fn read_model_select_aggregate_arguments<'s>(
                                         &field_call.name,
                                         argument,
                                         &model_source.type_mappings,
+                                        object_types,
                                         &model_source.data_connector,
                                         session_variables,
                                         usage_counts,
@@ -370,6 +379,7 @@ fn read_model_select_aggregate_arguments<'s>(
         filter_input_props,
         model_source,
         session_variables,
+        object_types,
         usage_counts,
     )?;
 
@@ -383,6 +393,10 @@ fn read_filter_input_arguments<'s>(
     filter_input_field_props: Option<&IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>>,
     model_source: &'s metadata_resolve::ModelSource,
     session_variables: &SessionVariables,
+    object_types: &'s BTreeMap<
+        metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FilterInputArguments<'s>, error::Error> {
     let mut limit = None;
@@ -444,6 +458,7 @@ fn read_filter_input_arguments<'s>(
                         session_variables,
                         usage_counts,
                         &model_source.type_mappings,
+                        object_types,
                         &model_source.data_connector,
                     )?);
                 }
@@ -462,6 +477,7 @@ fn read_filter_input_arguments<'s>(
                         filter_input_field_arg.value.as_object()?,
                         &model_source.data_connector,
                         &model_source.type_mappings,
+                        object_types,
                         session_variables,
                         usage_counts,
                     )?);
@@ -498,6 +514,7 @@ fn model_aggregate_selection_ir<'s>(
     offset: Option<u32>,
     order_by: Option<order_by::OrderBy<'s>>,
     session_variables: &SessionVariables,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
     let permission_filter = permissions::build_model_permissions_filter_predicate(
@@ -505,6 +522,7 @@ fn model_aggregate_selection_ir<'s>(
         &model_source.type_mappings,
         permissions_predicate,
         session_variables,
+        object_types,
         usage_counts,
     )?;
 

@@ -503,10 +503,7 @@ impl ResponseHash {
         let mut hasher = Blake2b::new();
         hasher.update(&serialized);
         let new_hash = hasher.finalize().into();
-        let matches = self
-            .0
-            .as_ref()
-            .map_or(false, |old_hash| old_hash == &new_hash);
+        let matches = self.0.as_ref() == Some(&new_hash);
         self.0 = Some(new_hash);
         matches
     }

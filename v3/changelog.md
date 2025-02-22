@@ -4,6 +4,26 @@
 
 ### Added
 
+- Added validation for command output types to ensure they reference valid types
+  in the schema.
+
+### Fixed
+
+### Changed
+
+## [v2025.02.20]
+
+### Fixed
+
+- GraphQL API: Using `null` for non-nullable custom scalar types now correctly
+  raises validation error.
+
+### Changed
+
+## [v2025.02.19]
+
+### Added
+
 #### AuthConfig v3
 
 AuthConfig v3 is a new version of the AuthConfig that allows for more
@@ -56,6 +76,10 @@ The AuthConfig v3 is backwards compatible with the AuthConfig v2.
 - Avoid infinite recursion when validating `BooleanExpressionType` for
   `ObjectType`s that contain self references through nested fields during build
   creation.
+- Argument presets did not map OpenDD field names to the corresponding NDC field
+  names before sending values across, this is now resolved.
+- GraphQL API: Validate query variables to ensure non-nullable variables are not
+  omitted or set to `null`.
 
 ### Changed
 
@@ -83,7 +107,6 @@ The AuthConfig v3 is backwards compatible with the AuthConfig v2.
   if the relationship is a remote relationship, or if the data connector does
   not support relationships, or if the target of the relationship does not have
   a source.
-
 - Fixed a bug causing queries to fail when filter expressions included remote
   relationships from nested fields.
 
@@ -1168,7 +1191,9 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.07...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.20...HEAD
+[v2025.02.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.20
+[v2025.02.19]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.19
 [v2025.02.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.07
 [v2025.02.03]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.03
 [v2025.01.24]: https://github.com/hasura/v3-engine/releases/tag/v2025.01.24

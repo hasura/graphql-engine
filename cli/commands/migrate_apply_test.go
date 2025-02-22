@@ -42,6 +42,33 @@ var testMigrateApply = func(projectDirectory string, globalFlags []string) {
 	})
 }
 
+var testMigrateApplyNonTransactional = func(projectDirectory string, globalFlags []string) {
+	Context("migrate apply", func() {
+		testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			Args: append(
+				[]string{"migrate", "create", "concurrent_index", "--up-sql", `CREATE TABLE test (id SERIAL PRIMARY KEY, name TEXT); CREATE INDEX CONCURRENTLY idx_test_name ON test (name);`, "--down-sql", "DROP INDEX IF EXISTS idx_test_name; DROP TABLE IF EXISTS test;"},
+				globalFlags...,
+			),
+			WorkingDirectory: projectDirectory,
+		})
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: append(
+				[]string{"migrate", "apply", "--no-transaction"},
+				globalFlags...,
+			),
+			WorkingDirectory: projectDirectory,
+		})
+		wantKeywordList := []string{
+			"migrations applied",
+		}
+
+		Eventually(session, timeout).Should(Exit(0))
+		for _, keyword := range wantKeywordList {
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+		}
+	})
+}
+
 var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []string) {
 	Context("migrate apply --skip-execution", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -280,6 +307,9 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 		testMigrateApply(projectDirectory, []string{"--database-name", pgSource})
 		testMigrateApply(projectDirectory, []string{"--database-name", citusSource})
 		testMigrateApply(projectDirectory, []string{"--database-name", mssqlSource})
+	})
+	It("should apply the non-transactional migrations on server", func() {
+		testMigrateApplyNonTransactional(projectDirectory, []string{"--database-name", pgSource})
 	})
 	It("should mark the migrations as applied ", func() {
 		testMigrateApplySkipExecution(projectDirectory, []string{"--database-name", pgSource})

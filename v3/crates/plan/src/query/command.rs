@@ -181,7 +181,7 @@ pub(crate) fn from_command_selection(
     if !command
         .permissions
         .get(&session.role)
-        .map_or(false, |permission| permission.allow_execution)
+        .is_some_and(|permission| permission.allow_execution)
     {
         Err(PlanError::Permission(PermissionError::Other(format!(
             "role {} does not have permission for command {}",
@@ -207,10 +207,14 @@ pub(crate) fn from_command_selection(
         session,
         request_headers,
         &mut usage_counts,
-    )
-    .map_err(|e| PlanError::Internal(e.to_string()))?;
-    let resolved_arguments =
-        resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
+    )?;
+
+    let resolved_arguments = resolve_arguments(
+        unresolved_arguments,
+        &mut relationships,
+        &mut remote_predicates,
+        unique_number,
+    )?;
 
     let command_plan = match &command_source.source {
         DataConnectorCommand::Function(function_name) => {
