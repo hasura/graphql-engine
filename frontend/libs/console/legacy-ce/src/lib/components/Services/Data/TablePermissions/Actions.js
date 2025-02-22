@@ -83,14 +83,14 @@ export const permValidateInputFields = (
   type: PERM_VALIDATE_INPUT_FIELD,
   payload: enabled
     ? {
-      type,
-      definition: {
-        url,
-        headers,
-        forward_client_headers,
-        timeout: parseInt(timeout),
-      },
-    }
+       type,
+       definition: {
+         url,
+         headers,
+         forward_client_headers,
+         timeout: parseInt(timeout),
+       },
+     }
     : undefined,
 });
 
