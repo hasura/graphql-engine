@@ -394,10 +394,10 @@ class Permissions extends Component {
             dispatch(permSetBulkSelect(isChecked, selectedRole));
           };
 
-          const disableCheckbox = !Object.keys(rolePermissions).includes(role);
+          const disableCheckbox = !role;
 
           return {
-            showCheckbox: !(role === 'admin' || isNewRole),
+            showCheckbox: !(role === 'admin'),
             disableCheckbox,
             title: disableCheckbox
               ? 'No permissions exist'

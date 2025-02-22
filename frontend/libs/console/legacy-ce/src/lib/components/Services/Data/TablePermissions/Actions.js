@@ -425,7 +425,7 @@ const bulkPermissionModifier = tableSchema => {
       const currentRolePermission = currentPermissions.filter(el => {
         return el.role_name === role;
       });
-      const currentPermissionsOnRole = Object.keys(currentRolePermission[0].permissions);
+      const currentPermissionsOnRole = currentRolePermission.length ? Object.keys(currentRolePermission[0].permissions) : [];
 
       permissionTypes.forEach(permissionType => {
         const deleteQuery = getDropPermissionQuery(
@@ -517,7 +517,8 @@ const permRemoveMultipleRoles = tableSchema => {
       const currentRolePermission = currentPermissions.filter(el => {
         return el.role_name === role;
       });
-      Object.keys(currentRolePermission[0].permissions).forEach(type => {
+      const currentPermissionsOnRole = currentRolePermission.length ? Object.keys(currentRolePermission[0].permissions) : [];
+      currentPermissionsOnRole.forEach(type => {
         const deleteQuery = getDropPermissionQuery(
           type,
           tableDef,
