@@ -68,7 +68,7 @@ AS $function$
 $function$
 ```
 
-I should able to fetch an author whose `full_name` is 'Bob Morley'
+I should be able to fetch an author whose `full_name` is 'Bob Morley'
 
 ```graphql
 query {
@@ -153,7 +153,7 @@ in the permission metadata definition
 
 Reference OSS ticket: https://github.com/hasura/graphql-engine/issues/7103
 
-Enable using computed fields in order by expresssion. For example, fetch authors ordering by `full_name`
+Enable using computed fields in order by expression. For example, fetch authors ordering by `full_name`
 
 ```graphql
 query {
