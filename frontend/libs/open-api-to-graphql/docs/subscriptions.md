@@ -172,7 +172,7 @@ startServer();
 
 ## GrapQL client
 
-If any GraphQL (WS) client subscribed to the route defined by the callback (`#/components/callbacks/DevicesEvent`), it will get the content transfered by PubSub.
+If any GraphQL (WS) client subscribed to the route defined by the callback (`#/components/callbacks/DevicesEvent`), it will get the content transferred by PubSub.
 
 ```javascript
 import axios from 'axios'

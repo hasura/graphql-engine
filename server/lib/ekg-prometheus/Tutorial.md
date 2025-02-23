@@ -189,7 +189,7 @@ Labels are useful for convenient filtering and aggregation of metric
 data. In `ekg-prometheus`, metrics are identified by both their name
 _and_ their label set, so metrics with the same name but different label
 sets are distinct and independent metrics. When working with labelled
-metrics, the constructors of a metrics specification GADT corrrespond to
+metrics, the constructors of a metrics specification GADT correspond to
 **classes** of metrics that share the same name.
 
 `ekg-prometheus` also has support for _structuring_ the representation
@@ -365,7 +365,7 @@ deregistration of metrics:
 --   assert (sample3 == expectedSample3) $ pure ()
 ```
 
-1. Deregistration handles were present in in all previous examples,
+1. Deregistration handles were present in all previous examples,
    but we ignored them for simplicity.
 
 1. The deregistration handle removes all metrics registered by the

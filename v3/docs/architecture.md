@@ -83,7 +83,7 @@ structures that are used in the `engine` crate for schema generation.
 
 ##### `graphql/schema`
 
-Provides functions to resolve the Open DDS metadata, generate the GraphQL scehma
+Provides functions to resolve the Open DDS metadata, generate the GraphQL schema
 from it, and execute queries against the schema.
 
 ##### `graphql/schema/operations`

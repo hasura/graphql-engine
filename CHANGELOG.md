@@ -655,7 +655,7 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 - cli: fix performance regression with large metadata in `metadata apply`
 - cli: fix error reporting in `metadata apply` command (#8280)
 - server: query runtime performance optimizations
-- server: fix bug that had disabled expression-based indexes in Postgress variants (fix Zendesk 5146)
+- server: fix bug that had disabled expression-based indexes in Postgres variants (fix Zendesk 5146)
 - server: add optionality to additional postgres-client-cert fields: sslcert, sslkey and sslpassword
 
 ## v2.8.1
@@ -1452,7 +1452,7 @@ Response 2:
 - server: add metadata inconsistency information in `reload_metadata` API call
 - server: add custom function for case insensitive lookup in session variable in request transformation
 - server: Improved error messaging for `test_webhook_transform` metadata API endpoint
-- server: Webhook Tranforms can now produce `x-www-url-formencoded` bodies.
+- server: Webhook Transforms can now produce `x-www-url-formencoded` bodies.
 - server: Webhook Transforms can now delete request/response bodies explicitly.
 - server: Fix truncation of session variables with variable length column types in MSSQL (#8158)
 - server: improve performance of `replace_metadata` for large schemas
@@ -1508,7 +1508,7 @@ The optimization can be enabled using the
 - server: MSSQL generates correct SQL when object relationships are null.
 - console: add support for remote database relationships
 - console: enable support for update permissions for mssql
-- cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (fix #4926)
+- cli: skip tls verification for all API requests when `insecure-skip-tls-verify` flag is set (fix #4926)
 - server: fix issues working with read-only DBs by reverting the need for storing required SQL functions in a `hdb_lib` schema in the user's DB
 - server: Fix experimental sql optimization read from `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` or `--experimental-features`
 
@@ -1676,7 +1676,7 @@ count (
 - server: fixes JSON ser/de backwards incompatibility introduced for metadata parsing and 'create_remote_relationship' queries (#7906)
 - console: add sample context section to webhook transforms
 - cli: `hasura metadata diff` shows diff with more context in directory mode
-- cli: revert change to split metadata related to remote schemas into seperate files (introduced in v2.1.0-beta.2)
+- cli: revert change to split metadata related to remote schemas into separate files (introduced in v2.1.0-beta.2)
 
 ## v2.1.0-beta.3
 
@@ -1760,11 +1760,11 @@ source.
 - console: fix v2 metadata imports
 - console: design cleanup Modify and Add Table forms (close #7454)
 - console: enable custom graphql root fields for mssql under modify tab
-- cli: split remote schema permissions metadata into seperate files (#7033)
+- cli: split remote schema permissions metadata into separate files (#7033)
 - cli: support action request transforms in metadata
 - cli: make `--database-name` optional in `migrate` subcommands when using a single database (#7434)
 - cli: support absolute paths in --envfile (#5689)
-- cli: split remote schema permissions metadata into seperate files (#7033)
+- cli: split remote schema permissions metadata into separate files (#7033)
 
 ## v2.0.10
 
@@ -1802,7 +1802,7 @@ source.
 - console: fix missing cross-schema computed fields in permission builder
 - console: add time limits setting to security settings
 - cli: add support for `network` metadata object
-- cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
+- cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on at least one database (#7499)
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
 - cli: support `query_tags` in metadata
 - cli: add `hasura deploy` command
@@ -1967,7 +1967,7 @@ NOTE: This only includes the diff between v2.0.0 and v2.0.0-beta.2
 - console: update connect database form with SSL certificates
 - console: add drop table functionality to MS SQL Server tables
 - console: allow renaming data sources
-- console: show error notification for table and cloumn names exceeding 63 characters and trim migration names exceeding 255 characters
+- console: show error notification for table and column names exceeding 63 characters and trim migration names exceeding 255 characters
 - cli: fix version command using stderr as output stream (#6998)
 
 ## v2.0.0-alpha.11
@@ -2586,7 +2586,7 @@ arguments.
 - server: add action-like URL templating for event triggers and remote schemas (fixes #2483)
 - server: change `created_at` column type from `timestamp` to `timestamptz` for scheduled triggers tables (fix #5722)
 - server: allow configuring timeouts for actions (fixes #4966)
-- server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
+- server: fix bug which arose when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
   **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: enable HASURA_GRAPHQL_PG_CONN_LIFETIME by default to reclaim memory
@@ -2597,7 +2597,7 @@ arguments.
 - server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
   **WARNING**: This can cause significant load on PG on startup if you have lots of event triggers. Delay in starting up is expected.
 - console: add notifications (#5070)
-- cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
+- cli: fix bug in metadata apply which made the server acquire some redundant and unnecessary locks (close #6115)
 - cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
 - cli: fix issue with cli binary on latest Mac (Big Sur) (fix #5462)
 - docs: add docs page on networking with docker (close #4346) (#4811)
@@ -2869,7 +2869,7 @@ using this flag is insecure since verification is not carried out.
 
 - console: update graphiql explorer to support operation transform (#4567)
 - console: make GraphiQL Explorer taking the whole viewport (#4553)
-- console: fix table columns type comparision during column edit (close #4125) (#4393)
+- console: fix table columns type comparison during column edit (close #4125) (#4393)
 - cli: allow initialising project in current directory (fix #4560) #4566
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - docs: update migrations docs with config v2 (#4586)
@@ -2898,7 +2898,7 @@ available for `admin` role requests. To enable this for other roles, start the s
 $ graphql-engine --database-url <database-url> serve --dev-mode
 ```
 
-In case you want to disable `internal` field for `admin` role requests, set `--admin-internal-errors` option to `false` or or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
+In case you want to disable `internal` field for `admin` role requests, set `--admin-internal-errors` option to `false` or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
 
 ```bash
 $ graphql-engine --database-url <database-url> serve --admin-internal-errors false
@@ -3035,7 +3035,7 @@ For example, see [here](https://hasura.io/docs/latest/graphql/core/api-reference
 - server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
-- console: format row count in data browser for readablity (#4433)
+- console: format row count in data browser for readability (#4433)
 - console: move pre-release notification tooltip msg to top (#4433)
 - console: remove extra localPresets key present in migration files on permissions change (close #3976) (#4433)
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
@@ -3044,7 +3044,7 @@ For example, see [here](https://hasura.io/docs/latest/graphql/core/api-reference
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
 - server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default)
-- docs: add reference docs for CLI (clsoe #4327) (#4408)
+- docs: add reference docs for CLI (close #4327) (#4408)
 
 ## `v1.2.0-beta.4`
 
@@ -3080,7 +3080,7 @@ The order, collapsed state of columns and rows limit is now persisted across pag
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
-- server: fix an edge case where some events wouldn't be processed because of internal erorrs (#4213)
+- server: fix an edge case where some events wouldn't be processed because of internal errors (#4213)
 - server: fix downgrade not working to version v1.1.1 (#4354)
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)

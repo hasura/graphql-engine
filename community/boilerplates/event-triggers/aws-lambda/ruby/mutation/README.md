@@ -31,7 +31,7 @@ Create a lambda function in AWS. This will be our webhook.
 1. Add API gateway as a trigger (in this example you can use Open as the security option).
 1. Add an API to API gateway.
 1. Add the code in `lambda_function.rb` to the lambda function editor. The handler function of your lambda will be the lambda_handler.
-1. Add the following enviroment variables in your lambda config:
+1. Add the following environment variables in your lambda config:
    1. `ACCESS_KEY`: this is the access key you configured when you setup HGE (`HASURA_GRAPHQL_ADMIN_SECRET` env variable).
    1. `HGE_ENDPOINT`: the URL on which you HGE instance is running.
 

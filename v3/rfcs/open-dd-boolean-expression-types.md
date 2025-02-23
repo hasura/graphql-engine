@@ -127,7 +127,7 @@ definition:
             typeName: Author_bool_exp
 ```
 
-There would be too much repition and it would be the inconsistent with the rest
+There would be too much repetition and it would be the inconsistent with the rest
 of OpenDD where you can only refer to explicitly defined types.
 
 ### Boolean expression types attached to kind: ObjectType

@@ -45,7 +45,7 @@ The default GraphQL Engine service uses migration and metadata configuration in 
 
 ## FAQs
 
-**How can I enable metrics in the the Source Health panel**
+**How can I enable metrics in the Source Health panel**
 
 > Currently, only Postgres supports source health check metrics.
 

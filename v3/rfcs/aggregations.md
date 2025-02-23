@@ -2364,7 +2364,7 @@ field's type (ie. an object `AggregationExpression` for object-typed fields, and
 a scalar `AggregationExpression` for scalar-typed fields).
 
 One can also enable or disable the `count`/`countDistinct` special-cased
-aggregations. However, the `countDistinct` function can only be used if the the
+aggregations. However, the `countDistinct` function can only be used if the
 `AggregateExpression` is not used on a Model, because you can't "distinctly"
 count rows in a collection (eg. `COUNT(*)` and `COUNT(DISTINCT *)` is the same).
 Whether or not distinct counts are possible will be need to be exposed in

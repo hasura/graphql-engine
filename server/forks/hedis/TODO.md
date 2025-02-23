@@ -55,7 +55,7 @@ function per command.
     - No real loss of safety for return types
     - can fail for arguments (list vs. non-empty)
   2. "correct" container types for each Redis type:
-    - Non-empty lists (unconvenient syntax?)
+    - Non-empty lists (inconvenient syntax?)
     - Sets
       - Which set type, Set vs HashSet vs ..
       - Redis already returns "sets" in the sense that each element exists only
@@ -67,7 +67,7 @@ function per command.
 ## Command Return Types
 
 Currently every command returns the result wrapped in `Maybe Reply`. This is
-"what Redis returns" but it's unconvenient to use.
+"what Redis returns" but it's inconvenient to use.
 
 * Return the results "unwrapped" and throw an exception when the reply is an
   error or can not be decoded to the desired return type.
