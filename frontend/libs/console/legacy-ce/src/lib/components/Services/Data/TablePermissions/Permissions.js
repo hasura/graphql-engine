@@ -26,6 +26,7 @@ import {
   permCustomChecked,
   permSetBulkSelect,
   permRemoveMultipleRoles,
+  bulkPermissionModifier,
   permSetApplySamePerm,
   permDelApplySamePerm,
   permToggleBackendOnly,
@@ -393,10 +394,10 @@ class Permissions extends Component {
             dispatch(permSetBulkSelect(isChecked, selectedRole));
           };
 
-          const disableCheckbox = !Object.keys(rolePermissions).includes(role);
+          const disableCheckbox = !role;
 
           return {
-            showCheckbox: !(role === 'admin' || isNewRole),
+            showCheckbox: !(role === 'admin'),
             disableCheckbox,
             title: disableCheckbox
               ? 'No permissions exist'
@@ -552,6 +553,7 @@ class Permissions extends Component {
           dispatch(permRemoveMultipleRoles(tableSchema));
         }
       };
+    
 
       return (
         <div id={'bulk-section'} className={styles.activeEdit}>
@@ -561,6 +563,9 @@ class Permissions extends Component {
             {getSelectedRoles()}
           </div>
           <div className={styles.add_mar_top + ' ' + styles.add_mar_bottom_mid}>
+          <Button onClick={handleBulkClick} mode='primary' size="sm" style={{marginRight: '5px'}}>
+              Add All Permissions
+            </Button>
             <Button onClick={handleBulkRemoveClick} color="red" size="sm">
               Remove All Permissions
             </Button>
