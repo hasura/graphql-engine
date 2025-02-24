@@ -17,7 +17,7 @@ use open_dds::commands::{
     CommandName, DataConnectorCommand, FunctionName, GraphQlRootFieldKind, ProcedureName,
 };
 use open_dds::data_connector::DataConnectorName;
-use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated};
+use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, TypeReference};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -86,6 +86,11 @@ pub enum CommandsIssue {
         command_name: Qualified<CommandName>,
         error: DuplicateRootFieldError,
     },
+    #[error("Command '{command_name}' has an invalid output type '{output_type}'")]
+    InvalidCommandOutputType {
+        command_name: Qualified<CommandName>,
+        output_type: TypeReference,
+    },
 }
 
 impl ShouldBeAnError for CommandsIssue {
@@ -93,6 +98,9 @@ impl ShouldBeAnError for CommandsIssue {
         match self {
             CommandsIssue::GraphQlRootFieldAlreadyInUse { .. } => {
                 flags.contains(open_dds::flags::Flag::RequireUniqueCommandGraphqlNames)
+            }
+            CommandsIssue::InvalidCommandOutputType { .. } => {
+                flags.contains(open_dds::flags::Flag::RequireValidCommandOutputType)
             }
             _ => false,
         }

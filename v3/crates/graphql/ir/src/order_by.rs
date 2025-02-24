@@ -1,21 +1,21 @@
 use std::collections::BTreeMap;
 use std::ops::Deref;
 
+use crate::{error, permissions};
 use graphql_schema::OrderByRelationshipAnnotation;
+use graphql_schema::GDS;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField, Value};
-use open_dds::data_connector::DataConnectorColumnName;
+use metadata_resolve::{ObjectTypeWithRelationships, Qualified};
+use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 use plan::count_model;
 use plan_types::{
     Expression, LocalModelRelationshipInfo, NdcRelationshipName, OrderByDirection, OrderByElement,
     OrderByTarget, RelationshipPathElement, UsagesCounts,
 };
 use serde::Serialize;
-
-use crate::{error, permissions};
-use graphql_schema::GDS;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct OrderBy<'s> {
@@ -33,6 +33,7 @@ pub fn build_ndc_order_by<'s>(
         metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
         metadata_resolve::TypeMapping,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
 ) -> Result<OrderBy<'s>, error::Error> {
     match &args_field.value {
@@ -49,6 +50,7 @@ pub fn build_ndc_order_by<'s>(
                     &mut relationships,
                     session_variables,
                     usage_counts,
+                    object_types,
                     type_mappings,
                     data_connector_link,
                 )?;
@@ -99,6 +101,7 @@ pub fn build_ndc_order_by_element<'s>(
     relationships: &mut BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     type_mappings: &'s BTreeMap<
         metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
         metadata_resolve::TypeMapping,
@@ -246,6 +249,7 @@ pub fn build_ndc_order_by_element<'s>(
                     &target_source.model.type_mappings,
                     filter_permission,
                     session_variables,
+                    object_types,
                     usage_counts,
                 )?;
 
@@ -269,6 +273,7 @@ pub fn build_ndc_order_by_element<'s>(
                     relationships,
                     session_variables,
                     usage_counts,
+                    object_types,
                     &target_source.model.type_mappings,
                     data_connector_link,
                 )?;
@@ -315,6 +320,7 @@ pub fn build_ndc_order_by_element<'s>(
                             relationships,
                             session_variables,
                             usage_counts,
+                            object_types,
                             type_mappings,
                             data_connector_link,
                         )?;
@@ -333,6 +339,7 @@ pub fn build_ndc_order_by_element<'s>(
                                 relationships,
                                 session_variables,
                                 usage_counts,
+                                object_types,
                                 type_mappings,
                                 data_connector_link,
                             )?;

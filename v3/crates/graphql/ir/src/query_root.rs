@@ -346,6 +346,7 @@ fn generate_command_rootfield_ir<'n, 's>(
             )?,
             GraphqlRequestPipeline::OpenDd => commands::generate_function_based_command_open_dd(
                 models,
+                object_types,
                 name,
                 function_name,
                 field,

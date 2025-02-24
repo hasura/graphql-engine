@@ -1,160 +1,20 @@
 use indexmap::IndexMap;
-use serde_json as json;
-use std::collections::BTreeMap;
-use std::collections::HashMap;
 
 use crate::ast::common as ast;
-use crate::ast::executable;
 use crate::ast::value as gql;
 use crate::normalized_ast as normalized;
 use crate::schema;
 use crate::validation::error::*;
+use crate::validation::variables;
 
-use super::normalize::*;
 use super::source::*;
-
-#[derive(Clone, Copy)]
-pub struct Variables<'q, 's, S: schema::SchemaContext> {
-    pub definitions:
-        &'q HashMap<&'q ast::Name, (&'q executable::VariableDefinition, schema::InputType<'s, S>)>,
-    pub values: &'q BTreeMap<ast::Name, json::Value>,
-}
-
-fn are_base_types_compatible(variable_type: &ast::BaseType, location_type: &ast::BaseType) -> bool {
-    match (variable_type, location_type) {
-        (ast::BaseType::Named(variable_type_name), ast::BaseType::Named(location_type_name)) => {
-            variable_type_name == location_type_name
-        }
-        (ast::BaseType::List(variable_list_type), ast::BaseType::List(location_list_type)) => {
-            are_types_compatible(variable_list_type, location_list_type)
-        }
-        _ => false,
-    }
-}
-
-fn are_types_compatible(variable_type: &ast::Type, location_type: &ast::Type) -> bool {
-    fn check_nullability(variable_nullability: bool, location_nullability: bool) -> bool {
-        location_nullability || !variable_nullability
-    }
-    are_base_types_compatible(&variable_type.base, &location_type.base)
-        && check_nullability(variable_type.nullable, location_type.nullable)
-}
-
-enum VariableValue<'q, 's, S: schema::SchemaContext> {
-    Json(&'q json::Value, &'q ast::Type, schema::InputType<'s, S>),
-    Const(&'q gql::ConstValue, &'q ast::Type, schema::InputType<'s, S>),
-    Normalized(&'s gql::ConstValue, &'q ast::Type, schema::InputType<'s, S>),
-    None,
-}
-
-impl<'s, S: schema::SchemaContext> VariableValue<'_, 's, S> {
-    #[allow(clippy::match_same_arms)] // lifetimes are different
-    pub fn into_json(self) -> serde_json::Value {
-        match self {
-            Self::Json(value, _, _) => value.clone(),
-            Self::Const(value, _, _) => value.to_json(),
-            Self::Normalized(value, _, _) => value.to_json(),
-            Self::None => serde_json::Value::Null,
-        }
-    }
-
-    pub fn normalize<NSGet: schema::NamespacedGetter<S>>(
-        &self,
-        schema: &'s schema::Schema<S>,
-        namespaced_getter: &NSGet,
-    ) -> Result<normalized::Value<'s, S>> {
-        match self {
-            VariableValue::Json(value, type_, type_info) => normalize(
-                schema,
-                namespaced_getter,
-                &(),
-                *value,
-                &LocationType::NoLocation { type_ },
-                type_info,
-            ),
-            VariableValue::Const(value, type_, type_info)
-            | VariableValue::Normalized(value, type_, type_info) => normalize(
-                schema,
-                namespaced_getter,
-                &(),
-                *value,
-                &LocationType::NoLocation { type_ },
-                type_info,
-            ),
-            VariableValue::None => Ok(normalized::Value::SimpleValue(
-                normalized::SimpleValue::Null,
-            )),
-        }
-    }
-}
-
-impl<'q, 's, S: schema::SchemaContext> Variables<'q, 's, S> {
-    fn get(
-        &self,
-        location_type: &LocationType<'q, 's>,
-        variable: &ast::Name,
-    ) -> Result<VariableValue<'q, 's, S>> {
-        let variable_definition =
-            self.definitions
-                .get(variable)
-                .ok_or_else(|| Error::VariableNotDefined {
-                    variable_name: variable.clone(),
-                })?;
-        let variable_type = &variable_definition.0.var_type.item;
-
-        // Ideally we would want to call are_types_compatible(location_type, variable_type) but a
-        // default value can be provided despite variable_type being nullable through a variable's
-        // default value or an argument's default value or a field's default value. So we check
-        // for this condition first and then call 'are_types_compatible'
-        //
-        let variable_spread_allowed = if location_type.default_value().is_some()
-            || variable_definition.0.default_value.is_some()
-        {
-            are_base_types_compatible(&variable_type.base, &location_type.type_().base)
-        } else {
-            are_types_compatible(variable_type, location_type.type_())
-        };
-
-        if variable_spread_allowed {
-            // look for the variable value
-            if let Some(variable_value) = self.values.get(variable) {
-                Ok(VariableValue::Json(
-                    variable_value,
-                    variable_type,
-                    variable_definition.1.clone(),
-                ))
-            // if not found, take the default value defined for the location
-            } else if let Some(variable_default) = &variable_definition.0.default_value {
-                Ok(VariableValue::Const(
-                    &variable_default.item,
-                    variable_type,
-                    variable_definition.1.clone(),
-                ))
-            } else if let Some(location_default) = location_type.default_value() {
-                Ok(VariableValue::Normalized(
-                    location_default,
-                    variable_type,
-                    variable_definition.1.clone(),
-                ))
-            } else {
-                Ok(VariableValue::None)
-            }
-        } else {
-            Err(Error::VariableSpreadNotAllowed {
-                variable_name: variable.clone(),
-                variable_type: variable_type.clone(),
-                location_type: location_type.type_().clone(),
-            })
-        }
-    }
-}
 
 impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for gql::Value
 where
     's: 'q,
     S: 's,
 {
-    type Context = Variables<'q, 's, S>;
+    type Context = variables::Variables<'q, 's, S>;
 
     fn as_json<NSGet: schema::NamespacedGetter<S>>(
         &self,
@@ -165,7 +25,9 @@ where
     ) -> Result<serde_json::Value> {
         match self {
             Self::Variable(variable) => {
-                let value = context.get(location_type, variable)?.into_json();
+                let value = context
+                    .get(location_type, variable, schema, namespaced_getter)?
+                    .as_json();
                 Ok(value)
             }
             Self::SimpleValue(value) => Ok(value.to_json()),
@@ -213,9 +75,9 @@ where
         NSGet: schema::NamespacedGetter<S>,
     {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespaced_getter),
+            gql::Value::Variable(variable) => {
+                context.get(location_type, variable, schema, namespaced_getter)
+            }
             gql::Value::SimpleValue(gql::SimpleValue::Enum(e)) => f(e),
             _ => Err(Error::IncorrectFormat {
                 expected_type: "ENUM",
@@ -232,9 +94,9 @@ where
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespaced_getter),
+            gql::Value::Variable(variable) => {
+                context.get(location_type, variable, schema, namespaced_getter)
+            }
             gql::Value::SimpleValue(gql::SimpleValue::Integer(i)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Integer(*i)),
             ),
@@ -253,9 +115,9 @@ where
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespaced_getter),
+            gql::Value::Variable(variable) => {
+                context.get(location_type, variable, schema, namespaced_getter)
+            }
             // Both integer and float input values are accepted for Float type.
             // Ref: https://spec.graphql.org/October2021/#sec-Float.Input-Coercion
             gql::Value::SimpleValue(simple_value) => simple_value
@@ -280,9 +142,9 @@ where
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespaced_getter),
+            gql::Value::Variable(variable) => {
+                context.get(location_type, variable, schema, namespaced_getter)
+            }
             gql::Value::SimpleValue(gql::SimpleValue::Boolean(b)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Boolean(*b)),
             ),
@@ -301,9 +163,9 @@ where
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespaced_getter),
+            gql::Value::Variable(variable) => {
+                context.get(location_type, variable, schema, namespaced_getter)
+            }
             gql::Value::SimpleValue(gql::SimpleValue::String(s)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::String(s.clone())),
             ),
@@ -322,9 +184,9 @@ where
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespaced_getter),
+            gql::Value::Variable(variable) => {
+                context.get(location_type, variable, schema, namespaced_getter)
+            }
             gql::Value::SimpleValue(gql::SimpleValue::String(id)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Id(id.clone())),
             ),
@@ -348,10 +210,9 @@ where
     {
         // TODO single element array coercion
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespaced_getter),
-
+            gql::Value::Variable(variable) => {
+                context.get(location_type, variable, schema, namespaced_getter)
+            }
             gql::Value::List(array) => {
                 let mut accum = Vec::new();
                 for value in array {
@@ -378,9 +239,9 @@ where
         F: Fn(normalized::Object<'s, S>, &ast::Name, &Self) -> Result<normalized::Object<'s, S>>,
     {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespaced_getter),
+            gql::Value::Variable(variable) => {
+                context.get(location_type, variable, schema, namespaced_getter)
+            }
             gql::Value::Object(object) => {
                 let mut accum = IndexMap::new();
                 for key_value in object {

@@ -4,11 +4,10 @@ use super::types::NDCQuery;
 use crate::filter::{resolve_model_permission_filter, to_filter_expression};
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::order_by::to_resolved_order_by_element;
-use crate::query::filter::resolve_filter_expression;
 use crate::types::PlanError;
 use hasura_authn_core::Session;
 use open_dds::query::ModelTarget;
-use plan_types::{Relationship, ResolvedFilterExpression, UniqueNumber};
+use plan_types::{PredicateQueryTrees, Relationship, ResolvedFilterExpression, UniqueNumber};
 use std::collections::BTreeMap;
 
 pub fn model_target_to_ndc_query(
@@ -21,6 +20,7 @@ pub fn model_target_to_ndc_query(
     model: &metadata_resolve::ModelWithPermissions,
     model_source: &metadata_resolve::ModelSource,
     model_object_type: &OutputObjectTypeView,
+    remote_predicates: &mut PredicateQueryTrees,
     unique_number: &mut UniqueNumber,
 ) -> Result<NDCQuery, PlanError> {
     let mut usage_counts = plan_types::UsagesCounts::default();
@@ -32,7 +32,9 @@ pub fn model_target_to_ndc_query(
         session,
         model,
         model_source,
+        &metadata.object_types,
         &mut relationships,
+        remote_predicates,
         unique_number,
         &mut usage_counts,
     )?;
@@ -45,6 +47,7 @@ pub fn model_target_to_ndc_query(
         &model_source.type_mappings,
         &model_source.data_connector,
     )?;
+
     // add any preset arguments from model permissions
     let unresolved_arguments = process_argument_presets_for_model(
         unresolved_arguments,
@@ -53,11 +56,14 @@ pub fn model_target_to_ndc_query(
         session,
         request_headers,
         &mut usage_counts,
-    )
-    .map_err(|e| PlanError::Internal(e.to_string()))?;
+    )?;
 
-    let resolved_arguments =
-        resolve_arguments(unresolved_arguments, &mut relationships, unique_number)?;
+    let resolved_arguments = resolve_arguments(
+        unresolved_arguments,
+        &mut relationships,
+        remote_predicates,
+        unique_number,
+    )?;
 
     let model_filter = match &model_target.filter {
         Some(expr) => {
@@ -70,11 +76,16 @@ pub fn model_target_to_ndc_query(
                 model.filter_expression_type.as_ref(),
                 expr,
                 &model_source.data_connector,
+                &metadata.object_types,
+                &mut usage_counts,
             )?;
 
-            // TODO: don't ignore remote predicates
-            let (resolved_filter_expression, _remote_predicates) =
-                resolve_filter_expression(&expression, &mut relationships, unique_number)?;
+            let resolved_filter_expression = crate::plan_expression(
+                &expression,
+                &mut relationships,
+                remote_predicates,
+                unique_number,
+            )?;
 
             Some(resolved_filter_expression)
         }
@@ -102,6 +113,7 @@ pub fn model_target_to_ndc_query(
                 &model_source.data_connector,
                 element,
                 &mut relationships,
+                remote_predicates,
                 unique_number,
                 &mut usage_counts,
             )

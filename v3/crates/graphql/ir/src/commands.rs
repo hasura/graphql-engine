@@ -12,7 +12,7 @@ use metadata_resolve::CommandSource;
 use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
-use open_dds::types::DataConnectorArgumentName;
+use open_dds::types::{CustomTypeName, DataConnectorArgumentName};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -25,7 +25,7 @@ use super::selection_set::ResultSelectionSet;
 use crate::error;
 use graphql_schema::TypeKind;
 use graphql_schema::GDS;
-use metadata_resolve::{Qualified, QualifiedTypeReference};
+use metadata_resolve::{ObjectTypeWithRelationships, Qualified, QualifiedTypeReference};
 use plan::UnresolvedArgument;
 use plan::{count_command, process_argument_presets_for_command};
 use plan_types::NdcFieldAlias;
@@ -124,6 +124,7 @@ pub fn generate_command_info<'n, 's>(
             &field_call.name,
             argument,
             &command_source.type_mappings,
+            object_types,
             &command_source.data_connector,
             &session.variables,
             usage_counts,
@@ -186,6 +187,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
         metadata_resolve::Qualified<open_dds::models::ModelName>,
         metadata_resolve::ModelWithPermissions,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     command_name: &Qualified<commands::CommandName>,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
@@ -223,6 +225,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
         metadata_resolve::FieldNestedness::NotNested,
         models,
         &command_source.type_mappings,
+        object_types,
         selection_set::NestedSelectionType::CommandRootSelection,
         field,
         session_variables,
@@ -344,6 +347,7 @@ pub fn generate_function_based_command_open_dd<'n, 's>(
         metadata_resolve::Qualified<open_dds::models::ModelName>,
         metadata_resolve::ModelWithPermissions,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     command_name: &Qualified<commands::CommandName>,
     function_name: &'s open_dds::commands::FunctionName,
     field: &'n normalized_ast::Field<'s, GDS>,
@@ -357,6 +361,7 @@ pub fn generate_function_based_command_open_dd<'n, 's>(
 ) -> Result<FunctionBasedCommand<'s>, error::Error> {
     let command_info = generate_command_info_open_dd(
         models,
+        object_types,
         command_name,
         field,
         field_call,
@@ -430,6 +435,7 @@ pub fn generate_procedure_based_command_open_dd<'n, 's>(
         metadata_resolve::Qualified<open_dds::models::ModelName>,
         metadata_resolve::ModelWithPermissions,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     command_name: &Qualified<commands::CommandName>,
     procedure_name: &'s open_dds::commands::ProcedureName,
     field: &'n normalized_ast::Field<'s, GDS>,
@@ -444,6 +450,7 @@ pub fn generate_procedure_based_command_open_dd<'n, 's>(
 
     let command_info = generate_command_info_open_dd(
         models,
+        object_types,
         command_name,
         field,
         field_call,

@@ -393,6 +393,9 @@ fn resolve_value_expression(
                 passed_as_json: metadata_accessor
                     .flags
                     .contains(open_dds::flags::Flag::JsonSessionVariables),
+                disallow_unknown_fields: metadata_accessor
+                    .flags
+                    .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
             })
         }
         open_dds::permissions::ValueExpression::Literal(json_value) => {

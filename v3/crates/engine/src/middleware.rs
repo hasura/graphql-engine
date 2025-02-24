@@ -93,7 +93,7 @@ pub async fn explain_request_tracing_middleware(
 /// authentication configuration present in the `auth_config` of `EngineState`. The
 /// result of the authentication is `hasura-authn-core::Identity`, which is then
 /// made available to the GraphQL request handler.
-pub async fn authentication_middleware<'a>(
+pub async fn authentication_middleware(
     State(engine_state): State<EngineState>,
     headers_map: HeaderMap,
     mut request: Request<Body>,

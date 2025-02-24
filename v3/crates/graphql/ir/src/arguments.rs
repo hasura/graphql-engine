@@ -9,8 +9,8 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
 use metadata_resolve::{
-    ArgumentKind, DataConnectorLink, Qualified, QualifiedBaseType, QualifiedTypeName,
-    QualifiedTypeReference, TypeMapping,
+    ArgumentKind, DataConnectorLink, ObjectTypeWithRelationships, Qualified, QualifiedBaseType,
+    QualifiedTypeName, QualifiedTypeReference, TypeMapping,
 };
 use open_dds::{
     arguments::ArgumentName,
@@ -124,6 +124,7 @@ pub fn build_ndc_argument_as_value<'a, 's>(
     command_field: &'a Name,
     argument: &'a InputField<'s, GDS>,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     data_connector_link: &'s DataConnectorLink,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -167,6 +168,7 @@ pub fn build_ndc_argument_as_value<'a, 's>(
             argument.value.as_object()?,
             data_connector_link,
             type_mappings,
+            object_types,
             session_variables,
             usage_counts,
         )

@@ -6,7 +6,7 @@ use open_dds::types::CustomTypeName;
 
 use crate::error;
 use graphql_schema::GDS;
-use metadata_resolve::Qualified;
+use metadata_resolve::{ObjectTypeWithRelationships, Qualified};
 use plan::process_model_predicate;
 use plan_types::{Expression, UsagesCounts};
 
@@ -41,6 +41,7 @@ pub fn build_model_permissions_filter_predicate<'s>(
     model_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     session_variables: &SessionVariables,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<Expression<'s>>, error::Error> {
     match permissions_predicate {
@@ -51,6 +52,7 @@ pub fn build_model_permissions_filter_predicate<'s>(
                 model_type_mappings,
                 predicate,
                 session_variables,
+                object_types,
                 usage_counts,
             )?;
             Ok(Some(permission_filter))

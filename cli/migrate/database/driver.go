@@ -64,7 +64,7 @@ type Driver interface {
 	UnLock() error
 
 	// RunSeq applies a migration to the database in a sequential fashion. migration is guaranteed to be not nil.
-	Run(migration io.Reader, fileType, fileName string) error
+	Run(migration io.Reader, fileType, fileName string, noTransaction bool) error
 
 	// Reset Migration Query Args
 	ResetQuery()

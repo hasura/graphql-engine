@@ -231,7 +231,7 @@ func (h *HasuraDB) UnLock() error {
 	return nil
 }
 
-func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
+func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string, noTransaction bool) error {
 	var op errors.Op = "hasuradb.HasuraDB.Run"
 	migr, err := ioutil.ReadAll(migration)
 	if err != nil {
@@ -252,6 +252,9 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		}
 		switch h.hasuraOpts.SourceKind {
 		case hasura.SourceKindPG:
+			if noTransaction {
+				sqlInput.NoTransaction = &noTransaction
+			}
 			_, err := h.pgSourceOps.PGRunSQL(sqlInput)
 			if err != nil {
 				return errors.E(op, err)
@@ -262,11 +265,17 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 				return errors.E(op, err)
 			}
 		case hasura.SourceKindCitus:
+			if noTransaction {
+				sqlInput.NoTransaction = &noTransaction
+			}
 			_, err := h.citusSourceOps.CitusRunSQL(hasura.CitusRunSQLInput(sqlInput))
 			if err != nil {
 				return errors.E(op, err)
 			}
 		case hasura.SourceKindCockroach:
+			if noTransaction {
+				sqlInput.NoTransaction = &noTransaction
+			}
 			_, err := h.cockroachSourceOps.CockroachRunSQL(hasura.CockroachRunSQLInput(sqlInput))
 			if err != nil {
 				return errors.E(op, err)

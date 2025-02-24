@@ -25,6 +25,23 @@ pub fn resolve_command(
     let mut arguments = IndexMap::new();
 
     let qualified_command_name = Qualified::new(subgraph.clone(), command.name.clone());
+
+    // Check command output type and raise an issue if invalid
+    if !type_exists(
+        &command.output_type,
+        subgraph,
+        object_types,
+        scalar_types,
+        // boolean expression types are also not valid output types for commands
+        // so we pass in an empty boolean expression types
+        &boolean_expressions::BooleanExpressionTypes::default(),
+    ) {
+        issues.push(CommandsIssue::InvalidCommandOutputType {
+            command_name: qualified_command_name.clone(),
+            output_type: command.output_type.clone(),
+        });
+    }
+
     let command_description = command.description.clone();
     // duplicate command arguments should not be allowed
     for argument in &command.arguments {

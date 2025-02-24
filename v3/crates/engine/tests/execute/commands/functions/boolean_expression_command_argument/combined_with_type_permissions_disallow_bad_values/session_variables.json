@@ -1,0 +1,28 @@
+[
+  {
+    "x-hasura-role": "user",
+    "institutions": [
+      {
+        "id": 1,
+        "name": "Academy of Science",
+        "location": {
+          "campuses": [
+            "Mile End",
+            "Whitechapel",
+            "Charterhouse Square",
+            "West Smithfield"
+          ],
+          "city": "London"
+        },
+        "staff": [
+          {
+            "first_name": "John"
+          },
+          {
+            "first_name": "Jane"
+          }
+        ]
+      }
+    ]
+  }
+]

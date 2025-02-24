@@ -97,6 +97,11 @@ func copyTestConfigV3Project(dest string) {
 	Expect(util.CopyDir(p, dest)).To(BeNil())
 }
 
+func copyTestConfigV3ProjectWithConcurrentMigrations(dest string) {
+	p, err := filepath.Abs("testdata/config-v3-test-project-concurrent-migrations")
+	Expect(err).To(BeNil())
+	Expect(util.CopyDir(p, dest)).To(BeNil())
+}
 func copyMigrationsToProjectDirectory(projectDirectory, migrationsDirectory string, sources ...string) {
 	projectMigrationsDirectory := filepath.Join(projectDirectory, "migrations")
 	if len(sources) == 0 {

@@ -12,7 +12,7 @@ use plan_types::{NDCQueryExecution, ProcessResponseAs};
 use tracing_util::SpanVisibility;
 
 #[allow(clippy::unused_async)]
-pub async fn handler_internal<'metadata>(
+pub async fn handler_internal(
     request_headers: Arc<HeaderMap>,
     http_context: Arc<HttpContext>,
     session: Arc<Session>,

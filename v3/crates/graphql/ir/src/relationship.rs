@@ -25,7 +25,9 @@ use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, InputAnnotation,
     ModelAggregateRelationshipAnnotation, ModelInputAnnotation, ModelRelationshipAnnotation, GDS,
 };
-use metadata_resolve::{self, CommandSource, Qualified, RelationshipModelMapping};
+use metadata_resolve::{
+    self, CommandSource, ObjectTypeWithRelationships, Qualified, RelationshipModelMapping,
+};
 use plan::{count_command, count_model};
 use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalCommandRelationshipInfo,
@@ -58,6 +60,7 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
         metadata_resolve::ModelWithPermissions,
     >,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     relationship_annotation: &'s ModelRelationshipAnnotation,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
@@ -159,6 +162,7 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
         metadata_resolve::FieldNestedness::NotNested,
         models,
         type_mappings,
+        object_types,
         session_variables,
         request_headers,
         usage_counts,
@@ -271,6 +275,7 @@ pub fn generate_model_relationship_ir<'s>(
                                     &session.variables,
                                     usage_counts,
                                     &target_source.type_mappings,
+                                    object_types,
                                     source_data_connector,
                                 )?);
                             }
@@ -288,6 +293,7 @@ pub fn generate_model_relationship_ir<'s>(
                             argument.value.as_object()?,
                             &target_source.data_connector,
                             &target_source.type_mappings,
+                            object_types,
                             &session.variables,
                             usage_counts,
                         )?);
@@ -490,6 +496,7 @@ pub fn generate_command_relationship_open_dd_ir<'s>(
         metadata_resolve::Qualified<CustomTypeName>,
         metadata_resolve::TypeMapping,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -501,6 +508,7 @@ pub fn generate_command_relationship_open_dd_ir<'s>(
         metadata_resolve::FieldNestedness::NotNested,
         models,
         type_mappings,
+        object_types,
         session_variables,
         request_headers,
         usage_counts,

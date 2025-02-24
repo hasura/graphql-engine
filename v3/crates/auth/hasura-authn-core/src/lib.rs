@@ -225,7 +225,7 @@ impl IntoResponse for SessionError {
 
 // Using the x-hasura-* headers of the request and the identity set by the authn system,
 // this layer resolves a 'session' which is then used by the execution engine
-pub async fn resolve_session<'a>(
+pub async fn resolve_session(
     Extension(identity): Extension<Identity>,
     mut request: Request<Body>,
     next: Next,

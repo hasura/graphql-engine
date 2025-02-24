@@ -1,3 +1,12 @@
+use hasura_authn_core::SessionVariables;
+use indexmap::IndexMap;
+use lang_graphql::ast::common as ast;
+use lang_graphql::normalized_ast;
+use metadata_resolve::{DataConnectorLink, FieldMapping, ObjectTypeWithRelationships, Qualified};
+use serde::Serialize;
+use std::collections::BTreeMap;
+use std::ops::Deref;
+
 use crate::{error, permissions};
 use graphql_schema::{self};
 use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind};
@@ -5,11 +14,6 @@ use graphql_schema::{
     FilterRelationshipAnnotation, ObjectBooleanExpressionField, ScalarBooleanExpressionField,
 };
 use graphql_schema::{LogicalOperatorField, GDS};
-use hasura_authn_core::SessionVariables;
-use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
-use lang_graphql::normalized_ast;
-use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName},
@@ -20,9 +24,6 @@ use plan_types::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
     EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
 };
-use serde::Serialize;
-use std::collections::BTreeMap;
-use std::ops::Deref;
 
 /// Filter expression to be applied on a model/command selection set
 #[derive(Debug, Serialize, Clone)]
@@ -54,7 +55,7 @@ pub fn resolve_filter_expression_open_dd(
 
 fn resolve_object_boolean_expression_open_dd(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'_, GDS>>,
-    field_path: &[&FieldName],
+    field_path: &[PathItem],
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
     let field_expressions = fields
@@ -124,12 +125,15 @@ fn resolve_object_boolean_expression_open_dd(
                     let field_value = field.value.as_object()?;
 
                     match object_field_kind {
-                        ObjectFieldKind::Object => {
+                        ObjectFieldKind::Object | ObjectFieldKind::ObjectArray => {
                             // Append the current column to the column_path before descending into the nested object expression
                             let new_field_path = field_path
                                 .iter()
-                                .copied()
-                                .chain([field_name])
+                                .cloned()
+                                .chain([PathItem::Nested(open_dds::query::ObjectFieldTarget {
+                                    field_name: field_name.clone(),
+                                    arguments: IndexMap::new(),
+                                })])
                                 .collect::<Vec<_>>();
                             resolve_object_boolean_expression_open_dd(
                                 field_value,
@@ -137,71 +141,46 @@ fn resolve_object_boolean_expression_open_dd(
                                 usage_counts,
                             )?
                         }
-                        ObjectFieldKind::ObjectArray => {
-                            let _inner_expression = resolve_object_boolean_expression_open_dd(
+                        ObjectFieldKind::Scalar | ObjectFieldKind::ScalarArray => {
+                            resolve_scalar_boolean_expression_open_dd(
                                 field_value,
-                                &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
-                                usage_counts,
-                            )?;
-
-                            todo!("resolve_object_boolean_expression_open_dd for ObjectArray");
-                            /*
-                            open_dds::query::BooleanExpression::LocalNestedArray {
-                                // The column name is the root column
-                                column: column_path.first().map_or(column, Deref::deref).clone(),
-                                // The field path is the nesting path inside the root column, if any
-                                field_path: column_path
-                                    .iter()
-                                    .copied()
-                                    .chain([column])
-                                    .skip(1)
-                                    .cloned()
-                                    .collect(),
-                                predicate: Box::new(inner_expression),
-                            } */
-                        }
-                        ObjectFieldKind::Scalar => resolve_scalar_boolean_expression_open_dd(
-                            field_value,
-                            field_path,
-                            field_name,
-                        )?,
-                        ObjectFieldKind::ScalarArray => {
-                            /*
-                                                        let _inner_expression = resolve_scalar_boolean_expression_open_dd(
-                                                            field_value,
-                                                            &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
-                                                            &DataConnectorColumnName::from(
-                                                                EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
-                                                            ), // Use the value virtual column name to represent the scalar value being compared against
-                                                        )?;
-                            */
-
-                            todo!("resolve_object_boolean_expression_open_dd for ScalarArray");
-                            /*
-                            Expression::LocalNestedScalarArray {
-                                // The column name is the root column
-                                column: column_path.first().map_or(column, Deref::deref).clone(),
-                                // The field path is the nesting path inside the root column, if any
-                                field_path: column_path
-                                    .iter()
-                                    .copied()
-                                    .chain([column])
-                                    .skip(1)
-                                    .cloned()
-                                    .collect(),
-                                predicate: Box::new(inner_expression),
-                            }*/
+                                field_path,
+                                field_name,
+                            )?
                         }
                     }
                 }
                 ObjectBooleanExpressionField::RelationshipField(FilterRelationshipAnnotation {
+                    relationship_name,
                     target_model_name,
                     ..
                 }) => {
                     // Add the target model being used in the usage counts
                     count_model(target_model_name, usage_counts);
 
-                    todo!("filter_relationship_annotation");
+                    // This map contains the relationships or the columns of the
+                    // relationship that needs to be used for ordering.
+                    let field_value = field.value.as_object()?;
+
+                    let relationship_path =
+                        PathItem::Relationship(open_dds::query::RelationshipTarget {
+                            relationship_name: relationship_name.clone(),
+                            arguments: IndexMap::new(),
+                            filter: None,
+                            offset: None,
+                            limit: None,
+                            order_by: vec![],
+                        });
+
+                    resolve_object_boolean_expression_open_dd(
+                        field_value,
+                        &field_path
+                            .iter()
+                            .cloned()
+                            .chain([relationship_path])
+                            .collect::<Vec<PathItem>>(),
+                        usage_counts,
+                    )?
                 }
             };
 
@@ -212,11 +191,18 @@ fn resolve_object_boolean_expression_open_dd(
     Ok(open_dds::query::BooleanExpression::And(field_expressions))
 }
 
+#[derive(Debug, Clone)]
+enum PathItem {
+    Nested(open_dds::query::ObjectFieldTarget),
+    Relationship(open_dds::query::RelationshipTarget),
+}
+
 /// Generate the IR for GraphQL 'where' boolean expression
 pub fn resolve_filter_expression<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'s>, error::Error> {
@@ -224,6 +210,7 @@ pub fn resolve_filter_expression<'s>(
         fields,
         data_connector_link,
         type_mappings,
+        object_types,
         &[],
         session_variables,
         usage_counts,
@@ -234,6 +221,7 @@ fn resolve_object_boolean_expression<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     column_path: &[&'s DataConnectorColumnName],
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -258,6 +246,7 @@ fn resolve_object_boolean_expression<'s>(
                                 value_object,
                                 data_connector_link,
                                 type_mappings,
+                                object_types,
                                 column_path,
                                 session_variables,
                                 usage_counts,
@@ -280,6 +269,7 @@ fn resolve_object_boolean_expression<'s>(
                                 value_object,
                                 data_connector_link,
                                 type_mappings,
+                                object_types,
                                 column_path,
                                 session_variables,
                                 usage_counts,
@@ -298,6 +288,7 @@ fn resolve_object_boolean_expression<'s>(
                         not_value,
                         data_connector_link,
                         type_mappings,
+                        object_types,
                         column_path,
                         session_variables,
                         usage_counts,
@@ -328,6 +319,7 @@ fn resolve_object_boolean_expression<'s>(
                                 field_value,
                                 data_connector_link,
                                 type_mappings,
+                                object_types,
                                 &field_path,
                                 session_variables,
                                 usage_counts,
@@ -338,6 +330,7 @@ fn resolve_object_boolean_expression<'s>(
                                 field_value,
                                 data_connector_link,
                                 type_mappings,
+                                object_types,
                                 &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
                                 session_variables,
                                 usage_counts,
@@ -409,6 +402,7 @@ fn resolve_object_boolean_expression<'s>(
                         &target_source.model.type_mappings,
                         filter_permission,
                         session_variables,
+                        object_types,
                         usage_counts,
                     )?;
 
@@ -421,6 +415,7 @@ fn resolve_object_boolean_expression<'s>(
                         filter_object,
                         &target_source.model.data_connector,
                         &target_source.model.type_mappings,
+                        object_types,
                         &[], // We're traversing across the relationship, so we reset the field path
                         session_variables,
                         usage_counts,
@@ -497,9 +492,9 @@ fn extract_object_boolean_expression_field_annotation(
     }
 }
 
-fn resolve_scalar_boolean_expression_open_dd<'s>(
-    fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
-    field_path: &[&'s FieldName],
+fn resolve_scalar_boolean_expression_open_dd(
+    fields: &IndexMap<ast::Name, normalized_ast::InputField<'_, GDS>>,
+    field_path: &[PathItem],
     field_name: &FieldName,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
     let field_expressions = fields
@@ -688,46 +683,48 @@ fn extract_scalar_boolean_expression_field_annotation(
     }
 }
 
-fn build_nested_field_path(field_path: &[FieldName]) -> Option<Box<open_dds::query::Operand>> {
+fn build_nested_field_path(field_path: &[PathItem]) -> Option<Box<open_dds::query::Operand>> {
     nonempty::NonEmpty::from_slice(field_path).map(|field_path| {
-        Box::new(open_dds::query::Operand::Field(
-            open_dds::query::ObjectFieldOperand {
-                target: Box::new(open_dds::query::ObjectFieldTarget {
-                    arguments: IndexMap::new(),
-                    field_name: (*field_path.first()).clone(),
-                }),
-                nested: build_nested_field_path(field_path.tail()),
-            },
-        ))
+        let nested = build_nested_field_path(field_path.tail());
+
+        match field_path.first() {
+            PathItem::Nested(target) => Box::new(open_dds::query::Operand::Field(
+                open_dds::query::ObjectFieldOperand {
+                    target: Box::new(target.clone()),
+                    nested,
+                },
+            )),
+            PathItem::Relationship(target) => Box::new(open_dds::query::Operand::Relationship(
+                open_dds::query::RelationshipOperand {
+                    target: Box::new(target.clone()),
+                    nested,
+                },
+            )),
+        }
     })
 }
 
 // TODO: is this reordering still the case when using `nested` in `ObjectFieldOperand`?
-fn reset_field_path(field_path: &[&FieldName], field_name: &FieldName) -> Vec<FieldName> {
+fn reset_field_path(field_path: &[PathItem], field_name: &FieldName) -> Vec<PathItem> {
     field_path
         .iter()
-        .copied()
-        .chain([field_name])
-        .skip(1)
         .cloned()
+        .chain([PathItem::Nested(open_dds::query::ObjectFieldTarget {
+            field_name: field_name.clone(),
+            arguments: IndexMap::new(),
+        })])
+        .skip(1)
         .collect()
 }
 
 /// Resolve `_is_null` GraphQL boolean operator
 fn build_is_null_expression_open_dd(
-    field_path: &[&FieldName],
+    field_path: &[PathItem],
     field_name: &FieldName,
     value: &normalized_ast::Value<'_, GDS>,
 ) -> Result<open_dds::query::BooleanExpression, error::Error> {
-    let unary_comparison_expression = open_dds::query::BooleanExpression::IsNull(
-        open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
-            target: Box::new(open_dds::query::ObjectFieldTarget {
-                arguments: IndexMap::new(),
-                field_name: field_path.first().map_or(field_name, Deref::deref).clone(),
-            }),
-            nested: build_nested_field_path(&reset_field_path(field_path, field_name)),
-        }),
-    );
+    let unary_comparison_expression =
+        open_dds::query::BooleanExpression::IsNull(operand_from_field_path(field_path, field_name));
 
     let is_null = value.as_boolean()?;
     if is_null {
@@ -775,23 +772,46 @@ fn build_is_null_expression<'s>(
     }
 }
 
+fn operand_from_field_path(
+    field_path: &[PathItem],
+    field_name: &FieldName,
+) -> open_dds::query::Operand {
+    let nested = build_nested_field_path(&reset_field_path(field_path, field_name));
+    match field_path.first() {
+        Some(PathItem::Relationship(target)) => {
+            open_dds::query::Operand::Relationship(open_dds::query::RelationshipOperand {
+                target: Box::new(target.clone()),
+                nested,
+            })
+        }
+        Some(PathItem::Nested(target)) => {
+            open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
+                target: Box::new(target.clone()),
+                nested,
+            })
+        }
+
+        None => open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
+            target: Box::new(open_dds::query::ObjectFieldTarget {
+                field_name: field_name.clone(),
+                arguments: IndexMap::new(),
+            }),
+            nested,
+        }),
+    }
+}
+
 /// Generate a binary comparison operator
 fn build_binary_comparison_expression_open_dd(
     operator_name: &open_dds::types::OperatorName,
-    field_path: &[&FieldName],
+    field_path: &[PathItem],
     field_name: &FieldName,
     value: &normalized_ast::Value<'_, GDS>,
 ) -> open_dds::query::BooleanExpression {
     open_dds::query::BooleanExpression::Comparison {
         argument: Box::new(open_dds::query::Value::Literal(value.as_json())),
         operator: open_dds::query::ComparisonOperator::Custom(operator_name.clone()),
-        operand: open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
-            target: Box::new(open_dds::query::ObjectFieldTarget {
-                arguments: IndexMap::new(),
-                field_name: field_path.first().map_or(field_name, Deref::deref).clone(),
-            }),
-            nested: build_nested_field_path(&reset_field_path(field_path, field_name)),
-        }),
+        operand: operand_from_field_path(field_path, field_name),
     }
 }
 

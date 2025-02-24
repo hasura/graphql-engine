@@ -18,11 +18,11 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
-var commonDeployCommandsTest = func(projectDirectory string, databaseFlags ...string) {
+var commonDeployCommandsTest = func(projectDirectory string, databaseFlags []string, deployFlags []string) {
 	Context("should apply metadata, run migrations and reload metadata", func() {
 		// Run Deploy
 		session := testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"deploy"},
+			Args:             append([]string{"deploy"}, deployFlags...),
 			WorkingDirectory: projectDirectory,
 		})
 		Eventually(session, timeout).Should(Exit(0))
@@ -82,10 +82,41 @@ var _ = Describe("hasura deploy config v3", func() {
 	})
 
 	It("deploy", func() {
-		commonDeployCommandsTest(projectDirectory, "--database-name", sourceName)
+		commonDeployCommandsTest(projectDirectory, []string{"--database-name", sourceName}, []string{})
 	})
 })
 
+var _ = Describe("hasura deploy config v3 (concurrent migrations)", func() {
+	var projectDirectory string
+	var teardown func()
+	sourceName := randomdata.SillyName()
+
+	BeforeEach(func() {
+		projectDirectory = testutil.RandDirName()
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+
+		connectionString, teardownPG := testutil.StartPGContainer(GinkgoT())
+		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionString, sourceName)
+		copyTestConfigV3ProjectWithConcurrentMigrations(projectDirectory)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+		editSourceNameInConfigV3ProjectTemplate(projectDirectory, sourceName, connectionString)
+
+		teardown = func() {
+			os.RemoveAll(projectDirectory)
+			teardownPG()
+			teardownHGE()
+		}
+	})
+
+	AfterEach(func() {
+		teardown()
+	})
+
+	It("deploy", func() {
+		commonDeployCommandsTest(projectDirectory, []string{"--database-name", sourceName}, []string{"--no-transaction"})
+	})
+})
 var _ = Describe("hasura deploy config v2", func() {
 	var projectDirectory string
 	var teardown func()
@@ -108,7 +139,7 @@ var _ = Describe("hasura deploy config v2", func() {
 	})
 
 	It("deploy", func() {
-		commonDeployCommandsTest(projectDirectory)
+		commonDeployCommandsTest(projectDirectory, []string{}, []string{})
 	})
 })
 

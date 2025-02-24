@@ -1,0 +1,132 @@
+[
+  {
+    "data": {
+      "Customer": [
+        {
+          "CustomerId": 17,
+          "Invoices_aggregate": {
+            "InvoiceDate": {
+              "_min": "2009-09-08T00:00:00",
+              "_max": "2011-12-01T00:00:00",
+              "_count_distinct": 2
+            },
+            "InvoiceId": {
+              "min": 59,
+              "max": 243,
+              "count": 2
+            },
+            "Total": {
+              "_min": 5.94,
+              "_max": 13.86,
+              "_sum": 19.8,
+              "_stddev": 5.600285706997456
+            },
+            "count_all": 2
+          }
+        },
+        {
+          "CustomerId": 21,
+          "Invoices_aggregate": {
+            "InvoiceDate": {
+              "_min": "2009-06-07T00:00:00",
+              "_max": "2011-08-30T00:00:00",
+              "_count_distinct": 2
+            },
+            "InvoiceId": {
+              "min": 38,
+              "max": 222,
+              "count": 2
+            },
+            "Total": {
+              "_min": 5.94,
+              "_max": 13.86,
+              "_sum": 19.8,
+              "_stddev": 5.600285706997456
+            },
+            "count_all": 2
+          }
+        },
+        {
+          "CustomerId": 48,
+          "Invoices_aggregate": {
+            "InvoiceDate": {
+              "_min": "2011-03-19T00:00:00",
+              "_max": "2011-06-21T00:00:00",
+              "_count_distinct": 2
+            },
+            "InvoiceId": {
+              "min": 184,
+              "max": 206,
+              "count": 2
+            },
+            "Total": {
+              "_min": 3.96,
+              "_max": 8.94,
+              "_sum": 12.9,
+              "_stddev": 3.5213917703090067
+            },
+            "count_all": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Customer": [
+        {
+          "CustomerId": 17,
+          "Invoices_aggregate": {
+            "InvoiceDate": {
+              "_min": null,
+              "_max": null,
+              "_count_distinct": 0
+            },
+            "InvoiceId": {
+              "min": null,
+              "max": null,
+              "count": 0
+            },
+            "Total": {
+              "_min": null,
+              "_max": null,
+              "_sum": 0,
+              "_stddev": null
+            },
+            "count_all": 0
+          }
+        },
+        {
+          "CustomerId": 21,
+          "Invoices_aggregate": {
+            "InvoiceDate": {
+              "_min": "2009-06-07T00:00:00",
+              "_max": "2011-08-30T00:00:00",
+              "_count_distinct": 2
+            },
+            "InvoiceId": {
+              "min": 38,
+              "max": 222,
+              "count": 2
+            },
+            "Total": {
+              "_min": 5.94,
+              "_max": 13.86,
+              "_sum": 19.8,
+              "_stddev": 5.600285706997456
+            },
+            "count_all": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Invoice_aggregate_exp: InvoiceDate"
+      }
+    ]
+  }
+]

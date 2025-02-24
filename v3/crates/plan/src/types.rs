@@ -1,5 +1,5 @@
 use crate::error::InternalError;
-use crate::query::RelationshipFieldMappingError;
+use crate::query::{ArgumentPresetExecutionError, RelationshipFieldMappingError};
 use hasura_authn_core::Role;
 use metadata_resolve::Qualified;
 use open_dds::{
@@ -15,17 +15,17 @@ use tracing_util::{ErrorVisibility, TraceableError};
 #[derive(Debug, thiserror::Error)]
 pub enum PlanError {
     #[error("{0}")]
-    Internal(String), // equivalent to DataFusionError::Internal
-    #[error("{0}")]
     Permission(#[from] PermissionError),
     #[error("{0}")]
     Relationship(#[from] RelationshipError),
     #[error("{0}")]
     OrderBy(#[from] OrderByError),
     #[error("{0}")]
-    ArgumentPresetExecutionError(#[from] crate::query::ArgumentPresetExecutionError),
+    ArgumentPresetExecutionError(#[from] ArgumentPresetExecutionError),
     #[error("{0}")]
     InternalError(InternalError),
+    #[error("{0}")]
+    Internal(String), // equivalent to DataFusionError::Internal
     #[error("{0}")]
     External(Box<dyn std::error::Error + Send + Sync>), //equivalent to DataFusionError::External
 }
@@ -33,15 +33,13 @@ pub enum PlanError {
 impl TraceableError for PlanError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::InternalError(InternalError::Developer(_))
-            | Self::ArgumentPresetExecutionError(_)
-            | Self::External(_) => ErrorVisibility::User,
+            Self::InternalError(error) => error.visibility(),
+            Self::ArgumentPresetExecutionError(error) => error.visibility(),
             Self::Permission(permission_error) => permission_error.visibility(),
             Self::Relationship(relationship_error) => relationship_error.visibility(),
             Self::OrderBy(order_by_error) => order_by_error.visibility(),
-            Self::InternalError(InternalError::Engine(_)) | Self::Internal(_) => {
-                ErrorVisibility::Internal
-            }
+            Self::External(_) => ErrorVisibility::User,
+            Self::Internal(_) => ErrorVisibility::Internal,
         }
     }
 }
@@ -59,6 +57,8 @@ pub enum PermissionError {
     },
     #[error("model {model_name:} could not be found")]
     ModelNotFound { model_name: Qualified<ModelName> },
+    #[error("model {model_name:} has no source")]
+    ModelHasNoSource { model_name: Qualified<ModelName> },
 
     #[error("role {role:} does not have permission to select from model {model_name:}")]
     ModelNotAccessible {
@@ -81,6 +81,31 @@ pub enum PermissionError {
         field_name: FieldName,
         role: Role,
     },
+    #[error("Object boolean expression type {boolean_expression_type_name} could not be found")]
+    ObjectBooleanExpressionTypeNotFound {
+        boolean_expression_type_name: Qualified<CustomTypeName>,
+    },
+    #[error("Relationship {relationship_name} not found for object type {object_type_name}")]
+    RelationshipNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+    },
+    #[error("Internal error: Relationship capabilities are missing for {relationship_name} on type {object_type_name}")]
+    InternalMissingRelationshipCapabilities {
+        object_type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+    },
+    #[error("Field {field_name} not found in object boolean expression type {boolean_expression_type_name}")]
+    FieldNotFoundInBooleanExpressionType {
+        field_name: FieldName,
+        boolean_expression_type_name: Qualified<CustomTypeName>,
+    },
+    #[error("Relationship {relationship_name} not found in object boolean expression type {boolean_expression_type_name}")]
+    RelationshipNotFoundInBooleanExpressionType {
+        relationship_name: RelationshipName,
+        boolean_expression_type_name: Qualified<CustomTypeName>,
+    },
+
     #[error("{0}")]
     Other(String),
 }
@@ -94,7 +119,13 @@ impl TraceableError for PermissionError {
             | Self::CommandNotFound { .. }
             | Self::CommandNotAccessible { .. }
             | Self::ModelNotFound { .. }
-            | Self::ModelNotAccessible { .. } => ErrorVisibility::Internal,
+            | Self::ModelHasNoSource { .. }
+            | Self::ModelNotAccessible { .. }
+            | Self::RelationshipNotFound { .. }
+            | Self::InternalMissingRelationshipCapabilities { .. }
+            | Self::FieldNotFoundInBooleanExpressionType { .. }
+            | Self::RelationshipNotFoundInBooleanExpressionType { .. }
+            | Self::ObjectBooleanExpressionTypeNotFound { .. } => ErrorVisibility::Internal,
             Self::Other(_) => ErrorVisibility::User,
         }
     }
@@ -149,6 +180,11 @@ pub enum OrderByError {
     RemoteRelationshipNotSupported(String),
     #[error("Nested order by is not supported: {0}")]
     NestedOrderByNotSupported(String),
+    #[error("Can't find field mapping for {field_name} in type: {object_type_name}")]
+    FieldMappingNotFound {
+        field_name: FieldName,
+        object_type_name: Qualified<CustomTypeName>,
+    },
     #[error("An internal error occurred in order_by: {0}")]
     Internal(String),
 }
@@ -165,7 +201,7 @@ impl TraceableError for OrderByError {
             Self::RelationshipAggregateNotSupported(_)
             | Self::NestedOrderByNotSupported(_)
             | Self::RemoteRelationshipNotSupported(_) => ErrorVisibility::User,
-            Self::Internal(_) => ErrorVisibility::Internal,
+            Self::Internal(_) | Self::FieldMappingNotFound { .. } => ErrorVisibility::Internal,
         }
     }
 }

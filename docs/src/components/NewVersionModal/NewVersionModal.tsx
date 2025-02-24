@@ -40,7 +40,7 @@ export const NewVersionModal = () => {
           developer experience. And so much more to love!
         </p>
         <div className={styles.ctaThing}>
-          <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/docs/3.0/index/">
+          <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/docs/3.0/index/" onClick={handleClose}>
             Check out Hasura DDN docs
           </a>
         </div>
@@ -63,4 +63,3 @@ const CloseButton = () => {
     </svg>
   );
 };
-

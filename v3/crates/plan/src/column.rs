@@ -65,6 +65,16 @@ pub fn to_resolved_column(
             None => {
                 // At the bottom of the tree, return the comparison target with
                 // the field path that we've accumulated:
+
+                // if this is a scalar array, we create an object with a single
+                // key
+                let column_name = match field_type.field_type.underlying_type {
+                    QualifiedBaseType::List(_) => {
+                        plan_types::EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME.into()
+                    }
+                    QualifiedBaseType::Named(_) => column_name,
+                };
+
                 return Ok(ResolvedColumn {
                     column_name,
                     field_path,

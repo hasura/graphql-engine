@@ -12,7 +12,7 @@ pub use middleware::{
     graphql_request_tracing_middleware, plugins_middleware,
 };
 pub use routes::{get_base_routes, get_cors_layer, get_jsonapi_route, get_metadata_routes};
-pub use state::build_state;
+pub use state::{build_state, print_warnings, resolve_metadata};
 pub use types::{EngineState, RequestType, StartupError};
 
 // This is set by the build.rs script.

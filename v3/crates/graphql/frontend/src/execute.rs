@@ -19,9 +19,9 @@ pub use types::{ExecuteQueryResult, RootFieldResult};
 
 /// Given an entire plan for a query, produce a result. We do this by executing all the singular
 /// root fields of the query in parallel, and joining the results back together.
-pub async fn execute_query_plan<'n, 's, 'ir>(
+pub async fn execute_query_plan(
     http_context: &HttpContext,
-    query_plan: QueryPlan<'n, 's, 'ir>,
+    query_plan: QueryPlan<'_, '_, '_>,
     project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
@@ -44,10 +44,10 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
 }
 
 /// Execute a single root field's query plan to produce a result.
-async fn execute_query_field_plan<'n, 's, 'ir>(
+async fn execute_query_field_plan(
     field_alias: &ast::Alias,
     http_context: &HttpContext,
-    query_plan: NodeQueryPlan<'n, 's, 'ir>,
+    query_plan: NodeQueryPlan<'_, '_, '_>,
     project_id: Option<&ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
@@ -202,7 +202,7 @@ fn resolve_type_name(type_name: ast::TypeName) -> Result<serde_json::Value, Fiel
 }
 
 /// Execute a single root field's mutation plan to produce a result.
-async fn execute_mutation_field_plan<'n, 's>(
+async fn execute_mutation_field_plan(
     http_context: &HttpContext,
     mutation_plan: NDCMutationExecution,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
@@ -241,9 +241,9 @@ async fn execute_mutation_field_plan<'n, 's>(
 /// Given an entire plan for a mutation, produce a result. We do this by executing the singular
 /// root fields of the mutation sequentially rather than concurrently, in the order defined by the
 /// `IndexMap`'s keys.
-pub async fn execute_mutation_plan<'n, 's>(
+pub async fn execute_mutation_plan(
     http_context: &HttpContext,
-    mutation_plan: MutationPlan<'n, 's>,
+    mutation_plan: MutationPlan<'_, '_>,
     project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();

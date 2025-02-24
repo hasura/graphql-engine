@@ -175,7 +175,7 @@ async fn execute_query_execution_tree<'s>(
 }
 
 // construct an NDC query request and execute it
-async fn execute_ndc_query<'s>(
+async fn execute_ndc_query(
     http_context: &HttpContext,
     query_execution_plan: QueryExecutionPlan,
     field_span_attribute: &str,
@@ -200,7 +200,7 @@ async fn execute_ndc_query<'s>(
 }
 
 // given results of ndc query, do any joins, and process result
-async fn run_remote_joins<'s, 'ir>(
+async fn run_remote_joins(
     http_context: &HttpContext,
     remote_join_executions: JoinLocations,
     execution_span_attribute: &'static str,
@@ -351,7 +351,7 @@ pub struct NDCSubscriptionQuery {
 }
 
 /// Resolve a subscription execution plan to a NDC query.
-pub async fn resolve_ndc_subscription_execution<'s, 'ir>(
+pub async fn resolve_ndc_subscription_execution(
     execution: NDCSubscriptionExecution,
 ) -> Result<NDCSubscriptionQuery, FieldError> {
     let NDCSubscriptionExecution {

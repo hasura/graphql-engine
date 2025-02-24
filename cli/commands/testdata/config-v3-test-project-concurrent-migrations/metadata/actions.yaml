@@ -1,0 +1,31 @@
+actions:
+  - name: actionName
+    definition:
+      kind: synchronous
+      handler: http://localhost:3000
+      headers:
+        - value: test
+          name: test
+      timeout: 1
+      request_transform:
+        body: |-
+          {
+            "users": {
+              "test": {{$body.input.arg1.username}},
+              "v": {{$body.input.arg1.password}}
+            }
+          }
+        content_type: application/json
+        method: POST
+        query_params:
+          test: test
+        template_engine: Kriti
+        url: https://httpbin.org/post
+    comment: actions_test_comment
+custom_types:
+  enums: []
+  input_objects:
+    - name: SampleInput
+  objects:
+    - name: SampleOutput
+  scalars: []

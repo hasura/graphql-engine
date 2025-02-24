@@ -1,0 +1,10 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: a null value found when expected a value of not nullable type: int4!"
+      }
+    ]
+  }
+]
