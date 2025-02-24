@@ -451,16 +451,6 @@ const bulkPermissionModifier = tableSchema => {
         }
       })
     })
-    console.log({
-      currentDataSource,
-      currentSchema,
-      permissionsState,
-      tableName,
-      roles,
-      currentPermissions,
-      permissionsUpQueries,
-      permissionsDownQueries
-    })
     // Apply migration
     const migrationName = 'add_permissions_roles_' + currentSchema + '_table_' + tableName;
 
