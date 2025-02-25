@@ -2799,7 +2799,7 @@ fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2891,7 +2891,7 @@ fn test_aggregates_relationship_field_filtering_ndc_v01() -> anyhow::Result<()> 
             NdcVersion::V01,
             vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
         )]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -2907,7 +2907,7 @@ fn test_aggregates_relationship_field_filtering_ndc_v02() -> anyhow::Result<()> 
             NdcVersion::V02,
             vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
         )]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

@@ -82,8 +82,8 @@ pub fn model_selection_open_dd_ir(
     model_arguments: Option<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>>,
     where_clause: Option<open_dds::query::BooleanExpression>,
     order_by: Vec<open_dds::query::OrderByElement>,
-    limit: Option<u32>,
-    offset: Option<u32>,
+    limit: Option<usize>,
+    offset: Option<usize>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -99,19 +99,6 @@ pub fn model_selection_open_dd_ir(
         usage_counts,
     )?;
 
-    let limit: Option<usize> = limit
-        .map(|limit| {
-            usize::try_from(limit).map_err(|_| error::Error::InvalidLimitValue { value: limit })
-        })
-        .transpose()?;
-
-    let offset: Option<usize> = offset
-        .map(|offset| {
-            usize::try_from(offset).map_err(|_| error::Error::InvalidOffsetValue { value: offset })
-        })
-        .transpose()?;
-
-    // TODO: append select permissions etc
     let filter = where_clause;
 
     let target = open_dds::query::ModelTarget {
@@ -129,35 +116,19 @@ pub fn model_selection_open_dd_ir(
 
 /// Generates the IR fragment for selecting from a model.
 #[allow(clippy::too_many_arguments)]
-pub fn model_aggregate_selection_open_dd_ir<'s>(
-    selection_set: &normalized_ast::SelectionSet<'s, GDS>,
-    data_type: &Qualified<CustomTypeName>,
-    model_source: &'s metadata_resolve::ModelSource,
+pub fn model_aggregate_selection_open_dd_ir(
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     model_name: &Qualified<ModelName>,
     model_arguments: Option<IndexMap<open_dds::query::ArgumentName, open_dds::query::Value>>,
     where_clause: Option<open_dds::query::BooleanExpression>,
     order_by: Vec<open_dds::query::OrderByElement>,
-    limit: Option<u32>,
-    offset: Option<u32>,
+    limit: Option<usize>,
+    offset: Option<usize>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::ModelAggregateSelection, error::Error> {
     count_model(model_name, usage_counts);
-    let _field_mappings = get_field_mappings_for_object_type(model_source, data_type)?;
     let selection = selection_set::generate_aggregate_selection_set_open_dd_ir(selection_set)?;
 
-    let limit: Option<usize> = limit
-        .map(|limit| {
-            usize::try_from(limit).map_err(|_| error::Error::InvalidLimitValue { value: limit })
-        })
-        .transpose()?;
-
-    let offset: Option<usize> = offset
-        .map(|offset| {
-            usize::try_from(offset).map_err(|_| error::Error::InvalidOffsetValue { value: offset })
-        })
-        .transpose()?;
-
-    // TODO: append select permissions etc
     let filter = where_clause;
 
     let target = open_dds::query::ModelTarget {
