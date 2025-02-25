@@ -2720,7 +2720,7 @@ fn test_apollo_federation_entities() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
