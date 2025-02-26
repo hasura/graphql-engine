@@ -233,7 +233,7 @@ fn build_ndc_query_fields(
 /// and passed as `relationship_predicate`.
 pub fn build_relationship_comparison_expression<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    column_path: &[&'s DataConnectorColumnName],
+    column_path: Vec<DataConnectorColumnName>,
     data_connector_link: &'s DataConnectorLink,
     relationship_name: &'s RelationshipName,
     relationship_type: &'s RelationshipType,
@@ -266,7 +266,7 @@ pub fn build_relationship_comparison_expression<'s>(
             };
 
             Ok(Expression::RelationshipLocalComparison {
-                field_path: column_path.iter().copied().cloned().collect(),
+                field_path: column_path,
                 relationship: ndc_relationship_name,
                 predicate: Box::new(relationship_predicate),
                 info: local_model_relationship_info,
@@ -306,7 +306,7 @@ pub fn build_relationship_comparison_expression<'s>(
 
                 let source_ndc_column = SourceNdcColumn {
                     column: source_column.clone(),
-                    field_path: column_path.iter().copied().cloned().collect(),
+                    field_path: column_path.clone(),
                     eq_operator,
                 };
 

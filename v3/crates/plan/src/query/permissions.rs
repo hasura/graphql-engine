@@ -112,7 +112,7 @@ pub fn process_model_predicate<'s>(
             // build and return relationshp comparison expression
             Ok(super::filter::build_relationship_comparison_expression(
                 type_mappings,
-                &Vec::new(), // Field path is empty for now
+                Vec::new(), // Field path is empty for now
                 data_connector_link,
                 &relationship_info.relationship_name,
                 &relationship_info.relationship_type,

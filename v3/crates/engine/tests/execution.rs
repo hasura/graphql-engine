@@ -1125,7 +1125,7 @@ fn test_model_select_many_where_remote_object_relationship_simple_across_subgrap
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1215,7 +1215,7 @@ fn test_model_select_many_where_nested_relationships() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1235,7 +1235,7 @@ fn test_model_select_many_where_nested_remote_relationships() -> anyhow::Result<
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1255,7 +1255,7 @@ fn test_model_select_many_where_nested_relationships_different_names() -> anyhow
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

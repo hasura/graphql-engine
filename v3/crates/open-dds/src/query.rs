@@ -301,6 +301,7 @@ pub enum BooleanExpression {
         argument: Box<Value>,
     },
     Relationship {
+        operand: Option<Operand>,
         relationship_name: RelationshipName,
         predicate: Box<BooleanExpression>,
     },
@@ -330,6 +331,7 @@ impl BooleanExpression {
             BooleanExpression::Relationship {
                 relationship_name,
                 predicate,
+                ..
             } => format!(
                 "In relationship {}, predicate {}",
                 relationship_name,

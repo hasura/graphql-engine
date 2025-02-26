@@ -169,6 +169,7 @@ fn resolve_object_boolean_expression_open_dd(
                     )?;
 
                     open_dds::query::BooleanExpression::Relationship {
+                        operand: build_nested_field_path(field_path).map(|a| *a),
                         relationship_name: relationship_name.clone(),
                         predicate: Box::new(inner),
                     }
@@ -417,7 +418,7 @@ fn resolve_object_boolean_expression<'s>(
                     // build and return relationshp comparison expression
                     plan::build_relationship_comparison_expression(
                         type_mappings,
-                        column_path,
+                        column_path.iter().copied().cloned().collect(),
                         data_connector_link,
                         relationship_name,
                         relationship_type,
