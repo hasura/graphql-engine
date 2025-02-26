@@ -126,24 +126,17 @@ fn from_command_output_type(
                 unique_number,
             )?;
 
-            match &command_source.data_connector.response_config {
+            let extract_response_from = match &command_source.data_connector.response_config {
                 // if the data connector has 'responseHeaders' configured, we'll need to wrap the ndc fields
                 // under the 'result' field if the command's response at opendd layer refers to the 'result'
                 // field's type. Note that we aren't requesting the 'header's field as we don't forward the
                 // response headers in the SQL layer yet
                 Some(response_config) if !command_source.ndc_type_opendd_type_same => {
-                    let result_field_name =
-                        NdcFieldAlias::from(response_config.result_field.as_str());
-                    let result_field = Field::Column {
-                        column: response_config.result_field.clone(),
-                        fields: Some(NestedField::Object(NestedObject { fields: ndc_fields })),
-                        arguments: BTreeMap::new(),
-                    };
-                    let fields = IndexMap::from_iter([(result_field_name, result_field)]);
-                    Ok((fields, Some(response_config.result_field.clone())))
+                    Some(response_config.result_field.clone())
                 }
-                _ => Ok((ndc_fields, None)),
-            }
+                _ => None,
+            };
+            Ok((ndc_fields, extract_response_from))
         }
     }
 }
@@ -226,9 +219,9 @@ pub(crate) fn from_command_selection(
                 query_execution_plan: QueryExecutionPlan {
                     query_node: QueryNodeNew {
                         fields: Some(plan_types::FieldsSelection {
-                            fields: wrap_scalar_select(wrap_function_ndc_field(
-                                &output_shape,
-                                ndc_fields,
+                            fields: wrap_scalar_select(wrap_selection_in_response_config(
+                                command_source,
+                                wrap_function_ndc_field(&output_shape, ndc_fields),
                             )),
                         }),
                         aggregates: None,
@@ -280,6 +273,49 @@ pub(crate) fn from_command_selection(
         command_plan,
         extract_response_from,
     })
+}
+
+/// Wrap a selection set in a `{"headers": ..., "response": ...}` selection
+/// shape for command selections, where `CommandsResponseConfig` is configured.
+///
+/// When the output type of a NDC function/procedure is an object type,
+/// containing headers and response fields; and the response field is also an
+/// object type -
+/// 1. Engine needs to generate fields selection IR such that it contains
+///    `{"headers": ..., "response": ...}` shape, and the actual selection from the
+///    user-facing query goes inside the `response` field
+fn wrap_selection_in_response_config(
+    command_source: &metadata_resolve::CommandSource,
+    original_selection: Option<NestedField>,
+) -> Option<NestedField> {
+    match &command_source.data_connector.response_config {
+        None => original_selection,
+        Some(response_config) => {
+            if command_source.ndc_type_opendd_type_same {
+                original_selection
+            } else {
+                let headers_field_name =
+                    NdcFieldAlias::from(response_config.headers_field.as_str());
+                let headers_field = Field::Column {
+                    column: response_config.headers_field.clone(),
+                    fields: None,
+                    arguments: BTreeMap::new(),
+                };
+                let result_field_name = NdcFieldAlias::from(response_config.result_field.as_str());
+                let result_field = Field::Column {
+                    column: response_config.result_field.clone(),
+                    fields: original_selection,
+                    arguments: BTreeMap::new(),
+                };
+                Some(NestedField::Object(NestedObject {
+                    fields: IndexMap::from_iter([
+                        (headers_field_name, headers_field),
+                        (result_field_name, result_field),
+                    ]),
+                }))
+            }
+        }
+    }
 }
 
 fn wrap_procedure_ndc_fields(
