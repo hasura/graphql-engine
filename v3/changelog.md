@@ -9,6 +9,11 @@
 
 ### Fixed
 
+- Reverted: GraphQL API: Using `null` for non-nullable custom scalar types now
+  correctly raises validation error.
+- Reverted: GraphQL API: Validate query variables to ensure non-nullable
+  variables are not omitted or set to `null`.
+
 ### Changed
 
 ## [v2025.02.20]
