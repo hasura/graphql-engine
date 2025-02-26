@@ -44,8 +44,10 @@ pub fn model_target_to_ndc_query(
         &model.model.arguments,
         &model_source.argument_mappings,
         metadata,
+        session,
         &model_source.type_mappings,
         &model_source.data_connector,
+        &mut usage_counts,
     )?;
 
     // add any preset arguments from model permissions

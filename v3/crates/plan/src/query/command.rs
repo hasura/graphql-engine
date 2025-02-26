@@ -195,8 +195,10 @@ pub(crate) fn from_command_selection(
         &command.command.arguments,
         &command_source.argument_mappings,
         metadata,
+        session,
         &command_source.type_mappings,
         &command_source.data_connector,
+        &mut usage_counts,
     )?;
 
     // add any preset arguments from model permissions

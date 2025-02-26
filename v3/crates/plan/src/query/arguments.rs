@@ -1,5 +1,5 @@
-use super::boolean_expression;
 use super::permissions;
+use crate::metadata_accessor;
 use crate::plan_expression;
 use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
@@ -536,11 +536,13 @@ pub fn process_connector_link_presets(
 
 pub fn get_unresolved_arguments<'s>(
     input_arguments: &IndexMap<ArgumentName, open_dds::query::Value>,
-    argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
+    argument_infos: &'s IndexMap<ArgumentName, ArgumentInfo>,
     argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
-    metadata: &Metadata,
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    data_connector: &metadata_resolve::DataConnectorLink,
+    metadata: &'s Metadata,
+    session: &Session,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector: &'s metadata_resolve::DataConnectorLink,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     let mut arguments = BTreeMap::new();
     for (argument_name, argument_value) in input_arguments {
@@ -553,24 +555,34 @@ pub fn get_unresolved_arguments<'s>(
         let ndc_argument_value = match argument_value {
             open_dds::query::Value::BooleanExpression(bool_exp) => {
                 let argument_info = argument_infos.get(argument_name).unwrap();
-                let custom_type_name =
+
+                let boolean_expression_type_name =
                     unwrap_custom_type_name(&argument_info.argument_type).unwrap();
+
                 let boolean_expression_type = metadata
                     .boolean_expression_types
                     .objects
-                    .get(custom_type_name)
+                    .get(boolean_expression_type_name)
                     .unwrap();
 
-                // this implementation is incomplete
-                // and should be filled out once we implement user-defined filters here
-                let predicate =
-                    boolean_expression::open_dd_boolean_expression_to_plan_types_expression(
-                        bool_exp,
-                        type_mappings,
-                        &boolean_expression_type.object_type,
-                        &data_connector.name,
-                        boolean_expression_type,
-                    )?;
+                let argument_object_type = metadata_accessor::get_output_object_type(
+                    metadata,
+                    &boolean_expression_type.object_type,
+                    &session.role,
+                )?;
+
+                let predicate = crate::filter::to_filter_expression(
+                    metadata,
+                    session,
+                    type_mappings,
+                    &boolean_expression_type.object_type,
+                    &argument_object_type,
+                    Some(boolean_expression_type),
+                    bool_exp,
+                    data_connector,
+                    &metadata.object_types,
+                    usage_counts,
+                )?;
 
                 UnresolvedArgument::BooleanExpression { predicate }
             }

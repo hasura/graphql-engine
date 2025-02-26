@@ -901,7 +901,7 @@ fn test_model_select_many_where_object_boolean_array_relationship_nested() -> an
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -983,7 +983,7 @@ fn test_model_select_many_where_array_relationship_nested() -> anyhow::Result<()
                 vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1065,7 +1065,7 @@ fn test_model_select_many_where_remote_array_relationship_nested() -> anyhow::Re
                 vec!["execute/models/select_many/where/remote_relationships/boolean_expression_type/pg_connector_ndc_v02.json", "execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 
@@ -1161,7 +1161,7 @@ fn test_model_select_many_where_no_capability_array_relationship_nested() -> any
             common_metadata_path_string,
             test_common_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::YesPlease,
     )
 }
 

@@ -1,5 +1,4 @@
 mod arguments;
-mod boolean_expression;
 mod command;
 pub mod field_selection;
 pub mod filter;
