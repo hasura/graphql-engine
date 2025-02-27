@@ -199,13 +199,11 @@ pub(crate) fn test_introspection_expectation(
 pub fn test_execution_expectation(
     test_path_string: &str,
     common_metadata_paths: &[&str],
-    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     test_execution_expectation_for_multiple_ndc_versions(
         test_path_string,
         common_metadata_paths,
         BTreeMap::new(),
-        opendd_tests,
     )
 }
 
@@ -214,7 +212,6 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
     test_path_string: &str,
     common_metadata_paths: &[&str],
     common_metadata_paths_per_ndc_version: BTreeMap<NdcVersion, Vec<&str>>,
-    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -369,31 +366,24 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             "websockets",
                         );
 
-                        // we'll switch on OpenDD pipeline tests for each test case
-                        // as we fix stuff. eventually we'll skip this check and run it every time.
-                        match opendd_tests {
-                            TestOpenDDPipeline::Skip => (),
-                            TestOpenDDPipeline::YesPlease => {
-                                // run tests with new pipeline and diff them
-                                let (_, open_dd_response) = execute_query(
-                                    GraphqlRequestPipeline::OpenDd, // the interesting part
-                                    ExposeInternalErrors::Expose,
-                                    &test_ctx.http_context,
-                                    &schema,
-                                    &arc_resolved_metadata,
-                                    session,
-                                    &request_headers,
-                                    raw_request.clone(),
-                                    None,
-                                )
-                                .await;
-                                compare_graphql_responses(
-                                    &http_response,
-                                    &open_dd_response.inner(),
-                                    "OpenDD pipeline",
-                                );
-                            }
-                        }
+                        // run tests with new pipeline and diff them
+                        let (_, open_dd_response) = execute_query(
+                            GraphqlRequestPipeline::OpenDd, // the interesting part
+                            ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            &arc_resolved_metadata,
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(
+                            &http_response,
+                            &open_dd_response.inner(),
+                            "OpenDD pipeline",
+                        );
 
                         responses.push(http_response);
                     }
@@ -436,31 +426,24 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             "websockets",
                         );
 
-                        // we'll switch on OpenDD pipeline tests for each test case
-                        // as we fix stuff. eventually we'll skip this check and run it every time.
-                        match opendd_tests {
-                            TestOpenDDPipeline::Skip => (),
-                            TestOpenDDPipeline::YesPlease => {
-                                // run tests with new pipeline and diff them
-                                let (_, open_dd_response) = execute_query(
-                                    GraphqlRequestPipeline::OpenDd, // the interesting part
-                                    ExposeInternalErrors::Expose,
-                                    &test_ctx.http_context,
-                                    &schema,
-                                    &arc_resolved_metadata,
-                                    session,
-                                    &request_headers,
-                                    raw_request.clone(),
-                                    None,
-                                )
-                                .await;
-                                compare_graphql_responses(
-                                    &http_response,
-                                    &open_dd_response.inner(),
-                                    "OpenDD pipeline",
-                                );
-                            }
-                        }
+                        // run tests with new pipeline and diff them
+                        let (_, open_dd_response) = execute_query(
+                            GraphqlRequestPipeline::OpenDd, // the interesting part
+                            ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            &arc_resolved_metadata,
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(
+                            &http_response,
+                            &open_dd_response.inner(),
+                            "OpenDD pipeline",
+                        );
                         responses.push(http_response);
                     }
                 }
@@ -750,12 +733,4 @@ async fn run_query_graphql_ws(
         };
     }
     response
-}
-
-// should we test with the OpenDD pipeline?
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy)]
-pub enum TestOpenDDPipeline {
-    Skip,
-    YesPlease,
 }
