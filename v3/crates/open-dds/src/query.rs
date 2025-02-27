@@ -300,6 +300,11 @@ pub enum BooleanExpression {
         operator: ComparisonOperator,
         argument: Box<Value>,
     },
+    Relationship {
+        operand: Option<Operand>,
+        relationship_name: RelationshipName,
+        predicate: Box<BooleanExpression>,
+    },
 }
 
 impl BooleanExpression {
@@ -323,6 +328,15 @@ impl BooleanExpression {
             ),
             BooleanExpression::Not(expr) => format!("(NOT {})", expr.fmt_for_explain()),
             BooleanExpression::IsNull(operand) => format!("{} IS NULL", operand.fmt_for_explain()),
+            BooleanExpression::Relationship {
+                relationship_name,
+                predicate,
+                ..
+            } => format!(
+                "In relationship {}, predicate {}",
+                relationship_name,
+                predicate.fmt_for_explain()
+            ),
             BooleanExpression::Comparison {
                 operand,
                 operator,
@@ -358,7 +372,6 @@ impl BooleanExpression {
                     operand.fmt_for_explain(),
                     argument.fmt_for_explain()
                 ),
-
                 ComparisonOperator::Contains => format!(
                     "contains({}, {})",
                     operand.fmt_for_explain(),

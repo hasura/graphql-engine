@@ -177,6 +177,7 @@ fn plan_subscription<'s, 'ir>(
                     }
                 }
             }?;
+
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,
@@ -548,12 +549,29 @@ fn plan_query<'n, 's, 'ir>(
                             session,
                             request_headers,
                             unique_number,
-                        )?
+                        )
                     }
-                    ModelEntitySelection::OpenDd(_) => {
-                        todo!("ApolloFederationRootFields for OpenDd")
+                    ModelEntitySelection::OpenDd(ref model_selection) => {
+                        // TODO: expose more specific function in `plan` for just model selections
+                        let single_node_execution_plan = plan::query_to_plan(
+                            &open_dds::query::Query::Model(model_selection.clone()),
+                            metadata,
+                            session,
+                            request_headers,
+                            unique_number,
+                        )?;
+                        match single_node_execution_plan {
+                            plan::SingleNodeExecutionPlan::Query(execution_tree) => {
+                                Ok(execution_tree)
+                            }
+                            plan::SingleNodeExecutionPlan::Mutation(_) => {
+                                // we should use a more specific planning function to avoid
+                                // this as it _should not_ happen
+                                Err(error::Error::PlanExpectedQueryGotMutation)
+                            }
+                        }
                     }
-                };
+                }?;
                 ndc_query_executions.push((
                     NDCQueryExecution {
                         execution_tree,

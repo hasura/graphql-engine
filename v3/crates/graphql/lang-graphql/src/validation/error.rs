@@ -117,18 +117,6 @@ pub enum Error {
     },
     #[error("the following variable is defined more than once: {variable_name}")]
     DuplicateVariableDeclarations { variable_name: ast::Name },
-    #[error(
-        "null value provided for non-nullable variable {variable_name} of type {variable_type}"
-    )]
-    NullValueForNonNullVariable {
-        variable_name: ast::Name,
-        variable_type: ast::Type,
-    },
-    #[error("expected a value for non-nullable variable {variable_name} of type {variable_type} but no value was provided")]
-    ExpectingValueForNonNullableVariable {
-        variable_name: ast::Name,
-        variable_type: ast::Type,
-    },
     #[error("the following fragment is defined more than once: {fragment_name}")]
     DuplicateFragmentDefinitions { fragment_name: ast::Name },
     #[error("the following operation is defined more than once: {operation_name}")]

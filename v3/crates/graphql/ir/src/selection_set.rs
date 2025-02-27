@@ -3,7 +3,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common::Alias;
 use lang_graphql::normalized_ast;
 use open_dds::data_connector::DataConnectorColumnName;
-use open_dds::query::Name;
+use open_dds::query::{Name, ObjectFieldOperand};
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, FieldName};
 use plan_types::NdcFieldAlias;
 use serde::Serialize;
@@ -472,6 +472,7 @@ pub fn generate_selection_set_open_dd_ir(
                                 relationship::generate_model_aggregate_relationship_open_dd_ir(
                                     field,
                                     relationship_annotation,
+                                    models,
                                     usage_counts,
                                 )?,
                             ),
@@ -513,25 +514,25 @@ pub fn generate_aggregate_selection_set_open_dd_ir(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<IndexMap<Name, open_dds::query::Aggregate>, error::Error> {
     let mut fields = IndexMap::new();
-    collect_aggregate_fields(&mut fields, None, &[], selection_set)?;
+    collect_aggregate_fields(&mut fields, &[], &[], selection_set)?;
     Ok(fields)
 }
 
 fn collect_aggregate_fields(
     aggregate_fields: &mut IndexMap<Name, open_dds::query::Aggregate>,
-    operand: Option<&open_dds::query::Operand>,
-    graphql_field_path: &[&Alias], // For generating the alias for the aggregate field
+    field_path: &[&open_dds::query::ObjectFieldTarget],
+    alias_path: &[&Alias], // For generating the alias for the aggregate field
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<(), error::Error> {
     for field in selection_set.fields.values() {
         let field_call = field.field_call()?;
-        let graphql_field_path = graphql_field_path
+        let alias_path = alias_path
             .iter()
             .chain(std::iter::once(&&field.alias))
             .copied()
             .collect::<Vec<&Alias>>();
-        let field_alias =
-            make_field_alias(mk_alias_from_graphql_field_path(&graphql_field_path).as_str())?;
+        let field_alias = make_field_alias(mk_alias_from_graphql_field_path(&alias_path).as_str())?;
+
         match field_call.info.generic {
             annotation @ Annotation::Output(annotated_field) => match annotated_field {
                 OutputAnnotation::Aggregate(aggregate_annotation) => match aggregate_annotation {
@@ -540,18 +541,18 @@ fn collect_aggregate_fields(
                         aggregate_operand_type: _,
                     } => {
                         let arguments = IndexMap::new();
-                        let field_operand =
-                            open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
-                                target: Box::new(open_dds::query::ObjectFieldTarget {
-                                    field_name: field_name.clone(),
-                                    arguments,
-                                }),
-                                nested: operand.cloned().map(Box::new),
-                            });
+                        let path_item = open_dds::query::ObjectFieldTarget {
+                            field_name: field_name.clone(),
+                            arguments,
+                        };
+
+                        let mut new_field_path = field_path.to_vec();
+                        new_field_path.push(&path_item);
+
                         collect_aggregate_fields(
                             aggregate_fields,
-                            Some(&field_operand),
-                            &graphql_field_path,
+                            &new_field_path,
+                            &alias_path,
                             &field.selection_set,
                         )?;
                     }
@@ -572,12 +573,22 @@ fn collect_aggregate_fields(
                                 expression: aggregate_expression.clone(),
                             },
                         };
+
+                        // start at end of path list and keep wrapping them in object field
+                        // operands
+                        let operand: Option<open_dds::query::Operand> = field_path
+                            .iter()
+                            .rev()
+                            .fold(None, |operand, object_field_target| {
+                                Some(open_dds::query::Operand::Field(ObjectFieldOperand {
+                                    target: Box::new((*object_field_target).clone()),
+                                    nested: operand.map(Box::new),
+                                }))
+                            });
+
                         aggregate_fields.insert(
                             Name::from(field_alias.as_str().to_owned()),
-                            open_dds::query::Aggregate {
-                                function,
-                                operand: operand.cloned(),
-                            },
+                            open_dds::query::Aggregate { function, operand },
                         );
                     }
                 },

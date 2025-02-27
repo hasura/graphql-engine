@@ -7,7 +7,7 @@ use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
 use metadata_resolve::{
     DataConnectorLink, ObjectComparisonKind, ObjectTypeWithRelationships, Qualified,
-    QualifiedBaseType, TypeMapping,
+    QualifiedBaseType, ResolvedObjectBooleanExpressionType, TypeMapping,
 };
 use open_dds::{
     data_connector::DataConnectorColumnName,
@@ -24,7 +24,7 @@ pub fn to_filter_expression<'metadata>(
     session: &'_ Session,
     type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &'metadata Qualified<CustomTypeName>,
-    model_object_type: &'metadata OutputObjectTypeView,
+    model_object_type: &'_ OutputObjectTypeView<'metadata>,
     boolean_expression_type: Option<
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
     >,
@@ -126,94 +126,33 @@ pub fn to_filter_expression<'metadata>(
             object_types,
             usage_counts,
         ),
-        BooleanExpression::IsNull(_) => Err(PlanError::Internal(format!(
-            "unsupported boolean expression: {expr:?}"
-        ))),
-    }
-}
-
-fn to_comparison_expression<'metadata>(
-    operand: &open_dds::query::Operand,
-    operator: &ComparisonOperator,
-    argument: &open_dds::query::Value,
-    column_path: &[&'_ DataConnectorColumnName],
-    metadata: &'metadata metadata_resolve::Metadata,
-    session: &'_ Session,
-    type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &'metadata Qualified<CustomTypeName>,
-    source_object_type: &OutputObjectTypeView<'metadata>,
-    boolean_expression_type: Option<
-        &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
-    >,
-    data_connector: &'metadata DataConnectorLink,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
-    usage_counts: &mut UsagesCounts,
-) -> Result<Expression<'metadata>, PlanError> {
-    match operand {
-        open_dds::query::Operand::Field(object_field_operand) => to_field_comparison_expression(
-            object_field_operand,
-            operator,
-            argument,
-            column_path,
-            metadata,
-            session,
-            type_mappings,
-            type_name,
-            source_object_type,
-            boolean_expression_type,
-            data_connector,
-            object_types,
-            usage_counts,
-        ),
-        open_dds::query::Operand::Relationship(relationship_operand) => {
-            to_relationship_comparison_expression(
-                relationship_operand,
-                operator,
-                argument,
-                metadata,
-                session,
-                type_mappings,
-                type_name,
-                source_object_type,
-                boolean_expression_type,
-                data_connector,
-                object_types,
-                usage_counts,
-            )
-        }
-        open_dds::query::Operand::RelationshipAggregate(_) => {
-            todo!("RelationshipAggregate is not implemented")
-        }
-    }
-}
-
-fn to_relationship_comparison_expression<'metadata>(
-    field: &open_dds::query::RelationshipOperand,
-    operator: &ComparisonOperator,
-    argument: &open_dds::query::Value,
-    metadata: &'metadata metadata_resolve::Metadata,
-    session: &'_ Session,
-    type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &'metadata Qualified<CustomTypeName>,
-    source_object_type: &OutputObjectTypeView<'metadata>,
-    boolean_expression_type: Option<
-        &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
-    >,
-    data_connector: &'metadata DataConnectorLink,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
-    usage_counts: &mut UsagesCounts,
-) -> Result<Expression<'metadata>, PlanError> {
-    match &field.nested {
-        // the nested field here is the target of the relationship
-        Some(nested_field) => {
+        BooleanExpression::Relationship {
+            relationship_name,
+            predicate,
+            operand,
+        } => {
             // Boolean expression type is required to resolve custom operators
             let boolean_expression_type = boolean_expression_type.ok_or_else(|| {
                 PlanError::Internal("Custom operators require a boolean expression type".into())
             })?;
 
-            let field_name = open_dds::types::FieldName::new(
-                field.target.relationship_name.clone().into_inner(),
-            );
+            let field_name =
+                open_dds::types::FieldName::new(relationship_name.clone().into_inner());
+
+            // we need to navigate the operand up to this relationship to find the right boolean
+            // expression type to start from
+            let boolean_expression_type = boolean_expression_type_for_path(
+                metadata,
+                boolean_expression_type,
+                operand.as_ref(),
+            )?;
+
+            // the object type for the left hand side of the relationship
+            let source_object_type = crate::metadata_accessor::get_output_object_type(
+                metadata,
+                &boolean_expression_type.object_type,
+                &session.role,
+            )?;
 
             // first try looking for a relationship
             if let Some(relationship_field) = boolean_expression_type
@@ -261,6 +200,7 @@ fn to_relationship_comparison_expression<'metadata>(
                             &session.role,
                         )?;
 
+                        // build expression for any model permissions for the target model
                         let model_expression = model_permission_filter_to_expression(
                             session,
                             &target_model_source,
@@ -268,22 +208,16 @@ fn to_relationship_comparison_expression<'metadata>(
                             usage_counts,
                         )?;
 
-                        // reset column path as we're starting from root inside
-                        // the relationship
-                        let column_path = &[];
-
-                        let inner = to_comparison_expression(
-                            nested_field,
-                            operator,
-                            argument,
-                            column_path,
+                        // resolve predicate inside the relationship
+                        let inner = to_filter_expression(
                             metadata,
                             session,
                             &target_model_source.source.type_mappings,
                             &target_boolean_expression_type.object_type,
                             &target_model_object_type,
                             Some(target_boolean_expression_type),
-                            data_connector,
+                            predicate,
+                            &target_model_source.source.data_connector,
                             object_types,
                             usage_counts,
                         )?;
@@ -296,13 +230,39 @@ fn to_relationship_comparison_expression<'metadata>(
                             None => inner,
                         };
 
+                        // work out path of any nesting before the relationship
+                        let column_path = match operand {
+                            Some(open_dds::query::Operand::Field(object_field_operand)) => {
+                                let ResolvedColumn {
+                                    column_name,
+                                    field_path,
+                                    field_mapping: _,
+                                } = to_resolved_column(
+                                    &session.role,
+                                    metadata,
+                                    type_mappings,
+                                    type_name,
+                                    model_object_type,
+                                    object_field_operand,
+                                )?;
+                                Ok(field_path.into_iter().chain([column_name]).collect())
+                            }
+                            Some(
+                                open_dds::query::Operand::RelationshipAggregate(_)
+                                | open_dds::query::Operand::Relationship(_),
+                            ) => Err(PlanError::Internal(
+                                "Operand in a relationship must be of type Field".into(),
+                            )),
+                            None => Ok(vec![]),
+                        }?;
+
                         Ok(crate::build_relationship_comparison_expression(
                             type_mappings,
                             column_path,
-                            data_connector,
+                            &target_model_source.source.data_connector,
                             &relationship.relationship_name,
                             &model_target.relationship_type,
-                            type_name,
+                            &boolean_expression_type.object_type,
                             &model_target.model_name,
                             target_model_source.source,
                             relationship.target_capabilities.as_ref().ok_or_else(|| {
@@ -322,14 +282,102 @@ fn to_relationship_comparison_expression<'metadata>(
             } else {
                 Err(PlanError::Permission(
                     PermissionError::RelationshipNotFoundInBooleanExpressionType {
-                        relationship_name: field.target.relationship_name.clone(),
+                        relationship_name: relationship_name.clone(),
                         boolean_expression_type_name: boolean_expression_type.name.clone(),
                     },
                 ))
             }
         }
-        None => {
-            todo!("Relationship without field inside")
+        BooleanExpression::IsNull(_) => Err(PlanError::Internal(format!(
+            "unsupported boolean expression: {expr:?}"
+        ))),
+    }
+}
+
+fn boolean_expression_type_for_path<'metadata>(
+    metadata: &'metadata metadata_resolve::Metadata,
+    boolean_expression_type: &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
+    operand: Option<&open_dds::query::Operand>,
+) -> Result<&'metadata ResolvedObjectBooleanExpressionType, PlanError> {
+    match operand {
+        None => Ok(boolean_expression_type),
+        Some(open_dds::query::Operand::Field(object_field_operand)) => {
+            let object_comparison_expression = boolean_expression_type
+                .fields
+                .object_fields
+                .get(&object_field_operand.target.field_name)
+                .ok_or_else(|| {
+                    PlanError::Permission(PermissionError::FieldNotFoundInBooleanExpressionType {
+                        field_name: object_field_operand.target.field_name.clone(),
+                        boolean_expression_type_name: boolean_expression_type.name.clone(),
+                    })
+                })?;
+
+            let inner_boolean_expression_type = metadata
+                .boolean_expression_types
+                .objects
+                .get(&object_comparison_expression.boolean_expression_type_name)
+                .ok_or_else(|| {
+                    PlanError::Permission(PermissionError::ObjectBooleanExpressionTypeNotFound {
+                        boolean_expression_type_name: object_comparison_expression
+                            .boolean_expression_type_name
+                            .clone(),
+                    })
+                })?;
+
+            boolean_expression_type_for_path(
+                metadata,
+                inner_boolean_expression_type,
+                object_field_operand.nested.as_deref(),
+            )
+        }
+        Some(
+            open_dds::query::Operand::Relationship(_)
+            | open_dds::query::Operand::RelationshipAggregate(_),
+        ) => Err(PlanError::Internal(
+            "Boolean expression operands can only be a Field".into(),
+        )),
+    }
+}
+
+fn to_comparison_expression<'metadata>(
+    operand: &open_dds::query::Operand,
+    operator: &ComparisonOperator,
+    argument: &open_dds::query::Value,
+    column_path: &[&'_ DataConnectorColumnName],
+    metadata: &'metadata metadata_resolve::Metadata,
+    session: &'_ Session,
+    type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    type_name: &'metadata Qualified<CustomTypeName>,
+    source_object_type: &OutputObjectTypeView<'metadata>,
+    boolean_expression_type: Option<
+        &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
+    >,
+    data_connector: &'metadata DataConnectorLink,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    usage_counts: &mut UsagesCounts,
+) -> Result<Expression<'metadata>, PlanError> {
+    match operand {
+        open_dds::query::Operand::Field(object_field_operand) => to_field_comparison_expression(
+            object_field_operand,
+            operator,
+            argument,
+            column_path,
+            metadata,
+            session,
+            type_mappings,
+            type_name,
+            source_object_type,
+            boolean_expression_type,
+            data_connector,
+            object_types,
+            usage_counts,
+        ),
+        open_dds::query::Operand::Relationship(_) => {
+            todo!("Relationship is not supported")
+        }
+        open_dds::query::Operand::RelationshipAggregate(_) => {
+            todo!("RelationshipAggregate is not implemented")
         }
     }
 }

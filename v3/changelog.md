@@ -4,10 +4,23 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2025.02.26]
+
+### Added
+
 - Added validation for command output types to ensure they reference valid types
   in the schema.
 
 ### Fixed
+
+- Reverted: GraphQL API: Using `null` for non-nullable custom scalar types now
+  correctly raises validation error.
+- Reverted: GraphQL API: Validate query variables to ensure non-nullable
+  variables are not omitted or set to `null`.
 
 ### Changed
 
@@ -1191,7 +1204,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.20...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.26...HEAD
+[v2025.02.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.26
 [v2025.02.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.20
 [v2025.02.19]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.19
 [v2025.02.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.07

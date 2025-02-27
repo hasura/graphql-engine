@@ -199,13 +199,11 @@ pub(crate) fn test_introspection_expectation(
 pub fn test_execution_expectation(
     test_path_string: &str,
     common_metadata_paths: &[&str],
-    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     test_execution_expectation_for_multiple_ndc_versions(
         test_path_string,
         common_metadata_paths,
         BTreeMap::new(),
-        opendd_tests,
     )
 }
 
@@ -214,7 +212,6 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
     test_path_string: &str,
     common_metadata_paths: &[&str],
     common_metadata_paths_per_ndc_version: BTreeMap<NdcVersion, Vec<&str>>,
-    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -352,7 +349,8 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         )
                         .await;
                         let http_response = response.inner();
-                        let graphql_ws_response = run_query_graphql_ws(
+                        let graphql_ws_response_old = run_query_graphql_ws(
+                            GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
@@ -365,35 +363,44 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
                         compare_graphql_responses(
                             &http_response,
-                            &graphql_ws_response,
+                            &graphql_ws_response_old,
                             "websockets",
                         );
-
-                        // we'll switch on OpenDD pipeline tests for each test case
-                        // as we fix stuff. eventually we'll skip this check and run it every time.
-                        match opendd_tests {
-                            TestOpenDDPipeline::Skip => (),
-                            TestOpenDDPipeline::YesPlease => {
-                                // run tests with new pipeline and diff them
-                                let (_, open_dd_response) = execute_query(
-                                    GraphqlRequestPipeline::OpenDd, // the interesting part
-                                    ExposeInternalErrors::Expose,
-                                    &test_ctx.http_context,
-                                    &schema,
-                                    &arc_resolved_metadata,
-                                    session,
-                                    &request_headers,
-                                    raw_request.clone(),
-                                    None,
-                                )
-                                .await;
-                                compare_graphql_responses(
-                                    &http_response,
-                                    &open_dd_response.inner(),
-                                    "OpenDD pipeline",
-                                );
-                            }
-                        }
+                        let graphql_ws_response_new = run_query_graphql_ws(
+                            GraphqlRequestPipeline::OpenDd,
+                            ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            arc_resolved_metadata.clone(),
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(
+                            &http_response,
+                            &graphql_ws_response_new,
+                            "websockets",
+                        );
+                        // run tests with new pipeline and diff them
+                        let (_, open_dd_response) = execute_query(
+                            GraphqlRequestPipeline::OpenDd, // the interesting part
+                            ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            &arc_resolved_metadata,
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(
+                            &http_response,
+                            &open_dd_response.inner(),
+                            "OpenDD pipeline",
+                        );
 
                         responses.push(http_response);
                     }
@@ -419,7 +426,8 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         )
                         .await;
                         let http_response = response.inner();
-                        let graphql_ws_response = run_query_graphql_ws(
+                        let graphql_ws_response_old = run_query_graphql_ws(
+                            GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
@@ -432,35 +440,45 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
                         compare_graphql_responses(
                             &http_response,
-                            &graphql_ws_response,
+                            &graphql_ws_response_old,
+                            "websockets",
+                        );
+                        let graphql_ws_response_new = run_query_graphql_ws(
+                            GraphqlRequestPipeline::OpenDd,
+                            ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            arc_resolved_metadata.clone(),
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(
+                            &http_response,
+                            &graphql_ws_response_new,
                             "websockets",
                         );
 
-                        // we'll switch on OpenDD pipeline tests for each test case
-                        // as we fix stuff. eventually we'll skip this check and run it every time.
-                        match opendd_tests {
-                            TestOpenDDPipeline::Skip => (),
-                            TestOpenDDPipeline::YesPlease => {
-                                // run tests with new pipeline and diff them
-                                let (_, open_dd_response) = execute_query(
-                                    GraphqlRequestPipeline::OpenDd, // the interesting part
-                                    ExposeInternalErrors::Expose,
-                                    &test_ctx.http_context,
-                                    &schema,
-                                    &arc_resolved_metadata,
-                                    session,
-                                    &request_headers,
-                                    raw_request.clone(),
-                                    None,
-                                )
-                                .await;
-                                compare_graphql_responses(
-                                    &http_response,
-                                    &open_dd_response.inner(),
-                                    "OpenDD pipeline",
-                                );
-                            }
-                        }
+                        // run tests with new pipeline and diff them
+                        let (_, open_dd_response) = execute_query(
+                            GraphqlRequestPipeline::OpenDd, // the interesting part
+                            ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            &arc_resolved_metadata,
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(
+                            &http_response,
+                            &open_dd_response.inner(),
+                            "OpenDD pipeline",
+                        );
                         responses.push(http_response);
                     }
                 }
@@ -643,6 +661,7 @@ fn compare_graphql_responses(
 
 /// Execute a GraphQL query over a dummy WebSocket connection.
 async fn run_query_graphql_ws(
+    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
@@ -664,7 +683,7 @@ async fn run_query_graphql_ws(
     });
 
     let context = graphql_ws::Context {
-        request_pipeline: GraphqlRequestPipeline::Old,
+        request_pipeline,
         connection_expiry: graphql_ws::ConnectionExpiry::Never,
         http_context: http_context.clone(),
         expose_internal_errors,
@@ -750,12 +769,4 @@ async fn run_query_graphql_ws(
         };
     }
     response
-}
-
-// should we test with the OpenDD pipeline?
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy)]
-pub enum TestOpenDDPipeline {
-    Skip,
-    YesPlease,
 }

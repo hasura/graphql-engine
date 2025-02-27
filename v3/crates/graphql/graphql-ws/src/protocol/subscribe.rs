@@ -276,6 +276,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
     // Normalize the parsed GraphQL query.
     let normalized_request =
         graphql_frontend::normalize_request(schema, &session, query, &raw_request)?;
+
     // Generate Intermediate Representation (IR) from the query.
     let ir = graphql_frontend::build_ir(
         connection.context.request_pipeline,

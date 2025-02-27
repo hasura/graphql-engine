@@ -106,9 +106,6 @@ pub(crate) fn entities_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
 ) -> Result<Vec<EntitySelect<'n, 's>>, error::Error> {
-    if request_pipeline == GraphqlRequestPipeline::OpenDd {
-        todo!("entities_ir for OpenDd");
-    }
     let representations = field_call
         .expected_argument(&lang_graphql::mk_name!("representations"))?
         .value
@@ -161,59 +158,117 @@ pub(crate) fn entities_ir<'n, 's>(
                     field_name: lang_graphql::mk_name!("_entities"),
                 },
             )?;
-
-            // Generate the filter clause for the entity
-            let filter_clause_expressions = typename_mapping
-                .key_fields_ndc_mapping
-                .iter()
-                .map(|(field_name, field_mapping)| {
-                    // Get the value of the field from the representation
-                    let val = representation.get(field_name.as_str()).ok_or(
-                        error::Error::FieldNotFoundInEntityRepresentation {
-                            field_name: field_name.clone(),
-                        },
-                    )?;
-                    Ok(Expression::LocalField(
-                        LocalFieldComparison::BinaryComparison {
-                            column: ComparisonTarget::Column {
-                                name: field_mapping.column.clone(),
-                                field_path: vec![], // We don't support nested fields in the key fields, so the path is empty
-                            },
-                            operator: field_mapping.equal_operator.clone(),
-                            value: ComparisonValue::Scalar { value: val.clone() },
-                        },
-                    ))
-                })
-                .collect::<Result<_, error::Error>>()?;
+            let mut usage_counts = UsagesCounts::new();
 
             // Filter the selection set to only include fields that are relevant to the entity
             let new_selection_set = field.selection_set.filter_field_calls_by_typename(typename);
-            let query_filter = filter::QueryFilter {
-                where_clause: None,
-                additional_filter: Some(Expression::mk_and(filter_clause_expressions)),
+
+            let model_selection = match request_pipeline {
+                GraphqlRequestPipeline::OpenDd => {
+                    let filter_clause_expressions: Vec<_> = typename_mapping
+                        .key_fields_ndc_mapping
+                        .keys()
+                        .map(|field_name| {
+                            // Get the value of the field from the representation
+                            let val = representation.get(field_name.as_str()).ok_or(
+                                error::Error::FieldNotFoundInEntityRepresentation {
+                                    field_name: field_name.clone(),
+                                },
+                            )?;
+                            Ok(open_dds::query::BooleanExpression::Comparison {
+                                operand: open_dds::query::Operand::Field(
+                                    open_dds::query::ObjectFieldOperand {
+                                        nested: None,
+                                        target: Box::new(open_dds::query::ObjectFieldTarget {
+                                            arguments: IndexMap::new(),
+                                            field_name: field_name.clone(),
+                                        }),
+                                    },
+                                ),
+                                operator: open_dds::query::ComparisonOperator::Equals,
+                                argument: Box::new(open_dds::query::Value::Literal(val.clone())),
+                            })
+                        })
+                        .collect::<Result<_, error::Error>>()?;
+
+                    let filter = if filter_clause_expressions.is_empty() {
+                        None
+                    } else {
+                        Some(open_dds::query::BooleanExpression::And(
+                            filter_clause_expressions,
+                        ))
+                    };
+
+                    ModelEntitySelection::OpenDd(model_selection::model_selection_open_dd_ir(
+                        &new_selection_set,
+                        &typename_mapping.model_name,
+                        models,
+                        &model_source.type_mappings,
+                        object_types,
+                        None, // arguments
+                        filter,
+                        vec![], // order_by
+                        None,   // limit
+                        None,   // offset
+                        &session.variables,
+                        request_headers,
+                        &mut usage_counts,
+                    )?)
+                }
+                GraphqlRequestPipeline::Old => {
+                    // Generate the filter clause for the entity
+                    let filter_clause_expressions = typename_mapping
+                        .key_fields_ndc_mapping
+                        .iter()
+                        .map(|(field_name, field_mapping)| {
+                            // Get the value of the field from the representation
+                            let val = representation.get(field_name.as_str()).ok_or(
+                                error::Error::FieldNotFoundInEntityRepresentation {
+                                    field_name: field_name.clone(),
+                                },
+                            )?;
+                            Ok(Expression::LocalField(
+                                LocalFieldComparison::BinaryComparison {
+                                    column: ComparisonTarget::Column {
+                                        name: field_mapping.column.clone(),
+                                        field_path: vec![], // We don't support nested fields in the key fields, so the path is empty
+                                    },
+                                    operator: field_mapping.equal_operator.clone(),
+                                    value: ComparisonValue::Scalar { value: val.clone() },
+                                },
+                            ))
+                        })
+                        .collect::<Result<_, error::Error>>()?;
+
+                    let query_filter = filter::QueryFilter {
+                        where_clause: None,
+                        additional_filter: Some(Expression::mk_and(filter_clause_expressions)),
+                    };
+
+                    ModelEntitySelection::Ir(model_selection::model_selection_ir(
+                        &new_selection_set,
+                        &typename_mapping.type_name,
+                        model_source,
+                        BTreeMap::new(), // arguments
+                        query_filter,
+                        role_model_select_permission,
+                        None, // limit
+                        None, // offset
+                        None, // order_by
+                        models,
+                        commands,
+                        object_types,
+                        session,
+                        request_headers,
+                        // Get all the models/commands that were used as relationships
+                        &mut usage_counts,
+                    )?)
+                }
             };
-            let mut usage_counts = UsagesCounts::new();
-            let model_selection = model_selection::model_selection_ir(
-                &new_selection_set,
-                &typename_mapping.type_name,
-                model_source,
-                BTreeMap::new(),
-                query_filter,
-                role_model_select_permission,
-                None, // limit
-                None, // offset
-                None, // order_by
-                models,
-                commands,
-                object_types,
-                session,
-                request_headers,
-                // Get all the models/commands that were used as relationships
-                &mut usage_counts,
-            )?;
+
             entity_selects.push(EntitySelect {
                 field_name: &field_call.name,
-                model_selection: ModelEntitySelection::Ir(model_selection),
+                model_selection,
                 selection_set: new_selection_set,
                 usage_counts,
             });

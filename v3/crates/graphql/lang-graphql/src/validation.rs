@@ -11,7 +11,6 @@ mod collect;
 mod error;
 pub mod input;
 pub mod selection_set;
-mod variables;
 
 pub use error::*;
 use indexmap::IndexMap;
@@ -147,8 +146,35 @@ pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::Name
     operation: &'q executable::OperationDefinition,
     variable_values: &'q VariableValues,
 ) -> Result<normalized::Operation<'s, S>> {
-    // Build variables context
-    let variables = variables::Variables::new(operation, variable_values, schema)?;
+    let mut variables = HashMap::new();
+    if let Some(variable_definitions) = &operation.variable_definitions {
+        for definition in &variable_definitions.item {
+            let definition = &definition.item;
+            let variable_name = &definition.name.item;
+            let variable_base_type = definition.var_type.item.underlying_type();
+            let type_info = schema
+                .get_type(variable_base_type)
+                .ok_or_else(|| Error::UnknownType(variable_base_type.clone()))?
+                .as_input_type()
+                .ok_or_else(|| Error::NotInputType {
+                    variable_name: variable_name.clone(),
+                    type_name: variable_base_type.clone(),
+                })?;
+            if variables
+                .insert(variable_name, (definition, type_info))
+                .is_some()
+            {
+                return Err(Error::DuplicateVariableDeclarations {
+                    variable_name: variable_name.clone(),
+                });
+            }
+        }
+    }
+    let variables_context = input::value::Variables {
+        definitions: &variables,
+        values: variable_values,
+    };
+
     let selection_set_type_name = match operation.ty {
         ast::OperationType::Query => &schema.query_type,
         ast::OperationType::Mutation => schema
@@ -173,7 +199,7 @@ pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::Name
         namespaced_getter,
         schema,
         fragments,
-        &variables,
+        &variables_context,
         &selection_set_type_info,
         &operation.selection_set.item,
     )?;

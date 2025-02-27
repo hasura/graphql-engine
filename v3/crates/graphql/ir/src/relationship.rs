@@ -19,8 +19,11 @@ use super::{
     permissions,
     selection_set::{self, generate_selection_set_open_dd_ir, FieldSelection},
 };
-use crate::error;
 use crate::order_by;
+use crate::{
+    error,
+    query_root::select_aggregate::{aggregate_query, AggregateQuery},
+};
 use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, InputAnnotation,
     ModelAggregateRelationshipAnnotation, ModelInputAnnotation, ModelRelationshipAnnotation, GDS,
@@ -372,6 +375,10 @@ pub fn generate_model_relationship_ir<'s>(
 pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
     field: &Field<'s, GDS>,
     relationship_annotation: &'s ModelAggregateRelationshipAnnotation,
+    models: &'s IndexMap<
+        Qualified<open_dds::models::ModelName>,
+        metadata_resolve::ModelWithPermissions,
+    >,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::RelationshipAggregateSelection, error::Error> {
     // Add the target model being used in the usage counts
@@ -380,13 +387,43 @@ pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
     let selection =
         selection_set::generate_aggregate_selection_set_open_dd_ir(&field.selection_set)?;
 
+    let field_call = field.field_call()?;
+
+    let model_source = models
+        .get(&relationship_annotation.model_name)
+        .ok_or_else(
+            || error::InternalDeveloperError::TargetModelNotFoundForRelationship {
+                model_name: relationship_annotation.model_name.clone(),
+                relationship_name: relationship_annotation.relationship_name.clone(),
+            },
+        )?
+        .model
+        .source
+        .as_ref()
+        .ok_or_else(|| error::InternalEngineError::InternalGeneric {
+            description: format!("Model {} has no source", relationship_annotation.model_name),
+        })?;
+
+    let AggregateQuery {
+        limit,
+        offset,
+        where_clause,
+        model_arguments,
+        order_by,
+    } = aggregate_query(
+        field_call,
+        &relationship_annotation.model_name,
+        model_source,
+        usage_counts,
+    )?;
+
     let target = open_dds::query::RelationshipTarget {
         relationship_name: relationship_annotation.relationship_name.clone(),
-        arguments: IndexMap::new(),
-        filter: None,
-        limit: None,
-        offset: None,
-        order_by: vec![],
+        arguments: model_arguments.unwrap_or_default(),
+        filter: where_clause,
+        limit,
+        offset,
+        order_by,
     };
 
     Ok(open_dds::query::RelationshipAggregateSelection { selection, target })
@@ -520,7 +557,7 @@ pub fn generate_command_relationship_open_dd_ir<'s>(
         filter: None,
         limit: None,
         offset: None,
-        order_by: vec![], // TODO: don't ignore me
+        order_by: vec![],
     };
 
     let relationship_selection = open_dds::query::RelationshipSelection {

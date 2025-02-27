@@ -59,7 +59,7 @@ const config = {
         return DOCS_SERVER_URLS[mode ?? 'development'];
       }
     })(),
-    hasuraVersion: 3,
+    hasuraVersion: 2,
     DEV_TOKEN: process.env.DEV_TOKEN,
   },
   scripts: [],

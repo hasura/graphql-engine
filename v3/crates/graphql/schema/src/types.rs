@@ -66,6 +66,7 @@ pub struct NodeFieldTypeNameMapping {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct EntityFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
+    pub model_name: Qualified<models::ModelName>,
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
     pub model_source: Option<Arc<metadata_resolve::ModelSource>>,

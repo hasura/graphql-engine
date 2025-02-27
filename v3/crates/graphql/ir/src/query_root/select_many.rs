@@ -201,6 +201,20 @@ pub fn select_many_generate_ir<'n, 's>(
                 )?,
             };
 
+            let limit: Option<usize> = limit
+                .map(|limit| {
+                    usize::try_from(limit)
+                        .map_err(|_| error::Error::InvalidLimitValue { value: limit })
+                })
+                .transpose()?;
+
+            let offset: Option<usize> = offset
+                .map(|offset| {
+                    usize::try_from(offset)
+                        .map_err(|_| error::Error::InvalidOffsetValue { value: offset })
+                })
+                .transpose()?;
+
             ModelSelectManySelection::OpenDd(model_selection::model_selection_open_dd_ir(
                 &field.selection_set,
                 model_name,
