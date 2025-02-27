@@ -151,7 +151,7 @@ pub fn bench_execute(
         |b, (runtime, schema)| {
             b.to_async(*runtime).iter(|| async {
                 generate_ir(
-                    GraphqlRequestPipeline::Old,
+                    GraphqlRequestPipeline::OpenDd,
                     schema,
                     &gds.metadata,
                     &session,
@@ -164,7 +164,7 @@ pub fn bench_execute(
     );
 
     let ir = generate_ir(
-        GraphqlRequestPipeline::Old,
+        GraphqlRequestPipeline::OpenDd,
         &schema,
         &gds.metadata,
         &session,
@@ -226,7 +226,7 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 execute_query_internal(
-                    GraphqlRequestPipeline::Old,
+                    GraphqlRequestPipeline::OpenDd,
                     ExposeInternalErrors::Expose,
                     &http_context,
                     schema,
