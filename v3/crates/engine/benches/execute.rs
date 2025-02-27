@@ -3,12 +3,10 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Samplin
 use engine_types::{ExposeInternalErrors, HttpContext};
 use graphql_frontend::{
     execute_mutation_plan, execute_query_internal, execute_query_plan, generate_ir,
-    ExecuteQueryResult, RootFieldResult,
 };
 use graphql_ir::{generate_request_plan, GraphqlRequestPipeline, RequestPlan};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
-use indexmap::IndexMap;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;
 use std::collections::BTreeMap;
@@ -194,25 +192,24 @@ pub fn bench_execute(
                     .unwrap()
                 {
                     RequestPlan::QueryPlan(query_plan) => {
-                        execute_query_plan(&http_context, query_plan, None).await
+                        let execute_query_result =
+                            execute_query_plan(&http_context, query_plan, None).await;
+                        assert!(
+                            !execute_query_result.root_fields.is_empty(),
+                            "IndexMap is empty!"
+                        );
                     }
                     RequestPlan::MutationPlan(mutation_plan) => {
-                        execute_mutation_plan(&http_context, mutation_plan, None).await
+                        let execute_query_result =
+                            execute_mutation_plan(&http_context, mutation_plan, None).await;
+                        assert!(
+                            !execute_query_result.root_fields.is_empty(),
+                            "IndexMap is empty!"
+                        );
                     }
-                    RequestPlan::SubscriptionPlan(alias, subscription_plan) => {
+                    RequestPlan::SubscriptionPlan(_alias, _subscription_plan) => {
                         // subscriptions are not supported
-                        let result = Err(execute::FieldError::SubscriptionsNotSupported);
-                        let root_field_result = RootFieldResult {
-                            is_nullable: subscription_plan
-                                .subscription_execution
-                                .process_response_as
-                                .is_nullable(),
-                            result,
-                            headers: None,
-                        };
-                        ExecuteQueryResult {
-                            root_fields: IndexMap::from([(alias, root_field_result)]),
-                        }
+                        panic!("subscriptions not expected here")
                     }
                 }
             });
