@@ -349,7 +349,8 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         )
                         .await;
                         let http_response = response.inner();
-                        let graphql_ws_response = run_query_graphql_ws(
+                        let graphql_ws_response_old = run_query_graphql_ws(
+                            GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
@@ -362,10 +363,26 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
                         compare_graphql_responses(
                             &http_response,
-                            &graphql_ws_response,
+                            &graphql_ws_response_old,
                             "websockets",
                         );
-
+                        let graphql_ws_response_new = run_query_graphql_ws(
+                            GraphqlRequestPipeline::OpenDd,
+                            ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            arc_resolved_metadata.clone(),
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(
+                            &http_response,
+                            &graphql_ws_response_new,
+                            "websockets",
+                        );
                         // run tests with new pipeline and diff them
                         let (_, open_dd_response) = execute_query(
                             GraphqlRequestPipeline::OpenDd, // the interesting part
@@ -409,7 +426,8 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         )
                         .await;
                         let http_response = response.inner();
-                        let graphql_ws_response = run_query_graphql_ws(
+                        let graphql_ws_response_old = run_query_graphql_ws(
+                            GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
@@ -422,7 +440,24 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         .await;
                         compare_graphql_responses(
                             &http_response,
-                            &graphql_ws_response,
+                            &graphql_ws_response_old,
+                            "websockets",
+                        );
+                        let graphql_ws_response_new = run_query_graphql_ws(
+                            GraphqlRequestPipeline::OpenDd,
+                            ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            arc_resolved_metadata.clone(),
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(
+                            &http_response,
+                            &graphql_ws_response_new,
                             "websockets",
                         );
 
@@ -626,6 +661,7 @@ fn compare_graphql_responses(
 
 /// Execute a GraphQL query over a dummy WebSocket connection.
 async fn run_query_graphql_ws(
+    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
@@ -647,7 +683,7 @@ async fn run_query_graphql_ws(
     });
 
     let context = graphql_ws::Context {
-        request_pipeline: GraphqlRequestPipeline::Old,
+        request_pipeline,
         connection_expiry: graphql_ws::ConnectionExpiry::Never,
         http_context: http_context.clone(),
         expose_internal_errors,

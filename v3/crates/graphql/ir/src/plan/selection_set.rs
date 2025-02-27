@@ -356,6 +356,7 @@ pub(crate) fn plan_selection_set(
                     },
                     remote_join_type: RemoteJoinType::ToCommand,
                 };
+
                 join_locations.locations.insert(
                     field_name.as_str().to_owned(),
                     Location {

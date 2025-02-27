@@ -177,6 +177,7 @@ fn plan_subscription<'s, 'ir>(
                     }
                 }
             }?;
+
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(SubscriptionSelect {
                 selection_set,

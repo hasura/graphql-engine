@@ -519,14 +519,16 @@ fn from_model_relationship(
             // Collect relationships from the generated query above
             collect_relationships.append(&mut ndc_relationships);
 
-            // Collect remote joins, adding local relationship context to them
-            remote_join_executions.locations.insert(
-                relationship_name.to_string(),
-                Location {
-                    join_node: JoinNode::Local(LocationKind::LocalRelationship),
-                    rest: new_remote_join_executions,
-                },
-            );
+            if !new_remote_join_executions.is_empty() {
+                // Collect remote joins, adding local relationship context to them
+                remote_join_executions.locations.insert(
+                    relationship_name.to_string(),
+                    Location {
+                        join_node: JoinNode::Local(LocationKind::LocalRelationship),
+                        rest: new_remote_join_executions,
+                    },
+                );
+            }
 
             // Collect remote predicates
             remote_predicates.0.extend(new_remote_predicates.0);
@@ -752,14 +754,16 @@ fn from_command_relationship(
             collect_relationships.append(&mut ndc_relationships);
             remote_predicates.0.extend(new_remote_predicates.0);
 
-            // Collect any remote joins, adding local relationship context
-            remote_join_executions.locations.insert(
-                relationship_name.to_string(),
-                Location {
-                    join_node: JoinNode::Local(LocationKind::LocalRelationship),
-                    rest: new_remote_join_executions,
-                },
-            );
+            if !new_remote_join_executions.locations.is_empty() {
+                // Collect any remote joins, adding local relationship context
+                remote_join_executions.locations.insert(
+                    relationship_name.to_string(),
+                    Location {
+                        join_node: JoinNode::Local(LocationKind::LocalRelationship),
+                        rest: new_remote_join_executions,
+                    },
+                );
+            }
 
             let ndc_field = Field::Relationship {
                 relationship: ndc_relationship_name,
