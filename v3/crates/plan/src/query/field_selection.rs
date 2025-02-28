@@ -17,6 +17,7 @@ use metadata_resolve::{
 use open_dds::{
     arguments::ArgumentName,
     commands::DataConnectorCommand,
+    models::ModelName,
     query::{
         Alias, CommandSelection, CommandTarget, ModelSelection, ModelTarget, ObjectFieldSelection,
         ObjectFieldTarget, ObjectSubSelection, RelationshipAggregateSelection,
@@ -431,11 +432,14 @@ fn from_model_relationship(
                 join_mapping,
                 phantom_fields,
                 mut relationship_join_filter_expressions,
+                arguments: new_arguments,
             } = calculate_remote_relationship_fields_for_model_target(
                 object_type_name,
                 relationship_name,
+                target_model_name,
                 &model_relationship_target.mappings,
                 source_type_mappings,
+                &target_source.model.argument_mappings,
             )
             .map_err(PlanError::Relationship)?;
 
@@ -466,6 +470,9 @@ fn from_model_relationship(
                 ));
             }
 
+            // add the new arguments
+            query_execution.arguments.extend(new_arguments);
+
             let remote_join = RemoteJoin {
                 target_ndc_execution: query_execution,
                 target_data_connector: target_source.model.data_connector.clone(),
@@ -489,6 +496,7 @@ fn from_model_relationship(
             let ndc_relationship_name = record_local_model_relationship(
                 object_type_name,
                 relationship_name,
+                target_model_name,
                 &target_source,
                 source_type_mappings,
                 source_data_connector,
@@ -779,6 +787,7 @@ fn from_command_relationship(
 fn record_local_model_relationship(
     object_type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
+    target_model_name: &Qualified<ModelName>,
     target_source: &metadata_resolve::ModelTargetSource,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     source_data_connector: &metadata_resolve::DataConnectorLink,
@@ -791,6 +800,7 @@ fn record_local_model_relationship(
         source_type: object_type_name,
         source_data_connector,
         source_type_mappings,
+        target_model_name,
         target_source: &target_source.model,
         target_type: &model_relationship_target.target_typename,
         mappings: &model_relationship_target.mappings,
@@ -865,6 +875,7 @@ fn from_relationship_aggregate_selection(
                 source_type: object_type_name,
                 source_data_connector,
                 source_type_mappings,
+                target_model_name,
                 target_source: target_model_source,
                 target_type: &model_relationship_target.target_typename,
                 mappings: &model_relationship_target.mappings,

@@ -138,7 +138,14 @@ pub enum RelationshipTarget {
 #[serde(rename_all = "snake_case")]
 pub struct RelationshipModelMapping {
     pub source_field: FieldName,
-    pub target_field: FieldName,
+    pub target: RelationshipModelMappingTarget,
+}
+
+#[derive(Serialize, JsonSchema, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum RelationshipModelMappingTarget {
+    Field(FieldName),
+    Argument(ArgumentName),
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -212,7 +219,9 @@ mod tests {
                 ),
                 mapping: vec![RelationshipModelMapping {
                     source_field: FieldName::new(identifier!("product_id")),
-                    target_field: FieldName::new(identifier!("id")),
+                    target: RelationshipModelMappingTarget::Field(FieldName::new(identifier!(
+                        "id"
+                    ))),
                 }],
             },
             deprecated: false,

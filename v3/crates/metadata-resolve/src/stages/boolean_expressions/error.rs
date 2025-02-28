@@ -128,6 +128,15 @@ pub enum BooleanExpressionError {
         model_name: Qualified<ModelName>,
     },
 
+    #[error("The relationship '{relationship_name}' cannot be used as a comparable relationship in boolean expression type '{boolean_expression_type_name}' because it is a remote relationship with an argument mapping target. Relationship '{relationship_name}' on type '{source_type}' has source field '{source_field}' mapped to target argument '{target_argument}'")]
+    RemoteComparableRelationshipWithArgumentMappingTargetNotSupported {
+        boolean_expression_type_name: Qualified<CustomTypeName>,
+        relationship_name: open_dds::relationships::RelationshipName,
+        source_type: Qualified<CustomTypeName>,
+        source_field: FieldName,
+        target_argument: open_dds::query::ArgumentName,
+    },
+
     #[error("{0}")]
     GraphqlConfigError(#[from] graphql_config::GraphqlConfigError),
 

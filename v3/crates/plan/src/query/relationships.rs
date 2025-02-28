@@ -7,13 +7,14 @@ use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
     data_connector::{CollectionName, DataConnectorColumnName},
+    models::ModelName,
     relationships::{RelationshipName, RelationshipType},
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use plan_types::{
     Argument, ComparisonTarget, ComparisonValue, Field, LocalCommandRelationshipInfo,
     LocalFieldComparison, LocalModelRelationshipInfo, NdcFieldAlias, Relationship,
-    ResolvedFilterExpression, SourceFieldAlias, TargetField, VariableName,
+    ResolvedFilterExpression, SourceFieldAlias, TargetField,
 };
 use std::collections::{BTreeMap, HashMap};
 
@@ -26,24 +27,19 @@ pub fn process_model_relationship_definition(
         source_type,
         source_data_connector: _,
         source_type_mappings,
+        target_model_name,
         target_source,
         target_type: _,
         mappings,
     } = relationship_info;
 
     let mut column_mapping = BTreeMap::new();
+    let mut arguments = BTreeMap::new();
     for metadata_resolve::RelationshipModelMapping {
         source_field: source_field_path,
-        target_field: _,
-        target_ndc_column,
+        target,
     } in mappings
     {
-        let target_column = target_ndc_column.as_ref().ok_or_else(|| {
-            PlanError::Internal(format!(
-                "No column mapping for relationship {relationship_name} on {source_type}"
-            ))
-        })?;
-
         let source_column = get_relationship_field_mapping_of_field_name(
             source_type_mappings,
             source_type,
@@ -52,23 +48,72 @@ pub fn process_model_relationship_definition(
         )
         .map_err(RelationshipError::RelationshipFieldMappingError)?;
 
-        if column_mapping
-            .insert(source_column.column, target_column.column.clone())
-            .is_some()
-        {
-            Err(PlanError::Relationship(
-                RelationshipError::MappingExistsInRelationship {
-                    source_column: source_field_path.field_name.clone(),
-                    relationship_name: relationship_name.clone(),
+        match target {
+            metadata_resolve::RelationshipModelMappingTarget::ModelField(
+                metadata_resolve::RelationshipModelMappingFieldTarget {
+                    target_field: _,
+                    target_ndc_column,
                 },
-            ))?;
+            ) => {
+                let target_column = target_ndc_column.as_ref().ok_or_else(|| {
+                    PlanError::Internal(format!(
+                        "No column mapping for relationship {relationship_name} on {source_type}"
+                    ))
+                })?;
+
+                if column_mapping
+                    .insert(source_column.column, target_column.column.clone())
+                    .is_some()
+                {
+                    Err(PlanError::Relationship(
+                        RelationshipError::MappingExistsInRelationship {
+                            source_column: source_field_path.field_name.clone(),
+                            relationship_name: relationship_name.clone(),
+                        },
+                    ))?;
+                }
+            }
+            metadata_resolve::RelationshipModelMappingTarget::Argument(argument_name) => {
+                let relationship_argument = plan_types::RelationshipArgument::Column {
+                    name: source_column.column,
+                };
+
+                let connector_argument_name = target_source
+                    .argument_mappings
+                    .get(argument_name)
+                    .ok_or_else(|| {
+                        PlanError::Relationship(
+                            RelationshipError::MissingArgumentMappingInModelRelationship {
+                                source_type: source_type.clone(),
+                                relationship_name: relationship_name.clone(),
+                                model_name: target_model_name.clone(),
+                                argument_name: argument_name.clone(),
+                            },
+                        )
+                    })?;
+
+                if arguments
+                    .insert(
+                        DataConnectorArgumentName::from(connector_argument_name.as_str()),
+                        relationship_argument,
+                    )
+                    .is_some()
+                {
+                    Err(PlanError::Relationship(
+                        RelationshipError::MappingExistsInRelationship {
+                            source_column: source_field_path.field_name.clone(),
+                            relationship_name: relationship_name.clone(),
+                        },
+                    ))?;
+                }
+            }
         }
     }
     let relationship = Relationship {
         column_mapping,
         relationship_type: relationship_type.clone(),
         target_collection: target_source.collection.clone(),
-        arguments: BTreeMap::new(),
+        arguments,
     };
     Ok(relationship)
 }
@@ -123,8 +168,8 @@ pub fn process_command_relationship_definition(
             .is_some()
         {
             Err(PlanError::Relationship(
-                RelationshipError::MappingExistsInRelationship {
-                    source_column: source_field_path.field_name.clone(),
+                RelationshipError::ArgumentMappingExistsInRelationship {
+                    argument_name: target_argument.clone(),
                     relationship_name: relationship_name.clone(),
                 },
             ))?;
@@ -178,8 +223,10 @@ pub fn calculate_remote_relationship_fields_for_command_target(
 
         phantom_fields.insert(processed_field.0, processed_field.1);
 
+        let target_argument = TargetField::Argument(argument_name.clone());
+
         // add argument referencing variable
-        let target_value_variable = VariableName(format!("${}", argument_name.as_str()));
+        let target_value_variable = target_argument.make_variable_name();
 
         let data_connector_argument_name =
             target_argument_mappings.get(argument_name).ok_or_else(|| {
@@ -202,10 +249,7 @@ pub fn calculate_remote_relationship_fields_for_command_target(
         // add join mapping
         join_mapping.insert(
             source_field.field_name.clone(),
-            (
-                ndc_field_alias,
-                TargetField::CommandField(argument_name.clone()),
-            ),
+            (ndc_field_alias, target_argument),
         );
     }
 
@@ -220,22 +264,25 @@ pub struct ModelRemoteRelationshipParts {
     pub join_mapping: HashMap<FieldName, (SourceFieldAlias, TargetField)>,
     pub phantom_fields: BTreeMap<NdcFieldAlias, Field>,
     pub relationship_join_filter_expressions: Vec<ResolvedFilterExpression>,
+    pub arguments: IndexMap<DataConnectorArgumentName, Argument>,
 }
 
 pub fn calculate_remote_relationship_fields_for_model_target(
     object_type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
+    model_name: &Qualified<ModelName>,
     relationship_model_mappings: &Vec<RelationshipModelMapping>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    target_argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
 ) -> Result<ModelRemoteRelationshipParts, RelationshipError> {
     let mut join_mapping = HashMap::new();
     let mut phantom_fields = BTreeMap::new();
     let mut relationship_join_filter_expressions = vec![];
+    let mut arguments = IndexMap::new();
 
     for metadata_resolve::RelationshipModelMapping {
         source_field,
-        target_field,
-        target_ndc_column,
+        target,
     } in relationship_model_mappings
     {
         let source_column = get_relationship_field_mapping_of_field_name(
@@ -253,50 +300,86 @@ pub fn calculate_remote_relationship_fields_for_model_target(
 
         phantom_fields.insert(processed_field.0, processed_field.1);
 
-        let target_ndc_column =
-            target_ndc_column
-                .clone()
-                .ok_or_else(|| RelationshipError::MissingTargetColumn {
-                    source_field: source_field.field_name.clone(),
-                    target_field: target_field.field_name.clone(),
-                    relationship_name: relationship_name.clone(),
+        match target {
+            metadata_resolve::RelationshipModelMappingTarget::ModelField(
+                metadata_resolve::RelationshipModelMappingFieldTarget {
+                    target_ndc_column,
+                    target_field,
+                },
+            ) => {
+                let target_ndc_column = target_ndc_column.clone().ok_or_else(|| {
+                    RelationshipError::MissingTargetColumn {
+                        source_field: source_field.field_name.clone(),
+                        target_field: target_field.field_name.clone(),
+                        relationship_name: relationship_name.clone(),
+                    }
                 })?;
 
-        // add join mapping
-        join_mapping.insert(
-            source_field.field_name.clone(),
-            (
-                ndc_field_alias,
-                TargetField::ModelField((
+                // add join mapping
+                let target_model_field = TargetField::ModelField(
                     target_field.field_name.clone(),
                     target_ndc_column.clone(),
-                )),
-            ),
-        );
+                );
+                let target_value_variable = target_model_field.make_variable_name();
+                join_mapping.insert(
+                    source_field.field_name.clone(),
+                    (ndc_field_alias, target_model_field),
+                );
 
-        // add extra comparison to filter for target model
-        let target_value_variable = format!("${}", &target_ndc_column.column);
-        let comparison_exp = LocalFieldComparison::BinaryComparison {
-            column: ComparisonTarget::Column {
-                name: target_ndc_column.column.clone(),
-                field_path: vec![],
-            },
-            operator: target_ndc_column.equal_operator.clone(),
-            value: ComparisonValue::Variable {
-                name: VariableName(target_value_variable),
-            },
-        };
+                // add extra comparison to filter for target model
+                let comparison_exp = LocalFieldComparison::BinaryComparison {
+                    column: ComparisonTarget::Column {
+                        name: target_ndc_column.column.clone(),
+                        field_path: vec![],
+                    },
+                    operator: target_ndc_column.equal_operator.clone(),
+                    value: ComparisonValue::Variable {
+                        name: target_value_variable,
+                    },
+                };
 
-        // collect these as we go
-        relationship_join_filter_expressions.push(ResolvedFilterExpression::LocalFieldComparison(
-            comparison_exp,
-        ));
+                // collect these as we go
+                relationship_join_filter_expressions.push(
+                    ResolvedFilterExpression::LocalFieldComparison(comparison_exp),
+                );
+            }
+            metadata_resolve::RelationshipModelMappingTarget::Argument(argument_name) => {
+                // add argument referencing variable
+                let target_argument = TargetField::Argument(argument_name.clone());
+                let target_value_variable = target_argument.make_variable_name();
+
+                let data_connector_argument_name =
+                    target_argument_mappings.get(argument_name).ok_or_else(|| {
+                        RelationshipError::MissingArgumentMappingInModelRelationship {
+                            source_type: object_type_name.clone(),
+                            relationship_name: relationship_name.clone(),
+                            model_name: model_name.clone(),
+                            argument_name: argument_name.clone(),
+                        }
+                    })?;
+
+                // collect these as we go
+                arguments.insert(
+                    data_connector_argument_name.clone(),
+                    Argument::Variable {
+                        name: target_value_variable,
+                    },
+                );
+
+                // add join mapping
+                join_mapping.insert(
+                    source_field.field_name.clone(),
+                    (ndc_field_alias, target_argument),
+                );
+            }
+        }
     }
 
     Ok(ModelRemoteRelationshipParts {
         join_mapping,
         phantom_fields,
         relationship_join_filter_expressions,
+        arguments,
     })
 }
 

@@ -22,11 +22,12 @@ pub use types::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
     BooleanExpressionGraphqlFieldConfig, BooleanExpressionIssue, BooleanExpressionTypeIdentifier,
     BooleanExpressionTypes, BooleanExpressionsOutput, ComparableFieldKind,
-    ComparisonExpressionInfo, DataConnectorType, IncludeLogicalOperators,
-    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionGraphqlConfig,
-    ObjectComparisonExpressionInfo, ObjectComparisonKind, OperatorMapping,
-    ResolvedObjectBooleanExpressionType, ResolvedObjectBooleanExpressionTypeFields,
-    ScalarBooleanExpressionGraphqlConfig, ScalarComparisonKind,
+    ComparableRelationshipExecutionStrategy, ComparisonExpressionInfo, DataConnectorType,
+    IncludeLogicalOperators, ObjectBooleanExpressionDataConnector,
+    ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo, ObjectComparisonKind,
+    OperatorMapping, ResolvedObjectBooleanExpressionType,
+    ResolvedObjectBooleanExpressionTypeFields, ScalarBooleanExpressionGraphqlConfig,
+    ScalarComparisonKind,
 };
 
 pub fn resolve(
@@ -181,4 +182,23 @@ pub fn resolve(
         // TODO: make sure we are adding new types to graphql_types
         issues,
     })
+}
+
+/// Determines the strategy for executing relationship predicates based on the connectors and their capabilities.
+pub fn get_comparable_relationship_execution_strategy(
+    source_connector_name: &Qualified<DataConnectorName>,
+    target_connector_name: &Qualified<DataConnectorName>,
+    target_source_relationship_capabilities: Option<
+        &data_connectors::DataConnectorRelationshipCapabilities,
+    >,
+) -> ComparableRelationshipExecutionStrategy {
+    // It's a local relationship if the source and target connectors are the same and
+    // the connector supports relationships.
+    if target_connector_name == source_connector_name
+        && target_source_relationship_capabilities.is_some_and(|r| r.supports_relation_comparisons)
+    {
+        ComparableRelationshipExecutionStrategy::NDCPushdown
+    } else {
+        ComparableRelationshipExecutionStrategy::InEngine
+    }
 }

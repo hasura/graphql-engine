@@ -23,11 +23,12 @@ pub use stages::aggregates::{
     AggregationFunctionInfo, DataConnectorAggregationFunctionInfo,
 };
 pub use stages::boolean_expressions::{
-    BooleanExpressionComparableRelationship, BooleanExpressionError,
-    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
-    IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo,
-    ObjectComparisonKind, OperatorMapping, ResolvedObjectBooleanExpressionType,
-    ScalarBooleanExpressionGraphqlConfig, ScalarComparisonKind,
+    get_comparable_relationship_execution_strategy, BooleanExpressionComparableRelationship,
+    BooleanExpressionError, BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig,
+    ComparableRelationshipExecutionStrategy, ComparisonExpressionInfo, IncludeLogicalOperators,
+    ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo, ObjectComparisonKind,
+    OperatorMapping, ResolvedObjectBooleanExpressionType, ScalarBooleanExpressionGraphqlConfig,
+    ScalarComparisonKind,
 };
 pub use stages::data_connectors::{
     ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset, NdcVersion,
@@ -46,7 +47,8 @@ pub use stages::object_relationships::{
     field_selection_relationship_execution_category, AggregateRelationship,
     CommandRelationshipTarget, FieldNestedness, ModelRelationshipTarget,
     ObjectTypeWithRelationships, RelationshipCapabilities, RelationshipCommandMapping,
-    RelationshipExecutionCategory, RelationshipField, RelationshipModelMapping, RelationshipTarget,
+    RelationshipExecutionCategory, RelationshipField, RelationshipModelMapping,
+    RelationshipModelMappingFieldTarget, RelationshipModelMappingTarget, RelationshipTarget,
 };
 pub use stages::object_types::{
     AggregateFunctions, ComparisonOperators, ExtractionFunctions, FieldArgumentInfo, FieldMapping,

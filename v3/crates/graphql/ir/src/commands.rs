@@ -13,6 +13,7 @@ use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName};
+use plan_types::VariableName;
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -78,7 +79,7 @@ pub struct FunctionBasedCommand<'s> {
     pub function_name: &'s FunctionName,
 
     /// Variable arguments to be used for remote joins
-    pub variable_arguments: BTreeMap<DataConnectorArgumentName, String>,
+    pub variable_arguments: BTreeMap<DataConnectorArgumentName, VariableName>,
 }
 
 /// IR for the 'procedure based command' operations

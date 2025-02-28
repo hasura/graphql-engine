@@ -14,6 +14,8 @@
 
 - Added validation for command output types to ensure they reference valid types
   in the schema.
+- Relationships that target models are now able to provide mappings that target
+  model arguments.
 
 ### Fixed
 

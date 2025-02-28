@@ -536,16 +536,51 @@
       "type": "object",
       "required": [
         "source_field",
-        "target_field"
+        "target"
       ],
       "properties": {
         "source_field": {
           "$ref": "#/definitions/FieldName"
         },
-        "target_field": {
-          "$ref": "#/definitions/FieldName"
+        "target": {
+          "$ref": "#/definitions/RelationshipModelMappingTarget"
         }
       }
+    },
+    "RelationshipModelMappingTarget": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "field"
+          ],
+          "properties": {
+            "field": {
+              "$ref": "#/definitions/FieldName"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "argument"
+          ],
+          "properties": {
+            "argument": {
+              "$ref": "#/definitions/ArgumentName"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ArgumentName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
+      "title": "ArgumentName",
+      "description": "The name of an argument.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "UnTaggedQualifiedTypeName": {
       "anyOf": [
@@ -583,13 +618,6 @@
           "$ref": "#/definitions/ArgumentName"
         }
       }
-    },
-    "ArgumentName": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
-      "title": "ArgumentName",
-      "description": "The name of an argument.",
-      "type": "string",
-      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "ArgumentPresetsUsage": {
       "type": "object",

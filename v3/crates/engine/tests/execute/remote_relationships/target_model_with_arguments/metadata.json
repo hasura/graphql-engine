@@ -1,0 +1,235 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "actor",
+            "fields": [
+              {
+                "name": "actor_id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Actor"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom_no_relationships",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "actor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "ActorsByMovie",
+            "objectType": "actor",
+            "arguments": [
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              }
+            ],
+            "source": {
+              "dataConnectorName": "custom_no_relationships",
+              "collection": "actors_by_movie"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ActorsByMovieByID",
+                  "uniqueIdentifier": ["actor_id"]
+                }
+              ],
+              "argumentsInputType": "ActorsByMovieArgs"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "ActorsByMovieAgain",
+            "objectType": "actor",
+            "arguments": [
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              }
+            ],
+            "source": {
+              "dataConnectorName": "custom_no_relationships",
+              "collection": "actors_by_movie"
+            }
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "ActorsByMovieAgain",
+            "sourceType": "actor",
+            "target": {
+              "model": {
+                "name": "ActorsByMovieAgain",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "movie_id"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "ActorsByMovie",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "ActorsByMovieAgain",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "actor_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-actor-id"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "require_graphql_config": false,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true,
+    "require_unique_command_graphql_names": true,
+    "json_session_variables": true,
+    "disallow_array_field_compared_with_scalar_boolean_type": true,
+    "allow_boolean_expression_fields_without_graphql": true,
+    "require_valid_ndc_v01_version": true,
+    "require_unique_model_graphql_names": true,
+    "disallow_object_boolean_expression_type": true,
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true,
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true,
+    "require_nested_support_for_order_by_expressions": true,
+    "disallow_model_v1_ordering_non_scalar_fields": true,
+    "disallow_array_relationship_in_order_by": true,
+    "disallow_duplicate_operator_definitions_for_scalar_type": true,
+    "disallow_multidimensional_arrays_in_boolean_expressions": true,
+    "disallow_duplicate_names_across_types_and_expressions": true,
+    "disallow_duplicate_aggregate_function_definitions_for_scalar_type": true,
+    "typecheck_object_type_values_in_presets": true,
+    "disallow_data_connector_scalar_types_mismatch": true,
+    "check_object_type_fields_exist": true,
+    "disallow_order_by_fields_with_field_arguments": true,
+    "disallow_unsupported_orderable_relationships": true,
+    "disallow_local_relationships_on_data_connectors_without_relationships_or_variables": true,
+    "disallow_unknown_values_in_arguments": true,
+    "disallow_recursive_object_types": true
+  }
+}

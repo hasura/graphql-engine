@@ -17,7 +17,7 @@ use open_dds::{
 };
 use plan::UnresolvedArgument;
 use plan::{count_model, process_argument_presets_for_model};
-use plan_types::{Expression, UsagesCounts};
+use plan_types::{Expression, UsagesCounts, VariableName};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -51,6 +51,9 @@ pub struct ModelSelection<'s> {
 
     // Aggregates requested of the model
     pub aggregate_selection: Option<plan_types::AggregateSelectionSet>,
+
+    /// Variable arguments to be used for remote joins
+    pub variable_arguments: BTreeMap<DataConnectorArgumentName, VariableName>,
 }
 
 struct ModelSelectAggregateArguments<'s> {
@@ -212,6 +215,7 @@ pub fn model_selection_ir<'s>(
         order_by,
         selection: Some(selection),
         aggregate_selection: None,
+        variable_arguments: BTreeMap::new(),
     })
 }
 
@@ -522,6 +526,7 @@ fn model_aggregate_selection_ir<'s>(
         order_by,
         selection: None,
         aggregate_selection: Some(aggregate_selection),
+        variable_arguments: BTreeMap::new(),
     })
 }
 

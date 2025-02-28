@@ -131,7 +131,7 @@
                         "operator": "_eq",
                         "value": {
                           "type": "variable",
-                          "name": "$AlbumId"
+                          "name": "$field_AlbumId"
                         }
                       }
                     },
@@ -401,7 +401,7 @@
                         "operator": "_eq",
                         "value": {
                           "type": "variable",
-                          "name": "$AlbumId"
+                          "name": "$field_AlbumId"
                         }
                       }
                     },
@@ -574,7 +574,7 @@
                         "operator": "_eq",
                         "value": {
                           "type": "variable",
-                          "name": "$AlbumId"
+                          "name": "$field_AlbumId"
                         }
                       }
                     },

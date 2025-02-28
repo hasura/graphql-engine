@@ -305,7 +305,7 @@ fn analyze_output_annotation(annotation: &graphql_schema::OutputAnnotation) -> V
                 name: relationship.relationship_name.clone(),
                 source: relationship.source_type.clone(),
                 target: RelationshipTarget::Model {
-                    model_name: relationship.model_name.clone(),
+                    model_name: relationship.target_model_name.clone(),
                     relationship_type: relationship.relationship_type.clone(),
                     opendd_type: relationship.target_type.clone(),
                     mapping: get_relationship_model_mappings(&relationship.mappings),
@@ -343,7 +343,7 @@ fn analyze_output_annotation(annotation: &graphql_schema::OutputAnnotation) -> V
                 name: relationship.relationship_name.clone(),
                 source: relationship.source_type.clone(),
                 target: RelationshipTarget::Model {
-                    model_name: relationship.model_name.clone(),
+                    model_name: relationship.target_model_name.clone(),
                     relationship_type: RelationshipType::Array,
                     opendd_type: relationship.target_type.clone(),
                     mapping: get_relationship_model_mappings(&relationship.mappings),
@@ -536,7 +536,18 @@ fn get_relationship_model_mappings(
     for mapping in mappings {
         result.push(query_usage_analytics::RelationshipModelMapping {
             source_field: mapping.source_field.field_name.clone(),
-            target_field: mapping.target_field.field_name.clone(),
+            target: match &mapping.target {
+                metadata_resolve::RelationshipModelMappingTarget::ModelField(field_target) => {
+                    query_usage_analytics::RelationshipModelMappingTarget::Field(
+                        field_target.target_field.field_name.clone(),
+                    )
+                }
+                metadata_resolve::RelationshipModelMappingTarget::Argument(argument_name) => {
+                    query_usage_analytics::RelationshipModelMappingTarget::Argument(
+                        argument_name.clone(),
+                    )
+                }
+            },
         });
     }
     result

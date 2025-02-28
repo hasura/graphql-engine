@@ -64,7 +64,9 @@
                           "mapping": [
                             {
                               "source_field": "CustomerId",
-                              "target_field": "CustomerId"
+                              "target": {
+                                "field": "CustomerId"
+                              }
                             }
                           ]
                         }
@@ -164,7 +166,9 @@
                       "mapping": [
                         {
                           "source_field": "InvoiceId",
-                          "target_field": "InvoiceId"
+                          "target": {
+                            "field": "InvoiceId"
+                          }
                         }
                       ]
                     }

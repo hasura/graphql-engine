@@ -636,3 +636,21 @@ fn test_relationship_with_no_relationship_capability() -> anyhow::Result<()> {
         ]),
     )
 }
+
+#[test]
+fn test_remote_relationships_target_model_with_arguments() -> anyhow::Result<()> {
+    let test_path_string = "execute/remote_relationships/target_model_with_arguments";
+    common::test_execution_expectation(
+        test_path_string,
+        &["execute/common_metadata/custom_connector_v02_no_relationships_schema.json"],
+    )
+}
+
+#[test]
+fn test_remote_relationships_target_model_with_arguments_and_fields() -> anyhow::Result<()> {
+    let test_path_string = "execute/remote_relationships/target_model_with_arguments_and_fields";
+    common::test_execution_expectation(
+        test_path_string,
+        &["execute/common_metadata/custom_connector_v02_no_relationships_schema.json"],
+    )
+}

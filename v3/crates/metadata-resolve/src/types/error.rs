@@ -394,8 +394,15 @@ pub enum RelationshipError {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
+    #[error("target argument {argument_name} in argument mapping for relationship {relationship_name} on type {source_type} to model {model_name} is unknown.")]
+    UnknownTargetModelArgumentInRelationshipMapping {
+        source_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        model_name: Qualified<ModelName>,
+        argument_name: ArgumentName,
+    },
     #[error("target argument {argument_name} in argument mapping for relationship {relationship_name} on type {source_type} to command {command_name} is unknown.")]
-    UnknownTargetArgumentInRelationshipMapping {
+    UnknownTargetCommandArgumentInRelationshipMapping {
         source_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
         command_name: Qualified<CommandName>,
@@ -407,8 +414,15 @@ pub enum RelationshipError {
         field_name: FieldName,
         relationship_name: RelationshipName,
     },
-    #[error("Mapping for target argument {argument_name} of command {command_name} already exists in the relationship {relationship_name} on type {type_name}")]
-    ArgumentMappingExistsInRelationship {
+    #[error("The target argument {argument_name} of model {model_name} has been mapped more than once in the relationship {relationship_name} on type {type_name}")]
+    ModelArgumentMappingExistsInRelationship {
+        argument_name: ArgumentName,
+        model_name: Qualified<ModelName>,
+        relationship_name: RelationshipName,
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("The target argument {argument_name} of command {command_name} has been mapped more than once in the relationship {relationship_name} on type {type_name}")]
+    CommandArgumentMappingExistsInRelationship {
         argument_name: ArgumentName,
         command_name: Qualified<CommandName>,
         relationship_name: RelationshipName,
@@ -443,6 +457,16 @@ pub enum RelationshipError {
         relationship_name: RelationshipName,
         error: models::ModelsError, // ideally, this would return the more accurate
                                     // `ModelAggregateExpressionError` instead
+    },
+    #[error("The source field '{source_field_name}' of type '{source_field_type}' in the relationship '{relationship_name}' on type '{source_type}' cannot be mapped to the target argument '{target_argument_name}' of type '{target_argument_type}' on the target model '{target_model_name}' because their types are incompatible")]
+    ModelArgumentTargetMappingTypeMismatch {
+        source_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        source_field_name: FieldName,
+        source_field_type: QualifiedTypeReference,
+        target_model_name: Qualified<ModelName>,
+        target_argument_name: ArgumentName,
+        target_argument_type: QualifiedTypeReference,
     },
 }
 

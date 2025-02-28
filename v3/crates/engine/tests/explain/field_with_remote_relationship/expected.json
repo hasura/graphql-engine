@@ -69,7 +69,7 @@
                     "operator": "_eq",
                     "value": {
                       "type": "variable",
-                      "name": "$author_id"
+                      "name": "$field_author_id"
                     }
                   }
                 },

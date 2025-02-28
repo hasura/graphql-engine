@@ -35,19 +35,6 @@ fn test_duplicate_field_path_relationship_mappings() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_field_path_to_argument_relationship_mapping() -> anyhow::Result<()> {
-    let metadata = read_metadata("validate_metadata_artifacts/metadata_with_field_path_to_argument_relationship_mapping.json")?;
-
-    let gds = GDS::new_with_default_flags(metadata);
-
-    assert_eq!(
-        gds.unwrap_err().to_string(),
-        "metadata is not consistent: Relationship mappings to model arguments expressions are not supported yet."
-    );
-    Ok(())
-}
-
-#[test]
 fn test_relationship_mapping_unknown_source_field() -> anyhow::Result<()> {
     let metadata = read_metadata("validate_metadata_artifacts/metadata_with_unknown_source_field_in_relationship_mapping.json")?;
 

@@ -1,10 +1,11 @@
 //! Join tree and related types for remote joins.
 //!
-use super::{query, ProcessResponseAs};
+use super::{super::variable_name::VariableName, query, ProcessResponseAs};
 use indexmap::IndexMap;
 use json_ext::ValueExt;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
+use serde::Serialize;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -139,10 +140,28 @@ pub type SourceFieldName = FieldName;
 pub struct SourceFieldAlias(pub String);
 
 /// Target field used in the join mapping
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum TargetField {
-    ModelField((FieldName, metadata_resolve::NdcColumnForComparison)),
-    CommandField(ArgumentName),
+    ModelField(FieldName, metadata_resolve::NdcColumnForComparison),
+    Argument(ArgumentName),
+}
+
+impl TargetField {
+    pub fn make_variable_name(&self) -> VariableName {
+        // It is important that variable names for fields and arguments are
+        // prefixed so that fields and arguments with the same names do not conflict
+        // if they are both used at the same time.
+        match self {
+            TargetField::ModelField(_, ndc_column) => {
+                VariableName(format!("$field_{}", ndc_column.column))
+            }
+            TargetField::Argument(argument_name) => mk_argument_target_variable_name(argument_name),
+        }
+    }
+}
+
+pub fn mk_argument_target_variable_name(argument_name: &ArgumentName) -> VariableName {
+    VariableName(format!("$argument_{argument_name}"))
 }
 
 #[derive(Debug, Clone, PartialEq)]

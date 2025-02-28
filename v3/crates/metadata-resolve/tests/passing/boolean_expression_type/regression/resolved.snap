@@ -162,20 +162,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ),
                                             ),
                                         },
-                                        target_field: FieldAccess {
-                                            field_name: FieldName(
-                                                Identifier(
-                                                    "ArtistId",
-                                                ),
-                                            ),
-                                        },
-                                        target_ndc_column: Some(
-                                            NdcColumnForComparison {
-                                                column: DataConnectorColumnName(
-                                                    "ArtistId",
-                                                ),
-                                                equal_operator: DataConnectorOperatorName(
-                                                    "_eq",
+                                        target: ModelField(
+                                            RelationshipModelMappingFieldTarget {
+                                                target_field: FieldAccess {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "ArtistId",
+                                                        ),
+                                                    ),
+                                                },
+                                                target_ndc_column: Some(
+                                                    NdcColumnForComparison {
+                                                        column: DataConnectorColumnName(
+                                                            "ArtistId",
+                                                        ),
+                                                        equal_operator: DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    },
                                                 ),
                                             },
                                         ),
@@ -259,20 +263,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ),
                                             ),
                                         },
-                                        target_field: FieldAccess {
-                                            field_name: FieldName(
-                                                Identifier(
-                                                    "AlbumId",
-                                                ),
-                                            ),
-                                        },
-                                        target_ndc_column: Some(
-                                            NdcColumnForComparison {
-                                                column: DataConnectorColumnName(
-                                                    "AlbumId",
-                                                ),
-                                                equal_operator: DataConnectorOperatorName(
-                                                    "_eq",
+                                        target: ModelField(
+                                            RelationshipModelMappingFieldTarget {
+                                                target_field: FieldAccess {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "AlbumId",
+                                                        ),
+                                                    ),
+                                                },
+                                                target_ndc_column: Some(
+                                                    NdcColumnForComparison {
+                                                        column: DataConnectorColumnName(
+                                                            "AlbumId",
+                                                        ),
+                                                        equal_operator: DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    },
                                                 ),
                                             },
                                         ),
@@ -1017,20 +1025,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ),
                                             ),
                                         },
-                                        target_field: FieldAccess {
-                                            field_name: FieldName(
-                                                Identifier(
-                                                    "ArtistId",
-                                                ),
-                                            ),
-                                        },
-                                        target_ndc_column: Some(
-                                            NdcColumnForComparison {
-                                                column: DataConnectorColumnName(
-                                                    "ArtistId",
-                                                ),
-                                                equal_operator: DataConnectorOperatorName(
-                                                    "_eq",
+                                        target: ModelField(
+                                            RelationshipModelMappingFieldTarget {
+                                                target_field: FieldAccess {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "ArtistId",
+                                                        ),
+                                                    ),
+                                                },
+                                                target_ndc_column: Some(
+                                                    NdcColumnForComparison {
+                                                        column: DataConnectorColumnName(
+                                                            "ArtistId",
+                                                        ),
+                                                        equal_operator: DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    },
                                                 ),
                                             },
                                         ),
@@ -1983,20 +1995,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ),
                                             ),
                                         },
-                                        target_field: FieldAccess {
-                                            field_name: FieldName(
-                                                Identifier(
-                                                    "AlbumId",
-                                                ),
-                                            ),
-                                        },
-                                        target_ndc_column: Some(
-                                            NdcColumnForComparison {
-                                                column: DataConnectorColumnName(
-                                                    "AlbumId",
-                                                ),
-                                                equal_operator: DataConnectorOperatorName(
-                                                    "_eq",
+                                        target: ModelField(
+                                            RelationshipModelMappingFieldTarget {
+                                                target_field: FieldAccess {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "AlbumId",
+                                                        ),
+                                                    ),
+                                                },
+                                                target_ndc_column: Some(
+                                                    NdcColumnForComparison {
+                                                        column: DataConnectorColumnName(
+                                                            "AlbumId",
+                                                        ),
+                                                        equal_operator: DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    },
                                                 ),
                                             },
                                         ),
@@ -2500,20 +2516,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 ),
                                             ),
                                         },
-                                        target_field: FieldAccess {
-                                            field_name: FieldName(
-                                                Identifier(
-                                                    "AlbumId",
-                                                ),
-                                            ),
-                                        },
-                                        target_ndc_column: Some(
-                                            NdcColumnForComparison {
-                                                column: DataConnectorColumnName(
-                                                    "AlbumId",
-                                                ),
-                                                equal_operator: DataConnectorOperatorName(
-                                                    "_eq",
+                                        target: ModelField(
+                                            RelationshipModelMappingFieldTarget {
+                                                target_field: FieldAccess {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "AlbumId",
+                                                        ),
+                                                    ),
+                                                },
+                                                target_ndc_column: Some(
+                                                    NdcColumnForComparison {
+                                                        column: DataConnectorColumnName(
+                                                            "AlbumId",
+                                                        ),
+                                                        equal_operator: DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    },
                                                 ),
                                             },
                                         ),
@@ -6006,20 +6026,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                 ),
                                             },
-                                            target_field: FieldAccess {
-                                                field_name: FieldName(
-                                                    Identifier(
-                                                        "ArtistId",
-                                                    ),
-                                                ),
-                                            },
-                                            target_ndc_column: Some(
-                                                NdcColumnForComparison {
-                                                    column: DataConnectorColumnName(
-                                                        "ArtistId",
-                                                    ),
-                                                    equal_operator: DataConnectorOperatorName(
-                                                        "_eq",
+                                            target: ModelField(
+                                                RelationshipModelMappingFieldTarget {
+                                                    target_field: FieldAccess {
+                                                        field_name: FieldName(
+                                                            Identifier(
+                                                                "ArtistId",
+                                                            ),
+                                                        ),
+                                                    },
+                                                    target_ndc_column: Some(
+                                                        NdcColumnForComparison {
+                                                            column: DataConnectorColumnName(
+                                                                "ArtistId",
+                                                            ),
+                                                            equal_operator: DataConnectorOperatorName(
+                                                                "_eq",
+                                                            ),
+                                                        },
                                                     ),
                                                 },
                                             ),
@@ -12537,20 +12561,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                 ),
                                             },
-                                            target_field: FieldAccess {
-                                                field_name: FieldName(
-                                                    Identifier(
-                                                        "AlbumId",
-                                                    ),
-                                                ),
-                                            },
-                                            target_ndc_column: Some(
-                                                NdcColumnForComparison {
-                                                    column: DataConnectorColumnName(
-                                                        "AlbumId",
-                                                    ),
-                                                    equal_operator: DataConnectorOperatorName(
-                                                        "_eq",
+                                            target: ModelField(
+                                                RelationshipModelMappingFieldTarget {
+                                                    target_field: FieldAccess {
+                                                        field_name: FieldName(
+                                                            Identifier(
+                                                                "AlbumId",
+                                                            ),
+                                                        ),
+                                                    },
+                                                    target_ndc_column: Some(
+                                                        NdcColumnForComparison {
+                                                            column: DataConnectorColumnName(
+                                                                "AlbumId",
+                                                            ),
+                                                            equal_operator: DataConnectorOperatorName(
+                                                                "_eq",
+                                                            ),
+                                                        },
                                                     ),
                                                 },
                                             ),

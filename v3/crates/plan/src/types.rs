@@ -138,6 +138,18 @@ pub enum RelationshipError {
         source_column: FieldName,
         relationship_name: RelationshipName,
     },
+    #[error("Mapping for argument {argument_name} already exists in the relationship {relationship_name}")]
+    ArgumentMappingExistsInRelationship {
+        argument_name: ArgumentName,
+        relationship_name: RelationshipName,
+    },
+    #[error("Missing argument mapping to model {model_name} data connector source for argument {argument_name} used in relationship {relationship_name} on type {source_type}")]
+    MissingArgumentMappingInModelRelationship {
+        source_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        model_name: Qualified<ModelName>,
+        argument_name: ArgumentName,
+    },
     #[error("Missing argument mapping to command {command_name} data connector source for argument {argument_name} used in relationship {relationship_name} on type {source_type}")]
     MissingArgumentMappingInCommandRelationship {
         source_type: Qualified<CustomTypeName>,
@@ -156,6 +168,13 @@ pub enum RelationshipError {
         relationship_name: RelationshipName,
         source_field: FieldName,
         source_column: DataConnectorColumnName,
+    },
+    #[error("Remote predicates are not supported for relationships with an argument mapping target. Relationship {relationship_name} on type {source_type} has source field {source_field} mapped to target argument {target_argument}")]
+    RemotePredicatesNotSupportedWithArgumentMappingTarget {
+        relationship_name: RelationshipName,
+        source_type: Qualified<CustomTypeName>,
+        source_field: FieldName,
+        target_argument: ArgumentName,
     },
 
     #[error("Procedure relationships are not supported: {relationship_name}")]

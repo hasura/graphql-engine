@@ -266,10 +266,7 @@ pub(crate) fn plan_selection_set(
                     );
                     join_mapping.insert(
                         src_field_alias.clone(),
-                        (
-                            ndc_field_alias,
-                            TargetField::ModelField(target_field.clone()),
-                        ),
+                        (ndc_field_alias, target_field.clone()),
                     );
                 }
                 // Construct the `JoinLocations` tree
@@ -318,10 +315,7 @@ pub(crate) fn plan_selection_set(
                     );
                     join_mapping.insert(
                         src_field_alias.clone(),
-                        (
-                            ndc_field_alias,
-                            TargetField::CommandField(target_field.clone()),
-                        ),
+                        (ndc_field_alias, TargetField::Argument(target_field.clone())),
                     );
                 }
                 // Construct the `JoinLocations` tree

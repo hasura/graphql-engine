@@ -56,7 +56,9 @@
                       "mapping": [
                         {
                           "source_field": "article_id",
-                          "target_field": "article_id"
+                          "target": {
+                            "field": "article_id"
+                          }
                         }
                       ]
                     }
@@ -104,7 +106,9 @@
                             "mapping": [
                               {
                                 "source_field": "author_id",
-                                "target_field": "author_id"
+                                "target": {
+                                  "field": "author_id"
+                                }
                               }
                             ]
                           }
