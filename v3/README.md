@@ -61,6 +61,49 @@ easily), and model your GraphQL API. You can then download the authored
 metadata.json and use the following steps to run GraphQL API on your local
 Hasura V3 engine.
 
+## Run v3-engine (with DDN)
+
+To run the engine using your existing DDN project metadata, follow these steps:
+
+1. Generate a local build:
+
+```bash
+ddn supergraph build local
+```
+
+This command creates resolved metadata files in the `engine/build` directory.
+
+2. Launch the required services:
+
+```bash
+ddn run docker-start
+```
+
+This command initializes the engine, connectors, and observability stack.
+
+3. Start the engine with the generated metadata:
+
+```bash
+cargo run --bin engine -- \
+    --metadata-path /path/to/project/engine/build/open_dd.json \
+    --authn-config-path /path/to/project/engine/build/auth_config.json \
+    --otlp-endpoint http://localhost:4317 \
+    --port 3001
+```
+
+Note: Use port 3001 (or any port other than 3000) to avoid conflicts with the
+engine started by `ddn run docker-start`.
+
+### Local Development Setup
+
+Add the following entry to your `/etc/hosts` file:
+
+```
+127.0.0.1 local.hasura.dev
+```
+
+This mapping ensures proper resolution of connector URLs by the engine.
+
 ## Running tests
 
 To run the test suite, you need to docker login to `ghcr.io` first:
