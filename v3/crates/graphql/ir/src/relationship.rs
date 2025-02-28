@@ -4,8 +4,9 @@ use lang_graphql::normalized_ast::{self, Field};
 use open_dds::{
     arguments::ArgumentName,
     commands::FunctionName,
+    models::ModelName,
     relationships::{RelationshipName, RelationshipType},
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use std::collections::BTreeMap;
 
@@ -33,9 +34,9 @@ use metadata_resolve::{
 };
 use plan::{count_command, count_model};
 use plan_types::{
-    ComparisonTarget, ComparisonValue, Expression, LocalCommandRelationshipInfo,
-    LocalFieldComparison, LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts,
-    VariableName,
+    mk_argument_target_variable_name, ComparisonTarget, ComparisonValue, Expression,
+    LocalCommandRelationshipInfo, LocalFieldComparison, LocalModelRelationshipInfo,
+    NdcRelationshipName, TargetField, UsagesCounts,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -54,7 +55,6 @@ pub struct RemoteCommandRelationshipInfo<'s> {
 }
 
 pub type SourceField = (FieldName, metadata_resolve::FieldMapping);
-pub type TargetField = (FieldName, metadata_resolve::NdcColumnForComparison);
 
 pub fn generate_model_relationship_open_dd_ir<'s>(
     field: &Field<'s, GDS>,
@@ -70,7 +70,7 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::RelationshipSelection, error::Error> {
     // Add the target model being used in the usage counts
-    count_model(&relationship_annotation.model_name, usage_counts);
+    count_model(&relationship_annotation.target_model_name, usage_counts);
     let field_call = field.field_call()?;
 
     let mut limit = None;
@@ -97,11 +97,11 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                         }
                         ModelInputAnnotation::ModelOrderByExpression => {
                             let target_model = models
-                                    .get(&relationship_annotation.model_name)
+                                    .get(&relationship_annotation.target_model_name)
                                     .ok_or_else(|| {
                                         error::InternalError::Developer(
                                             error::InternalDeveloperError::TargetModelNotFoundForRelationship {
-                                                model_name: relationship_annotation.model_name.clone(),
+                                                model_name: relationship_annotation.target_model_name.clone(),
                                                 relationship_name: relationship_annotation.relationship_name.clone(),
                                             },
                                         )
@@ -225,15 +225,15 @@ pub fn generate_model_relationship_ir<'s>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     // Add the target model being used in the usage counts
-    count_model(&relationship_annotation.model_name, usage_counts);
+    count_model(&relationship_annotation.target_model_name, usage_counts);
     let field_call = field.field_call()?;
 
     let target_model = models
-        .get(&relationship_annotation.model_name)
+        .get(&relationship_annotation.target_model_name)
         .ok_or_else(|| {
             error::InternalError::Developer(
                 error::InternalDeveloperError::TargetModelNotFoundForRelationship {
-                    model_name: relationship_annotation.model_name.clone(),
+                    model_name: relationship_annotation.target_model_name.clone(),
                     relationship_name: relationship_annotation.relationship_name.clone(),
                 },
             )
@@ -355,6 +355,7 @@ pub fn generate_model_relationship_ir<'s>(
                 &relationship_annotation.source_type,
                 source_data_connector,
                 source_type_mappings,
+                &relationship_annotation.target_model_name,
                 &relationship_annotation.target_type,
                 target_source,
                 &relationship_annotation.mappings,
@@ -367,6 +368,7 @@ pub fn generate_model_relationship_ir<'s>(
                 &relationship_annotation.source_type,
                 source_type_mappings,
                 &relationship_annotation.mappings,
+                &target_source.argument_mappings,
             )
         }
     }
@@ -382,7 +384,7 @@ pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::RelationshipAggregateSelection, error::Error> {
     // Add the target model being used in the usage counts
-    count_model(&relationship_annotation.model_name, usage_counts);
+    count_model(&relationship_annotation.target_model_name, usage_counts);
 
     let selection =
         selection_set::generate_aggregate_selection_set_open_dd_ir(&field.selection_set)?;
@@ -390,10 +392,10 @@ pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
     let field_call = field.field_call()?;
 
     let model_source = models
-        .get(&relationship_annotation.model_name)
+        .get(&relationship_annotation.target_model_name)
         .ok_or_else(
             || error::InternalDeveloperError::TargetModelNotFoundForRelationship {
-                model_name: relationship_annotation.model_name.clone(),
+                model_name: relationship_annotation.target_model_name.clone(),
                 relationship_name: relationship_annotation.relationship_name.clone(),
             },
         )?
@@ -401,7 +403,10 @@ pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
         .source
         .as_ref()
         .ok_or_else(|| error::InternalEngineError::InternalGeneric {
-            description: format!("Model {} has no source", relationship_annotation.model_name),
+            description: format!(
+                "Model {} has no source",
+                relationship_annotation.target_model_name
+            ),
         })?;
 
     let AggregateQuery {
@@ -412,7 +417,7 @@ pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
         order_by,
     } = aggregate_query(
         field_call,
-        &relationship_annotation.model_name,
+        &relationship_annotation.target_model_name,
         model_source,
         usage_counts,
     )?;
@@ -448,16 +453,16 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     // Add the target model being used in the usage counts
-    count_model(&relationship_annotation.model_name, usage_counts);
+    count_model(&relationship_annotation.target_model_name, usage_counts);
 
     let field_call = field.field_call()?;
 
     let model = models
-        .get(&relationship_annotation.model_name)
+        .get(&relationship_annotation.target_model_name)
         .ok_or_else(|| {
             error::InternalError::Developer(
                 error::InternalDeveloperError::TargetModelNotFoundForRelationship {
-                    model_name: relationship_annotation.model_name.clone(),
+                    model_name: relationship_annotation.target_model_name.clone(),
                     relationship_name: relationship_annotation.relationship_name.clone(),
                 },
             )
@@ -484,7 +489,7 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
         &relationship_annotation.target_type,
         model,
         target_source,
-        &relationship_annotation.model_name,
+        &relationship_annotation.target_model_name,
         object_types,
         session,
         request_headers,
@@ -505,6 +510,7 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
                 &relationship_annotation.source_type,
                 source_data_connector,
                 source_type_mappings,
+                &relationship_annotation.target_model_name,
                 &relationship_annotation.target_type,
                 target_source,
                 &relationship_annotation.mappings,
@@ -517,6 +523,7 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
                 &relationship_annotation.source_type,
                 source_type_mappings,
                 &relationship_annotation.mappings,
+                &target_source.argument_mappings,
             )
         }
     }
@@ -676,6 +683,7 @@ pub fn build_local_model_relationship<'s>(
     source_type: &'s Qualified<CustomTypeName>,
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
     source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    target_model_name: &'s Qualified<ModelName>,
     target_type: &'s Qualified<CustomTypeName>,
     target_source: &'s metadata_resolve::ModelSource,
     target_mappings: &'s Vec<RelationshipModelMapping>,
@@ -686,6 +694,7 @@ pub fn build_local_model_relationship<'s>(
         source_type,
         source_data_connector,
         source_type_mappings,
+        target_model_name,
         target_source,
         target_type,
         mappings: target_mappings,
@@ -769,58 +778,83 @@ pub fn build_remote_relationship<'s>(
     source_type: &'s Qualified<CustomTypeName>,
     source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     target_mappings: &'s Vec<RelationshipModelMapping>,
+    target_argument_mappings: &'s BTreeMap<ArgumentName, DataConnectorArgumentName>,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, TargetField)> = vec![];
+    let mut relationship_join_filter_expressions = Vec::new();
+    let mut variable_arguments = BTreeMap::new();
+
     for metadata_resolve::RelationshipModelMapping {
-        source_field: source_field_path,
-        target_field: target_field_path,
-        target_ndc_column,
+        source_field,
+        target,
     } in target_mappings
     {
         let source_column = plan::get_relationship_field_mapping_of_field_name(
             source_type_mappings,
             source_type,
             relationship_name,
-            &source_field_path.field_name,
+            &source_field.field_name,
         )
         .map_err(|err| {
             error::Error::from(error::InternalDeveloperError::RelationshipFieldMappingError(err))
         })?;
 
-        let target_column = target_ndc_column.as_ref().ok_or_else(|| {
-            error::InternalEngineError::InternalGeneric {
-                description: format!(
-                    "No column mapping for relationship {relationship_name} on {source_type}"
-                ),
+        let source_field = (source_field.field_name.clone(), source_column);
+        match target {
+            metadata_resolve::RelationshipModelMappingTarget::ModelField(
+                metadata_resolve::RelationshipModelMappingFieldTarget {
+                    target_field,
+                    target_ndc_column,
+                },
+            ) => {
+                let target_column = target_ndc_column.as_ref().ok_or_else(|| {
+                    error::InternalEngineError::InternalGeneric {
+                        description: format!(
+                            "No column mapping for relationship {relationship_name} on {source_type}"
+                        ),
+                    }
+                })?;
+
+                let target_model_field =
+                    TargetField::ModelField(target_field.field_name.clone(), target_column.clone());
+                let target_value_variable = target_model_field.make_variable_name();
+                join_mapping.push((source_field, target_model_field));
+
+                // Generate the join condition expressions for the remote relationship
+                let comparison_exp = LocalFieldComparison::BinaryComparison {
+                    column: ComparisonTarget::Column {
+                        name: target_column.column.clone(),
+                        field_path: vec![],
+                    },
+                    operator: target_column.equal_operator.clone(),
+                    value: ComparisonValue::Variable {
+                        name: target_value_variable,
+                    },
+                };
+                relationship_join_filter_expressions.push(Expression::LocalField(comparison_exp));
             }
-        })?;
+            metadata_resolve::RelationshipModelMappingTarget::Argument(argument_name) => {
+                let target_argument = TargetField::Argument(argument_name.clone());
+                let target_value_variable = target_argument.make_variable_name();
+                join_mapping.push((source_field, target_argument));
 
-        let source_field = (source_field_path.field_name.clone(), source_column);
-        let target_field = (target_field_path.field_name.clone(), target_column.clone());
-        join_mapping.push((source_field, target_field));
-    }
+                let ndc_argument_name =
+                    target_argument_mappings.get(argument_name).ok_or_else(|| {
+                        error::InternalDeveloperError::ArgumentMappingNotFoundForRelationship {
+                            relationship_name: relationship_name.clone(),
+                            argument_name: argument_name.clone(),
+                        }
+                    })?;
 
-    let mut relationship_join_filter_expressions = Vec::new();
-
-    // Generate the join condition expressions for the remote relationship
-    for (_source, (_field_name, target_column)) in &join_mapping {
-        let target_value_variable = format!("${}", &target_column.column);
-        let comparison_exp = LocalFieldComparison::BinaryComparison {
-            column: ComparisonTarget::Column {
-                name: target_column.column.clone(),
-                field_path: vec![],
-            },
-            operator: target_column.equal_operator.clone(),
-            value: ComparisonValue::Variable {
-                name: VariableName(target_value_variable),
-            },
-        };
-        relationship_join_filter_expressions.push(Expression::LocalField(comparison_exp));
+                variable_arguments.insert(ndc_argument_name.clone(), target_value_variable);
+            }
+        }
     }
 
     remote_relationships_ir
         .filter_clause
         .relationship_join_filter = Some(Expression::mk_and(relationship_join_filter_expressions));
+    remote_relationships_ir.variable_arguments = variable_arguments;
 
     let rel_info = RemoteModelRelationshipInfo { join_mapping };
     Ok(FieldSelection::ModelRelationshipRemote {
@@ -892,7 +926,7 @@ pub fn build_remote_command_relationship<'n, 's>(
     // Add the arguments on which the join is done to the command arguments
     let mut variable_arguments = BTreeMap::new();
     for (_source, target_argument_name) in &join_mapping {
-        let target_value_variable = format!("${target_argument_name}");
+        let target_value_variable = mk_argument_target_variable_name(target_argument_name);
         let ndc_argument_name = target_source
             .argument_mappings
             .get(target_argument_name)

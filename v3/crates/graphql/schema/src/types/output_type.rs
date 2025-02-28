@@ -417,11 +417,6 @@ fn model_relationship_fields(
         .ok_or_else(|| Error::InternalModelNotFound {
             model_name: model_relationship_target.model_name.clone(),
         })?;
-    if !model.model.arguments.is_empty() {
-        return Err(Error::InternalUnsupported {
-            summary: "Relationships to models with arguments aren't supported".into(),
-        });
-    }
 
     let arguments = match model_relationship_target.relationship_type {
         relationships::RelationshipType::Array => generate_select_many_arguments(builder, model)?,
@@ -439,7 +434,7 @@ fn model_relationship_fields(
                 ModelRelationshipAnnotation {
                     source_type: relationship.source.clone(),
                     relationship_name: relationship.relationship_name.clone(),
-                    model_name: model_relationship_target.model_name.clone(),
+                    target_model_name: model_relationship_target.model_name.clone(),
                     target_capabilities: relationship.target_capabilities.clone(),
                     target_type: model_relationship_target.target_typename.clone(),
                     relationship_type: model_relationship_target.relationship_type.clone(),
@@ -526,7 +521,7 @@ fn model_aggregate_relationship_field(
                 ModelAggregateRelationshipAnnotation {
                     source_type: relationship.source.clone(),
                     relationship_name: relationship.relationship_name.clone(),
-                    model_name: target_model.model.name.clone(),
+                    target_model_name: target_model.model.name.clone(),
                     target_capabilities: relationship.target_capabilities.clone(),
                     target_type: target_typename.clone(),
                     mappings: mappings.to_vec(),

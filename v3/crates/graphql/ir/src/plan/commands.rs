@@ -14,8 +14,7 @@ use open_dds::commands::ProcedureName;
 use plan_types::{
     Argument, Field, FieldsSelection, JoinLocations, MutationExecutionPlan, MutationExecutionTree,
     NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan,
-    QueryExecutionTree, QueryNodeNew, Relationship, UniqueNumber, VariableName,
-    FUNCTION_IR_VALUE_COLUMN_NAME,
+    QueryExecutionTree, QueryNodeNew, Relationship, UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME,
 };
 
 pub(crate) fn plan_query_node(
@@ -121,7 +120,7 @@ pub(crate) fn plan_query_execution(
                 arguments.insert(
                     variable_name.clone(),
                     Argument::Variable {
-                        name: VariableName(variable_argument.clone()),
+                        name: variable_argument.clone(),
                     },
                 );
             }

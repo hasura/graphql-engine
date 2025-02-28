@@ -15,7 +15,7 @@ use crate::types::TypeKind;
 pub struct ModelRelationshipAnnotation {
     pub source_type: Qualified<CustomTypeName>,
     pub relationship_name: RelationshipName,
-    pub model_name: Qualified<ModelName>,
+    pub target_model_name: Qualified<ModelName>,
     pub target_capabilities: Option<RelationshipCapabilities>,
     pub target_type: Qualified<CustomTypeName>,
     pub relationship_type: RelationshipType,
@@ -27,7 +27,7 @@ pub struct ModelRelationshipAnnotation {
 pub struct ModelAggregateRelationshipAnnotation {
     pub source_type: Qualified<CustomTypeName>,
     pub relationship_name: RelationshipName,
-    pub model_name: Qualified<ModelName>,
+    pub target_model_name: Qualified<ModelName>,
     pub target_capabilities: Option<RelationshipCapabilities>,
     pub target_type: Qualified<CustomTypeName>,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,

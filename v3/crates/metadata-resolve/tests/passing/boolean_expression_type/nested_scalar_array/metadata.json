@@ -101,15 +101,15 @@
               },
               {
                 "name": "location",
-                "type": "location"
+                "type": "location!"
               },
               {
                 "name": "staff",
-                "type": "[staff_member]"
+                "type": "[staff_member!]!"
               },
               {
                 "name": "departments",
-                "type": "[String]"
+                "type": "[String!]!"
               }
             ],
             "graphql": {
@@ -209,15 +209,15 @@
             "fields": [
               {
                 "name": "city",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "country",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "campuses",
-                "type": "[String]"
+                "type": "[String!]!"
               }
             ],
             "graphql": {
@@ -271,15 +271,15 @@
             "fields": [
               {
                 "name": "first_name",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "last_name",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "specialities",
-                "type": "[String]"
+                "type": "[String!]!"
               }
             ],
             "graphql": {

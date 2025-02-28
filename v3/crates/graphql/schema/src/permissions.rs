@@ -62,13 +62,26 @@ pub(crate) fn get_model_relationship_namespace_annotations(
         .into_iter()
         .filter(|(role, _)| {
             mappings.iter().all(|mapping| {
-                let source_name = mapping.source_field.field_name.clone();
-                let target_name = mapping.target_field.field_name.clone();
+                let source_name = &mapping.source_field.field_name;
 
-                get_allowed_roles_for_field(source_object_type_representation, &source_name)
-                    .any(|allowed_role| role == allowed_role)
-                    && get_allowed_roles_for_field(target_object_type_representation, &target_name)
-                        .any(|allowed_role| role == allowed_role)
+                let has_access_to_source_field =
+                    get_allowed_roles_for_field(source_object_type_representation, source_name)
+                        .any(|allowed_role| role == allowed_role);
+
+                let has_access_to_target = match &mapping.target {
+                    metadata_resolve::RelationshipModelMappingTarget::ModelField(
+                        metadata_resolve::RelationshipModelMappingFieldTarget {
+                            target_field, ..
+                        },
+                    ) => get_allowed_roles_for_field(
+                        target_object_type_representation,
+                        &target_field.field_name,
+                    )
+                    .any(|allowed_role| role == allowed_role),
+                    metadata_resolve::RelationshipModelMappingTarget::Argument(_) => true,
+                };
+
+                has_access_to_source_field && has_access_to_target
             })
         })
         .collect();

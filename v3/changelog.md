@@ -6,6 +6,9 @@
 
 ### Fixed
 
+- Validate `ObjectType` field types against mapped NDC types, ensuring
+  compatibility of nullability, arrays, and scalar representations.
+
 ### Changed
 
 ## [v2025.02.26]
@@ -14,6 +17,8 @@
 
 - Added validation for command output types to ensure they reference valid types
   in the schema.
+- Relationships that target models are now able to provide mappings that target
+  model arguments.
 
 ### Fixed
 

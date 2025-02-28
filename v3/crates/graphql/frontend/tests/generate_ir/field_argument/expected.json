@@ -196,7 +196,8 @@
                   }
                 }
               },
-              "aggregate_selection": null
+              "aggregate_selection": null,
+              "variable_arguments": {}
             }
           },
           "type_container": {

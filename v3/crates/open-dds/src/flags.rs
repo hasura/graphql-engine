@@ -46,6 +46,7 @@ pub enum Flag {
     DisallowRecursiveObjectTypes,
     DisallowUnknownValuesInArguments,
     RequireValidCommandOutputType,
+    ValidateObjectTypeDataConnectorTypeMappingFieldTypes,
 }
 
 impl Flag {
@@ -123,6 +124,9 @@ impl Flag {
             Flag::DisallowRecursiveObjectTypes => "disallow_recursive_object_types",
             Flag::DisallowUnknownValuesInArguments => "disallow_unknown_values_in_arguments",
             Flag::RequireValidCommandOutputType => "require_valid_command_output_type",
+            Flag::ValidateObjectTypeDataConnectorTypeMappingFieldTypes => {
+                "validate_object_type_data_connector_type_mapping_field_types"
+            }
         }
     }
 }

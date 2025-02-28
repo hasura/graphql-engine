@@ -309,52 +309,85 @@ fn validate_data_connector_with_comparable_relationship(
 
         match &target_model.source {
             Some(target_model_source) => {
-                // If relationship is a not a local relationship.
-                // We need to check for the presence of equality operator on source NDC fields
-                if data_connector.name != target_model_source.data_connector.name {
-                    let type_mapping = source_type_mappings
-                        .get(&object_boolean_expression_type.object_type)
-                        .ok_or_else(|| TypePredicateError::UnknownTypeMapping {
-                            type_name: object_boolean_expression_type.object_type.clone(),
-                            data_connector_name: data_connector.name.clone(),
-                        })?;
-                    let field_mappings = match type_mapping {
-                        object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
-                    };
-                    for relationship_mapping in &relationship_target_model.mappings {
-                        let source_field = &relationship_mapping.source_field.field_name;
-                        let object_types::FieldMapping {
-                            column: source_ndc_column,
-                            comparison_operators,
-                            ..
-                        } = field_mappings.get(source_field).ok_or_else(|| {
-                            TypePredicateError::UnknownFieldMapping {
+                let execution_strategy =
+                    boolean_expressions::get_comparable_relationship_execution_strategy(
+                        &data_connector.name,
+                        &target_model_source.data_connector.name,
+                        target_model_source
+                            .data_connector
+                            .capabilities
+                            .supports_relationships
+                            .as_ref(),
+                    );
+                match execution_strategy {
+                    // If the comparable relationship would be evaluated using a remote predicate
+                    boolean_expressions::ComparableRelationshipExecutionStrategy::InEngine => {
+                        let source_type_mapping = source_type_mappings
+                            .get(&object_boolean_expression_type.object_type)
+                            .ok_or_else(|| TypePredicateError::UnknownTypeMapping {
                                 type_name: object_boolean_expression_type.object_type.clone(),
-                                field_name: source_field.clone(),
                                 data_connector_name: data_connector.name.clone(),
+                            })?;
+                        let source_field_mappings = match source_type_mapping {
+                            object_types::TypeMapping::Object { field_mappings, .. } => {
+                                field_mappings
                             }
-                        })?;
+                        };
 
-                        let equal_operators = comparison_operators
-                            .clone()
-                            .map(|ops| ops.eq_operator)
-                            .unwrap_or_default();
+                        // Validate each join mapping
+                        for relationship_mapping in &relationship_target_model.mappings {
+                            let source_field = &relationship_mapping.source_field.field_name;
+                            let object_types::FieldMapping {
+                                column: source_ndc_column,
+                                comparison_operators,
+                                ..
+                            } = source_field_mappings.get(source_field).ok_or_else(|| {
+                                TypePredicateError::UnknownFieldMapping {
+                                    type_name: object_boolean_expression_type.object_type.clone(),
+                                    field_name: source_field.clone(),
+                                    data_connector_name: data_connector.name.clone(),
+                                }
+                            })?;
 
-                        if equal_operators.is_none() {
-                            return Err(TypePredicateError::MissingEqualOperator {
-                                location: format!(
-                                    "While resolving comparable relationship {0}",
-                                    comparable_relationship.relationship_name
-                                ),
-                                type_name: object_boolean_expression_type.object_type.clone(),
-                                field_name: source_field.clone(),
-                                ndc_column: source_ndc_column.clone(),
-                                data_connector_name: data_connector.name.clone(),
+                            // Check that the source field in the mapping has an equality operator
+                            let source_field_type_has_equal_operator = comparison_operators
+                                .as_ref()
+                                .is_some_and(|ops| ops.eq_operator.is_some());
+
+                            if !source_field_type_has_equal_operator {
+                                return Err(TypePredicateError::MissingEqualOperator {
+                                    location: format!(
+                                        "While resolving comparable relationship {0}",
+                                        comparable_relationship.relationship_name
+                                    ),
+                                    type_name: object_boolean_expression_type.object_type.clone(),
+                                    field_name: source_field.clone(),
+                                    ndc_column: source_ndc_column.clone(),
+                                    data_connector_name: data_connector.name.clone(),
+                                }
+                                .into());
                             }
-                            .into());
+
+                            // Check that the target of the mapping is not an argument.
+                            // Arguments are not supported in remote predicates since we can't evaluate the
+                            // model without a value for the argument, which we won't have when the remote
+                            // predicate executes
+                            match &relationship_mapping.target {
+                                object_relationships::RelationshipModelMappingTarget::Argument(argument_target) => {
+                                    return Err(boolean_expressions::BooleanExpressionError::RemoteComparableRelationshipWithArgumentMappingTargetNotSupported {
+                                        boolean_expression_type_name: object_boolean_expression_type.name.clone(),
+                                        relationship_name: comparable_relationship.relationship_name.clone(),
+                                        source_type: object_boolean_expression_type.object_type.clone(),
+                                        source_field: source_field.clone(),
+                                        target_argument: argument_target.clone(),
+                                    });
+                                }
+                                object_relationships::RelationshipModelMappingTarget::ModelField(_) => {}
+                            };
                         }
                     }
-                };
+                    boolean_expressions::ComparableRelationshipExecutionStrategy::NDCPushdown => {}
+                }
             }
             None => {
                 // no source for target model, explode!

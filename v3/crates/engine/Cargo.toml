@@ -23,7 +23,6 @@ harness = false
 [dependencies]
 axum-ext = { path = "../utils/axum-ext" }
 engine-types = { path = "../engine-types" }
-execute = { path = "../execute" }
 graphql-frontend = { path = "../graphql/frontend" }
 graphql-ir = { path = "../graphql/ir" }
 graphql-schema = { path = "../graphql/schema" }
@@ -49,7 +48,6 @@ base64 = { workspace = true }
 clap = { workspace = true }
 futures-util = {workspace = true}
 http-body-util = { workspace = true }
-indexmap = {workspace = true}
 json_value_merge = { workspace = true }
 jsonapi_library = { workspace =  true }
 mimalloc = { workspace = true }

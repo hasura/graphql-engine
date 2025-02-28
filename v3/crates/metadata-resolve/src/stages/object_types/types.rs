@@ -1,4 +1,5 @@
 use super::error::ObjectTypesError;
+use crate::helpers::type_validation::TypeCompatibilityIssue;
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{QualifiedTypeName, QualifiedTypeReference};
 use crate::NdcVersion;
@@ -473,6 +474,15 @@ pub enum ObjectTypesIssue {
         type_name: Qualified<CustomTypeName>,
         field_path: String,
     },
+    #[error("The field '{field_name}' in object type '{type_name}' cannot be mapped to data connector '{data_connector}' field '{data_connector_object}.{data_connector_column}' because: {issue}")]
+    FieldTypeNdcMappingIssue {
+        field_name: FieldName,
+        type_name: Qualified<CustomTypeName>,
+        data_connector: Qualified<DataConnectorName>,
+        data_connector_object: DataConnectorObjectType,
+        data_connector_column: DataConnectorColumnName,
+        issue: TypeCompatibilityIssue,
+    },
 }
 
 impl ShouldBeAnError for ObjectTypesIssue {
@@ -493,6 +503,9 @@ impl ShouldBeAnError for ObjectTypesIssue {
             ObjectTypesIssue::RecursiveObjectType { .. } => {
                 flags.contains(open_dds::flags::Flag::DisallowRecursiveObjectTypes)
             }
+            ObjectTypesIssue::FieldTypeNdcMappingIssue { .. } => flags.contains(
+                open_dds::flags::Flag::ValidateObjectTypeDataConnectorTypeMappingFieldTypes,
+            ),
         }
     }
 }

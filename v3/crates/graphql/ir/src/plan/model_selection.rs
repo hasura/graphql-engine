@@ -10,6 +10,7 @@ use crate::plan::Plan;
 use crate::ModelSelection;
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
+use plan_types::Argument;
 use plan_types::{
     FieldsSelection, JoinLocations, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan,
     QueryExecutionTree, QueryNodeNew, Relationship, UniqueNumber,
@@ -108,8 +109,18 @@ pub(crate) fn plan_query_execution(
     // collection relationships from order_by clause
     relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;
 
-    let (arguments, argument_remote_predicates) =
+    let (mut arguments, argument_remote_predicates) =
         arguments::plan_arguments(&ir.arguments, &mut collection_relationships, unique_number)?;
+
+    // Add the variable arguments which are used for remote joins
+    for (variable_name, variable_argument) in &ir.variable_arguments {
+        arguments.insert(
+            variable_name.clone(),
+            Argument::Variable {
+                name: variable_argument.clone(),
+            },
+        );
+    }
 
     remote_predicates.0.extend(argument_remote_predicates.0);
 

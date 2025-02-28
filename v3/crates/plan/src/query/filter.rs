@@ -16,22 +16,7 @@ use plan_types::{
     QueryExecutionTree, QueryNodeNew, Relationship, RelationshipColumnMapping,
     ResolvedFilterExpression, SourceNdcColumn, UniqueNumber,
 };
-use std::borrow::Cow;
 use std::collections::BTreeMap;
-
-/// Defines strategies for executing relationship predicates.
-enum RelationshipPredicateExecutionStrategy {
-    /// Pushes predicate resolution to the NDC (Data Connector).
-    /// This is feasible only if the data connector supports the 'relation_comparisons' capability
-    /// and is used when both source and target connectors are the same (local relationship).
-    NDCPushdown,
-
-    /// Resolves predicates within the Engine itself.
-    /// This approach is used when dealing with remote relationships or if the data connector lacks
-    /// the 'relation_comparisons' capability. The Engine queries field values from the target model
-    /// and constructs the necessary comparison expressions.
-    InEngine,
-}
 
 /// Plan the expression IR type.
 pub fn plan_expression<'a>(
@@ -246,12 +231,12 @@ pub fn build_relationship_comparison_expression<'s>(
     relationship_predicate: Expression<'s>,
 ) -> Result<Expression<'s>, RelationshipError> {
     // Determine whether the relationship is local or remote
-    match get_relationship_predicate_execution_strategy(
-        data_connector_link,
-        &target_model_source.data_connector,
-        target_capabilities,
+    match metadata_resolve::get_comparable_relationship_execution_strategy(
+        &data_connector_link.name,
+        &target_model_source.data_connector.name,
+        target_capabilities.supports_relationships.as_ref(),
     ) {
-        RelationshipPredicateExecutionStrategy::NDCPushdown => {
+        metadata_resolve::ComparableRelationshipExecutionStrategy::NDCPushdown => {
             let ndc_relationship_name = NdcRelationshipName::new(source_type, relationship_name);
 
             let local_model_relationship_info = LocalModelRelationshipInfo {
@@ -260,6 +245,7 @@ pub fn build_relationship_comparison_expression<'s>(
                 source_type,
                 source_data_connector: data_connector_link,
                 source_type_mappings: type_mappings,
+                target_model_name,
                 target_source: target_model_source,
                 target_type,
                 mappings,
@@ -273,7 +259,7 @@ pub fn build_relationship_comparison_expression<'s>(
             })
         }
 
-        RelationshipPredicateExecutionStrategy::InEngine => {
+        metadata_resolve::ComparableRelationshipExecutionStrategy::InEngine => {
             // Build a NDC column mapping out of the relationship mappings.
             // This mapping is later used to build the local field comparison expressions
             // using values fetched from remote source
@@ -293,37 +279,49 @@ pub fn build_relationship_comparison_expression<'s>(
 
                 let equal_operator = comparison_operators
                     .as_ref()
-                    .map(|ops| Cow::Borrowed(&ops.eq_operator))
-                    .unwrap_or_default();
-
-                let eq_operator = equal_operator.as_ref().clone().ok_or_else(|| {
-                    RelationshipError::SourceColumnMissingEqualComparisonOperator {
-                        relationship_name: relationship_name.clone(),
-                        source_field: source_field.clone(),
-                        source_column: source_column.clone(),
-                    }
-                })?;
+                    .and_then(|ops| ops.eq_operator.as_ref())
+                    .ok_or_else(|| {
+                        RelationshipError::SourceColumnMissingEqualComparisonOperator {
+                            relationship_name: relationship_name.clone(),
+                            source_field: source_field.clone(),
+                            source_column: source_column.clone(),
+                        }
+                    })?;
 
                 let source_ndc_column = SourceNdcColumn {
                     column: source_column.clone(),
                     field_path: column_path.clone(),
-                    eq_operator,
+                    eq_operator: equal_operator.clone(),
                 };
 
-                let target_ndc_column = &relationship_mapping
-                    .target_ndc_column
-                    .as_ref()
-                    .ok_or_else(|| RelationshipError::MissingTargetColumn {
-                        relationship_name: relationship_name.clone(),
-                        source_field: source_field.clone(),
-                        target_field: relationship_mapping.target_field.field_name.clone(),
-                    })?
-                    .column;
+                match &relationship_mapping.target {
+                    metadata_resolve::RelationshipModelMappingTarget::ModelField(
+                        relationship_mapping,
+                    ) => {
+                        let target_ndc_column = &relationship_mapping
+                            .target_ndc_column
+                            .as_ref()
+                            .ok_or_else(|| RelationshipError::MissingTargetColumn {
+                                relationship_name: relationship_name.clone(),
+                                source_field: source_field.clone(),
+                                target_field: relationship_mapping.target_field.field_name.clone(),
+                            })?
+                            .column;
 
-                ndc_column_mapping.push(RelationshipColumnMapping {
-                    source_ndc_column,
-                    target_ndc_column: target_ndc_column.clone(),
-                });
+                        ndc_column_mapping.push(RelationshipColumnMapping {
+                            source_ndc_column,
+                            target_ndc_column: target_ndc_column.clone(),
+                        });
+                    }
+                    metadata_resolve::RelationshipModelMappingTarget::Argument(argument_name) => {
+                        return Err(RelationshipError::RemotePredicatesNotSupportedWithArgumentMappingTarget {
+                            relationship_name: relationship_name.clone(),
+                            source_type: source_type.clone(),
+                            source_field: source_field.clone(),
+                            target_argument: argument_name.clone(),
+                        });
+                    }
+                }
             }
 
             Ok(Expression::RelationshipRemoteComparison {
@@ -334,25 +332,5 @@ pub fn build_relationship_comparison_expression<'s>(
                 predicate: Box::new(relationship_predicate),
             })
         }
-    }
-}
-
-/// Determines the strategy for executing relationship predicates based on the connectors and their capabilities.
-fn get_relationship_predicate_execution_strategy(
-    source_connector: &DataConnectorLink,
-    target_connector: &DataConnectorLink,
-    target_source_relationship_capabilities: &RelationshipCapabilities,
-) -> RelationshipPredicateExecutionStrategy {
-    // It's a local relationship if the source and target connectors are the same and
-    // the connector supports relationships.
-    if target_connector.name == source_connector.name
-        && target_source_relationship_capabilities
-            .supports_relationships
-            .as_ref()
-            .is_some_and(|r| r.supports_relation_comparisons)
-    {
-        RelationshipPredicateExecutionStrategy::NDCPushdown
-    } else {
-        RelationshipPredicateExecutionStrategy::InEngine
     }
 }

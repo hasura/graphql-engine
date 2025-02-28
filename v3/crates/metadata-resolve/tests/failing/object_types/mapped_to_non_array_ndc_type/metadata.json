@@ -1,0 +1,1068 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": {
+              "typeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": {
+              "typeName": "Int_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "institution_bool_exp",
+            "operand": {
+              "object": {
+                "type": "institution",
+                "comparableFields": [
+                  {
+                    "fieldName": "id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "location",
+                    "booleanExpressionType": "location_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": { "typeName": "InstitutionBoolExp" }
+          }
+        },
+
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "institution",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "location",
+                "type": "location!"
+              },
+              {
+                "name": "staff",
+                "type": "staff_member!"
+              },
+              {
+                "name": "departments",
+                "type": "[String!]!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Institution"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "institution",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "location": {
+                    "column": {
+                      "name": "location"
+                    }
+                  },
+                  "staff": {
+                    "column": {
+                      "name": "staff"
+                    }
+                  },
+                  "departments": {
+                    "column": {
+                      "name": "departments"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "institution",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "location_bool_exp",
+            "operand": {
+              "object": {
+                "type": "location",
+                "comparableFields": [
+                  {
+                    "fieldName": "city",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "country",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": { "typeName": "LocationBoolExp" }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "location",
+            "fields": [
+              {
+                "name": "city",
+                "type": "String!"
+              },
+              {
+                "name": "country",
+                "type": "String!"
+              },
+              {
+                "name": "campuses",
+                "type": "[String!]!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Location"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "location",
+                "fieldMapping": {
+                  "city": {
+                    "column": {
+                      "name": "city"
+                    }
+                  },
+                  "country": {
+                    "column": {
+                      "name": "country"
+                    }
+                  },
+                  "campuses": {
+                    "column": {
+                      "name": "campuses"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "location",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["city", "country", "campuses"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "staff_member",
+            "fields": [
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              },
+              {
+                "name": "specialities",
+                "type": "[String!]!"
+              }
+            ],
+            "graphql": {
+              "typeName": "StaffMember"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "staff_member",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  },
+                  "specialities": {
+                    "column": {
+                      "name": "specialities"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "staff_member",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["first_name", "last_name", "specialities"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "institutions",
+            "arguments": [],
+            "objectType": "institution",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "institutions",
+              "argumentMapping": {}
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "InstitutionMany"
+              }
+            },
+            "filterExpressionType": "institution_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "institutions",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "custom",
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:8101"
+              }
+            },
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Actor_Name": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  },
+                  "Int": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    }
+                  },
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "like": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      }
+                    }
+                  }
+                },
+                "object_types": {
+                  "actor": {
+                    "description": "An actor",
+                    "fields": {
+                      "id": {
+                        "description": "The actor's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "movie_id": {
+                        "description": "The actor's movie ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "The actor's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "movie": {
+                    "description": "A movie",
+                    "fields": {
+                      "id": {
+                        "description": "The movie's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "rating": {
+                        "description": "The movie's rating",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "title": {
+                        "description": "The movie's title",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "name_query": {
+                    "description": "parameters for querying by name",
+                    "fields": {
+                      "first_name": {
+                        "description": "The actor's first name or null to match any first name",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "last_name": {
+                        "description": "The actor's last name or null to match any last",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "institution": {
+                    "description": "An institution",
+                    "fields": {
+                      "departments": {
+                        "description": "The institution's departments",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "id": {
+                        "description": "The institution's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "location": {
+                        "description": "The institution's location",
+                        "type": {
+                          "type": "named",
+                          "name": "location"
+                        }
+                      },
+                      "name": {
+                        "description": "The institution's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "staff": {
+                        "description": "The institution's staff",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "staff_member"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "location": {
+                    "description": "A location",
+                    "fields": {
+                      "campuses": {
+                        "description": "The location's campuses",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "city": {
+                        "description": "The location's city",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "country": {
+                        "description": "The location's country",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "staff_member": {
+                    "description": "A staff member",
+                    "fields": {
+                      "first_name": {
+                        "description": "The staff member's first name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "last_name": {
+                        "description": "The staff member's last name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "specialities": {
+                        "description": "The staff member's specialities",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "favourite_artist_id": {
+                        "description": "The artist_id of the staff member's favourite artist",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "actors",
+                    "description": "A collection of actors",
+                    "arguments": {},
+                    "type": "actor",
+                    "uniqueness_constraints": {
+                      "ActorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "movies",
+                    "description": "A collection of movies",
+                    "arguments": {},
+                    "type": "movie",
+                    "uniqueness_constraints": {
+                      "MovieByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "institutions",
+                    "description": "A collection of institutions",
+                    "arguments": {},
+                    "type": "institution",
+                    "uniqueness_constraints": {
+                      "InstitutionByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "actors_by_movie",
+                    "description": "Actors parameterized by movie",
+                    "arguments": {
+                      "movie_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "type": "actor",
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "movies_by_actor_name",
+                    "description": "Movies filtered by actor name search parameters",
+                    "arguments": {
+                      "actor_name": {
+                        "description": "the actor name components to search by",
+                        "type": {
+                          "type": "named",
+                          "name": "name_query"
+                        }
+                      }
+                    },
+                    "type": "movie",
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [
+                  {
+                    "name": "latest_actor_id",
+                    "description": "Get the ID of the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_actor_name",
+                    "description": "Get the name of the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Actor_Name"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_actor",
+                    "description": "Get the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actor_by_id",
+                    "description": "Get actor by ID",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_movie_by_id",
+                    "description": "Get movie by ID",
+                    "arguments": {
+                      "movie_id": {
+                        "description": "the id of the movie to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "movie"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_name",
+                    "description": "Get actors by name",
+                    "arguments": {
+                      "name": {
+                        "description": "the name components to search by",
+                        "type": {
+                          "type": "named",
+                          "name": "name_query"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "actor_names_by_movie",
+                    "description": "Get actor names by movie ID",
+                    "arguments": {
+                      "movie_id": {
+                        "description": "the id of the movie to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_all_actors",
+                    "description": "Get list of all actors",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_movie_id_bounds",
+                    "description": "Get all actors within a given lower and upper movie id bound",
+                    "arguments": {
+                      "lower_bound": {
+                        "description": "the lower bound for movie id",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "upper_bound": {
+                        "description": "the upper bound for movie id",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_bool_exp",
+                    "description": "Get all actors with a boolean expression",
+                    "arguments": {
+                      "actor_bool_exp": {
+                        "description": "boolean expression over actor",
+                        "type": {
+                          "type": "predicate",
+                          "object_type_name": "actor"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_movie_id",
+                    "description": "Get all actors from a movie by movie ID",
+                    "arguments": {
+                      "movie_id": {
+                        "description": "the id of the movie to fetch the actors from",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_institutions_by_institution_query",
+                    "description": "Get institutions by specifying parts of institution object. For example by 'location.city'. All fields are optional.",
+                    "arguments": {
+                      "institution_query": {
+                        "description": "The institution query object. All fields are optional",
+                        "type": {
+                          "type": "named",
+                          "name": "institution"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "institution"
+                      }
+                    }
+                  }
+                ],
+                "procedures": [
+                  {
+                    "name": "upsert_actor",
+                    "description": "Insert or update an actor",
+                    "arguments": {
+                      "actor": {
+                        "description": "The actor to insert or update",
+                        "type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "update_actor_name_by_id",
+                    "description": "Update an actor name given the ID and new name",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "the new name of the actor",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "noop_procedure",
+                    "description": "Procedure which does not perform any actual mutuations on the data",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "String"
+                      }
+                    }
+                  },
+                  {
+                    "name": "uppercase_actor_name_by_id",
+                    "description": "Uppercase an actor name given the ID",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "uppercase_all_actor_names",
+                    "description": "Uppercase all actor names",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "uppercase_all_actor_names_return_names_list",
+                    "description": "Uppercase all actor names and return a list of the updated names",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "capabilities": {
+                "capabilities": {
+                  "query": {
+                    "explain": {},
+                    "aggregates": {},
+                    "variables": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    }
+                  },
+                  "mutation": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                },
+                "version": "0.1.3"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "disallow_model_v1_ordering_non_scalar_fields": true,
+    "validate_object_type_data_connector_type_mapping_field_types": true
+  }
+}

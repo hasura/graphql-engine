@@ -133,7 +133,9 @@
                           "mapping": [
                             {
                               "source_field": "TrackId",
-                              "target_field": "TrackId"
+                              "target": {
+                                "field": "TrackId"
+                              }
                             }
                           ]
                         }
@@ -164,7 +166,9 @@
                       "mapping": [
                         {
                           "source_field": "AlbumId",
-                          "target_field": "AlbumId"
+                          "target": {
+                            "field": "AlbumId"
+                          }
                         }
                       ]
                     }
@@ -413,7 +417,9 @@
                           "mapping": [
                             {
                               "source_field": "EmployeeId",
-                              "target_field": "ReportsTo"
+                              "target": {
+                                "field": "ReportsTo"
+                              }
                             }
                           ]
                         }
@@ -444,7 +450,9 @@
                       "mapping": [
                         {
                           "source_field": "SupportRepId",
-                          "target_field": "EmployeeId"
+                          "target": {
+                            "field": "EmployeeId"
+                          }
                         }
                       ]
                     }

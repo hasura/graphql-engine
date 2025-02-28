@@ -117,20 +117,24 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                 ),
                                             ),
                                         },
-                                        target_field: FieldAccess {
-                                            field_name: FieldName(
-                                                Identifier(
-                                                    "id",
-                                                ),
-                                            ),
-                                        },
-                                        target_ndc_column: Some(
-                                            NdcColumnForComparison {
-                                                column: DataConnectorColumnName(
-                                                    "id",
-                                                ),
-                                                equal_operator: DataConnectorOperatorName(
-                                                    "_eq",
+                                        target: ModelField(
+                                            RelationshipModelMappingFieldTarget {
+                                                target_field: FieldAccess {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "id",
+                                                        ),
+                                                    ),
+                                                },
+                                                target_ndc_column: Some(
+                                                    NdcColumnForComparison {
+                                                        column: DataConnectorColumnName(
+                                                            "id",
+                                                        ),
+                                                        equal_operator: DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    },
                                                 ),
                                             },
                                         ),

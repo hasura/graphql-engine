@@ -16,7 +16,6 @@ use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{CommandReturnKind, ProcessResponseAs, VariableName};
 use plan_types::{
     JoinLocations, JoinNode, LocationKind, RemoteJoin, RemoteJoinArgument, SourceFieldAlias,
-    TargetField,
 };
 
 /// An executable join node is a remote join node, it's collected join values
@@ -179,20 +178,7 @@ fn collect_argument_from_row(
 pub(crate) fn get_join_fields(join_node: &RemoteJoin) -> Vec<(&SourceFieldAlias, VariableName)> {
     let mut join_fields = vec![];
     for (src_alias, target_field) in join_node.join_mapping.values() {
-        match target_field {
-            TargetField::ModelField((_, field_mapping)) => {
-                // use the target field name here to create the variable
-                // name to be used in RHS
-                let variable_name = VariableName(format!("${}", &field_mapping.column));
-                join_fields.push((src_alias, variable_name));
-            }
-            TargetField::CommandField(argument_name) => {
-                // use the target argument name here to create the variable
-                // name to be used in RHS
-                let variable_name = VariableName(format!("${}", &argument_name));
-                join_fields.push((src_alias, variable_name));
-            }
-        }
+        join_fields.push((src_alias, target_field.make_variable_name()));
     }
     join_fields
 }

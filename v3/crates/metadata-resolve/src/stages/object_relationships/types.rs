@@ -76,6 +76,17 @@ pub enum RelationshipTargetName {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct RelationshipModelMapping {
     pub source_field: FieldAccess,
+    pub target: RelationshipModelMappingTarget,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum RelationshipModelMappingTarget {
+    ModelField(RelationshipModelMappingFieldTarget),
+    Argument(ArgumentName),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct RelationshipModelMappingFieldTarget {
     pub target_field: FieldAccess,
     // Optional because we allow building schema without specifying a data source
     pub target_ndc_column: Option<NdcColumnForComparison>,

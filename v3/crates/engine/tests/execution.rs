@@ -2815,3 +2815,22 @@ fn test_session_variables_json_disabled_integer_session_variable() -> anyhow::Re
         ]),
     )
 }
+
+// Test a join with an object on RHS, where that object is joined on an argument
+#[test]
+fn test_relationships_array_target_model_with_arguments() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/array/target_model_with_arguments",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+    )
+}

@@ -1,0 +1,12 @@
+query MyQuery {
+  Actors {
+    conflicting_name_id
+    name
+    movie_id
+    MovieActors {
+      conflicting_name_id
+      movie_id
+      name
+    }
+  }
+}

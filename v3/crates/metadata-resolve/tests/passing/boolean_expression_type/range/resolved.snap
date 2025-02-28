@@ -26,7 +26,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             field_type: QualifiedTypeReference {
                                 underlying_type: Named(
                                     Inbuilt(
-                                        Int,
+                                        Float,
                                     ),
                                 ),
                                 nullable: false,
@@ -43,7 +43,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             field_type: QualifiedTypeReference {
                                 underlying_type: Named(
                                     Inbuilt(
-                                        Int,
+                                        Float,
                                     ),
                                 ),
                                 nullable: false,

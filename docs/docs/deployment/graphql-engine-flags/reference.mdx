@@ -1046,6 +1046,21 @@ The timeout for redis queries while serving requests. The timeout is in seconds.
 | **Default**         | `null` (No timeout)                           |
 | **Supported in**    | Enterprise Edition only                       |
 
+### Redis no-fail on Startup
+
+Whether to proceed if redis is unavailable at engine startup. If set to `true` and there are issues with redis on
+startup then the server will start as though caching and rate limiting were disabled until the next engine restart. A
+startup log message will be displayed in this case mentioning "redis operation failed".
+
+|                     |                                           |
+| ------------------- | ----------------------------------------- |
+| **Flag**            | `--redis-no-fail-on-startup`              |
+| **Env var**         | `HASURA_GRAPHQL_REDIS_NO_FAIL_ON_STARTUP` |
+| **Accepted values** | Boolean                                   |
+| **Options**         | `true` or `false`                         |
+| **Default**         | `false`                                   |
+| **Supported in**    | Enterprise Edition only                   |
+
 ### Redis TLS Hostname
 
 The hostname to use for SNI when connecting to a [caching Redis instance over TLS](/caching/enterprise-caching.mdx).

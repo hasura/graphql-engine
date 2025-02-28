@@ -148,7 +148,9 @@
                         "mapping": [
                           {
                             "source_field": "author_id",
-                            "target_field": "author_id"
+                            "target": {
+                              "field": "author_id"
+                            }
                           }
                         ]
                       }

@@ -19,7 +19,7 @@
                               "name": "commandArticle"
                             },
                             "relationship_name": "article",
-                            "model_name": {
+                            "target_model_name": {
                               "name": "Articles"
                             },
                             "target_capabilities": {
@@ -40,12 +40,16 @@
                                 "source_field": {
                                   "fieldName": "article_id"
                                 },
-                                "target_field": {
-                                  "fieldName": "article_id"
-                                },
-                                "target_ndc_column": {
-                                  "column": "id",
-                                  "equal_operator": "_eq"
+                                "target": {
+                                  "ModelField": {
+                                    "target_field": {
+                                      "fieldName": "article_id"
+                                    },
+                                    "target_ndc_column": {
+                                      "column": "id",
+                                      "equal_operator": "_eq"
+                                    }
+                                  }
                                 }
                               }
                             ],
@@ -82,7 +86,7 @@
                                     "name": "article"
                                   },
                                   "relationship_name": "Author",
-                                  "model_name": {
+                                  "target_model_name": {
                                     "name": "Authors"
                                   },
                                   "target_capabilities": {
@@ -103,12 +107,16 @@
                                       "source_field": {
                                         "fieldName": "author_id"
                                       },
-                                      "target_field": {
-                                        "fieldName": "author_id"
-                                      },
-                                      "target_ndc_column": {
-                                        "column": "id",
-                                        "equal_operator": "_eq"
+                                      "target": {
+                                        "ModelField": {
+                                          "target_field": {
+                                            "fieldName": "author_id"
+                                          },
+                                          "target_ndc_column": {
+                                            "column": "id",
+                                            "equal_operator": "_eq"
+                                          }
+                                        }
                                       }
                                     }
                                   ],
@@ -145,7 +153,7 @@
                                           "name": "author"
                                         },
                                         "relationship_name": "Articles",
-                                        "model_name": {
+                                        "target_model_name": {
                                           "name": "Articles"
                                         },
                                         "target_capabilities": {
@@ -166,12 +174,16 @@
                                             "source_field": {
                                               "fieldName": "author_id"
                                             },
-                                            "target_field": {
-                                              "fieldName": "author_id"
-                                            },
-                                            "target_ndc_column": {
-                                              "column": "author_id",
-                                              "equal_operator": "_eq"
+                                            "target": {
+                                              "ModelField": {
+                                                "target_field": {
+                                                  "fieldName": "author_id"
+                                                },
+                                                "target_ndc_column": {
+                                                  "column": "author_id",
+                                                  "equal_operator": "_eq"
+                                                }
+                                              }
                                             }
                                           }
                                         ],
@@ -490,7 +502,8 @@
                                                     }
                                                   }
                                                 },
-                                                "aggregate_selection": null
+                                                "aggregate_selection": null,
+                                                "variable_arguments": {}
                                               },
                                               "name": "default___author__Articles",
                                               "relationship_info": {
@@ -689,6 +702,9 @@
                                                       }
                                                     }
                                                   }
+                                                },
+                                                "target_model_name": {
+                                                  "name": "Articles"
                                                 },
                                                 "target_source": {
                                                   "data_connector": {
@@ -905,12 +921,16 @@
                                                     "source_field": {
                                                       "fieldName": "author_id"
                                                     },
-                                                    "target_field": {
-                                                      "fieldName": "author_id"
-                                                    },
-                                                    "target_ndc_column": {
-                                                      "column": "author_id",
-                                                      "equal_operator": "_eq"
+                                                    "target": {
+                                                      "ModelField": {
+                                                        "target_field": {
+                                                          "fieldName": "author_id"
+                                                        },
+                                                        "target_ndc_column": {
+                                                          "column": "author_id",
+                                                          "equal_operator": "_eq"
+                                                        }
+                                                      }
                                                     }
                                                   }
                                                 ]
@@ -919,7 +939,8 @@
                                           }
                                         }
                                       },
-                                      "aggregate_selection": null
+                                      "aggregate_selection": null,
+                                      "variable_arguments": {}
                                     },
                                     "name": "default___article__Author",
                                     "relationship_info": {
@@ -1128,6 +1149,9 @@
                                           }
                                         }
                                       },
+                                      "target_model_name": {
+                                        "name": "Authors"
+                                      },
                                       "target_source": {
                                         "data_connector": {
                                           "name": {
@@ -1334,12 +1358,16 @@
                                           "source_field": {
                                             "fieldName": "author_id"
                                           },
-                                          "target_field": {
-                                            "fieldName": "author_id"
-                                          },
-                                          "target_ndc_column": {
-                                            "column": "id",
-                                            "equal_operator": "_eq"
+                                          "target": {
+                                            "ModelField": {
+                                              "target_field": {
+                                                "fieldName": "author_id"
+                                              },
+                                              "target_ndc_column": {
+                                                "column": "id",
+                                                "equal_operator": "_eq"
+                                              }
+                                            }
                                           }
                                         }
                                       ]
@@ -1348,7 +1376,8 @@
                                 }
                               }
                             },
-                            "aggregate_selection": null
+                            "aggregate_selection": null,
+                            "variable_arguments": {}
                           },
                           "name": "default___commandArticle__article",
                           "relationship_info": {
@@ -1556,6 +1585,9 @@
                                   }
                                 }
                               }
+                            },
+                            "target_model_name": {
+                              "name": "Articles"
                             },
                             "target_source": {
                               "data_connector": {
@@ -1772,12 +1804,16 @@
                                 "source_field": {
                                   "fieldName": "article_id"
                                 },
-                                "target_field": {
-                                  "fieldName": "article_id"
-                                },
-                                "target_ndc_column": {
-                                  "column": "id",
-                                  "equal_operator": "_eq"
+                                "target": {
+                                  "ModelField": {
+                                    "target_field": {
+                                      "fieldName": "article_id"
+                                    },
+                                    "target_ndc_column": {
+                                      "column": "id",
+                                      "equal_operator": "_eq"
+                                    }
+                                  }
                                 }
                               }
                             ]

@@ -61,7 +61,9 @@
                       "mapping": [
                         {
                           "source_field": "article_id",
-                          "target_field": "article_id"
+                          "target": {
+                            "field": "article_id"
+                          }
                         }
                       ]
                     }

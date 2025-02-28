@@ -290,3 +290,18 @@ pub struct BooleanExpressionGraphqlConfig {
     pub scalar_fields: BTreeMap<FieldName, ScalarBooleanExpressionGraphqlConfig>,
     pub field_config: BooleanExpressionGraphqlFieldConfig,
 }
+
+/// Defines strategies for executing relationship predicates.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ComparableRelationshipExecutionStrategy {
+    /// Pushes predicate resolution to the NDC (Data Connector).
+    /// This is feasible only if the data connector supports the 'relation_comparisons' capability
+    /// and is used when both source and target connectors are the same (local relationship).
+    NDCPushdown,
+
+    /// Resolves predicates within the Engine itself.
+    /// This approach is used when dealing with remote relationships or if the data connector lacks
+    /// the 'relation_comparisons' capability. The Engine queries field values from the target model
+    /// and constructs the necessary comparison expressions.
+    InEngine,
+}
