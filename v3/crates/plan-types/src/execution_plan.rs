@@ -26,7 +26,7 @@ pub use remote_joins::{
 
 // these versions of the types are equivalent to the old "Resolved" versions
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct NDCQueryExecution {
     pub execution_tree: QueryExecutionTree,
     pub execution_span_attribute: &'static str,
@@ -34,7 +34,7 @@ pub struct NDCQueryExecution {
     pub process_response_as: ProcessResponseAs,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct NDCMutationExecution {
     pub execution_tree: MutationExecutionTree,
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
@@ -43,7 +43,7 @@ pub struct NDCMutationExecution {
     pub process_response_as: ProcessResponseAs,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct NDCSubscriptionExecution {
     pub query_execution_plan: QueryExecutionPlan,
     pub polling_interval_ms: u64,

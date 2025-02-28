@@ -97,8 +97,8 @@ pub fn model_target_to_ndc_query(
     let filter = match (model_filter, permission_filter) {
         (None, filter) | (filter, None) => filter,
         (Some(filter), Some(permission_filter)) => Some(ResolvedFilterExpression::mk_and(vec![
-            filter,
             permission_filter,
+            filter,
         ])),
     };
 

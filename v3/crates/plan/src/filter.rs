@@ -141,7 +141,7 @@ pub fn to_filter_expression<'metadata>(
 
             // we need to navigate the operand up to this relationship to find the right boolean
             // expression type to start from
-            let boolean_expression_type = boolean_expression_type_for_path(
+            let source_boolean_expression_type = boolean_expression_type_for_path(
                 metadata,
                 boolean_expression_type,
                 operand.as_ref(),
@@ -150,12 +150,12 @@ pub fn to_filter_expression<'metadata>(
             // the object type for the left hand side of the relationship
             let source_object_type = crate::metadata_accessor::get_output_object_type(
                 metadata,
-                &boolean_expression_type.object_type,
+                &source_boolean_expression_type.object_type,
                 &session.role,
             )?;
 
             // first try looking for a relationship
-            if let Some(relationship_field) = boolean_expression_type
+            if let Some(relationship_field) = source_boolean_expression_type
                 .fields
                 .relationship_fields
                 .get(&field_name)
@@ -225,7 +225,7 @@ pub fn to_filter_expression<'metadata>(
                         // include any predicates from model permissions
                         let predicate = match model_expression {
                             Some(model_expression) => {
-                                Expression::mk_and([inner, model_expression].to_vec())
+                                Expression::mk_and([model_expression, inner].to_vec())
                             }
                             None => inner,
                         };
@@ -259,10 +259,10 @@ pub fn to_filter_expression<'metadata>(
                         Ok(crate::build_relationship_comparison_expression(
                             type_mappings,
                             column_path,
-                            &target_model_source.source.data_connector,
+                            data_connector,
                             &relationship.relationship_name,
                             &model_target.relationship_type,
-                            &boolean_expression_type.object_type,
+                            &source_boolean_expression_type.object_type,
                             &model_target.model_name,
                             target_model_source.source,
                             relationship.target_capabilities.as_ref().ok_or_else(|| {

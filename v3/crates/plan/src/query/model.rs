@@ -597,6 +597,7 @@ pub fn from_model_selection(
         &model_source.type_mappings,
         &model_source.data_connector,
         &model_selection.selection,
+        metadata_resolve::FieldNestedness::NotNested,
         &mut relationships,
         &mut remote_join_executions,
         &mut remote_predicates,
