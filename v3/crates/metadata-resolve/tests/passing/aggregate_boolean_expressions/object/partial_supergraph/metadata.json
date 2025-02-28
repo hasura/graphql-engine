@@ -221,17 +221,17 @@
             "fields": [
               {
                 "name": "album_id",
-                "type": "Int",
+                "type": "Int!",
                 "description": "The ID of the album"
               },
               {
                 "name": "artist_id",
-                "type": "Int",
+                "type": "Int!",
                 "description": "The ID of the album's artist"
               },
               {
                 "name": "title",
-                "type": "String",
+                "type": "String!",
                 "description": "The title of the album"
               }
             ],

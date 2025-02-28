@@ -1,7 +1,7 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: resolved
-input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested_scalar_array/metadata.json
+input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_field_type_issues/metadata.json
 ---
 (
     Metadata {
@@ -26,7 +26,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             field_type: QualifiedTypeReference {
                                 underlying_type: Named(
                                     Inbuilt(
-                                        Int,
+                                        Float,
                                     ),
                                 ),
                                 nullable: false,
@@ -72,7 +72,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         },
                                     ),
                                 ),
-                                nullable: false,
+                                nullable: true,
                             },
                             description: None,
                             deprecated: None,
@@ -100,7 +100,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 },
                                             ),
                                         ),
-                                        nullable: false,
+                                        nullable: true,
                                     },
                                 ),
                                 nullable: false,
@@ -125,7 +125,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         nullable: false,
                                     },
                                 ),
-                                nullable: false,
+                                nullable: true,
                             },
                             description: None,
                             deprecated: None,
@@ -1260,7 +1260,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             field_type: QualifiedTypeReference {
                                 underlying_type: Named(
                                     Inbuilt(
-                                        Int,
+                                        Float,
                                     ),
                                 ),
                                 nullable: false,
@@ -1306,7 +1306,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         },
                                     ),
                                 ),
-                                nullable: false,
+                                nullable: true,
                             },
                             description: None,
                             deprecated: None,
@@ -1334,7 +1334,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 },
                                             ),
                                         ),
-                                        nullable: false,
+                                        nullable: true,
                                     },
                                 ),
                                 nullable: false,
@@ -1359,7 +1359,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         nullable: false,
                                     },
                                 ),
-                                nullable: false,
+                                nullable: true,
                             },
                             description: None,
                             deprecated: None,
@@ -2353,22 +2353,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 scalar_fields: {
                                     FieldName(
                                         Identifier(
-                                            "id",
-                                        ),
-                                    ): ScalarBooleanExpressionGraphqlConfig {
-                                        type_name: TypeName(
-                                            Name(
-                                                "Int_Comparison_Exp",
-                                            ),
-                                        ),
-                                        is_null_operator_name: Some(
-                                            Name(
-                                                "_is_null",
-                                            ),
-                                        ),
-                                    },
-                                    FieldName(
-                                        Identifier(
                                             "name",
                                         ),
                                     ): ScalarBooleanExpressionGraphqlConfig {
@@ -2433,55 +2417,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 },
                             },
                             scalar_fields: {
-                                FieldName(
-                                    Identifier(
-                                        "id",
-                                    ),
-                                ): ComparisonExpressionInfo {
-                                    boolean_expression_type_name: FromBooleanExpressionType(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "int_bool_exp",
-                                                ),
-                                            ),
-                                        },
-                                    ),
-                                    operators: {},
-                                    operator_mapping: {
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: DataConnectorName(
-                                                Identifier(
-                                                    "custom",
-                                                ),
-                                            ),
-                                        }: OperatorMapping(
-                                            {},
-                                        ),
-                                    },
-                                    logical_operators: Include {
-                                        graphql: Some(
-                                            LogicalOperatorsGraphqlConfig {
-                                                and_operator_name: Name(
-                                                    "_and",
-                                                ),
-                                                or_operator_name: Name(
-                                                    "_or",
-                                                ),
-                                                not_operator_name: Name(
-                                                    "_not",
-                                                ),
-                                            },
-                                        ),
-                                    },
-                                    field_kind: Scalar,
-                                },
                                 FieldName(
                                     Identifier(
                                         "name",
@@ -2627,22 +2562,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             scalar_fields: {
                                 FieldName(
                                     Identifier(
-                                        "id",
-                                    ),
-                                ): ScalarBooleanExpressionGraphqlConfig {
-                                    type_name: TypeName(
-                                        Name(
-                                            "Int_Comparison_Exp",
-                                        ),
-                                    ),
-                                    is_null_operator_name: Some(
-                                        Name(
-                                            "_is_null",
-                                        ),
-                                    ),
-                                },
-                                FieldName(
-                                    Identifier(
                                         "name",
                                     ),
                                 ): ScalarBooleanExpressionGraphqlConfig {
@@ -2707,55 +2626,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                         scalar_fields: {
-                            FieldName(
-                                Identifier(
-                                    "id",
-                                ),
-                            ): ComparisonExpressionInfo {
-                                boolean_expression_type_name: FromBooleanExpressionType(
-                                    Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "int_bool_exp",
-                                            ),
-                                        ),
-                                    },
-                                ),
-                                operators: {},
-                                operator_mapping: {
-                                    Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
-                                        ),
-                                        name: DataConnectorName(
-                                            Identifier(
-                                                "custom",
-                                            ),
-                                        ),
-                                    }: OperatorMapping(
-                                        {},
-                                    ),
-                                },
-                                logical_operators: Include {
-                                    graphql: Some(
-                                        LogicalOperatorsGraphqlConfig {
-                                            and_operator_name: Name(
-                                                "_and",
-                                            ),
-                                            or_operator_name: Name(
-                                                "_or",
-                                            ),
-                                            not_operator_name: Name(
-                                                "_not",
-                                            ),
-                                        },
-                                    ),
-                                },
-                                field_kind: Scalar,
-                            },
                             FieldName(
                                 Identifier(
                                     "name",
@@ -3356,5 +3226,242 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             ),
         },
     },
-    [],
+    [
+        ObjectTypesIssue(
+            FieldTypeNdcMappingIssue {
+                field_name: FieldName(
+                    Identifier(
+                        "id",
+                    ),
+                ),
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "institution",
+                        ),
+                    ),
+                },
+                data_connector: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: DataConnectorName(
+                        Identifier(
+                            "custom",
+                        ),
+                    ),
+                },
+                data_connector_object: DataConnectorObjectType(
+                    "institution",
+                ),
+                data_connector_column: DataConnectorColumnName(
+                    "id",
+                ),
+                issue: TypeCompatibilityIssue {
+                    opendd_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Inbuilt(
+                                Float,
+                            ),
+                        ),
+                        nullable: false,
+                    },
+                    ndc_type: Named {
+                        name: TypeName(
+                            "Int",
+                        ),
+                    },
+                    issue_message: "Inbuilt type 'Float' is not compatible with the data connector's type representation 'Int32'",
+                },
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNdcMappingIssue {
+                field_name: FieldName(
+                    Identifier(
+                        "location",
+                    ),
+                ),
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "institution",
+                        ),
+                    ),
+                },
+                data_connector: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: DataConnectorName(
+                        Identifier(
+                            "custom",
+                        ),
+                    ),
+                },
+                data_connector_object: DataConnectorObjectType(
+                    "institution",
+                ),
+                data_connector_column: DataConnectorColumnName(
+                    "location",
+                ),
+                issue: TypeCompatibilityIssue {
+                    opendd_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Custom(
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "location",
+                                        ),
+                                    ),
+                                },
+                            ),
+                        ),
+                        nullable: true,
+                    },
+                    ndc_type: Named {
+                        name: TypeName(
+                            "location",
+                        ),
+                    },
+                    issue_message: "Expected a nullable type",
+                },
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNdcMappingIssue {
+                field_name: FieldName(
+                    Identifier(
+                        "staff",
+                    ),
+                ),
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "institution",
+                        ),
+                    ),
+                },
+                data_connector: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: DataConnectorName(
+                        Identifier(
+                            "custom",
+                        ),
+                    ),
+                },
+                data_connector_object: DataConnectorObjectType(
+                    "institution",
+                ),
+                data_connector_column: DataConnectorColumnName(
+                    "staff",
+                ),
+                issue: TypeCompatibilityIssue {
+                    opendd_type: QualifiedTypeReference {
+                        underlying_type: List(
+                            QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "staff_member",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                        ),
+                        nullable: false,
+                    },
+                    ndc_type: Array {
+                        element_type: Named {
+                            name: TypeName(
+                                "staff_member",
+                            ),
+                        },
+                    },
+                    issue_message: "Expected a nullable type",
+                },
+            },
+        ),
+        ObjectTypesIssue(
+            FieldTypeNdcMappingIssue {
+                field_name: FieldName(
+                    Identifier(
+                        "departments",
+                    ),
+                ),
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "institution",
+                        ),
+                    ),
+                },
+                data_connector: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: DataConnectorName(
+                        Identifier(
+                            "custom",
+                        ),
+                    ),
+                },
+                data_connector_object: DataConnectorObjectType(
+                    "institution",
+                ),
+                data_connector_column: DataConnectorColumnName(
+                    "departments",
+                ),
+                issue: TypeCompatibilityIssue {
+                    opendd_type: QualifiedTypeReference {
+                        underlying_type: List(
+                            QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                        ),
+                        nullable: true,
+                    },
+                    ndc_type: Array {
+                        element_type: Named {
+                            name: TypeName(
+                                "String",
+                            ),
+                        },
+                    },
+                    issue_message: "Expected a nullable type",
+                },
+            },
+        ),
+    ],
 )

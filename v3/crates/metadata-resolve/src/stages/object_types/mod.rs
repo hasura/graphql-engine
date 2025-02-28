@@ -23,6 +23,7 @@ pub use types::{
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
+use crate::helpers::type_validation::validate_type_compatibility;
 use crate::helpers::types::{mk_name, unwrap_custom_type_name, unwrap_qualified_type_name};
 use crate::stages::{
     apollo, data_connector_scalar_types, data_connectors, graphql_config, scalar_types,
@@ -431,6 +432,25 @@ pub fn resolve_data_connector_type_mapping(
             };
         let source_column =
             get_column(ndc_object_type, field_name, &resolved_field_mapping_column)?;
+
+        // Validate OpenDd type mapping to NDC type
+        if let Some(issue) = validate_type_compatibility(
+            data_connector_scalars,
+            &field_definition.field_type,
+            &source_column.r#type,
+        ) {
+            issues.push(ObjectTypesIssue::FieldTypeNdcMappingIssue {
+                field_name: field_name.clone(),
+                type_name: qualified_type_name.clone(),
+                data_connector: qualified_data_connector_name.clone(),
+                data_connector_object: data_connector_type_mapping
+                    .data_connector_object_type
+                    .clone(),
+                data_connector_column: resolved_field_mapping_column.clone().into_owned(),
+                issue,
+            });
+        }
+
         let underlying_column_type = get_underlying_named_type(&source_column.r#type);
 
         let scalar_type = data_connector_context
@@ -459,7 +479,7 @@ pub fn resolve_data_connector_type_mapping(
                     field_name: field_name.clone(),
                     type_name: qualified_type_name.clone(),
                 });
-            };
+            }
         }
 
         let column_type_representation = scalar_type.map(|ty| ty.representation.clone());

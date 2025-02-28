@@ -9,6 +9,7 @@ pub mod http;
 pub mod ndc_validation;
 pub mod relationship;
 pub mod type_mappings;
+pub mod type_validation;
 pub mod typecheck;
 pub mod types;
 

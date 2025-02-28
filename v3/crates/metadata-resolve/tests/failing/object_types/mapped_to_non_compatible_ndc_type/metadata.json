@@ -64,10 +64,6 @@
                 "type": "institution",
                 "comparableFields": [
                   {
-                    "fieldName": "id",
-                    "booleanExpressionType": "int_bool_exp"
-                  },
-                  {
                     "fieldName": "name",
                     "booleanExpressionType": "string_bool_exp"
                   },
@@ -93,7 +89,7 @@
             "fields": [
               {
                 "name": "id",
-                "type": "Int!"
+                "type": "Float!"
               },
               {
                 "name": "name",
@@ -1756,6 +1752,7 @@
     "disallow_multiple_input_object_fields_in_graphql_order_by": true,
     "require_nested_support_for_order_by_expressions": true,
     "disallow_model_v1_ordering_non_scalar_fields": true,
-    "disallow_array_relationship_in_order_by": true
+    "disallow_array_relationship_in_order_by": true,
+    "validate_object_type_data_connector_type_mapping_field_types": true
   }
 }

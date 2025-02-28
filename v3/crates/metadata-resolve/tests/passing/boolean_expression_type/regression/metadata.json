@@ -793,11 +793,11 @@
             "fields": [
               {
                 "name": "ArtistId",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "Name",
-                "type": "String"
+                "type": "String!"
               }
             ],
             "graphql": {
@@ -838,11 +838,11 @@
             "fields": [
               {
                 "name": "affected_rows",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "returning",
-                "type": "[Artist]"
+                "type": "[Artist!]!"
               }
             ],
             "graphql": {
@@ -876,15 +876,15 @@
             "fields": [
               {
                 "name": "AlbumId",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "Title",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "ArtistId",
-                "type": "Int"
+                "type": "Int!"
               }
             ],
             "graphql": {
@@ -923,11 +923,11 @@
             "fields": [
               {
                 "name": "affected_rows",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "returning",
-                "type": "[Album]"
+                "type": "[Album!]!"
               }
             ],
             "graphql": {
@@ -961,15 +961,15 @@
             "fields": [
               {
                 "name": "TrackId",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "Name",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "AlbumId",
-                "type": "Int"
+                "type": "Int!"
               }
             ],
             "graphql": {
@@ -1008,11 +1008,11 @@
             "fields": [
               {
                 "name": "PlaylistId",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "TrackId",
-                "type": "Int"
+                "type": "Int!"
               }
             ],
             "graphql": {
@@ -1053,11 +1053,11 @@
             "fields": [
               {
                 "name": "ArtistId",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "Name",
-                "type": "String"
+                "type": "String!"
               }
             ],
             "graphql": {
@@ -2914,15 +2914,15 @@
             "fields": [
               {
                 "name": "SongId",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "Name",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "AlbumId",
-                "type": "Int"
+                "type": "Int!"
               }
             ],
             "graphql": {

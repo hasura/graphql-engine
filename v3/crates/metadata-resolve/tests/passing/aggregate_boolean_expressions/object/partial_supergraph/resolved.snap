@@ -29,7 +29,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         Int,
                                     ),
                                 ),
-                                nullable: true,
+                                nullable: false,
                             },
                             description: Some(
                                 "The ID of the album",
@@ -48,7 +48,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         Int,
                                     ),
                                 ),
-                                nullable: true,
+                                nullable: false,
                             },
                             description: Some(
                                 "The ID of the album's artist",
@@ -67,7 +67,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         String,
                                     ),
                                 ),
-                                nullable: true,
+                                nullable: false,
                             },
                             description: Some(
                                 "The title of the album",
@@ -388,7 +388,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         Int,
                                     ),
                                 ),
-                                nullable: true,
+                                nullable: false,
                             },
                             description: Some(
                                 "The ID of the album",
@@ -407,7 +407,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         Int,
                                     ),
                                 ),
-                                nullable: true,
+                                nullable: false,
                             },
                             description: Some(
                                 "The ID of the album's artist",
@@ -426,7 +426,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         String,
                                     ),
                                 ),
-                                nullable: true,
+                                nullable: false,
                             },
                             description: Some(
                                 "The title of the album",

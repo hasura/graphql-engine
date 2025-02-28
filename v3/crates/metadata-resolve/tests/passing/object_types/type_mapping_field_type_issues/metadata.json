@@ -64,10 +64,6 @@
                 "type": "institution",
                 "comparableFields": [
                   {
-                    "fieldName": "id",
-                    "booleanExpressionType": "int_bool_exp"
-                  },
-                  {
                     "fieldName": "name",
                     "booleanExpressionType": "string_bool_exp"
                   },
@@ -93,7 +89,7 @@
             "fields": [
               {
                 "name": "id",
-                "type": "Int!"
+                "type": "Float!"
               },
               {
                 "name": "name",
@@ -101,15 +97,15 @@
               },
               {
                 "name": "location",
-                "type": "location!"
+                "type": "location"
               },
               {
                 "name": "staff",
-                "type": "[staff_member!]!"
+                "type": "[staff_member]!"
               },
               {
                 "name": "departments",
-                "type": "[String!]!"
+                "type": "[String!]"
               }
             ],
             "graphql": {

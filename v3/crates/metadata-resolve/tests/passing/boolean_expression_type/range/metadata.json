@@ -87,11 +87,11 @@
       "fields": [
         {
           "name": "start",
-          "type": "Int!"
+          "type": "Float!"
         },
         {
           "name": "end",
-          "type": "Int!"
+          "type": "Float!"
         }
       ],
       "graphql": {
