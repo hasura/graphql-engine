@@ -12,7 +12,7 @@ use crate::types::{PlanError, RelationshipError};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{
-    Metadata, Qualified, QualifiedBaseType, QualifiedTypeReference, TypeMapping,
+    FieldNestedness, Metadata, Qualified, QualifiedBaseType, QualifiedTypeReference, TypeMapping,
 };
 use open_dds::{
     arguments::ArgumentName,
@@ -43,6 +43,7 @@ pub fn resolve_field_selection(
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector: &metadata_resolve::DataConnectorLink,
     selection: &IndexMap<Alias, ObjectSubSelection>,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
@@ -69,6 +70,7 @@ pub fn resolve_field_selection(
                     field_mappings,
                     object_type_name,
                     object_type,
+                    relationship_field_nestedness,
                     relationships,
                     remote_join_executions,
                     remote_predicates,
@@ -86,6 +88,7 @@ pub fn resolve_field_selection(
                     object_type,
                     type_mappings,
                     data_connector,
+                    relationship_field_nestedness,
                     relationships,
                     remote_join_executions,
                     remote_predicates,
@@ -139,6 +142,7 @@ fn from_field_selection(
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &OutputObjectTypeView,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
@@ -167,6 +171,7 @@ fn from_field_selection(
         data_connector,
         field_selection,
         field_type,
+        relationship_field_nestedness,
         relationships,
         &mut nested_remote_join_executions,
         remote_predicates,
@@ -229,6 +234,7 @@ fn resolve_nested_field_selection(
     data_connector: &metadata_resolve::DataConnectorLink,
     field_selection: &ObjectFieldSelection,
     field_type: &QualifiedTypeReference,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
@@ -257,6 +263,11 @@ fn resolve_nested_field_selection(
                 &session.role,
             )?;
 
+            let new_relationship_field_nestedness = match field_type.underlying_type {
+                metadata_resolve::QualifiedBaseType::Named(_) => FieldNestedness::ObjectNested,
+                metadata_resolve::QualifiedBaseType::List(_) => FieldNestedness::ArrayNested,
+            };
+
             // Resolve the nested selection
             let resolved_nested_selection = resolve_field_selection(
                 metadata,
@@ -267,6 +278,7 @@ fn resolve_nested_field_selection(
                 type_mappings,
                 data_connector,
                 nested_selection,
+                relationship_field_nestedness.max(new_relationship_field_nestedness),
                 relationships,
                 remote_join_executions,
                 remote_predicates,
@@ -307,6 +319,7 @@ fn from_relationship_selection(
     object_type: &OutputObjectTypeView,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector: &metadata_resolve::DataConnectorLink,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
@@ -324,6 +337,7 @@ fn from_relationship_selection(
                 object_type_name,
                 relationship_selection,
                 relationship_field,
+                relationship_field_nestedness,
                 type_mappings,
                 data_connector,
                 model_relationship_target,
@@ -341,6 +355,7 @@ fn from_relationship_selection(
                 object_type_name,
                 relationship_selection,
                 relationship_field,
+                relationship_field_nestedness,
                 data_connector,
                 type_mappings,
                 command_relationship_target,
@@ -360,6 +375,7 @@ fn from_model_relationship(
     object_type_name: &Qualified<CustomTypeName>,
     relationship_selection: &RelationshipSelection,
     relationship_field: &metadata_resolve::RelationshipField,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     source_data_connector: &metadata_resolve::DataConnectorLink,
     model_relationship_target: &metadata_resolve::ModelRelationshipTarget,
@@ -378,9 +394,6 @@ fn from_model_relationship(
         offset,
     } = target;
     let target_model_name = &model_relationship_target.model_name;
-
-    // TODO: this is wrong and we should be passing this in
-    let relationship_field_nestedness = metadata_resolve::FieldNestedness::NotNested;
 
     let target_model = metadata.models.get(target_model_name).ok_or_else(|| {
         PlanError::Internal(format!("model {target_model_name} not found in metadata"))
@@ -565,6 +578,7 @@ fn from_command_relationship(
     object_type_name: &Qualified<CustomTypeName>,
     relationship_selection: &RelationshipSelection,
     relationship_field: &metadata_resolve::RelationshipField,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     source_data_connector: &metadata_resolve::DataConnectorLink,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     command_relationship_target: &metadata_resolve::CommandRelationshipTarget,
@@ -606,9 +620,6 @@ fn from_command_relationship(
             ));
         }
     };
-
-    // TODO: this is wrong and we should be passing this in
-    let relationship_field_nestedness = metadata_resolve::FieldNestedness::NotNested;
 
     let target_capabilities = relationship_field
         .target_capabilities

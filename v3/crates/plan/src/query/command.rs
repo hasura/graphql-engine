@@ -120,6 +120,7 @@ fn from_command_output_type(
                 &command_source.type_mappings,
                 &command_source.data_connector,
                 command_selection_set,
+                metadata_resolve::FieldNestedness::NotNested,
                 relationships,
                 remote_join_executions,
                 remote_predicates,
@@ -259,7 +260,7 @@ pub(crate) fn from_command_selection(
                         )
                     })
                     .collect(),
-                procedure_fields: Some(wrap_procedure_ndc_fields(&output_shape, ndc_fields)),
+                procedure_fields: wrap_function_ndc_field(&output_shape, ndc_fields),
                 collection_relationships: relationships.clone(),
                 data_connector: command_source.data_connector.clone(),
             };
@@ -315,24 +316,6 @@ fn wrap_selection_in_response_config(
                 }))
             }
         }
-    }
-}
-
-fn wrap_procedure_ndc_fields(
-    output_shape: &OutputShape,
-    ndc_fields: IndexMap<NdcFieldAlias, Field>,
-) -> NestedField {
-    match output_shape {
-        OutputShape::Object { .. } => NestedField::Object(NestedObject { fields: ndc_fields }),
-        OutputShape::Array { inner } => {
-            let nested_fields = wrap_procedure_ndc_fields(inner, ndc_fields);
-            NestedField::Array(NestedArray {
-                fields: Box::new(nested_fields),
-            })
-        }
-        OutputShape::ScalarType { .. } => NestedField::Object(NestedObject {
-            fields: wrap_scalar_select(None),
-        }),
     }
 }
 
