@@ -167,7 +167,8 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
             Some(new_compatibility_date(2025, 2, 20))
         }
         Flag::RequireValidCommandOutputType => Some(new_compatibility_date(2025, 2, 27)),
-        Flag::ValidateObjectTypeDataConnectorTypeMappingFieldTypes => {
+        Flag::ValidateObjectTypeDataConnectorTypeMappingFieldTypes
+        | Flag::ValidateArgumentMappingTypes => {
             //TODO: Should be set on next release
             None
         }

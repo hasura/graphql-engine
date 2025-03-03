@@ -102,7 +102,10 @@ impl ShouldBeAnError for CommandsIssue {
             CommandsIssue::InvalidCommandOutputType { .. } => {
                 flags.contains(open_dds::flags::Flag::RequireValidCommandOutputType)
             }
-            _ => false,
+            CommandsIssue::FunctionArgumentMappingIssue { issue, .. }
+            | CommandsIssue::ProcedureArgumentMappingIssue { issue, .. } => {
+                issue.should_be_an_error(flags)
+            }
         }
     }
 }

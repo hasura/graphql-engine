@@ -2,6 +2,7 @@ use super::ndc_validation::{unwrap_nullable_type, NDCValidationError};
 use crate::data_connectors::DataConnectorContext;
 use crate::helpers::ndc_validation;
 use crate::helpers::type_mappings;
+use crate::helpers::type_validation;
 use crate::helpers::typecheck::{
     typecheck_qualified_type_reference, TypecheckError, TypecheckIssue,
 };
@@ -13,6 +14,7 @@ use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions,
     models_graphql, object_relationships, object_types, scalar_types, type_permissions,
 };
+use crate::types::error::ShouldBeAnError;
 use crate::types::error::{Error, TypeError, TypePredicateError};
 use crate::types::permission::ValueExpressionOrPredicate;
 use crate::types::subgraph::{ArgumentInfo, ArgumentKind, Qualified, QualifiedTypeReference};
@@ -79,6 +81,23 @@ pub enum ArgumentMappingIssue {
     UnmappedNdcArguments {
         ndc_argument_names: Vec<DataConnectorArgumentName>,
     },
+    #[error("the type of argument '{argument_name:}' is not compatible with the type of the data connector argument '{ndc_argument_name:}': {issue:}")]
+    IncompatibleType {
+        argument_name: ArgumentName,
+        ndc_argument_name: DataConnectorArgumentName,
+        issue: type_validation::TypeCompatibilityIssue,
+    },
+}
+
+impl ShouldBeAnError for ArgumentMappingIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            ArgumentMappingIssue::UnmappedNdcArguments { .. } => false,
+            ArgumentMappingIssue::IncompatibleType { .. } => {
+                flags.contains(open_dds::flags::Flag::ValidateArgumentMappingTypes)
+            }
+        }
+    }
 }
 
 pub struct ArgumentMappingResults<'a> {
@@ -94,6 +113,7 @@ pub fn get_argument_mappings<'a>(
     argument_mapping: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
     ndc_arguments_types: &'a BTreeMap<DataConnectorArgumentName, ndc_models::Type>,
     data_connector_context: &DataConnectorContext,
+    data_connector_scalars: &'a data_connector_scalar_types::DataConnectorScalars,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
@@ -101,6 +121,7 @@ pub fn get_argument_mappings<'a>(
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
 ) -> Result<ArgumentMappingResults<'a>, ArgumentMappingError> {
+    let mut issues = Vec::new();
     let mut unconsumed_argument_mappings: BTreeMap<&ArgumentName, &DataConnectorArgumentName> =
         argument_mapping.iter().collect();
     let mut unmapped_ndc_arguments: HashSet<&DataConnectorArgumentName> =
@@ -127,6 +148,18 @@ pub fn get_argument_mappings<'a>(
                 argument_name: argument_name.clone(),
                 ndc_argument_name: mapped_to_ndc_argument_name.clone(),
             })?;
+        // Validate the type compatibility
+        if let Some(issue) = type_validation::validate_type_compatibility(
+            data_connector_scalars,
+            &argument_type.argument_type,
+            ndc_argument_type,
+        ) {
+            issues.push(ArgumentMappingIssue::IncompatibleType {
+                argument_name: argument_name.clone(),
+                ndc_argument_name: mapped_to_ndc_argument_name.clone(),
+                issue,
+            });
+        }
         if !unmapped_ndc_arguments.remove(&mapped_to_ndc_argument_name) {
             return Err(ArgumentMappingError::DuplicateNdcArgumentMapping {
                 ndc_argument_name: mapped_to_ndc_argument_name.clone(),
@@ -217,15 +250,11 @@ pub fn get_argument_mappings<'a>(
     // If any unmapped ndc arguments, we have missing arguments or data connector link argument presets
     // We raise this as an issue because existing projects have this issue and we need to be backwards
     // compatible. Those existing projects will probably fail at query time, but they do build and start 😭
-    let issues = if unmapped_ndc_arguments.is_empty() {
-        vec![]
-    } else {
-        vec![
-            (ArgumentMappingIssue::UnmappedNdcArguments {
-                ndc_argument_names: unmapped_ndc_arguments.into_iter().cloned().collect(),
-            }),
-        ]
-    };
+    if !unmapped_ndc_arguments.is_empty() {
+        issues.push(ArgumentMappingIssue::UnmappedNdcArguments {
+            ndc_argument_names: unmapped_ndc_arguments.into_iter().cloned().collect(),
+        });
+    }
 
     Ok(ArgumentMappingResults {
         argument_mappings: resolved_argument_mappings,

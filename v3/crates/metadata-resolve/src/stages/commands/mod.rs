@@ -5,9 +5,13 @@ mod error;
 mod source;
 mod types;
 pub use error::CommandsError;
+use open_dds::data_connector::DataConnectorName;
 
 use crate::helpers::types::TrackGraphQLRootFields;
-use crate::stages::{boolean_expressions, data_connectors, scalar_types, type_permissions};
+use crate::stages::{
+    boolean_expressions, data_connector_scalar_types, data_connectors, scalar_types,
+    type_permissions,
+};
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 
@@ -22,6 +26,10 @@ use std::collections::BTreeMap;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     track_root_fields: &mut TrackGraphQLRootFields,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -50,6 +58,7 @@ pub fn resolve(
                 &resolved_command,
                 subgraph,
                 data_connectors,
+                data_connector_scalars,
                 object_types,
                 scalar_types,
                 boolean_expression_types,
