@@ -8,6 +8,7 @@ use open_dds::{
     commands::CommandName,
     data_connector::{CollectionName, DataConnectorColumnName},
     models::ModelName,
+    query::ObjectSubSelection,
     relationships::{RelationshipName, RelationshipType},
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
@@ -187,7 +188,6 @@ pub fn process_command_relationship_definition(
 
 pub struct CommandRemoteRelationshipParts {
     pub join_mapping: HashMap<FieldName, (SourceFieldAlias, TargetField)>,
-    pub phantom_fields: BTreeMap<NdcFieldAlias, Field>,
     pub arguments: IndexMap<DataConnectorArgumentName, Argument>,
 }
 
@@ -198,9 +198,10 @@ pub fn calculate_remote_relationship_fields_for_command_target(
     relationship_command_mappings: &Vec<RelationshipCommandMapping>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     target_argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    selection: &IndexMap<open_dds::query::Alias, ObjectSubSelection>,
+    ndc_fields: &mut IndexMap<NdcFieldAlias, Field>,
 ) -> Result<CommandRemoteRelationshipParts, RelationshipError> {
     let mut join_mapping = HashMap::new();
-    let mut phantom_fields = BTreeMap::new();
     let mut arguments = IndexMap::new();
 
     for metadata_resolve::RelationshipCommandMapping {
@@ -216,12 +217,12 @@ pub fn calculate_remote_relationship_fields_for_command_target(
         )
         .map_err(RelationshipError::RelationshipFieldMappingError)?;
 
-        let ProcessedRemoteRelationship {
-            source_field_alias: ndc_field_alias,
-            field: processed_field,
-        } = process_remote_relationship_field_mapping(&source_column.column);
-
-        phantom_fields.insert(processed_field.0, processed_field.1);
+        let ndc_field_alias = process_remote_relationship_field_mapping(
+            selection,
+            &source_column.column,
+            &source_field.field_name,
+            ndc_fields,
+        );
 
         let target_argument = TargetField::Argument(argument_name.clone());
 
@@ -255,14 +256,12 @@ pub fn calculate_remote_relationship_fields_for_command_target(
 
     Ok(CommandRemoteRelationshipParts {
         join_mapping,
-        phantom_fields,
         arguments,
     })
 }
 
 pub struct ModelRemoteRelationshipParts {
     pub join_mapping: HashMap<FieldName, (SourceFieldAlias, TargetField)>,
-    pub phantom_fields: BTreeMap<NdcFieldAlias, Field>,
     pub relationship_join_filter_expressions: Vec<ResolvedFilterExpression>,
     pub arguments: IndexMap<DataConnectorArgumentName, Argument>,
 }
@@ -274,9 +273,10 @@ pub fn calculate_remote_relationship_fields_for_model_target(
     relationship_model_mappings: &Vec<RelationshipModelMapping>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     target_argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    source_selection: &IndexMap<open_dds::query::Alias, ObjectSubSelection>,
+    ndc_fields: &mut IndexMap<NdcFieldAlias, Field>,
 ) -> Result<ModelRemoteRelationshipParts, RelationshipError> {
     let mut join_mapping = HashMap::new();
-    let mut phantom_fields = BTreeMap::new();
     let mut relationship_join_filter_expressions = vec![];
     let mut arguments = IndexMap::new();
 
@@ -293,12 +293,12 @@ pub fn calculate_remote_relationship_fields_for_model_target(
         )
         .map_err(RelationshipError::RelationshipFieldMappingError)?;
 
-        let ProcessedRemoteRelationship {
-            source_field_alias: ndc_field_alias,
-            field: processed_field,
-        } = process_remote_relationship_field_mapping(&source_column.column);
-
-        phantom_fields.insert(processed_field.0, processed_field.1);
+        let ndc_field_alias = process_remote_relationship_field_mapping(
+            source_selection,
+            &source_column.column,
+            &source_field.field_name,
+            ndc_fields,
+        );
 
         match target {
             metadata_resolve::RelationshipModelMappingTarget::ModelField(
@@ -377,33 +377,54 @@ pub fn calculate_remote_relationship_fields_for_model_target(
 
     Ok(ModelRemoteRelationshipParts {
         join_mapping,
-        phantom_fields,
         relationship_join_filter_expressions,
         arguments,
     })
 }
 
-struct ProcessedRemoteRelationship {
-    source_field_alias: SourceFieldAlias,
-    field: (NdcFieldAlias, Field),
-}
-
 /// Processes a remote relationship field mapping, and returns the alias used in
 /// the NDC IR for that field
+///
+/// - if the selection set DOES NOT contain the field, insert it into the NDC IR
+///   (with an internal alias), and return the alias
+/// - if the selection set already contains the field, do not insert the field
+///   in NDC IR, and return the existing alias
+///
 fn process_remote_relationship_field_mapping(
+    source_selection: &IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>,
     ndc_column_name: &DataConnectorColumnName,
-) -> ProcessedRemoteRelationship {
-    let internal_alias = make_hasura_phantom_field(ndc_column_name);
-    ProcessedRemoteRelationship {
-        source_field_alias: SourceFieldAlias(internal_alias.clone()),
-        field: (
-            NdcFieldAlias::from(internal_alias.as_str()),
-            Field::Column {
-                column: ndc_column_name.clone(),
-                fields: None,
-                arguments: BTreeMap::new(),
-            },
-        ),
+    field_name: &FieldName,
+    ndc_fields: &mut IndexMap<NdcFieldAlias, Field>,
+) -> SourceFieldAlias {
+    let found = source_selection
+        .iter()
+        .find_map(|(alias, column)| match column {
+            open_dds::query::ObjectSubSelection::Field(field) => {
+                if field.target.field_name == *field_name {
+                    Some(alias.clone())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        });
+
+    // if we're not already selecting this field, add it to selection and generate a field name for
+    // it
+    match found {
+        None => {
+            let internal_alias = make_hasura_phantom_field(ndc_column_name);
+            ndc_fields.insert(
+                NdcFieldAlias::from(internal_alias.as_str()),
+                Field::Column {
+                    column: ndc_column_name.clone(),
+                    fields: None,
+                    arguments: BTreeMap::new(),
+                },
+            );
+            SourceFieldAlias(internal_alias)
+        }
+        Some(field_alias) => SourceFieldAlias(field_alias.to_string()),
     }
 }
 
