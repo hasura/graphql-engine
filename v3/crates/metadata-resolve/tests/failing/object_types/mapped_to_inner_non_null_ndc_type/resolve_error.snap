@@ -5,4 +5,4 @@ input_file: crates/metadata-resolve/tests/failing/object_types/mapped_to_inner_n
 ---
 The following issues were raised but disallowed by compatibility configuration:
 
-The field 'departments' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.departments' because: Type '[String]!' is not compatible with NDC type 'Array { element_type: Named { name: TypeName("String") } }' - Expected a nullable type
+The field 'departments' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.departments' because: Type '[String]!' is not compatible with NDC type '[String!]!' - Expected a nullable type

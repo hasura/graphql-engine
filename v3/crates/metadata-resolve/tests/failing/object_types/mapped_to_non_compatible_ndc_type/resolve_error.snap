@@ -5,4 +5,4 @@ input_file: crates/metadata-resolve/tests/failing/object_types/mapped_to_non_com
 ---
 The following issues were raised but disallowed by compatibility configuration:
 
-The field 'id' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.id' because: Type 'Float!' is not compatible with NDC type 'Named { name: TypeName("Int") }' - Inbuilt type 'Float' is not compatible with the data connector's type representation 'Int32'
+The field 'id' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.id' because: Type 'Float!' is not compatible with NDC type 'Int!' - Inbuilt type 'Float' is not compatible with the data connector's type representation 'Int32'

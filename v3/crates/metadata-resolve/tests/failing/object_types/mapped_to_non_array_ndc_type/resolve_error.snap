@@ -5,4 +5,4 @@ input_file: crates/metadata-resolve/tests/failing/object_types/mapped_to_non_arr
 ---
 The following issues were raised but disallowed by compatibility configuration:
 
-The field 'staff' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.staff' because: Type 'staff_member! (in subgraph default)' is not compatible with NDC type 'Array { element_type: Named { name: TypeName("staff_member") } }' - Type mismatch
+The field 'staff' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.staff' because: Type 'staff_member! (in subgraph default)' is not compatible with NDC type '[staff_member!]!' - Type mismatch

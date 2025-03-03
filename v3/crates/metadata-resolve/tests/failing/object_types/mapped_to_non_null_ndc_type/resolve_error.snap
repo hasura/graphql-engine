@@ -5,4 +5,4 @@ input_file: crates/metadata-resolve/tests/failing/object_types/mapped_to_non_nul
 ---
 The following issues were raised but disallowed by compatibility configuration:
 
-The field 'location' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.location' because: Type 'location (in subgraph default)' is not compatible with NDC type 'Named { name: TypeName("location") }' - Expected a nullable type
+The field 'location' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.location' because: Type 'location (in subgraph default)' is not compatible with NDC type 'location!' - Expected a nullable type

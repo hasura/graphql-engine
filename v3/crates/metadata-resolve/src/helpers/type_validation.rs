@@ -3,7 +3,10 @@ use crate::types::subgraph::{QualifiedBaseType, QualifiedTypeName, QualifiedType
 use ndc_models;
 
 #[derive(Debug, thiserror::Error)]
-#[error("Type '{opendd_type:}' is not compatible with NDC type '{ndc_type:?}' - {issue_message:}")]
+#[error(
+    "Type '{opendd_type:}' is not compatible with NDC type '{}' - {issue_message:}",
+    show_ndc_type(ndc_type)
+)]
 pub struct TypeCompatibilityIssue {
     opendd_type: QualifiedTypeReference,
     ndc_type: ndc_models::Type,
@@ -141,5 +144,113 @@ fn map_ndc_type_representation_to_inbuilt_type(
         | ndc_models::TypeRepresentation::Geography
         | ndc_models::TypeRepresentation::Geometry
         | ndc_models::TypeRepresentation::JSON => None,
+    }
+}
+
+pub(crate) fn show_ndc_type(ndc_type: &ndc_models::Type) -> String {
+    match ndc_type {
+        // nullable type
+        ndc_models::Type::Nullable { underlying_type } => {
+            // remove trailing '!', if any, from underlying type
+            show_ndc_type(underlying_type)
+                .trim_end_matches('!')
+                .to_string()
+        }
+        // rest all are non-nullable
+        ndc_models::Type::Named { name } => format!("{name:}!"),
+        ndc_models::Type::Array { element_type } => {
+            format!("[{}]!", show_ndc_type(element_type))
+        }
+        ndc_models::Type::Predicate { object_type_name } => {
+            format!("Predicate({object_type_name:})!")
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::show_ndc_type;
+    use ndc_models::Type;
+
+    #[test]
+    fn test_show_ndc_type_named() {
+        // Test named type - non-nullable
+        assert_eq!(show_ndc_type(&Type::Named { name: "Foo".into() }), "Foo!");
+    }
+
+    #[test]
+    fn test_show_ndc_type_nullable() {
+        // Test nullable type
+        assert_eq!(
+            show_ndc_type(&Type::Nullable {
+                underlying_type: Box::new(Type::Named { name: "Foo".into() })
+            }),
+            "Foo",
+        );
+    }
+
+    #[test]
+    fn test_show_ndc_type_array() {
+        // Test array type
+        assert_eq!(
+            show_ndc_type(&Type::Array {
+                element_type: Box::new(Type::Named { name: "Foo".into() })
+            }),
+            "[Foo!]!"
+        );
+    }
+
+    #[test]
+    fn test_show_ndc_type_nullable_array() {
+        // Test nullable array type
+        assert_eq!(
+            show_ndc_type(&Type::Nullable {
+                underlying_type: Box::new(Type::Array {
+                    element_type: Box::new(Type::Named { name: "Foo".into() })
+                })
+            }),
+            "[Foo!]",
+        );
+    }
+
+    #[test]
+    fn test_show_ndc_type_nullable_array_nullable() {
+        // Test nullable array type with nullable elements
+        assert_eq!(
+            show_ndc_type(&Type::Nullable {
+                underlying_type: Box::new(Type::Nullable {
+                    underlying_type: Box::new(Type::Array {
+                        element_type: Box::new(Type::Nullable {
+                            underlying_type: Box::new(Type::Named { name: "Foo".into() })
+                        })
+                    })
+                })
+            }),
+            "[Foo]",
+        );
+    }
+
+    #[test]
+    fn test_show_ndc_type_predicate() {
+        // Test predicate type
+        assert_eq!(
+            show_ndc_type(&Type::Predicate {
+                object_type_name: "Foo".into()
+            }),
+            "Predicate(Foo)!",
+        );
+    }
+
+    #[test]
+    fn test_show_ndc_type_nullable_predicate() {
+        // Test nullable predicate type
+        assert_eq!(
+            show_ndc_type(&Type::Nullable {
+                underlying_type: Box::new(Type::Predicate {
+                    object_type_name: "Foo".into()
+                })
+            }),
+            "Predicate(Foo)",
+        );
     }
 }
