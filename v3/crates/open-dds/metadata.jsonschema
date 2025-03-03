@@ -3748,6 +3748,10 @@
         "validate_object_type_data_connector_type_mapping_field_types": {
           "default": false,
           "type": "boolean"
+        },
+        "validate_argument_mapping_types": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

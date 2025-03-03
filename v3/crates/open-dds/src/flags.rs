@@ -47,6 +47,7 @@ pub enum Flag {
     DisallowUnknownValuesInArguments,
     RequireValidCommandOutputType,
     ValidateObjectTypeDataConnectorTypeMappingFieldTypes,
+    ValidateArgumentMappingTypes,
 }
 
 impl Flag {
@@ -127,6 +128,7 @@ impl Flag {
             Flag::ValidateObjectTypeDataConnectorTypeMappingFieldTypes => {
                 "validate_object_type_data_connector_type_mapping_field_types"
             }
+            Flag::ValidateArgumentMappingTypes => "validate_argument_mapping_types",
         }
     }
 }

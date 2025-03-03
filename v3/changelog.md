@@ -8,6 +8,8 @@
 
 - Validate `ObjectType` field types against mapped NDC types, ensuring
   compatibility of nullability, arrays, and scalar representations.
+- Validate argument types against mapped NDC types, ensuring compatibility of
+  nullability, arrays, and scalar representations.
 
 ### Changed
 

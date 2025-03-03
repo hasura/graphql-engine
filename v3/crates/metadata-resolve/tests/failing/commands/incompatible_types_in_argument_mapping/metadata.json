@@ -8,31 +8,26 @@
           "kind": "Command",
           "version": "v1",
           "definition": {
-            "name": "function_with_args",
+            "name": "procedure_with_args",
             "arguments": [
               {
                 "name": "argA",
-                "type": "String!"
+                "type": "Boolean!"
               },
               {
                 "name": "argB",
-                "type": "Int!"
-              },
-              {
-                "name": "http_headers",
-                "type": "Headers!"
+                "type": "[Int]!"
               }
             ],
             "outputType": "String",
             "source": {
               "dataConnectorName": "myconnector",
               "dataConnectorCommand": {
-                "function": "function_with_args"
+                "procedure": "procedure_with_args"
               },
               "argumentMapping": {
                 "argA": "arg1",
-                "argB": "arg2",
-                "http_headers": "headers"
+                "argB": "arg2"
               }
             }
           }
@@ -96,9 +91,10 @@
                 },
                 "object_types": {},
                 "collections": [],
-                "functions": [
+                "functions": [],
+                "procedures": [
                   {
-                    "name": "function_with_args",
+                    "name": "procedure_with_args",
                     "arguments": {
                       "headers": {
                         "type": {
@@ -124,8 +120,7 @@
                       "name": "String"
                     }
                   }
-                ],
-                "procedures": []
+                ]
               },
               "capabilities": {
                 "version": "0.1.0",
@@ -154,10 +149,7 @@
           "definition": {
             "dataConnectorName": "myconnector",
             "dataConnectorScalarType": "String",
-            "representation": "String",
-            "graphql": {
-              "comparisonExpressionTypeName": "myconnector_String_comparisonexp"
-            }
+            "representation": "String"
           }
         },
         {
@@ -166,10 +158,7 @@
           "definition": {
             "dataConnectorName": "myconnector",
             "dataConnectorScalarType": "Int",
-            "representation": "Int",
-            "graphql": {
-              "comparisonExpressionTypeName": "myconnector_Int_comparisonexp"
-            }
+            "representation": "Int"
           }
         },
         {
@@ -178,10 +167,7 @@
           "definition": {
             "dataConnectorName": "myconnector",
             "dataConnectorScalarType": "Headers",
-            "representation": "Headers",
-            "graphql": {
-              "comparisonExpressionTypeName": "myconnector_Int_comparisonexp"
-            }
+            "representation": "Headers"
           }
         },
         {
@@ -197,5 +183,8 @@
         }
       ]
     }
-  ]
+  ],
+  "flags": {
+    "validate_argument_mapping_types": true
+  }
 }

@@ -39,11 +39,11 @@
             "arguments": [
               {
                 "name": "argA",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "argB",
-                "type": "Int"
+                "type": "Int!"
               }
             ],
             "orderableFields": [

@@ -1,7 +1,7 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: resolved
-input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_including_connector_link_presets/metadata.json
+input_file: crates/metadata-resolve/tests/passing/models/issue_when_types_not_compatible_in_argument_mapping/metadata.json
 ---
 (
     Metadata {
@@ -247,7 +247,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                                         String,
                                     ),
                                 ),
-                                nullable: false,
+                                nullable: true,
                             },
                             description: None,
                             argument_kind: Other,
@@ -258,10 +258,15 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                             ),
                         ): ArgumentInfo {
                             argument_type: QualifiedTypeReference {
-                                underlying_type: Named(
-                                    Inbuilt(
-                                        Int,
-                                    ),
+                                underlying_type: List(
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
                                 ),
                                 nullable: false,
                             },
@@ -760,5 +765,117 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
         },
         roles: {},
     },
-    [],
+    [
+        ModelIssue(
+            FunctionArgumentMappingIssue {
+                data_connector_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: DataConnectorName(
+                        Identifier(
+                            "myconnector",
+                        ),
+                    ),
+                },
+                model_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: ModelName(
+                        Identifier(
+                            "collection_with_args",
+                        ),
+                    ),
+                },
+                collection_name: CollectionName(
+                    "collection_with_args",
+                ),
+                issue: IncompatibleType {
+                    argument_name: ArgumentName(
+                        Identifier(
+                            "argA",
+                        ),
+                    ),
+                    ndc_argument_name: DataConnectorArgumentName(
+                        "arg1",
+                    ),
+                    issue: TypeCompatibilityIssue {
+                        opendd_type: QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    String,
+                                ),
+                            ),
+                            nullable: true,
+                        },
+                        ndc_type: Named {
+                            name: TypeName(
+                                "String",
+                            ),
+                        },
+                        issue_message: "Expected a nullable type",
+                    },
+                },
+            },
+        ),
+        ModelIssue(
+            FunctionArgumentMappingIssue {
+                data_connector_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: DataConnectorName(
+                        Identifier(
+                            "myconnector",
+                        ),
+                    ),
+                },
+                model_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: ModelName(
+                        Identifier(
+                            "collection_with_args",
+                        ),
+                    ),
+                },
+                collection_name: CollectionName(
+                    "collection_with_args",
+                ),
+                issue: IncompatibleType {
+                    argument_name: ArgumentName(
+                        Identifier(
+                            "argB",
+                        ),
+                    ),
+                    ndc_argument_name: DataConnectorArgumentName(
+                        "arg2",
+                    ),
+                    issue: TypeCompatibilityIssue {
+                        opendd_type: QualifiedTypeReference {
+                            underlying_type: List(
+                                QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                            ),
+                            nullable: false,
+                        },
+                        ndc_type: Named {
+                            name: TypeName(
+                                "Int",
+                            ),
+                        },
+                        issue_message: "Type mismatch",
+                    },
+                },
+            },
+        ),
+    ],
 )

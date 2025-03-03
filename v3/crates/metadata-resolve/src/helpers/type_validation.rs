@@ -93,6 +93,13 @@ fn validate_type_structure(
                         list_opendd_type.nullable,
                     )
                 }
+                (
+                    QualifiedBaseType::Named(QualifiedTypeName::Custom(_)), // Custom boolean expression type
+                    ndc_models::Type::Predicate { .. },                     // Predicate type
+                ) => {
+                    // This is valid
+                    None
+                }
                 (_, _) => {
                     // This is invalid
                     Some("Type mismatch".to_string())

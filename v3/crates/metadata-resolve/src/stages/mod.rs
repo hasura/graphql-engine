@@ -220,6 +220,7 @@ fn resolve_internal(
     let commands::CommandsOutput { commands, issues } = commands::resolve(
         &metadata_accessor,
         &data_connectors,
+        &data_connector_scalars,
         &object_types_with_permissions,
         &mut track_root_fields,
         &scalar_types,

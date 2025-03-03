@@ -5,35 +5,70 @@
       "name": "default",
       "objects": [
         {
-          "kind": "Command",
+          "kind": "ObjectType",
           "version": "v1",
           "definition": {
-            "name": "function_with_args",
+            "name": "RowType",
+            "fields": [
+              {
+                "name": "test",
+                "type": "String!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "myconnector",
+                "dataConnectorObjectType": "row_type",
+                "fieldMapping": {
+                  "test": {
+                    "column": {
+                      "name": "test"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "collection_with_args",
+            "objectType": "RowType",
             "arguments": [
               {
                 "name": "argA",
-                "type": "String!"
+                "type": "String"
               },
               {
                 "name": "argB",
-                "type": "Int!"
-              },
-              {
-                "name": "http_headers",
-                "type": "Headers!"
+                "type": "[Int!]!"
               }
             ],
-            "outputType": "String",
+            "orderableFields": [
+              {
+                "fieldName": "test",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
             "source": {
               "dataConnectorName": "myconnector",
-              "dataConnectorCommand": {
-                "function": "function_with_args"
-              },
+              "collection": "collection_with_args",
               "argumentMapping": {
                 "argA": "arg1",
-                "argB": "arg2",
-                "http_headers": "headers"
+                "argB": "arg2"
               }
+            },
+            "graphql": {
+              "selectMany": {
+                "queryRootField": "collection_with_args"
+              },
+              "selectUniques": [],
+              "argumentsInputType": "collection_with_args_input_args",
+              "orderByExpressionType": "collection_with_args_order_by"
             }
           }
         },
@@ -94,11 +129,21 @@
                     "comparison_operators": {}
                   }
                 },
-                "object_types": {},
-                "collections": [],
-                "functions": [
+                "object_types": {
+                  "row_type": {
+                    "fields": {
+                      "test": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
                   {
-                    "name": "function_with_args",
+                    "name": "collection_with_args",
                     "arguments": {
                       "headers": {
                         "type": {
@@ -119,12 +164,12 @@
                         }
                       }
                     },
-                    "result_type": {
-                      "type": "named",
-                      "name": "String"
-                    }
+                    "type": "row_type",
+                    "foreign_keys": {},
+                    "uniqueness_constraints": {}
                   }
                 ],
+                "functions": [],
                 "procedures": []
               },
               "capabilities": {
