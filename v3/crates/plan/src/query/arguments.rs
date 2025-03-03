@@ -580,7 +580,6 @@ pub fn get_unresolved_arguments<'s>(
                     Some(boolean_expression_type),
                     bool_exp,
                     data_connector,
-                    &metadata.object_types,
                     usage_counts,
                 )?;
 
