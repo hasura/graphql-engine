@@ -11,6 +11,7 @@ log() {
 
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 DEFAULT_METADATA_DIR="/hasura-metadata"
+DEFAULT_DISALLOW_INCONSISTENT_METADATA_FLAG=""
 TEMP_PROJECT_DIR="/tmp/hasura-project"
 
 if [ -z ${HGE_BINARY+x} ]; then
@@ -67,19 +68,13 @@ if [ -z ${HASURA_GRAPHQL_METADATA_DIR+x} ]; then
     HASURA_GRAPHQL_METADATA_DIR="$DEFAULT_METADATA_DIR"
 fi
 
-# apply metadata if the directory exist
-if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
-    rm -rf "$TEMP_PROJECT_DIR"
-    log "migrations-apply" "applying metadata from $HASURA_GRAPHQL_METADATA_DIR"
-    mkdir -p "$TEMP_PROJECT_DIR"
-    cp -a "$HASURA_GRAPHQL_METADATA_DIR/." "$TEMP_PROJECT_DIR/metadata/"
-    cd "$TEMP_PROJECT_DIR"
-    echo "version: 3" > config.yaml
-    echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
-    echo "metadata_directory: metadata" >> config.yaml
-    hasura-cli metadata apply 
+# check if disallow metadata inconsistency is set to true (case insensitive), default otherwise
+if [ "$(echo "$HASURA_GRAPHQL_DISALLOW_INCONSISTENT_METADATA" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+    log "migrations-startup" "env var HASURA_GRAPHQL_DISALLOW_INCONSISTENT_METADATA is set to true, disallowing inconsistent metadata"
+    HASURA_GRAPHQL_DISALLOW_INCONSISTENT_METADATA="--disallow-inconsistent-metadata"
 else
-    log "migrations-apply" "directory $HASURA_GRAPHQL_METADATA_DIR does not exist, skipping metadata"
+    log "migrations-startup" "env var HASURA_GRAPHQL_DISALLOW_INCONSISTENT_METADATA is not true, falling back to default CLI behavior"
+    HASURA_GRAPHQL_DISALLOW_INCONSISTENT_METADATA="$DEFAULT_DISALLOW_INCONSISTENT_METADATA_FLAG"
 fi
 
 # apply migrations if the directory exist
@@ -95,6 +90,21 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     hasura-cli metadata reload
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_MIGRATIONS_DIR does not exist, skipping migrations"
+fi
+
+# apply metadata if the directory exist
+if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
+    rm -rf "$TEMP_PROJECT_DIR"
+    log "migrations-apply" "applying metadata from $HASURA_GRAPHQL_METADATA_DIR"
+    mkdir -p "$TEMP_PROJECT_DIR"
+    cp -a "$HASURA_GRAPHQL_METADATA_DIR/." "$TEMP_PROJECT_DIR/metadata/"
+    cd "$TEMP_PROJECT_DIR"
+    echo "version: 3" > config.yaml
+    echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
+    echo "metadata_directory: metadata" >> config.yaml
+    hasura-cli metadata apply $HASURA_GRAPHQL_DISALLOW_INCONSISTENT_METADATA
+else
+    log "migrations-apply" "directory $HASURA_GRAPHQL_METADATA_DIR does not exist, skipping metadata"
 fi
 
 # kill graphql engine that we started earlier
