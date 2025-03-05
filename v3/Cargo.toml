@@ -86,7 +86,7 @@ convert_case = "0.6"
 cookie = "0.18"
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 darling = "0.20"
-datafusion = { version = "41", features = ["serde"] }
+datafusion = { version = "45", features = ["serde"] }
 derive_more = { version = "1.0", features = ["full"] }
 diffy = "0.4"
 env_logger = "0.11"
