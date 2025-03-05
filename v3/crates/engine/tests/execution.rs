@@ -544,6 +544,25 @@ fn test_model_select_many_where() -> anyhow::Result<()> {
     )
 }
 
+// With null input
+#[test]
+fn test_model_select_many_where_null_input() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/where/null_input",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
 // the test here is that two Models can both use the same ObjectBooleanExpressionType without
 // errors
 #[test]
@@ -1234,6 +1253,24 @@ fn test_model_select_many_predicate_is_null() -> anyhow::Result<()> {
 fn test_model_select_many_offset() -> anyhow::Result<()> {
     common::test_execution_expectation_for_multiple_ndc_versions(
         "execute/models/select_many/limit_offset/offset",
+        &["execute/models/select_many/limit_offset/common_metadata/metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
+#[test]
+fn test_model_select_many_limit_offset_null_values() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/limit_offset/null_values",
         &["execute/models/select_many/limit_offset/common_metadata/metadata.json"],
         BTreeMap::from([
             (
@@ -2596,6 +2633,33 @@ fn test_aggregates_root_field_filtering() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_aggregates_root_field_filtering_null_inputs() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/aggregates/root_field/filtering_null_inputs",
+        &[
+            "execute/aggregates/common_metadata/pg_types.json",
+            "execute/aggregates/common_metadata/supergraph.json",
+        ],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec![
+                    "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
+                    "execute/aggregates/root_field/filtering_null_inputs/metadata_ndc_v01.json",
+                ],
+            ),
+            (
+                NdcVersion::V02,
+                vec![
+                    "execute/common_metadata/postgres_connector_ndc_v02_schema.json",
+                    "execute/aggregates/root_field/filtering_null_inputs/metadata_ndc_v02.json",
+                ],
+            ),
+        ]),
+    )
+}
+
+#[test]
 fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
     let test_path_string = "execute/aggregates/root_field/nested_object";
     common::test_execution_expectation_for_multiple_ndc_versions(
@@ -2709,6 +2773,36 @@ fn test_aggregates_relationship_field_filtering_ndc_v01() -> anyhow::Result<()> 
 fn test_aggregates_relationship_field_filtering_ndc_v02() -> anyhow::Result<()> {
     common::test_execution_expectation_for_multiple_ndc_versions(
         "execute/aggregates/relationship_field/filtering_ndc_v02",
+        &[
+            "execute/aggregates/common_metadata/pg_types.json",
+            "execute/aggregates/common_metadata/supergraph.json",
+        ],
+        BTreeMap::from([(
+            NdcVersion::V01,
+            vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+        )]),
+    )
+}
+
+#[test]
+fn test_aggregates_relationship_field_filtering_null_inputs_ndc_v01() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/aggregates/relationship_field/filtering_null_inputs_ndc_v01",
+        &[
+            "execute/aggregates/common_metadata/pg_types.json",
+            "execute/aggregates/common_metadata/supergraph.json",
+        ],
+        BTreeMap::from([(
+            NdcVersion::V01,
+            vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+        )]),
+    )
+}
+
+#[test]
+fn test_aggregates_relationship_field_filtering_null_inputs_ndc_v02() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/aggregates/relationship_field/filtering_null_inputs_ndc_v02",
         &[
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",

@@ -1,0 +1,21 @@
+query MyQuery {
+  AuthorMany {
+    first_name
+    author_id
+    Articles(
+      limit_custom: null
+      offset_custom: null
+      order_by_custom: null
+      where_custom: null
+    ) {
+      title
+      article_id
+    }
+  }
+  AuthorByID(author_id: 2) {
+    Articles(where_custom: null) {
+      title
+      article_id
+    }
+  }
+}

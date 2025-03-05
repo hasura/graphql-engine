@@ -1,0 +1,80 @@
+[
+  {
+    "data": {
+      "AuthorManyWithLimitNull": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        },
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyWithOffsetNull": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        },
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyWithLimitOffsetNull": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        },
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "AuthorManyWithLimitNull": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        }
+      ],
+      "AuthorManyWithOffsetNull": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        }
+      ],
+      "AuthorManyWithLimitOffsetNull": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "AuthorManyWithLimitNull": [
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyWithOffsetNull": [
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyWithLimitOffsetNull": [
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ]
+    }
+  }
+]

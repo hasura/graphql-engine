@@ -161,10 +161,11 @@ pub fn aggregate_query(
                                 }
                                 .into());
                             }
-                            limit =
-                                Some(filter_input_field_arg.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
+                            // Limit is optional
+                            limit = filter_input_field_arg
+                                .value
+                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
 
                         // Offset argument
@@ -177,17 +178,21 @@ pub fn aggregate_query(
                                 }
                                 .into());
                             }
-                            offset =
-                                Some(filter_input_field_arg.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
+                            // Offset is optional
+                            offset = filter_input_field_arg
+                                .value
+                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
 
                         // Order By argument
                         Annotation::Input(InputAnnotation::Model(
                             ModelInputAnnotation::ModelOrderByExpression,
                         )) => {
-                            order_by_input = Some(&filter_input_field_arg.value);
+                            // order by argument is optional
+                            if !filter_input_field_arg.value.is_null() {
+                                order_by_input = Some(&filter_input_field_arg.value);
+                            }
                         }
 
                         // Where argument
@@ -200,7 +205,10 @@ pub fn aggregate_query(
                                 }
                                 .into());
                             }
-                            where_input = Some(filter_input_field_arg.value.as_object()?);
+                            // where argument is optional
+                            if !filter_input_field_arg.value.is_null() {
+                                where_input = Some(filter_input_field_arg.value.as_object()?);
+                            }
                         }
 
                         _ => {

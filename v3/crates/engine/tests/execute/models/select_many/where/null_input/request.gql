@@ -1,0 +1,10 @@
+query ($where_input: AuthorFilter) {
+  AuthorManyWhereNull: AuthorMany(where: null) {
+    author_id
+    first_name
+  }
+  AuthorManyWhere: AuthorMany(where: $where_input) {
+    author_id
+    first_name
+  }
+}

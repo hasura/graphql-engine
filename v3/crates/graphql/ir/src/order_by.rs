@@ -7,7 +7,7 @@ use graphql_schema::GDS;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
-use lang_graphql::normalized_ast::{self as normalized_ast, InputField, Value};
+use lang_graphql::normalized_ast::{self as normalized_ast, Value};
 use metadata_resolve::{ObjectTypeWithRelationships, Qualified};
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 use plan::count_model;
@@ -26,7 +26,7 @@ pub struct OrderBy<'s> {
 }
 
 pub fn build_ndc_order_by<'s>(
-    args_field: &InputField<'s, GDS>,
+    value: &Value<'s, GDS>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
     type_mappings: &'s BTreeMap<
@@ -36,7 +36,7 @@ pub fn build_ndc_order_by<'s>(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
 ) -> Result<OrderBy<'s>, error::Error> {
-    match &args_field.value {
+    match value {
         normalized_ast::Value::List(arguments) => {
             let mut order_by_elements = Vec::new();
             let mut relationships = BTreeMap::new();

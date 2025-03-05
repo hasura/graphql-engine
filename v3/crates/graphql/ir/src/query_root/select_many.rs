@@ -93,20 +93,18 @@ pub fn select_many_generate_ir<'n, 's>(
                 model_argument_annotation,
             )) => match model_argument_annotation {
                 ModelInputAnnotation::ModelLimitArgument => {
-                    limit = Some(
-                        argument
-                            .value
-                            .as_int_u32()
-                            .map_err(error::Error::map_unexpected_value_to_external_error)?,
-                    );
+                    // Limit is optional
+                    limit = argument
+                        .value
+                        .as_nullable(normalized_ast::Value::as_int_u32)
+                        .map_err(error::Error::map_unexpected_value_to_external_error)?;
                 }
                 ModelInputAnnotation::ModelOffsetArgument => {
-                    offset = Some(
-                        argument
-                            .value
-                            .as_int_u32()
-                            .map_err(error::Error::map_unexpected_value_to_external_error)?,
-                    );
+                    // Offset is optional
+                    offset = argument
+                        .value
+                        .as_nullable(normalized_ast::Value::as_int_u32)
+                        .map_err(error::Error::map_unexpected_value_to_external_error)?;
                 }
                 ModelInputAnnotation::ModelArgumentsExpression => match &argument.value {
                     normalized_ast::Value::Object(arguments) => {
@@ -130,16 +128,22 @@ pub fn select_many_generate_ir<'n, 's>(
                     })?,
                 },
                 ModelInputAnnotation::ModelOrderByExpression => {
-                    order_by = Some(build_ndc_order_by(
-                        argument,
-                        &session.variables,
-                        &mut usage_counts,
-                        &model_source.type_mappings,
-                        object_types,
-                        &model_source.data_connector,
-                    )?);
+                    // order by is optional
+                    order_by = argument.value.as_nullable(|v| {
+                        build_ndc_order_by(
+                            v,
+                            &session.variables,
+                            &mut usage_counts,
+                            &model_source.type_mappings,
+                            object_types,
+                            &model_source.data_connector,
+                        )
+                    })?;
                     // For opendd execution pipeline
-                    order_by_input = Some(&argument.value);
+                    // Assign the order_by_input only if it is not null
+                    if !argument.value.is_null() {
+                        order_by_input = Some(&argument.value);
+                    }
                 }
                 _ => {
                     return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -151,7 +155,10 @@ pub fn select_many_generate_ir<'n, 's>(
             Annotation::Input(graphql_schema::InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpressionRootField,
             )) => {
-                where_input = Some(argument.value.as_object()?);
+                // where argument is optional
+                where_input = argument
+                    .value
+                    .as_nullable(normalized_ast::Value::as_object)?;
             }
 
             annotation => {

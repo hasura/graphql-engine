@@ -84,16 +84,18 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                 InputAnnotation::Model(model_argument_annotation) => {
                     match model_argument_annotation {
                         ModelInputAnnotation::ModelLimitArgument => {
-                            limit =
-                                Some(argument.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
+                            // Limit is optional
+                            limit = argument
+                                .value
+                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
                         ModelInputAnnotation::ModelOffsetArgument => {
-                            offset =
-                                Some(argument.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
+                            // Offset is optional
+                            offset = argument
+                                .value
+                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
                         ModelInputAnnotation::ModelOrderByExpression => {
                             let target_model = models
@@ -115,11 +117,16 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                                         type_name: relationship_annotation.source_type.clone(),
                                     }
                                 })?;
-                            order_by.extend(order_by::build_order_by_open_dd_ir(
-                                &argument.value,
-                                usage_counts,
-                                &target_model_source.data_connector,
-                            )?);
+                            // order by is optional
+                            if let Some(open_dd_order_by) = argument.value.as_nullable(|v| {
+                                order_by::build_order_by_open_dd_ir(
+                                    v,
+                                    usage_counts,
+                                    &target_model_source.data_connector,
+                                )
+                            })? {
+                                order_by.extend(open_dd_order_by);
+                            }
                         }
                         _ => {
                             return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -133,7 +140,10 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                 ) => {
                     if let Some(_target_capabilities) = &relationship_annotation.target_capabilities
                     {
-                        where_input = Some(argument.value.as_object()?);
+                        // where argument is optional
+                        where_input = argument
+                            .value
+                            .as_nullable(normalized_ast::Value::as_object)?;
                     }
                 }
 
@@ -258,57 +268,65 @@ pub fn generate_model_relationship_ir<'s>(
 
     for argument in field_call.arguments.values() {
         match argument.info.generic {
-            annotation @ Annotation::Input(argument_annotation) => {
-                match argument_annotation {
-                    InputAnnotation::Model(model_argument_annotation) => {
-                        match model_argument_annotation {
-                            ModelInputAnnotation::ModelLimitArgument => {
-                                limit = Some(argument.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
-                            }
-                            ModelInputAnnotation::ModelOffsetArgument => {
-                                offset = Some(argument.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
-                            }
-                            ModelInputAnnotation::ModelOrderByExpression => {
-                                order_by = Some(build_ndc_order_by(
-                                    argument,
+            annotation @ Annotation::Input(argument_annotation) => match argument_annotation {
+                InputAnnotation::Model(model_argument_annotation) => {
+                    match model_argument_annotation {
+                        ModelInputAnnotation::ModelLimitArgument => {
+                            // Limit is optional
+                            limit = argument
+                                .value
+                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .map_err(error::Error::map_unexpected_value_to_external_error)?;
+                        }
+                        ModelInputAnnotation::ModelOffsetArgument => {
+                            // Offset is optional
+                            offset = argument
+                                .value
+                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .map_err(error::Error::map_unexpected_value_to_external_error)?;
+                        }
+                        ModelInputAnnotation::ModelOrderByExpression => {
+                            // order by is optional
+                            order_by = argument.value.as_nullable(|v| {
+                                build_ndc_order_by(
+                                    v,
                                     &session.variables,
                                     usage_counts,
                                     &target_source.type_mappings,
                                     object_types,
                                     source_data_connector,
-                                )?);
-                            }
-                            _ => {
-                                return Err(error::InternalEngineError::UnexpectedAnnotation {
-                                    annotation: annotation.clone(),
-                                })?
-                            }
+                                )
+                            })?;
+                        }
+                        _ => {
+                            return Err(error::InternalEngineError::UnexpectedAnnotation {
+                                annotation: annotation.clone(),
+                            })?
                         }
                     }
-                    InputAnnotation::BooleanExpression(
-                        BooleanExpressionAnnotation::BooleanExpressionRootField,
-                    ) => {
-                        where_clause = Some(filter::resolve_filter_expression(
-                            argument.value.as_object()?,
+                }
+                InputAnnotation::BooleanExpression(
+                    BooleanExpressionAnnotation::BooleanExpressionRootField,
+                ) => {
+                    // where argument is optional
+                    where_clause = argument.value.as_nullable(|v| {
+                        filter::resolve_filter_expression(
+                            v.as_object()?,
                             &target_source.data_connector,
                             &target_source.type_mappings,
                             object_types,
                             &session.variables,
                             usage_counts,
-                        )?);
-                    }
-
-                    _ => {
-                        return Err(error::InternalEngineError::UnexpectedAnnotation {
-                            annotation: annotation.clone(),
-                        })?
-                    }
+                        )
+                    })?;
                 }
-            }
+
+                _ => {
+                    return Err(error::InternalEngineError::UnexpectedAnnotation {
+                        annotation: annotation.clone(),
+                    })?
+                }
+            },
 
             annotation => {
                 return Err(error::InternalEngineError::UnexpectedAnnotation {

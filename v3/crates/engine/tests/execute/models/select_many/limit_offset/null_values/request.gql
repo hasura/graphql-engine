@@ -1,0 +1,14 @@
+query {
+  AuthorManyWithLimitNull: AuthorMany(limit: null) {
+    author_id
+    first_name
+  }
+  AuthorManyWithOffsetNull: AuthorMany(offset: null) {
+    author_id
+    first_name
+  }
+  AuthorManyWithLimitOffsetNull: AuthorMany(limit: null, offset: null) {
+    author_id
+    first_name
+  }
+}

@@ -11,6 +11,8 @@
 - Validate argument types against mapped NDC types, ensuring compatibility of
   nullability, arrays, and scalar representations.
 - Validate `AuthConfig` headers to ensure they are valid HTTP headers.
+- GraphQL API: Fixed a bug where `null` inputs for nullable query parameters
+  like `limit`, `offset`, `order_by` and `where` would cause an error.
 
 ### Changed
 

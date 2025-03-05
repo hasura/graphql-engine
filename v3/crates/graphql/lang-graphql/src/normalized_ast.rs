@@ -210,6 +210,17 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             }),
         }
     }
+
+    pub fn as_nullable<'a, T, E>(
+        &'a self,
+        f: impl FnOnce(&'a Value<'s, S>) -> core::result::Result<T, E>,
+    ) -> core::result::Result<Option<T>, E> {
+        if self.is_null() {
+            Ok(None)
+        } else {
+            f(self).map(Some)
+        }
+    }
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]

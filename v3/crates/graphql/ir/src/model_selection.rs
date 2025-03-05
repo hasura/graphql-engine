@@ -392,12 +392,11 @@ fn read_filter_input_arguments<'s>(
                         }
                         .into());
                     }
-                    limit = Some(
-                        filter_input_field_arg
-                            .value
-                            .as_int_u32()
-                            .map_err(error::Error::map_unexpected_value_to_external_error)?,
-                    );
+                    // Limit is optional
+                    limit = filter_input_field_arg
+                        .value
+                        .as_nullable(normalized_ast::Value::as_int_u32)
+                        .map_err(error::Error::map_unexpected_value_to_external_error)?;
                 }
 
                 // Offset argument
@@ -410,12 +409,11 @@ fn read_filter_input_arguments<'s>(
                         }
                         .into());
                     }
-                    offset = Some(
-                        filter_input_field_arg
-                            .value
-                            .as_int_u32()
-                            .map_err(error::Error::map_unexpected_value_to_external_error)?,
-                    );
+                    // Offset is optional
+                    offset = filter_input_field_arg
+                        .value
+                        .as_nullable(normalized_ast::Value::as_int_u32)
+                        .map_err(error::Error::map_unexpected_value_to_external_error)?;
                 }
 
                 // Order By argument
@@ -428,14 +426,17 @@ fn read_filter_input_arguments<'s>(
                         }
                         .into());
                     }
-                    order_by = Some(order_by::build_ndc_order_by(
-                        filter_input_field_arg,
-                        session_variables,
-                        usage_counts,
-                        &model_source.type_mappings,
-                        object_types,
-                        &model_source.data_connector,
-                    )?);
+                    // order by is optional
+                    order_by = filter_input_field_arg.value.as_nullable(|v| {
+                        order_by::build_ndc_order_by(
+                            v,
+                            session_variables,
+                            usage_counts,
+                            &model_source.type_mappings,
+                            object_types,
+                            &model_source.data_connector,
+                        )
+                    })?;
                 }
 
                 // Where argument
@@ -448,14 +449,17 @@ fn read_filter_input_arguments<'s>(
                         }
                         .into());
                     }
-                    filter_clause = Some(filter::resolve_filter_expression(
-                        filter_input_field_arg.value.as_object()?,
-                        &model_source.data_connector,
-                        &model_source.type_mappings,
-                        object_types,
-                        session_variables,
-                        usage_counts,
-                    )?);
+                    // where argument is optional
+                    filter_clause = filter_input_field_arg.value.as_nullable(|v| {
+                        filter::resolve_filter_expression(
+                            v.as_object()?,
+                            &model_source.data_connector,
+                            &model_source.type_mappings,
+                            object_types,
+                            session_variables,
+                            usage_counts,
+                        )
+                    })?;
                 }
 
                 _ => {
