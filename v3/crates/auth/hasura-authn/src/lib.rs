@@ -1,3 +1,5 @@
+use std::{fmt::Display, str::FromStr};
+
 use axum::http::HeaderMap;
 use hasura_authn_core::{Identity, Role};
 use hasura_authn_jwt::{auth as jwt_auth, jwt};
@@ -153,12 +155,50 @@ pub enum Warning {
     PleaseUpgradeV1ToV3,
     #[error("AuthConfig v2 is deprecated. Please consider upgrading to AuthConfig v3.")]
     PleaseUpgradeV2ToV3,
+    #[error("Header '{0}', used in the auth config, is not a valid header name")]
+    InvalidHeaderName(String),
+    #[error("Header value '{0}' is not a valid header value for header '{1}' in the auth config")]
+    InvalidHeaderValue(String, String),
+}
+
+impl Warning {
+    pub fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
+        match self {
+            Warning::InvalidHeaderName(_) | Warning::InvalidHeaderValue(_, _) => {
+                flags.contains(open_dds::flags::Flag::DisallowInvalidHeadersInAuthConfig)
+            }
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, thiserror::Error, PartialEq)]
 pub enum Error {
     #[error("Invalid URL for auth webhook: {0}")]
     InvalidAuthWebhookUrl(String),
+    #[error("{0}")]
+    AuthConfigWarningsAsErrors(SeparatedBy<Warning>),
+}
+
+// A small utility type which exists for the sole purpose of displaying a vector with a certain
+// separator.
+#[derive(Debug, PartialEq)]
+pub struct SeparatedBy<T> {
+    pub lines_of: Vec<T>,
+    pub separator: String,
+}
+
+impl<T: Display> Display for SeparatedBy<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (index, elem) in self.lines_of.iter().enumerate() {
+            elem.fmt(f)?;
+            if index < self.lines_of.len() - 1 {
+                self.separator.fmt(f)?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 /// Resolve `AuthConfig` which is not part of metadata. Hence we resolve/build
@@ -184,10 +224,81 @@ pub fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Er
                 // Validate the URL is valid
                 reqwest::Url::parse(config.get_url())
                     .map_err(|e| Error::InvalidAuthWebhookUrl(e.to_string()))?;
+                match &config {
+                    webhook::AuthHookConfigV3::GET(config) => {
+                        if let Some(headers_config) = config
+                            .custom_headers_config
+                            .as_ref()
+                            .and_then(|c| c.headers.as_ref())
+                        {
+                            warnings.extend(validate_header_config(headers_config));
+                        };
+                    }
+                    webhook::AuthHookConfigV3::POST(config) => {
+                        if let Some(headers_config) = config
+                            .custom_headers_config
+                            .as_ref()
+                            .and_then(|c| c.headers.as_ref())
+                        {
+                            warnings.extend(validate_header_config(headers_config));
+                        };
+                        if let Some(body_header_config) = config
+                            .custom_headers_config
+                            .as_ref()
+                            .and_then(|c| c.body.as_ref())
+                            .and_then(|c| c.headers.as_ref())
+                        {
+                            warnings.extend(validate_header_config(body_header_config));
+                        };
+                    }
+                }
             }
         }
     }
     Ok(warnings)
+}
+
+pub fn auth_config_warnings_as_error_by_compatibility(
+    flags: &open_dds::flags::OpenDdFlags,
+    auth_warnings: Vec<Warning>,
+) -> Result<Vec<Warning>, Error> {
+    let (warnings_that_are_errors, remaining_warnings): (Vec<Warning>, Vec<Warning>) =
+        auth_warnings
+            .into_iter()
+            .partition(|warning| warning.should_be_an_error(flags));
+
+    if warnings_that_are_errors.is_empty() {
+        Ok(remaining_warnings)
+    } else {
+        Err(Error::AuthConfigWarningsAsErrors(SeparatedBy {
+            lines_of: warnings_that_are_errors,
+            separator: "\n".to_string(),
+        }))
+    }
+}
+
+// Validate the header config
+fn validate_header_config(header_config: &webhook::AuthHookConfigV3Headers) -> Vec<Warning> {
+    let mut warnings = vec![];
+    if let webhook::AllOrList::List(list) = &header_config.forward {
+        for header_name in list {
+            if let Err(_e) = axum::http::header::HeaderName::from_str(header_name.as_str()) {
+                warnings.push(Warning::InvalidHeaderName(header_name.to_string()));
+            }
+        }
+    }
+    for (header_name, header_value) in &header_config.additional {
+        if let Err(_e) = axum::http::header::HeaderName::from_str(header_name.as_str()) {
+            warnings.push(Warning::InvalidHeaderName(header_name.to_string()));
+        }
+        if let Err(_e) = axum::http::header::HeaderValue::from_str(header_value.as_str()) {
+            warnings.push(Warning::InvalidHeaderValue(
+                header_value.to_string(),
+                header_name.to_string(),
+            ));
+        }
+    }
+    warnings
 }
 
 /// Errors that can occur during authentication
@@ -314,7 +425,7 @@ mod tests {
             path_buf.pop();
             path_buf.pop();
             path_buf.pop();
-            path_buf.join("static/auth/auth_config.json")
+            path_buf.join("static/auth/auth_config_v3.json")
         };
         let auth_config_from_json = <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(
             serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap(),

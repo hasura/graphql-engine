@@ -48,6 +48,7 @@ pub enum Flag {
     RequireValidCommandOutputType,
     ValidateObjectTypeDataConnectorTypeMappingFieldTypes,
     ValidateArgumentMappingTypes,
+    DisallowInvalidHeadersInAuthConfig,
 }
 
 impl Flag {
@@ -129,6 +130,7 @@ impl Flag {
                 "validate_object_type_data_connector_type_mapping_field_types"
             }
             Flag::ValidateArgumentMappingTypes => "validate_argument_mapping_types",
+            Flag::DisallowInvalidHeadersInAuthConfig => "disallow_invalid_headers_in_auth_config",
         }
     }
 }

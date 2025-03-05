@@ -242,7 +242,7 @@ impl AuthHookConfigV3GET {
 /// The configuration for the headers to be sent to the GET auth hook.
 pub struct AuthHookConfigV3GETHeaders {
     #[serde(default)]
-    headers: Option<AuthHookConfigV3Headers>,
+    pub headers: Option<AuthHookConfigV3Headers>,
 }
 
 impl AuthHookConfigV3GETHeaders {
@@ -313,10 +313,10 @@ impl AuthHookConfigV3POST {
 pub struct AuthHookConfigV3POSTHeaders {
     #[serde(default)]
     /// The configuration for the headers to be sent to the POST auth hook.
-    headers: Option<AuthHookConfigV3Headers>,
+    pub headers: Option<AuthHookConfigV3Headers>,
     #[serde(default)]
     /// The configuration for the body to be sent to the POST auth hook.
-    body: Option<AuthHookConfigV3Body>,
+    pub body: Option<AuthHookConfigV3Body>,
 }
 
 impl AuthHookConfigV3POSTHeaders {
@@ -753,18 +753,27 @@ fn get_filtered_headers(
             }
         }
         AllOrList::List(list) => {
-            for (header_name, header_value) in client_headers {
-                if list.contains(&header_name.to_string()) {
-                    auth_hook_headers.insert(header_name, header_value.clone());
+            for header_name in list {
+                // We have already validated the forward header names in the auth config (see `validate_header_config`)
+                if let Ok(header_name) = HeaderName::from_str(header_name.as_str()) {
+                    // If the header is present in the client headers, we forward it to the auth hook. We
+                    // will ignore the header if it is not present in the client headers.
+                    if let Some(header_value) = client_headers.get(&header_name) {
+                        auth_hook_headers.insert(header_name, header_value.clone());
+                    }
                 }
             }
         }
     }
     for (header_name, header_value) in &auth_hook_headers_config.additional {
-        auth_hook_headers.insert(
-            HeaderName::from_str(header_name.as_str()).unwrap(),
-            header_value.parse().unwrap(),
-        );
+        // We have already validated the additional headers in the auth config (see `validate_header_config`)
+        // So we can safely ignore the errors here.
+        if let (Ok(header_name), Ok(header_value)) = (
+            HeaderName::from_str(header_name.as_str()),
+            header_value.parse(),
+        ) {
+            auth_hook_headers.insert(header_name, header_value);
+        }
     }
     auth_hook_headers
 }
@@ -1328,5 +1337,96 @@ mod tests {
             result.is_err(),
             "Deserialization should have failed: {result:#?}"
         );
+    }
+
+    #[test]
+    fn test_get_filtered_headers_forward_all() {
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("x-custom-header", "custom-value".parse().unwrap());
+        client_headers.insert("authorization", "Bearer token".parse().unwrap());
+        client_headers.insert("user-agent", "test-agent".parse().unwrap()); // This is in common headers
+
+        let config = AuthHookConfigV3Headers {
+            forward: AllOrList::All(All(())),
+            additional: HashMap::new(),
+        };
+
+        // Test with ignore_common_headers = true
+        let filtered_headers = get_filtered_headers(&config, &client_headers, true);
+        assert!(filtered_headers.contains_key("x-custom-header"));
+        assert!(filtered_headers.contains_key("authorization"));
+        assert!(!filtered_headers.contains_key("user-agent")); // Should be filtered out
+
+        // Test with ignore_common_headers = false
+        let filtered_headers = get_filtered_headers(&config, &client_headers, false);
+        assert!(filtered_headers.contains_key("x-custom-header"));
+        assert!(filtered_headers.contains_key("authorization"));
+        assert!(filtered_headers.contains_key("user-agent")); // Should be included
+    }
+
+    #[test]
+    fn test_get_filtered_headers_forward_list() {
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("x-custom-header", "custom-value".parse().unwrap());
+        client_headers.insert("authorization", "Bearer token".parse().unwrap());
+        client_headers.insert("not-in-list", "value".parse().unwrap());
+
+        let forward_list = vec!["x-custom-header".to_string(), "authorization".to_string()];
+
+        let config = AuthHookConfigV3Headers {
+            forward: AllOrList::List(forward_list),
+            additional: HashMap::new(),
+        };
+
+        let filtered_headers = get_filtered_headers(&config, &client_headers, true);
+        assert!(filtered_headers.contains_key("x-custom-header"));
+        assert!(filtered_headers.contains_key("authorization"));
+        assert!(!filtered_headers.contains_key("not-in-list"));
+    }
+
+    #[test]
+    fn test_get_filtered_headers_with_additional() {
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("x-custom-header", "custom-value".parse().unwrap());
+
+        let mut additional_headers = HashMap::new();
+        additional_headers.insert("x-additional".to_string(), "additional-value".to_string());
+        additional_headers.insert("x-api-key".to_string(), "1234".to_string());
+
+        let config = AuthHookConfigV3Headers {
+            forward: AllOrList::All(All(())),
+            additional: additional_headers,
+        };
+
+        let filtered_headers = get_filtered_headers(&config, &client_headers, true);
+        assert!(filtered_headers.contains_key("x-custom-header"));
+        assert!(filtered_headers.contains_key("x-additional"));
+        assert!(filtered_headers.contains_key("x-api-key"));
+        assert_eq!(
+            filtered_headers.get("x-additional").unwrap(),
+            "additional-value"
+        );
+        assert_eq!(filtered_headers.get("x-api-key").unwrap(), "1234");
+    }
+
+    #[test]
+    fn test_get_filtered_headers_invalid_headers() {
+        let client_headers = HeaderMap::new();
+
+        let forward_list = vec!["invalid header name with spaces".to_string()]; // Invalid header name
+
+        let mut additional_headers = HashMap::new();
+        additional_headers.insert("invalid header".to_string(), "value".to_string()); // Invalid header name
+        additional_headers.insert("valid-header".to_string(), "invalid value\n".to_string()); // Invalid header value
+
+        let config = AuthHookConfigV3Headers {
+            forward: AllOrList::List(forward_list),
+            additional: additional_headers,
+        };
+
+        let filtered_headers = get_filtered_headers(&config, &client_headers, true);
+        assert!(!filtered_headers.contains_key("invalid header name with spaces"));
+        assert!(!filtered_headers.contains_key("invalid header"));
+        assert!(!filtered_headers.contains_key("valid-header"));
     }
 }

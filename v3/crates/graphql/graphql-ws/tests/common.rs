@@ -17,7 +17,7 @@ use tokio_tungstenite::{
 static METADATA_PATH: &str = "tests/static/metadata.json";
 
 #[allow(dead_code)]
-static AUTH_CONFIG_PATH: &str = "tests/static/auth_config_v2.json";
+static AUTH_CONFIG_PATH: &str = "tests/static/auth_config_v3.json";
 
 #[allow(dead_code)]
 pub(crate) struct ServerState<M> {

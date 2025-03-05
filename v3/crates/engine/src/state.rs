@@ -18,12 +18,18 @@ pub fn resolve_metadata(
     raw_auth_config: &str,
     metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
 ) -> Result<(metadata_resolve::Metadata, hasura_authn::AuthConfig), anyhow::Error> {
-    // Auth Config
-    let (auth_config, auth_warnings) =
-        resolve_auth_config(raw_auth_config).map_err(StartupError::ReadAuth)?;
-
     // Metadata
     let metadata = open_dds::Metadata::from_json_str(raw_metadata)?;
+
+    // Auth Config
+    let (auth_config, mut auth_warnings) =
+        resolve_auth_config(raw_auth_config).map_err(StartupError::ReadAuth)?;
+
+    auth_warnings = hasura_authn::auth_config_warnings_as_error_by_compatibility(
+        &open_dds::accessor::get_flags(&metadata),
+        auth_warnings,
+    )?;
+
     let (resolved_metadata, warnings) =
         metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
 

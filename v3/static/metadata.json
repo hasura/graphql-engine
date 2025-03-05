@@ -16205,6 +16205,7 @@
     "disallow_duplicate_names_in_boolean_expressions": true,
     "disallow_multiple_input_object_fields_in_graphql_order_by": true,
     "require_nested_support_for_order_by_expressions": true,
-    "disallow_model_v1_ordering_non_scalar_fields": true
+    "disallow_model_v1_ordering_non_scalar_fields": true,
+    "disallow_invalid_headers_in_auth_config": true
   }
 }

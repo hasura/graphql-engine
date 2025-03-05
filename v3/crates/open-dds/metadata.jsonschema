@@ -3752,6 +3752,10 @@
         "validate_argument_mapping_types": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_invalid_headers_in_auth_config": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

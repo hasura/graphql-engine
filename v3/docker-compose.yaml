@@ -21,7 +21,7 @@ services:
     extra_hosts:
       - local.hasura.dev=${LOCALHOST_GATEWAY:-host-gateway}
     volumes:
-      - ./static/auth/auth_config.json:/app/auth_config.json
+      - ./static/auth/auth_config_v3.json:/app/auth_config.json
       - ./static/metadata.json:/app/metadata.json
       - ./crates/open-dds/examples/reference.json:/app/crates/open-dds/examples/reference.json
 
