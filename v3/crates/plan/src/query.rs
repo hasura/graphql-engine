@@ -121,6 +121,7 @@ where
                 &model_aggregate.selection,
                 metadata,
                 session,
+                None,
                 request_headers,
                 unique_number,
             )?;

@@ -82,7 +82,6 @@ fn add_aggregate_selections<'s>(
 
                 AggregationFunctionAnnotation::Function {
                     function_name,
-                    aggregate_expression: _,
                     data_connector_functions,
                 } => {
                     let selection_field_name =

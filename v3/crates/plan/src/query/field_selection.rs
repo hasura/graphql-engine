@@ -923,6 +923,11 @@ fn from_relationship_aggregate_selection(
                 offset: *offset,
             };
 
+            let relationship_aggregate_expression = model_relationship_target
+                .relationship_aggregate
+                .as_ref()
+                .map(|aggregate| &aggregate.aggregate_expression);
+
             // is it local or remote?
             match metadata_resolve::field_selection_relationship_execution_category(
                 relationship_field_nestedness,
@@ -940,6 +945,7 @@ fn from_relationship_aggregate_selection(
                         selection,
                         metadata,
                         session,
+                        relationship_aggregate_expression,
                         request_headers,
                         unique_number,
                     )?;
@@ -1038,6 +1044,7 @@ fn from_relationship_aggregate_selection(
                         selection,
                         metadata,
                         session,
+                        relationship_aggregate_expression,
                         request_headers,
                         unique_number,
                     )?;

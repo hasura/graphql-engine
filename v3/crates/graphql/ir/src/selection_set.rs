@@ -566,11 +566,9 @@ fn collect_aggregate_fields(
                             }
                             AggregationFunctionAnnotation::Function {
                                 function_name,
-                                aggregate_expression,
                                 data_connector_functions: _,
                             } => open_dds::query::AggregationFunction::Custom {
                                 name: function_name.clone(),
-                                expression: aggregate_expression.clone(),
                             },
                         };
 

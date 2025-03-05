@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::arguments::ArgumentName;
 use crate::{
-    aggregates::{AggregateExpressionName, AggregationFunctionName, ExtractionFunctionName},
+    aggregates::{AggregationFunctionName, ExtractionFunctionName},
     commands::CommandName,
     identifier::{Identifier, SubgraphName},
     models::{ModelName, OrderByDirection},
@@ -445,10 +445,7 @@ pub enum AggregationFunction {
     Average,
     Count {},
     CountDistinct {},
-    Custom {
-        name: AggregationFunctionName,
-        expression: AggregateExpressionName,
-    },
+    Custom { name: AggregationFunctionName },
 }
 
 /// An aggregate metric computed over a set of values in whose context this is used.
