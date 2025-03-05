@@ -21,7 +21,7 @@ const DEFAULT_PORT: u16 = 3000;
 #[derive(Parser, Serialize)]
 #[command(version = VERSION)]
 struct ServerOptions {
-    /// The path to the metadata file, used to construct the schema.
+    /// The path to the OpenDD metadata file, used to construct the schema.
     #[arg(long, value_name = "PATH", env = "METADATA_PATH")]
     metadata_path: PathBuf,
     /// An introspection metadata file, served over `/metadata` if provided.
@@ -138,11 +138,11 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
 
     let raw_auth_config =
         std::fs::read_to_string(&server.authn_config_path).expect("could not read auth config");
-    let raw_metadata =
+    let opendd_metadata_json =
         std::fs::read_to_string(&server.metadata_path).expect("could not read metadata");
 
     let (resolved_metadata, auth_config) = engine::resolve_metadata(
-        &raw_metadata,
+        &opendd_metadata_json,
         &raw_auth_config,
         &metadata_resolve_configuration,
     )

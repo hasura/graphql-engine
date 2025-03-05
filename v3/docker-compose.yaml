@@ -73,6 +73,7 @@ services:
       jaeger:
         condition: service_started
 
+  # browse traces at: http://localhost:16686/search
   jaeger:
     image: jaegertracing/all-in-one:1.55
     restart: always
@@ -88,6 +89,7 @@ services:
       - 4317:4317 # OTLP gRPC
       - 4318:4318 # OTLP HTTP
       - 9411:9411
+      - 16686:16686
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
       COLLECTOR_ZIPKIN_HOST_PORT: "9411"
