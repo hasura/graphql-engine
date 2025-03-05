@@ -21,7 +21,7 @@ Initially we just wanted to support update mutations on MSSQL in the same way
 that we do on Postgres.
 
 However, there are some differences between the two database systems that
-warrent closer inspection.
+warrant closer inspection.
 
 ### Problem
 
