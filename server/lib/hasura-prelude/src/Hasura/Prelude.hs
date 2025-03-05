@@ -1,6 +1,12 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Prelude
   ( module M,
@@ -22,6 +28,7 @@ module Hasura.Prelude
 
     -- * Either
     onLeft,
+    onLeft_,
     onLeftM,
     mapLeft,
     liftEitherM,
@@ -70,6 +77,8 @@ module Hasura.Prelude
     alphaNumerics,
     labelMe,
     ContextAdvice (..),
+    LiftedConstraint,
+    ComposeConstraint,
 
     -- * Extensions to @Data.Foldable@
     module Data.Time.Clock.Units,
@@ -126,6 +135,7 @@ import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet as M (HashSet)
 import Data.Hashable as M (Hashable)
+import Data.Kind
 import Data.List as M
   ( find,
     findIndex,
@@ -241,6 +251,10 @@ hoistMaybe = MaybeT . pure
 -- applicative action to the 'Left' value.
 onLeft :: (Applicative m) => Either e a -> (e -> m a) -> m a
 onLeft e f = either f pure e
+
+-- | Similar to 'onLeft', but ignores the 'Right' value.
+onLeft_ :: (Applicative m) => Either e a -> (e -> m ()) -> m ()
+onLeft_ e f = either f (const $ pure ()) e
 
 -- | Similar to 'onLeft', but accepts a monadic action on its LHS.
 onLeftM :: (Monad m) => m (Either e a) -> (e -> m a) -> m a
@@ -444,3 +458,23 @@ labelMe l = liftIO (myThreadId >>= flip labelThread l)
 -- | A newtype wrapper over Text which is only meant to be used to contextualise
 -- an message for human consumption.
 newtype ContextAdvice = ContextAdvice {getContextAdvice :: Text}
+
+-- | Generalizes @Eq1@ etc. but without any instance body
+--
+-- This is currently only used in @class Backend@; see that declaration for details.
+class (forall a. (c a) => c (f a)) => LiftedConstraint c f
+
+type LiftedConstraint :: (k -> Constraint) -> (k -> k) -> Constraint
+
+-- | The only instance. NOTE: this should probably require @UndecidableInstances@ but
+-- perhaps doesn't due to a bug: https://stackoverflow.com/q/78840628/176841
+instance (forall a. (c a) => c (f a)) => LiftedConstraint c f
+
+-- ...else we need this, and a load of other instances scattered across 100 modules:
+--   instance LiftedConstraint Eq (Const Void)
+
+class (forall a. (c2 a) => c1 (f a)) => ComposeConstraint c1 c2 f
+
+type ComposeConstraint :: (k -> Constraint) -> (k -> Constraint) -> (k -> k) -> Constraint
+
+instance (forall a. (c2 a) => c1 (f a)) => ComposeConstraint c1 c2 f

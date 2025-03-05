@@ -6,7 +6,7 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe qualified as Maybe
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.GraphqlEngine (postMetadata, postMetadata_)
+import Harness.GraphqlEngine (postMetadata, postMetadataWithStatus, postMetadata_)
 import Harness.Quoter.Yaml
 import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
@@ -121,6 +121,27 @@ tests = do
           inconsistent_objects: []
         |]
 
+  describe "updating a source that is already inconsistent" do
+    it "should fail to update the source" \testEnvironment -> do
+      let shouldReturnYaml :: IO Value -> Value -> IO ()
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
+
+      _ <- postMetadata testEnvironment (setupMetadataWithInconsistentSource testEnvironment)
+
+      postMetadataWithStatus 400 testEnvironment (addSourceWithIncorrectConnectionString testEnvironment)
+        `shouldReturnYaml` [yaml|
+          code: invalid-configuration
+          error: "Inconsistent object: connection error"
+          internal:
+          - definition: postgres
+            message: |
+              missing "=" after "postgresbusted://postgres:postgres@postgres:5432/another_non_existent_db" in connection info string
+            name: source postgres
+            reason: "Inconsistent object: connection error"
+            type: source
+          path: $.args
+        |]
+
 reloadMetadata :: Value
 reloadMetadata =
   [yaml|
@@ -178,6 +199,22 @@ setupMetadataWithInconsistentSource testEnvironment =
     sourceName = Fixture.backendSourceName backendTypeMetadata
     schemaName = Schema.getSchemaName testEnvironment
     tableName = Schema.tableName table
+
+addSourceWithIncorrectConnectionString :: TestEnvironment -> Value
+addSourceWithIncorrectConnectionString testEnvironment =
+  [yaml|
+    type: pg_add_source
+    args:
+      name: *sourceName
+      configuration:
+        connection_info:
+          database_url: postgresbusted://postgres:postgres@postgres:5432/another_non_existent_db
+          pool_settings: {}
+      replace_configuration: true
+  |]
+  where
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+    sourceName = Fixture.backendSourceName backendTypeMetadata
 
 repaceMetadataRemoveInconsistentSource :: Value
 repaceMetadataRemoveInconsistentSource =

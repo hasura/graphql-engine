@@ -45,6 +45,13 @@ class TestGraphqlIntrospection:
     def test_introspection_user(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/introspection_user_role.yaml")
 
+    def test_introspection_directive_is_repeatable(self, hge_ctx):
+        with open(self.dir() + "/introspection_directive_is_repeatable.yaml") as c:
+            conf = yaml.load(c)
+        resp, _ = check_query(hge_ctx, conf)
+        for t in resp['data']['__schema']['directives']:
+            assert t['isRepeatable'] == False
+
     @classmethod
     def dir(cls):
         return "queries/graphql_introspection"

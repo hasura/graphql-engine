@@ -6,5 +6,5 @@ import type { DeleteMutationOperation } from './DeleteMutationOperation';
 import type { InsertMutationOperation } from './InsertMutationOperation';
 import type { UpdateMutationOperation } from './UpdateMutationOperation';
 
-export type MutationOperation = (InsertMutationOperation | DeleteMutationOperation | UpdateMutationOperation);
+export type MutationOperation = (InsertMutationOperation | UpdateMutationOperation | DeleteMutationOperation);
 

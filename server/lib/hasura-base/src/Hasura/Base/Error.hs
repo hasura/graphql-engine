@@ -5,6 +5,7 @@ module Hasura.Base.Error
   ( Code (..),
     QErr (..),
     QErrExtra (..),
+    IncludeInternalErrors (..),
     overrideQErrStatus,
     prefixQErr,
     showQErr,
@@ -227,11 +228,16 @@ prefixQErr prefix err = err {qeError = prefix <> qeError err}
 showQErr :: QErr -> Text
 showQErr = TL.toStrict . TL.decodeUtf8 . encode
 
-encodeGQLErr :: Bool -> QErr -> Encoding
+data IncludeInternalErrors = IncludeInternalErrors | HideInternalErrors
+  deriving (Eq, Ord, Show)
+
+encodeGQLErr :: IncludeInternalErrors -> QErr -> Encoding
 encodeGQLErr includeInternal (QErr jPath _ msg code maybeExtra) =
   pairs (("message" .= msg) <> (J.pair "extensions" extnsObj))
   where
-    appendIf cond a b = if cond then a <> b else a
+    appendInternal a b = case includeInternal of
+      IncludeInternalErrors -> a <> b
+      HideInternalErrors -> a
 
     extnsObj = case maybeExtra of
       Nothing -> pairs codeAndPath
@@ -240,15 +246,15 @@ encodeGQLErr includeInternal (QErr jPath _ msg code maybeExtra) =
       -- contains a `code` field:
       Just (ExtraExtensions v) -> toEncoding v
       Just (ExtraInternal v) ->
-        pairs $ appendIf includeInternal codeAndPath ("internal" .= v)
+        pairs $ appendInternal codeAndPath ("internal" .= v)
     codeAndPath =
       ("path" .= encodeJSONPath jPath)
         <> ("code" .= code)
 
 -- whether internal should be included or not
-encodeQErr :: Bool -> QErr -> Encoding
-encodeQErr True = toEncoding
-encodeQErr False = toEncoding . removeInternalErr
+encodeQErr :: IncludeInternalErrors -> QErr -> Encoding
+encodeQErr IncludeInternalErrors = toEncoding
+encodeQErr HideInternalErrors = toEncoding . removeInternalErr
   where
     removeInternalErr :: QErr -> QErr
     removeInternalErr err = err {qeInternal = Nothing}

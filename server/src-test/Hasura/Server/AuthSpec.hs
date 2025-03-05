@@ -84,10 +84,6 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         IO (Either Code RoleName)
       getUserInfoWithExpTime o claims authMode = gqlUserInfoWithExpTime o claims authMode Nothing
 
-  let setupAuthMode'E a b c d =
-        either (const $ error "fixme") id
-          <$> setupAuthMode' a b c d
-
   let ourUnauthRole = mkRoleNameE "an0nymous"
 
   describe "started without admin secret" $ do
@@ -646,6 +642,18 @@ setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
       mUnAuthRole
       (Logger $ void . return)
       httpManager
+
+setupAuthMode'E ::
+  ( ForkableMonadIO m
+  ) =>
+  Maybe (HashSet AdminSecretHash) ->
+  Maybe AuthHook ->
+  [JWTConfig] ->
+  Maybe RoleName ->
+  m AuthMode
+setupAuthMode'E a b c d =
+  either (const $ error "fixme") id
+    <$> setupAuthMode' a b c d
 
 mkClaimsSetWithUnregisteredClaims :: J.Object -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =

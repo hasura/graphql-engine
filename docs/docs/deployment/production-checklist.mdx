@@ -71,7 +71,7 @@ querying the entire table in one shot, thus adding load on Postgres.
 
 ## Configure max connections
 
-Hasura utilizes [connection pooling](https://hasura.io/docs/latest/databases/database-config/cloud-connection-pooling/)
+Hasura utilizes [connection pooling](/databases/database-config/cloud-connection-pooling.mdx)
 for Postgres and MS SQL Server databases. You should set an appropriate
 [`total_max_connections`](/api-reference/syntax-defs.mdx#pgpoolsettings) (on Cloud) or
 [`max_connections`](/api-reference/syntax-defs.mdx#pgpoolsettings) (on Self-hosted) to use the database efficiently.

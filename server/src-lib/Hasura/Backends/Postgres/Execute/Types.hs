@@ -90,6 +90,8 @@ data PGExecCtxInfo = PGExecCtxInfo
 data PGExecTxType
   = -- | a transaction without an explicit tranasction block
     NoTxRead
+  | -- | a transaction with read-write access and without an explicit transaction block
+    NoTxReadWrite
   | -- | a transaction block with custom transaction access and isolation level.
     --  Choose defaultIsolationLevel defined in 'SourceConnConfiguration' if
     --  "Nothing" is provided for isolation level.
@@ -123,6 +125,8 @@ mkPGExecCtx defaultIsoLevel pool resizeStrategy =
       _pecRunTx = \case
         -- \| Run a read only statement without an explicit transaction block
         (PGExecCtxInfo NoTxRead _) -> PG.runTx' pool
+        -- \| Run a read-write statement without an explicit transaction block
+        (PGExecCtxInfo NoTxReadWrite _) -> PG.runTx' pool
         -- \| Run a transaction
         (PGExecCtxInfo (Tx txAccess (Just isolationLevel)) _) -> PG.runTx pool (isolationLevel, Just txAccess)
         (PGExecCtxInfo (Tx txAccess Nothing) _) -> PG.runTx pool (defaultIsoLevel, Just txAccess)

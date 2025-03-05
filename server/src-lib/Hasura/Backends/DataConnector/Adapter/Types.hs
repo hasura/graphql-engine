@@ -526,6 +526,8 @@ data ArgumentExp a
 
 instance (Hashable a) => Hashable (ArgumentExp a)
 
+instance (NFData a) => NFData (ArgumentExp a)
+
 --------------------------------------------------------------------------------
 
 data CountAggregate v
@@ -535,7 +537,7 @@ data CountAggregate v
   deriving (Generic)
 
 deriving stock instance
-  (Backend 'DataConnector, Show (IR.AnnRedactionExp 'DataConnector v), Show v) =>
+  (Backend 'DataConnector, Show v) =>
   Show (CountAggregate v)
 
 deriving stock instance (Backend 'DataConnector) => Functor CountAggregate
@@ -545,7 +547,7 @@ deriving stock instance (Backend 'DataConnector) => Foldable CountAggregate
 deriving stock instance (Backend 'DataConnector) => Traversable CountAggregate
 
 deriving stock instance
-  (Backend 'DataConnector, Eq (IR.AnnRedactionExp 'DataConnector v), Eq v) =>
+  (Backend 'DataConnector, Eq v) =>
   Eq (CountAggregate v)
 
 deriving stock instance

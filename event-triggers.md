@@ -104,3 +104,4 @@ Propagate event-driven and asynchronous information to UI clients easily with Gr
 This document is available in the following translations:
 
 - [French :fr:](translations/event-triggers.french.md)
+- [中文 :cn:](translations/event-triggers.chinese.md)

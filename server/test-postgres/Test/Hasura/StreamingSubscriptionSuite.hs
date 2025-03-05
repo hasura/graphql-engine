@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -Wno-x-partial #-}
 
 module Test.Hasura.StreamingSubscriptionSuite (buildStreamingSubscriptionSuite) where
 

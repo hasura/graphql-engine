@@ -253,9 +253,10 @@ X-Hasura-Role: admin
 In case there are multiple headers with the same name, the order of precedence is: client headers \> resolved user
 (`x-hasura-*`) variables \> configuration headers.
 
-If you want to change the order of precedence to: configuration headers \> resolved user (`x-hasura-*`) variables
-\> client headers, use the [configured header
-precedence](deployment/graphql-engine-flags/reference.mdx/#configured-header-precedence) flag or environment variable.
+If you want to change the order of precedence to: configuration headers \> resolved user (`x-hasura-*`) variables \>
+client headers, use the
+[configured header precedence](deployment/graphql-engine-flags/reference.mdx/#configured-header-precedence) flag or
+environment variable.
 
 :::
 
@@ -271,9 +272,11 @@ API.
 This secret is only known by Hasura and is passed to your endpoint with every call, thus making sure only Hasura can
 successfully authenticate with the action handler.
 
-:::info Note
+:::info Header names
 
-The name for the action secret is not defined by Hasura and can be chosen freely.
+The name for the action secret is not defined by Hasura and can be chosen freely. If you're utilizing nginx, take care
+to [enable underscores](https://nginx.org/en/docs/http/ngx_http_core_module.html#underscores_in_headers) in headers if
+you choose to use them in your header keys.
 
 :::
 

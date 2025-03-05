@@ -91,6 +91,7 @@ emptyServeOptionsRaw =
       rsoGracefulShutdownTimeout = Nothing,
       rsoWebSocketConnectionInitTimeout = Nothing,
       rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingDisabled,
+      rsoHttpLogQueryOnlyOnError = Logging.HttpLogQueryOnlyOnErrorDisabled,
       rsoDefaultNamingConvention = Nothing,
       rsoExtensionsSchema = Nothing,
       rsoMetadataDefaults = Nothing,

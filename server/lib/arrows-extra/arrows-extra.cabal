@@ -22,9 +22,16 @@ library
     -Wno-monomorphism-restriction
     -Wno-missing-kind-signatures
     -Wno-missing-safe-haskell-mode
+    -Wno-missing-role-annotations
+    -Wno-missing-poly-kind-signatures
+    -Wno-term-variable-capture
     -- We want these warnings, but the code doesn't satisfy them yet:
     -Wno-missing-deriving-strategies
     -Wno-unused-packages
+    -- TODO should we review the warnings from these?
+    -Wno-missing-role-annotations
+    -Wno-missing-poly-kind-signatures 
+
 
   build-depends:
     , base

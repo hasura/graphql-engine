@@ -17,6 +17,8 @@ import { isProloginWithPAT } from '../../../utils/utils';
 import { isAdmin as _isAdmin } from './utils';
 import extendedGlobals from '../../../Globals';
 import styles from './Metrics.module.scss';
+import { useLDClient } from 'launchdarkly-react-client-sdk';
+import prometheusMonitoring from './images/prometheus_monitoring.svg';
 /*
  * useClient hook will be called for every change in the accessToken and when it changes,
  * a new apollo client instance is created and returned to the required component
@@ -63,7 +65,16 @@ const useClient = ({ tokenType, token, metricsFQDN }) => {
   return c;
 };
 
+const useIsTenantMetricsEnabled = projectPlanName => {
+  const ldClient = useLDClient();
+  const result = ldClient?.variation('v2-tenant-metrics');
+  // Check if the project plan name is in the list of allowed plans
+  const allowedPlans = result?.plan_name || [];
+  return allowedPlans.includes(projectPlanName);
+};
+
 const Metrics = props => {
+  const tenantMetricsEnabled = useIsTenantMetricsEnabled(globals.pricingPlan);
   const {
     projectId,
     privileges,
@@ -148,7 +159,7 @@ const Metrics = props => {
       }
 
       if (projectId) {
-        return (
+        const metricsContent = (
           <ApolloProvider client={client}>
             <div className={styles.metricsWrapper}>
               <LeftPanel location={location} />
@@ -166,6 +177,31 @@ const Metrics = props => {
             </div>
           </ApolloProvider>
         );
+
+        if (tenantMetricsEnabled) {
+          return (
+            <>
+              <a
+                href={`${window.location.protocol}//${window.location.host}/project/${projectId}/monitoring`}
+                target="_blank"
+                className={styles.banner}
+              >
+                <img
+                  src={prometheusMonitoring}
+                  alt="Monitoring Icon"
+                  className={styles.bannerIcon}
+                />
+                <div className={styles.bannerText}>
+                  Access more metrics with our new dashboard!
+                </div>
+              </a>
+              {metricsContent}
+            </>
+          );
+        }
+
+        // Return only the metrics content if tenantMetricsEnabled is false
+        return metricsContent;
       }
 
       if (isAdminSecretMode || !globals.isAdminSecretSet) {

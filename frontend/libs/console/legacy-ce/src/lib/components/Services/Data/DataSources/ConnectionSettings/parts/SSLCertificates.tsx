@@ -26,7 +26,11 @@ export const SSLCertificates: React.VFC<ConnectionSettingsFormProps> = ({
       </div>
       <div className={styles.text_muted}>
         Certificates will be loaded from{' '}
-        <a href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database">
+        <a
+          href="https://hasura.io/docs/2.0/databases/postgres/gcp/#step-72-add-env-vars"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           environment variables
         </a>
       </div>

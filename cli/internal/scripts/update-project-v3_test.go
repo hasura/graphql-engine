@@ -59,6 +59,24 @@ func Test_checkIfDirectoryIsMigration(t *testing.T) {
 			false,
 			require.NoError,
 		},
+		{
+			"can check if a directory name is a valid migration, 14 chars",
+			args{
+				dirPath: "16048559649031_test",
+			},
+			true,
+			false,
+			require.NoError,
+		},
+		{
+			"can check if a directory name is a valid migration, 15 chars",
+			args{
+				dirPath: "160485596490312_test",
+			},
+			false,
+			false,
+			require.NoError,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

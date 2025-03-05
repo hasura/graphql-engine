@@ -26,6 +26,7 @@ import {
   permCustomChecked,
   permSetBulkSelect,
   permRemoveMultipleRoles,
+  bulkPermissionModifier,
   permSetApplySamePerm,
   permDelApplySamePerm,
   permToggleBackendOnly,
@@ -39,6 +40,7 @@ import {
   PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
   permToggleSelectField,
   permValidateInputFields,
+  PERM_RESET_BULK_SELECT,
 } from './Actions';
 import {
   RootFieldPermissions,
@@ -393,10 +395,10 @@ class Permissions extends Component {
             dispatch(permSetBulkSelect(isChecked, selectedRole));
           };
 
-          const disableCheckbox = !Object.keys(rolePermissions).includes(role);
+          const disableCheckbox = !role;
 
           return {
-            showCheckbox: !(role === 'admin' || isNewRole),
+            showCheckbox: !(role === 'admin'),
             disableCheckbox,
             title: disableCheckbox
               ? 'No permissions exist'
@@ -553,14 +555,50 @@ class Permissions extends Component {
         }
       };
 
+      const handleBulkClick = () => {
+        const confirmMessage =
+          'This will give full access (select/insert/update/delete) with all columns enabled for the selected roles';
+        const isOk = getConfirmation(confirmMessage);
+        if (isOk) {
+          dispatch(bulkPermissionModifier(tableSchema));
+        }
+      };
+
       return (
         <div id={'bulk-section'} className={styles.activeEdit}>
-          <div className={styles.editPermsHeading}>Apply Bulk Actions</div>
+          <div className={styles.editPermsHeading}>
+            Apply Bulk Actions
+            <Button
+              mode="secondary"
+              size="sm"
+              onClick={() => {
+                // Reset bulk selections
+                dispatch({ type: PERM_RESET_BULK_SELECT });
+                // Uncheck all checkboxes programmatically
+                const checkboxes =
+                  document.querySelectorAll('input[data-role]');
+                checkboxes.forEach(checkbox => {
+                  checkbox.checked = false;
+                });
+              }}
+              style={{ marginLeft: '10px' }}
+            >
+              Cancel
+            </Button>
+          </div>
           <div>
             <span className={styles.add_pad_right}>Selected Roles</span>
             {getSelectedRoles()}
           </div>
           <div className={styles.add_mar_top + ' ' + styles.add_mar_bottom_mid}>
+            <Button
+              onClick={handleBulkClick}
+              mode="primary"
+              size="sm"
+              style={{ marginRight: '5px' }}
+            >
+              Add All Permissions
+            </Button>
             <Button onClick={handleBulkRemoveClick} color="red" size="sm">
               Remove All Permissions
             </Button>

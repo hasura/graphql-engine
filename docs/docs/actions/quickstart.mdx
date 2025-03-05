@@ -19,8 +19,8 @@ import SampleAppBlock from '@site/src/components/SampleAppBlock';
 # Quickstart Actions
 
 Actions extend your GraphQL schema, allowing it to include traditional REST endpoints. This quickstart will show you how
-to implement an Action using the Console of your Hasura project. This Action, using a REST API, will convert a
-currency value that we'll query directly from our GraphQL API.
+to implement an Action using the Console of your Hasura project. This Action, using a REST API, will convert a currency
+value that we'll query directly from our GraphQL API.
 
 **All you need to do is to follow the steps listed below, but if you're more curious about what's happening, check out
 the [recap at the bottom of the page](#recap).**
@@ -134,6 +134,7 @@ Add the following query parameters and values as separate pairs in the available
 | from        | `{{$body.input.CurrencyInfo.from}}` |
 | to          | `{{$body.input.CurrencyInfo.to}}`   |
 | amount      | `{{$body.input.CurrencyInfo.amt}}`  |
+| access_key  | `0417395c100e46d35f7ff0b01ccb638d`  |
 
 Scroll to the bottom of the page, click `Create Action`, then head to your API page.
 

@@ -24,6 +24,7 @@ import (
 // NewMigrateCmd returns the migrate command
 func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
+	ec.Viper = v
 	migrateCmd := &cobra.Command{
 		Use:   "migrate",
 		Short: "Manage migrations on the database",

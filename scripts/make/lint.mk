@@ -1,7 +1,7 @@
 # skip server/forks because it contains forks of other projects, and
 # we want to keep the diff between the fork and the original library as small
 # as possible
-HS_FILES = $(shell git ls-files '*.hs' '*.hs-boot' | grep -E -v '^server/forks/')
+HS_FILES = $(shell git ls-files '*.hs' '*.hs-boot' | grep -E -v '^server/forks/|^server/lib/pg-client/bench/Main.hs')
 CHANGED_HS_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\(\.hs\|hs-boot\)$$' | grep -E -v '^server/forks/')
 
 NIX_FILES = $(shell git ls-files '*.nix' 'nix/*.nix')

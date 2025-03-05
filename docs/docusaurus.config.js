@@ -5,31 +5,58 @@ const path = require('path');
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
+const DOCS_SERVER_ROOT_URLS = {
+  development: 'localhost:8000',
+  production: 'website-api.hasura.io',
+  staging: 'website-api.stage.hasura.io',
+};
+
+const DOCS_SERVER_URLS = {
+  development: `http://${DOCS_SERVER_ROOT_URLS.development}`,
+  production: `https://${DOCS_SERVER_ROOT_URLS.production}`,
+  staging: `https://${DOCS_SERVER_ROOT_URLS.staging}`,
+};
+
+const BOT_ROUTES = {
+  development: `ws://${DOCS_SERVER_ROOT_URLS.development}/bot/query`,
+  production: `wss://${DOCS_SERVER_ROOT_URLS.production}/docs-services/docs-server/bot/query`,
+  staging: `wss://${DOCS_SERVER_ROOT_URLS.staging}/docs-services/docs-server/bot/query`,
+};
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Hasura GraphQL Docs',
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io',
-  baseUrl: '/docs/',
+  baseUrl: process.env.CF_PAGES === '1' ? '/' : '/docs/2.0',
   trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
-  favicon: '/docs/img/favicon.png',
+  favicon: '/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',
   staticDirectories: ['static', 'public'],
   customFields: {
     docsBotEndpointURL: (() => {
-      console.log('process.env.release_mode docs-bot', process.env.release_mode);
-      switch (process.env.release_mode) {
-        case 'development':
-          return 'ws://localhost:8000/hasura-docs-ai';
-        case 'production':
-          return 'wss://website-api.hasura.io/chat-bot/hasura-docs-ai';
-        case 'staging':
-          return 'wss://website-api.stage.hasura.io/chat-bot/hasura-docs-ai';
-        default:
-          return 'ws://localhost:8000/hasura-docs-ai'; // default to development if no match
+      if (process.env.CF_PAGES === '1') {
+        return BOT_ROUTES.staging; // if we're on CF pages, use the staging environment
+      } else {
+        const mode = process.env.release_mode;
+        if (mode === 'staging') {
+          return BOT_ROUTES.production; // use production route for staging
+        }
+        return BOT_ROUTES[mode ?? 'development'];
+      }
+    })(),
+    docsServerURL: (() => {
+      if (process.env.CF_PAGES === '1') {
+        return DOCS_SERVER_URLS.staging; // if we're on CF pages, use the staging environment
+      } else {
+        const mode = process.env.release_mode;
+        if (mode === 'staging') {
+          return DOCS_SERVER_URLS.production; // use production route for staging
+        }
+        return DOCS_SERVER_URLS[mode ?? 'development'];
       }
     })(),
     hasuraVersion: 2,
@@ -72,7 +99,7 @@ const config = {
             current: {
               label: 'v2.x',
               badge: true,
-              path: 'latest',
+              path: '',
             },
           },
         },
@@ -157,9 +184,9 @@ const config = {
       },
       announcementBar: {
         id: 'announcementBar-1', // Increment on change
-        content: `The new version of Hasura has launched. <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/docs/3.0/index/">Check out the Hasura DDN docs here.</a>`,
-        // isCloseable: true,
-        // backgroundColor: '#fafbfc',
+        content: `The new version of Hasura has launched. <a target="_blank" rel="noopener" href="https://hasura.io/docs/3.0/getting-started/quickstart/?utm_source=hasura&utm_medium=v2_docs">Get started with Hasura DDN here.</a>`,
+        isCloseable: false,
+        // backgroundColor: '#478BCA',
         // textColor: '#091E42',
       },
       // announcementBar: {
@@ -201,13 +228,13 @@ const config = {
             position: 'left',
           },
           {
-            to: '/latest/hasura-cloud/overview',
+            to: '/hasura-cloud/overview',
             label: 'Hasura Cloud',
             className: 'header-hasura-cloud-link',
             position: 'left',
           },
           {
-            to: '/latest/enterprise/overview',
+            to: '/enterprise/overview',
             label: 'Hasura Enterprise',
             className: 'header-hasura-ee-link',
             position: 'left',
@@ -219,7 +246,7 @@ const config = {
             dropdownItemsAfter: [
               {
                 href: 'https://hasura.io/docs/3.0/index/',
-                label: 'v3.x',
+                label: 'v3.x (DDN)',
               },
               {
                 href: 'https://hasura.io/docs/1.0/graphql/core/index.html',

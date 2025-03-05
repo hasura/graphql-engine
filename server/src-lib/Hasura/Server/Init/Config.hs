@@ -89,6 +89,7 @@ import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as Query
 import Hasura.Authentication.Role (RoleName, adminRoleName)
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
+import Hasura.Base.Error (IncludeInternalErrors (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.Logging qualified as Logging
 import Hasura.NativeQuery.Validation qualified as NativeQuery.Validation
@@ -321,6 +322,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoGracefulShutdownTimeout :: Maybe (Refined NonNegative Seconds),
     rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
     rsoEnableMetadataQueryLoggingEnv :: Server.Logging.MetadataQueryLoggingMode,
+    rsoHttpLogQueryOnlyOnError :: Server.Logging.HttpLogQueryOnlyOnError,
     -- | stores global default naming convention
     rsoDefaultNamingConvention :: Maybe NamingCase,
     rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema,
@@ -635,6 +637,7 @@ data ServeOptions impl = ServeOptions
     -- | See note '$readOnlyMode'
     soReadOnlyMode :: Server.Types.ReadOnlyMode,
     soEnableMetadataQueryLogging :: Server.Logging.MetadataQueryLoggingMode,
+    soHttpLogQueryOnlyOnError :: Server.Logging.HttpLogQueryOnlyOnError,
     soDefaultNamingConvention :: NamingCase,
     soExtensionsSchema :: MonadTx.ExtensionsSchema,
     soMetadataDefaults :: MetadataDefaults,
@@ -662,11 +665,14 @@ data ResponseInternalErrorsConfig
   | InternalErrorsDisabled
   deriving (Show, Eq)
 
-shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> Bool
+shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> IncludeInternalErrors
 shouldIncludeInternal role = \case
-  InternalErrorsAllRequests -> True
-  InternalErrorsAdminOnly -> role == adminRoleName
-  InternalErrorsDisabled -> False
+  InternalErrorsAllRequests -> IncludeInternalErrors
+  InternalErrorsAdminOnly ->
+    if role == adminRoleName
+      then IncludeInternalErrors
+      else HideInternalErrors
+  InternalErrorsDisabled -> HideInternalErrors
 
 --------------------------------------------------------------------------------
 

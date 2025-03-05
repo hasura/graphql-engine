@@ -28,6 +28,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     getData,
     getRawWebSocketConnection,
     getWSId,
+    setConnInitialized,
     mkWSServerErrorCode,
     sendMsg,
     shutdown,
@@ -40,7 +41,6 @@ where
 import Control.Concurrent.Async qualified as A
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.Extended (sleep)
-import Control.Concurrent.STM (readTVarIO)
 import Control.Concurrent.STM qualified as STM
 import Control.Exception.Lifted
 import Control.Monad.Trans.Control qualified as MC
@@ -110,6 +110,7 @@ $(J.deriveToJSON hasuraJSON ''MessageDetails)
 
 data WSEvent
   = EConnectionRequest
+  | EConnectionTimeout
   | EAccepted
   | ERejected
   | EMessageReceived !MessageDetails
@@ -201,6 +202,7 @@ data WSConn a = WSConn
     _wcLogger :: !(L.Logger L.Hasura),
     _wcConnRaw :: !WS.Connection,
     _wcSendQ :: !(STM.TQueue WSQueueResponse),
+    _wsConnInitTimer :: !WSConnInitTimeout,
     _wcExtraData :: !a
   }
 
@@ -215,6 +217,10 @@ getWSId = _wcConnId
 
 closeConn :: WSConn a -> BL.ByteString -> IO ()
 closeConn wsConn = closeConnWithCode wsConn 1000 -- 1000 is "normal close"
+
+setConnInitialized :: WSConn a -> IO ()
+setConnInitialized wsConn =
+  STM.atomically $ STM.writeTMVar (_wsConnInitTimer wsConn) Initialized
 
 -- | Closes a connection with code 1012, which means "Server is restarting"
 -- good clients will implement a retry logic with a backoff of a few seconds
@@ -380,7 +386,7 @@ websocketConnectionReaper getLatestConfig getSchemaCache ws@(WSServer _ userConf
   forever $ do
     (currAuthMode, currEnableAllowlist, currCorsPolicy, currSqlGenCtx, currExperimentalFeatures, currDefaultNamingCase) <- getLatestConfig
     currAllowlist <- scAllowlist <$> getSchemaCache
-    SecuritySensitiveUserConfig prevAuthMode prevEnableAllowlist prevAllowlist prevCorsPolicy prevSqlGenCtx prevExperimentalFeatures prevDefaultNamingCase <- readTVarIO userConfRef
+    SecuritySensitiveUserConfig prevAuthMode prevEnableAllowlist prevAllowlist prevCorsPolicy prevSqlGenCtx prevExperimentalFeatures prevDefaultNamingCase <- STM.readTVarIO userConfRef
     -- check and close all connections if required
     checkAndReapConnections
       (currAuthMode, prevAuthMode)
@@ -499,6 +505,7 @@ websocketConnectionReaper getLatestConfig getSchemaCache ws@(WSServer _ userConf
                 (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures, ssucDefaultNamingCase = currDefaultNamingCase})
           | otherwise -> pure ()
 
+-- | This is called for each client websocket connection
 createServerApp ::
   (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m, MonadGetPolicies m) =>
   IO MetricsConfig ->
@@ -513,9 +520,9 @@ createServerApp ::
 createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger writeLog) _ serverStatus) prometheusMetrics wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
-  -- NOTE: this timer is specific to `graphql-ws`. the server has to close the connection
   -- if the client doesn't send a `connection_init` message within the timeout period
-  wsConnInitTimer <- liftIO $ getNewWSTimer (unrefine $ unWSConnectionInitTimeout wsConnInitTimeout)
+  -- the server has to close the connection
+  wsConnInitTimer <- liftIO newWSConnInitTimeout
   status <- liftIO $ STM.readTVarIO serverStatus
   case status of
     AcceptingConns _ -> logUnexpectedExceptions $ do
@@ -550,6 +557,25 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                 $ "Client exception: "
                 <> show e
               throwIO e,
+            Handler $ \case
+              -- This represents a clean shutdown at the websocket layer by client, without a
+              -- graceful 'Complete' message at the graphql-ws layer. Raised from receiveData.
+              -- This might get raised if Presumably we have correctly cleaned up by this point:
+              WS.CloseRequest {} -> pure ()
+              -- This is quite common, and easy to induce with `websocat --no-close` and CTRL-C
+              WS.ConnectionClosed ->
+                writeLog
+                  $ L.UnstructuredLog L.LevelDebug
+                  $ fromString
+                  $ "Websocket client closed without sending the proper close control messages"
+              -- I haven't observed these, so make them INFO-level
+              e ->
+                writeLog
+                  $ L.UnstructuredLog L.LevelInfo
+                  $ fromString
+                  $ "A Websocket client may be misbehaving. This was raised while handling the connection: "
+                  <> show e,
+            -- Anything not caught above will be re-raised:
             Handler $ \(e :: SomeException) -> do
               writeLog
                 $ L.UnstructuredLog L.LevelError
@@ -574,7 +600,7 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
       conn <- liftIO $ WS.acceptRequestWith pendingConn acceptWithParams
       logWSLog logger $ WSLog wsId EAccepted Nothing
       sendQ <- liftIO STM.newTQueueIO
-      let !wsConn = WSConn wsId logger conn sendQ a
+      let !wsConn = WSConn wsId logger conn sendQ wsConnInitTimer a
       -- TODO there are many thunks here. Difficult to trace how much is retained, and
       --      how much of that would be shared anyway.
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
@@ -657,31 +683,52 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                         (realToFrac messageWriteTime)
                     logWSLog logger $ WSLog wsId (EMessageSent messageDetails) wsInfo
 
+            let connInitTimer = liftIO $ do
+                  labelMe "WebSocket connInitTimer"
+                  runTimer (unrefine $ unWSConnectionInitTimeout wsConnInitTimeout) wsConnInitTimer
+
             -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
             -- forking that the threads we launched will be cleaned up. See also below.
-            LA.withAsync rcv $ \rcvRef -> do
-              LA.withAsync send $ \sendRef -> do
-                LA.withAsync (liftIO $ labelMe "WebSocket keepAlive" >> keepAlive wsConn) $ \keepAliveRef -> do
-                  LA.withAsync (liftIO $ labelMe "WebSocket onJwtExpiry" >> onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
-                    -- once connection is accepted, check the status of the timer, and if it's expired, close the connection for `graphql-ws`
-                    timeoutStatus <- liftIO $ getWSTimerState wsConnInitTimer
-                    when (timeoutStatus == Done && subProtocol == GraphQLWS)
-                      $ liftIO
-                      $ closeConnWithCode wsConn 4408 "Connection initialisation timed out"
-
-                    -- terminates on WS.ConnectionException and JWT expiry
-                    let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
-                    -- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in
-                    -- case of async exceptions raised while blocking here:
-                    try (LA.waitAnyCancel waitOnRefs) >>= \case
-                      -- NOTE: 'websockets' is a bit of a rat's nest at the moment wrt
-                      -- exceptions; for now handle all ConnectionException by closing
-                      -- and cleaning up, see: https://github.com/jaspervdj/websockets/issues/48
-                      Left (_ :: WS.ConnectionException) -> do
-                        logWSLog logger $ WSLog (_wcConnId wsConn) ECloseReceived Nothing
-                      -- this will happen when jwt is expired
-                      Right _ -> do
-                        logWSLog logger $ WSLog (_wcConnId wsConn) EJwtExpired Nothing
+            LA.withAsync connInitTimer $ \connInitTimerRef -> do
+              LA.withAsync rcv $ \rcvRef -> do
+                LA.withAsync send $ \sendRef -> do
+                  LA.withAsync (liftIO $ labelMe "WebSocket keepAlive" >> keepAlive wsConn) $ \keepAliveRef -> do
+                    LA.withAsync (liftIO $ labelMe "WebSocket onJwtExpiry" >> onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
+                      -- Wait for connection init status, and then wait for any of the threads to terminate
+                      -- The code below will block until the status is updated by either the timer thread or the GraphQL protocol connection initialization.
+                      liftIO (STM.atomically $ STM.takeTMVar wsConnInitTimer) >>= \case
+                        TimedOut -> do
+                          -- send close message
+                          let timeoutMessage = "Connection initialisation timed out"
+                          case subProtocol of
+                            GraphQLWS ->
+                              -- https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#connectioninit
+                              liftIO $ closeConnWithCode wsConn 4408 timeoutMessage
+                            Apollo ->
+                              -- 1011 is an unexpected condition prevented the request from being fulfilled.
+                              -- NOTE: The protocol spec does not define a close code for connection timeouts, so we're using the close code from the reference implementation.
+                              -- https://github.com/apollographql/subscriptions-transport-ws/blob/36f3f6f780acc1a458b768db13fd39c65e5e6518/src/server.ts#L159
+                              liftIO $ closeConnWithCode wsConn 1011 timeoutMessage
+                          -- log connection timeout
+                          logWSLog logger $ WSLog (_wcConnId wsConn) EConnectionTimeout Nothing
+                          -- terminate all threads
+                          mapM_ LA.cancel [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
+                        Initialized -> do
+                          -- terminate the timer thread
+                          LA.cancel connInitTimerRef
+                          -- terminates on WS.ConnectionException and JWT expiry
+                          let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
+                          -- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in
+                          -- case of async exceptions raised while blocking here:
+                          try (LA.waitAnyCancel waitOnRefs) >>= \case
+                            -- NOTE: 'websockets' is a bit of a rat's nest at the moment wrt
+                            -- exceptions; for now handle all ConnectionException by closing
+                            -- and cleaning up, see: https://github.com/jaspervdj/websockets/issues/48
+                            Left (_ :: WS.ConnectionException) -> do
+                              logWSLog logger $ WSLog (_wcConnId wsConn) ECloseReceived Nothing
+                            -- this will happen when jwt is expired
+                            Right _ -> do
+                              logWSLog logger $ WSLog (_wcConnId wsConn) EJwtExpired Nothing
 
     onConnClose wsConn = \case
       ShuttingDown -> pure ()

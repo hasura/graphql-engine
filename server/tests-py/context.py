@@ -43,7 +43,7 @@ class GQLWsClient():
         self.ws_queue = queue.Queue(maxsize=-1)
         self.ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws',
                                                          path=endpoint)
-        self.create_conn()
+        self.conn_created = False
 
     def create_conn(self):
         self.ws_queue.queue.clear()
@@ -60,10 +60,7 @@ class GQLWsClient():
         self.wst = threading.Thread(target=self._ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
-
-    def recreate_conn(self):
-        self.teardown()
-        self.create_conn()
+        self.conn_created = True
 
     def wait_for_connection(self, timeout=10):
         assert not self.is_closing
@@ -78,7 +75,7 @@ class GQLWsClient():
     def get_ws_query_event(self, query_id, timeout):
         return self.ws_id_query_queues[query_id].get(timeout=timeout)
 
-    def send(self, frame, count=0):
+    def send(self, frame, headers={}, count=0):
         self.wait_for_connection()
         if frame.get('type') == 'stop':
             self.ws_active_query_ids.discard( frame.get('id') )
@@ -90,7 +87,7 @@ class GQLWsClient():
             if count > 2:
                 raise websocket.WebSocketConnectionClosedException("Connection is already closed and cannot be recreated even after 3 attempts")
             # Connection closed, try to recreate the connection and send the frame again
-            self.recreate_conn()
+            self.init(headers)
             self.send(frame, count+1)
 
     def init_as_admin(self):
@@ -100,6 +97,7 @@ class GQLWsClient():
         self.init(headers)
 
     def init(self, headers={}):
+        self.create_conn()
         payload = {'type': 'connection_init', 'payload': {}}
 
         if headers and len(headers) > 0:
@@ -121,13 +119,10 @@ class GQLWsClient():
             return self.gen_id(size, chars)
         return new_id
 
-    def send_query(self, query, query_id=None, headers={}, timeout=60):
-        graphql.parse(query['query'])
-        if headers and len(headers) > 0:
-            #Do init If headers are provided
-            self.init(headers)
-        elif not self.init_done:
+    def send_query(self, query, query_id=None, timeout=60):
+        if not self.init_done:
             self.init()
+        graphql.parse(query['query'])
         if query_id == None:
             query_id = self.gen_id()
         frame = {
@@ -169,10 +164,12 @@ class GQLWsClient():
         return self.remote_closed or self.is_closing
 
     def teardown(self):
-        self.is_closing = True
-        if not self.remote_closed:
-            self._ws.close()
-        self.wst.join()
+        if self.conn_created:
+            self.is_closing = True
+            if not self.remote_closed:
+                self._ws.close()
+                self.wst.join()
+            self.conn_created = False
 
 # NOTE: use this to generate a GraphQL client that uses the `graphql-ws` sub-protocol
 class GraphQLWSClient():
@@ -182,7 +179,7 @@ class GraphQLWSClient():
         self.ws_queue = queue.Queue(maxsize=-1)
         self.ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws',
                                                          path=endpoint)
-        self.create_conn()
+        self.conn_created = False
 
     def get_queue(self):
         return self.ws_queue.queue
@@ -205,10 +202,7 @@ class GraphQLWSClient():
         self.wst = threading.Thread(target=self._ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
-
-    def recreate_conn(self):
-        self.teardown()
-        self.create_conn()
+        self.conn_created = True
 
     def wait_for_connection(self, timeout=10):
         assert not self.is_closing
@@ -239,6 +233,7 @@ class GraphQLWSClient():
         self.init(headers)
 
     def init(self, headers={}):
+        self.create_conn()
         payload = {'type': 'connection_init', 'payload': {}}
 
         if headers and len(headers) > 0:
@@ -260,13 +255,9 @@ class GraphQLWSClient():
             return self.gen_id(size, chars)
         return new_id
 
-    def send_query(self, query, query_id=None, headers={}, timeout=60):
+    def send_query(self, query, query_id=None, timeout=60):
         graphql.parse(query['query'])
-        if headers and len(headers) > 0:
-            #Do init If headers are provided
-            self.clear_queue()
-            self.init(headers)
-        elif not self.init_done:
+        if not self.init_done:
             self.init()
         if query_id == None:
             query_id = self.gen_id()
@@ -318,10 +309,11 @@ class GraphQLWSClient():
         return self.remote_closed or self.is_closing
 
     def teardown(self):
-        self.is_closing = True
-        if not self.remote_closed:
-            self._ws.close()
-        self.wst.join()
+        if self.conn_created:
+            self.is_closing = True
+            if not self.remote_closed:
+                self._ws.close()
+                self.wst.join()
 
 class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
     hge_url: str
@@ -387,7 +379,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/null-response":
             resp, status = self.null_response()
             self._send_response(status, resp)
-        
+
         elif req_path == "/omitted-response-field":
             self._send_response(
                 HTTPStatus.OK,
@@ -624,7 +616,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             'id': 1,
             'child': None
         }
-    
+
     def get_omitted_response_field(self):
         return {
             'country': 'India'

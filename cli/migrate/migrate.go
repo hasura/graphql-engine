@@ -163,6 +163,7 @@ type Migrate struct {
 	SkipExecution   bool
 	DryRun          bool
 	ProgressBarLogs bool
+	NoTransaction   bool
 }
 
 type NewMigrateOpts struct {
@@ -642,7 +643,7 @@ func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser, skipExecu
 	}
 
 	if !skipExecution {
-		if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+		if err := m.databaseDrv.Run(data, "meta", "", false); err != nil {
 			m.databaseDrv.ResetQuery()
 			if e := m.unlockErr(err); e != nil {
 				return herrors.E(op, e)
@@ -1302,7 +1303,7 @@ func (m *Migrate) runMigrations(ret <-chan interface{}, bar *pb.ProgressBar) err
 			if r.Body != nil {
 				if !m.SkipExecution {
 					m.Logger.Debugf("applying migration: %s", r.FileName)
-					if err := m.databaseDrv.Run(r.BufferedBody, r.FileType, r.FileName); err != nil {
+					if err := m.databaseDrv.Run(r.BufferedBody, r.FileType, r.FileName, m.NoTransaction); err != nil {
 						return herrors.E(op, err)
 					}
 				}

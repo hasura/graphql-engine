@@ -22,10 +22,10 @@ exporters:
   #     key: ${DD_API_KEY}
 
   ## New Relic exporter
-  otlp/newrelic:
-    endpoint: otlp.nr-data.net:4317
-    headers:
-      api-key: ${NEW_RELIC_API_KEY}
+  # otlp/newrelic:
+  #   endpoint: otlp.nr-data.net:4317
+  #   headers:
+  #     api-key: ${NEW_RELIC_API_KEY}
 
   ## Export traces to Jaeger via OTLP protocol.
   ## You can also export traces directly to jaeger to graphql-engine.
@@ -51,8 +51,12 @@ exporters:
   ## download and rename to gcp-sa.json so the otel-collector can mount the service account
   ##
   # googlecloud:
+  #   trace:
+  #   metric:
+  #     compression: gzip
   #   log:
   #     default_log_name: example-otel.io/hasura-exported-log
+  #     compression: gzip
 
 processors:
   batch:
@@ -113,9 +117,50 @@ processors:
 
     logs:
       log_record:
-        # You can filter unused logs to save cost, or configure HASURA_GRAPHQL_ENABLED_LOG_TYPES in GraphQL Engine to disable unused log types
-        - 'attributes["type"] == "query-log" and IsMatch(body["query"]["operationName"], "UnknownQuery")'
-        - 'attributes["type"] == "http-log" and IsMatch(body["operation"]["query"]["operationName"], "UnknownQuery")'
+        ## Disable debug logs. You can also set HASURA_GRAPHQL_LOG_LEVEL=info.
+        - severity_number == SEVERITY_NUMBER_DEBUG
+
+        ## Deprecated log types. You should export OTEL traces and metrics instead.
+        - 'attributes["type"] == "metrics" or attributes["type"] == "tracing-log" or attributes["type"] == "livequery-poller-log"'
+
+        ## http-log and websocket-log already include most of information in query-log.
+        ## You can ignore this log type unless you want to debug generated SQL.
+        # - 'attributes["type"] == "query-log"'
+
+        ## You can filter unused logs to save cost, or configure HASURA_GRAPHQL_ENABLED_LOG_TYPES in GraphQL Engine to disable unused log types
+        # - 'attributes["type"] == "query-log" and IsMatch(body["query"]["operationName"], "UnknownQuery")'
+        # - 'attributes["type"] == "http-log" and IsMatch(body["operation"]["query"]["operationName"], "UnknownQuery")'
+
+  transform/logs:
+    error_mode: ignore
+    log_statements:
+      ## Remove the transform context in trigger logs
+      # - context: log
+      #   conditions:
+      #     - 'attributes["type"] == "scheduled-trigger" or attributes["type"] == "event-trigger"'
+      #   statements:
+      #     - 'delete_key(body["request"], "req_transform_ctx")'
+
+      ## Truncate very long query strings in http-log
+      - context: log
+        conditions:
+          - 'attributes["type"] == "http-log" and IsMap(body["operation"])'
+        statements:
+          - 'truncate_all(body["operation"], 4096)'
+
+      ## Truncate very long query strings in http-log
+      - context: log
+        conditions:
+          - 'attributes["type"] == "websocket-log" and IsMap(body["event.detail.query"])'
+        statements:
+          - 'truncate_all(body["event.detail.query"], 4096)'
+
+      ## Truncate very long generated_sql strings in query-log
+      - context: log
+        conditions:
+          - 'attributes["type"] == "query-log" and IsMap(body["generated_sql"])'
+        statements:
+          - 'truncate_all(body["generated_sql"], 4096)'
 
 service:
   pipelines:
@@ -126,8 +171,8 @@ service:
 
     logs:
       receivers: [otlp]
-      processors: [filter, memory_limiter, batch]
-      exporters: [loki]
+      processors: [filter, transform/logs, memory_limiter, batch]
+      exporters: [loki, debug]
 
     metrics:
       receivers: [otlp]

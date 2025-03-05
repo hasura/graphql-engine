@@ -205,7 +205,30 @@ class
     Traversable (BooleanOperators b),
     Traversable (UpdateVariant b),
     Traversable (BackendInsert b),
-    Traversable (AggregationPredicates b)
+    Traversable (AggregationPredicates b),
+    -- we need to smuggle superclass constraints on higher kinded associated
+    -- types in this weird way here for the compiler to accept it. Done to
+    -- allow us to remove UndecidableInstances elsewhere
+    --
+    -- More will need to be added here to excise UI everywhere
+    LiftedConstraint Eq (FunctionArgumentExp b),
+    LiftedConstraint Eq (AggregationPredicates b),
+    LiftedConstraint Eq (BooleanOperators b),
+    LiftedConstraint Eq (CountType b),
+    LiftedConstraint Show (CountType b),
+    LiftedConstraint Show (BooleanOperators b),
+    LiftedConstraint NFData (BooleanOperators b),
+    LiftedConstraint Hashable (BooleanOperators b),
+    ComposeConstraint ToJSONKeyValue ToJSON (BooleanOperators b),
+    LiftedConstraint Show (FunctionArgumentExp b),
+    LiftedConstraint NFData (FunctionArgumentExp b),
+    LiftedConstraint Hashable (FunctionArgumentExp b),
+    LiftedConstraint Show (AggregationPredicates b),
+    LiftedConstraint NFData (AggregationPredicates b),
+    LiftedConstraint Hashable (AggregationPredicates b),
+    ComposeConstraint ToJSONKeyValue ToJSON (AggregationPredicates b),
+    LiftedConstraint Eq (UpdateVariant b),
+    LiftedConstraint Show (UpdateVariant b)
   ) =>
   Backend (b :: BackendType)
   where

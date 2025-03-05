@@ -6,6 +6,7 @@ module Hasura.Server.API.Metadata
   )
 where
 
+import Control.Exception.Lifted qualified as E
 import Control.Lens (_Just)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
@@ -76,6 +77,7 @@ import Hasura.Server.Types
 import Hasura.Services
 import Hasura.StoredProcedure.API qualified as StoredProcedures
 import Hasura.Tracing qualified as Tracing
+import Network.WebSockets qualified as WS (ConnectionException (..))
 
 -- | The payload for the @/v1/metadata@ endpoint. See:
 --
@@ -193,10 +195,21 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
 
         -- Close all subscriptions with 1012 code (subscribers should reconnect)
         -- and close poller threads
-        when ((_cdcCloseWebsocketsOnMetadataChangeStatus dynamicConfig) == CWMCEnabled)
-          $ Tracing.newSpan "closeWebsocketsOnMetadataChange" Tracing.SKInternal
-          $ liftIO
-          $ WS.runWebsocketCloseOnMetadataChangeAction closeWebsocketsOnMetadataChange
+        when ((_cdcCloseWebsocketsOnMetadataChangeStatus dynamicConfig) == CWMCEnabled) $ do
+          Tracing.newSpan "closeWebsocketsOnMetadataChange" Tracing.SKInternal
+            $ E.catch (liftIO $ WS.runWebsocketCloseOnMetadataChangeAction closeWebsocketsOnMetadataChange)
+            -- 'ConnectionClosed' seems to happen when this is run between an
+            -- unclean client shutdown and (probably) the attempt to send the
+            -- next keepalive message on the connection. It's fine to ignore
+            -- it. Other exception types have not been observed here.
+            $ \case
+              WS.ConnectionClosed -> pure ()
+              e ->
+                L.unLoggerTracing logger
+                  $ SchemaSyncLog L.LevelDebug TTMetadataApi
+                  $ String
+                  $ "When closeWebsocketsOnMetadataChange, got: "
+                  <> tshow e
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -602,7 +615,7 @@ runBulkAtomic cmds = do
 
   -- Try building the schema cache using the combined modifiers. If we run into
   -- any inconsistencies, we should fail and roll back.
-  inconsistencies <- tryBuildSchemaCacheWithModifiers mdModifiers
+  inconsistencies <- tryBuildSchemaCacheWithModifiers [] mdModifiers
 
   unless (null inconsistencies)
     $ throw400WithDetail BadRequest "Schema inconsistency"

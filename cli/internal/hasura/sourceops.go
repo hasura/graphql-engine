@@ -17,6 +17,7 @@ type PGRunSQLInput struct {
 	Cascade                  bool   `json:"cascade,omitempty" yaml:"cascade,omitempty"`
 	ReadOnly                 bool   `json:"read_only,omitempty" yaml:"read_only,omitempty"`
 	CheckMetadataConsistency *bool  `json:"check_metadata_consistency,omitempty" yaml:"check_metadata_consistency,omitempty"`
+	NoTransaction            *bool  `json:"no_transaction,omitempty" yaml:"no_transaction,omitempty"`
 }
 
 type PGRunSQLOutput struct {

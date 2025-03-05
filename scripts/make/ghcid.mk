@@ -66,6 +66,11 @@ ghcid-test-harness:
 ghcid-pg-client:
 	$(call run_ghcid,pg-client)
 
+.PHONY: ghcid-hasura-base
+## ghcid-hasura-base: build and watch hasura-base in ghcid
+ghcid-hasura-base:
+	$(call run_ghcid,hasura-base)
+
 .PHONY: ghcid-api-tests-pro
 ## ghcid-api-tests-pro: build and watch api-tests in pro
 ghcid-api-tests-pro:

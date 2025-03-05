@@ -20,6 +20,8 @@ module Hasura.Server.Prometheus
     decWebsocketConnections,
     ScheduledTriggerMetrics (..),
     SubscriptionMetrics (..),
+    EventTriggerSourceLabel (..),
+    EventsFetchQueryStatusLabel (..),
     DynamicEventTriggerLabel (..),
     ResponseStatus (..),
     responseStatusToLabelValue,
@@ -92,6 +94,8 @@ data GraphQLRequestMetrics = GraphQLRequestMetrics
 
 data EventTriggerMetrics = EventTriggerMetrics
   { eventTriggerHTTPWorkers :: Gauge,
+    eventsFetchQueryTime :: HistogramVector EventsFetchQueryStatusLabel,
+    eventsFetchedTotal :: CounterVector EventTriggerSourceLabel,
     eventsFetchedPerBatch :: Gauge,
     eventQueueTimeSeconds :: HistogramVector (Maybe DynamicEventTriggerLabel),
     eventsFetchTimePerBatch :: Histogram,
@@ -174,6 +178,8 @@ makeDummyGraphQLRequestMetrics = do
 makeDummyEventTriggerMetrics :: IO EventTriggerMetrics
 makeDummyEventTriggerMetrics = do
   eventTriggerHTTPWorkers <- Gauge.new
+  eventsFetchQueryTime <- HistogramVector.new []
+  eventsFetchedTotal <- CounterVector.new
   eventsFetchedPerBatch <- Gauge.new
   eventQueueTimeSeconds <- HistogramVector.new []
   eventsFetchTimePerBatch <- Histogram.new []
@@ -273,6 +279,27 @@ modifyConnectionsGauge ::
   (Connections -> Connections) -> ConnectionsGauge -> IO ()
 modifyConnectionsGauge f (ConnectionsGauge ref) =
   atomicModifyIORef' ref $ \connections -> (f connections, ())
+
+data EventTriggerSourceLabel = EventTriggerSourceLabel
+  { _eslSourceName :: SourceName
+  }
+  deriving (Eq, Ord)
+
+instance ToLabels EventTriggerSourceLabel where
+  toLabels (EventTriggerSourceLabel {..}) = Map.singleton "source_name" $ sourceNameToText _eslSourceName
+
+data EventsFetchQueryStatusLabel = EventsFetchQueryStatusLabel
+  { _efqsSourceName :: SourceName,
+    _efqsStatus :: ResponseStatus
+  }
+  deriving (Eq, Ord)
+
+instance ToLabels EventsFetchQueryStatusLabel where
+  toLabels (EventsFetchQueryStatusLabel sourceName status) =
+    Map.fromList
+      [ ("source_name", sourceNameToText sourceName),
+        ("status", responseStatusToLabelValue status)
+      ]
 
 data DynamicEventTriggerLabel = DynamicEventTriggerLabel
   { _detlTriggerName :: TriggerName,

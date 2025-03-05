@@ -238,7 +238,7 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
     getCohortOperations cohorts = \case
       Left e ->
         -- TODO: this is internal error
-        let resp = throwError $ GQExecError [encodeGQLErr False e]
+        let resp = throwError $ GQExecError [encodeGQLErr HideInternalErrors e]
          in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = HashMap.fromList cohorts

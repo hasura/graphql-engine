@@ -93,6 +93,25 @@ X-Hasura-Role: admin
 }
 ```
 
+Track a table from the public schema without a custom name. Useful when both schema and table names are specified, especially when no custom name is needed for GraphQL.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_table",
+  "args": {
+    "source": "default",
+    "table": {
+      "schema": "public",
+      "name": "author"
+    }
+  }
+}
+```
+
 The GraphQL nodes and typenames that are generated will be according to the `identifier`. For example, in this case, the
 nodes generated will be:
 
