@@ -54,19 +54,21 @@ impl ResolvedFilterExpression {
         if expressions.len() == 1 {
             expressions.into_iter().next().unwrap()
         }
-        // If all subexpressions are also `and`, we can flatten into a single `and`
-        // ie. and([and([x,y]), and([a,b])]) == and([x,y,a,b])
+        // If any subexpressions are also `and`, we can flatten into a single `and`
+        // ie. and([and([x,y]), and([a,b])]) == and([x,y,a,b]) or
+        // and([a, and([b,c])]) == and([a,b,c])
         else if expressions
             .iter()
-            .all(|expr| matches!(expr, ResolvedFilterExpression::And { .. }))
+            .any(|expr| matches!(expr, ResolvedFilterExpression::And { .. }))
         {
             let subexprs = expressions
                 .into_iter()
                 .flat_map(|expr| match expr {
                     ResolvedFilterExpression::And { expressions } => expressions,
-                    _ => vec![],
+                    other => vec![other],
                 })
                 .collect();
+
             ResolvedFilterExpression::And {
                 expressions: subexprs,
             }

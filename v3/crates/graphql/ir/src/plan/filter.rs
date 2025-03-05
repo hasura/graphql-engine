@@ -34,18 +34,6 @@ pub(crate) fn plan_filter_expression(
         );
     }
 
-    if let Some(filter) = relationship_join_filter {
-        expressions.push(
-            plan_expression(filter, relationships, &mut remote_predicates, unique_number).map_err(
-                |plan_error| {
-                    plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
-                        description: plan_error.to_string(),
-                    })
-                },
-            )?,
-        );
-    }
-
     if let Some(filter) = &query_filter.additional_filter {
         expressions.push(
             plan_expression(filter, relationships, &mut remote_predicates, unique_number).map_err(
@@ -69,8 +57,20 @@ pub(crate) fn plan_filter_expression(
         expressions.push(planned_expression);
     }
 
-    Ok((
-        ResolvedFilterExpression::mk_and(expressions).remove_always_true_expression(),
-        remote_predicates,
-    ))
+    if let Some(filter) = relationship_join_filter {
+        expressions.push(
+            plan_expression(filter, relationships, &mut remote_predicates, unique_number).map_err(
+                |plan_error| {
+                    plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
+                        description: plan_error.to_string(),
+                    })
+                },
+            )?,
+        );
+    }
+
+    let resolved_filter_expression =
+        ResolvedFilterExpression::mk_and(expressions).remove_always_true_expression();
+
+    Ok((resolved_filter_expression, remote_predicates))
 }

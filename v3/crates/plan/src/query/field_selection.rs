@@ -12,7 +12,8 @@ use crate::types::{PlanError, RelationshipError};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{
-    FieldNestedness, Metadata, Qualified, QualifiedBaseType, QualifiedTypeReference, TypeMapping,
+    FieldNestedness, Metadata, Qualified, QualifiedBaseType, QualifiedTypeReference,
+    RelationshipExecutionCategory, TypeMapping,
 };
 use open_dds::{
     arguments::ArgumentName,
@@ -107,8 +108,10 @@ pub fn resolve_field_selection(
                     request_headers,
                     object_type_name,
                     object_type,
+                    selection,
                     type_mappings,
                     data_connector,
+                    relationship_field_nestedness,
                     NdcFieldAlias::from(field_alias.as_str()),
                     &mut ndc_fields,
                     relationships,
@@ -481,14 +484,16 @@ fn from_model_relationship(
             remote_predicates.0.extend(new_remote_predicates.0);
 
             // add field comparison to QueryExecutionPlan
+            // we specifically push_front to match old GraphQL pipeline plan
+            // once that's removed ordering is not important
             if let Some(ref query_filter) = query_execution.query_node.predicate {
-                relationship_join_filter_expressions.push(query_filter.clone());
+                relationship_join_filter_expressions.push_front(query_filter.clone());
             }
 
             // combine existing filter with new ones
             if !relationship_join_filter_expressions.is_empty() {
                 query_execution.query_node.predicate = Some(ResolvedFilterExpression::mk_and(
-                    relationship_join_filter_expressions,
+                    relationship_join_filter_expressions.into(),
                 ));
             }
 
@@ -511,7 +516,6 @@ fn from_model_relationship(
                 },
             );
 
-            // have we made sure phantom fields are still being pushed?
             Ok(())
         }
         metadata_resolve::RelationshipExecutionCategory::Local => {
@@ -735,7 +739,6 @@ fn from_command_relationship(
                 },
             );
 
-            // have we done something with phantom fields?
             Ok(())
         }
         metadata_resolve::RelationshipExecutionCategory::Local => {
@@ -863,8 +866,10 @@ fn from_relationship_aggregate_selection(
     request_headers: &reqwest::header::HeaderMap,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &OutputObjectTypeView,
+    source_selection: &IndexMap<Alias, ObjectSubSelection>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     source_data_connector: &metadata_resolve::DataConnectorLink,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     ndc_field_alias: NdcFieldAlias,
     ndc_fields: &mut IndexMap<NdcFieldAlias, Field>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
@@ -897,25 +902,16 @@ fn from_relationship_aggregate_selection(
                 PlanError::Internal(format!("model {target_model_name} has no source"))
             })?;
 
-            let local_model_relationship_info = plan_types::LocalModelRelationshipInfo {
-                relationship_name,
-                relationship_type: &model_relationship_target.relationship_type,
-                source_type: object_type_name,
-                source_data_connector,
-                source_type_mappings,
-                target_model_name,
-                target_source: target_model_source,
-                target_type: &model_relationship_target.target_typename,
-                mappings: &model_relationship_target.mappings,
-            };
-
-            let ndc_relationship_name =
-                plan_types::NdcRelationshipName::new(object_type_name, relationship_name);
-            // Record this relationship
-            collect_relationships.insert(
-                ndc_relationship_name.clone(),
-                process_model_relationship_definition(&local_model_relationship_info)?,
-            );
+            let target_capabilities =
+                relationship_field
+                    .target_capabilities
+                    .as_ref()
+                    .ok_or_else(|| {
+                        PlanError::Relationship(RelationshipError::Other(format!(
+                    "Relationship capabilities not found for relationship {} in data connector {}",
+                    relationship_name, &target_model_source.data_connector.name,
+                )))
+                    })?;
 
             let relationship_model_target = ModelTarget {
                 subgraph: target_model_name.subgraph.clone(),
@@ -927,43 +923,144 @@ fn from_relationship_aggregate_selection(
                 offset: *offset,
             };
 
-            let QueryExecutionTree {
-                query_execution_plan:
-                    QueryExecutionPlan {
-                        query_node,
-                        collection: _,
-                        arguments: ndc_arguments,
-                        collection_relationships: mut ndc_relationships,
-                        variables: _,
-                        data_connector: _,
-                    },
-                remote_join_executions: new_remote_join_executions,
-                remote_predicates: new_remote_predicates,
-            } = super::model::from_model_aggregate_selection(
-                &relationship_model_target,
-                selection,
-                metadata,
-                session,
-                request_headers,
-                unique_number,
-            )?;
-            // Collect relationships from the generated query above
-            collect_relationships.append(&mut ndc_relationships);
-            remote_join_executions
-                .locations
-                .extend(new_remote_join_executions.locations);
-            remote_predicates.0.extend(new_remote_predicates.0);
+            // is it local or remote?
+            match metadata_resolve::field_selection_relationship_execution_category(
+                relationship_field_nestedness,
+                source_data_connector,
+                &target_model_source.data_connector,
+                target_capabilities,
+            ) {
+                RelationshipExecutionCategory::RemoteForEach => {
+                    let QueryExecutionTree {
+                        query_execution_plan: mut query_execution,
+                        remote_join_executions: sub_join_locations,
+                        remote_predicates: new_remote_predicates,
+                    } = super::model::from_model_aggregate_selection(
+                        &relationship_model_target,
+                        selection,
+                        metadata,
+                        session,
+                        request_headers,
+                        unique_number,
+                    )?;
 
-            ndc_fields.insert(
-                ndc_field_alias,
-                Field::Relationship {
-                    relationship: ndc_relationship_name,
-                    arguments: ndc_arguments,
-                    query_node: Box::new(query_node),
-                },
-            );
+                    let ModelRemoteRelationshipParts {
+                        join_mapping,
+                        mut relationship_join_filter_expressions,
+                        arguments: new_arguments,
+                    } = calculate_remote_relationship_fields_for_model_target(
+                        object_type_name,
+                        relationship_name,
+                        target_model_name,
+                        &model_relationship_target.mappings,
+                        source_type_mappings,
+                        &target_model_source.argument_mappings,
+                        source_selection,
+                        ndc_fields,
+                    )
+                    .map_err(PlanError::Relationship)?;
 
-            Ok(())
+                    // store remote predicates
+                    remote_predicates.0.extend(new_remote_predicates.0);
+
+                    // add field comparison to QueryExecutionPlan
+                    // we specifically push_front to match old GraphQL pipeline plan
+                    // once that's removed ordering is not important
+                    if let Some(ref query_filter) = query_execution.query_node.predicate {
+                        relationship_join_filter_expressions.push_front(query_filter.clone());
+                    }
+
+                    // combine existing filter with new ones
+                    if !relationship_join_filter_expressions.is_empty() {
+                        query_execution.query_node.predicate =
+                            Some(ResolvedFilterExpression::mk_and(
+                                relationship_join_filter_expressions.into(),
+                            ));
+                    }
+
+                    // add the new arguments
+                    query_execution.arguments.extend(new_arguments);
+
+                    let remote_join = RemoteJoin {
+                        target_ndc_execution: query_execution,
+                        target_data_connector: target_model_source.data_connector.clone(),
+                        join_mapping,
+                        process_response_as: ProcessResponseAs::Array { is_nullable: true },
+                        remote_join_type: RemoteJoinType::ToModel,
+                    };
+
+                    remote_join_executions.locations.insert(
+                        ndc_field_alias.to_string(),
+                        Location {
+                            join_node: JoinNode::Remote(remote_join),
+                            rest: sub_join_locations,
+                        },
+                    );
+
+                    Ok(())
+                }
+                RelationshipExecutionCategory::Local => {
+                    let local_model_relationship_info = plan_types::LocalModelRelationshipInfo {
+                        relationship_name,
+                        relationship_type: &model_relationship_target.relationship_type,
+                        source_type: object_type_name,
+                        source_data_connector,
+                        source_type_mappings,
+                        target_model_name,
+                        target_source: target_model_source,
+                        target_type: &model_relationship_target.target_typename,
+                        mappings: &model_relationship_target.mappings,
+                    };
+
+                    let ndc_relationship_name =
+                        plan_types::NdcRelationshipName::new(object_type_name, relationship_name);
+
+                    // Record this relationship
+                    collect_relationships.insert(
+                        ndc_relationship_name.clone(),
+                        process_model_relationship_definition(&local_model_relationship_info)?,
+                    );
+
+                    let QueryExecutionTree {
+                        query_execution_plan:
+                            QueryExecutionPlan {
+                                query_node,
+                                collection: _,
+                                arguments: ndc_arguments,
+                                collection_relationships: mut ndc_relationships,
+                                variables: _,
+                                data_connector: _,
+                            },
+                        remote_join_executions: new_remote_join_executions,
+                        remote_predicates: new_remote_predicates,
+                    } = super::model::from_model_aggregate_selection(
+                        &relationship_model_target,
+                        selection,
+                        metadata,
+                        session,
+                        request_headers,
+                        unique_number,
+                    )?;
+
+                    // Collect relationships from the generated query above
+                    collect_relationships.append(&mut ndc_relationships);
+                    remote_join_executions
+                        .locations
+                        .extend(new_remote_join_executions.locations);
+                    remote_predicates.0.extend(new_remote_predicates.0);
+
+                    ndc_fields.insert(
+                        ndc_field_alias,
+                        Field::Relationship {
+                            relationship: ndc_relationship_name,
+                            arguments: ndc_arguments,
+                            query_node: Box::new(query_node),
+                        },
+                    );
+
+                    Ok(())
+                }
+            }
         }
     }
 }

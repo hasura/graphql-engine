@@ -82,19 +82,21 @@ impl<'s> Expression<'s> {
         if expressions.len() == 1 {
             expressions.into_iter().next().unwrap()
         }
-        // If all subexpressions are also `and`, we can flatten into a single `and`
+        // If any subexpressions are also `and`, we can flatten into a single `and`
         // ie. and([and([x,y]), and([a,b])]) == and([x,y,a,b])
+        // ie. and([a, and([b,c])]) == and([a,b,c])
         else if expressions
             .iter()
-            .all(|expr| matches!(expr, Expression::And { .. }))
+            .any(|expr| matches!(expr, Expression::And { .. }))
         {
             let subexprs = expressions
                 .into_iter()
                 .flat_map(|expr| match expr {
                     Expression::And { expressions } => expressions,
-                    _ => vec![],
+                    other => vec![other],
                 })
                 .collect();
+
             Expression::And {
                 expressions: subexprs,
             }

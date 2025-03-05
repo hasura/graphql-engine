@@ -7,7 +7,6 @@ use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
 use serde::Serialize;
 use std::collections::BTreeMap;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 /// This tree structure captures all the locations (in the selection set IR) where
@@ -115,7 +114,7 @@ pub struct RemoteJoin {
     /// NDC node to execute on a data connector
     pub target_ndc_execution: query::QueryExecutionPlan,
     /// Mapping of the fields in source to fields in target.
-    /// The HashMap has the following info -
+    /// The BTreeMap has the following info -
     ///   - key: is the field name in the source
     ///   - value->first item: is the alias we create for the
     ///     source field. If the user did not request the join field in the
@@ -123,7 +122,7 @@ pub struct RemoteJoin {
     ///     field.
     ///   - value->second item: is the target NDC field. This could be a model
     ///     field or an argument name.
-    pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
+    pub join_mapping: BTreeMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
     /// Represents how to process the join response.
     pub process_response_as: ProcessResponseAs,
     /// Represents the type of the remote join

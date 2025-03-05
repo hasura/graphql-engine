@@ -17,7 +17,8 @@ use plan_types::{
     LocalFieldComparison, LocalModelRelationshipInfo, NdcFieldAlias, Relationship,
     ResolvedFilterExpression, SourceFieldAlias, TargetField,
 };
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
+use std::collections::VecDeque;
 
 pub fn process_model_relationship_definition(
     relationship_info: &LocalModelRelationshipInfo,
@@ -187,7 +188,7 @@ pub fn process_command_relationship_definition(
 }
 
 pub struct CommandRemoteRelationshipParts {
-    pub join_mapping: HashMap<FieldName, (SourceFieldAlias, TargetField)>,
+    pub join_mapping: BTreeMap<FieldName, (SourceFieldAlias, TargetField)>,
     pub arguments: IndexMap<DataConnectorArgumentName, Argument>,
 }
 
@@ -201,7 +202,7 @@ pub fn calculate_remote_relationship_fields_for_command_target(
     selection: &IndexMap<open_dds::query::Alias, ObjectSubSelection>,
     ndc_fields: &mut IndexMap<NdcFieldAlias, Field>,
 ) -> Result<CommandRemoteRelationshipParts, RelationshipError> {
-    let mut join_mapping = HashMap::new();
+    let mut join_mapping = BTreeMap::new();
     let mut arguments = IndexMap::new();
 
     for metadata_resolve::RelationshipCommandMapping {
@@ -261,8 +262,8 @@ pub fn calculate_remote_relationship_fields_for_command_target(
 }
 
 pub struct ModelRemoteRelationshipParts {
-    pub join_mapping: HashMap<FieldName, (SourceFieldAlias, TargetField)>,
-    pub relationship_join_filter_expressions: Vec<ResolvedFilterExpression>,
+    pub join_mapping: BTreeMap<FieldName, (SourceFieldAlias, TargetField)>,
+    pub relationship_join_filter_expressions: VecDeque<ResolvedFilterExpression>,
     pub arguments: IndexMap<DataConnectorArgumentName, Argument>,
 }
 
@@ -276,8 +277,8 @@ pub fn calculate_remote_relationship_fields_for_model_target(
     source_selection: &IndexMap<open_dds::query::Alias, ObjectSubSelection>,
     ndc_fields: &mut IndexMap<NdcFieldAlias, Field>,
 ) -> Result<ModelRemoteRelationshipParts, RelationshipError> {
-    let mut join_mapping = HashMap::new();
-    let mut relationship_join_filter_expressions = vec![];
+    let mut join_mapping = BTreeMap::new();
+    let mut relationship_join_filter_expressions = VecDeque::new();
     let mut arguments = IndexMap::new();
 
     for metadata_resolve::RelationshipModelMapping {
@@ -339,7 +340,7 @@ pub fn calculate_remote_relationship_fields_for_model_target(
                 };
 
                 // collect these as we go
-                relationship_join_filter_expressions.push(
+                relationship_join_filter_expressions.push_back(
                     ResolvedFilterExpression::LocalFieldComparison(comparison_exp),
                 );
             }

@@ -70,6 +70,7 @@ graphql-ir = { path = "../graphql/ir" }
 criterion = { workspace = true }
 goldenfile = { workspace = true }
 pretty_assertions = { workspace = true }
+similar-asserts = { workspace = true }
 tokio-test = { workspace = true }
 
 [package.metadata.cargo-machete]

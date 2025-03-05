@@ -402,6 +402,15 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             "OpenDD pipeline",
                         );
 
+                        // check execution plans are the same
+                        diff_execution_plan(
+                            &schema,
+                            &arc_resolved_metadata.clone(),
+                            session,
+                            &request_headers,
+                            &raw_request,
+                        );
+
                         responses.push(http_response);
                     }
                 }
@@ -479,6 +488,16 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             &open_dd_response.inner(),
                             "OpenDD pipeline",
                         );
+
+                        // check execution plans are the same
+                        diff_execution_plan(
+                            &schema,
+                            &arc_resolved_metadata.clone(),
+                            session,
+                            &request_headers,
+                            &raw_request,
+                        );
+
                         responses.push(http_response);
                     }
                 }
@@ -769,4 +788,59 @@ async fn run_query_graphql_ws(
         };
     }
     response
+}
+
+/// Compare executions plans. If they fail to build, ignore them.
+pub fn diff_execution_plan(
+    schema: &'_ lang_graphql::schema::Schema<GDS>,
+    metadata: &'_ Arc<metadata_resolve::Metadata>,
+    session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
+    raw_request: &lang_graphql::http::RawRequest,
+) {
+    // parse the raw request into a GQL query
+    if let Ok(query) = graphql_frontend::parse_query(&raw_request.query) {
+        // normalize the parsed GQL query
+        if let Ok(normalized_request) =
+            graphql_frontend::normalize_request(schema, session, query, raw_request)
+        {
+            // generate IR
+            if let Ok(old_ir) = graphql_frontend::build_ir(
+                GraphqlRequestPipeline::Old,
+                schema,
+                metadata,
+                session,
+                request_headers,
+                &normalized_request,
+            ) {
+                // construct a plan to execute the request
+                if let Ok(old_request_plan) = graphql_frontend::build_request_plan(
+                    &old_ir,
+                    metadata,
+                    session,
+                    request_headers,
+                ) {
+                    // generate IR
+                    if let Ok(new_ir) = graphql_frontend::build_ir(
+                        GraphqlRequestPipeline::OpenDd,
+                        schema,
+                        metadata,
+                        session,
+                        request_headers,
+                        &normalized_request,
+                    ) {
+                        // construct a plan to execute the request
+                        if let Ok(new_request_plan) = graphql_frontend::build_request_plan(
+                            &new_ir,
+                            metadata,
+                            session,
+                            request_headers,
+                        ) {
+                            similar_asserts::assert_eq!(old_request_plan, new_request_plan);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

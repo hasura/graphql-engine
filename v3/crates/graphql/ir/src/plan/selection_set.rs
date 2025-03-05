@@ -17,7 +17,7 @@ use plan_types::{
     SourceFieldAlias, TargetField,
 };
 use plan_types::{NdcFieldAlias, NdcRelationshipName, Relationship, UniqueNumber};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 pub(crate) fn plan_nested_selection(
     nested_selection: &NestedSelection<'_>,
@@ -256,7 +256,7 @@ pub(crate) fn plan_selection_set(
                 ir,
                 relationship_info,
             } => {
-                let mut join_mapping = HashMap::new();
+                let mut join_mapping = BTreeMap::new();
                 for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
                 {
                     let ndc_field_alias = process_remote_relationship_field_mapping(
@@ -304,7 +304,7 @@ pub(crate) fn plan_selection_set(
                 ir,
                 relationship_info,
             } => {
-                let mut join_mapping = HashMap::new();
+                let mut join_mapping = BTreeMap::new();
 
                 for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
                 {

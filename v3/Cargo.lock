@@ -1074,6 +1074,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "similar-asserts",
  "thiserror",
  "tokio",
  "tokio-test",

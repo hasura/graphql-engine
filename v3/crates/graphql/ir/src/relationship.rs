@@ -851,9 +851,12 @@ pub fn build_remote_relationship<'s>(
         }
     }
 
-    remote_relationships_ir
-        .filter_clause
-        .relationship_join_filter = Some(Expression::mk_and(relationship_join_filter_expressions));
+    if !relationship_join_filter_expressions.is_empty() {
+        remote_relationships_ir
+            .filter_clause
+            .relationship_join_filter =
+            Some(Expression::mk_and(relationship_join_filter_expressions));
+    }
     remote_relationships_ir.variable_arguments = variable_arguments;
 
     let rel_info = RemoteModelRelationshipInfo { join_mapping };
