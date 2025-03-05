@@ -6,6 +6,7 @@ keywords:
   - databases
   - postgres
 slug: index
+toc_max_heading_level: 2
 ---
 
 import VersionedLink from '@site/src/components/VersionedLink';
@@ -234,6 +235,56 @@ corresponding Hasura features will not work.
 - The Hasura Console requires permissions such as `REFERENCES` and `CREATE` to make changes to your schema.
 - `TRIGGER` is required to use [Event Triggers](/event-triggers/overview.mdx)
 - If you want to use computed fields or user-defined Postgres functions, the `EXECUTE` permission is required.
+
+## Connecting to Postgres with SSL Authentication {#postgres-ssl-authentication}
+
+Hasura supports SSL-based authentication for connecting to a PostgreSQL database without requiring password
+authentication. Below are the steps to configure SSL authentication correctly:
+
+### Step 1. Configure SSL Certificates
+
+Ensure that the required SSL certificates are available and correctly mounted in the Hasura container or pod.
+
+- `SSL_ROOT_CERT`: Path to the root CA certificate (e.g., `/shared-fs/ssl-db/rootCA.crt`)
+- `SSL_CERT`: Path to the client certificate (e.g., `/shared-fs/ssl-db/client.crt`)
+- `SSL_KEY`: Path to the client private key (e.g., `/shared-fs/ssl-db/client.pem`)
+
+:::info Important
+
+Ensure the private key is in `.pem` format and has the correct permissions:
+
+```sh
+chmod 0600 /shared-fs/ssl-db/client.pem
+```
+
+:::
+
+### Step 2. Set the Connection String
+
+Use the following format for the `HASURA_GRAPHQL_DATABASE_URL` environment variable:
+
+```sh
+HASURA_GRAPHQL_DATABASE_URL="postgresql://<user>@<host>:<port>/<database>?sslmode=verify-ca&sslcert=/path/to/client.crt&sslkey=/path/to/client.pem&sslrootcert=/path/to/rootCA.crt"
+```
+
+### Step 3. Verify Connection
+
+Test connectivity using `psql` from inside the Hasura container:
+
+```sh
+psql "postgresql://<user>@<host>:<port>/<database>?sslmode=verify-ca&sslcert=/path/to/client.crt&sslkey=/path/to/client.pem&sslrootcert=/path/to/rootCA.crt"
+```
+
+If successful, Hasura should now be able to connect using SSL authentication.
+
+### Troubleshooting
+
+If the connection fails, check for:
+
+- Incorrect file permissions (`0600` is required for the private key).
+- A mismatched private key format (use `.pem` instead of `.pk8`).
+- Logs in the Hasura container (`docker logs <container_id>` or `kubectl logs <pod_name>`).
+- PostgreSQL server logs for authentication failures.
 
 ## Know more
 
