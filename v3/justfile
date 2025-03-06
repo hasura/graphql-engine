@@ -182,5 +182,4 @@ run METADATA_PATH="static/metadata.json": start-docker-test-deps
     --authn-config-path static/auth/auth_config_v3.json \
     --metadata-path {{ METADATA_PATH }} \
     --expose-internal-errors \
-    --export-traces-stdout \
-    --unstable-feature enable-open-dd-pipeline-for-graphql
+    --export-traces-stdout 

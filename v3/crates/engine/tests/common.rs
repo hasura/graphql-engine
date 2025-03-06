@@ -145,7 +145,7 @@ pub(crate) fn test_introspection_expectation(
         // Execute the test
         let mut responses = Vec::new();
         for session in &sessions {
-            let (_, http_response) = execute_query(
+            let (_, http_response, _) = execute_query(
                 GraphqlRequestPipeline::Old,
                 ExposeInternalErrors::Expose,
                 &test_ctx.http_context,
@@ -160,7 +160,7 @@ pub(crate) fn test_introspection_expectation(
             let response = http_response.inner();
 
             // do the same with OpenDD pipeline and diff the responses
-            let (_, open_dd_response) = execute_query(
+            let (_, open_dd_response, _) = execute_query(
                 GraphqlRequestPipeline::OpenDd, // the interesting part
                 ExposeInternalErrors::Expose,
                 &test_ctx.http_context,
@@ -336,7 +336,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         variables: None,
                     };
                     for session in &sessions {
-                        let (_, response) = execute_query(
+                        let (_, response, _) = execute_query(
                             GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
@@ -384,7 +384,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             "websockets",
                         );
                         // run tests with new pipeline and diff them
-                        let (_, open_dd_response) = execute_query(
+                        let (_, open_dd_response, _) = execute_query(
                             GraphqlRequestPipeline::OpenDd, // the interesting part
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
@@ -422,7 +422,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             variables: Some(variables),
                         };
                         // do actual test
-                        let (_, response) = execute_query(
+                        let (_, response, _) = execute_query(
                             GraphqlRequestPipeline::Old,
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
@@ -471,7 +471,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         );
 
                         // run tests with new pipeline and diff them
-                        let (_, open_dd_response) = execute_query(
+                        let (_, open_dd_response, _) = execute_query(
                             GraphqlRequestPipeline::OpenDd, // the interesting part
                             ExposeInternalErrors::Expose,
                             &test_ctx.http_context,

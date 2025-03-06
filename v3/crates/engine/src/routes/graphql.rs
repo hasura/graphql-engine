@@ -12,6 +12,7 @@ use hasura_authn_core::Session;
 use lang_graphql as gql;
 use tracing_util::{set_status_on_current_span, SpanVisibility};
 
+#[allow(clippy::print_stdout)]
 pub async fn handle_request(
     headers: axum::http::header::HeaderMap,
     State(state): State<EngineState>,
@@ -26,20 +27,36 @@ pub async fn handle_request(
             SpanVisibility::User,
             || {
                 {
-                    Box::pin(
-                        graphql_frontend::execute_query(
-                            state.request_pipeline,
-                            state.expose_internal_errors,
-                            &state.http_context,
-                            &state.graphql_state,
-                            &state.resolved_metadata,
-                            &session,
-                            &headers,
-                            request,
-                            None,
-                        )
-                        .map(|(_operation_type, graphql_response)| graphql_response),
-                    )
+                    Box::pin(async move {
+                        let (_operation_type, graphql_response, execution_plans_match) =
+                            graphql_frontend::execute_query(
+                                state.request_pipeline,
+                                state.expose_internal_errors,
+                                &state.http_context,
+                                &state.graphql_state,
+                                &state.resolved_metadata,
+                                &session,
+                                &headers,
+                                request,
+                                None,
+                            )
+                            .await;
+
+                        // if our execution plans do not match, emit a trace that we can track in
+                        // Grafana
+                        if !execution_plans_match {
+                            let tracer = tracing_util::global_tracer();
+
+                            let _ = tracer.in_span(
+                                "execution_plan_mismatch",
+                                "execution_plan_mismatch",
+                                SpanVisibility::Internal,
+                                || Ok::<bool, std::convert::Infallible>(true),
+                            );
+                        };
+
+                        graphql_response
+                    })
                 }
             },
         )
