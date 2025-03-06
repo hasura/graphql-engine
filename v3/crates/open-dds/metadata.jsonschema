@@ -3116,12 +3116,11 @@
           ]
         },
         "objectType": {
+          "$id": "https://hasura.io/jsonschemas/metadata/CustomTypeName",
+          "title": "CustomTypeName",
           "description": "The type of the objects of which this model is a collection.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/CustomTypeName"
-            }
-          ]
+          "type": "string",
+          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
         },
         "globalIdSource": {
           "description": "Whether this model should be used as the global ID source for all objects of its type.",
@@ -3216,12 +3215,11 @@
           ]
         },
         "objectType": {
+          "$id": "https://hasura.io/jsonschemas/metadata/CustomTypeName",
+          "title": "CustomTypeName",
           "description": "The type of the objects of which this model is a collection.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/CustomTypeName"
-            }
-          ]
+          "type": "string",
+          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
         },
         "globalIdSource": {
           "description": "Whether this model should be used as the global ID source for all objects of its type.",

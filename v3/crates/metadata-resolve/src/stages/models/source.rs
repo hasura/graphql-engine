@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use super::types::{Model, ModelSource, ModelsIssue};
+use jsonpath::JSONPath;
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::identifier::SubgraphName;
 use open_dds::types::DataConnectorArgumentName;
@@ -19,6 +20,7 @@ use crate::types::subgraph::Qualified;
 use super::error::ModelsError;
 use open_dds::{
     models::{self, ModelName},
+    spanned::Spanned,
     types::CustomTypeName,
 };
 use std::collections::BTreeMap;
@@ -154,8 +156,12 @@ pub(crate) fn resolve_model_source(
         source_arguments,
     };
 
-    let model_object_type =
-        get_model_object_type_representation(object_types, &model.data_type, &model.name)?;
+    let model_object_type = get_model_object_type_representation(
+        object_types,
+        &model.data_type,
+        &model.name,
+        &model.data_type_path,
+    )?;
 
     if let Some(global_id_source) = &mut model.global_id_source {
         for global_id_field in &model_object_type.object_type.global_id_fields {
@@ -210,11 +216,15 @@ pub(crate) fn get_model_object_type_representation<'s>(
     object_types: &'s type_permissions::ObjectTypesWithPermissions,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
+    data_type_path: &JSONPath,
 ) -> Result<&'s type_permissions::ObjectTypeWithPermissions, ModelsError> {
     object_types
         .get(data_type)
         .map_err(|_| ModelsError::UnknownModelDataType {
             model_name: model_name.clone(),
-            data_type: data_type.clone(),
+            data_type: Spanned {
+                path: data_type_path.clone(),
+                value: data_type.clone(),
+            },
         })
 }

@@ -105,7 +105,7 @@ impl Model {
         }
     }
 
-    pub fn object_type(&self) -> &CustomTypeName {
+    pub fn object_type(&self) -> &Spanned<CustomTypeName> {
         match self {
             Model::V1(v1) => &v1.object_type,
             Model::V2(v2) => &v2.object_type,
@@ -171,7 +171,7 @@ pub struct ModelV1 {
     /// The name of the data model.
     pub name: ModelName,
     /// The type of the objects of which this model is a collection.
-    pub object_type: CustomTypeName,
+    pub object_type: Spanned<CustomTypeName>,
     /// Whether this model should be used as the global ID source for all objects of its type.
     #[opendd(default)]
     pub global_id_source: bool,
@@ -203,7 +203,7 @@ pub struct ModelV2 {
     /// The name of the data model.
     pub name: ModelName,
     /// The type of the objects of which this model is a collection.
-    pub object_type: CustomTypeName,
+    pub object_type: Spanned<CustomTypeName>,
     /// Whether this model should be used as the global ID source for all objects of its type.
     #[opendd(default)]
     pub global_id_source: bool,

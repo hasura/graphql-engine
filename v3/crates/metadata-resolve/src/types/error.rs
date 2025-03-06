@@ -247,15 +247,15 @@ pub enum Error {
         relationship_name: RelationshipName,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("the data type {data_type:} has not been defined")]
+    #[error("The data type {data_type:} has not been defined")]
     UnknownType {
         data_type: Qualified<CustomTypeName>,
     },
-    #[error("the object type {data_type:} has not been defined")]
+    #[error("The object type {data_type:} has not been defined")]
     UnknownObjectType {
         data_type: Qualified<CustomTypeName>,
     },
-    #[error("the scalar type {data_type:} has not been defined")]
+    #[error("The scalar type {data_type:} has not been defined")]
     UnknownScalarType {
         data_type: Qualified<CustomTypeName>,
     },

@@ -42,6 +42,7 @@ pre-route-plugin = { path = "../plugins/pre-route-plugin" }
 tracing-util = { path = "../utils/tracing-util" }
 
 anyhow = { workspace = true }
+ariadne = { workspace = true }
 axum = { workspace = true }
 axum-core = { workspace = true }
 base64 = { workspace = true }

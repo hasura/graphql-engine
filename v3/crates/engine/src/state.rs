@@ -31,7 +31,23 @@ pub fn resolve_metadata(
     )?;
 
     let (resolved_metadata, warnings) =
-        metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
+        metadata_resolve::resolve(metadata, metadata_resolve_configuration).map_err(|error| {
+            match metadata_resolve::to_fancy_error(
+                opendd_metadata_json,
+                &error,
+                ariadne::Config::new(),
+            ) {
+                Some(report) => {
+                    report
+                        .eprint(ariadne::Source::from(opendd_metadata_json))
+                        .unwrap();
+
+                    // return empty error to stop printing twice
+                    anyhow::anyhow!("error building metadata")
+                }
+                None => anyhow::anyhow!(error),
+            }
+        })?;
 
     print_warnings(auth_warnings);
     print_warnings(warnings);
@@ -46,6 +62,7 @@ pub fn build_state(
     auth_config: hasura_authn::AuthConfig,
     resolved_metadata: metadata_resolve::Metadata,
 ) -> Result<EngineState, anyhow::Error> {
+    // Metadata
     let resolved_metadata = Arc::new(resolved_metadata);
 
     let http_context = HttpContext {

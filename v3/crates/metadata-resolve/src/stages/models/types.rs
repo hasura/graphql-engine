@@ -53,6 +53,7 @@ pub struct Model {
     pub path: jsonpath::JSONPath,
     pub name: Qualified<ModelName>,
     pub data_type: Qualified<CustomTypeName>,
+    pub data_type_path: jsonpath::JSONPath, // source path for definition of data_type in Model
     pub type_fields: IndexMap<FieldName, object_types::FieldDefinition>,
     pub global_id_fields: Vec<FieldName>,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,

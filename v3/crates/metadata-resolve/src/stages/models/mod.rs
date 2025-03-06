@@ -153,12 +153,14 @@ fn resolve_model(
         Option<Qualified<ModelName>>,
     >,
 ) -> Result<Model, ModelsError> {
-    let qualified_object_type_name = Qualified::new(subgraph.clone(), model.object_type().clone());
+    let qualified_object_type_name =
+        Qualified::new(subgraph.clone(), model.object_type().value.clone());
     let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
     let object_type_representation = source::get_model_object_type_representation(
         object_types,
         &qualified_object_type_name,
         &qualified_model_name,
+        &model.object_type().path,
     )?;
     let mut global_id_source = None;
     if model.global_id_source() {
@@ -309,6 +311,7 @@ fn resolve_model(
         path,
         name: qualified_model_name,
         data_type: qualified_object_type_name,
+        data_type_path: model.object_type().path.clone(),
         aggregate_expression: None, // we fill this in once we have resolved the model source
         type_fields: object_type_representation.object_type.fields.clone(),
         global_id_fields: object_type_representation

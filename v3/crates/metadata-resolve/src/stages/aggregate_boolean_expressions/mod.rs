@@ -826,7 +826,7 @@ fn resolve_comparable_relationship(
         .map(|q| {
             Qualified::new(
                 model_target_subgraph.clone(),
-                q.object.object_type().clone(),
+                q.object.object_type().value.clone(),
             )
         })
         .ok_or_else(|| {
@@ -1006,12 +1006,15 @@ fn resolve_object_aggregate_filter_input(
             // Check that the type of the model matches the operand type.
             // We can assume the subgraphs match because the model is from the same subgraph as this
             // object aggregate operand
-            if operand_type.name != *model.object_type() {
+            if operand_type.name != model.object_type().value {
                 return Err(
                     AggregateBooleanExpressionError::FilterInputModelTypeMismatch {
                         operand_type: operand_type.clone(),
                         model_name,
-                        model_type: Qualified::new(subgraph.clone(), model.object_type().clone()),
+                        model_type: Qualified::new(
+                            subgraph.clone(),
+                            model.object_type().value.clone(),
+                        ),
                     },
                 );
             }

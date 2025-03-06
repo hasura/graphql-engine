@@ -4,6 +4,8 @@
 
 ### Added
 
+- Pretty print errors where they have had contexts and paths provided
+
 ### Fixed
 
 - Validate `ObjectType` field types against mapped NDC types, ensuring

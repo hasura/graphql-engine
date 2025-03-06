@@ -748,6 +748,19 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Index(
+                                7,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(

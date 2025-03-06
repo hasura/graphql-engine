@@ -7,10 +7,10 @@ use crate::types::error::ContextualError;
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use crate::OrderByExpressionIdentifier;
 
-use open_dds::commands::CommandName;
 use open_dds::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
+    commands::CommandName,
     data_connector::{CollectionName, DataConnectorName, DataConnectorScalarType},
     models::ModelName,
     order_by_expression::OrderByExpressionName,
@@ -20,10 +20,10 @@ use open_dds::{
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelsError {
-    #[error("the data type {data_type:} for model {model_name:} has not been defined")]
+    #[error("The data type '{data_type:}' for model '{model_name:}' has not been defined")]
     UnknownModelDataType {
         model_name: Qualified<ModelName>,
-        data_type: Qualified<CustomTypeName>,
+        data_type: Spanned<Qualified<CustomTypeName>>,
     },
     #[error("the model {model_name:} could not be found")]
     ModelNotFound { model_name: Qualified<ModelName> },
@@ -162,6 +162,22 @@ impl ContextualError for ModelsError {
                 path: collection.path.clone(),
                 subgraph: Some(data_connector.subgraph.clone()),
             }])),
+            ModelsError::UnknownModelDataType {
+                model_name,
+                data_type:
+                    Spanned {
+                        path,
+                        value: data_type,
+                    },
+            } => Some(error_context::Context(vec![error_context::Step {
+                message: format!(
+                    "Model '{}' uses data type '{}', but it cannot be found in this subgraph",
+                    model_name.name, data_type.name
+                ),
+                path: path.clone(),
+                subgraph: Some(model_name.subgraph.clone()),
+            }])),
+
             _other => None,
         }
     }

@@ -11,10 +11,12 @@ bench = false
 error-context = { path = "../utils/error-context" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 jsonpath = { path = "../utils/jsonpath" }
+json-annotation-parse = { path = "../utils/json-annotation-parse/" }
 lang-graphql = { path = "../graphql/lang-graphql" }
 open-dds = { path = "../open-dds" }
 serde-ext = { path = "../utils/serde-ext" }
 
+ariadne = { workspace = true }
 derive_more = { workspace = true }
 indexmap = { workspace = true }
 ndc-models = { workspace = true }
