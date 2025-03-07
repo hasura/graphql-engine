@@ -2721,7 +2721,7 @@ dependencies = [
 [[package]]
 name = "ndc-models"
 version = "0.2.0"
-source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.2.0-rc.3#9c202b92fd72be93b6a180f6b8dbf70607eca7b4"
+source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.2.0#e25213f51a7e8422d712509d63ae012c67b4f3f1"
 dependencies = [
  "indexmap 2.7.1",
  "ref-cast",

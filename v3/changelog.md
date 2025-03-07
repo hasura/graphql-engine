@@ -4,6 +4,241 @@
 
 ### Added
 
+#### Native Data Connector (NDC) Specification v0.2.0 Support
+
+Engine now supports the
+[NDC specification v0.2.0](https://hasura.github.io/ndc-spec/specification/changelog.html#020).
+This new version of the specification adds many new capabilities to data
+connectors that engine will support over time. As of this release, engine
+supports the following new features for data connectors that support NDC Spec
+v0.2.0:
+
+##### Filtering by items in a nested array of scalars
+
+Consider an `ObjectType` with a field that is an array of scalars, such as the
+`Country` type with its `cities` array of string field below.
+
+```yaml
+kind: ObjectType
+version: v1
+definition:
+  name: Country
+  fields:
+    - name: id
+      type: Int!
+    - name: name
+      type: String!
+    - name: cities
+      type: [String!]!
+  graphql:
+    typeName: Country
+  dataConnectorTypeMapping: {}
+```
+
+It is now possible to write the following `where` clause in GraphQL, which
+returns all countries whose cities array contains a string equalling
+"Melbourne":
+
+```graphql
+query {
+  CountryMany(where: { cities: { _eq: "Melbourne" } }) {
+    id
+    name
+    cities
+  }
+}
+```
+
+In order to do this, the `cities` field must be added as a `comparableField` to
+Country's `BooleanExpressionType`:
+
+```yaml
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: Country_bool_exp
+  operand:
+    object:
+      type: Country
+      comparableFields:
+        - fieldName: cities
+          booleanExpressionType: String_bool_exp # New!
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: false
+  graphql:
+    typeName: Country_bool_exp
+```
+
+The `booleanExpressionType` of the `comparableField` must be for the scalar type
+of the array element (in this case a `BooleanExpressionType` for `String`).
+
+However, doing this is only supported if the data connector your `Model` sources
+itself from supports filtering by nested scalar arrays, which is new in NDC Spec
+v0.2.0.
+
+##### Count aggregates can return ScalarTypes other than Int
+
+Some data sources return count aggregates using a scalar type other than a
+32-bit integer (for example, a 64-bit integer). If the data connector declares
+that counts are returned in a different scalar type, the engine can now return
+those counts using the approprate ScalarType.
+
+This is done by specifying the correct ScalarType in the `AggregateExpression`
+`count` and `countDistinct`'s `resultType` field, like so:
+
+```yaml
+kind: AggregateExpression
+version: v1
+definition:
+  name: String_aggregate_exp
+  operand:
+    scalar:
+      aggregatedType: String
+      aggregationFunctions:
+        - name: _min
+          returnType: String
+        - name: _max
+          returnType: String
+      dataConnectorAggregationFunctionMapping:
+        - dataConnectorName: custom
+          dataConnectorScalarType: String
+          functionMapping:
+            _min:
+              name: min
+            _max:
+              name: max
+  count:
+    enable: true
+    returnType: Int64 # New!
+  countDistinct:
+    enable: true
+    returnType: Int64 # New!
+  description: Aggregate expression for the String type
+  graphql:
+    selectTypeName: String_aggregate_exp
+```
+
+If `returnType` is omitted, it defaults to the `Int` type.
+
+##### Filtering and ordering of relationships that start from inside a nested object
+
+Consider an `Institution` type with a nested `campuses` field, where each
+`Campus` has a relationship to a `Country` type:
+
+```yaml
+kind: ObjectType
+version: v1
+definition:
+  name: Institution
+  fields:
+    - name: id
+      type: Int!
+    - name: name
+      type: String!
+    - name: campuses
+      type: "[Campus!]!" # Array of Campus objects
+
+kind: ObjectType
+version: v1
+definition:
+  name: Campus
+  fields:
+    - name: id
+      type: Int!
+    - name: name
+      type: String!
+    - name: country_id # Foreign key to Country
+      type: Int!
+
+kind: Relationship
+version: v1
+definition:
+  name: country
+  sourceType: Campus
+  target:
+    model:
+      name: Country
+      relationshipType: Object
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: country_id
+      target:
+        modelField:
+          - fieldName: id
+```
+
+If the data connector declares support for doing so, you can filter and order
+institutions based on their campuses' countries:
+
+```graphql
+query {
+  InstitutionMany(
+    where: { campuses: { country: { name: { _eq: "USA" } } } }
+    order_by: { campuses: { country: { name: Asc } } }
+  ) {
+    id
+    name
+    campuses {
+      name
+      country {
+        name
+      }
+    }
+  }
+}
+```
+
+To do so, you will need to declare the `country` relationship as a
+`comparableRelationship` in the `Campus`'s `BooleanExpressionType`, an as an
+`orderableRelationship` in the `Campus`'s `OrderByExpression`:
+
+```yaml
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: Campus_bool_exp
+  operand:
+    object:
+      type: Campus
+      comparableFields:
+        - fieldName: id
+          booleanExpressionType: Int_bool_exp
+        - fieldName: name
+          booleanExpressionType: String_bool_exp
+      comparableRelationships:
+        - relationshipName: country # New!
+          booleanExpressionType: Country_bool_exp
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: false
+  graphql:
+    typeName: Campus_bool_exp
+
+kind: OrderByExpression
+version: v1
+definition:
+  name: Campus_order_by_exp
+  operand:
+    object:
+      orderedType: Campus
+      orderableFields:
+        - fieldName: id
+          orderByExpression: Int_order_by_exp
+        - fieldName: name
+          orderByExpression: String_order_by_exp
+      orderableRelationships:
+        - relationshipName: country # New!
+          orderByExpression: Country_order_by_exp
+  graphql:
+    expressionTypeName: Campus_order_by_exp
+```
+
+#### Other
+
 - Pretty print errors where they have had contexts and paths provided
 
 ### Fixed

@@ -40,7 +40,8 @@
                       "type": "string"
                     },
                     "aggregate_functions": {},
-                    "comparison_operators": {}
+                    "comparison_operators": {},
+                    "extraction_functions": {}
                   },
                   "Bool": {
                     "representation": {
@@ -55,6 +56,32 @@
                           "name": "Bool"
                         }
                       }
+                    },
+                    "extraction_functions": {}
+                  },
+                  "Date": {
+                    "representation": {
+                      "type": "date"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "extraction_functions": {
+                      "day": {
+                        "type": "day",
+                        "result_type": "Int"
+                      },
+                      "month": {
+                        "type": "month",
+                        "result_type": "Int"
+                      },
+                      "year": {
+                        "type": "year",
+                        "result_type": "Int"
+                      }
                     }
                   },
                   "HeaderMap": {
@@ -62,7 +89,8 @@
                       "type": "json"
                     },
                     "aggregate_functions": {},
-                    "comparison_operators": {}
+                    "comparison_operators": {},
+                    "extraction_functions": {}
                   },
                   "Int": {
                     "representation": {
@@ -80,7 +108,8 @@
                       "_eq": {
                         "type": "equal"
                       }
-                    }
+                    },
+                    "extraction_functions": {}
                   },
                   "String": {
                     "representation": {
@@ -147,7 +176,8 @@
                           "name": "String"
                         }
                       }
-                    }
+                    },
+                    "extraction_functions": {}
                   }
                 },
                 "object_types": {
@@ -627,6 +657,13 @@
                               "name": "String"
                             }
                           }
+                        }
+                      },
+                      "release_date": {
+                        "description": "The movie's release date",
+                        "type": {
+                          "type": "named",
+                          "name": "Date"
                         }
                       },
                       "title": {
@@ -1488,7 +1525,9 @@
                     "relation_comparisons": {},
                     "order_by_aggregate": {},
                     "nested": {
-                      "array": {}
+                      "array": {},
+                      "filtering": {},
+                      "ordering": {}
                     }
                   }
                 }
@@ -1532,7 +1571,8 @@
                       "type": "string"
                     },
                     "aggregate_functions": {},
-                    "comparison_operators": {}
+                    "comparison_operators": {},
+                    "extraction_functions": {}
                   },
                   "Bool": {
                     "representation": {
@@ -1547,6 +1587,32 @@
                           "name": "Bool"
                         }
                       }
+                    },
+                    "extraction_functions": {}
+                  },
+                  "Date": {
+                    "representation": {
+                      "type": "date"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "extraction_functions": {
+                      "day": {
+                        "type": "day",
+                        "result_type": "Int"
+                      },
+                      "month": {
+                        "type": "month",
+                        "result_type": "Int"
+                      },
+                      "year": {
+                        "type": "year",
+                        "result_type": "Int"
+                      }
                     }
                   },
                   "HeaderMap": {
@@ -1554,7 +1620,8 @@
                       "type": "json"
                     },
                     "aggregate_functions": {},
-                    "comparison_operators": {}
+                    "comparison_operators": {},
+                    "extraction_functions": {}
                   },
                   "Int": {
                     "representation": {
@@ -1572,7 +1639,8 @@
                       "_eq": {
                         "type": "equal"
                       }
-                    }
+                    },
+                    "extraction_functions": {}
                   },
                   "String": {
                     "representation": {
@@ -1639,7 +1707,8 @@
                           "name": "String"
                         }
                       }
-                    }
+                    },
+                    "extraction_functions": {}
                   }
                 },
                 "object_types": {
@@ -2119,6 +2188,13 @@
                               "name": "String"
                             }
                           }
+                        }
+                      },
+                      "release_date": {
+                        "description": "The movie's release date",
+                        "type": {
+                          "type": "named",
+                          "name": "Date"
                         }
                       },
                       "title": {
@@ -2980,7 +3056,9 @@
                     "relation_comparisons": {},
                     "order_by_aggregate": {},
                     "nested": {
-                      "array": {}
+                      "array": {},
+                      "filtering": {},
+                      "ordering": {}
                     }
                   }
                 }

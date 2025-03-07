@@ -6547,6 +6547,31 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "title": "SchemaAndCapabilitiesV02",
+          "description": "Version 0.2 of schema and capabilities for a data connector.",
+          "type": "object",
+          "required": [
+            "capabilities",
+            "schema",
+            "version"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "enum": [
+                "v0.2"
+              ]
+            },
+            "schema": {
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0/ndc-models/tests/json_schema/schema_response.jsonschema"
+            },
+            "capabilities": {
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0/ndc-models/tests/json_schema/capabilities_response.jsonschema"
+            }
+          },
+          "additionalProperties": false
         }
       ]
     }

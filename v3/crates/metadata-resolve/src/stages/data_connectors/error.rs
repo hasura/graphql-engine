@@ -13,8 +13,6 @@ pub struct NamedDataConnectorError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum DataConnectorError {
-    #[error("The data connector uses ndc-spec v0.2.* and is not yet supported")]
-    NdcV02DataConnectorNotSupported,
     #[error("the data connector is defined more than once")]
     DuplicateDataConnectorDefinition,
     #[error("The url for the data connector is invalid: {error}")]

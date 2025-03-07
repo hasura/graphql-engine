@@ -71,7 +71,7 @@ fn resolve_internal(
     let data_connectors::DataConnectorsOutput {
         data_connectors,
         issues,
-    } = data_connectors::resolve(&metadata_accessor, configuration)?;
+    } = data_connectors::resolve(&metadata_accessor)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 

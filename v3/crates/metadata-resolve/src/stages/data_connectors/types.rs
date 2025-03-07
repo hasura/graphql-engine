@@ -1,7 +1,6 @@
 use super::error::{
     DataConnectorError, DataConnectorIssue, NamedDataConnectorError, NamedDataConnectorIssue,
 };
-use crate::configuration::UnstableFeatures;
 use crate::helpers::http::{
     HeaderError, SerializableHeaderMap, SerializableHeaderName, SerializableUrl,
 };
@@ -65,7 +64,6 @@ impl<'a> DataConnectorContext<'a> {
     pub fn new(
         metadata_accessor: &MetadataAccessor,
         data_connector: &'a data_connector::DataConnectorLinkV1,
-        unstable_features: &UnstableFeatures,
     ) -> Result<(Self, Vec<DataConnectorIssue>), DataConnectorError> {
         let (resolved_schema, capabilities, issues) = match &data_connector.schema {
             VersionedSchemaAndCapabilities::V01(schema_and_capabilities) => {
@@ -94,12 +92,6 @@ impl<'a> DataConnectorContext<'a> {
                 (schema, capabilities, issues)
             }
         };
-
-        if !unstable_features.enable_ndc_v02_support
-            && capabilities.supported_ndc_version == NdcVersion::V02
-        {
-            return Err(DataConnectorError::NdcV02DataConnectorNotSupported);
-        }
 
         let argument_presets = data_connector
             .argument_presets
@@ -644,8 +636,8 @@ fn mk_ndc_02_capabilities(
                 supports_nested_relationships: rel.nested.as_ref().map(|n| {
                     DataConnectorNestedRelationshipCapabilities {
                         supports_nested_array_selection: n.array.is_some(),
-                        supports_nested_in_filtering: true,
-                        supports_nested_in_ordering: true,
+                        supports_nested_in_filtering: n.filtering.is_some(),
+                        supports_nested_in_ordering: n.ordering.is_some(),
                     }
                 }),
             }
@@ -659,7 +651,6 @@ mod tests {
     use strum::IntoEnumIterator;
 
     use crate::{
-        configuration::UnstableFeatures,
         data_connectors::{
             error::DataConnectorIssue, types::NdcVersion, DataConnectorCapabilities,
         },
@@ -720,17 +711,10 @@ mod tests {
         };
 
         // With explicit capabilities specified, we should use them
-        let unstable_features = UnstableFeatures {
-            enable_ndc_v02_support: true,
-            ..Default::default()
-        };
         let metadata_accessor = MetadataAccessor::new(Metadata::WithoutNamespaces(vec![]));
-        let (context, issues) = DataConnectorContext::new(
-            &metadata_accessor,
-            &data_connector_with_capabilities,
-            &unstable_features,
-        )
-        .unwrap();
+        let (context, issues) =
+            DataConnectorContext::new(&metadata_accessor, &data_connector_with_capabilities)
+                .unwrap();
         assert_eq!(context.capabilities, data_connector_capabilities);
         assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
     }
@@ -771,17 +755,10 @@ mod tests {
         };
 
         // With explicit capabilities specified, we should use them
-        let unstable_features = UnstableFeatures {
-            enable_ndc_v02_support: true,
-            ..Default::default()
-        };
         let metadata_accessor = MetadataAccessor::new(Metadata::WithoutNamespaces(vec![]));
-        let (context, issues) = DataConnectorContext::new(
-            &metadata_accessor,
-            &data_connector_with_capabilities,
-            &unstable_features,
-        )
-        .unwrap();
+        let (context, issues) =
+            DataConnectorContext::new(&metadata_accessor, &data_connector_with_capabilities)
+                .unwrap();
         assert_eq!(context.capabilities, data_connector_capabilities);
         assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
     }

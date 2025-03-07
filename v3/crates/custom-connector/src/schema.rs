@@ -61,6 +61,8 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
                     order_by_aggregate: Some(ndc_models::LeafCapability {}),
                     nested: Some(ndc_models::NestedRelationshipCapabilities {
                         array: Some(ndc_models::LeafCapability {}),
+                        filtering: Some(ndc_models::LeafCapability {}),
+                        ordering: Some(ndc_models::LeafCapability {}),
                     }),
                 })
             } else {
