@@ -549,10 +549,23 @@ fn get_claims_mapping_entry_value<T: for<'de> serde::Deserialize<'de> + Clone>(
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AudienceValidationMode {
+    /// If the JWT contains an aud claim, it must be validated against the audience configured in the AuthConfig.
+    /// If one is not configured, the JWT will be rejected.
+    Required,
+
+    /// If the JWT contains an aud claim, it will be validated against the audience configured in the AuthConfig,
+    /// but only if one is configured. This is a serious security issue, but this behaviour is retained for
+    /// backwards compatibility and is disabled via the OpenDDFlag `RequireJwtAudienceValidationIfAudClaimPresent`
+    Optional,
+}
+
 pub(crate) async fn decode_and_parse_hasura_claims(
     http_client: &reqwest::Client,
     jwt_config: &JWTConfig,
     jwt: String,
+    audience_validation_mode: AudienceValidationMode,
 ) -> Result<HasuraClaims, Error> {
     let (acceptable_algorithms, decoding_key) = match &jwt_config.key {
         JWTKey::Fixed(conf) => (vec![conf.algorithm], get_decoding_key(conf)?),
@@ -563,6 +576,10 @@ pub(crate) async fn decode_and_parse_hasura_claims(
 
     let mut validation = Validation::default();
     validation.algorithms = acceptable_algorithms;
+    validation.validate_aud = match audience_validation_mode {
+        AudienceValidationMode::Required => true,
+        AudienceValidationMode::Optional => false,
+    };
 
     // Additional validations according to the `jwt_config`.
     if let Some(aud) = &jwt_config.audience {
@@ -904,8 +921,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -957,8 +979,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1022,8 +1049,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1096,8 +1128,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1169,8 +1206,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1310,9 +1352,13 @@ mod tests {
 
         let jwt_config: JWTConfig = serde_json::from_value(jwt_config_json)?;
 
-        let decoded_hasura_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, authorization_token_1)
-                .await?;
+        let decoded_hasura_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            authorization_token_1,
+            AudienceValidationMode::Required,
+        )
+        .await?;
 
         mock.assert();
 
@@ -1332,10 +1378,15 @@ mod tests {
         )?;
 
         assert_eq!(
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, authorization_token_2)
-                .await
-                .unwrap_err()
-                .to_string(),
+            decode_and_parse_hasura_claims(
+                &http_client,
+                &jwt_config,
+                authorization_token_2,
+                AudienceValidationMode::Required
+            )
+            .await
+            .unwrap_err()
+            .to_string(),
             "Internal Error - No matching JWK found for the given kid: random_kid_3"
         );
         Ok(())
@@ -1523,10 +1574,14 @@ mod tests {
         });
         let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
         let http_client = reqwest::Client::new();
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims)
-                .await
-                .unwrap();
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await
+        .unwrap();
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }

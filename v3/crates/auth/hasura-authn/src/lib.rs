@@ -201,20 +201,67 @@ impl<T: Display> Display for SeparatedBy<T> {
     }
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ResolvedAuthConfig {
+    pub auth_config: AuthConfig,
+    pub auth_config_flags: AuthConfigFlags,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AuthConfigFlags {
+    /// If true, if a JWT contains the 'aud' claim, it must be validated against
+    /// the audienced configured in the AuthConfig. If the audience is missing in the AuthConfig,
+    /// the JWT will be rejected.
+    pub require_audience_validation: hasura_authn_jwt::jwt::AudienceValidationMode,
+}
+
+impl Default for AuthConfigFlags {
+    fn default() -> Self {
+        Self {
+            // Legacy behaviour for backwards compatiblity
+            require_audience_validation: hasura_authn_jwt::jwt::AudienceValidationMode::Optional,
+        }
+    }
+}
+
+pub fn parse_auth_config(raw_auth_config: &str) -> Result<AuthConfig, anyhow::Error> {
+    Ok(open_dds::traits::OpenDd::deserialize(
+        serde_json::from_str(raw_auth_config)?,
+        jsonpath::JSONPath::new(),
+    )?)
+}
+
 /// Resolve `AuthConfig` which is not part of metadata. Hence we resolve/build
 /// it separately. This also emits warnings.
 pub fn resolve_auth_config(
-    raw_auth_config: &str,
-) -> Result<(AuthConfig, Vec<Warning>), anyhow::Error> {
-    let auth_config: AuthConfig = open_dds::traits::OpenDd::deserialize(
-        serde_json::from_str(raw_auth_config)?,
-        jsonpath::JSONPath::new(),
-    )?;
+    auth_config: AuthConfig,
+    flags: &open_dds::flags::OpenDdFlags,
+) -> Result<(ResolvedAuthConfig, Vec<Warning>), Error> {
     let warnings = validate_auth_config(&auth_config)?;
-    Ok((auth_config, warnings))
+    let warnings = auth_config_warnings_as_error_by_compatibility(flags, warnings)?;
+    let auth_config_flags = resolve_auth_config_flags(flags);
+    Ok((
+        ResolvedAuthConfig {
+            auth_config,
+            auth_config_flags,
+        },
+        warnings,
+    ))
 }
 
-pub fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error> {
+fn resolve_auth_config_flags(flags: &open_dds::flags::OpenDdFlags) -> AuthConfigFlags {
+    AuthConfigFlags {
+        require_audience_validation: if flags
+            .contains(open_dds::flags::Flag::RequireJwtAudienceValidationIfAudClaimPresent)
+        {
+            hasura_authn_jwt::jwt::AudienceValidationMode::Required
+        } else {
+            hasura_authn_jwt::jwt::AudienceValidationMode::Optional
+        },
+    }
+}
+
+fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error> {
     let mut warnings = vec![];
     match auth_config {
         AuthConfig::V1(_) => warnings.push(Warning::PleaseUpgradeV1ToV3),
@@ -258,7 +305,7 @@ pub fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Er
     Ok(warnings)
 }
 
-pub fn auth_config_warnings_as_error_by_compatibility(
+fn auth_config_warnings_as_error_by_compatibility(
     flags: &open_dds::flags::OpenDdFlags,
     auth_warnings: Vec<Warning>,
 ) -> Result<Vec<Warning>, Error> {
@@ -337,11 +384,11 @@ pub enum PossibleAuthModeConfig<'a> {
 pub async fn authenticate(
     headers_map: &HeaderMap,
     client: &reqwest::Client,
-    auth_config: &AuthConfig,
+    resolved_auth_config: &ResolvedAuthConfig,
 ) -> Result<Identity, AuthError> {
     // We are still supporting AuthConfig::V1, hence we need to
     // support role emulation
-    let (auth_mode, allow_role_emulation_by) = match auth_config {
+    let (auth_mode, allow_role_emulation_by) = match &resolved_auth_config.auth_config {
         AuthConfig::V1(auth_config) => (
             &PossibleAuthModeConfig::V1V2(&auth_config.mode),
             auth_config.allow_role_emulation_by.as_ref(),
@@ -383,6 +430,9 @@ pub async fn authenticate(
                 jwt_secret_config,
                 headers_map,
                 allow_role_emulation_by,
+                resolved_auth_config
+                    .auth_config_flags
+                    .require_audience_validation,
             )
             .await
             .map_err(AuthError::from)

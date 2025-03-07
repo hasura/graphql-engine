@@ -2,7 +2,7 @@ use axum::extract::ws;
 use axum::http::HeaderMap;
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
 use graphql_ir::GraphqlRequestPipeline;
-use hasura_authn::AuthConfig;
+use hasura_authn::ResolvedAuthConfig;
 use metadata_resolve::LifecyclePluginConfigs;
 use serde::Serialize;
 use smol_str::SmolStr;
@@ -25,7 +25,7 @@ pub struct Context<M> {
     pub project_id: Option<ProjectId>,
     pub schema: Arc<lang_graphql::schema::Schema<graphql_schema::GDS>>,
     pub metadata: Arc<metadata_resolve::Metadata>,
-    pub auth_config: Arc<AuthConfig>,
+    pub auth_config: Arc<ResolvedAuthConfig>,
     pub plugin_configs: Arc<LifecyclePluginConfigs>,
     pub metrics: M,
     pub handshake_headers: Arc<HeaderMap>,

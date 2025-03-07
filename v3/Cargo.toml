@@ -106,8 +106,11 @@ itertools = "0.13.0"
 json_value_merge = "2"
 jsonapi_library = { package = "jsonapi", git = "https://github.com/hasura/jsonapi-rust.git", rev = "9b5a3a08414e559c7285b539acd4d4fc7b31f3b5" }
 jsonptr = "0.4"
-jsonwebkey = { version = "0.3", features = ["generate", "jsonwebtoken","pkcs-convert"] }
-jsonwebtoken = "8"
+# We're using a fork of this library that updates the deps to use more recent versions
+# (in particular jsonwebtoken from v8->v9 to fix a vulnerability in its dependency on ring: https://rustsec.org/advisories/RUSTSEC-2025-0009)
+# (the branch uses the code from https://github.com/nhynes/jwk-rs/pull/13)
+jsonwebkey = { features = ["generate", "jsonwebtoken","pkcs-convert"], git = "https://github.com/hasura/jwk-rs.git", branch = "update-deps" }
+jsonwebtoken = "9"
 lazy_static = "1.5.0"
 lexical-core = "1"
 mimalloc = "0.1"

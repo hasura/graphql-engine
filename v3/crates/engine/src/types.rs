@@ -1,4 +1,4 @@
-use hasura_authn::AuthConfig;
+use hasura_authn::ResolvedAuthConfig;
 use metadata_resolve::LifecyclePluginConfigs;
 use std::sync::Arc;
 
@@ -16,7 +16,7 @@ pub struct EngineState {
     pub graphql_state: Arc<gql::schema::Schema<GDS>>,
     pub resolved_metadata: Arc<metadata_resolve::Metadata>,
     pub jsonapi_catalog: Arc<jsonapi::Catalog>,
-    pub auth_config: Arc<AuthConfig>,
+    pub auth_config: Arc<ResolvedAuthConfig>,
     pub plugin_configs: Arc<LifecyclePluginConfigs>,
     pub graphql_websocket_server:
         Arc<graphql_ws::WebSocketServer<graphql_ws::NoOpWebSocketMetrics>>,

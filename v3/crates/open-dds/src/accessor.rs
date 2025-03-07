@@ -255,14 +255,3 @@ impl MetadataAccessor {
         }
     }
 }
-
-pub fn get_flags(metadata: &Metadata) -> flags::OpenDdFlags {
-    match metadata {
-        Metadata::WithoutNamespaces(_) => flags::OpenDdFlags::default(),
-        Metadata::Versioned(metadata) => match metadata {
-            MetadataWithVersion::V1(metadata) => metadata.flags.clone(),
-            MetadataWithVersion::V2(metadata) => metadata.flags.clone(),
-            MetadataWithVersion::V3(metadata) => metadata.flags.clone(),
-        },
-    }
-}

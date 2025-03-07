@@ -1,5 +1,7 @@
 extern crate self as open_dds;
 
+use std::borrow::Cow;
+
 use open_dds::spanned::Spanned;
 use schemars::{schema::Schema::Object as SchemaObjectVariant, JsonSchema};
 use serde::{Deserialize, Serialize};
@@ -209,6 +211,17 @@ impl Metadata {
                 path: jsonpath::JSONPath::from_serde_path(&track.path()),
                 error: e,
             }),
+        }
+    }
+
+    pub fn get_flags(&self) -> Cow<flags::OpenDdFlags> {
+        match self {
+            Metadata::WithoutNamespaces(_) => Cow::Owned(flags::OpenDdFlags::default()),
+            Metadata::Versioned(metadata) => match metadata {
+                MetadataWithVersion::V1(metadata) => Cow::Borrowed(&metadata.flags),
+                MetadataWithVersion::V2(metadata) => Cow::Borrowed(&metadata.flags),
+                MetadataWithVersion::V3(metadata) => Cow::Borrowed(&metadata.flags),
+            },
         }
     }
 }
