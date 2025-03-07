@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html"><span class="hs-identifier">Hasura.Tracing.Class</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html"><span class="hs-identifier">Hasura.Tracing.Context</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Monad.html"><span class="hs-identifier">Hasura.Tracing.Monad</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.html"><span class="hs-identifier">Hasura.Tracing.Propagator</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.B3.html"><span class="hs-identifier">Hasura.Tracing.Propagator.B3</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html"><span class="hs-identifier">Hasura.Tracing.Propagator.W3CTraceContext</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Reporter.html"><span class="hs-identifier">Hasura.Tracing.Reporter</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html"><span class="hs-identifier">Hasura.Tracing.Sampling</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html"><span class="hs-identifier">Hasura.Tracing.TraceId</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html"><span class="hs-identifier">Hasura.Tracing.TraceState</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Utils.html"><span class="hs-identifier">Hasura.Tracing.Utils</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">{- Note [Tracing]
+
+\## Usage
+
+The Tracing library allows us to trace arbitrary pieces of our code, providing
+that the current monad implements 'MonadTrace'.
+
+    newTrace &quot;request&quot; do
+      userInfo    &lt;- newSpan &quot;authentication&quot; retrieveUserInfo
+      parsedQuery &lt;- newSpan &quot;parsing&quot; $ parseQuery q
+      result      &lt;- newSpan &quot;execution&quot; $ runQuery parsedQuery userInfo
+      pure result
+
+\## Trace and span
+
+Each _trace_ is distinct, and is composed of one or more _spans_. Spans are
+organized as a tree: the root span covers the entire trace, and each sub span
+keeps track of its parent.
+
+We report each span individually, and to each of them we associate a
+'TraceContext', that contains:
+  - a trace id, common to all the spans of that trace
+  - a unique span id, generated randomly
+  - the span id of the parent span, if any
+  - whether that trace was sampled (see &quot;Sampling&quot;).
+
+All of this can be retrieved for the current span with 'currentContext'.
+
+Starting a new trace masks the previous one; in the following example, &quot;span2&quot;
+is associated to &quot;trace2&quot; and &quot;span1&quot; is associated to &quot;trace1&quot;; the two trees
+are distinct:
+
+    newTrace &quot;trace1&quot; $
+      newSpan &quot;span1&quot; $
+        newTrace &quot;trace2&quot; $
+          newSpan &quot;span2&quot;
+
+Lastly, a span that is started outside of a root trace is, for now, silently
+ignored, as it has no trace id to attach to. This is a design decision we may
+revisit.
+
+\## Metadata
+
+Metadata can be attached to the current span with 'attachMetadata', as a list
+of pair of text key and text values.
+
+\## Reporters
+
+'TraceT' is the de-facto implementation of 'MonadTrace'; but, in practice, it
+only does half the job: once a span finishes, 'TraceT' delegates the job of
+actually reporting / exporting all relevant information to a 'Reporter'. Said
+reporter must be provided to 'runTraceT', and is a wrapper around a function in
+IO that processes the span.
+
+In practice, 'TraceT' is only a reader that keeps track of the reporter, the
+default sampling policy, and the current trace.
+
+\## Sampling
+
+To run 'TraceT', you must also provide a 'SamplingPolicy': an IO action that,
+when evaluated, will decide whether an arbitrary trace should be reporter or
+not. This decision is only made once per trace: every span within a trace will
+use the same result: they're either all reporter, or none of them are.
+
+When starting a trace, the default sampling policy can be overriden. You can for
+instance run 'TraceT' with an action that, by default, only reports one out of
+every ten traces, but use 'newTraceWithPolicy sampleAlways' when sending
+critical requests to your authentication service.
+
+Note that sampling and reporting are distinct: using 'sampleAlways' simply
+guarantees that the 'Reporter' you provided will be called.
+
+-}</span><span>
+</span><span id="line-88"></span></pre></body></html>

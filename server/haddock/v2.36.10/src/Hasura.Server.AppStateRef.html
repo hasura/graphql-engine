@@ -1,0 +1,663 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html"><span class="hs-identifier">Hasura.Server.AppStateRef</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * AppState</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier">AppStateRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#initialiseAppStateRef"><span class="hs-identifier">initialiseAppStateRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#withSchemaCacheUpdate"><span class="hs-identifier">withSchemaCacheUpdate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#withAppContextUpdate"><span class="hs-identifier">withAppContextUpdate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#updateAppStateRef"><span class="hs-identifier">updateAppStateRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-comment">-- * TLS AllowList reference</span></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier">TLSAllowListRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#createTLSAllowListRef"><span class="hs-identifier">createTLSAllowListRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#readTLSAllowList"><span class="hs-identifier">readTLSAllowList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Metrics config reference</span></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier">MetricsConfigRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#createMetricsConfigRef"><span class="hs-identifier">createMetricsConfigRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#readMetricsConfig"><span class="hs-identifier">readMetricsConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Utility</span></span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getSchemaCache"><span class="hs-identifier">getSchemaCache</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getSchemaCacheWithVersion"><span class="hs-identifier">getSchemaCacheWithVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getRebuildableSchemaCacheWithVersion"><span class="hs-identifier">getRebuildableSchemaCacheWithVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#readAppContextRef"><span class="hs-identifier">readAppContextRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getAppContext"><span class="hs-identifier">getAppContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#logInconsistentMetadata"><span class="hs-identifier">logInconsistentMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#withSchemaCacheReadUpdate"><span class="hs-identifier">withSchemaCacheReadUpdate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lifted-base-0.2.3.12-1236ccd06afb130acb896e54a1f2632aea78e5a896631c0879370de140144631/share/doc/html/src/Control.Concurrent.MVar.Lifted.html/Control.Concurrent.MVar.Lifted.html"><span class="hs-identifier">Control.Concurrent.MVar.Lifted</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html"><span class="hs-identifier">Control.Monad.Trans.Control</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier">MonadBaseControl</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.IORef</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.App.State.html"><span class="hs-identifier">Hasura.App.State</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">get</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">put</span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.html"><span class="hs-identifier">Hasura.RQL.DDL.Schema</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#MetricsConfig"><span class="hs-identifier">MetricsConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Object</span></a></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html"><span class="hs-identifier">Hasura.Server.Logging</span></a></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Metrics.html"><span class="hs-identifier">Hasura.Server.Metrics</span></a></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html/Network.Types.Extended.html"><span class="hs-identifier">Network.Types.Extended</span></a></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/ekg-core-0.1.1.7-62d888937f8158f3cbcbf29ac5f17459148bc6a441073803ab6e587a2df6bfd8/share/doc/html/src/System.Metrics.Gauge.html/System.Metrics.Gauge.html"><span class="hs-identifier">System.Metrics.Gauge</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/ekg-core-0.1.1.7-62d888937f8158f3cbcbf29ac5f17459148bc6a441073803ab6e587a2df6bfd8/share/doc/html/src/System.Metrics.Gauge.html/System.Metrics.Gauge.html#Gauge"><span class="hs-identifier">Gauge</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/ekg-core-0.1.1.7-62d888937f8158f3cbcbf29ac5f17459148bc6a441073803ab6e587a2df6bfd8/share/doc/html/src/System.Metrics.Gauge.html/System.Metrics.Gauge.html"><span class="hs-identifier">System.Metrics.Gauge</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Gauge</span></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- AppState</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- | A mutable reference to a 'AppState', plus</span><span>
+</span><span id="line-52"></span><span class="hs-comment">--</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- * a write lock,</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- * update version tracking, and</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- * a gauge metric that tracks the metadata version of the 'SchemaCache'.</span><span>
+</span><span id="line-56"></span><span class="hs-keyword">data</span><span> </span><span id="AppStateRef"><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-var">AppStateRef</span></a></span></span><span> </span><span id="local-6989586621688041862"><span class="annot"><a href="#local-6989586621688041862"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AppStateRef"><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-var">AppStateRef</span></a></span></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The idea behind explicit locking here is to</span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-comment">--   1. Allow maximum throughput for serving requests (/v1/graphql) (as each</span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-comment">--      request reads the current schemacache)</span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-comment">--   2. We don't want to process more than one request at any point of time</span><span>
+</span><span id="line-62"></span><span>    </span><span class="hs-comment">--      which would modify the schema cache as such queries are expensive.</span><span>
+</span><span id="line-63"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-comment">-- Another option is to consider removing this lock in place of `_scrCache ::</span><span>
+</span><span id="line-65"></span><span>    </span><span class="hs-comment">-- MVar ...` if it's okay or in fact correct to block during schema update in</span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-comment">-- e.g.  _wseGCtxMap. Vamshi says: It is theoretically possible to have a</span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-comment">-- situation (in between building new schemacache and before writing it to</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-comment">-- the IORef) where we serve a request with a stale schemacache but I guess</span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-comment">-- it is an okay trade-off to pay for a higher throughput (I remember doing a</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-comment">-- bunch of benchmarks to test this hypothesis).</span><span>
+</span><span id="line-71"></span><span>    </span><span id="_scrLock"><span class="annot"><span class="annottext">forall impl. AppStateRef impl -&gt; MVar ()
+</span><a href="Hasura.Server.AppStateRef.html#_scrLock"><span class="hs-identifier hs-var hs-var">_scrLock</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MVar</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>    </span><span id="_scrCache"><span class="annot"><span class="annottext">forall impl. AppStateRef impl -&gt; IORef (AppState impl)
+</span><a href="Hasura.Server.AppStateRef.html#_scrCache"><span class="hs-identifier hs-var hs-var">_scrCache</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppState"><span class="hs-identifier hs-type">AppState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041862"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>    </span><span class="hs-comment">-- | The gauge metric that tracks the current metadata version.</span><span>
+</span><span id="line-74"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-comment">-- Invariant: This gauge must be updated via 'updateMetadataVersionGauge'</span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-comment">-- whenever the _scrCache IORef is updated.</span><span>
+</span><span id="line-77"></span><span>    </span><span id="_scrMetadataVersionGauge"><span class="annot"><span class="annottext">forall impl. AppStateRef impl -&gt; Gauge
+</span><a href="Hasura.Server.AppStateRef.html#_scrMetadataVersionGauge"><span class="hs-identifier hs-var hs-var">_scrMetadataVersionGauge</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/ekg-core-0.1.1.7-62d888937f8158f3cbcbf29ac5f17459148bc6a441073803ab6e587a2df6bfd8/share/doc/html/src/System.Metrics.Gauge.html/System.Metrics.Gauge.html#Gauge"><span class="hs-identifier hs-type">Gauge</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span class="annot"><span class="hs-comment">-- | A mutable reference to '(RebuildableSchemaCache, SchemaCacheVer)' and 'RebuildableAppContext'</span></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">data</span><span> </span><span id="AppState"><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppState"><span class="hs-identifier hs-var">AppState</span></a></span></span><span> </span><span id="local-6989586621688041871"><span class="annot"><a href="#local-6989586621688041871"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AppState"><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppState"><span class="hs-identifier hs-var">AppState</span></a></span></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="asSchemaCache"><span class="annot"><span class="annottext">forall impl. AppState impl -&gt; RebuildableSchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#asSchemaCache"><span class="hs-identifier hs-var hs-var">asSchemaCache</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>    </span><span id="asAppCtx"><span class="annot"><span class="annottext">forall impl. AppState impl -&gt; RebuildableAppContext impl
+</span><a href="Hasura.Server.AppStateRef.html#asAppCtx"><span class="hs-identifier hs-var hs-var">asAppCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041871"><span class="hs-identifier hs-type">impl</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- | Build a new 'AppStateRef'.</span><span>
+</span><span id="line-87"></span><span class="hs-comment">--</span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- This function also updates the 'TLSAllowListRef' to make it point to the</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- newly minted 'SchemaCacheRef'.</span><span>
+</span><span id="line-90"></span><span id="local-6989586621688041876"><span id="local-6989586621688041880"><span class="annot"><a href="Hasura.Server.AppStateRef.html#initialiseAppStateRef"><span class="hs-identifier hs-type">initialiseAppStateRef</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041876"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier hs-type">TLSAllowListRef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier hs-type">MetricsConfigRef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><a href="Hasura.Server.Metrics.html#ServerMetrics"><span class="hs-identifier hs-type">ServerMetrics</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-96"></span><span>  </span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041880"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><a href="#local-6989586621688041876"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041880"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-98"></span><span id="initialiseAppStateRef"><span class="annot"><span class="annottext">initialiseAppStateRef :: forall (m :: * -&gt; *) impl.
+MonadIO m =&gt;
+TLSAllowListRef
+-&gt; Maybe MetricsConfigRef
+-&gt; ServerMetrics
+-&gt; RebuildableSchemaCache
+-&gt; RebuildableAppContext impl
+-&gt; m (AppStateRef impl)
+</span><a href="Hasura.Server.AppStateRef.html#initialiseAppStateRef"><span class="hs-identifier hs-var hs-var">initialiseAppStateRef</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier hs-type">TLSAllowListRef</span></a></span><span> </span><span id="local-6989586621688042048"><span class="annot"><span class="annottext">IORef (IO [TlsAllow])
+</span><a href="#local-6989586621688042048"><span class="hs-identifier hs-var">tlsAllowListRef</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688042049"><span class="annot"><span class="annottext">Maybe MetricsConfigRef
+</span><a href="#local-6989586621688042049"><span class="hs-identifier hs-var">metricsConfigRefM</span></a></span></span><span> </span><span id="local-6989586621688042050"><span class="annot"><span class="annottext">ServerMetrics
+</span><a href="#local-6989586621688042050"><span class="hs-identifier hs-var">serverMetrics</span></a></span></span><span> </span><span id="local-6989586621688042051"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688042051"><span class="hs-identifier hs-var">rebuildableSchemaCache</span></a></span></span><span> </span><span id="local-6989586621688042052"><span class="annot"><span class="annottext">RebuildableAppContext impl
+</span><a href="#local-6989586621688042052"><span class="hs-identifier hs-var">rebuildableAppCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO (AppStateRef impl) -&gt; m (AppStateRef impl)
+forall a. IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621688042054"><span class="annot"><a href="#local-6989586621688042054"><span class="hs-identifier hs-var">cacheLock</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO (MVar ())
+forall (m :: * -&gt; *) a. MonadBase IO m =&gt; a -&gt; m (MVar a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lifted-base-0.2.3.12-1236ccd06afb130acb896e54a1f2632aea78e5a896631c0879370de140144631/share/doc/html/src/Control.Concurrent.MVar.Lifted.html/Control.Concurrent.MVar.Lifted.html#newMVar"><span class="hs-identifier hs-var">newMVar</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688042056"><span class="annot"><a href="#local-6989586621688042056"><span class="hs-identifier hs-var hs-var">appState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+-&gt; RebuildableAppContext impl -&gt; AppState impl
+forall impl.
+RebuildableSchemaCache
+-&gt; RebuildableAppContext impl -&gt; AppState impl
+</span><a href="Hasura.Server.AppStateRef.html#AppState"><span class="hs-identifier hs-var">AppState</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688042051"><span class="hs-identifier hs-var">rebuildableSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableAppContext impl
+</span><a href="#local-6989586621688042052"><span class="hs-identifier hs-var">rebuildableAppCtx</span></a></span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621688042057"><span class="annot"><a href="#local-6989586621688042057"><span class="hs-identifier hs-var">cacheCell</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="hs-identifier hs-type">newIORef</span></span><span> </span><span class="annot"><a href="#local-6989586621688042056"><span class="hs-identifier hs-type">appState</span></a></span><span>
+</span><span id="line-102"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688042059"><span class="annot"><a href="#local-6989586621688042059"><span class="hs-identifier hs-var hs-var">metadataVersionGauge</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
+</span><a href="Hasura.Server.Metrics.html#smSchemaCacheMetadataResourceVersion"><span class="hs-identifier hs-var">smSchemaCacheMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
+</span><a href="#local-6989586621688042050"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-type">updateMetadataVersionGauge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042059"><span class="hs-identifier hs-type">metadataVersionGauge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042051"><span class="hs-identifier hs-type">rebuildableSchemaCache</span></a></span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688042061"><span class="annot"><a href="#local-6989586621688042061"><span class="hs-identifier hs-var hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MVar () -&gt; IORef (AppState impl) -&gt; Gauge -&gt; AppStateRef impl
+forall impl.
+MVar () -&gt; IORef (AppState impl) -&gt; Gauge -&gt; AppStateRef impl
+</span><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-var">AppStateRef</span></a></span><span> </span><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621688042054"><span class="hs-identifier hs-var">cacheLock</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (AppState impl)
+</span><a href="#local-6989586621688042057"><span class="hs-identifier hs-var">cacheCell</span></a></span><span> </span><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621688042059"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">liftIO</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">writeIORef</span></span><span> </span><span class="annot"><a href="#local-6989586621688042048"><span class="hs-identifier hs-type">tlsAllowListRef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#scTlsAllowlist"><span class="hs-identifier hs-var">scTlsAllowlist</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&lt;$&gt;</span></span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getSchemaCache"><span class="hs-identifier hs-type">getSchemaCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042061"><span class="hs-identifier hs-type">ref</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">for_</span></span><span> </span><span class="annot"><a href="#local-6989586621688042049"><span class="hs-identifier hs-type">metricsConfigRefM</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier hs-type">MetricsConfigRef</span></a></span><span> </span><span id="local-6989586621688042067"><span class="annot"><span class="annottext">IORef (IO MetricsConfig)
+</span><a href="#local-6989586621688042067"><span class="hs-identifier hs-var">metricsConfigRef</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">IO () -&gt; IO ()
+forall a. IO a -&gt; IO a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IORef (IO MetricsConfig) -&gt; IO MetricsConfig -&gt; IO ()
+forall a. IORef a -&gt; a -&gt; IO ()
+</span><span class="hs-identifier hs-var">writeIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef (IO MetricsConfig)
+</span><a href="#local-6989586621688042067"><span class="hs-identifier hs-var">metricsConfigRef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaCache -&gt; MetricsConfig
+</span><a href="Hasura.RQL.Types.SchemaCache.html#scMetricsConfig"><span class="hs-identifier hs-var">scMetricsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; MetricsConfig)
+-&gt; IO SchemaCache -&gt; IO MetricsConfig
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl -&gt; IO SchemaCache
+forall impl. AppStateRef impl -&gt; IO SchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#getSchemaCache"><span class="hs-identifier hs-var">getSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042061"><span class="hs-identifier hs-var">ref</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="annot"><a href="#local-6989586621688042061"><span class="hs-identifier hs-type">ref</span></a></span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- TODO: This function might not be needed at all. This function is used only in `refreshSchemaCache` and we</span><span>
+</span><span id="line-111"></span><span class="hs-comment">-- can use `withSchemaCacheReadUpdate` there.</span><span>
+</span><span id="line-112"></span><span id="local-6989586621688041908"><span id="local-6989586621688041912"><span id="local-6989586621688041915"><span class="annot"><a href="Hasura.Server.AppStateRef.html#withSchemaCacheUpdate"><span class="hs-identifier hs-type">withSchemaCacheUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041908"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041908"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041908"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041912"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">STM.TVar</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><a href="#local-6989586621688041908"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688041915"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><a href="#local-6989586621688041908"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041915"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-119"></span><span id="withSchemaCacheUpdate"><span class="annot"><span class="annottext">withSchemaCacheUpdate :: forall (m :: * -&gt; *) impl a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m) =&gt;
+AppStateRef impl
+-&gt; Logger Hasura
+-&gt; Maybe (TVar Bool)
+-&gt; m (a, RebuildableSchemaCache)
+-&gt; m a
+</span><a href="Hasura.Server.AppStateRef.html#withSchemaCacheUpdate"><span class="hs-identifier hs-var hs-var">withSchemaCacheUpdate</span></a></span></span><span> </span><span id="local-6989586621688042075"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042075"><span class="hs-identifier hs-var">asr</span></a></span></span><span> </span><span id="local-6989586621688042076"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688042076"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688042077"><span class="annot"><span class="annottext">Maybe (TVar Bool)
+</span><a href="#local-6989586621688042077"><span class="hs-identifier hs-var">mLogCheckerTVar</span></a></span></span><span> </span><span id="local-6989586621688042078"><span class="annot"><span class="annottext">m (a, RebuildableSchemaCache)
+</span><a href="#local-6989586621688042078"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-120"></span><span>  </span><span class="annot"><span class="annottext">AppStateRef impl
+-&gt; Logger Hasura
+-&gt; Maybe (TVar Bool)
+-&gt; (RebuildableSchemaCache -&gt; m (a, RebuildableSchemaCache))
+-&gt; m a
+forall (m :: * -&gt; *) impl a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m) =&gt;
+AppStateRef impl
+-&gt; Logger Hasura
+-&gt; Maybe (TVar Bool)
+-&gt; (RebuildableSchemaCache -&gt; m (a, RebuildableSchemaCache))
+-&gt; m a
+</span><a href="Hasura.Server.AppStateRef.html#withSchemaCacheReadUpdate"><span class="hs-identifier hs-var">withSchemaCacheReadUpdate</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042075"><span class="hs-identifier hs-var">asr</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688042076"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (TVar Bool)
+</span><a href="#local-6989586621688042077"><span class="hs-identifier hs-var">mLogCheckerTVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m (a, RebuildableSchemaCache)
+-&gt; RebuildableSchemaCache -&gt; m (a, RebuildableSchemaCache)
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">m (a, RebuildableSchemaCache)
+</span><a href="#local-6989586621688042078"><span class="hs-identifier hs-var">action</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- | Set the 'AppStateRef' to the 'RebuildableSchemaCache' produced by the</span><span>
+</span><span id="line-123"></span><span class="hs-comment">-- given action.</span><span>
+</span><span id="line-124"></span><span class="hs-comment">--</span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- An internal lock ensures that at most one update to the 'AppStateRef' may</span><span>
+</span><span id="line-126"></span><span class="hs-comment">-- proceed at a time.</span><span>
+</span><span id="line-127"></span><span id="local-6989586621688041919"><span id="local-6989586621688041920"><span id="local-6989586621688041921"><span class="annot"><a href="Hasura.Server.AppStateRef.html#withSchemaCacheReadUpdate"><span class="hs-identifier hs-type">withSchemaCacheReadUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041919"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041919"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041919"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041920"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-130"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">STM.TVar</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688041919"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688041921"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-133"></span><span>  </span><span class="annot"><a href="#local-6989586621688041919"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041921"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-134"></span><span id="withSchemaCacheReadUpdate"><span class="annot"><span class="annottext">withSchemaCacheReadUpdate :: forall (m :: * -&gt; *) impl a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m) =&gt;
+AppStateRef impl
+-&gt; Logger Hasura
+-&gt; Maybe (TVar Bool)
+-&gt; (RebuildableSchemaCache -&gt; m (a, RebuildableSchemaCache))
+-&gt; m a
+</span><a href="Hasura.Server.AppStateRef.html#withSchemaCacheReadUpdate"><span class="hs-identifier hs-var hs-var">withSchemaCacheReadUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span id="local-6989586621688042121"><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621688042121"><span class="hs-identifier hs-var">lock</span></a></span></span><span> </span><span id="local-6989586621688042122"><span class="annot"><span class="annottext">IORef (AppState impl)
+</span><a href="#local-6989586621688042122"><span class="hs-identifier hs-var">cacheRef</span></a></span></span><span> </span><span id="local-6989586621688042123"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621688042123"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688042124"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688042124"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688042125"><span class="annot"><span class="annottext">Maybe (TVar Bool)
+</span><a href="#local-6989586621688042125"><span class="hs-identifier hs-var">mLogCheckerTVar</span></a></span></span><span> </span><span id="local-6989586621688042126"><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; m (a, RebuildableSchemaCache)
+</span><a href="#local-6989586621688042126"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><span class="annottext">MVar () -&gt; (() -&gt; m a) -&gt; m a
+forall (m :: * -&gt; *) a b.
+MonadBaseControl IO m =&gt;
+MVar a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lifted-base-0.2.3.12-1236ccd06afb130acb896e54a1f2632aea78e5a896631c0879370de140144631/share/doc/html/src/Control.Concurrent.MVar.Lifted.html/Control.Concurrent.MVar.Lifted.html#withMVarMasked"><span class="hs-identifier hs-var">withMVarMasked</span></a></span><span> </span><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621688042121"><span class="hs-identifier hs-var">lock</span></a></span><span> </span><span class="annot"><span class="annottext">((() -&gt; m a) -&gt; m a) -&gt; (() -&gt; m a) -&gt; m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">m a -&gt; () -&gt; m a
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-136"></span><span>    </span><span id="local-6989586621688042128"><span class="annot"><a href="#local-6989586621688042128"><span class="hs-identifier hs-var">rebuildableSchemaCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">AppState impl -&gt; RebuildableSchemaCache
+forall impl. AppState impl -&gt; RebuildableSchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#asSchemaCache"><span class="hs-identifier hs-var">asSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">(AppState impl -&gt; RebuildableSchemaCache)
+-&gt; m (AppState impl) -&gt; m RebuildableSchemaCache
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IO (AppState impl) -&gt; m (AppState impl)
+forall a. IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IORef (AppState impl) -&gt; IO (AppState impl)
+forall a. IORef a -&gt; IO a
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef (AppState impl)
+</span><a href="#local-6989586621688042122"><span class="hs-identifier hs-var">cacheRef</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621688042130"><span class="annot"><a href="#local-6989586621688042130"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621688042131"><span class="annot"><a href="#local-6989586621688042131"><span class="hs-identifier hs-var">newSC</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="#local-6989586621688042126"><span class="hs-identifier hs-type">action</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042128"><span class="hs-identifier hs-type">rebuildableSchemaCache</span></a></span><span>
+</span><span id="line-138"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#scMetadataResourceVersion"><span class="hs-identifier hs-var">scMetadataResourceVersion</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var">lastBuiltSchemaCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042131"><span class="hs-identifier hs-type">newSC</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-operator hs-type">==</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>      </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-type">throw500</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;Programming error: attempting to save Schema Cache with incorrect mrv. Please report this to Hasura.&quot;</span></span><span>
+</span><span id="line-140"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">liftIO</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-141"></span><span>      </span><span class="hs-comment">-- update schemacache in IO reference</span><span>
+</span><span id="line-142"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">modifyIORef'</span></span><span> </span><span class="annot"><a href="#local-6989586621688042122"><span class="hs-identifier hs-type">cacheRef</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688042138"><span class="annot"><span class="annottext">AppState impl
+</span><a href="#local-6989586621688042138"><span class="hs-identifier hs-var">appState</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-143"></span><span>        </span><span class="annot"><span class="annottext">AppState impl
+</span><a href="#local-6989586621688042138"><span class="hs-identifier hs-var">appState</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#asSchemaCache"><span class="hs-identifier hs-var">asSchemaCache</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621688042131"><span class="hs-identifier hs-type">newSC</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span>      </span><span class="hs-comment">-- update metric with new metadata version</span><span>
+</span><span id="line-146"></span><span>      </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-type">updateMetadataVersionGauge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042123"><span class="hs-identifier hs-type">metadataVersionGauge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042131"><span class="hs-identifier hs-type">newSC</span></a></span><span>
+</span><span id="line-147"></span><span>
+</span><span id="line-148"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688042139"><span class="annot"><a href="#local-6989586621688042139"><span class="hs-identifier hs-var hs-var">inconsistentObjectsList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; [InconsistentMetadata]
+</span><a href="Hasura.RQL.Types.SchemaCache.html#scInconsistentObjs"><span class="hs-identifier hs-var">scInconsistentObjs</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; [InconsistentMetadata])
+-&gt; SchemaCache -&gt; [InconsistentMetadata]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var">lastBuiltSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688042131"><span class="hs-identifier hs-var">newSC</span></a></span><span>
+</span><span id="line-149"></span><span>          </span><span id="local-6989586621688042141"><span class="annot"><a href="#local-6989586621688042141"><span class="hs-identifier hs-var hs-var">logInconsistentMetadata'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; [InconsistentMetadata] -&gt; IO ()
+</span><a href="Hasura.Server.AppStateRef.html#logInconsistentMetadata"><span class="hs-identifier hs-var">logInconsistentMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688042124"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
+</span><a href="#local-6989586621688042139"><span class="hs-identifier hs-var">inconsistentObjectsList</span></a></span><span>
+</span><span id="line-150"></span><span>      </span><span class="hs-comment">-- log any inconsistent objects only once and not everytime this method is called</span><span>
+</span><span id="line-151"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621688042125"><span class="hs-identifier hs-type">mLogCheckerTVar</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-152"></span><span>        </span><span class="annot"><span class="annottext">Maybe (TVar Bool)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO ()
+</span><a href="#local-6989586621688042141"><span class="hs-identifier hs-var">logInconsistentMetadata'</span></a></span><span>
+</span><span id="line-153"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688042142"><span class="annot"><span class="annottext">TVar Bool
+</span><a href="#local-6989586621688042142"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-154"></span><span>          </span><span id="local-6989586621688042143"><span class="annot"><a href="#local-6989586621688042143"><span class="hs-identifier hs-var">logCheck</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar Bool -&gt; IO Bool
+forall a. TVar a -&gt; IO a
+</span><span class="hs-identifier hs-var">STM.readTVarIO</span></span><span> </span><span class="annot"><span class="annottext">TVar Bool
+</span><a href="#local-6989586621688042142"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span><span>
+</span><span id="line-155"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="hs-identifier hs-type">null</span></span><span> </span><span class="annot"><a href="#local-6989586621688042139"><span class="hs-identifier hs-type">inconsistentObjectsList</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&amp;&amp;</span></span><span> </span><span class="annot"><a href="#local-6989586621688042143"><span class="hs-identifier hs-type">logCheck</span></a></span><span>
+</span><span id="line-156"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-157"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">STM.atomically</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM.writeTVar</span></span><span> </span><span class="annot"><a href="#local-6989586621688042142"><span class="hs-identifier hs-type">logCheckerTVar</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">False</span></span><span>
+</span><span id="line-158"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-159"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688042143"><span class="hs-identifier hs-type">logCheck</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">||</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">null</span></span><span> </span><span class="annot"><a href="#local-6989586621688042139"><span class="hs-identifier hs-type">inconsistentObjectsList</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-160"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">STM.atomically</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM.writeTVar</span></span><span> </span><span class="annot"><a href="#local-6989586621688042142"><span class="hs-identifier hs-type">logCheckerTVar</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span>
+</span><span id="line-161"></span><span>                </span><span class="annot"><a href="#local-6989586621688042141"><span class="hs-identifier hs-type">logInconsistentMetadata'</span></a></span><span>
+</span><span id="line-162"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="annot"><a href="#local-6989586621688042130"><span class="hs-identifier hs-type">res</span></a></span><span>
+</span><span id="line-163"></span><span>
+</span><span id="line-164"></span><span class="annot"><span class="hs-comment">-- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableAppContext'</span></span><span>
+</span><span id="line-165"></span><span id="local-6989586621688041953"><span class="annot"><a href="Hasura.Server.AppStateRef.html#readAppContextRef"><span class="hs-identifier hs-type">readAppContextRef</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041953"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041953"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-166"></span><span id="readAppContextRef"><span class="annot"><span class="annottext">readAppContextRef :: forall impl. AppStateRef impl -&gt; IO (RebuildableAppContext impl)
+</span><a href="Hasura.Server.AppStateRef.html#readAppContextRef"><span class="hs-identifier hs-var hs-var">readAppContextRef</span></a></span></span><span> </span><span id="local-6989586621688042152"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042152"><span class="hs-identifier hs-var">scRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AppState impl -&gt; RebuildableAppContext impl
+forall impl. AppState impl -&gt; RebuildableAppContext impl
+</span><a href="Hasura.Server.AppStateRef.html#asAppCtx"><span class="hs-identifier hs-var">asAppCtx</span></a></span><span> </span><span class="annot"><span class="annottext">(AppState impl -&gt; RebuildableAppContext impl)
+-&gt; IO (AppState impl) -&gt; IO (RebuildableAppContext impl)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IORef (AppState impl) -&gt; IO (AppState impl)
+forall a. IORef a -&gt; IO a
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AppStateRef impl -&gt; IORef (AppState impl)
+forall impl. AppStateRef impl -&gt; IORef (AppState impl)
+</span><a href="Hasura.Server.AppStateRef.html#_scrCache"><span class="hs-identifier hs-var">_scrCache</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042152"><span class="hs-identifier hs-var">scRef</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-167"></span><span>
+</span><span id="line-168"></span><span class="annot"><span class="hs-comment">-- | Read the contents of the 'AppStateRef' to get the latest 'RebuildableSchemaCache' and 'SchemaCacheVer'</span></span><span>
+</span><span id="line-169"></span><span id="local-6989586621688041955"><span class="annot"><a href="Hasura.Server.AppStateRef.html#getRebuildableSchemaCacheWithVersion"><span class="hs-identifier hs-type">getRebuildableSchemaCacheWithVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041955"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span></span><span>
+</span><span id="line-170"></span><span id="getRebuildableSchemaCacheWithVersion"><span class="annot"><span class="annottext">getRebuildableSchemaCacheWithVersion :: forall impl. AppStateRef impl -&gt; IO RebuildableSchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#getRebuildableSchemaCacheWithVersion"><span class="hs-identifier hs-var hs-var">getRebuildableSchemaCacheWithVersion</span></a></span></span><span> </span><span id="local-6989586621688042154"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042154"><span class="hs-identifier hs-var">scRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AppState impl -&gt; RebuildableSchemaCache
+forall impl. AppState impl -&gt; RebuildableSchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#asSchemaCache"><span class="hs-identifier hs-var">asSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">(AppState impl -&gt; RebuildableSchemaCache)
+-&gt; IO (AppState impl) -&gt; IO RebuildableSchemaCache
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IORef (AppState impl) -&gt; IO (AppState impl)
+forall a. IORef a -&gt; IO a
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AppStateRef impl -&gt; IORef (AppState impl)
+forall impl. AppStateRef impl -&gt; IORef (AppState impl)
+</span><a href="Hasura.Server.AppStateRef.html#_scrCache"><span class="hs-identifier hs-var">_scrCache</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042154"><span class="hs-identifier hs-var">scRef</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-171"></span><span>
+</span><span id="line-172"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-173"></span><span class="hs-comment">-- TLS Allow List</span><span>
+</span><span id="line-174"></span><span>
+</span><span id="line-175"></span><span class="hs-comment">-- | Reference to a TLS AllowList, used for dynamic TLS settings in the app's</span><span>
+</span><span id="line-176"></span><span class="hs-comment">-- HTTP Manager.</span><span>
+</span><span id="line-177"></span><span class="hs-comment">--</span><span>
+</span><span id="line-178"></span><span class="hs-comment">-- This exists to break a chicken-and-egg problem in the initialisation of the</span><span>
+</span><span id="line-179"></span><span class="hs-comment">-- engine: the IO action that dynamically reads the TLS settings reads it from</span><span>
+</span><span id="line-180"></span><span class="hs-comment">-- the schema cache; but to build the schema cache we need a HTTP manager that</span><span>
+</span><span id="line-181"></span><span class="hs-comment">-- has access to the TLS settings... In the past, we were using a temporary HTTP</span><span>
+</span><span id="line-182"></span><span class="hs-comment">-- Manager to create the first schema cache, to then create the *real* Manager</span><span>
+</span><span id="line-183"></span><span class="hs-comment">-- that would refer to the list in the schema cache. Now, instead, we only</span><span>
+</span><span id="line-184"></span><span class="hs-comment">-- create one Manager, which uses a 'TLSAllowListRef' to dynamically access the</span><span>
+</span><span id="line-185"></span><span class="hs-comment">-- Allow List.</span><span>
+</span><span id="line-186"></span><span class="hs-keyword">newtype</span><span> </span><span id="TLSAllowListRef"><span class="annot"><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier hs-var">TLSAllowListRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TLSAllowListRef"><span class="annot"><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier hs-var">TLSAllowListRef</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-187"></span><span>
+</span><span id="line-188"></span><span class="annot"><span class="hs-comment">-- | Creates a new 'TLSAllowListRef' that points to the given list.</span></span><span>
+</span><span id="line-189"></span><span class="annot"><a href="Hasura.Server.AppStateRef.html#createTLSAllowListRef"><span class="hs-identifier hs-type">createTLSAllowListRef</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier hs-type">TLSAllowListRef</span></a></span><span>
+</span><span id="line-190"></span><span id="createTLSAllowListRef"><span class="annot"><span class="annottext">createTLSAllowListRef :: [TlsAllow] -&gt; IO TLSAllowListRef
+</span><a href="Hasura.Server.AppStateRef.html#createTLSAllowListRef"><span class="hs-identifier hs-var hs-var">createTLSAllowListRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(IORef (IO [TlsAllow]) -&gt; TLSAllowListRef)
+-&gt; IO (IORef (IO [TlsAllow])) -&gt; IO TLSAllowListRef
+forall a b. (a -&gt; b) -&gt; IO a -&gt; IO b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">IORef (IO [TlsAllow]) -&gt; TLSAllowListRef
+</span><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier hs-var">TLSAllowListRef</span></a></span><span> </span><span class="annot"><span class="annottext">(IO (IORef (IO [TlsAllow])) -&gt; IO TLSAllowListRef)
+-&gt; ([TlsAllow] -&gt; IO (IORef (IO [TlsAllow])))
+-&gt; [TlsAllow]
+-&gt; IO TLSAllowListRef
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IO [TlsAllow] -&gt; IO (IORef (IO [TlsAllow]))
+forall a. a -&gt; IO (IORef a)
+</span><span class="hs-identifier hs-var">newIORef</span></span><span> </span><span class="annot"><span class="annottext">(IO [TlsAllow] -&gt; IO (IORef (IO [TlsAllow])))
+-&gt; ([TlsAllow] -&gt; IO [TlsAllow])
+-&gt; [TlsAllow]
+-&gt; IO (IORef (IO [TlsAllow]))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[TlsAllow] -&gt; IO [TlsAllow]
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span>
+</span><span id="line-191"></span><span>
+</span><span id="line-192"></span><span class="hs-comment">-- | Reads the TLS AllowList by attempting to read from the schema cache, and</span><span>
+</span><span id="line-193"></span><span class="hs-comment">-- defaulting to the list given when the ref was created.</span><span>
+</span><span id="line-194"></span><span class="annot"><a href="Hasura.Server.AppStateRef.html#readTLSAllowList"><span class="hs-identifier hs-type">readTLSAllowList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier hs-type">TLSAllowListRef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-195"></span><span id="readTLSAllowList"><span class="annot"><span class="annottext">readTLSAllowList :: TLSAllowListRef -&gt; IO [TlsAllow]
+</span><a href="Hasura.Server.AppStateRef.html#readTLSAllowList"><span class="hs-identifier hs-var hs-var">readTLSAllowList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#TLSAllowListRef"><span class="hs-identifier hs-type">TLSAllowListRef</span></a></span><span> </span><span id="local-6989586621688042156"><span class="annot"><span class="annottext">IORef (IO [TlsAllow])
+</span><a href="#local-6989586621688042156"><span class="hs-identifier hs-var">ref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO (IO [TlsAllow]) -&gt; IO [TlsAllow]
+forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
+</span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">(IO (IO [TlsAllow]) -&gt; IO [TlsAllow])
+-&gt; IO (IO [TlsAllow]) -&gt; IO [TlsAllow]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IORef (IO [TlsAllow]) -&gt; IO (IO [TlsAllow])
+forall a. IORef a -&gt; IO a
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef (IO [TlsAllow])
+</span><a href="#local-6989586621688042156"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><span id="line-196"></span><span>
+</span><span id="line-197"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-198"></span><span class="hs-comment">-- Metrics config</span><span>
+</span><span id="line-199"></span><span>
+</span><span id="line-200"></span><span class="hs-comment">-- | Reference to the metadata's 'MetricsConfig'.</span><span>
+</span><span id="line-201"></span><span class="hs-comment">--</span><span>
+</span><span id="line-202"></span><span class="hs-comment">-- Similarly to the 'TLSAllowListRef', this exists to break a</span><span>
+</span><span id="line-203"></span><span class="hs-comment">-- chicken-and-egg problem in the initialisation of the engine: the</span><span>
+</span><span id="line-204"></span><span class="hs-comment">-- implementation of several behaviour classes requires access to said</span><span>
+</span><span id="line-205"></span><span class="hs-comment">-- config, but those classes are implemented on the app monad, that</span><span>
+</span><span id="line-206"></span><span class="hs-comment">-- doesn't have access to the schema cache. This small type allows the</span><span>
+</span><span id="line-207"></span><span class="hs-comment">-- app monad to have access to the config, even before we build the</span><span>
+</span><span id="line-208"></span><span class="hs-comment">-- first schema cache.</span><span>
+</span><span id="line-209"></span><span class="hs-keyword">newtype</span><span> </span><span id="MetricsConfigRef"><span class="annot"><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier hs-var">MetricsConfigRef</span></a></span></span><span>
+</span><span id="line-210"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MetricsConfigRef"><span class="annot"><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier hs-var">MetricsConfigRef</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#MetricsConfig"><span class="hs-identifier hs-type">MetricsConfig</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-211"></span><span>
+</span><span id="line-212"></span><span class="annot"><span class="hs-comment">-- | Creates a new 'MetricsConfigRef' that points to the given config.</span></span><span>
+</span><span id="line-213"></span><span class="annot"><a href="Hasura.Server.AppStateRef.html#createMetricsConfigRef"><span class="hs-identifier hs-type">createMetricsConfigRef</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#MetricsConfig"><span class="hs-identifier hs-type">MetricsConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier hs-type">MetricsConfigRef</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-214"></span><span id="createMetricsConfigRef"><span class="annot"><span class="annottext">createMetricsConfigRef :: MetricsConfig -&gt; IO MetricsConfigRef
+</span><a href="Hasura.Server.AppStateRef.html#createMetricsConfigRef"><span class="hs-identifier hs-var hs-var">createMetricsConfigRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(IORef (IO MetricsConfig) -&gt; MetricsConfigRef)
+-&gt; IO (IORef (IO MetricsConfig)) -&gt; IO MetricsConfigRef
+forall a b. (a -&gt; b) -&gt; IO a -&gt; IO b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">IORef (IO MetricsConfig) -&gt; MetricsConfigRef
+</span><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier hs-var">MetricsConfigRef</span></a></span><span> </span><span class="annot"><span class="annottext">(IO (IORef (IO MetricsConfig)) -&gt; IO MetricsConfigRef)
+-&gt; (MetricsConfig -&gt; IO (IORef (IO MetricsConfig)))
+-&gt; MetricsConfig
+-&gt; IO MetricsConfigRef
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IO MetricsConfig -&gt; IO (IORef (IO MetricsConfig))
+forall a. a -&gt; IO (IORef a)
+</span><span class="hs-identifier hs-var">newIORef</span></span><span> </span><span class="annot"><span class="annottext">(IO MetricsConfig -&gt; IO (IORef (IO MetricsConfig)))
+-&gt; (MetricsConfig -&gt; IO MetricsConfig)
+-&gt; MetricsConfig
+-&gt; IO (IORef (IO MetricsConfig))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MetricsConfig -&gt; IO MetricsConfig
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span>
+</span><span id="line-215"></span><span>
+</span><span id="line-216"></span><span class="hs-comment">-- | Reads the TLS AllowList by attempting to read from the schema cache, and</span><span>
+</span><span id="line-217"></span><span class="hs-comment">-- defaulting to the list given when the ref was created.</span><span>
+</span><span id="line-218"></span><span class="annot"><a href="Hasura.Server.AppStateRef.html#readMetricsConfig"><span class="hs-identifier hs-type">readMetricsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier hs-type">MetricsConfigRef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#MetricsConfig"><span class="hs-identifier hs-type">MetricsConfig</span></a></span><span>
+</span><span id="line-219"></span><span id="readMetricsConfig"><span class="annot"><span class="annottext">readMetricsConfig :: MetricsConfigRef -&gt; IO MetricsConfig
+</span><a href="Hasura.Server.AppStateRef.html#readMetricsConfig"><span class="hs-identifier hs-var hs-var">readMetricsConfig</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#MetricsConfigRef"><span class="hs-identifier hs-type">MetricsConfigRef</span></a></span><span> </span><span id="local-6989586621688042157"><span class="annot"><span class="annottext">IORef (IO MetricsConfig)
+</span><a href="#local-6989586621688042157"><span class="hs-identifier hs-var">ref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO (IO MetricsConfig) -&gt; IO MetricsConfig
+forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
+</span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">(IO (IO MetricsConfig) -&gt; IO MetricsConfig)
+-&gt; IO (IO MetricsConfig) -&gt; IO MetricsConfig
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IORef (IO MetricsConfig) -&gt; IO (IO MetricsConfig)
+forall a. IORef a -&gt; IO a
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef (IO MetricsConfig)
+</span><a href="#local-6989586621688042157"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><span id="line-220"></span><span>
+</span><span id="line-221"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-222"></span><span class="hs-comment">-- Utility functions</span><span>
+</span><span id="line-223"></span><span>
+</span><span id="line-224"></span><span class="annot"><span class="hs-comment">-- | Read the latest 'SchemaCache' from the 'AppStateRef'.</span></span><span>
+</span><span id="line-225"></span><span id="local-6989586621688041900"><span class="annot"><a href="Hasura.Server.AppStateRef.html#getSchemaCache"><span class="hs-identifier hs-type">getSchemaCache</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041900"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCache"><span class="hs-identifier hs-type">SchemaCache</span></a></span></span><span>
+</span><span id="line-226"></span><span id="getSchemaCache"><span class="annot"><span class="annottext">getSchemaCache :: forall impl. AppStateRef impl -&gt; IO SchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#getSchemaCache"><span class="hs-identifier hs-var hs-var">getSchemaCache</span></a></span></span><span> </span><span id="local-6989586621688042159"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042159"><span class="hs-identifier hs-var">asRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var">lastBuiltSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">(RebuildableSchemaCache -&gt; SchemaCache)
+-&gt; IO RebuildableSchemaCache -&gt; IO SchemaCache
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl -&gt; IO RebuildableSchemaCache
+forall impl. AppStateRef impl -&gt; IO RebuildableSchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#getRebuildableSchemaCacheWithVersion"><span class="hs-identifier hs-var">getRebuildableSchemaCacheWithVersion</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042159"><span class="hs-identifier hs-var">asRef</span></a></span><span>
+</span><span id="line-227"></span><span>
+</span><span id="line-228"></span><span class="annot"><span class="hs-comment">-- | Read the latest 'SchemaCache' and its version from the 'AppStateRef'.</span></span><span>
+</span><span id="line-229"></span><span id="local-6989586621688042160"><span class="annot"><a href="Hasura.Server.AppStateRef.html#getSchemaCacheWithVersion"><span class="hs-identifier hs-type">getSchemaCacheWithVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042160"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCache"><span class="hs-identifier hs-type">SchemaCache</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-230"></span><span id="getSchemaCacheWithVersion"><span class="annot"><span class="annottext">getSchemaCacheWithVersion :: forall impl. AppStateRef impl -&gt; IO SchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#getSchemaCacheWithVersion"><span class="hs-identifier hs-var hs-var">getSchemaCacheWithVersion</span></a></span></span><span> </span><span id="local-6989586621688042162"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042162"><span class="hs-identifier hs-var">scRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RebuildableSchemaCache -&gt; SchemaCache)
+-&gt; IO RebuildableSchemaCache -&gt; IO SchemaCache
+forall a b. (a -&gt; b) -&gt; IO a -&gt; IO b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var">lastBuiltSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">(IO RebuildableSchemaCache -&gt; IO SchemaCache)
+-&gt; IO RebuildableSchemaCache -&gt; IO SchemaCache
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl -&gt; IO RebuildableSchemaCache
+forall impl. AppStateRef impl -&gt; IO RebuildableSchemaCache
+</span><a href="Hasura.Server.AppStateRef.html#getRebuildableSchemaCacheWithVersion"><span class="hs-identifier hs-var">getRebuildableSchemaCacheWithVersion</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042162"><span class="hs-identifier hs-var">scRef</span></a></span><span>
+</span><span id="line-231"></span><span>
+</span><span id="line-232"></span><span class="annot"><span class="hs-comment">-- | Read the latest 'AppContext' from the 'AppStateRef'.</span></span><span>
+</span><span id="line-233"></span><span id="local-6989586621688041967"><span class="annot"><a href="Hasura.Server.AppStateRef.html#getAppContext"><span class="hs-identifier hs-type">getAppContext</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041967"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-type">AppContext</span></a></span></span><span>
+</span><span id="line-234"></span><span id="getAppContext"><span class="annot"><span class="annottext">getAppContext :: forall impl. AppStateRef impl -&gt; IO AppContext
+</span><a href="Hasura.Server.AppStateRef.html#getAppContext"><span class="hs-identifier hs-var hs-var">getAppContext</span></a></span></span><span> </span><span id="local-6989586621688042165"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042165"><span class="hs-identifier hs-var">asRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RebuildableAppContext impl -&gt; AppContext
+forall impl. RebuildableAppContext impl -&gt; AppContext
+</span><a href="Hasura.App.State.html#lastBuiltAppContext"><span class="hs-identifier hs-var">lastBuiltAppContext</span></a></span><span> </span><span class="annot"><span class="annottext">(RebuildableAppContext impl -&gt; AppContext)
+-&gt; IO (RebuildableAppContext impl) -&gt; IO AppContext
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl -&gt; IO (RebuildableAppContext impl)
+forall impl. AppStateRef impl -&gt; IO (RebuildableAppContext impl)
+</span><a href="Hasura.Server.AppStateRef.html#readAppContextRef"><span class="hs-identifier hs-var">readAppContextRef</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042165"><span class="hs-identifier hs-var">asRef</span></a></span><span>
+</span><span id="line-235"></span><span>
+</span><span id="line-236"></span><span class="annot"><span class="hs-comment">-- | Formats and logs a list of inconsistent metadata objects.</span></span><span>
+</span><span id="line-237"></span><span class="annot"><a href="Hasura.Server.AppStateRef.html#logInconsistentMetadata"><span class="hs-identifier hs-type">logInconsistentMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#InconsistentMetadata"><span class="hs-identifier hs-type">InconsistentMetadata</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-238"></span><span id="logInconsistentMetadata"><span class="annot"><span class="annottext">logInconsistentMetadata :: Logger Hasura -&gt; [InconsistentMetadata] -&gt; IO ()
+</span><a href="Hasura.Server.AppStateRef.html#logInconsistentMetadata"><span class="hs-identifier hs-var hs-var">logInconsistentMetadata</span></a></span></span><span> </span><span id="local-6989586621688042167"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688042167"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688042168"><span class="annot"><span class="annottext">[InconsistentMetadata]
+</span><a href="#local-6989586621688042168"><span class="hs-identifier hs-var">objs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-239"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[InconsistentMetadata] -&gt; Bool
+forall a. [a] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
+</span><a href="#local-6989586621688042168"><span class="hs-identifier hs-var">objs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-240"></span><span>    </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a Hasura, MonadIO m) =&gt;
+   a -&gt; m ()
+forall impl.
+Logger impl
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a impl, MonadIO m) =&gt;
+   a -&gt; m ()
+</span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">L.unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688042167"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-241"></span><span>    </span><span class="annot"><span class="annottext">(MetadataLog -&gt; IO ()) -&gt; MetadataLog -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata] -&gt; MetadataLog
+</span><a href="Hasura.Server.Logging.html#mkInconsMetadataLog"><span class="hs-identifier hs-var">mkInconsMetadataLog</span></a></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
+</span><a href="#local-6989586621688042168"><span class="hs-identifier hs-var">objs</span></a></span><span>
+</span><span id="line-242"></span><span>
+</span><span id="line-243"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-244"></span><span class="hs-comment">-- Local helpers</span><span>
+</span><span id="line-245"></span><span>
+</span><span id="line-246"></span><span class="annot"><span class="hs-comment">-- | Set the gauge metric to the metadata version of the schema cache, if it exists.</span></span><span>
+</span><span id="line-247"></span><span id="local-6989586621688041890"><span class="annot"><a href="Hasura.Server.AppStateRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-type">updateMetadataVersionGauge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041890"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/ekg-core-0.1.1.7-62d888937f8158f3cbcbf29ac5f17459148bc6a441073803ab6e587a2df6bfd8/share/doc/html/src/System.Metrics.Gauge.html/System.Metrics.Gauge.html#Gauge"><span class="hs-identifier hs-type">Gauge</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688041890"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-248"></span><span id="updateMetadataVersionGauge"><span class="annot"><span class="annottext">updateMetadataVersionGauge :: forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Gauge -&gt; RebuildableSchemaCache -&gt; m ()
+</span><a href="Hasura.Server.AppStateRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-var hs-var">updateMetadataVersionGauge</span></a></span></span><span> </span><span id="local-6989586621688042173"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621688042173"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span></span><span> </span><span id="local-6989586621688042174"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688042174"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-249"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688042175"><span class="annot"><span class="annottext">metadataVersion :: MetadataResourceVersion
+</span><a href="#local-6989586621688042175"><span class="hs-identifier hs-var hs-var">metadataVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; MetadataResourceVersion
+</span><a href="Hasura.RQL.Types.SchemaCache.html#scMetadataResourceVersion"><span class="hs-identifier hs-var">scMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; MetadataResourceVersion)
+-&gt; (RebuildableSchemaCache -&gt; SchemaCache)
+-&gt; RebuildableSchemaCache
+-&gt; MetadataResourceVersion
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var">lastBuiltSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">(RebuildableSchemaCache -&gt; MetadataResourceVersion)
+-&gt; RebuildableSchemaCache -&gt; MetadataResourceVersion
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688042174"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
+</span><span id="line-250"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+forall a. IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Gauge -&gt; Int64 -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/ekg-core-0.1.1.7-62d888937f8158f3cbcbf29ac5f17459148bc6a441073803ab6e587a2df6bfd8/share/doc/html/src/System.Metrics.Gauge.html/System.Metrics.Gauge.html#set"><span class="hs-identifier hs-var">Gauge.set</span></a></span><span> </span><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621688042173"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">(Int64 -&gt; IO ()) -&gt; Int64 -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Int64
+</span><a href="Hasura.RQL.Types.SchemaCache.html#getMetadataResourceVersion"><span class="hs-identifier hs-var">getMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688042175"><span class="hs-identifier hs-var">metadataVersion</span></a></span><span>
+</span><span id="line-251"></span><span>
+</span><span id="line-252"></span><span class="hs-comment">-- | Set the 'RebuildableAppContext' to the 'AppStateRef' produced by the given</span><span>
+</span><span id="line-253"></span><span class="hs-comment">-- action.</span><span>
+</span><span id="line-254"></span><span class="hs-comment">--</span><span>
+</span><span id="line-255"></span><span class="hs-comment">-- An internal lock ensures that at most one update to the 'AppStateRef' may</span><span>
+</span><span id="line-256"></span><span class="hs-comment">-- proceed at a time.</span><span>
+</span><span id="line-257"></span><span id="local-6989586621688041975"><span id="local-6989586621688041976"><span id="local-6989586621688041977"><span class="annot"><a href="Hasura.Server.AppStateRef.html#withAppContextUpdate"><span class="hs-identifier hs-type">withAppContextUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-258"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041975"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041975"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-259"></span><span>  </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041976"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-260"></span><span>  </span><span class="annot"><a href="#local-6989586621688041975"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688041977"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041976"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-261"></span><span>  </span><span class="annot"><a href="#local-6989586621688041975"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041977"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-262"></span><span id="withAppContextUpdate"><span class="annot"><span class="annottext">withAppContextUpdate :: forall (m :: * -&gt; *) impl a.
+(MonadIO m, MonadBaseControl IO m) =&gt;
+AppStateRef impl -&gt; m (a, RebuildableAppContext impl) -&gt; m a
+</span><a href="Hasura.Server.AppStateRef.html#withAppContextUpdate"><span class="hs-identifier hs-var hs-var">withAppContextUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span id="local-6989586621688042186"><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621688042186"><span class="hs-identifier hs-var">lock</span></a></span></span><span> </span><span id="local-6989586621688042187"><span class="annot"><span class="annottext">IORef (AppState impl)
+</span><a href="#local-6989586621688042187"><span class="hs-identifier hs-var">cacheRef</span></a></span></span><span> </span><span class="annot"><span class="annottext">Gauge
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688042188"><span class="annot"><span class="annottext">m (a, RebuildableAppContext impl)
+</span><a href="#local-6989586621688042188"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-263"></span><span>  </span><span class="annot"><span class="annottext">MVar () -&gt; (() -&gt; m a) -&gt; m a
+forall (m :: * -&gt; *) a b.
+MonadBaseControl IO m =&gt;
+MVar a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lifted-base-0.2.3.12-1236ccd06afb130acb896e54a1f2632aea78e5a896631c0879370de140144631/share/doc/html/src/Control.Concurrent.MVar.Lifted.html/Control.Concurrent.MVar.Lifted.html#withMVarMasked"><span class="hs-identifier hs-var">withMVarMasked</span></a></span><span> </span><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621688042186"><span class="hs-identifier hs-var">lock</span></a></span><span> </span><span class="annot"><span class="annottext">((() -&gt; m a) -&gt; m a) -&gt; (() -&gt; m a) -&gt; m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-264"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621688042189"><span class="annot"><a href="#local-6989586621688042189"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621688042190"><span class="annot"><a href="#local-6989586621688042190"><span class="hs-identifier hs-var">newCtx</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (a, RebuildableAppContext impl)
+</span><a href="#local-6989586621688042188"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-265"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">liftIO</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-266"></span><span>      </span><span class="hs-comment">-- update app ctx in IO reference</span><span>
+</span><span id="line-267"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">modifyIORef'</span></span><span> </span><span class="annot"><a href="#local-6989586621688042187"><span class="hs-identifier hs-type">cacheRef</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688042191"><span class="annot"><span class="annottext">AppState impl
+</span><a href="#local-6989586621688042191"><span class="hs-identifier hs-var">appState</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AppState impl
+</span><a href="#local-6989586621688042191"><span class="hs-identifier hs-var">appState</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#asAppCtx"><span class="hs-identifier hs-var">asAppCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621688042190"><span class="hs-identifier hs-type">newCtx</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-268"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">return</span></span><span> </span><span class="annot"><a href="#local-6989586621688042189"><span class="hs-identifier hs-type">res</span></a></span><span>
+</span><span id="line-269"></span><span>
+</span><span id="line-270"></span><span class="hs-comment">-- | Set the 'AppStateRef', atomically, to the ('RebuildableSchemaCache',</span><span>
+</span><span id="line-271"></span><span class="hs-comment">-- 'RebuildableAppContext') produced by the given action.</span><span>
+</span><span id="line-272"></span><span class="hs-comment">--</span><span>
+</span><span id="line-273"></span><span class="hs-comment">-- An internal lock ensures that at most one update to the 'AppStateRef' may</span><span>
+</span><span id="line-274"></span><span class="hs-comment">-- proceed at a time.</span><span>
+</span><span id="line-275"></span><span id="local-6989586621688041982"><span id="local-6989586621688041983"><span class="annot"><a href="Hasura.Server.AppStateRef.html#updateAppStateRef"><span class="hs-identifier hs-type">updateAppStateRef</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-276"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041982"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688041982"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-277"></span><span>  </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041983"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-278"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-279"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041983"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688041982"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688041983"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-280"></span><span>  </span><span class="annot"><a href="#local-6989586621688041982"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-281"></span><span id="updateAppStateRef"><span class="annot"><span class="annottext">updateAppStateRef :: forall (m :: * -&gt; *) impl.
+(MonadIO m, MonadBaseControl IO m) =&gt;
+AppStateRef impl
+-&gt; Logger Hasura
+-&gt; (RebuildableAppContext impl
+    -&gt; m (RebuildableAppContext impl, RebuildableSchemaCache))
+-&gt; m ()
+</span><a href="Hasura.Server.AppStateRef.html#updateAppStateRef"><span class="hs-identifier hs-var hs-var">updateAppStateRef</span></a></span></span><span> </span><span id="local-6989586621688042205"><span class="annot"><span class="annottext">appStateRef :: AppStateRef impl
+</span><a href="#local-6989586621688042205"><span class="hs-identifier hs-var">appStateRef</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span id="local-6989586621688042206"><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621688042206"><span class="hs-identifier hs-var">lock</span></a></span></span><span> </span><span id="local-6989586621688042207"><span class="annot"><span class="annottext">IORef (AppState impl)
+</span><a href="#local-6989586621688042207"><span class="hs-identifier hs-var">cacheRef</span></a></span></span><span> </span><span id="local-6989586621688042208"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621688042208"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688042209"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688042209"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688042210"><span class="annot"><span class="annottext">RebuildableAppContext impl
+-&gt; m (RebuildableAppContext impl, RebuildableSchemaCache)
+</span><a href="#local-6989586621688042210"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-282"></span><span>  </span><span class="annot"><span class="annottext">MVar () -&gt; (() -&gt; m ()) -&gt; m ()
+forall (m :: * -&gt; *) a b.
+MonadBaseControl IO m =&gt;
+MVar a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lifted-base-0.2.3.12-1236ccd06afb130acb896e54a1f2632aea78e5a896631c0879370de140144631/share/doc/html/src/Control.Concurrent.MVar.Lifted.html/Control.Concurrent.MVar.Lifted.html#withMVarMasked"><span class="hs-identifier hs-var">withMVarMasked</span></a></span><span> </span><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621688042206"><span class="hs-identifier hs-var">lock</span></a></span><span> </span><span class="annot"><span class="annottext">((() -&gt; m ()) -&gt; m ()) -&gt; (() -&gt; m ()) -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">m () -&gt; () -&gt; m ()
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-283"></span><span>    </span><span id="local-6989586621688042211"><span class="annot"><a href="#local-6989586621688042211"><span class="hs-identifier hs-var">rebuildableAppContext</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (RebuildableAppContext impl) -&gt; m (RebuildableAppContext impl)
+forall a. IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (RebuildableAppContext impl) -&gt; m (RebuildableAppContext impl))
+-&gt; IO (RebuildableAppContext impl)
+-&gt; m (RebuildableAppContext impl)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl -&gt; IO (RebuildableAppContext impl)
+forall impl. AppStateRef impl -&gt; IO (RebuildableAppContext impl)
+</span><a href="Hasura.Server.AppStateRef.html#readAppContextRef"><span class="hs-identifier hs-var">readAppContextRef</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688042205"><span class="hs-identifier hs-var">appStateRef</span></a></span><span>
+</span><span id="line-284"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621688042212"><span class="annot"><a href="#local-6989586621688042212"><span class="hs-identifier hs-var">newAppCtx</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621688042213"><span class="annot"><a href="#local-6989586621688042213"><span class="hs-identifier hs-var">newSC</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="#local-6989586621688042210"><span class="hs-identifier hs-type">action</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042211"><span class="hs-identifier hs-type">rebuildableAppContext</span></a></span><span>
+</span><span id="line-285"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">liftIO</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-286"></span><span>      </span><span class="hs-comment">-- update schemacache in IO reference</span><span>
+</span><span id="line-287"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">modifyIORef'</span></span><span> </span><span class="annot"><a href="#local-6989586621688042207"><span class="hs-identifier hs-type">cacheRef</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688042214"><span class="annot"><span class="annottext">AppState impl
+</span><a href="#local-6989586621688042214"><span class="hs-identifier hs-var">appState</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-288"></span><span>        </span><span class="annot"><span class="annottext">AppState impl
+</span><a href="#local-6989586621688042214"><span class="hs-identifier hs-var">appState</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="Hasura.Server.AppStateRef.html#asSchemaCache"><span class="hs-identifier hs-var">asSchemaCache</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621688042213"><span class="hs-identifier hs-type">newSC</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#asAppCtx"><span class="hs-identifier hs-var">asAppCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621688042212"><span class="hs-identifier hs-type">newAppCtx</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-289"></span><span>
+</span><span id="line-290"></span><span>      </span><span class="hs-comment">-- update metric with new metadata version</span><span>
+</span><span id="line-291"></span><span>      </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-type">updateMetadataVersionGauge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042208"><span class="hs-identifier hs-type">metadataVersionGauge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688042213"><span class="hs-identifier hs-type">newSC</span></a></span><span>
+</span><span id="line-292"></span><span>
+</span><span id="line-293"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688042215"><span class="annot"><a href="#local-6989586621688042215"><span class="hs-identifier hs-var hs-var">inconsistentObjectsList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; [InconsistentMetadata]
+</span><a href="Hasura.RQL.Types.SchemaCache.html#scInconsistentObjs"><span class="hs-identifier hs-var">scInconsistentObjs</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; [InconsistentMetadata])
+-&gt; SchemaCache -&gt; [InconsistentMetadata]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var">lastBuiltSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688042213"><span class="hs-identifier hs-var">newSC</span></a></span><span>
+</span><span id="line-294"></span><span>          </span><span id="local-6989586621688042216"><span class="annot"><a href="#local-6989586621688042216"><span class="hs-identifier hs-var hs-var">logInconsistentMetadata'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; [InconsistentMetadata] -&gt; IO ()
+</span><a href="Hasura.Server.AppStateRef.html#logInconsistentMetadata"><span class="hs-identifier hs-var">logInconsistentMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688042209"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
+</span><a href="#local-6989586621688042215"><span class="hs-identifier hs-var">inconsistentObjectsList</span></a></span><span>
+</span><span id="line-295"></span><span>      </span><span class="hs-comment">-- log any inconsistent objects everytime this method is called</span><span>
+</span><span id="line-296"></span><span>      </span><span class="annot"><a href="#local-6989586621688042216"><span class="hs-identifier hs-type">logInconsistentMetadata'</span></a></span><span>
+</span><span id="line-297"></span></pre></body></html>
