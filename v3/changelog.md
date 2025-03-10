@@ -4,6 +4,14 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [v2025.03.10]
+
+### Added
+
 #### Native Data Connector (NDC) Specification v0.2.0 Support
 
 Engine now supports the
@@ -1451,7 +1459,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.26...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.10...HEAD
+[v2025.03.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.10
 [v2025.02.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.26
 [v2025.02.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.20
 [v2025.02.19]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.19
