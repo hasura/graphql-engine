@@ -1,12 +1,12 @@
 use crate::helpers::ndc_validation::NDCValidationError;
-use crate::helpers::{argument::ArgumentMappingError, type_mappings::TypeMappingCollectionError};
+use crate::helpers::{argument::ArgumentMappingError, type_mappings};
 use crate::stages::{
     aggregates, apollo, data_connectors, graphql_config, object_types, order_by_expressions, relay,
 };
 use crate::types::error::ContextualError;
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use crate::OrderByExpressionIdentifier;
-
+use jsonpath::JSONPath;
 use open_dds::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
@@ -46,7 +46,7 @@ pub enum ModelsError {
     )]
     DuplicateModelArgumentDefinition {
         model_name: Qualified<ModelName>,
-        argument_name: ArgumentName,
+        argument_name: Spanned<ArgumentName>,
     },
 
     #[error("the collection {collection:} in the data connector {data_connector:} for model {model_name:} has not been defined")]
@@ -65,7 +65,8 @@ pub enum ModelsError {
     #[error("{error:} in model {model_name:}")]
     ModelTypeMappingCollectionError {
         model_name: Qualified<ModelName>,
-        error: TypeMappingCollectionError,
+        model_path: JSONPath,
+        error: type_mappings::TypeMappingCollectionError,
     },
     #[error("type mapping required for type {type_name:} in model source {model_name:} backed by data connector {data_connector:}")]
     TypeMappingRequired {
@@ -140,7 +141,7 @@ pub enum ModelsError {
 impl ContextualError for ModelsError {
     fn create_error_context(&self) -> Option<error_context::Context> {
         match self {
-            ModelsError::UnknownModelDataConnector {
+            Self::UnknownModelDataConnector {
                 data_connector,
                 data_connector_path,
                 ..
@@ -150,7 +151,7 @@ impl ContextualError for ModelsError {
                 subgraph: Some(data_connector.subgraph.clone()),
             }])),
 
-            ModelsError::UnknownModelCollection {
+            Self::UnknownModelCollection {
                 collection,
                 data_connector,
                 ..
@@ -162,7 +163,7 @@ impl ContextualError for ModelsError {
                 path: collection.path.clone(),
                 subgraph: Some(data_connector.subgraph.clone()),
             }])),
-            ModelsError::UnknownModelDataType {
+            Self::UnknownModelDataType {
                 model_name,
                 data_type:
                     Spanned {
@@ -177,7 +178,17 @@ impl ContextualError for ModelsError {
                 path: path.clone(),
                 subgraph: Some(model_name.subgraph.clone()),
             }])),
-
+            Self::DuplicateModelArgumentDefinition {
+                model_name,
+                argument_name,
+            } => Some(error_context::Context(vec![error_context::Step {
+                subgraph: Some(model_name.subgraph.clone()),
+                path: argument_name.path.clone(),
+                message: format!(
+                    "Model '{}' has a duplicate argument definition for '{}'",
+                    model_name.name, argument_name.value
+                ),
+            }])),
             _other => None,
         }
     }

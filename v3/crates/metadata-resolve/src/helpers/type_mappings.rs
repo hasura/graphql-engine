@@ -4,10 +4,8 @@ use crate::data_connectors::CommandsResponseConfig;
 use crate::helpers::ndc_validation::{get_underlying_named_type, NDCValidationError};
 use crate::helpers::types::{object_type_exists, unwrap_custom_type_name};
 use crate::types::subgraph::Qualified;
-
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::types::{CustomTypeName, FieldName};
-
 use std::collections::BTreeMap;
 
 #[derive(Debug)]

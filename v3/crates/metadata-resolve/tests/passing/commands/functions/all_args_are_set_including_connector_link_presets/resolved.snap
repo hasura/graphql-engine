@@ -88,6 +88,34 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_ar
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -104,6 +132,34 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_ar
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        1,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: None,

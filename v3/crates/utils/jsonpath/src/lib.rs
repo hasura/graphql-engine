@@ -76,6 +76,12 @@ impl JSONPath {
         JSONPath(new_path)
     }
 
+    pub fn parent(self) -> Self {
+        let mut new_path = self.0;
+        new_path.pop();
+        JSONPath(new_path)
+    }
+
     pub fn from_serde_path(path: &serde_path_to_error::Path) -> Self {
         JSONPath(
             path.iter()

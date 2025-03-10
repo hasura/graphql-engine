@@ -2,6 +2,7 @@ use crate::traits::{OpenDd, OpenDdDeserializeError};
 use core::ops::Deref;
 use serde::{Serialize, Serializer};
 use std::fmt::Display;
+use std::hash::{Hash, Hasher};
 
 /// Wrapper that combines an item with its parsed JSONPath
 /// for use in error reporting
@@ -21,6 +22,12 @@ impl<T> Deref for Spanned<T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
         &self.value
+    }
+}
+
+impl<T: Hash> Hash for Spanned<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
     }
 }
 

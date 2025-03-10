@@ -248,6 +248,7 @@ definition:
 #### Other
 
 - Pretty print errors where they have had contexts and paths provided
+- Add error contexts and paths to some argument errors for Models and Commands.
 
 ### Fixed
 

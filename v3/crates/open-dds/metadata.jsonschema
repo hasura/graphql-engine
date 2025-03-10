@@ -374,7 +374,11 @@
       ],
       "properties": {
         "name": {
-          "$ref": "#/definitions/ArgumentName"
+          "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
+          "title": "ArgumentName",
+          "description": "The name of an argument.",
+          "type": "string",
+          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
         },
         "type": {
           "$ref": "#/definitions/TypeReference"

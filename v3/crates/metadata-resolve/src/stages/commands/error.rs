@@ -3,13 +3,59 @@ use crate::helpers::{
     type_mappings::TypeMappingCollectionError,
 };
 use crate::stages::{data_connectors, graphql_config};
+use crate::types::error::ContextualError;
 use crate::types::subgraph::Qualified;
+use error_context::{Context, Step};
 use open_dds::{
     arguments::ArgumentName,
     commands::{CommandName, FunctionName, ProcedureName},
     data_connector::DataConnectorName,
+    spanned::Spanned,
     types::{CustomTypeName, TypeReference},
 };
+impl ContextualError for CommandsError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        match self {
+            Self::DuplicateCommandArgumentDefinition {
+                command_name,
+                argument_name,
+            } => Some(Context(vec![Step {
+                subgraph: Some(command_name.subgraph.clone()),
+                path: argument_name.path.clone(),
+                message: format!(
+                    "Command '{}' has a duplicate argument definition for '{}'",
+                    command_name.name, argument_name.value
+                ),
+            }])),
+
+            Self::UnknownCommandArgumentType {
+                command_name,
+                argument_name,
+                argument_type,
+            } => Some(Context(vec![
+                Step {
+                    message: format!(
+                        "Command '{}' has an argument '{}'",
+                        command_name.name, argument_name.value
+                    ),
+                    path: argument_name.path.clone(),
+                    subgraph: Some(command_name.subgraph.clone()),
+                },
+                Step {
+                    subgraph: Some(command_name.subgraph.clone()),
+                    path: argument_name
+                        .path
+                        .clone()
+                        .parent()
+                        .append_key("type".into()),
+                    message: format!("The argument type '{argument_type}' has not been defined",),
+                },
+            ])),
+
+            _other => None,
+        }
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandsError {
@@ -18,7 +64,7 @@ pub enum CommandsError {
     #[error("the following argument {argument_name:} with argument type {argument_type:} in command {command_name:} ) has not been defined")]
     UnknownCommandArgumentType {
         command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
+        argument_name: Spanned<ArgumentName>,
         argument_type: TypeReference,
     },
     #[error(
@@ -26,7 +72,7 @@ pub enum CommandsError {
     )]
     DuplicateCommandArgumentDefinition {
         command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
+        argument_name: Spanned<ArgumentName>,
     },
     #[error("source for the following command is defined more than once: {command_name:}")]
     DuplicateCommandSourceDefinition {
@@ -44,23 +90,9 @@ pub enum CommandsError {
         command_name: Qualified<CommandName>,
         type_name: CustomTypeName,
     },
-    #[error(
-        "unknown argument {argument_name:} referenced in argument mappings for command {command_name:}"
-    )]
-    UnknownCommandSourceArgument {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
     #[error("command source is required for command '{command_name:}' to resolve predicate")]
     CommandSourceRequiredForPredicate {
         command_name: Qualified<CommandName>,
-    },
-    #[error(
-        "the mapping for argument {argument_name:} of command {command_name:} has been defined more than once"
-    )]
-    DuplicateCommandArgumentMapping {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
     },
     #[error("a preset argument {argument_name:} has been set for the command {command_name:} but no such argument exists for this command")]
     CommandArgumentPresetMismatch {

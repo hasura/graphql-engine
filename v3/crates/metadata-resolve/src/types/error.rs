@@ -353,6 +353,7 @@ impl ContextualError for Error {
     fn create_error_context(&self) -> Option<error_context::Context> {
         match self {
             Error::ModelsError(error) => error.create_error_context(),
+            Error::CommandsError(error) => error.create_error_context(),
             _other => None,
         }
     }

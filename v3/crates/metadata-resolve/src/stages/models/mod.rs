@@ -267,11 +267,12 @@ fn resolve_model(
 
         if arguments
             .insert(
-                argument.name.clone(),
+                argument.name.value.clone(),
                 ArgumentInfo {
                     argument_type: mk_qualified_type_reference(&argument.argument_type, subgraph),
                     argument_kind,
                     description: argument.description.clone(),
+                    path: argument.name.path.clone(),
                 },
             )
             .is_some()

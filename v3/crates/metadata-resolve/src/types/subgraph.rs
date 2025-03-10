@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::{collections::BTreeMap, fmt::Write};
 
+use jsonpath::JSONPath;
 use open_dds::identifier::SubgraphName;
 use open_dds::types::{BaseType, CustomTypeName, InbuiltType, TypeName, TypeReference};
 use schemars::JsonSchema;
@@ -113,6 +114,7 @@ pub struct ArgumentInfo {
     pub argument_type: QualifiedTypeReference,
     pub description: Option<String>,
     pub argument_kind: ArgumentKind,
+    pub path: JSONPath,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, JsonSchema)]

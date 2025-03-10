@@ -137,6 +137,7 @@ pub(crate) fn resolve_model_source(
         )
         .map_err(|error| ModelsError::ModelTypeMappingCollectionError {
             model_name: model.name.clone(),
+            model_path: model.path.clone(),
             error,
         })?;
     }
