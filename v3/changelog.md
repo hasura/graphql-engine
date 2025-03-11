@@ -19,6 +19,8 @@
 - Empty filter expressions are consistent between old and OpenDD execution
   pipelines
 
+- Fixed error responses from JSON:API by making it spec-compliant.
+
 ## [v2025.03.10]
 
 ### Added

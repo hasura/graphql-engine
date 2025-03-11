@@ -30,7 +30,7 @@ pub fn create_json_api_router(state: EngineState) -> axum::Router {
             jsonapi::rest_request_tracing_middleware,
         ))
         // *PLEASE DO NOT ADD ANY MIDDLEWARE
-        // BEFORE THE `explain_request_tracing_middleware`*
+        // BEFORE THE `rest_request_tracing_middleware`*
         // Refer to it for more details.
         .layer(TraceLayer::new_for_http())
         .with_state(state);
@@ -115,51 +115,6 @@ async fn handle_rest_request(
     set_status_on_current_span(&response);
     match response {
         Ok(r) => (axum::http::StatusCode::OK, Json(r)).into_response(),
-        Err(e) => (match e {
-            jsonapi::RequestError::BadRequest(err) => (
-                axum::http::StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({"error": err})),
-            ),
-            jsonapi::RequestError::ParseError(err) => (
-                axum::http::StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({"error": err})),
-            ),
-            jsonapi::RequestError::NotFound => (
-                axum::http::StatusCode::NOT_FOUND,
-                Json(serde_json::json!({"error": "invalid route or path"})),
-            ),
-            jsonapi::RequestError::InternalError(jsonapi::InternalError::EmptyQuerySet)
-            | jsonapi::RequestError::PlanError(
-                plan::PlanError::Internal(_)
-                | plan::PlanError::InternalError(_)
-                | plan::PlanError::ArgumentPresetExecutionError(_),
-            ) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error" })),
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::External(_err)) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error" })),
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::Permission(_msg)) => (
-                axum::http::StatusCode::FORBIDDEN,
-                Json(serde_json::json!({"error": "Access forbidden" })), // need to decide how much
-                                                                         // we tell the user, for
-                                                                         // now default to nothing
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::Relationship(_error)) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error" })),
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::OrderBy(_error)) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error" })),
-            ),
-            jsonapi::RequestError::ExecuteError(field_error) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": field_error.to_string() })),
-            ),
-        })
-        .into_response(),
+        Err(e) => e.into_http_error().into_response(),
     }
 }

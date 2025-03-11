@@ -1097,7 +1097,6 @@ dependencies = [
  "nonempty",
  "oas3",
  "open-dds",
- "plan",
  "pre-parse-plugin",
  "pre-response-plugin",
  "pre-route-plugin",

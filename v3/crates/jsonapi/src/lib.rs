@@ -13,4 +13,4 @@ pub use handler::handler_internal;
 pub use middleware::rest_request_tracing_middleware;
 pub use parse::ParseError;
 pub use schema::{empty_schema, openapi_schema};
-pub use types::{InternalError, ModelInfo, RequestError};
+pub use types::{InternalError, JsonApiHttpError, ModelInfo, RequestError};

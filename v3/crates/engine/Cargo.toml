@@ -35,7 +35,6 @@ jsonpath = { path = "../utils/jsonpath" }
 lang-graphql = { path = "../graphql/lang-graphql" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
-plan = { path = "../plan" }
 pre-parse-plugin = { path = "../plugins/pre-parse-plugin" }
 pre-response-plugin = { path = "../plugins/pre-response-plugin" }
 pre-route-plugin = { path = "../plugins/pre-route-plugin" }
