@@ -52,6 +52,18 @@ impl<T> WithContext<T> {
             },
         }
     }
+
+    pub fn into_inner(&self) -> &T {
+        match self {
+            WithContext::Contextualised { error, .. } | WithContext::Raw(error) => error,
+        }
+    }
+
+    pub fn into_inner_owned(self) -> T {
+        match self {
+            WithContext::Contextualised { error, .. } | WithContext::Raw(error) => error,
+        }
+    }
 }
 
 impl<T: Display> Display for WithContext<T> {
@@ -333,11 +345,11 @@ pub enum Error {
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
     ),
-    #[error(
-        "The following issues were raised but disallowed by compatibility configuration:\n\n{warnings_as_errors}"
-    )]
-    CompatibilityError {
-        warnings_as_errors: SeparatedBy<crate::Warning>,
+    #[error("{warning_as_error}")]
+    CompatibilityError { warning_as_error: crate::Warning },
+    #[error("{errors}")]
+    MultipleErrors {
+        errors: SeparatedBy<WithContext<Error>>,
     },
 }
 
@@ -347,6 +359,18 @@ pub trait ShouldBeAnError {
 
 pub trait ContextualError {
     fn create_error_context(&self) -> Option<error_context::Context>;
+    fn add_context_if_exists(self) -> WithContext<Self>
+    where
+        Self: Sized,
+    {
+        match self.create_error_context() {
+            Some(context) => WithContext::Contextualised {
+                error: self,
+                context,
+            },
+            None => WithContext::Raw(self),
+        }
+    }
 }
 
 impl ContextualError for Error {

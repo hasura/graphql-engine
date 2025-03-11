@@ -40,10 +40,8 @@ pub fn resolve(
     metadata: open_dds::Metadata,
     configuration: &Configuration,
 ) -> Result<(Metadata, Vec<Warning>), WithContext<Error>> {
-    resolve_internal(metadata, configuration).map_err(|error| match error.create_error_context() {
-        Some(context) => WithContext::Contextualised { error, context },
-        None => WithContext::Raw(error),
-    })
+    resolve_internal(metadata, configuration)
+        .map_err(super::types::error::ContextualError::add_context_if_exists)
 }
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
@@ -360,9 +358,18 @@ fn warnings_as_errors_by_compatibility(
     if warnings_that_are_errors.is_empty() {
         Ok(remaining_warnings)
     } else {
-        Err(Error::CompatibilityError {
-            warnings_as_errors: SeparatedBy {
-                lines_of: warnings_that_are_errors,
+        let mut errors = vec![];
+        for warning in warnings_that_are_errors {
+            errors.push(
+                (Error::CompatibilityError {
+                    warning_as_error: warning,
+                })
+                .add_context_if_exists(),
+            );
+        }
+        Err(Error::MultipleErrors {
+            errors: SeparatedBy {
+                lines_of: errors,
                 separator: "\n".to_string(),
             },
         })
