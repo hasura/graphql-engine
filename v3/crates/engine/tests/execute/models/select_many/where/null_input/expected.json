@@ -20,6 +20,16 @@
           "author_id": 2,
           "first_name": "John"
         }
+      ],
+      "AuthorManyWhereEmpty": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        },
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
       ]
     }
   },
@@ -32,6 +42,12 @@
         }
       ],
       "AuthorManyWhere": [
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyWhereEmpty": [
         {
           "author_id": 2,
           "first_name": "John"

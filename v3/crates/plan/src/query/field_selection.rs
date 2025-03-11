@@ -492,9 +492,9 @@ fn from_model_relationship(
 
             // combine existing filter with new ones
             if !relationship_join_filter_expressions.is_empty() {
-                query_execution.query_node.predicate = Some(ResolvedFilterExpression::mk_and(
-                    relationship_join_filter_expressions.into(),
-                ));
+                query_execution.query_node.predicate =
+                    ResolvedFilterExpression::mk_and(relationship_join_filter_expressions.into())
+                        .remove_always_true_expression();
             }
 
             // add the new arguments
@@ -978,10 +978,10 @@ fn from_relationship_aggregate_selection(
 
                     // combine existing filter with new ones
                     if !relationship_join_filter_expressions.is_empty() {
-                        query_execution.query_node.predicate =
-                            Some(ResolvedFilterExpression::mk_and(
-                                relationship_join_filter_expressions.into(),
-                            ));
+                        query_execution.query_node.predicate = ResolvedFilterExpression::mk_and(
+                            relationship_join_filter_expressions.into(),
+                        )
+                        .remove_always_true_expression();
                     }
 
                     // add the new arguments

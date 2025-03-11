@@ -99,7 +99,8 @@ pub fn model_target_to_ndc_query(
             permission_filter,
             filter,
         ])),
-    };
+    }
+    .and_then(ResolvedFilterExpression::remove_always_true_expression);
 
     let order_by_elements = model_target
         .order_by

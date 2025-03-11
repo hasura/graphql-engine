@@ -7,4 +7,8 @@ query ($where_input: AuthorFilter) {
     author_id
     first_name
   }
+  AuthorManyWhereEmpty: AuthorMany(where: {}) {
+    author_id
+    first_name
+  }
 }
