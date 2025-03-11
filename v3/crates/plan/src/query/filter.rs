@@ -13,7 +13,7 @@ use open_dds::{
 use plan_types::{
     Expression, Field, FieldsSelection, JoinLocations, LocalModelRelationshipInfo, NdcFieldAlias,
     NdcRelationshipName, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan,
-    QueryExecutionTree, QueryNodeNew, Relationship, RelationshipColumnMapping,
+    QueryExecutionTree, QueryNode, Relationship, RelationshipColumnMapping,
     ResolvedFilterExpression, SourceNdcColumn, UniqueNumber,
 };
 use std::collections::BTreeMap;
@@ -162,7 +162,7 @@ pub fn plan_remote_predicate<'a>(
     unique_number: &mut UniqueNumber,
 ) -> Result<
     (
-        QueryNodeNew,
+        QueryNode,
         PredicateQueryTrees,
         BTreeMap<NdcRelationshipName, Relationship>,
     ),
@@ -177,7 +177,7 @@ pub fn plan_remote_predicate<'a>(
         unique_number,
     )?;
 
-    let query_node = QueryNodeNew {
+    let query_node = QueryNode {
         limit: None,
         offset: None,
         order_by: None,

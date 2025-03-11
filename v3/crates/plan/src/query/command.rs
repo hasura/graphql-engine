@@ -17,7 +17,7 @@ use open_dds::{
 use plan_types::{
     Argument, Field, JoinLocations, MutationArgument, MutationExecutionPlan, MutationExecutionTree,
     NdcFieldAlias, NdcRelationshipName, NestedArray, NestedField, NestedObject,
-    PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNodeNew, Relationship,
+    PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode, Relationship,
 };
 use plan_types::{UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME};
 use std::collections::BTreeMap;
@@ -218,7 +218,7 @@ pub(crate) fn from_command_selection(
                 remote_predicates,
                 remote_join_executions,
                 query_execution_plan: QueryExecutionPlan {
-                    query_node: QueryNodeNew {
+                    query_node: QueryNode {
                         fields: Some(plan_types::FieldsSelection {
                             fields: wrap_scalar_select(wrap_selection_in_response_config(
                                 command_source,

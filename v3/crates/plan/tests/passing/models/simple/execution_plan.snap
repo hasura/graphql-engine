@@ -14,7 +14,7 @@ Queries(
                 {},
             ),
             query_execution_plan: QueryExecutionPlan {
-                query_node: QueryNodeNew {
+                query_node: QueryNode {
                     limit: Some(
                         5,
                     ),

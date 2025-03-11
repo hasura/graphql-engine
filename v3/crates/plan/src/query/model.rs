@@ -21,7 +21,7 @@ use open_dds::query::{
 };
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, Grouping, JoinLocations,
-    NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNodeNew,
+    NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode,
     UniqueNumber,
 };
 
@@ -246,7 +246,7 @@ pub fn from_model_group_by(
         .map_err(|_| PlanError::Internal("offset out of range".into()))?;
 
     let query_execution_plan = QueryExecutionPlan {
-        query_node: QueryNodeNew {
+        query_node: QueryNode {
             fields: None,
             aggregates: None,
             limit: query.limit,
@@ -362,7 +362,7 @@ pub fn from_model_aggregate_selection(
     };
 
     let query_execution_plan = QueryExecutionPlan {
-        query_node: QueryNodeNew {
+        query_node: QueryNode {
             fields: None,
             aggregates: query_aggregate_fields,
             limit: query.limit,
@@ -681,7 +681,7 @@ pub fn from_model_selection(
     };
 
     let query_execution_plan = QueryExecutionPlan {
-        query_node: QueryNodeNew {
+        query_node: QueryNode {
             fields: query_fields,
             aggregates: None,
             limit: query.limit,

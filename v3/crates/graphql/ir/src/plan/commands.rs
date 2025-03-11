@@ -14,7 +14,7 @@ use open_dds::commands::ProcedureName;
 use plan_types::{
     Argument, Field, FieldsSelection, JoinLocations, MutationExecutionPlan, MutationExecutionTree,
     NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan,
-    QueryExecutionTree, QueryNodeNew, Relationship, UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME,
+    QueryExecutionTree, QueryNode, Relationship, UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME,
 };
 
 pub(crate) fn plan_query_node(
@@ -24,7 +24,7 @@ pub(crate) fn plan_query_node(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<Plan<QueryNodeNew>, error::Error> {
+) -> Result<Plan<QueryNode>, error::Error> {
     let mut ndc_nested_field = None;
     let mut join_locations = JoinLocations::new();
     let mut remote_predicates = PredicateQueryTrees::new();
@@ -54,7 +54,7 @@ pub(crate) fn plan_query_node(
                 join_locations = nested_join_locations;
                 remote_predicates = nested_remote_predicates;
             }
-            let query = QueryNodeNew {
+            let query = QueryNode {
                 aggregates: None,
                 fields: Some(FieldsSelection {
                     fields: IndexMap::from([(

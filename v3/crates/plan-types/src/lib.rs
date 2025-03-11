@@ -14,7 +14,7 @@ pub use execution_plan::{
     Grouping, JoinLocations, JoinNode, Location, LocationKind, MutationArgument,
     MutationExecutionPlan, MutationExecutionTree, NDCMutationExecution, NDCQueryExecution,
     NDCSubscriptionExecution, NestedArray, NestedField, NestedObject, PredicateQueryTree,
-    PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree, QueryNodeNew,
+    PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree, QueryNode,
     Relationship, RelationshipArgument, RemoteJoin, RemoteJoinArgument, RemoteJoinType,
     RemotePredicateKey, ResolvedFilterExpression, SourceFieldAlias, TargetField, UniqueNumber,
 };

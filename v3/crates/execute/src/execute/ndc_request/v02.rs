@@ -10,7 +10,7 @@ use crate::error::{FieldError, FieldInternalError};
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, Argument, Field, MutationArgument,
     MutationExecutionPlan, NestedArray, NestedField, NestedObject, OrderByDirection,
-    OrderByElement, OrderByTarget, QueryExecutionPlan, QueryNodeNew, Relationship,
+    OrderByElement, OrderByTarget, QueryExecutionPlan, QueryNode, Relationship,
     RelationshipArgument, ResolvedFilterExpression, VariableName,
 };
 
@@ -71,7 +71,7 @@ fn make_variables(
     })
 }
 
-fn make_query(query_node: QueryNodeNew) -> Result<ndc_models_v02::Query, FieldError> {
+fn make_query(query_node: QueryNode) -> Result<ndc_models_v02::Query, FieldError> {
     let ndc_predicate = query_node.predicate.map(make_expression).transpose()?;
 
     let ndc_fields = query_node

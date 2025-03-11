@@ -17,7 +17,7 @@ use std::sync::Arc;
 // this represents an execution plan. all predicates only refer to local comparisons.
 // remote predicates are represented as additional execution nodes
 pub struct QueryExecutionPlan {
-    pub query_node: QueryNodeNew,
+    pub query_node: QueryNode,
     /// The name of a collection
     pub collection: CollectionName,
     /// Values to be provided to any collection arguments
@@ -92,7 +92,7 @@ impl Default for UniqueNumber {
 
 /// Query plan for fetching data
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct QueryNodeNew {
+pub struct QueryNode {
     /// Optionally limit to N results
     pub limit: Option<u32>,
     /// Optionally offset from the Nth result

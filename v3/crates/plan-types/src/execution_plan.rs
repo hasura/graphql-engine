@@ -16,7 +16,7 @@ pub use filter::ResolvedFilterExpression;
 pub use mutation::MutationExecutionPlan;
 pub use query::{
     AggregateFieldsSelection, FieldsSelection, PredicateQueryTree, PredicateQueryTrees,
-    QueryExecutionPlan, QueryNodeNew, RemotePredicateKey, UniqueNumber,
+    QueryExecutionPlan, QueryNode, RemotePredicateKey, UniqueNumber,
 };
 pub use relationships::{Relationship, RelationshipArgument};
 pub use remote_joins::{

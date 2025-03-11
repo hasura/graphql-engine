@@ -13,7 +13,7 @@ use metadata_resolve::Metadata;
 use plan_types::Argument;
 use plan_types::{
     FieldsSelection, JoinLocations, NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan,
-    QueryExecutionTree, QueryNodeNew, Relationship, UniqueNumber,
+    QueryExecutionTree, QueryNode, Relationship, UniqueNumber,
 };
 use std::collections::BTreeMap;
 
@@ -26,7 +26,7 @@ pub(crate) fn plan_query_node(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
-) -> Result<Plan<QueryNodeNew>, error::Error> {
+) -> Result<Plan<QueryNode>, error::Error> {
     let mut query_fields = None;
     let mut join_locations = JoinLocations::new();
     let mut remote_predicates = PredicateQueryTrees::new();
@@ -67,7 +67,7 @@ pub(crate) fn plan_query_node(
 
     remote_predicates.0.extend(order_by_remote_predicates.0);
 
-    let query_node = QueryNodeNew {
+    let query_node = QueryNode {
         limit: ir.limit,
         offset: ir.offset,
         order_by,
