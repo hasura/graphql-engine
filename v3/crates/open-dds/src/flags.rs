@@ -50,6 +50,7 @@ pub enum Flag {
     ValidateArgumentMappingTypes,
     DisallowInvalidHeadersInAuthConfig,
     RequireJwtAudienceValidationIfAudClaimPresent,
+    DisallowProcedureCommandRelationships,
 }
 
 impl Flag {
@@ -134,6 +135,9 @@ impl Flag {
             Flag::DisallowInvalidHeadersInAuthConfig => "disallow_invalid_headers_in_auth_config",
             Flag::RequireJwtAudienceValidationIfAudClaimPresent => {
                 "require_jwt_audience_validation_if_aud_claim_present"
+            }
+            Flag::DisallowProcedureCommandRelationships => {
+                "disallow_procedure_command_relationships"
             }
         }
     }

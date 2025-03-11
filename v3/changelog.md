@@ -262,6 +262,7 @@ definition:
 - Validate `AuthConfig` headers to ensure they are valid HTTP headers.
 - GraphQL API: Fixed a bug where `null` inputs for nullable query parameters
   like `limit`, `offset`, `order_by` and `where` would cause an error.
+- Disallow relationships targeting procedure based commands.
 
 ### Changed
 

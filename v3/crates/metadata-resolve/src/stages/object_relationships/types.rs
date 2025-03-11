@@ -154,6 +154,17 @@ pub enum ObjectRelationshipsIssue {
         relationship_name: RelationshipName,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error(
+        "Procedure based commands are not supported in relationships. \
+         Relationship '{relationship_name}' on type '{type_name}' targets \
+         command '{command_name}' which is backed by procedure '{procedure_name}'"
+    )]
+    ProcedureCommandRelationshipsNotSupported {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        command_name: Qualified<CommandName>,
+        procedure_name: open_dds::commands::ProcedureName,
+    },
 }
 
 impl ShouldBeAnError for ObjectRelationshipsIssue {
@@ -161,6 +172,9 @@ impl ShouldBeAnError for ObjectRelationshipsIssue {
         match self {
             ObjectRelationshipsIssue::LocalRelationshipDataConnectorDoesNotSupportRelationshipsOrVariables { .. } => {
                 flags.contains(open_dds::flags::Flag::DisallowLocalRelationshipsOnDataConnectorsWithoutRelationshipsOrVariables)
+            }
+            ObjectRelationshipsIssue::ProcedureCommandRelationshipsNotSupported { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowProcedureCommandRelationships)
             }
         }
     }

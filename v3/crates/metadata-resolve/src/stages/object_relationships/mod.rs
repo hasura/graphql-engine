@@ -7,6 +7,7 @@ use indexmap::IndexMap;
 
 use lang_graphql::ast::common::{self as ast};
 use open_dds::aggregates::AggregateExpressionName;
+use open_dds::commands::DataConnectorCommand;
 use open_dds::query::ArgumentName;
 use open_dds::relationships::{
     ArgumentMappingTarget, FieldAccess, RelationshipName, RelationshipType, RelationshipV1,
@@ -802,6 +803,17 @@ fn resolve_command_relationship_field(
                 relationship_name: relationship.name.clone(),
                 command_name: qualified_target_command_name.clone(),
             })?;
+
+    // validate the command source
+    if let Some(command_source) = &resolved_target_command.source {
+        issues.extend(validate_command_source(
+            source_type_name,
+            &relationship.name,
+            &qualified_target_command_name,
+            command_source,
+        ));
+    }
+
     let source_data_connector = resolved_target_command
         .source
         .as_ref()
@@ -839,6 +851,30 @@ fn resolve_command_relationship_field(
         description: relationship.description.clone(),
         deprecated: relationship.deprecated.clone(),
     })
+}
+
+// validate the command source
+fn validate_command_source(
+    source_type_name: &Qualified<CustomTypeName>,
+    relationship_name: &RelationshipName,
+    command_name: &Qualified<CommandName>,
+    source: &commands::CommandSource,
+) -> Vec<ObjectRelationshipsIssue> {
+    let mut issues = Vec::new();
+    // Procedure based commands are operations that modify data and should not be used in relationships
+    // since relationships are meant to be defined between read-only data points.
+    // Using these commands in relationships would cause unintended side effects during data fetching.
+    if let DataConnectorCommand::Procedure(procedure) = &source.source {
+        issues.push(
+            ObjectRelationshipsIssue::ProcedureCommandRelationshipsNotSupported {
+                type_name: source_type_name.clone(),
+                relationship_name: relationship_name.clone(),
+                command_name: command_name.clone(),
+                procedure_name: procedure.clone(),
+            },
+        );
+    }
+    issues
 }
 
 fn resolve_relationship_field(

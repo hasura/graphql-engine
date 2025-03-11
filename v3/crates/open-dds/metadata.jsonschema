@@ -3762,6 +3762,10 @@
         "require_jwt_audience_validation_if_aud_claim_present": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_procedure_command_relationships": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
