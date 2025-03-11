@@ -4,6 +4,8 @@
 
 ### Added
 
+- Add error contexts and paths to some argument errors for Models and Commands.
+
 ### Changed
 
 ### Fixed
@@ -247,8 +249,9 @@ definition:
 
 #### Other
 
+- Relationships that target models are now able to provide mappings that target
+  model arguments.
 - Pretty print errors where they have had contexts and paths provided
-- Add error contexts and paths to some argument errors for Models and Commands.
 
 ### Fixed
 
@@ -268,8 +271,6 @@ definition:
 
 - Added validation for command output types to ensure they reference valid types
   in the schema.
-- Relationships that target models are now able to provide mappings that target
-  model arguments.
 
 ### Fixed
 
