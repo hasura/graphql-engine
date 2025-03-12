@@ -27,6 +27,25 @@
                     "comparison_operators": {},
                     "extraction_functions": {}
                   },
+                  "BigInt": {
+                    "representation": {
+                      "type": "biginteger"
+                    },
+                    "aggregate_functions": {
+                      "max": {
+                        "type": "max"
+                      },
+                      "min": {
+                        "type": "min"
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "extraction_functions": {}
+                  },
                   "Bool": {
                     "representation": {
                       "type": "boolean"
@@ -79,6 +98,25 @@
                   "Int": {
                     "representation": {
                       "type": "int32"
+                    },
+                    "aggregate_functions": {
+                      "max": {
+                        "type": "max"
+                      },
+                      "min": {
+                        "type": "min"
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "extraction_functions": {}
+                  },
+                  "Int64": {
+                    "representation": {
+                      "type": "int64"
                     },
                     "aggregate_functions": {
                       "max": {
@@ -173,6 +211,38 @@
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "favourite_big_integer": {
+                        "description": "The actor's favourite big integer",
+                        "type": {
+                          "type": "named",
+                          "name": "BigInt"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "favourite_int_64": {
+                        "description": "The actor's favourite int 64",
+                        "type": {
+                          "type": "named",
+                          "name": "Int64"
                         },
                         "arguments": {
                           "hash": {
@@ -1547,6 +1617,25 @@
                     "comparison_operators": {},
                     "extraction_functions": {}
                   },
+                  "BigInt": {
+                    "representation": {
+                      "type": "biginteger"
+                    },
+                    "aggregate_functions": {
+                      "max": {
+                        "type": "max"
+                      },
+                      "min": {
+                        "type": "min"
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "extraction_functions": {}
+                  },
                   "Bool": {
                     "representation": {
                       "type": "boolean"
@@ -1599,6 +1688,25 @@
                   "Int": {
                     "representation": {
                       "type": "int32"
+                    },
+                    "aggregate_functions": {
+                      "max": {
+                        "type": "max"
+                      },
+                      "min": {
+                        "type": "min"
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "extraction_functions": {}
+                  },
+                  "Int64": {
+                    "representation": {
+                      "type": "int64"
                     },
                     "aggregate_functions": {
                       "max": {
@@ -1693,6 +1801,38 @@
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "favourite_big_integer": {
+                        "description": "The actor's favourite big integer",
+                        "type": {
+                          "type": "named",
+                          "name": "BigInt"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "favourite_int_64": {
+                        "description": "The actor's favourite int 64",
+                        "type": {
+                          "type": "named",
+                          "name": "Int64"
                         },
                         "arguments": {
                           "hash": {

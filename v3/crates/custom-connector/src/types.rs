@@ -135,6 +135,36 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
             },
         ),
         (
+            "BigInt".into(),
+            ndc_models::ScalarType {
+                representation: ndc_models::TypeRepresentation::BigInteger,
+                aggregate_functions: BTreeMap::from_iter([
+                    ("max".into(), ndc_models::AggregateFunctionDefinition::Max),
+                    ("min".into(), ndc_models::AggregateFunctionDefinition::Min),
+                ]),
+                comparison_operators: BTreeMap::from_iter([(
+                    "_eq".into(),
+                    ndc_models::ComparisonOperatorDefinition::Equal,
+                )]),
+                extraction_functions: BTreeMap::new(),
+            },
+        ),
+        (
+            "Int64".into(),
+            ndc_models::ScalarType {
+                representation: ndc_models::TypeRepresentation::Int64,
+                aggregate_functions: BTreeMap::from_iter([
+                    ("max".into(), ndc_models::AggregateFunctionDefinition::Max),
+                    ("min".into(), ndc_models::AggregateFunctionDefinition::Min),
+                ]),
+                comparison_operators: BTreeMap::from_iter([(
+                    "_eq".into(),
+                    ndc_models::ComparisonOperatorDefinition::Equal,
+                )]),
+                extraction_functions: BTreeMap::new(),
+            },
+        ),
+        (
             "Bool".into(),
             ndc_models::ScalarType {
                 representation: ndc_models::TypeRepresentation::Boolean,
