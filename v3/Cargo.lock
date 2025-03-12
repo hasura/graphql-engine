@@ -2584,6 +2584,7 @@ dependencies = [
  "ndc-models 0.2.0",
  "nonempty",
  "open-dds",
+ "partition_eithers",
  "ref-cast",
  "reqwest",
  "schemars",
@@ -3122,6 +3123,12 @@ dependencies = [
  "smallvec",
  "windows-targets 0.52.6",
 ]
+
+[[package]]
+name = "partition_eithers"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29ccb15db252ac40ea2eff27097fcfaec5d093873ee3cac7e2f321f12bbd2787"
 
 [[package]]
 name = "paste"

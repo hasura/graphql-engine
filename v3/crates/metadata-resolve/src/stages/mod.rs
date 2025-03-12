@@ -69,7 +69,7 @@ fn resolve_internal(
     let data_connectors::DataConnectorsOutput {
         data_connectors,
         issues,
-    } = data_connectors::resolve(&metadata_accessor)?;
+    } = data_connectors::resolve(&metadata_accessor).map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -347,6 +347,23 @@ fn resolve_internal(
     ))
 }
 
+// if a step returns multiple errors, add context and combine them
+fn flatten_multiple_errors<E: Into<Error>>(errors: Vec<E>) -> Error {
+    if errors.len() == 1 {
+        errors.into_iter().next().unwrap().into()
+    } else {
+        Error::MultipleErrors {
+            errors: SeparatedBy {
+                lines_of: errors
+                    .into_iter()
+                    .map(derive_more::Into::into)
+                    .map(ContextualError::add_context_if_exists)
+                    .collect(),
+            },
+        }
+    }
+}
+
 fn warnings_as_errors_by_compatibility(
     flags: &flags::OpenDdFlags,
     all_issues: Vec<Warning>,
@@ -368,10 +385,7 @@ fn warnings_as_errors_by_compatibility(
             );
         }
         Err(Error::MultipleErrors {
-            errors: SeparatedBy {
-                lines_of: errors,
-                separator: "\n".to_string(),
-            },
+            errors: SeparatedBy { lines_of: errors },
         })
     }
 }

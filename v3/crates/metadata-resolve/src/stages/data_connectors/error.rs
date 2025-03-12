@@ -1,8 +1,14 @@
 use crate::helpers::ndc_validation::NDCValidationError;
-use crate::types::error::ShouldBeAnError;
+use crate::types::error::{ContextualError, ShouldBeAnError};
 use crate::types::subgraph::Qualified;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::flags;
+
+impl ContextualError for NamedDataConnectorError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 #[error("The data connector {data_connector_name} has an error: {error}")]

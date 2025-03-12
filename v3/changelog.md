@@ -6,6 +6,9 @@
 
 ### Changed
 
+- Data connectors resolve step now returns multiple errors rather than failing
+  on the first one.
+
 ### Fixed
 
 ## [v2025.03.11]

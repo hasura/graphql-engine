@@ -378,17 +378,17 @@ impl ContextualError for Error {
         match self {
             Error::ModelsError(error) => error.create_error_context(),
             Error::CommandsError(error) => error.create_error_context(),
+            Error::DataConnectorError(error) => error.create_error_context(),
             _other => None,
         }
     }
 }
 
-// A small utility type which exists for the sole purpose of displaying a vector with a certain
+// A small utility type which exists for the sole purpose of displaying a vector with a newline
 // separator.
 #[derive(Debug)]
 pub struct SeparatedBy<T> {
     pub lines_of: Vec<T>,
-    pub separator: String,
 }
 
 impl<T: Display> Display for SeparatedBy<T> {
@@ -396,7 +396,7 @@ impl<T: Display> Display for SeparatedBy<T> {
         for (index, elem) in self.lines_of.iter().enumerate() {
             elem.fmt(f)?;
             if index < self.lines_of.len() - 1 {
-                self.separator.fmt(f)?;
+                writeln!(f)?;
             }
         }
 

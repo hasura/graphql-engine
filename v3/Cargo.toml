@@ -126,6 +126,7 @@ opentelemetry-semantic-conventions = "0.16"
 opentelemetry-stdout = { version = "0.5", default-features = false, features = ["trace"] }
 opentelemetry-zipkin = "0.22"
 opentelemetry_sdk = { version = "0.24", features = ["rt-tokio"] }
+partition_eithers = "0.1.0"
 postcard = { version = "1", features = ["use-std"] }
 pretty_assertions = "1"
 proc-macro2 = "1"

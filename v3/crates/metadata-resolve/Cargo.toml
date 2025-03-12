@@ -22,6 +22,7 @@ indexmap = { workspace = true }
 ndc-models = { workspace = true }
 ndc-models-v01 = { workspace = true }
 nonempty = { workspace = true }
+partition_eithers = { workspace = true }
 ref-cast = { workspace = true }
 reqwest = { workspace = true }
 semver = { workspace = true }
