@@ -100,4 +100,13 @@ impl JSONPath {
                 .collect(),
         )
     }
+
+    /// Determines if the path contains a specified subpath somewhere inside it.
+    /// For example: "$.a.b.c.d" contains "b.c"
+    pub fn contains_subpath(&self, subpath: &[JSONPathElement]) -> bool {
+        self.0
+            .as_slice()
+            .windows(subpath.len())
+            .any(|window| window == subpath)
+    }
 }
