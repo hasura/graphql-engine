@@ -11,6 +11,8 @@
 - Improved build errors for when older versions of the ddn CLI generate invalid
   metadata in the DataConnectorLink; the new error guides users to upgrade their
   CLI version.
+- Scalar types resolve step now returns multiple errors rather than failing on
+  the first one.
 
 ### Fixed
 

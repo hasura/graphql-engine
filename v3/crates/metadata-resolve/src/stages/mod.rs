@@ -77,7 +77,8 @@ fn resolve_internal(
     let scalar_types::ScalarTypesOutput {
         scalar_types,
         issues,
-    } = scalar_types::resolve(&metadata_accessor, &mut graphql_types)?;
+    } = scalar_types::resolve(&metadata_accessor, &mut graphql_types)
+        .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 

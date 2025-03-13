@@ -1,0 +1,29 @@
+{
+  "version": "v3",
+  "flags": {
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true
+  },
+  "subgraphs": [
+    {
+      "name": "subgraph",
+      "objects": [
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "String",
+            "description": "This is gonna be bad"
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Int",
+            "description": "This is gonna be worse"
+          }
+        }
+      ]
+    }
+  ]
+}

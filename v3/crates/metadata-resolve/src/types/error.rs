@@ -379,6 +379,7 @@ impl ContextualError for Error {
             Error::ModelsError(error) => error.create_error_context(),
             Error::CommandsError(error) => error.create_error_context(),
             Error::DataConnectorError(error) => error.create_error_context(),
+            Error::ScalarTypesError(error) => error.create_error_context(),
             _other => None,
         }
     }
