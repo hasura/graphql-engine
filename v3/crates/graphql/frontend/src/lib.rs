@@ -7,7 +7,7 @@ mod query_usage;
 mod steps;
 mod types;
 
-pub use error::RequestError;
+pub use error::{build_state_with_middleware_error_converter, RequestError};
 pub use execute::{execute_mutation_plan, execute_query_plan, ExecuteQueryResult, RootFieldResult};
 pub use explain::execute_explain;
 pub use explain::types::{redact_ndc_explain, ExplainResponse};

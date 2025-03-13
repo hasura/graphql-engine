@@ -1117,6 +1117,7 @@ dependencies = [
 name = "engine-types"
 version = "3.0.0"
 dependencies = [
+ "axum",
  "reqwest",
  "serde",
 ]
@@ -1666,6 +1667,7 @@ version = "3.0.0"
 dependencies = [
  "anyhow",
  "axum",
+ "engine-types",
  "goldenfile",
  "hasura-authn-core",
  "hasura-authn-jwt",
@@ -1691,8 +1693,8 @@ dependencies = [
  "axum",
  "axum-core",
  "derive_more",
+ "engine-types",
  "http 1.1.0",
- "lang-graphql",
  "open-dds",
  "pretty_assertions",
  "schemars",
@@ -1708,11 +1710,11 @@ dependencies = [
  "anyhow",
  "axum",
  "cookie",
+ "engine-types",
  "hasura-authn-core",
  "jsonptr",
  "jsonwebkey",
  "jsonwebtoken",
- "lang-graphql",
  "mockito",
  "open-dds",
  "openssl",
@@ -1741,8 +1743,8 @@ name = "hasura-authn-webhook"
 version = "3.0.0"
 dependencies = [
  "axum",
+ "engine-types",
  "hasura-authn-core",
- "lang-graphql",
  "mockito",
  "open-dds",
  "rand",

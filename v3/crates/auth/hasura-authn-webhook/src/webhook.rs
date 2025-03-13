@@ -4,10 +4,7 @@ use std::sync::OnceLock;
 use std::time::Duration;
 
 use auth_base::{Identity, Role, RoleAuthorization, SessionVariableName, SessionVariableValue};
-use axum::{
-    http::{HeaderMap, HeaderName, StatusCode},
-    response::IntoResponse,
-};
+use axum::http::{HeaderMap, HeaderName, StatusCode};
 use reqwest::{header::ToStrError, Url};
 use serde::{de::Error as SerdeDeError, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -68,22 +65,19 @@ impl Error {
             Error::Internal(_e) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
-}
 
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
+    pub fn into_middleware_error(self) -> engine_types::MiddlewareError {
         let is_internal = match &self {
             Error::ErrorInConvertingHeaderValueToString { .. } | Error::AuthenticationFailed => {
                 false
             }
             Error::Internal(_e) => true,
         };
-        lang_graphql::http::Response::error_message_with_status(
-            self.to_status_code(),
-            self.to_string(),
+        engine_types::MiddlewareError {
+            status: self.to_status_code(),
+            message: self.to_string(),
             is_internal,
-        )
-        .into_response()
+        }
     }
 }
 

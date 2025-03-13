@@ -10,6 +10,7 @@ bench = false
 [dependencies]
 reqwest = { workspace = true }
 serde = { workspace = true }
+axum = { workspace = true }
 
 [lints]
 workspace = true

@@ -128,6 +128,13 @@ impl JsonApiHttpError {
             ..Default::default()
         }
     }
+
+    pub fn from_middleware_error(error: engine_types::MiddlewareError) -> Self {
+        Self {
+            status: error.status,
+            error: error.message,
+        }
+    }
 }
 
 impl axum::response::IntoResponse for JsonApiHttpError {

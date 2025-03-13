@@ -19,11 +19,12 @@ pub fn create_json_api_router(state: EngineState) -> axum::Router {
         // in JSON:API spec, all queries have the GET method. Not even HEAD is
         // supported. So this should be fine.
         .route("/*path", get(handle_rest_request))
-        .layer(axum::middleware::from_fn(
+        .layer(axum::middleware::from_fn_with_state(
+            jsonapi::build_state_with_middleware_error_converter(()),
             hasura_authn_core::resolve_session,
         ))
         .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
+            jsonapi::build_state_with_middleware_error_converter(state.clone()),
             authentication_middleware,
         ))
         .layer(axum::middleware::from_fn(

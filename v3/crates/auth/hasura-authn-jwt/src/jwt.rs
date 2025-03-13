@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use axum::http::{HeaderMap, HeaderValue};
-use axum::response::IntoResponse;
 use cookie::{self, Cookie};
 use hasura_authn_core::{JsonSessionVariableValue, Role};
 use jsonptr::Pointer;
@@ -120,10 +119,8 @@ impl Error {
             | Error::ClaimMustBeAString { claim_name: _ } => StatusCode::BAD_REQUEST,
         }
     }
-}
 
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
+    pub fn into_middleware_error(self) -> engine_types::MiddlewareError {
         let is_internal = match self {
             Error::Internal(_) => true,
             Error::ErrorDecodingAuthorizationHeader(_)
@@ -146,12 +143,11 @@ impl IntoResponse for Error {
             | Error::MissingCookieValue { cookie_name: _ }
             | Error::ClaimMustBeAString { claim_name: _ } => false,
         };
-        lang_graphql::http::Response::error_message_with_status(
-            self.to_status_code(),
-            self.to_string(),
+        engine_types::MiddlewareError {
+            status: self.to_status_code(),
+            message: self.to_string(),
             is_internal,
-        )
-        .into_response()
+        }
     }
 }
 

@@ -366,11 +366,11 @@ impl tracing_util::TraceableError for AuthError {
     }
 }
 
-impl axum::response::IntoResponse for AuthError {
-    fn into_response(self) -> axum::response::Response {
+impl AuthError {
+    pub fn into_middleware_error(self) -> engine_types::MiddlewareError {
         match self {
-            AuthError::Jwt(e) => e.into_response(),
-            AuthError::Webhook(e) => e.into_response(),
+            AuthError::Jwt(e) => e.into_middleware_error(),
+            AuthError::Webhook(e) => e.into_middleware_error(),
         }
     }
 }

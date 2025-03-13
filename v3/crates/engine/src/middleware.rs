@@ -94,13 +94,14 @@ pub async fn explain_request_tracing_middleware(
 /// result of the authentication is `hasura-authn-core::Identity`, which is then
 /// made available to the GraphQL request handler.
 pub async fn authentication_middleware(
-    State(engine_state): State<EngineState>,
+    State(state): State<engine_types::WithMiddlewareErrorConverter<EngineState>>,
     headers_map: HeaderMap,
     mut request: Request<Body>,
     next: Next,
 ) -> axum::response::Result<axum::response::Response> {
     let tracer = tracing_util::global_tracer();
 
+    let engine_state = &state.state;
     let resolved_identity = tracer
         .in_span_async(
             "authentication_middleware",
@@ -114,7 +115,8 @@ pub async fn authentication_middleware(
                 ))
             },
         )
-        .await?;
+        .await
+        .map_err(|err| state.handle_error(err.into_middleware_error()))?;
 
     request.extensions_mut().insert(resolved_identity);
     Ok(next.run(request).await)
