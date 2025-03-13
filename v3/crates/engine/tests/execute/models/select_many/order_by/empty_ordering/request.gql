@@ -1,0 +1,18 @@
+query MyQuery($order_by: [AuthorOrderBy!]) {
+  one: AuthorMany(order_by: []) {
+    author_id
+    first_name
+  }
+  two: AuthorMany(order_by: {}) {
+    author_id
+    first_name
+  }
+  three: AuthorMany(order_by: null) {
+    author_id
+    first_name
+  }
+  four: AuthorMany(order_by: $order_by) {
+    author_id
+    first_name
+  }
+}

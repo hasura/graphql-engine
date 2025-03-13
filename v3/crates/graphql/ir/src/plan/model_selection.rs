@@ -62,7 +62,14 @@ pub(crate) fn plan_query_node(
         .transpose()?
         .map_or_else(
             || (None, PredicateQueryTrees::new()),
-            |(order_by, predicate)| (Some(order_by), predicate),
+            |(order_by, predicate)| {
+                // only send ordering if there are elements
+                if order_by.is_empty() {
+                    (None, predicate)
+                } else {
+                    (Some(order_by), predicate)
+                }
+            },
         );
 
     remote_predicates.0.extend(order_by_remote_predicates.0);
