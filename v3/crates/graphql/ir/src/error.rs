@@ -191,6 +191,17 @@ pub enum InternalDeveloperError {
         field_name: FieldName,
     },
 
+    #[error("Object type '{type_name}' not found")]
+    ObjectTypeNotFound {
+        type_name: Qualified<CustomTypeName>,
+    },
+
+    #[error("The field '{field_name}' was not found on object type '{object_type_name}'")]
+    ObjectTypeFieldNotFound {
+        field_name: FieldName,
+        object_type_name: Qualified<CustomTypeName>,
+    },
+
     #[error("{0}")]
     RelationshipFieldMappingError(#[from] plan::RelationshipFieldMappingError),
 

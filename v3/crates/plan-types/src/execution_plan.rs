@@ -21,7 +21,8 @@ pub use query::{
 pub use relationships::{Relationship, RelationshipArgument};
 pub use remote_joins::{
     mk_argument_target_variable_name, JoinLocations, JoinNode, Location, LocationKind, RemoteJoin,
-    RemoteJoinArgument, RemoteJoinType, SourceFieldAlias, TargetField,
+    RemoteJoinFieldMapping, RemoteJoinObjectFieldMapping, RemoteJoinObjectTargetField,
+    RemoteJoinType, RemoteJoinVariable, RemoteJoinVariableSet, SourceFieldAlias, TargetField,
 };
 
 // these versions of the types are equivalent to the old "Resolved" versions

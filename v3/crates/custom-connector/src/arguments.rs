@@ -349,6 +349,39 @@ where
     Ok(result)
 }
 
+pub(crate) fn parse_nullable_object_argument<'a, Arg>(
+    argument_name: &Arg,
+    arguments: &mut BTreeMap<ndc_models::ArgumentName, &'a serde_json::Value>,
+) -> Result<Option<&'a serde_json::Map<String, serde_json::Value>>>
+where
+    ndc_models::ArgumentName: Borrow<Arg>,
+    Arg: Ord + ?Sized + Display,
+{
+    let argument_value = arguments.remove(argument_name).ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ndc_models::ErrorResponse {
+                message: format!("missing argument {argument_name}"),
+                details: serde_json::Value::Null,
+            }),
+        )
+    })?;
+    let result = if argument_value.is_null() {
+        None
+    } else {
+        Some(argument_value.as_object().ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("{argument_name} must be an object"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?)
+    };
+    Ok(result)
+}
+
 pub(crate) fn parse_i32_argument<Arg>(
     argument_name: &Arg,
     arguments: &mut BTreeMap<ndc_models::ArgumentName, &serde_json::Value>,

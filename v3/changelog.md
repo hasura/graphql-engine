@@ -11,6 +11,12 @@
 
 ### Fixed
 
+- Remote joins that map fields that contain objects now correctly pass the whole
+  object contained in that field to the target data connector, instead of
+  sometimes a subset based on what's been selected in the GraphQL query. In
+  addition, the fields of the object are now mapped correctly to the target data
+  connector's field names.
+
 ## [v2025.03.11]
 
 ### Added

@@ -436,6 +436,18 @@ fn test_remote_mutually_recursive_relationships_model_to_command() -> anyhow::Re
 }
 
 #[test]
+fn test_remote_relationships_command_join_with_object_value() -> anyhow::Result<()> {
+    let test_path_string = "execute/remote_relationships/command/join_with_object_value";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            "execute/common_metadata/custom_connector_v02_no_relationships_schema.json",
+            "execute/common_metadata/custom_connector_v02_schema.json",
+        ],
+    )
+}
+
+#[test]
 fn test_remote_relationships_model_to_model_array_with_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/remote_relationships/array/arguments";
     let common_metadata_path_string = "execute/common_metadata/two_postgres_connector_schema.json";

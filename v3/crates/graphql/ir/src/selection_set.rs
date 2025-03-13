@@ -73,11 +73,18 @@ pub struct ResultSelectionSet<'s> {
 
 impl ResultSelectionSet<'_> {
     /// Check if the field is found in existing fields. Returns the alias of the field.
-    pub fn contains(&self, other_field: &metadata_resolve::FieldMapping) -> Option<NdcFieldAlias> {
+    pub fn contains(
+        &self,
+        other_field: &metadata_resolve::FieldMapping,
+    ) -> Option<(&NdcFieldAlias, &Option<NestedSelection<'_>>)> {
         self.fields.iter().find_map(|(alias, field)| match field {
-            FieldSelection::Column { column, .. } => {
+            FieldSelection::Column {
+                column,
+                nested_selection,
+                ..
+            } => {
                 if column.as_str() == other_field.column.as_str() {
-                    Some(alias.clone())
+                    Some((alias, nested_selection))
                 } else {
                     None
                 }

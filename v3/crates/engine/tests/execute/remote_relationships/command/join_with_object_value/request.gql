@@ -1,0 +1,10 @@
+query MyQuery {
+  Institutions {
+    Id
+    Location {
+      Country
+      CountryId
+    }
+    EvaluatedLocation
+  }
+}

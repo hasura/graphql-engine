@@ -61,7 +61,7 @@ impl ContextualError for CommandsError {
 pub enum CommandsError {
     #[error("the following command is defined more than once: {name:}")]
     DuplicateCommandDefinition { name: Qualified<CommandName> },
-    #[error("the following argument {argument_name:} with argument type {argument_type:} in command {command_name:} ) has not been defined")]
+    #[error("the argument '{argument_name}' in command '{command_name}' has an unknown type: {argument_type}")]
     UnknownCommandArgumentType {
         command_name: Qualified<CommandName>,
         argument_name: Spanned<ArgumentName>,

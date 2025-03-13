@@ -1189,7 +1189,6 @@ dependencies = [
  "engine-types",
  "graphql-schema",
  "indexmap 2.7.1",
- "json-ext",
  "lang-graphql",
  "metadata-resolve",
  "mockito",
@@ -3245,7 +3244,6 @@ version = "3.0.0"
 dependencies = [
  "derive_more",
  "indexmap 2.7.1",
- "json-ext",
  "metadata-resolve",
  "nonempty",
  "open-dds",

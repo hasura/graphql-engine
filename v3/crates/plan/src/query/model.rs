@@ -640,7 +640,6 @@ pub fn from_model_selection(
         metadata,
         session,
         request_headers,
-        &model.model.data_type,
         &model_object_type,
         &model_source.type_mappings,
         &model_source.data_connector,

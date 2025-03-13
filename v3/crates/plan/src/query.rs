@@ -18,8 +18,9 @@ use indexmap::IndexMap;
 pub use model::{from_model_aggregate_selection, from_model_group_by, from_model_selection};
 pub use permissions::process_model_predicate;
 pub use relationships::{
-    get_relationship_field_mapping_of_field_name, process_command_relationship_definition,
-    process_model_relationship_definition, RelationshipFieldMappingError,
+    collect_remote_join_object_type_field_mappings, get_relationship_field_mapping_of_field_name,
+    process_command_relationship_definition, process_model_relationship_definition,
+    RelationshipFieldMappingError,
 };
 
 use hasura_authn_core::Session;

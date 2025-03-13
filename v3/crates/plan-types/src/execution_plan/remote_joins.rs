@@ -2,8 +2,11 @@
 //!
 use super::{super::variable_name::VariableName, query, ProcessResponseAs};
 use indexmap::IndexMap;
-use json_ext::ValueExt;
+use metadata_resolve::Qualified;
+use metadata_resolve::QualifiedTypeReference;
 use open_dds::arguments::ArgumentName;
+use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::types::CustomTypeName;
 use open_dds::types::FieldName;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -52,6 +55,8 @@ pub enum JoinNode {
 ///
 /// If it is a join node, then there is information about the join (captured as
 /// [RemoteJoin]). It may further have more join nodes, represented by `rest`.
+/// These are further remote joins that need to be done on the result of the
+/// current join node.
 ///
 /// The current node may not have a join node and only have joins in sub-tree.
 /// This is represented by `join_node` being `None` and `rest` containing the
@@ -116,13 +121,12 @@ pub struct RemoteJoin {
     /// Mapping of the fields in source to fields in target.
     /// The BTreeMap has the following info -
     ///   - key: is the field name in the source
-    ///   - value->first item: is the alias we create for the
-    ///     source field. If the user did not request the join field in the
-    ///     selection set, we include the join mapping field and call it a phantom
-    ///     field.
-    ///   - value->second item: is the target NDC field. This could be a model
-    ///     field or an argument name.
-    pub join_mapping: BTreeMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
+    ///   - value: details about the field, such as its alias name and join target field
+    pub join_mapping: BTreeMap<SourceFieldName, RemoteJoinFieldMapping>,
+    /// For any object types used in the join_mapping fields, this contains how to map the object fields
+    /// from the names used in the source to the names used in the target
+    pub object_type_field_mappings:
+        BTreeMap<Qualified<CustomTypeName>, RemoteJoinObjectFieldMapping>,
     /// Represents how to process the join response.
     pub process_response_as: ProcessResponseAs,
     /// Represents the type of the remote join
@@ -137,6 +141,30 @@ pub type SourceFieldName = FieldName;
 /// the IR to have a newtype Alias.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SourceFieldAlias(pub String);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RemoteJoinFieldMapping {
+    /// The alias we create for the source field in the query.
+    /// If the user did not request the join field in the selection set, we
+    /// include the join mapping field and call it a "phantom field"
+    pub source_field_alias: SourceFieldAlias,
+
+    /// The type of the source field
+    pub source_field_type: QualifiedTypeReference,
+
+    /// The target NDC field. This could be a model field or an argument name.
+    pub target_field: TargetField,
+}
+
+/// A mapping of the object field names in the source to the target's field names
+pub type RemoteJoinObjectFieldMapping =
+    BTreeMap<DataConnectorColumnName, RemoteJoinObjectTargetField>;
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct RemoteJoinObjectTargetField {
+    pub name: DataConnectorColumnName,
+    pub field_type: QualifiedTypeReference,
+}
 
 /// Target field used in the join mapping
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -169,6 +197,12 @@ pub enum RemoteJoinType {
     ToCommand,
 }
 
-/// An 'Argument' is a map of variable name to it's value.
-/// For example, `{"first_name": "John", "last_name": "Doe"}`
-pub type RemoteJoinArgument = BTreeMap<crate::VariableName, ValueExt>;
+/// An 'Argument' is a map of variable name to it's value, plus the value's type.
+/// For example, `{"first_name": (String!, "John"), "last_name": (String!, "Doe")}`
+pub type RemoteJoinVariableSet = BTreeMap<VariableName, RemoteJoinVariable>;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct RemoteJoinVariable {
+    pub variable_type: QualifiedTypeReference,
+    pub value: serde_json::Value,
+}

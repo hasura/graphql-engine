@@ -497,8 +497,11 @@
                       "location": {
                         "description": "The institution's location",
                         "type": {
-                          "type": "named",
-                          "name": "location"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "location"
+                          }
                         }
                       },
                       "name": {
@@ -639,6 +642,103 @@
                         }
                       },
                       "country_id": {
+                        "description": "The location's country ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "location_pascalcase": {
+                    "description": "A location, but with pascal-case properties",
+                    "fields": {
+                      "Campuses": {
+                        "description": "The location's campuses",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "City": {
+                        "description": "The location's city",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "Country": {
+                        "description": "The location's country",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "CountryId": {
                         "description": "The location's country ID",
                         "type": {
                           "type": "named",
@@ -1111,6 +1211,33 @@
                         "type": "named",
                         "name": "evaluated_institution"
                       }
+                    }
+                  },
+                  {
+                    "name": "eval_location",
+                    "description": "Evaluates a submitted location object against the provided boolean expression",
+                    "arguments": {
+                      "check": {
+                        "description": "The boolean expression to evaluate the location against",
+                        "type": {
+                          "type": "predicate",
+                          "object_type_name": "location_pascalcase"
+                        }
+                      },
+                      "location": {
+                        "description": "The location to evaluate",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "location_pascalcase"
+                          }
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "Bool"
                     }
                   },
                   {
@@ -2087,8 +2214,11 @@
                       "location": {
                         "description": "The institution's location",
                         "type": {
-                          "type": "named",
-                          "name": "location"
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "location"
+                          }
                         }
                       },
                       "name": {
@@ -2229,6 +2359,103 @@
                         }
                       },
                       "country_id": {
+                        "description": "The location's country ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "location_pascalcase": {
+                    "description": "A location, but with pascal-case properties",
+                    "fields": {
+                      "Campuses": {
+                        "description": "The location's campuses",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "City": {
+                        "description": "The location's city",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "Country": {
+                        "description": "The location's country",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      },
+                      "CountryId": {
                         "description": "The location's country ID",
                         "type": {
                           "type": "named",
@@ -2701,6 +2928,33 @@
                         "type": "named",
                         "name": "evaluated_institution"
                       }
+                    }
+                  },
+                  {
+                    "name": "eval_location",
+                    "description": "Evaluates a submitted location object against the provided boolean expression",
+                    "arguments": {
+                      "check": {
+                        "description": "The boolean expression to evaluate the location against",
+                        "type": {
+                          "type": "predicate",
+                          "object_type_name": "location_pascalcase"
+                        }
+                      },
+                      "location": {
+                        "description": "The location to evaluate",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "location_pascalcase"
+                          }
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "Bool"
                     }
                   },
                   {

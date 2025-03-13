@@ -12,7 +12,6 @@ use open_dds::query::CommandSelection;
 use open_dds::{
     commands::DataConnectorCommand,
     data_connector::{CollectionName, DataConnectorColumnName},
-    types::CustomTypeName,
 };
 use plan_types::{
     Argument, Field, JoinLocations, MutationArgument, MutationExecutionPlan, MutationExecutionTree,
@@ -105,7 +104,6 @@ fn from_command_output_type(
         ),
         OutputShape::Object {
             object: output_object_type,
-            object_name: output_object_type_name,
         } => {
             let command_selection_set = match &command_selection.selection {
                 Some(selection_set) => selection_set,
@@ -115,7 +113,6 @@ fn from_command_output_type(
                 metadata,
                 session,
                 request_headers,
-                output_object_type_name,
                 output_object_type,
                 &command_source.type_mappings,
                 &command_source.data_connector,
@@ -321,7 +318,6 @@ fn wrap_selection_in_response_config(
 
 enum OutputShape<'metadata> {
     Object {
-        object_name: Qualified<CustomTypeName>,
         object: OutputObjectTypeView<'metadata>,
     },
     Array {
@@ -392,7 +388,6 @@ fn return_type_shape<'metadata>(
                     role,
                 )
                 .map(|output_object_type| OutputShape::Object {
-                    object_name: custom_type.clone(),
                     object: output_object_type.clone(),
                 })?),
             }

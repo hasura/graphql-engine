@@ -11,6 +11,7 @@ use metadata_resolve::data_connectors::NdcVersion;
 use metadata_resolve::{FieldMapping, Metadata};
 use open_dds::data_connector::DataConnectorColumnName;
 use plan::{process_command_relationship_definition, process_model_relationship_definition};
+use plan_types::RemoteJoinFieldMapping;
 use plan_types::{
     CommandReturnKind, Field, JoinLocations, JoinNode, Location, LocationKind, NestedArray,
     NestedField, NestedObject, PredicateQueryTrees, QueryExecutionTree, RemoteJoin, RemoteJoinType,
@@ -257,7 +258,8 @@ pub(crate) fn plan_selection_set(
                 relationship_info,
             } => {
                 let mut join_mapping = BTreeMap::new();
-                for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
+                for ((src_field_alias, src_field_type, src_field), target_field) in
+                    &relationship_info.join_mapping
                 {
                     let ndc_field_alias = process_remote_relationship_field_mapping(
                         model_selection,
@@ -266,7 +268,11 @@ pub(crate) fn plan_selection_set(
                     );
                     join_mapping.insert(
                         src_field_alias.clone(),
-                        (ndc_field_alias, target_field.clone()),
+                        RemoteJoinFieldMapping {
+                            source_field_alias: ndc_field_alias.clone(),
+                            source_field_type: src_field_type.clone(),
+                            target_field: target_field.clone(),
+                        },
                     );
                 }
                 // Construct the `JoinLocations` tree
@@ -289,6 +295,9 @@ pub(crate) fn plan_selection_set(
                     target_ndc_execution: query_execution,
                     target_data_connector: ir.data_connector.clone(),
                     join_mapping,
+                    object_type_field_mappings: relationship_info
+                        .object_type_field_mappings
+                        .clone(),
                     process_response_as: ProcessResponseAs::Array { is_nullable: true },
                     remote_join_type: RemoteJoinType::ToModel,
                 };
@@ -306,7 +315,8 @@ pub(crate) fn plan_selection_set(
             } => {
                 let mut join_mapping = BTreeMap::new();
 
-                for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
+                for ((src_field_alias, src_field_type, src_field), target_field) in
+                    &relationship_info.join_mapping
                 {
                     let ndc_field_alias = process_remote_relationship_field_mapping(
                         model_selection,
@@ -315,7 +325,11 @@ pub(crate) fn plan_selection_set(
                     );
                     join_mapping.insert(
                         src_field_alias.clone(),
-                        (ndc_field_alias, TargetField::Argument(target_field.clone())),
+                        RemoteJoinFieldMapping {
+                            source_field_alias: ndc_field_alias.clone(),
+                            source_field_type: src_field_type.clone(),
+                            target_field: TargetField::Argument(target_field.clone()),
+                        },
                     );
                 }
                 // Construct the `JoinLocations` tree
@@ -338,6 +352,9 @@ pub(crate) fn plan_selection_set(
                     target_ndc_execution: ndc_ir,
                     target_data_connector: ir.command_info.data_connector.clone(),
                     join_mapping,
+                    object_type_field_mappings: relationship_info
+                        .object_type_field_mappings
+                        .clone(),
                     process_response_as: ProcessResponseAs::CommandResponse {
                         command_name: ir.command_info.command_name.clone(),
                         is_nullable: ir.command_info.type_container.nullable,
@@ -373,6 +390,10 @@ pub(crate) fn plan_selection_set(
 ///
 /// - if the selection set DOES NOT contain the field, insert it into the NDC IR
 ///   (with an internal alias), and return the alias
+/// - if the selection set already contains the field, but it is a nested field
+///   selection, we can't use it because it might be a partial select of the type
+///   and we need the whole value for the join, so we insert a fresh selection into
+///   the NDC IR (with an internal alias) and return the alias
 /// - if the selection set already contains the field, do not insert the field
 ///   in NDC IR, and return the existing alias
 fn process_remote_relationship_field_mapping(
@@ -381,7 +402,13 @@ fn process_remote_relationship_field_mapping(
     fields: &mut IndexMap<NdcFieldAlias, Field>,
 ) -> SourceFieldAlias {
     match selection.contains(field_mapping) {
-        None => {
+        // The query already contains this field, but if it has a nested selection, we
+        // shouldn't use it because it might be a partial selection, and a join needs
+        // the whole value, so we make a new field with an internal alias.
+        Some((_, Some(_ /* nested_selection */)))
+        // The query doesn't already contain this field, so we make a new field with
+        // an internal alias.
+        | None => {
             let internal_alias = make_hasura_phantom_field(&field_mapping.column);
             fields.insert(
                 NdcFieldAlias::from(internal_alias.as_str()),
@@ -393,7 +420,9 @@ fn process_remote_relationship_field_mapping(
             );
             SourceFieldAlias(internal_alias)
         }
-        Some(field_alias) => SourceFieldAlias(field_alias.as_str().to_owned()),
+        // The query already contains this field, and it doesn't have a nested selection,
+        // so we can re-use it.
+        Some((field_alias, None)) => SourceFieldAlias(field_alias.as_str().to_owned()),
     }
 }
 

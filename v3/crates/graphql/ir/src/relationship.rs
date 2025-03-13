@@ -30,13 +30,14 @@ use graphql_schema::{
     ModelAggregateRelationshipAnnotation, ModelInputAnnotation, ModelRelationshipAnnotation, GDS,
 };
 use metadata_resolve::{
-    self, CommandSource, ObjectTypeWithRelationships, Qualified, RelationshipModelMapping,
+    self, CommandSource, ObjectTypeWithRelationships, Qualified, QualifiedTypeReference,
+    RelationshipModelMapping,
 };
-use plan::{count_command, count_model};
+use plan::{collect_remote_join_object_type_field_mappings, count_command, count_model};
 use plan_types::{
     mk_argument_target_variable_name, ComparisonTarget, ComparisonValue, Expression,
     LocalCommandRelationshipInfo, LocalFieldComparison, LocalModelRelationshipInfo,
-    NdcRelationshipName, TargetField, UsagesCounts,
+    NdcRelationshipName, RemoteJoinObjectFieldMapping, TargetField, UsagesCounts,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -46,15 +47,27 @@ pub struct RemoteModelRelationshipInfo {
     /// contains mapping of field names and `metadata_resolve::FieldMapping`.
     /// Also see `build_remote_relationship`.
     pub join_mapping: Vec<(SourceField, TargetField)>,
+    /// For any object types used in the join_mapping fields, this contains how to map the object fields
+    /// from the names used in the source to the names used in the target
+    pub object_type_field_mappings:
+        BTreeMap<Qualified<CustomTypeName>, RemoteJoinObjectFieldMapping>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct RemoteCommandRelationshipInfo<'s> {
     pub annotation: &'s CommandRelationshipAnnotation,
     pub join_mapping: Vec<(SourceField, ArgumentName)>,
+    /// For any object types used in the join_mapping fields, this contains how to map the object fields
+    /// from the names used in the source to the names used in the target
+    pub object_type_field_mappings:
+        BTreeMap<Qualified<CustomTypeName>, RemoteJoinObjectFieldMapping>,
 }
 
-pub type SourceField = (FieldName, metadata_resolve::FieldMapping);
+pub type SourceField = (
+    FieldName,
+    QualifiedTypeReference,
+    metadata_resolve::FieldMapping,
+);
 
 pub fn generate_model_relationship_open_dd_ir<'s>(
     field: &Field<'s, GDS>,
@@ -385,8 +398,10 @@ pub fn generate_model_relationship_ir<'s>(
                 &relationship_annotation.relationship_name,
                 &relationship_annotation.source_type,
                 source_type_mappings,
+                &target_source.type_mappings,
                 &relationship_annotation.mappings,
                 &target_source.argument_mappings,
+                object_types,
             )
         }
     }
@@ -540,8 +555,10 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
                 &relationship_annotation.relationship_name,
                 &relationship_annotation.source_type,
                 source_type_mappings,
+                &target_source.type_mappings,
                 &relationship_annotation.mappings,
                 &target_source.argument_mappings,
+                object_types,
             )
         }
     }
@@ -795,18 +812,49 @@ pub fn build_remote_relationship<'s>(
     relationship_name: &'s RelationshipName,
     source_type: &'s Qualified<CustomTypeName>,
     source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    target_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     target_mappings: &'s Vec<RelationshipModelMapping>,
     target_argument_mappings: &'s BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    object_types: &'s BTreeMap<
+        Qualified<open_dds::types::CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, TargetField)> = vec![];
     let mut relationship_join_filter_expressions = Vec::new();
     let mut variable_arguments = BTreeMap::new();
+    let mut object_type_field_mappings = BTreeMap::new();
 
     for metadata_resolve::RelationshipModelMapping {
         source_field,
         target,
     } in target_mappings
     {
+        let source_object_type = object_types.get(source_type).ok_or_else(|| {
+            error::InternalDeveloperError::ObjectTypeNotFound {
+                type_name: source_type.clone(),
+            }
+        })?;
+        let source_field_type = &source_object_type
+            .object_type
+            .fields
+            .get(&source_field.field_name)
+            .ok_or_else(|| error::InternalDeveloperError::ObjectTypeFieldNotFound {
+                field_name: source_field.field_name.clone(),
+                object_type_name: source_type.clone(),
+            })?
+            .field_type;
+
+        collect_remote_join_object_type_field_mappings(
+            source_field_type,
+            &mut object_type_field_mappings,
+            relationship_name,
+            source_type_mappings,
+            target_type_mappings,
+            object_types,
+        )
+        .map_err(|err| error::Error::PlanError(plan::PlanError::Relationship(err)))?;
+
         let source_column = plan::get_relationship_field_mapping_of_field_name(
             source_type_mappings,
             source_type,
@@ -817,7 +865,11 @@ pub fn build_remote_relationship<'s>(
             error::Error::from(error::InternalDeveloperError::RelationshipFieldMappingError(err))
         })?;
 
-        let source_field = (source_field.field_name.clone(), source_column);
+        let source_field = (
+            source_field.field_name.clone(),
+            source_field_type.clone(),
+            source_column,
+        );
         match target {
             metadata_resolve::RelationshipModelMappingTarget::ModelField(
                 metadata_resolve::RelationshipModelMappingFieldTarget {
@@ -877,7 +929,10 @@ pub fn build_remote_relationship<'s>(
     }
     remote_relationships_ir.variable_arguments = variable_arguments;
 
-    let rel_info = RemoteModelRelationshipInfo { join_mapping };
+    let rel_info = RemoteModelRelationshipInfo {
+        join_mapping,
+        object_type_field_mappings,
+    };
     Ok(FieldSelection::ModelRelationshipRemote {
         ir: remote_relationships_ir,
         relationship_info: rel_info,
@@ -909,22 +964,53 @@ pub fn build_remote_command_relationship<'n, 's>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, ArgumentName)> = vec![];
+    let mut object_type_field_mappings = BTreeMap::new();
+
     for metadata_resolve::RelationshipCommandMapping {
-        source_field: source_field_path,
+        source_field,
         argument_name: target_argument_name,
     } in &annotation.mappings
     {
+        let source_object_type = object_types.get(&annotation.source_type).ok_or_else(|| {
+            error::InternalDeveloperError::ObjectTypeNotFound {
+                type_name: annotation.source_type.clone(),
+            }
+        })?;
+        let source_field_type = &source_object_type
+            .object_type
+            .fields
+            .get(&source_field.field_name)
+            .ok_or_else(|| error::InternalDeveloperError::ObjectTypeFieldNotFound {
+                field_name: source_field.field_name.clone(),
+                object_type_name: annotation.source_type.clone(),
+            })?
+            .field_type;
+
+        collect_remote_join_object_type_field_mappings(
+            source_field_type,
+            &mut object_type_field_mappings,
+            &annotation.relationship_name,
+            type_mappings,
+            &target_source.type_mappings,
+            object_types,
+        )
+        .map_err(|err| error::Error::PlanError(plan::PlanError::Relationship(err)))?;
+
         let source_column = plan::get_relationship_field_mapping_of_field_name(
             type_mappings,
             &annotation.source_type,
             &annotation.relationship_name,
-            &source_field_path.field_name,
+            &source_field.field_name,
         )
         .map_err(|err| {
             error::Error::from(error::InternalDeveloperError::RelationshipFieldMappingError(err))
         })?;
 
-        let source_field = (source_field_path.field_name.clone(), source_column);
+        let source_field = (
+            source_field.field_name.clone(),
+            source_field_type.clone(),
+            source_column,
+        );
         join_mapping.push((source_field, target_argument_name.clone()));
     }
     let mut remote_relationships_ir = generate_function_based_command(
@@ -965,6 +1051,7 @@ pub fn build_remote_command_relationship<'n, 's>(
     let rel_info = RemoteCommandRelationshipInfo {
         annotation,
         join_mapping,
+        object_type_field_mappings,
     };
     Ok(FieldSelection::CommandRelationshipRemote {
         ir: remote_relationships_ir,

@@ -64,18 +64,20 @@
 //!    this algorithm.
 //!
 //! 5. Perform join on LHS response and RHS response
+use metadata_resolve::{Qualified, QualifiedTypeName, QualifiedTypeReference};
+use open_dds::types::CustomTypeName;
 use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
 
-use plan_types::ProcessResponseAs;
+use plan_types::{ProcessResponseAs, RemoteJoinObjectFieldMapping};
 
 use crate::error;
 use crate::ndc::execute_ndc_query;
 use engine_types::{HttpContext, ProjectId};
 
 use collect::ExecutableJoinNode;
-use plan_types::{JoinLocations, RemoteJoinArgument};
+use plan_types::{JoinLocations, RemoteJoinVariableSet};
 mod collect;
 mod join;
 
@@ -95,7 +97,7 @@ pub async fn execute_join_locations(
     let tracer = tracing_util::global_tracer();
 
     // collect the join column arguments from the LHS response
-    let mut location_path = Vec::new();
+    let location_path = &[];
     let next_join_nodes = tracer.in_span(
         "collect_arguments",
         "Collect arguments for join",
@@ -105,14 +107,14 @@ pub async fn execute_join_locations(
                 lhs_response,
                 lhs_response_type,
                 join_locations,
-                &mut location_path,
+                location_path,
             )
         },
     )?;
 
     for executable_join_node in next_join_nodes {
         let ExecutableJoinNode {
-            arguments,
+            variable_sets,
             location_path,
             mut join_node,
             sub_tree,
@@ -121,14 +123,27 @@ pub async fn execute_join_locations(
 
         // if we do not get any join arguments back, we have nothing on the RHS
         // to execute. Skip execution.
-        if arguments.is_empty() {
+        if variable_sets.is_empty() {
             continue;
         }
         // patch the target/RHS IR with variable values
-        let foreach_variables: Vec<BTreeMap<plan_types::VariableName, json::Value>> = arguments
+        let foreach_variables: Vec<BTreeMap<plan_types::VariableName, json::Value>> = variable_sets
             .iter()
-            .map(|bmap| bmap.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect())
-            .collect();
+            .map(|variable_set| {
+                variable_set
+                    .iter()
+                    .map(|(variable_name, variable)| {
+                        let mapped_variable_value =
+                            map_remote_join_variable_value_to_target_connector(
+                                &variable.value,
+                                &variable.variable_type,
+                                &join_node.object_type_field_mappings,
+                            )?;
+                        Ok((variable_name.clone(), mapped_variable_value))
+                    })
+                    .collect::<Result<_, _>>()
+            })
+            .collect::<Result<_, error::FieldError>>()?;
 
         join_node.target_ndc_execution.variables = Some(foreach_variables);
 
@@ -174,8 +189,8 @@ pub async fn execute_join_locations(
             SpanVisibility::Internal,
             || {
                 // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
-                let rhs_response: HashMap<RemoteJoinArgument, ndc_models::RowSet> =
-                    arguments.into_iter().zip(target_response).collect();
+                let rhs_response: HashMap<RemoteJoinVariableSet, ndc_models::RowSet> =
+                    variable_sets.into_iter().zip(target_response).collect();
 
                 join::join_responses(
                     &location_path,
@@ -188,4 +203,90 @@ pub async fn execute_join_locations(
         )?;
     }
     Ok(())
+}
+
+fn map_remote_join_variable_value_to_target_connector(
+    value: &serde_json::Value,
+    value_type: &QualifiedTypeReference,
+    object_type_field_mappings: &BTreeMap<Qualified<CustomTypeName>, RemoteJoinObjectFieldMapping>,
+) -> Result<serde_json::Value, error::FieldError> {
+    // If the value is null, there's nothing to map
+    if value.is_null() {
+        return Ok(serde_json::Value::Null);
+    }
+
+    match &value_type.underlying_type {
+        // Scalar inbuilt types: we can just pass through untouched
+        metadata_resolve::QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(_)) => {
+            Ok(value.clone())
+        }
+        metadata_resolve::QualifiedBaseType::Named(QualifiedTypeName::Custom(value_type_name)) => {
+            // If the named type is an object type, we'll have a mapping for it
+            if let Some(object_type_field_mapping) = object_type_field_mappings.get(value_type_name)
+            {
+                let mapped_object = value
+                    .as_object()
+                    .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                        summary: format!("While mapping remote join variable values, expected an object value for type '{value_type}', but got a JSON {}", get_json_value_type(value)),
+                    })?
+                    .iter()
+                    .map(|(field_name, field_value)| {
+                        let target_field_info = object_type_field_mapping
+                            .get(field_name.as_str())
+                            .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                summary: format!("While mapping remote join variable values, found an unexpected field '{field_name}' in the object value with expected type '{value_type}'"),
+                            })?;
+
+                        let mapped_field_value =
+                            map_remote_join_variable_value_to_target_connector(
+                                field_value,
+                                &target_field_info.field_type,
+                                object_type_field_mappings,
+                            )?;
+
+                        Ok((
+                            target_field_info.name.as_str().to_owned(),
+                            mapped_field_value,
+                        ))
+                    })
+                    .collect::<Result<serde_json::Map<_, _>, error::FieldError>>()?;
+
+                Ok(serde_json::Value::Object(mapped_object))
+            }
+            // It must be a custom scalar type, so we can just pass through untouched
+            else {
+                Ok(value.clone())
+            }
+        }
+        // Array types: we need to map each of the elements
+        metadata_resolve::QualifiedBaseType::List(element_type) => {
+            let mapped_array = value
+                .as_array()
+                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                    summary: format!("While mapping remote join variable values, expected an array value for type '{value_type}', but got a JSON {}", get_json_value_type(value)),
+                })?
+                .iter()
+                .map(|element| {
+                    map_remote_join_variable_value_to_target_connector(
+                        element,
+                        element_type,
+                        object_type_field_mappings,
+                    )
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+
+            Ok(serde_json::Value::Array(mapped_array))
+        }
+    }
+}
+
+fn get_json_value_type(value: &serde_json::Value) -> &'static str {
+    match value {
+        serde_json::Value::Null => "null",
+        serde_json::Value::Bool(_) => "boolean",
+        serde_json::Value::Number(_) => "number",
+        serde_json::Value::String(_) => "string",
+        serde_json::Value::Array(_) => "array",
+        serde_json::Value::Object(_) => "object",
+    }
 }

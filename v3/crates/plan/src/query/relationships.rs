@@ -1,7 +1,10 @@
+use crate::metadata_accessor::OutputObjectTypeView;
 use crate::types::{PlanError, RelationshipError};
+use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{
-    Qualified, RelationshipCommandMapping, RelationshipModelMapping, TypeMapping,
+    Metadata, Qualified, QualifiedTypeReference, RelationshipCommandMapping,
+    RelationshipModelMapping, TypeMapping,
 };
 use open_dds::{
     arguments::ArgumentName,
@@ -15,6 +18,7 @@ use open_dds::{
 use plan_types::{
     Argument, ComparisonTarget, ComparisonValue, Field, LocalCommandRelationshipInfo,
     LocalFieldComparison, LocalModelRelationshipInfo, NdcFieldAlias, Relationship,
+    RemoteJoinFieldMapping, RemoteJoinObjectFieldMapping, RemoteJoinObjectTargetField,
     ResolvedFilterExpression, SourceFieldAlias, TargetField,
 };
 use std::collections::BTreeMap;
@@ -188,31 +192,54 @@ pub fn process_command_relationship_definition(
 }
 
 pub struct CommandRemoteRelationshipParts {
-    pub join_mapping: BTreeMap<FieldName, (SourceFieldAlias, TargetField)>,
+    pub join_mapping: BTreeMap<FieldName, RemoteJoinFieldMapping>,
+    pub object_type_field_mappings:
+        BTreeMap<Qualified<CustomTypeName>, RemoteJoinObjectFieldMapping>,
     pub arguments: IndexMap<DataConnectorArgumentName, Argument>,
 }
 
 pub fn calculate_remote_relationship_fields_for_command_target(
-    object_type_name: &Qualified<CustomTypeName>,
+    session: &Session,
+    metadata: &Metadata,
+    object_type: &OutputObjectTypeView,
     relationship_name: &RelationshipName,
     command_name: &Qualified<CommandName>,
     relationship_command_mappings: &Vec<RelationshipCommandMapping>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    target_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     target_argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
     selection: &IndexMap<open_dds::query::Alias, ObjectSubSelection>,
     ndc_fields: &mut IndexMap<NdcFieldAlias, Field>,
 ) -> Result<CommandRemoteRelationshipParts, RelationshipError> {
     let mut join_mapping = BTreeMap::new();
     let mut arguments = IndexMap::new();
+    let mut object_type_field_mappings = BTreeMap::new();
 
     for metadata_resolve::RelationshipCommandMapping {
         source_field,
         argument_name,
     } in relationship_command_mappings
     {
+        let source_field_type = object_type
+            .get_field(&source_field.field_name, &session.role)
+            .map_err(|_| RelationshipError::MissingSourceField {
+                relationship_name: relationship_name.clone(),
+                source_field: source_field.field_name.clone(),
+            })?
+            .field_type;
+
+        collect_remote_join_object_type_field_mappings(
+            source_field_type,
+            &mut object_type_field_mappings,
+            relationship_name,
+            source_type_mappings,
+            target_type_mappings,
+            &metadata.object_types,
+        )?;
+
         let source_column = get_relationship_field_mapping_of_field_name(
             source_type_mappings,
-            object_type_name,
+            object_type.object_type_name,
             relationship_name,
             &source_field.field_name,
         )
@@ -233,7 +260,7 @@ pub fn calculate_remote_relationship_fields_for_command_target(
         let data_connector_argument_name =
             target_argument_mappings.get(argument_name).ok_or_else(|| {
                 RelationshipError::MissingArgumentMappingInCommandRelationship {
-                    source_type: object_type_name.clone(),
+                    source_type: object_type.object_type_name.clone(),
                     relationship_name: relationship_name.clone(),
                     command_name: command_name.clone(),
                     argument_name: argument_name.clone(),
@@ -251,28 +278,38 @@ pub fn calculate_remote_relationship_fields_for_command_target(
         // add join mapping
         join_mapping.insert(
             source_field.field_name.clone(),
-            (ndc_field_alias, target_argument),
+            RemoteJoinFieldMapping {
+                source_field_alias: ndc_field_alias.clone(),
+                source_field_type: source_field_type.clone(),
+                target_field: target_argument.clone(),
+            },
         );
     }
 
     Ok(CommandRemoteRelationshipParts {
         join_mapping,
+        object_type_field_mappings,
         arguments,
     })
 }
 
 pub struct ModelRemoteRelationshipParts {
-    pub join_mapping: BTreeMap<FieldName, (SourceFieldAlias, TargetField)>,
+    pub join_mapping: BTreeMap<FieldName, RemoteJoinFieldMapping>,
+    pub object_type_field_mappings:
+        BTreeMap<Qualified<CustomTypeName>, RemoteJoinObjectFieldMapping>,
     pub relationship_join_filter_expressions: VecDeque<ResolvedFilterExpression>,
     pub arguments: IndexMap<DataConnectorArgumentName, Argument>,
 }
 
 pub fn calculate_remote_relationship_fields_for_model_target(
-    object_type_name: &Qualified<CustomTypeName>,
+    session: &Session,
+    metadata: &Metadata,
+    object_type: &OutputObjectTypeView,
     relationship_name: &RelationshipName,
     model_name: &Qualified<ModelName>,
     relationship_model_mappings: &Vec<RelationshipModelMapping>,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    target_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     target_argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
     source_selection: &IndexMap<open_dds::query::Alias, ObjectSubSelection>,
     ndc_fields: &mut IndexMap<NdcFieldAlias, Field>,
@@ -280,15 +317,33 @@ pub fn calculate_remote_relationship_fields_for_model_target(
     let mut join_mapping = BTreeMap::new();
     let mut relationship_join_filter_expressions = VecDeque::new();
     let mut arguments = IndexMap::new();
+    let mut object_type_field_mappings = BTreeMap::new();
 
     for metadata_resolve::RelationshipModelMapping {
         source_field,
         target,
     } in relationship_model_mappings
     {
+        let source_field_type = object_type
+            .get_field(&source_field.field_name, &session.role)
+            .map_err(|_| RelationshipError::MissingSourceField {
+                relationship_name: relationship_name.clone(),
+                source_field: source_field.field_name.clone(),
+            })?
+            .field_type;
+
+        collect_remote_join_object_type_field_mappings(
+            source_field_type,
+            &mut object_type_field_mappings,
+            relationship_name,
+            source_type_mappings,
+            target_type_mappings,
+            &metadata.object_types,
+        )?;
+
         let source_column = get_relationship_field_mapping_of_field_name(
             source_type_mappings,
-            object_type_name,
+            object_type.object_type_name,
             relationship_name,
             &source_field.field_name,
         )
@@ -324,7 +379,11 @@ pub fn calculate_remote_relationship_fields_for_model_target(
                 let target_value_variable = target_model_field.make_variable_name();
                 join_mapping.insert(
                     source_field.field_name.clone(),
-                    (ndc_field_alias, target_model_field),
+                    RemoteJoinFieldMapping {
+                        source_field_alias: ndc_field_alias.clone(),
+                        source_field_type: source_field_type.clone(),
+                        target_field: target_model_field.clone(),
+                    },
                 );
 
                 // add extra comparison to filter for target model
@@ -352,7 +411,7 @@ pub fn calculate_remote_relationship_fields_for_model_target(
                 let data_connector_argument_name =
                     target_argument_mappings.get(argument_name).ok_or_else(|| {
                         RelationshipError::MissingArgumentMappingInModelRelationship {
-                            source_type: object_type_name.clone(),
+                            source_type: object_type.object_type_name.clone(),
                             relationship_name: relationship_name.clone(),
                             model_name: model_name.clone(),
                             argument_name: argument_name.clone(),
@@ -370,7 +429,11 @@ pub fn calculate_remote_relationship_fields_for_model_target(
                 // add join mapping
                 join_mapping.insert(
                     source_field.field_name.clone(),
-                    (ndc_field_alias, target_argument),
+                    RemoteJoinFieldMapping {
+                        source_field_alias: ndc_field_alias.clone(),
+                        source_field_type: source_field_type.clone(),
+                        target_field: target_argument.clone(),
+                    },
                 );
             }
         }
@@ -378,9 +441,130 @@ pub fn calculate_remote_relationship_fields_for_model_target(
 
     Ok(ModelRemoteRelationshipParts {
         join_mapping,
+        object_type_field_mappings,
         relationship_join_filter_expressions,
         arguments,
     })
+}
+
+pub fn collect_remote_join_object_type_field_mappings(
+    source_field_type: &QualifiedTypeReference,
+    object_type_field_mappings: &mut BTreeMap<
+        Qualified<CustomTypeName>,
+        RemoteJoinObjectFieldMapping,
+    >,
+    relationship_name: &RelationshipName,
+    source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    target_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+) -> Result<(), RelationshipError> {
+    // Get the object type of the field (if it is one)
+    let (source_field_type_name, field_object_type) =
+        match source_field_type.get_underlying_type_name() {
+            // Scalar type, no field mapping required
+            metadata_resolve::QualifiedTypeName::Inbuilt(_) => return Ok(()),
+
+            metadata_resolve::QualifiedTypeName::Custom(source_field_type_name) => {
+                // Check if already mapped
+                if object_type_field_mappings.contains_key(source_field_type_name) {
+                    // Already mapped, no need to do it again
+                    return Ok(());
+                }
+
+                let Some(field_object_type) = object_types.get(source_field_type_name) else {
+                    // Field is not an object type - no field mapping required
+                    return Ok(());
+                };
+
+                (source_field_type_name, field_object_type)
+            }
+        };
+
+    // Get the field mappings from the source
+    let TypeMapping::Object {
+        field_mappings: source_field_mappings,
+        ..
+    } = source_type_mappings
+        .get(source_field_type_name)
+        .ok_or_else(|| {
+            RelationshipError::RelationshipFieldMappingError(
+                RelationshipFieldMappingError::TypeMappingNotFoundForRelationship {
+                    type_name: source_field_type_name.clone(),
+                    relationship_name: relationship_name.clone(),
+                },
+            )
+        })?;
+
+    // Get the field mappings from target
+    let TypeMapping::Object {
+        field_mappings: target_field_mappings,
+        ..
+    } = target_type_mappings
+        .get(source_field_type_name)
+        .ok_or_else(|| {
+            RelationshipError::RelationshipFieldMappingError(
+                RelationshipFieldMappingError::TypeMappingNotFoundForRelationship {
+                    type_name: source_field_type_name.clone(),
+                    relationship_name: relationship_name.clone(),
+                },
+            )
+        })?;
+
+    // Construct a mapping from source data connector column names to target data connector column names
+    let object_field_mapping = field_object_type
+        .object_type
+        .fields
+        .iter()
+        .map(|(field_name, field_definition)| {
+            let source_field_mapping = source_field_mappings.get(field_name).ok_or_else(|| {
+                RelationshipError::RelationshipFieldMappingError(
+                    RelationshipFieldMappingError::FieldMappingNotFoundForRelationship {
+                        type_name: source_field_type_name.clone(),
+                        relationship_name: relationship_name.clone(),
+                        field_name: field_name.clone(),
+                    },
+                )
+            })?;
+
+            let target_field_mapping = target_field_mappings.get(field_name).ok_or_else(|| {
+                RelationshipError::RelationshipFieldMappingError(
+                    RelationshipFieldMappingError::FieldMappingNotFoundForRelationship {
+                        type_name: source_field_type_name.clone(),
+                        relationship_name: relationship_name.clone(),
+                        field_name: field_name.clone(),
+                    },
+                )
+            })?;
+
+            Ok((
+                source_field_mapping.column.clone(),
+                RemoteJoinObjectTargetField {
+                    name: target_field_mapping.column.clone(),
+                    field_type: field_definition.field_type.clone(),
+                },
+            ))
+        })
+        .collect::<Result<RemoteJoinObjectFieldMapping, RelationshipError>>()?;
+
+    object_type_field_mappings.insert(source_field_type_name.clone(), object_field_mapping);
+
+    // Loop through all the fields of this object type and collect any mappings required
+    // for fields that also use object types
+    for field in field_object_type.object_type.fields.values() {
+        collect_remote_join_object_type_field_mappings(
+            &field.field_type,
+            object_type_field_mappings,
+            relationship_name,
+            source_type_mappings,
+            target_type_mappings,
+            object_types,
+        )?;
+    }
+
+    Ok(())
 }
 
 /// Processes a remote relationship field mapping, and returns the alias used in
@@ -388,6 +572,10 @@ pub fn calculate_remote_relationship_fields_for_model_target(
 ///
 /// - if the selection set DOES NOT contain the field, insert it into the NDC IR
 ///   (with an internal alias), and return the alias
+/// - if the selection set already contains the field, but it is a nested field
+///   selection, we can't use it because it might be a partial select of the type
+///   and we need the whole value for the join, so we insert a fresh selection into
+///   the NDC IR (with an internal alias) and return the alias
 /// - if the selection set already contains the field, do not insert the field
 ///   in NDC IR, and return the existing alias
 ///
@@ -401,8 +589,8 @@ fn process_remote_relationship_field_mapping(
         .iter()
         .find_map(|(alias, column)| match column {
             open_dds::query::ObjectSubSelection::Field(field) => {
-                if field.target.field_name == *field_name {
-                    Some(alias.clone())
+                if field.target.field_name == *field_name && field.selection.is_none() {
+                    Some(alias)
                 } else {
                     None
                 }

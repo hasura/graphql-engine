@@ -15,8 +15,10 @@ pub use execution_plan::{
     MutationExecutionPlan, MutationExecutionTree, NDCMutationExecution, NDCQueryExecution,
     NDCSubscriptionExecution, NestedArray, NestedField, NestedObject, PredicateQueryTree,
     PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree, QueryNode,
-    Relationship, RelationshipArgument, RemoteJoin, RemoteJoinArgument, RemoteJoinType,
-    RemotePredicateKey, ResolvedFilterExpression, SourceFieldAlias, TargetField, UniqueNumber,
+    Relationship, RelationshipArgument, RemoteJoin, RemoteJoinFieldMapping,
+    RemoteJoinObjectFieldMapping, RemoteJoinObjectTargetField, RemoteJoinType, RemoteJoinVariable,
+    RemoteJoinVariableSet, RemotePredicateKey, ResolvedFilterExpression, SourceFieldAlias,
+    TargetField, UniqueNumber,
 };
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,

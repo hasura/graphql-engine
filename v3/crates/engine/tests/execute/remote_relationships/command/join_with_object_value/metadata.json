@@ -1,0 +1,473 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Location",
+            "fields": [
+              {
+                "name": "Campuses",
+                "type": "[String!]!",
+                "description": "The location's campuses"
+              },
+              {
+                "name": "City",
+                "type": "String!",
+                "description": "The location's city"
+              },
+              {
+                "name": "Country",
+                "type": "String!",
+                "description": "The location's city"
+              },
+              {
+                "name": "CountryId",
+                "type": "Int!",
+                "description": "The location's country ID"
+              }
+            ],
+            "description": "A location",
+            "graphql": {
+              "typeName": "Location",
+              "inputTypeName": "LocationInput"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "location",
+                "fieldMapping": {
+                  "Campuses": {
+                    "column": {
+                      "name": "campuses"
+                    }
+                  },
+                  "City": {
+                    "column": {
+                      "name": "city"
+                    }
+                  },
+                  "Country": {
+                    "column": {
+                      "name": "country"
+                    }
+                  },
+                  "CountryId": {
+                    "column": {
+                      "name": "country_id"
+                    }
+                  }
+                }
+              },
+              {
+                "dataConnectorName": "custom_no_relationships",
+                "dataConnectorObjectType": "location_pascalcase",
+                "fieldMapping": {
+                  "Campuses": {
+                    "column": {
+                      "name": "Campuses"
+                    }
+                  },
+                  "City": {
+                    "column": {
+                      "name": "City"
+                    }
+                  },
+                  "Country": {
+                    "column": {
+                      "name": "Country"
+                    }
+                  },
+                  "CountryId": {
+                    "column": {
+                      "name": "CountryId"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Location",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["Campuses", "City", "Country", "CountryId"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["Campuses", "City", "Country", "CountryId"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Location_bool_exp",
+            "operand": {
+              "object": {
+                "type": "Location",
+                "comparableFields": [
+                  {
+                    "fieldName": "Campuses",
+                    "booleanExpressionType": "String_comparison_exp"
+                  },
+                  {
+                    "fieldName": "City",
+                    "booleanExpressionType": "String_comparison_exp"
+                  },
+                  {
+                    "fieldName": "Country",
+                    "booleanExpressionType": "String_comparison_exp"
+                  },
+                  {
+                    "fieldName": "CountryId",
+                    "booleanExpressionType": "Int_comparison_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Location_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "String_comparison_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  },
+                  {
+                    "dataConnectorName": "custom_no_relationships",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": false
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_comparison_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Int_comparison_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  },
+                  {
+                    "dataConnectorName": "custom_no_relationships",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": false
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_comparison_exp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Institution",
+            "fields": [
+              {
+                "name": "Departments",
+                "type": "[String!]!",
+                "description": "The institution's departments"
+              },
+              {
+                "name": "Id",
+                "type": "Int",
+                "description": "The institution's primary key"
+              },
+              {
+                "name": "Location",
+                "type": "Location",
+                "description": "The institution's location"
+              },
+              {
+                "name": "Name",
+                "type": "String!",
+                "description": "The institution's name"
+              }
+            ],
+            "description": "An institution",
+            "graphql": {
+              "typeName": "Institution"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "institution",
+                "fieldMapping": {
+                  "Departments": {
+                    "column": {
+                      "name": "departments"
+                    }
+                  },
+                  "Id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "Location": {
+                    "column": {
+                      "name": "location"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Institution",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["Departments", "Id", "Location", "Name"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["Departments", "Id", "Location", "Name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "Institutions",
+            "arguments": [],
+            "objectType": "Institution",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "institutions",
+              "argumentMapping": {}
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "Institutions"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Institutions",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "EvalLocation",
+            "arguments": [
+              {
+                "name": "location",
+                "type": "Location!",
+                "description": "The location to evaluate"
+              },
+              {
+                "name": "check",
+                "type": "Location_bool_exp!",
+                "description": "The boolean expression to evaluate the location against"
+              }
+            ],
+            "outputType": "Boolean!",
+            "graphql": {
+              "rootFieldKind": "Query",
+              "rootFieldName": "EvalLocation"
+            },
+            "source": {
+              "dataConnectorName": "custom_no_relationships",
+              "dataConnectorCommand": {
+                "function": "eval_location"
+              }
+            },
+            "description": "Evaluates a submitted location object against the provided boolean expression"
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "EvalLocation",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "check",
+                    "value": {
+                      "booleanExpression": {
+                        "fieldComparison": {
+                          "field": "CountryId",
+                          "operator": "_eq",
+                          "value": {
+                            "literal": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "check",
+                    "value": {
+                      "booleanExpression": {
+                        "fieldComparison": {
+                          "field": "CountryId",
+                          "operator": "_eq",
+                          "value": {
+                            "literal": 2
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "EvaluatedLocation",
+            "sourceType": "Institution",
+            "target": {
+              "command": {
+                "name": "EvalLocation"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [{ "fieldName": "Location" }]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "location"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,7 @@ pub mod evaluated_institution;
 pub mod genre;
 pub mod institution;
 pub mod location;
+pub mod location_pascalcase;
 pub mod login;
 pub mod movie;
 pub mod name_query;
@@ -215,6 +216,10 @@ pub(crate) fn object_types() -> BTreeMap<ndc_models::ObjectTypeName, ndc_models:
         ("name_query".into(), name_query::definition()),
         ("institution".into(), institution::definition()),
         ("location".into(), location::definition()),
+        (
+            "location_pascalcase".into(),
+            location_pascalcase::definition(),
+        ),
         ("staff_member".into(), staff_member::definition()),
         ("login_response".into(), login::definition_login_response()),
         (
