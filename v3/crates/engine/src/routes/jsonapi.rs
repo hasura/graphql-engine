@@ -13,12 +13,25 @@ use tracing_util::{set_status_on_current_span, SpanVisibility, Traceable};
 use crate::{authentication_middleware, EngineState};
 
 pub fn create_json_api_router(state: EngineState) -> axum::Router {
-    let router = Router::new()
-        .route("/__schema", get(handle_rest_schema))
+    // Create the base router and nest both paths to the same handler
+    Router::new()
+        .nest(
+            jsonapi::EndPoint::V1Rest.as_str(),
+            build_router(state.clone(), jsonapi::EndPoint::V1Rest),
+        )
+        .nest(
+            jsonapi::EndPoint::V1Jsonapi.as_str(),
+            build_router(state, jsonapi::EndPoint::V1Jsonapi),
+        )
+}
+
+fn build_router(state: EngineState, endpoint: jsonapi::EndPoint) -> axum::Router {
+    Router::new()
+        .route("/__schema", get(handle_jsonapi_schema))
         // TODO: update method GET; for now we are only supporting queries. And
         // in JSON:API spec, all queries have the GET method. Not even HEAD is
         // supported. So this should be fine.
-        .route("/*path", get(handle_rest_request))
+        .route("/*path", get(handle_jsonapi_request))
         .layer(axum::middleware::from_fn_with_state(
             jsonapi::build_state_with_middleware_error_converter(()),
             hasura_authn_core::resolve_session,
@@ -27,15 +40,15 @@ pub fn create_json_api_router(state: EngineState) -> axum::Router {
             jsonapi::build_state_with_middleware_error_converter(state.clone()),
             authentication_middleware,
         ))
-        .layer(axum::middleware::from_fn(
-            jsonapi::rest_request_tracing_middleware,
+        .layer(axum::middleware::from_fn_with_state(
+            endpoint,
+            jsonapi::jsonapi_request_tracing_middleware,
         ))
         // *PLEASE DO NOT ADD ANY MIDDLEWARE
-        // BEFORE THE `rest_request_tracing_middleware`*
+        // BEFORE THE `jsonapi_request_tracing_middleware`*
         // Refer to it for more details.
         .layer(TraceLayer::new_for_http())
-        .with_state(state);
-    Router::new().nest("/v1/rest", router)
+        .with_state(state)
 }
 
 struct JsonApiSchemaResponse {
@@ -60,7 +73,7 @@ impl Traceable for JsonApiSchemaResponse {
     }
 }
 
-async fn handle_rest_schema(
+async fn handle_jsonapi_schema(
     axum::extract::State(state): axum::extract::State<EngineState>,
     Extension(session): Extension<Session>,
 ) -> impl IntoResponse {
@@ -84,7 +97,7 @@ async fn handle_rest_schema(
     )
 }
 
-async fn handle_rest_request(
+async fn handle_jsonapi_request(
     request_headers: HeaderMap,
     method: Method,
     uri: Uri,
@@ -95,8 +108,8 @@ async fn handle_rest_request(
     let tracer = tracing_util::global_tracer();
     let response = tracer
         .in_span_async(
-            "handle_rest_request",
-            "Handle rest request",
+            "handle_jsonapi_request",
+            "Handle jsonapi request",
             SpanVisibility::User,
             || {
                 Box::pin(jsonapi::handler_internal(

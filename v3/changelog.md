@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added `/v1/jsonapi` as an alias for `/v1/rest` endpoints to better reflect the
+  JSONAPI specification compliance.
+
 ### Changed
 
 ### Fixed
