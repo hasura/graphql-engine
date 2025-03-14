@@ -54,7 +54,7 @@ It also includes a robust way to override the default allocator in [Windows](#ov
 - __first-class heaps__: efficiently create and use multiple heaps to allocate across different regions.
   A heap can be destroyed at once instead of deallocating each object separately.
 - __bounded__: it does not suffer from _blowup_ \[1\], has bounded worst-case allocation
-  times (_wcat_) (upto OS primitives), bounded space overhead (~0.2% meta-data, with low
+  times (_wcat_) (up to OS primitives), bounded space overhead (~0.2% meta-data, with low
   internal fragmentation), and has no internal points of contention using only atomic operations.
 - __fast__: In our benchmarks (see [below](#performance)),
   _mimalloc_ outperforms other leading allocators (_jemalloc_, _tcmalloc_, _Hoard_, etc),
@@ -85,14 +85,14 @@ Note: the `v2.x` version has a new algorithm for managing internal mimalloc page
   abstraction layer to make it easier to port and separate platform dependent code (in `src/prim`). Fixed C++ STL compilation on older Microsoft C++ compilers, and various small bug fixes.
 
 * 2022-12-23, `v1.7.9`, `v2.0.9`: Supports building with [asan](#asan) and improved [Valgrind](#valgrind) support.
-  Support abitrary large alignments (in particular for `std::pmr` pools). 
+  Support arbitrary large alignments (in particular for `std::pmr` pools). 
   Added C++ STL allocators attached to a specific heap (thanks @vmarkovtsev). 
   Heap walks now visit all object (including huge objects). Support Windows nano server containers (by Johannes Schindelin,@dscho). 
   Various small bug fixes.
 
 * 2022-11-03, `v1.7.7`, `v2.0.7`: Initial support for [Valgrind](#valgrind) for leak testing and heap block overflow
   detection. Initial
-  support for attaching heaps to a speficic memory area (only in v2). Fix `realloc` behavior for zero size blocks, remove restriction to integral multiple of the alignment in `alloc_align`, improved aligned allocation performance, reduced contention with many threads on few processors (thank you @dposluns!), vs2022 support, support `pkg-config`, .
+  support for attaching heaps to a specific memory area (only in v2). Fix `realloc` behavior for zero size blocks, remove restriction to integral multiple of the alignment in `alloc_align`, improved aligned allocation performance, reduced contention with many threads on few processors (thank you @dposluns!), vs2022 support, support `pkg-config`, .
 
 * 2022-04-14, `v1.7.6`, `v2.0.6`: fix fallback path for aligned OS allocation on Windows, improve Windows aligned allocation
   even when compiling with older SDK's, fix dynamic overriding on macOS Monterey, fix MSVC C++ dynamic overriding, fix
@@ -232,7 +232,7 @@ target_link_libraries(myapp PUBLIC mimalloc-static)
 to link with the static library. See `test\CMakeLists.txt` for an example.
 
 For best performance in C++ programs, it is also recommended to override the
-global `new` and `delete` operators. For convience, mimalloc provides
+global `new` and `delete` operators. For convince, mimalloc provides
 [`mimalloc-new-delete.h`](https://github.com/microsoft/mimalloc/blob/master/include/mimalloc-new-delete.h) which does this for you -- just include it in a single(!) source file in your project.
 In C++, mimalloc also provides the `mi_stl_allocator` struct which implements the `std::allocator`
 interface.
@@ -338,7 +338,7 @@ to make mimalloc more robust against exploits. In particular:
 - All free list pointers are
   [encoded](https://github.com/microsoft/mimalloc/blob/783e3377f79ee82af43a0793910a9f2d01ac7863/include/mimalloc-internal.h#L396)
   with per-page keys which is used both to prevent overwrites with a known pointer, as well as to detect heap corruption.
-- Double free's are detected (and ignored).
+- Double frees are detected (and ignored).
 - The free lists are initialized in a random order and allocation randomly chooses between extension and reuse within a page to
   mitigate against attacks that rely on a predicable allocation order. Similarly, the larger heap blocks allocated by mimalloc
   from the OS are also address randomized.
@@ -351,7 +351,7 @@ When _mimalloc_ is built using debug mode, various checks are done at runtime to
 
 - Statistics are maintained in detail for each object size. They can be shown using `MIMALLOC_SHOW_STATS=1` at runtime.
 - All objects have padding at the end to detect (byte precise) heap block overflows.
-- Double free's, and freeing invalid heap pointers are detected.
+- Double frees, and freeing invalid heap pointers are detected.
 - Corrupted free-lists and some forms of use-after-free are detected.
 
 

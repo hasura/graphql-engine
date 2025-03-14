@@ -91,7 +91,7 @@ If you are re-running this command to update your Mac, you may need to run
      ln -s cabal/dev-sh.project.local cabal.project.local
      ```
 
-     (Copying and pasting allows you to add local projects overrides, which may be needed if you are are planning to make changes to the graphql-engine code, but is not required for simply compiling the code as-is).
+     (Copying and pasting allows you to add local projects overrides, which may be needed if you are planning to make changes to the graphql-engine code, but is not required for simply compiling the code as-is).
 
 6. Write the version number of the graphql-server that you are intending to build to the file `server/CURRENT_VERSION`.
     For example if you are building `v2.13.0` then you can run the following command:

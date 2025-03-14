@@ -64,7 +64,7 @@ Note: Boolean flags `{FLAG}` can be provided as `1`, `true`, `t`, `yes`, `y`, or
 | `DB_READONLY` | `{FLAG}` | `false` | Makes databases readonly. |
 | `DB_ALLOW_LIST` | `DB1[,DB2]*` | Any Allowed | Restrict what databases can be connected to. |
 | `DB_PRIVATECACHE` | `{FLAG}` | Shared | Keep caches between connections private. |
-| `DEBUGGING_TAGS` | `{FLAG}` | `false` | Outputs xml style tags in query comments for deugging purposes. |
+| `DEBUGGING_TAGS` | `{FLAG}` | `false` | Outputs xml style tags in query comments for debugging purposes. |
 | `PRETTY_PRINT_LOGS` | `{FLAG}` | `false` | Uses `pino-pretty` to pretty print request logs |
 | `LOG_LEVEL` | `fatal` \| `error` \| `info` \| `debug` \| `trace` \| `silent` | `info` | The minimum log level to output |
 | `METRICS` | `{FLAG}` | `false` | Enables a `/metrics` prometheus metrics endpoint.
