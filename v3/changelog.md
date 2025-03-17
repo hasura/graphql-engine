@@ -4,12 +4,16 @@
 
 ### Added
 
-- Added `/v1/jsonapi` as an alias for `/v1/rest` endpoints to better reflect the
-  JSONAPI specification compliance.
-
 ### Changed
 
 ### Fixed
+
+## [v2025.03.17]
+
+### Added
+
+- Added `/v1/jsonapi` as an alias for `/v1/rest` endpoints to better reflect the
+  JSONAPI specification compliance.
 
 ## [v2025.03.13]
 
@@ -1496,7 +1500,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.13...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.17...HEAD
+[v2025.03.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.17
 [v2025.03.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.13
 [v2025.03.11]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.11
 [v2025.03.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.10
