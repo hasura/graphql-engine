@@ -39,12 +39,13 @@ pub fn resolve(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
-) -> Result<AggregateBooleanExpressionsOutput, NamedAggregateBooleanExpressionError> {
+) -> Result<AggregateBooleanExpressionsOutput, Vec<NamedAggregateBooleanExpressionError>> {
     let mut output = AggregateBooleanExpressionsOutput {
         scalar_aggregates: BTreeMap::new(),
         object_aggregates: BTreeMap::new(),
         issues: vec![],
     };
+    let mut results = vec![];
 
     for open_dds::accessor::QualifiedObject {
         path: _,
@@ -52,91 +53,125 @@ pub fn resolve(
         object: boolean_expression,
     } in &metadata_accessor.boolean_expression_types
     {
-        match &boolean_expression.operand {
-            open_dds::boolean_expression::BooleanExpressionOperand::ObjectAggregate(
-                object_aggregate_operand,
-            ) => {
-                let mut issues = vec![];
-
-                let qualified_name = resolve_common_aggregate_boolean_expression(
-                    unstable_features,
-                    subgraph,
-                    boolean_expression,
-                )?;
-                let object_aggregate = resolve_object_aggregate_boolean_expression(
-                    subgraph,
-                    boolean_expression,
-                    object_aggregate_operand,
-                    scalar_boolean_expression_types,
-                    &metadata_accessor.boolean_expression_types,
-                    unresolved_relationships,
-                    &metadata_accessor.models,
-                    aggregate_expressions,
-                    scalar_types,
-                    object_types,
-                    graphql_config,
-                    graphql_types,
-                    &mut issues,
-                )
-                .map_err(|error| NamedAggregateBooleanExpressionError {
-                    type_name: qualified_name.clone(),
-                    error,
-                })?;
-
-                output.issues.extend(issues.into_iter().map(|issue| {
-                    NamedAggregateBooleanExpressionIssue {
-                        type_name: qualified_name.clone(),
-                        issue,
-                    }
-                }));
-
-                output
-                    .object_aggregates
-                    .insert(qualified_name, object_aggregate);
-            }
-            open_dds::boolean_expression::BooleanExpressionOperand::ScalarAggregate(
-                scalar_aggregate_operand,
-            ) => {
-                let mut issues = vec![];
-
-                let qualified_name = resolve_common_aggregate_boolean_expression(
-                    unstable_features,
-                    subgraph,
-                    boolean_expression,
-                )?;
-
-                let scalar_aggregate = resolve_scalar_aggregate_boolean_expression(
-                    subgraph,
-                    boolean_expression,
-                    scalar_aggregate_operand,
-                    scalar_boolean_expression_types,
-                    aggregate_expressions,
-                    scalar_types,
-                    graphql_config,
-                    graphql_types,
-                    &mut issues,
-                )
-                .map_err(|error| NamedAggregateBooleanExpressionError {
-                    type_name: qualified_name.clone(),
-                    error,
-                })?;
-
-                output.issues.extend(issues.into_iter().map(|issue| {
-                    NamedAggregateBooleanExpressionIssue {
-                        type_name: qualified_name.clone(),
-                        issue,
-                    }
-                }));
-
-                output
-                    .scalar_aggregates
-                    .insert(qualified_name, scalar_aggregate);
-            }
-            _ => (),
-        }
+        results.push(resolve_aggregate_boolean_expression(
+            &mut output,
+            unstable_features,
+            metadata_accessor,
+            scalar_boolean_expression_types,
+            aggregate_expressions,
+            unresolved_relationships,
+            object_types,
+            scalar_types,
+            graphql_config,
+            graphql_types,
+            subgraph,
+            boolean_expression,
+        ));
     }
 
-    Ok(output)
+    partition_eithers::collect_any_errors(results).map(|_| output)
+}
+
+fn resolve_aggregate_boolean_expression(
+    output: &mut AggregateBooleanExpressionsOutput,
+    unstable_features: &UnstableFeatures,
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    scalar_boolean_expression_types: &BTreeMap<
+        boolean_expressions::BooleanExpressionTypeIdentifier,
+        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
+    >,
+    aggregate_expressions: &BTreeMap<Qualified<AggregateExpressionName>, AggregateExpression>,
+    unresolved_relationships: &relationships::Relationships,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    graphql_config: &graphql_config::GraphqlConfig,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
+    subgraph: &SubgraphName,
+    boolean_expression: &open_dds::boolean_expression::BooleanExpressionTypeV1,
+) -> Result<(), NamedAggregateBooleanExpressionError> {
+    match &boolean_expression.operand {
+        open_dds::boolean_expression::BooleanExpressionOperand::ObjectAggregate(
+            object_aggregate_operand,
+        ) => {
+            let mut issues = vec![];
+
+            let qualified_name = resolve_common_aggregate_boolean_expression(
+                unstable_features,
+                subgraph,
+                boolean_expression,
+            )?;
+            let object_aggregate = resolve_object_aggregate_boolean_expression(
+                subgraph,
+                boolean_expression,
+                object_aggregate_operand,
+                scalar_boolean_expression_types,
+                &metadata_accessor.boolean_expression_types,
+                unresolved_relationships,
+                &metadata_accessor.models,
+                aggregate_expressions,
+                scalar_types,
+                object_types,
+                graphql_config,
+                graphql_types,
+                &mut issues,
+            )
+            .map_err(|error| NamedAggregateBooleanExpressionError {
+                type_name: qualified_name.clone(),
+                error,
+            })?;
+
+            output.issues.extend(issues.into_iter().map(|issue| {
+                NamedAggregateBooleanExpressionIssue {
+                    type_name: qualified_name.clone(),
+                    issue,
+                }
+            }));
+
+            output
+                .object_aggregates
+                .insert(qualified_name, object_aggregate);
+        }
+        open_dds::boolean_expression::BooleanExpressionOperand::ScalarAggregate(
+            scalar_aggregate_operand,
+        ) => {
+            let mut issues = vec![];
+
+            let qualified_name = resolve_common_aggregate_boolean_expression(
+                unstable_features,
+                subgraph,
+                boolean_expression,
+            )?;
+
+            let scalar_aggregate = resolve_scalar_aggregate_boolean_expression(
+                subgraph,
+                boolean_expression,
+                scalar_aggregate_operand,
+                scalar_boolean_expression_types,
+                aggregate_expressions,
+                scalar_types,
+                graphql_config,
+                graphql_types,
+                &mut issues,
+            )
+            .map_err(|error| NamedAggregateBooleanExpressionError {
+                type_name: qualified_name.clone(),
+                error,
+            })?;
+
+            output.issues.extend(issues.into_iter().map(|issue| {
+                NamedAggregateBooleanExpressionIssue {
+                    type_name: qualified_name.clone(),
+                    issue,
+                }
+            }));
+
+            output
+                .scalar_aggregates
+                .insert(qualified_name, scalar_aggregate);
+        }
+        _ => (),
+    }
+    Ok(())
 }
 
 fn resolve_common_aggregate_boolean_expression(

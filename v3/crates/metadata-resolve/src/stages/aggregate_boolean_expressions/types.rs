@@ -11,11 +11,12 @@ use open_dds::{
 };
 
 use crate::{
-    stages::aggregates::CountAggregateType,
-    stages::boolean_expressions::BooleanExpressionTypeIdentifier,
-    stages::graphql_config::GraphqlConfigError,
-    stages::scalar_boolean_expressions::LogicalOperators, Qualified, QualifiedTypeName,
-    QualifiedTypeReference,
+    stages::{
+        aggregates::CountAggregateType, boolean_expressions::BooleanExpressionTypeIdentifier,
+        graphql_config::GraphqlConfigError, scalar_boolean_expressions::LogicalOperators,
+    },
+    types::error::ContextualError,
+    Qualified, QualifiedTypeName, QualifiedTypeReference,
 };
 
 #[derive(Debug)]
@@ -126,6 +127,12 @@ pub struct AggregatePredicateGraphqlConfig {
 pub struct NamedAggregateBooleanExpressionError {
     pub type_name: Qualified<CustomTypeName>,
     pub error: AggregateBooleanExpressionError,
+}
+
+impl ContextualError for NamedAggregateBooleanExpressionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -3,7 +3,7 @@ use crate::helpers::type_mappings::TypeMappingCollectionError;
 use crate::stages::{
     boolean_expressions, data_connectors, graphql_config, relationships, scalar_boolean_expressions,
 };
-use crate::types::error::TypePredicateError;
+use crate::types::error::{ContextualError, TypePredicateError};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use crate::QualifiedTypeReference;
 use open_dds::{
@@ -156,4 +156,10 @@ pub enum BooleanExpressionError {
 
     #[error("{0}")]
     RelationshipError(#[from] relationships::RelationshipError),
+}
+
+impl ContextualError for BooleanExpressionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }

@@ -1,4 +1,4 @@
-use crate::stages::graphql_config;
+use crate::{stages::graphql_config, types::error::ContextualError};
 use open_dds::{
     aggregates::{
         AggregateExpressionName, AggregationFunctionName, DataConnectorAggregationFunctionName,
@@ -254,6 +254,12 @@ pub enum AggregateExpressionError {
         count_type: CountAggregateType,
         return_type: QualifiedTypeName,
     },
+}
+
+impl ContextualError for AggregateExpressionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]

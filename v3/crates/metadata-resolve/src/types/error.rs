@@ -384,6 +384,10 @@ impl ContextualError for Error {
             Error::ObjectTypesError(error) => error.create_error_context(),
             Error::ScalarBooleanExpressionTypeError(error) => error.create_error_context(),
             Error::TypePermissionError(error) => error.create_error_context(),
+            Error::RelationshipError(error) => error.create_error_context(),
+            Error::AggregateExpressionError(error) => error.create_error_context(),
+            Error::AggregateBooleanExpressionError(error) => error.create_error_context(),
+            Error::BooleanExpressionError(error) => error.create_error_context(),
             _other => None,
         }
     }

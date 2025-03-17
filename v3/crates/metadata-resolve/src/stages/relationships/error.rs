@@ -1,3 +1,4 @@
+use crate::types::error::ContextualError;
 use crate::types::subgraph::Qualified;
 use open_dds::relationships::RelationshipName;
 use open_dds::types::CustomTypeName;
@@ -22,4 +23,10 @@ pub enum RelationshipError {
         relationship_name: RelationshipName,
         object_type_name: Qualified<CustomTypeName>,
     },
+}
+
+impl ContextualError for RelationshipError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
