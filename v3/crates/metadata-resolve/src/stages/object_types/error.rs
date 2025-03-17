@@ -4,9 +4,12 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 
-use crate::stages::{apollo, graphql_config};
 use crate::types::subgraph::Qualified;
 use crate::NDCValidationError;
+use crate::{
+    stages::{apollo, graphql_config},
+    types::error::ContextualError,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ObjectTypesError {
@@ -51,6 +54,12 @@ pub enum ObjectTypesError {
     GraphqlError(#[from] graphql_config::GraphqlConfigError),
     #[error("{0}")]
     ApolloError(#[from] apollo::ApolloError),
+}
+
+impl ContextualError for ObjectTypesError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -88,7 +88,8 @@ fn resolve_internal(
         &data_connectors,
         &scalar_types,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     // Validate object types defined in metadata
     let object_types::ObjectTypesOutput {
@@ -102,7 +103,8 @@ fn resolve_internal(
         &data_connector_scalars,
         &scalar_types,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
