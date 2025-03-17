@@ -1,5 +1,5 @@
 use crate::helpers::typecheck::{self, TypecheckIssue};
-use crate::types::error::{Error, ShouldBeAnError};
+use crate::types::error::{ContextualError, Error, ShouldBeAnError};
 use open_dds::types::{CustomTypeName, FieldName};
 
 use crate::types::subgraph::Qualified;
@@ -19,6 +19,12 @@ pub enum TypeOutputPermissionError {
         field_name: FieldName,
         type_name: CustomTypeName,
     },
+}
+
+impl ContextualError for TypeOutputPermissionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
 
 impl From<TypeOutputPermissionError> for TypePermissionError {
@@ -48,6 +54,12 @@ pub enum TypeInputPermissionError {
     },
 }
 
+impl ContextualError for TypeInputPermissionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
+}
+
 impl From<TypeInputPermissionError> for TypePermissionError {
     fn from(val: TypeInputPermissionError) -> Self {
         TypePermissionError::TypeInputPermissionError(val)
@@ -60,6 +72,15 @@ pub enum TypePermissionError {
     TypeOutputPermissionError(TypeOutputPermissionError),
     #[error("{0}")]
     TypeInputPermissionError(TypeInputPermissionError),
+}
+
+impl ContextualError for TypePermissionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        match self {
+            Self::TypeOutputPermissionError(error) => error.create_error_context(),
+            Self::TypeInputPermissionError(error) => error.create_error_context(),
+        }
+    }
 }
 
 impl From<TypePermissionError> for Error {

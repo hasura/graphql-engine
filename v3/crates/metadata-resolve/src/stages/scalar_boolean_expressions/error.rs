@@ -1,3 +1,4 @@
+use crate::types::error::ContextualError;
 use crate::Qualified;
 use crate::{stages::graphql_config, types::error::ShouldBeAnError};
 use open_dds::flags;
@@ -43,6 +44,12 @@ pub enum ScalarBooleanExpressionTypeError {
     PredicateTypesUnsupported,
     #[error("{0}")]
     GraphqlError(#[from] graphql_config::GraphqlConfigError),
+}
+
+impl ContextualError for ScalarBooleanExpressionTypeError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
