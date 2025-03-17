@@ -130,9 +130,14 @@ impl JsonApiHttpError {
     }
 
     pub fn from_middleware_error(error: engine_types::MiddlewareError) -> Self {
+        let message = if error.is_internal {
+            "Internal error".to_string()
+        } else {
+            error.message
+        };
         Self {
             status: error.status,
-            error: error.message,
+            error: message,
         }
     }
 }
