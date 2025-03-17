@@ -102,7 +102,7 @@ human_bytes = "0.4"
 indexmap = { version = "2", features = ["serde"] }
 insta = { version = "1", features = ["glob", "json"] }
 iso8601 = "0.6.2"
-itertools = "0.13.0"
+itertools = "0.14.0"
 json_value_merge = "2"
 jsonapi_library = { package = "jsonapi", git = "https://github.com/hasura/jsonapi-rust.git", rev = "9b5a3a08414e559c7285b539acd4d4fc7b31f3b5" }
 jsonptr = "0.4"
