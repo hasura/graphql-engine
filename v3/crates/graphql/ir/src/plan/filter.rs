@@ -23,50 +23,58 @@ pub(crate) fn plan_filter_expression(
     let mut remote_predicates = PredicateQueryTrees::new();
 
     if let Some(filter) = permission_filter {
-        expressions.push(
-            plan_expression(filter, relationships, &mut remote_predicates, unique_number).map_err(
-                |plan_error| {
+        if let Some(expression) =
+            plan_expression(filter, relationships, &mut remote_predicates, unique_number)
+                .map_err(|plan_error| {
                     plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
                         description: plan_error.to_string(),
                     })
-                },
-            )?,
-        );
+                })?
+                .remove_always_true_expression()
+        {
+            expressions.push(expression);
+        }
     }
 
     if let Some(filter) = &query_filter.additional_filter {
-        expressions.push(
-            plan_expression(filter, relationships, &mut remote_predicates, unique_number).map_err(
-                |plan_error| {
+        if let Some(expression) =
+            plan_expression(filter, relationships, &mut remote_predicates, unique_number)
+                .map_err(|plan_error| {
                     plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
                         description: plan_error.to_string(),
                     })
-                },
-            )?,
-        );
+                })?
+                .remove_always_true_expression()
+        {
+            expressions.push(expression);
+        }
     }
 
     if let Some(query_where_expression) = &query_filter.where_clause {
-        let planned_expression = plan_expression(
+        if let Some(expression) = plan_expression(
             query_where_expression,
             relationships,
             &mut remote_predicates,
             unique_number,
-        )?;
-
-        expressions.push(planned_expression);
+        )?
+        .remove_always_true_expression()
+        {
+            expressions.push(expression);
+        }
     }
 
     if let Some(filter) = relationship_join_filter {
-        expressions.push(
-            plan_expression(filter, relationships, &mut remote_predicates, unique_number).map_err(
-                |plan_error| {
+        if let Some(expression) =
+            plan_expression(filter, relationships, &mut remote_predicates, unique_number)
+                .map_err(|plan_error| {
                     plan_error::Error::Internal(plan_error::InternalError::InternalGeneric {
                         description: plan_error.to_string(),
                     })
-                },
-            )?,
-        );
+                })?
+                .remove_always_true_expression()
+        {
+            expressions.push(expression);
+        }
     }
 
     let resolved_filter_expression =

@@ -1,7 +1,7 @@
 query MyQuery {
   AuthorByID(author_id: 2) {
     author_id
-    Articles {
+    Articles(where: {}) {
       title
     }
   }

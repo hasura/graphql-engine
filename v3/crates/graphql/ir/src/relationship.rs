@@ -924,8 +924,8 @@ pub fn build_remote_relationship<'s>(
     if !relationship_join_filter_expressions.is_empty() {
         remote_relationships_ir
             .filter_clause
-            .relationship_join_filter =
-            Some(Expression::mk_and(relationship_join_filter_expressions));
+            .relationship_join_filter = Expression::mk_and(relationship_join_filter_expressions)
+            .remove_always_true_expression();
     }
     remote_relationships_ir.variable_arguments = variable_arguments;
 

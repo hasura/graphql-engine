@@ -259,7 +259,9 @@ fn to_filter_expression_internal<'metadata>(
                         )?;
 
                         // include any predicates from model permissions
-                        let predicate = match model_expression {
+                        let predicate = match model_expression
+                            .and_then(Expression::remove_always_true_expression)
+                        {
                             Some(model_expression) => {
                                 Expression::mk_and([model_expression, inner].to_vec())
                             }
@@ -1022,7 +1024,7 @@ pub(crate) fn resolve_model_permission_filter(
                 unique_number,
             )?;
 
-            Ok(Some(filter))
+            Ok(filter.remove_always_true_expression())
         }
     }
 }

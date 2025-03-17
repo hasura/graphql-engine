@@ -88,7 +88,7 @@ pub fn model_target_to_ndc_query(
                 unique_number,
             )?;
 
-            Some(resolved_filter_expression)
+            resolved_filter_expression.remove_always_true_expression()
         }
         _ => None,
     };

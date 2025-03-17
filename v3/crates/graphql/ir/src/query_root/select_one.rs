@@ -207,7 +207,8 @@ pub fn select_one_generate_ir<'n, 's>(
 
             let query_filter = filter::QueryFilter {
                 where_clause: None,
-                additional_filter: Some(Expression::mk_and(filter_expressions)),
+                additional_filter: Expression::mk_and(filter_expressions)
+                    .remove_always_true_expression(),
             };
 
             ModelSelectOneSelection::Ir(model_selection::model_selection_ir(

@@ -217,7 +217,8 @@ pub(crate) fn relay_node_ir<'n, 's>(
 
                     let query_filter = filter::QueryFilter {
                         where_clause: None,
-                        additional_filter: Some(Expression::mk_and(filter_clause_expressions)),
+                        additional_filter: Expression::mk_and(filter_clause_expressions)
+                            .remove_always_true_expression(),
                     };
 
                     ModelNodeSelection::Ir(model_selection::model_selection_ir(

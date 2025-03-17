@@ -408,7 +408,9 @@ fn resolve_object_boolean_expression<'s>(
                     )?;
 
                     // Combine the filter predicate and the relationship predicate
-                    let predicate = match filter_predicate {
+                    let predicate = match filter_predicate
+                        .and_then(Expression::remove_always_true_expression)
+                    {
                         Some(filter_predicate) => {
                             Expression::mk_and(vec![filter_predicate, relationship_predicate])
                         }
