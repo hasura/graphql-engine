@@ -1,3 +1,5 @@
+pub mod rel;
+
 use std::{
     cmp::{Ord, Ordering},
     collections::{BTreeMap, HashSet},

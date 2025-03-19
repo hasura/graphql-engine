@@ -1,0 +1,2532 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rel",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "collection",
+        "columns",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "From"
+          ]
+        },
+        "collection": {
+          "type": "string"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "input",
+        "skip",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Limit"
+          ]
+        },
+        "input": {
+          "$ref": "#/definitions/Rel"
+        },
+        "fetch": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0.0
+        },
+        "skip": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0.0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "exprs",
+        "input",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Project"
+          ]
+        },
+        "input": {
+          "$ref": "#/definitions/Rel"
+        },
+        "exprs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Expression"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "input",
+        "predicate",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Filter"
+          ]
+        },
+        "input": {
+          "$ref": "#/definitions/Rel"
+        },
+        "predicate": {
+          "$ref": "#/definitions/Expression"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "exprs",
+        "input",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Sort"
+          ]
+        },
+        "input": {
+          "$ref": "#/definitions/Rel"
+        },
+        "exprs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Sort"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "join_type",
+        "left",
+        "on",
+        "right",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Join"
+          ]
+        },
+        "left": {
+          "$ref": "#/definitions/Rel"
+        },
+        "right": {
+          "$ref": "#/definitions/Rel"
+        },
+        "on": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/JoinOn"
+          }
+        },
+        "join_type": {
+          "$ref": "#/definitions/JoinType"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "aggregates",
+        "group_by",
+        "input",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Aggregate"
+          ]
+        },
+        "input": {
+          "$ref": "#/definitions/Rel"
+        },
+        "group_by": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Expression"
+          }
+        },
+        "aggregates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Expression"
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "CaseWhen": {
+      "type": "object",
+      "required": [
+        "then",
+        "when"
+      ],
+      "properties": {
+        "when": {
+          "$ref": "#/definitions/Expression"
+        },
+        "then": {
+          "$ref": "#/definitions/Expression"
+        }
+      }
+    },
+    "Expression": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "literal",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Literal"
+              ]
+            },
+            "literal": {
+              "$ref": "#/definitions/Literal"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "index",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Column"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_type",
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Cast"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "as_type": {
+              "$ref": "#/definitions/ScalarType"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_type",
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TryCast"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "as_type": {
+              "$ref": "#/definitions/ScalarType"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "when"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Case"
+              ]
+            },
+            "when": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CaseWhen"
+              }
+            },
+            "default": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "And"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Or"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Eq"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "NotEq"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Lt"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "LtEq"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Gt"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "GtEq"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Plus"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Minus"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Multiply"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Divide"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "left",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Modulo"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Expression"
+            },
+            "right": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "pattern",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Like"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "pattern": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "pattern",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "ILike"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "pattern": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "pattern",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "NotLike"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "pattern": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "pattern",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "NotILike"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "pattern": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Not"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsNotNull"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsNull"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsTrue"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsFalse"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsUnknown"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsNotTrue"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsNotFalse"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsNotUnknown"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Negative"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "high",
+            "low",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Between"
+              ]
+            },
+            "low": {
+              "$ref": "#/definitions/Expression"
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "high": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "high",
+            "low",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "NotBetween"
+              ]
+            },
+            "low": {
+              "$ref": "#/definitions/Expression"
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "high": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "list",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "In"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "list": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "list",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "NotIn"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "list": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "ToLower"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "ToUpper"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Average"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "BoolAnd"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "BoolOr"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Count"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "FirstValue"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "LastValue"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Max"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Mean"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Median"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Min"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StringAgg"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Sum"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Var"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        }
+      ]
+    },
+    "JoinOn": {
+      "type": "object",
+      "required": [
+        "left",
+        "right"
+      ],
+      "properties": {
+        "left": {
+          "$ref": "#/definitions/Expression"
+        },
+        "right": {
+          "$ref": "#/definitions/Expression"
+        }
+      }
+    },
+    "JoinType": {
+      "type": "string",
+      "enum": [
+        "Left",
+        "Right",
+        "Inner",
+        "Full"
+      ]
+    },
+    "Literal": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Boolean"
+              ]
+            },
+            "value": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "description": "32bit float",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Float32"
+              ]
+            },
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "float"
+            }
+          }
+        },
+        {
+          "description": "64bit float",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Float64"
+              ]
+            },
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            }
+          }
+        },
+        {
+          "description": "signed 8bit int",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int8"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int8"
+            }
+          }
+        },
+        {
+          "description": "signed 16bit int",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int16"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int16"
+            }
+          }
+        },
+        {
+          "description": "signed 32bit int",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int32"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            }
+          }
+        },
+        {
+          "description": "signed 64bit int",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int64"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "unsigned 8bit int",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UInt8"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          }
+        },
+        {
+          "description": "unsigned 16bit int",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UInt16"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "minimum": 0.0
+            }
+          }
+        },
+        {
+          "description": "unsigned 32bit int",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UInt32"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            }
+          }
+        },
+        {
+          "description": "unsigned 64bit int",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UInt64"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        },
+        {
+          "description": "128-bit decimal",
+          "type": "object",
+          "required": [
+            "prec",
+            "scale",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Decimal128"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int128"
+            },
+            "scale": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            },
+            "prec": {
+              "type": "integer",
+              "format": "int8"
+            }
+          }
+        },
+        {
+          "description": "utf-8 encoded string.",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Utf8"
+              ]
+            },
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "description": "Date stored as a signed 32bit int days since UNIX epoch 1970-01-01",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Date32"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            }
+          }
+        },
+        {
+          "description": "Date stored as a signed 64bit int milliseconds since UNIX epoch 1970-01-01",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Date64"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Time stored as a signed 32bit int as seconds since midnight",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Time32Second"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            }
+          }
+        },
+        {
+          "description": "Time stored as a signed 32bit int as milliseconds since midnight",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Time32Millisecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            }
+          }
+        },
+        {
+          "description": "Time stored as a signed 64bit int as microseconds since midnight",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Time64Microsecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Time stored as a signed 64bit int as nanoseconds since midnight",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Time64Nanosecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Timestamp Second",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TimestampSecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Timestamp Milliseconds",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TimestampMillisecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Timestamp Microseconds",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TimestampMicrosecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Timestamp Nanoseconds",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TimestampNanosecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Duration in seconds",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DurationSecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Duration in milliseconds",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DurationMillisecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Duration in microseconds",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DurationMicrosecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "description": "Duration in nanoseconds",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DurationNanosecond"
+              ]
+            },
+            "value": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        }
+      ]
+    },
+    "Rel": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "collection",
+            "columns",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "From"
+              ]
+            },
+            "collection": {
+              "type": "string"
+            },
+            "columns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "input",
+            "skip",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Limit"
+              ]
+            },
+            "input": {
+              "$ref": "#/definitions/Rel"
+            },
+            "fetch": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 0.0
+            },
+            "skip": {
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0.0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "exprs",
+            "input",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Project"
+              ]
+            },
+            "input": {
+              "$ref": "#/definitions/Rel"
+            },
+            "exprs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "input",
+            "predicate",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Filter"
+              ]
+            },
+            "input": {
+              "$ref": "#/definitions/Rel"
+            },
+            "predicate": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "exprs",
+            "input",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Sort"
+              ]
+            },
+            "input": {
+              "$ref": "#/definitions/Rel"
+            },
+            "exprs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sort"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "join_type",
+            "left",
+            "on",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Join"
+              ]
+            },
+            "left": {
+              "$ref": "#/definitions/Rel"
+            },
+            "right": {
+              "$ref": "#/definitions/Rel"
+            },
+            "on": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/JoinOn"
+              }
+            },
+            "join_type": {
+              "$ref": "#/definitions/JoinType"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "aggregates",
+            "group_by",
+            "input",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Aggregate"
+              ]
+            },
+            "input": {
+              "$ref": "#/definitions/Rel"
+            },
+            "group_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            },
+            "aggregates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ScalarType": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Boolean"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Float32"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Float64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int8"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int16"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int32"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UInt8"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UInt16"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UInt32"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UInt64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "prec",
+            "scale",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Decimal128"
+              ]
+            },
+            "scale": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            },
+            "prec": {
+              "type": "integer",
+              "format": "int8"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Utf8"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Date32"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Date64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Time32Second"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Time32Millisecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Time64Microsecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Time64Nanosecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TimestampSecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TimestampMillisecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TimestampMicrosecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "TimestampNanosecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DurationSecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DurationMillisecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DurationMicrosecond"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DurationNanosecond"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Sort": {
+      "type": "object",
+      "required": [
+        "asc",
+        "expr",
+        "nulls_first"
+      ],
+      "properties": {
+        "expr": {
+          "$ref": "#/definitions/Expression"
+        },
+        "asc": {
+          "type": "boolean"
+        },
+        "nulls_first": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

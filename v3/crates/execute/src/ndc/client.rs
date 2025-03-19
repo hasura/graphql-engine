@@ -305,6 +305,45 @@ pub async fn query_post(
         .await
 }
 
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct QueryRelRequest {
+    pub rel: plan_pushdown_types::Rel,
+}
+
+/// POST on undocumented /query/rel endpoint
+pub async fn query_rel_post(
+    configuration: Configuration<'_>,
+    request: &QueryRelRequest,
+) -> Result<Vec<serde_json::Value>, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "query_rel_post",
+            "Post relation for query",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let url = append_path(configuration.base_path, &["query", "rel"])?;
+                    let response_size_limit = configuration.response_size_limit;
+
+                    let request = construct_request(
+                        configuration,
+                        NdcVersion::V01,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+                    let response =
+                        execute_request(request, response_size_limit, NdcErrorResponse::V01)
+                            .await?;
+                    Ok(response)
+                })
+            },
+        )
+        .await
+}
+
 // Private utility functions
 
 /// Append a path to a URL
