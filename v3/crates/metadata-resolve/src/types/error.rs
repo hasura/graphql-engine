@@ -13,7 +13,6 @@ use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::flags;
-use open_dds::order_by_expression::OrderByExpressionName;
 use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
@@ -298,11 +297,8 @@ pub enum Error {
     ObjectRelationshipError {
         relationship_error: RelationshipError,
     },
-    #[error("Error in order by expression {order_by_expression_name}: {error}")]
-    OrderByExpressionError {
-        order_by_expression_name: Qualified<OrderByExpressionName>,
-        error: order_by_expressions::OrderByExpressionError,
-    },
+    #[error("{0}")]
+    OrderByExpressionError(#[from] order_by_expressions::NamedOrderByExpressionError),
     #[error("{0}")]
     BooleanExpressionError(#[from] boolean_expressions::BooleanExpressionError),
     #[error("{0}")]
@@ -388,6 +384,7 @@ impl ContextualError for Error {
             Error::AggregateExpressionError(error) => error.create_error_context(),
             Error::AggregateBooleanExpressionError(error) => error.create_error_context(),
             Error::BooleanExpressionError(error) => error.create_error_context(),
+            Error::OrderByExpressionError(error) => error.create_error_context(),
             _other => None,
         }
     }

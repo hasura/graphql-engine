@@ -1,4 +1,5 @@
 use crate::stages::graphql_config;
+use crate::types::error::ContextualError;
 use crate::types::subgraph::{Qualified, QualifiedBaseType};
 
 use open_dds::{
@@ -6,6 +7,19 @@ use open_dds::{
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName, TypeName},
 };
+
+#[derive(Debug, thiserror::Error)]
+#[error("Error in order by expression {order_by_expression_name}: {error}")]
+pub struct NamedOrderByExpressionError {
+    pub order_by_expression_name: Qualified<OrderByExpressionName>,
+    pub error: OrderByExpressionError,
+}
+
+impl ContextualError for NamedOrderByExpressionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum OrderByExpressionError {

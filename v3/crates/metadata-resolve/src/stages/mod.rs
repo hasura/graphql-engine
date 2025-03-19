@@ -201,7 +201,8 @@ fn resolve_internal(
         &relationships,
         &scalar_types,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
