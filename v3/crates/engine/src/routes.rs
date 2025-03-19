@@ -41,7 +41,7 @@ pub fn get_base_routes(state: EngineState) -> Router {
     let graphql_route = Router::new()
         .route("/graphql", post(handle_request))
         .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
+            graphql_frontend::build_state_with_middleware_error_converter(state.clone()),
             plugins_middleware,
         ))
         .layer(axum::middleware::from_fn_with_state(

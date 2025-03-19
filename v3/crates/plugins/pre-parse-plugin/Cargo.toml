@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 
+engine-types = { path = "../../engine-types" }
 hasura-authn-core = { path = "../../auth/hasura-authn-core" }
 lang-graphql = { path = "../../graphql/lang-graphql" }
 tracing-util = { path = "../../utils/tracing-util" }

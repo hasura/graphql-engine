@@ -10,6 +10,7 @@ use axum::{
     Extension,
 };
 use axum_core::body::Body;
+use engine_types::WithMiddlewareErrorConverter;
 use hasura_authn::authenticate;
 use http_body_util::BodyExt;
 use pre_parse_plugin::execute::pre_parse_plugins_handler;
@@ -124,12 +125,13 @@ pub async fn authentication_middleware(
 
 pub async fn plugins_middleware(
     ConnectInfo(client_address): ConnectInfo<std::net::SocketAddr>,
-    State(engine_state): State<EngineState>,
+    State(state): State<WithMiddlewareErrorConverter<EngineState>>,
     Extension(session): Extension<Session>,
     headers_map: HeaderMap,
     request: Request<axum::body::Body>,
     next: Next,
 ) -> axum::response::Result<axum::response::Response<Body>> {
+    let engine_state = &state.state;
     let (parts, body) = request.into_parts();
     let bytes = body
         .collect()
@@ -157,7 +159,8 @@ pub async fn plugins_middleware(
                     &bytes,
                     headers_map.clone(),
                 )
-                .await?;
+                .await
+                .map_err(|err| state.handle_error(err.into_middleware_error()))?;
 
                 if let Some(response) = response {
                     Ok(response)
