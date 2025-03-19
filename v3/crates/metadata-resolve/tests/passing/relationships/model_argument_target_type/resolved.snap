@@ -177,7 +177,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "ArtistTenantId",
@@ -193,7 +193,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                         ),
                                     },
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "ArtistId",
@@ -202,7 +202,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "ArtistId",

@@ -4,13 +4,14 @@ use std::borrow::Cow;
 use std::convert::Infallible;
 use std::str::FromStr;
 
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use crate::impl_JsonSchema_with_OpenDd_for;
 
 /// Used to represent a reference to a session variable,
 /// where one is required in the IR
-#[derive(Debug, Clone, Hash, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
-#[schemars(rename = "OpenDdSessionVariableReference")]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize, opendds_derive::OpenDd)]
+#[opendd(json_schema(rename = "OpenDdSessionVariableReference"))]
 pub struct SessionVariableReference {
     pub name: SessionVariableName,
     pub passed_as_json: bool,
@@ -20,10 +21,21 @@ pub struct SessionVariableReference {
 /// Used to represent the name of a session variable, like
 /// "x-hasura-role".
 #[derive(
-    Debug, Clone, Hash, PartialEq, Eq, JsonSchema, Serialize, Deserialize, PartialOrd, Ord,
+    Debug,
+    Clone,
+    Hash,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    PartialOrd,
+    Ord,
+    opendds_derive::OpenDd,
 )]
-#[schemars(rename = "OpenDdSessionVariable")]
+#[opendd(json_schema(rename = "OpenDdSessionVariable"))]
 pub struct SessionVariableName(Cow<'static, str>);
+
+impl_JsonSchema_with_OpenDd_for!(SessionVariableName);
 
 pub const SESSION_VARIABLE_ROLE: SessionVariableName =
     SessionVariableName(Cow::Borrowed("x-hasura-role"));

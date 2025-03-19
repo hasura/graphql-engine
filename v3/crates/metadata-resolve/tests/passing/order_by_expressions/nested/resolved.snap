@@ -110,7 +110,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "row_type_id",
@@ -119,7 +119,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "id",

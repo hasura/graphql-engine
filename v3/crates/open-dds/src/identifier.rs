@@ -117,7 +117,7 @@ impl<'de> Deserialize<'de> for Identifier {
         D: serde::Deserializer<'de>,
     {
         OpenDd::deserialize(
-            serde_json::Value::deserialize(deserializer)?,
+            <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?,
             jsonpath::JSONPath::new(),
         )
         .map_err(D::Error::custom)
@@ -209,7 +209,7 @@ impl<'de> Deserialize<'de> for SubgraphNameInput {
         D: serde::Deserializer<'de>,
     {
         OpenDd::deserialize(
-            serde_json::Value::deserialize(deserializer)?,
+            <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?,
             jsonpath::JSONPath::new(),
         )
         .map_err(D::Error::custom)

@@ -5,6 +5,7 @@ use schemars::schema::{
 use schemars::schema::{InstanceType, SingleOrVec};
 use serde_json;
 use smol_str::SmolStr;
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
 
@@ -64,6 +65,7 @@ impl_OpenDd_default_for!(i32);
 impl_OpenDd_default_for!(u32);
 impl_OpenDd_default_for!(u64);
 impl_OpenDd_default_for!(());
+impl_OpenDd_default_for!(serde_json::Value);
 
 impl<T: OpenDd> OpenDd for Box<T> {
     fn deserialize(
@@ -79,6 +81,32 @@ impl<T: OpenDd> OpenDd for Box<T> {
 
     fn _schema_name() -> String {
         T::_schema_name()
+    }
+
+    fn _schema_is_referenceable() -> bool {
+        T::_schema_is_referenceable()
+    }
+}
+
+impl<T> OpenDd for Cow<'static, T>
+where
+    T: ToOwned + ?Sized,
+    T::Owned: OpenDd,
+    // Concrete example: T is str and T::Owned is String - so we deserialize a String and store it as an Owned str in the Cow
+{
+    fn deserialize(
+        json: serde_json::Value,
+        path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError> {
+        <<T as ToOwned>::Owned>::deserialize(json, path).map(Cow::Owned)
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        String::json_schema(gen)
+    }
+
+    fn _schema_name() -> String {
+        String::_schema_name()
     }
 }
 
@@ -920,6 +948,24 @@ mod tests {
             err.error.to_string()
         );
         assert_eq!("$", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_nested_error() {
+        let json = serde_json::json!({
+            "variantTwo": {
+                "prop1": "wrong type",
+                "prop2": "testing"
+            }
+        });
+        let err =
+            <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
+                .unwrap_err();
+        assert_eq!(
+            "invalid type: string \"wrong type\", expected a boolean".to_string(),
+            err.error.to_string()
+        );
+        assert_eq!("$.variantTwo.prop1", err.path.to_string());
     }
 
     #[test]

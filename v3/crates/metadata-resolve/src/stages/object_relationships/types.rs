@@ -13,8 +13,8 @@ use lang_graphql::ast::common as ast;
 use open_dds::arguments::ArgumentName;
 use std::collections::BTreeMap;
 
-use open_dds::relationships::{FieldAccess, RelationshipName, RelationshipType};
-use open_dds::types::Deprecated;
+use open_dds::relationships::{RelationshipName, RelationshipType};
+use open_dds::types::{Deprecated, FieldName};
 
 pub struct ObjectRelationshipsOutput {
     pub object_types: BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
@@ -75,8 +75,13 @@ pub enum RelationshipTargetName {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct RelationshipModelMapping {
-    pub source_field: FieldAccess,
+    pub source_field: RelationshipFieldAccess,
     pub target: RelationshipModelMappingTarget,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct RelationshipFieldAccess {
+    pub field_name: FieldName,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -87,14 +92,14 @@ pub enum RelationshipModelMappingTarget {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct RelationshipModelMappingFieldTarget {
-    pub target_field: FieldAccess,
+    pub target_field: RelationshipFieldAccess,
     // Optional because we allow building schema without specifying a data source
     pub target_ndc_column: Option<NdcColumnForComparison>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct RelationshipCommandMapping {
-    pub source_field: FieldAccess,
+    pub source_field: RelationshipFieldAccess,
     pub argument_name: ArgumentName,
 }
 

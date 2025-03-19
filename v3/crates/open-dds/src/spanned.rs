@@ -56,11 +56,11 @@ impl<T: OpenDd> OpenDd for Spanned<T> {
     }
 
     fn _schema_name() -> String {
-        "Spanned".to_string()
+        T::_schema_name()
     }
 
     fn _schema_is_referenceable() -> bool {
-        false
+        T::_schema_is_referenceable()
     }
 }
 

@@ -113,7 +113,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
                                 },
                                 mappings: [
                                     RelationshipCommandMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "id",

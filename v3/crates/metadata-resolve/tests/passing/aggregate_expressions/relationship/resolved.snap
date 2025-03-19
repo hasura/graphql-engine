@@ -322,7 +322,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "invoiceId",
@@ -331,7 +331,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "invoiceId",

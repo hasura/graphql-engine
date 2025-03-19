@@ -30,8 +30,9 @@ pub use types::{
     AggregateRelationship, CommandRelationshipTarget, FieldNestedness, ModelRelationshipTarget,
     ObjectRelationshipsIssue, ObjectRelationshipsOutput, ObjectTypeWithRelationships,
     RelationshipCapabilities, RelationshipCommandMapping, RelationshipExecutionCategory,
-    RelationshipField, RelationshipModelMapping, RelationshipModelMappingFieldTarget,
-    RelationshipModelMappingTarget, RelationshipTarget, RelationshipTargetName,
+    RelationshipField, RelationshipFieldAccess, RelationshipModelMapping,
+    RelationshipModelMappingFieldTarget, RelationshipModelMappingTarget, RelationshipTarget,
+    RelationshipTargetName,
 };
 
 /// resolve relationships
@@ -276,7 +277,9 @@ fn resolve_relationship_mappings_model(
         };
 
         let resolved_relationship_mapping = RelationshipModelMapping {
-            source_field: resolved_relationship_source_field.clone(),
+            source_field: RelationshipFieldAccess {
+                field_name: resolved_relationship_source_field.field_name.clone(),
+            },
             target: resolved_relationship_mapping_target,
         };
 
@@ -347,7 +350,9 @@ fn resolve_relationship_mappings_model_field_target(
 
     let resolved_relationship_mapping_target =
         RelationshipModelMappingTarget::ModelField(RelationshipModelMappingFieldTarget {
-            target_field: resolved_relationship_target_mapping.clone(),
+            target_field: RelationshipFieldAccess {
+                field_name: resolved_relationship_target_mapping.field_name.clone(),
+            },
             target_ndc_column,
         });
 
@@ -500,7 +505,9 @@ fn resolve_relationship_mappings_command(
             if source_fields_already_mapped.insert(&resolved_relationship_source_mapping.field_name)
             {
                 Ok(RelationshipCommandMapping {
-                    source_field: resolved_relationship_source_mapping.clone(),
+                    source_field: RelationshipFieldAccess {
+                        field_name: resolved_relationship_source_mapping.field_name.clone(),
+                    },
                     argument_name: target_argument_name.clone(),
                 })
             } else {

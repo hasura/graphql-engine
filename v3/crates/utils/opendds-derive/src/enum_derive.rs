@@ -120,7 +120,7 @@ fn impl_read_tag_value_str(
             format!("object with only one of the following properties: {variants_list}");
         quote! {
             let mut __object_map_iter = __object_map.into_iter();
-            let (__tag_value_string, __inner) = __object_map_iter.next().ok_or_else(||
+            let (__tag_value_string, __tag_value) = __object_map_iter.next().ok_or_else(||
                 open_dds::traits::OpenDdDeserializeError  {
                     error: serde::de::Error::invalid_type(
                         serde::de::Unexpected::Other("found empty object"),
@@ -139,18 +139,6 @@ fn impl_read_tag_value_str(
                 });
             }
             let __tag_value_str = __tag_value_string.as_str();
-            let mut __object_map = match __inner {
-                serde_json::Value::Object(map) => map,
-                _ => {
-                    return Err(open_dds::traits::OpenDdDeserializeError  {
-                        error: serde::de::Error::invalid_type(
-                            serde::de::Unexpected::Other("not an object"),
-                            &"object",
-                        ),
-                        path: jsonpath::JSONPath::new_key(__tag_value_str),
-                    })
-                }
-            };
         }
     }
 }
@@ -237,7 +225,10 @@ fn generate_enum_variants(
         let variant_name_string = variant.renamed_variant.to_string();
         let variant_name_str = variant_name_string.as_str();
         let parsed_variant = match tag_type {
-            EnumTagType::Internal {..} | EnumTagType::External => quote! {
+            EnumTagType::External => quote! {
+                open_dds::traits::deserialize_key(#deserialize_from, path, __tag_value_string)?
+            },
+            EnumTagType::Internal {..} => quote! {
                 open_dds::traits::OpenDd::deserialize(#deserialize_from, path)?
             },
             EnumTagType::Adjacent {tag:_, content} => quote! {
@@ -268,7 +259,10 @@ fn generate_enum_variants(
 
 fn gen_deserialize_from(tag_type: &EnumTagType) -> proc_macro2::TokenStream {
     match tag_type {
-        EnumTagType::Internal { .. } | EnumTagType::External { .. } => quote! {
+        EnumTagType::External { .. } => quote! {
+            __tag_value
+        },
+        EnumTagType::Internal { .. } => quote! {
             serde_json::Value::Object(__object_map)
         },
         EnumTagType::Adjacent { tag: _, content } => quote! {

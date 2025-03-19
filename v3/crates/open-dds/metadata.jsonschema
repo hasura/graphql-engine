@@ -374,11 +374,7 @@
       ],
       "properties": {
         "name": {
-          "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
-          "title": "ArgumentName",
-          "description": "The name of an argument.",
-          "type": "string",
-          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+          "$ref": "#/definitions/ArgumentName"
         },
         "type": {
           "$ref": "#/definitions/TypeReference"
@@ -746,6 +742,12 @@
         }
       },
       "additionalProperties": false
+    },
+    "CollectionName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/CollectionName",
+      "title": "CollectionName",
+      "description": "The name of a collection in a data connector.",
+      "type": "string"
     },
     "ColumnFieldMapping": {
       "$id": "https://hasura.io/jsonschemas/metadata/ColumnFieldMapping",
@@ -3076,17 +3078,20 @@
       ],
       "properties": {
         "dataConnectorName": {
-          "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorName",
-          "title": "DataConnectorName",
           "description": "The name of the data connector backing this model.",
-          "type": "string",
-          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorName"
+            }
+          ]
         },
         "collection": {
-          "$id": "https://hasura.io/jsonschemas/metadata/CollectionName",
-          "title": "CollectionName",
           "description": "The collection in the data connector that backs this model.",
-          "type": "string"
+          "allOf": [
+            {
+              "$ref": "#/definitions/CollectionName"
+            }
+          ]
         },
         "argumentMapping": {
           "description": "Mapping from model argument names to data connector collection argument names.",
@@ -3120,11 +3125,12 @@
           ]
         },
         "objectType": {
-          "$id": "https://hasura.io/jsonschemas/metadata/CustomTypeName",
-          "title": "CustomTypeName",
           "description": "The type of the objects of which this model is a collection.",
-          "type": "string",
-          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
         },
         "globalIdSource": {
           "description": "Whether this model should be used as the global ID source for all objects of its type.",
@@ -3219,11 +3225,12 @@
           ]
         },
         "objectType": {
-          "$id": "https://hasura.io/jsonschemas/metadata/CustomTypeName",
-          "title": "CustomTypeName",
           "description": "The type of the objects of which this model is a collection.",
-          "type": "string",
-          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
         },
         "globalIdSource": {
           "description": "Whether this model should be used as the global ID source for all objects of its type.",
@@ -3887,6 +3894,8 @@
       ]
     },
     "OpenDdSessionVariable": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSessionVariable",
+      "title": "OpenDdSessionVariable",
       "description": "Used to represent the name of a session variable, like \"x-hasura-role\".",
       "type": "string"
     },

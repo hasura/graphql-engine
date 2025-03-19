@@ -8,6 +8,10 @@
 
 ### Fixed
 
+- JSON paths in metadata parse errors involving externally tagged unions (such
+  as `BooleanExpressionOperand`) now correctly include the tag property in the
+  path.
+
 ## [v2025.03.17]
 
 ### Added

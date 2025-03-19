@@ -38,12 +38,12 @@
                             "mappings": [
                               {
                                 "source_field": {
-                                  "fieldName": "article_id"
+                                  "field_name": "article_id"
                                 },
                                 "target": {
                                   "ModelField": {
                                     "target_field": {
-                                      "fieldName": "article_id"
+                                      "field_name": "article_id"
                                     },
                                     "target_ndc_column": {
                                       "column": "id",
@@ -105,12 +105,12 @@
                                   "mappings": [
                                     {
                                       "source_field": {
-                                        "fieldName": "author_id"
+                                        "field_name": "author_id"
                                       },
                                       "target": {
                                         "ModelField": {
                                           "target_field": {
-                                            "fieldName": "author_id"
+                                            "field_name": "author_id"
                                           },
                                           "target_ndc_column": {
                                             "column": "id",
@@ -172,12 +172,12 @@
                                         "mappings": [
                                           {
                                             "source_field": {
-                                              "fieldName": "author_id"
+                                              "field_name": "author_id"
                                             },
                                             "target": {
                                               "ModelField": {
                                                 "target_field": {
-                                                  "fieldName": "author_id"
+                                                  "field_name": "author_id"
                                                 },
                                                 "target_ndc_column": {
                                                   "column": "author_id",
@@ -919,12 +919,12 @@
                                                 "mappings": [
                                                   {
                                                     "source_field": {
-                                                      "fieldName": "author_id"
+                                                      "field_name": "author_id"
                                                     },
                                                     "target": {
                                                       "ModelField": {
                                                         "target_field": {
-                                                          "fieldName": "author_id"
+                                                          "field_name": "author_id"
                                                         },
                                                         "target_ndc_column": {
                                                           "column": "author_id",
@@ -1356,12 +1356,12 @@
                                       "mappings": [
                                         {
                                           "source_field": {
-                                            "fieldName": "author_id"
+                                            "field_name": "author_id"
                                           },
                                           "target": {
                                             "ModelField": {
                                               "target_field": {
-                                                "fieldName": "author_id"
+                                                "field_name": "author_id"
                                               },
                                               "target_ndc_column": {
                                                 "column": "id",
@@ -1802,12 +1802,12 @@
                             "mappings": [
                               {
                                 "source_field": {
-                                  "fieldName": "article_id"
+                                  "field_name": "article_id"
                                 },
                                 "target": {
                                   "ModelField": {
                                     "target_field": {
-                                      "fieldName": "article_id"
+                                      "field_name": "article_id"
                                     },
                                     "target_ndc_column": {
                                       "column": "id",
