@@ -3,5 +3,4 @@ source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: msg
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/agg_exp_type_mismatch/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the type of the comparable field 'title' (String) does not match the operand type of the boolean expression type 'Int_aggregate_bool_exp (in subgraph default)': 'Int'
-error in boolean expression type 'Int_aggregate_bool_exp (in subgraph default)': type mismatch between the aggregation function '_min' (return type: 'String') and the specified boolean expression type 'Int_bool_exp (in subgraph default)' (operand type: 'Int')
+error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the operand type 'Album (in subgraph default)' does not match the operand type 'Artist (in subgraph default)' from the aggregate expression 'Artist_agg_exp (in subgraph default)'

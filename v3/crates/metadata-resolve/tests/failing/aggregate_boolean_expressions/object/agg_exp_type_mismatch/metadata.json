@@ -12,11 +12,11 @@
             "operand": {
               "objectAggregate": {
                 "type": "Album",
-                "aggregateExpression": "Album_agg_exp",
+                "aggregateExpression": "Artist_agg_exp",
                 "comparableFields": [
                   {
                     "fieldName": "title",
-                    "aggregateBooleanExpressionType": "Int_aggregate_bool_exp"
+                    "aggregateBooleanExpressionType": "String_aggregate_bool_exp"
                   }
                 ],
                 "comparableRelationships": []
@@ -103,6 +103,34 @@
           "kind": "AggregateExpression",
           "version": "v1",
           "definition": {
+            "name": "Artist_agg_exp",
+            "operand": {
+              "object": {
+                "aggregatedType": "Artist",
+                "aggregatableFields": [
+                  {
+                    "fieldName": "artist_id",
+                    "aggregateExpression": "Int_agg_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "aggregateExpression": "String_agg_exp"
+                  }
+                ]
+              }
+            },
+            "count": {
+              "enable": true
+            },
+            "countDistinct": {
+              "enable": false
+            }
+          }
+        },
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
             "name": "String_agg_exp",
             "operand": {
               "scalar": {
@@ -136,8 +164,8 @@
                 "aggregationFunctions": [
                   {
                     "name": "_min",
-                    "returnType": "String",
-                    "description": "The lexicographically least string"
+                    "returnType": "Int",
+                    "description": "The smallest integer"
                   }
                 ],
                 "dataConnectorAggregationFunctionMapping": []
@@ -217,6 +245,25 @@
                 "name": "title",
                 "type": "String",
                 "description": "The title of the album"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Artist",
+            "fields": [
+              {
+                "name": "artist_id",
+                "type": "Int",
+                "description": "The ID of the artist"
+              },
+              {
+                "name": "name",
+                "type": "String",
+                "description": "The name of the artist"
               }
             ]
           }
