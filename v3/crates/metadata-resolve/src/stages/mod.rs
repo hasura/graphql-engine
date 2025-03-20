@@ -235,7 +235,8 @@ fn resolve_internal(
         &mut track_root_fields,
         &scalar_types,
         &boolean_expression_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
