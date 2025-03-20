@@ -11,7 +11,7 @@ use crate::{
     Qualified,
 };
 
-use super::error::ShouldBeAnError;
+use super::error::{ContextualError, ShouldBeAnError};
 
 /// Warnings for the user raised during metadata generation
 /// These are things that don't break the build, but may do so in future
@@ -72,6 +72,15 @@ impl ShouldBeAnError for Warning {
             Warning::CommandPermissionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ObjectRelationshipsIssue(issue) => issue.should_be_an_error(flags),
             _ => false,
+        }
+    }
+}
+
+impl ContextualError for Warning {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        match self {
+            Warning::ModelPermissionIssue(issue) => issue.create_error_context(),
+            _ => None,
         }
     }
 }

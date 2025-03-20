@@ -59,10 +59,10 @@ pub fn resolve_command_permissions(
         let mut argument_presets = BTreeMap::new();
 
         for argument_preset in &command_permission.argument_presets {
-            if argument_presets.contains_key(&argument_preset.argument) {
+            if argument_presets.contains_key(&argument_preset.argument.value) {
                 return Err(Error::DuplicateCommandArgumentPreset {
                     command_name: command.name.clone(),
-                    argument_name: argument_preset.argument.clone(),
+                    argument_name: argument_preset.argument.value.clone(),
                 });
             }
 
@@ -75,12 +75,12 @@ pub fn resolve_command_permissions(
                 }
             })?;
 
-            match command.arguments.get(&argument_preset.argument) {
+            match command.arguments.get(&argument_preset.argument.value) {
                 Some(argument) => {
                     let error_mapper = |type_error| Error::CommandArgumentPresetTypeError {
                         role: command_permission.role.clone(),
                         command_name: command.name.clone(),
-                        argument_name: argument_preset.argument.clone(),
+                        argument_name: argument_preset.argument.value.clone(),
                         type_error,
                     };
                     let (value_expression, new_issues) = resolve_value_expression_for_argument(
@@ -106,14 +106,14 @@ pub fn resolve_command_permissions(
                             CommandPermissionIssue::CommandArgumentPresetTypecheckIssue {
                                 role: command_permission.role.clone(),
                                 command_name: command.name.clone(),
-                                argument_name: argument_preset.argument.clone(),
+                                argument_name: argument_preset.argument.value.clone(),
                                 typecheck_issue: issue,
                             },
                         );
                     }
 
                     argument_presets.insert(
-                        argument_preset.argument.clone(),
+                        argument_preset.argument.value.clone(),
                         (argument.argument_type.clone(), value_expression),
                     );
                 }
@@ -121,7 +121,7 @@ pub fn resolve_command_permissions(
                     return Err(Error::from(
                         commands::CommandsError::CommandArgumentPresetMismatch {
                             command_name: command.name.clone(),
-                            argument_name: argument_preset.argument.clone(),
+                            argument_name: argument_preset.argument.value.clone(),
                         },
                     ));
                 }

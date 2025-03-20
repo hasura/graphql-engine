@@ -174,5 +174,10 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
             Some(new_compatibility_date(2025, 3, 11))
         }
         Flag::DisallowProcedureCommandRelationships => Some(new_compatibility_date(2025, 3, 12)),
+        Flag::DisallowDuplicateModelPermissionsRoles => {
+            // TODO: Must be set to a date before the next release
+            // Docs PR: https://github.com/hasura/ddn-docs/pull/961
+            None
+        }
     }
 }

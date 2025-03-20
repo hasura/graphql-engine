@@ -41,6 +41,12 @@ pub enum BooleanExpressionError {
         field_name: FieldName,
         object_boolean_expression_type: Qualified<CustomTypeName>,
     },
+    #[error("relationship '{relationship_name}' is used in comparableRelationships in boolean expression type '{object_boolean_expression_type}' does not exist on type '{type_name}'")]
+    UnknownRelationshipInObjectBooleanExpressionType {
+        relationship_name: RelationshipName,
+        object_boolean_expression_type: Qualified<CustomTypeName>,
+        type_name: Qualified<CustomTypeName>,
+    },
     #[error("the object type '{object_type:}' used in boolean expression type {object_boolean_expression_type:} does not have a mapping to object {data_connector_object_type:} of data connector {data_connector:}")]
     NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
         object_type: Qualified<CustomTypeName>,

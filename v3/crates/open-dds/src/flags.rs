@@ -51,6 +51,7 @@ pub enum Flag {
     DisallowInvalidHeadersInAuthConfig,
     RequireJwtAudienceValidationIfAudClaimPresent,
     DisallowProcedureCommandRelationships,
+    DisallowDuplicateModelPermissionsRoles,
 }
 
 impl Flag {
@@ -138,6 +139,9 @@ impl Flag {
             }
             Flag::DisallowProcedureCommandRelationships => {
                 "disallow_procedure_command_relationships"
+            }
+            Flag::DisallowDuplicateModelPermissionsRoles => {
+                "disallow_duplicate_model_permissions_roles"
             }
         }
     }

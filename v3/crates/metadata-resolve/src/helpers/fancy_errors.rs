@@ -39,14 +39,14 @@ fn to_fancy_error<'a>(
                 let mut labels = vec![];
 
                 let mut first_location = 0..0;
-                for item in context.0.clone() {
+                for item in &context.0 {
                     let location =
                         json_annotation_parse::walk(&fancy_json, &mut item.path.clone()).ok()?;
                     first_location = location.start.offset..location.end.offset;
 
                     labels.push(
                         ariadne::Label::new(location.start.offset..location.end.offset)
-                            .with_message(item.message)
+                            .with_message(item.message.clone())
                             .with_color(ariadne::Color::Red),
                     );
                 }

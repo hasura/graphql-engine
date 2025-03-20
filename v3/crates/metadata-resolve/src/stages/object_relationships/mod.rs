@@ -202,14 +202,15 @@ fn resolve_relationship_source_mapping<'a, 'b>(
                     relationship_name: relationship_name.clone(),
                 }),
                 [field_access] => {
-                    let Some(field_definition) = source_type.fields.get(&field_access.field_name)
+                    let Some(field_definition) =
+                        source_type.fields.get(&field_access.field_name.value)
                     else {
                         return Err(Error::ObjectRelationshipError {
                             relationship_error:
                                 RelationshipError::UnknownSourceFieldInRelationshipMapping {
                                     relationship_name: relationship_name.clone(),
                                     source_type: source_type_name.clone(),
-                                    field_name: field_access.field_name.clone(),
+                                    field_name: field_access.field_name.value.clone(),
                                 },
                         });
                     };
@@ -244,11 +245,13 @@ fn resolve_relationship_mappings_model(
                 relationship_mapping,
             )?;
 
-        if !source_fields_already_mapped.insert(&resolved_relationship_source_field.field_name) {
+        if !source_fields_already_mapped
+            .insert(&resolved_relationship_source_field.field_name.value)
+        {
             return Err(Error::ObjectRelationshipError {
                 relationship_error: RelationshipError::MappingExistsInRelationship {
                     type_name: source_type_name.clone(),
-                    field_name: resolved_relationship_source_field.field_name.clone(),
+                    field_name: resolved_relationship_source_field.field_name.value.clone(),
                     relationship_name: relationship.name.clone(),
                 },
             });
@@ -278,7 +281,7 @@ fn resolve_relationship_mappings_model(
 
         let resolved_relationship_mapping = RelationshipModelMapping {
             source_field: RelationshipFieldAccess {
-                field_name: resolved_relationship_source_field.field_name.clone(),
+                field_name: resolved_relationship_source_field.field_name.value.clone(),
             },
             target: resolved_relationship_mapping_target,
         };
@@ -316,14 +319,17 @@ fn resolve_relationship_mappings_model_field_target(
     // Make sure the target model contains the target field
     if !target_model
         .type_fields
-        .contains_key(&resolved_relationship_target_mapping.field_name)
+        .contains_key(&resolved_relationship_target_mapping.field_name.value)
     {
         return Err(Error::ObjectRelationshipError {
             relationship_error: RelationshipError::UnknownTargetFieldInRelationshipMapping {
                 relationship_name: relationship.name.clone(),
                 source_type: source_type_name.clone(),
                 model_name: target_model.name.clone(),
-                field_name: resolved_relationship_target_mapping.field_name.clone(),
+                field_name: resolved_relationship_target_mapping
+                    .field_name
+                    .value
+                    .clone(),
             },
         });
     }
@@ -351,7 +357,10 @@ fn resolve_relationship_mappings_model_field_target(
     let resolved_relationship_mapping_target =
         RelationshipModelMappingTarget::ModelField(RelationshipModelMappingFieldTarget {
             target_field: RelationshipFieldAccess {
-                field_name: resolved_relationship_target_mapping.field_name.clone(),
+                field_name: resolved_relationship_target_mapping
+                    .field_name
+                    .value
+                    .clone(),
             },
             target_ndc_column,
         });
@@ -502,11 +511,15 @@ fn resolve_relationship_mappings_command(
 
         // Check if the source field is already mapped to a target argument
         let resolved_relationship_mapping = {
-            if source_fields_already_mapped.insert(&resolved_relationship_source_mapping.field_name)
+            if source_fields_already_mapped
+                .insert(&resolved_relationship_source_mapping.field_name.value)
             {
                 Ok(RelationshipCommandMapping {
                     source_field: RelationshipFieldAccess {
-                        field_name: resolved_relationship_source_mapping.field_name.clone(),
+                        field_name: resolved_relationship_source_mapping
+                            .field_name
+                            .value
+                            .clone(),
                     },
                     argument_name: target_argument_name.clone(),
                 })
@@ -514,7 +527,10 @@ fn resolve_relationship_mappings_command(
                 Err(Error::ObjectRelationshipError {
                     relationship_error: RelationshipError::MappingExistsInRelationship {
                         type_name: source_type_name.clone(),
-                        field_name: resolved_relationship_source_mapping.field_name.clone(),
+                        field_name: resolved_relationship_source_mapping
+                            .field_name
+                            .value
+                            .clone(),
                         relationship_name: relationship.name.clone(),
                     },
                 })

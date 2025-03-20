@@ -9,10 +9,11 @@ use open_dds::{
     models::ModelName,
     permissions::Role,
     relationships::{RelationshipName, RelationshipType},
+    spanned::Spanned,
     types::{CustomTypeName, Deprecated, FieldName},
 };
 
-use crate::types::error::{Error, RelationshipError};
+use crate::types::error::{ContextualError, Error, RelationshipError};
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
@@ -141,6 +142,11 @@ impl ModelTargetSource {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelPermissionIssue {
+    #[error("The role '{role}' has been defined more than once in model permissions for model '{model_name}'")]
+    DuplicateRole {
+        role: Spanned<Role>,
+        model_name: Qualified<ModelName>,
+    },
     #[error("Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {typecheck_issue:}")]
     ModelArgumentPresetTypecheckIssue {
         role: Role,
@@ -150,9 +156,27 @@ pub enum ModelPermissionIssue {
     },
 }
 
+impl ContextualError for ModelPermissionIssue {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        match self {
+            ModelPermissionIssue::DuplicateRole { role, model_name } => {
+                Some(error_context::Context(vec![error_context::Step {
+                    message: "This role is a duplicate".to_owned(),
+                    path: role.path.clone(),
+                    subgraph: Some(model_name.subgraph.clone()),
+                }]))
+            }
+            ModelPermissionIssue::ModelArgumentPresetTypecheckIssue { .. } => None,
+        }
+    }
+}
+
 impl ShouldBeAnError for ModelPermissionIssue {
     fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
         match self {
+            ModelPermissionIssue::DuplicateRole { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowDuplicateModelPermissionsRoles)
+            }
             ModelPermissionIssue::ModelArgumentPresetTypecheckIssue {
                 typecheck_issue, ..
             } => typecheck_issue.should_be_an_error(flags),

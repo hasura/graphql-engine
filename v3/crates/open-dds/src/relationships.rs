@@ -9,6 +9,7 @@ use crate::{
     impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
     permissions::ValueExpression,
+    spanned::Spanned,
     str_newtype,
     types::{CustomTypeName, Deprecated, FieldName},
 };
@@ -116,7 +117,7 @@ impl RelationshipTarget {
 #[opendd(json_schema(title = "RelationshipSourceFieldAccess"))]
 /// A field access in a relationship mapping.
 pub struct FieldAccess {
-    pub field_name: FieldName,
+    pub field_name: Spanned<FieldName>,
     // #[serde(default)]
     // pub arguments: HashMap<ArgumentName, ValueExpression>,
 }

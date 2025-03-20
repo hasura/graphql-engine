@@ -1,0 +1,353 @@
+{
+  "version": "v3",
+  "subgraphs": [
+    {
+      "name": "subgraphs",
+      "objects": [
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Albums",
+            "objectType": "Album",
+            "source": {
+              "dataConnectorName": "myconnector",
+              "collection": "Albums",
+              "argumentMapping": {
+                "include_rereleases": "include_rereleases"
+              }
+            },
+            "arguments": [
+              {
+                "name": "include_rereleases",
+                "type": "Boolean"
+              }
+            ],
+            "orderableFields": [
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "selectMany": {
+                "queryRootField": "Albums"
+              },
+              "selectUniques": []
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Albums",
+            "permissions": [
+              {
+                "role": "user",
+                "select": {
+                  "argumentPresets": [
+                    {
+                      "argument": "unknown_argument",
+                      "value": {
+                        "literal": true
+                      }
+                    }
+                  ],
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Album",
+            "fields": [
+              {
+                "name": "AlbumId",
+                "type": "Int!"
+              },
+              {
+                "name": "ArtistId",
+                "type": "Int!"
+              },
+              {
+                "name": "Title",
+                "type": "String!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "myconnector",
+                "dataConnectorObjectType": "Album",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  }
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Album",
+              "inputTypeName": "Album_input"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Album",
+            "permissions": [
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["AlbumId", "ArtistId", "Title"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "GraphqlConfig",
+          "version": "v1",
+          "definition": {
+            "query": {
+              "rootOperationTypeName": "Query",
+              "argumentsInput": {
+                "fieldName": "args"
+              },
+              "limitInput": {
+                "fieldName": "limit"
+              },
+              "offsetInput": {
+                "fieldName": "offset"
+              },
+              "filterInput": {
+                "fieldName": "where",
+                "operatorNames": {
+                  "and": "_and",
+                  "or": "_or",
+                  "not": "_not",
+                  "isNull": "_is_null"
+                }
+              },
+              "orderByInput": {
+                "fieldName": "order_by",
+                "enumDirectionValues": {
+                  "asc": "Asc",
+                  "desc": "Desc"
+                },
+                "enumTypeNames": [
+                  {
+                    "directions": ["Asc", "Desc"],
+                    "typeName": "OrderBy"
+                  }
+                ]
+              },
+              "aggregate": {
+                "filterInputFieldName": "filter_input",
+                "countFieldName": "_count",
+                "countDistinctFieldName": "_count_distinct"
+              }
+            },
+            "mutation": {
+              "rootOperationTypeName": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "myconnector",
+            "url": {
+              "readWriteUrls": {
+                "read": {
+                  "value": "http://local-dev.hasura.me:8080"
+                },
+                "write": {
+                  "value": "http://local-dev.hasura.me:8080"
+                }
+              }
+            },
+            "argumentPresets": [],
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "eq": {
+                        "type": "equal"
+                      }
+                    }
+                  },
+                  "String": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "eq": {
+                        "type": "equal"
+                      }
+                    }
+                  },
+                  "Boolean": {
+                    "representation": {
+                      "type": "boolean"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "eq": {
+                        "type": "equal"
+                      }
+                    }
+                  }
+                },
+                "object_types": {
+                  "Album": {
+                    "fields": {
+                      "AlbumId": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "ArtistId": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "Title": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "Albums",
+                    "arguments": {
+                      "include_rereleases": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Boolean"
+                          }
+                        }
+                      }
+                    },
+                    "type": "Album",
+                    "foreign_keys": {},
+                    "uniqueness_constraints": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "version": "0.1.0",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {}
+                  },
+                  "mutation": {
+                    "transactional": {},
+                    "explain": {}
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "require_graphql_config": true,
+    "require_valid_ndc_v01_version": true,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true,
+    "require_unique_command_graphql_names": true,
+    "allow_partial_supergraph": false,
+    "json_session_variables": true,
+    "disallow_array_field_compared_with_scalar_boolean_type": true,
+    "allow_boolean_expression_fields_without_graphql": true,
+    "require_unique_model_graphql_names": true,
+    "disallow_object_boolean_expression_type": true,
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "disallow_duplicate_names_in_boolean_expressions": true,
+    "disallow_multiple_input_object_fields_in_graphql_order_by": true,
+    "require_nested_support_for_order_by_expressions": true,
+    "disallow_model_v1_ordering_non_scalar_fields": true,
+    "disallow_array_relationship_in_order_by": true,
+    "disallow_duplicate_operator_definitions_for_scalar_type": true,
+    "disallow_multidimensional_arrays_in_boolean_expressions": true,
+    "disallow_duplicate_names_across_types_and_expressions": true,
+    "disallow_duplicate_aggregate_function_definitions_for_scalar_type": true,
+    "typecheck_object_type_values_in_presets": true,
+    "disallow_data_connector_scalar_types_mismatch": true,
+    "check_object_type_fields_exist": true,
+    "disallow_order_by_fields_with_field_arguments": true,
+    "disallow_unsupported_orderable_relationships": true,
+    "disallow_local_relationships_on_data_connectors_without_relationships_or_variables": true,
+    "disallow_recursive_object_types": true,
+    "disallow_unknown_values_in_arguments": true,
+    "require_valid_command_output_type": true,
+    "validate_object_type_data_connector_type_mapping_field_types": true,
+    "validate_argument_mapping_types": true,
+    "disallow_invalid_headers_in_auth_config": true,
+    "require_jwt_audience_validation_if_aud_claim_present": true,
+    "disallow_procedure_command_relationships": true,
+    "disallow_duplicate_model_permissions_roles": true
+  }
+}

@@ -289,8 +289,9 @@ fn validate_data_connector_with_comparable_relationship(
     let relationship = underlying_object
         .relationship_fields
         .get(&comparable_relationship.relationship_name)
-        .ok_or_else(|| TypePredicateError::UnknownRelationshipInTypePredicate {
+        .ok_or_else(|| boolean_expressions::BooleanExpressionError::UnknownRelationshipInObjectBooleanExpressionType {
             relationship_name: comparable_relationship.relationship_name.clone(),
+            object_boolean_expression_type: object_boolean_expression_type.name.clone(),
             type_name: object_boolean_expression_type.object_type.clone(),
         })?;
 

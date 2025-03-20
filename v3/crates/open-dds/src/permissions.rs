@@ -10,6 +10,7 @@ use crate::{
     models::ModelName,
     relationships::RelationshipName,
     session_variables::SessionVariableName,
+    spanned::Spanned,
     traits::{self, OpenDd, OpenDdDeserializeError},
     types::{CustomTypeName, FieldName, OperatorName},
 };
@@ -41,9 +42,9 @@ impl Role {
 /// Preset value for an argument
 pub struct ArgumentPreset {
     /// Argument name for preset
-    pub argument: ArgumentName,
+    pub argument: Spanned<ArgumentName>,
     /// Value for preset
-    pub value: ValueExpressionOrPredicate,
+    pub value: Spanned<ValueExpressionOrPredicate>,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
@@ -287,7 +288,7 @@ impl ModelPermissions {
 /// Definition of permissions for an OpenDD model.
 pub struct ModelPermissionsV1 {
     /// The name of the model for which permissions are being defined.
-    pub model_name: ModelName,
+    pub model_name: Spanned<ModelName>,
     /// A list of model permissions, one for each role.
     pub permissions: Vec<ModelPermission>,
 }
@@ -298,7 +299,7 @@ pub struct ModelPermissionsV1 {
 /// Defines the permissions for an OpenDD model.
 pub struct ModelPermission {
     /// The role for which permissions are being defined.
-    pub role: Role,
+    pub role: Spanned<Role>,
     /// The permissions for selecting from this model for this role.
     /// If this is null, the role is not allowed to query the model.
     pub select: Option<SelectPermission>,
@@ -485,9 +486,9 @@ pub struct CommandPermissionsV1 {
 /// Field comparison predicate filters objects based on a field value.
 pub struct FieldComparisonPredicate {
     /// The field name of the object type of the model to compare.
-    pub field: FieldName,
+    pub field: Spanned<FieldName>,
     /// The name of the operator to use for comparison.
-    pub operator: OperatorName,
+    pub operator: Spanned<OperatorName>,
     /// The value expression to compare against.
     // When we support custom operators, we can make this optional
     pub value: ValueExpression,
@@ -500,7 +501,7 @@ pub struct FieldComparisonPredicate {
 /// Predicate to check if the given field is null.
 pub struct FieldIsNullPredicate {
     /// The name of the field that should be checked for a null value.
-    pub field: FieldName,
+    pub field: Spanned<FieldName>,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
@@ -510,7 +511,7 @@ pub struct FieldIsNullPredicate {
 /// Relationship predicate filters objects of a source model based on a predicate on the related model.
 pub struct RelationshipPredicate {
     /// The name of the relationship of the object type of the model to follow.
-    pub name: RelationshipName,
+    pub name: Spanned<RelationshipName>,
     /// The predicate to apply on the related objects. If this is null, then the predicate
     /// evaluates to true as long as there is at least one related object present.
     pub predicate: Option<Box<ModelPredicate>>,

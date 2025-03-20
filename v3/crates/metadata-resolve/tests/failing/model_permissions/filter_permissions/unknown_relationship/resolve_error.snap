@@ -1,0 +1,12 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/model_permissions/filter_permissions/unknown_relationship/metadata.json
+---
+Error: Error in model permission for model 'Albums (in subgraph subgraphs)' for role 'user': in select filter permissions: relationship 'Artist' is used in predicate but does not exist for type 'Album (in subgraph subgraphs)'
+    ╭─[<unknown>:38:31]
+    │
+ 38 │                       "name": "Artist",
+    │                               ────┬───  
+    │                                   ╰───── This relationship is not defined for the type 'Album (in subgraph subgraphs)'
+────╯

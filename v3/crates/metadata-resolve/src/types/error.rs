@@ -5,20 +5,21 @@ use crate::helpers::{
 use crate::stages::{
     aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo,
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
-    models, object_types, order_by_expressions, relationships, relay, scalar_boolean_expressions,
-    scalar_types, type_permissions,
+    model_permissions, models, object_types, order_by_expressions, relationships, relay,
+    scalar_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use error_context::Context;
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
-use open_dds::data_connector::DataConnectorColumnName;
-use open_dds::flags;
 use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
-    data_connector::{DataConnectorName, DataConnectorObjectType},
+    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorObjectType},
+    flags,
     models::ModelName,
     relationships::RelationshipName,
+    spanned::Spanned,
     types::{CustomTypeName, FieldName, OperatorName},
 };
 use std::fmt::Display;
@@ -81,19 +82,9 @@ pub enum Error {
         model_name: ModelName,
         field_name: FieldName,
     },
-    #[error("a preset argument {argument_name:} has been set for the model {model_name:} but no such argument exists for this model")]
-    ModelArgumentPresetMismatch {
-        model_name: Qualified<ModelName>,
-        argument_name: ArgumentName,
-    },
     #[error("duplicate preset argument {argument_name:} for command {command_name:}")]
     DuplicateCommandArgumentPreset {
         command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
-    #[error("duplicate preset argument {argument_name:} for model {model_name:}")]
-    DuplicateModelArgumentPreset {
-        model_name: Qualified<ModelName>,
         argument_name: ArgumentName,
     },
 
@@ -158,12 +149,14 @@ pub enum Error {
         argument_name: ArgumentName,
         type_error: TypeError,
     },
-    #[error("unknown model used in model select permissions definition: {model_name:}")]
-    UnknownModelInModelSelectPermissions { model_name: Qualified<ModelName> },
-    #[error("multiple select permissions defined for model: {model_name:}")]
-    DuplicateModelSelectPermission { model_name: Qualified<ModelName> },
-    #[error("model source is required for model '{model_name:}' to resolve predicate")]
-    ModelSourceRequiredForPredicate { model_name: Qualified<ModelName> },
+    #[error("unknown model used in model select permissions definition: {model_name}")]
+    UnknownModelInModelPermissions {
+        model_name: Spanned<Qualified<ModelName>>,
+    },
+    #[error("multiple model permissions defined for model: {model_name}")]
+    DuplicateModelPermissions {
+        model_name: Spanned<Qualified<ModelName>>,
+    },
     #[error(
         "both model source for model '{source_model_name:}' and target source for model '{target_model_name}' are required  to resolve select permission predicate with relationships"
     )]
@@ -279,15 +272,6 @@ pub enum Error {
         argument_name: ArgumentName,
         type_error: typecheck::TypecheckError,
     },
-    #[error(
-        "Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {type_error:}"
-    )]
-    ModelArgumentPresetTypeError {
-        role: Role,
-        model_name: Qualified<ModelName>,
-        argument_name: ArgumentName,
-        type_error: typecheck::TypecheckError,
-    },
     #[error("{graphql_config_error:}")]
     GraphqlConfigError {
         #[from]
@@ -309,10 +293,8 @@ pub enum Error {
     AggregateBooleanExpressionError(
         #[from] aggregate_boolean_expressions::NamedAggregateBooleanExpressionError,
     ),
-    #[error("{type_predicate_error:}")]
-    TypePredicateError {
-        type_predicate_error: TypePredicateError,
-    },
+    #[error("{0}")]
+    TypePredicateError(#[from] TypePredicateError),
     #[error("{0}")]
     DataConnectorError(#[from] data_connectors::NamedDataConnectorError),
     #[error("NDC validation error: {0}")]
@@ -337,6 +319,8 @@ pub enum Error {
     CommandsError(#[from] commands::CommandsError),
     #[error("{0}")]
     RelationshipError(#[from] relationships::RelationshipError),
+    #[error("{0}")]
+    ModelPermissionsError(#[from] model_permissions::NamedModelPermissionError),
     #[error("{0}")]
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
@@ -372,6 +356,21 @@ pub trait ContextualError {
 impl ContextualError for Error {
     fn create_error_context(&self) -> Option<error_context::Context> {
         match self {
+            Error::UnknownModelInModelPermissions { model_name } => {
+                Some(Context(vec![error_context::Step {
+                    message: "This model is not defined".to_owned(),
+                    path: model_name.path.clone(),
+                    subgraph: None,
+                }]))
+            }
+            Error::DuplicateModelPermissions { model_name } => {
+                Some(Context(vec![error_context::Step {
+                    message: "A model permissions has already been defined for this model"
+                        .to_owned(),
+                    path: model_name.path.clone(),
+                    subgraph: None,
+                }]))
+            }
             Error::ModelsError(error) => error.create_error_context(),
             Error::CommandsError(error) => error.create_error_context(),
             Error::DataConnectorError(error) => error.create_error_context(),
@@ -385,6 +384,10 @@ impl ContextualError for Error {
             Error::AggregateBooleanExpressionError(error) => error.create_error_context(),
             Error::BooleanExpressionError(error) => error.create_error_context(),
             Error::OrderByExpressionError(error) => error.create_error_context(),
+            Error::ModelPermissionsError(error) => error.create_error_context(),
+            Error::CompatibilityError { warning_as_error } => {
+                warning_as_error.create_error_context()
+            }
             _other => None,
         }
     }
@@ -511,15 +514,16 @@ impl From<RelationshipError> for Error {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypePredicateError {
-    #[error("field '{field_name:}' used in predicate for type '{type_name:}' not found in data connector field mappings")]
-    UnknownFieldInDataConnectorFieldMappingsForTypePredicate {
-        field_name: FieldName,
-        type_name: Qualified<CustomTypeName>,
-    },
     #[error("unknown field '{field_name:}' used in predicate for type '{type_name:}'")]
     UnknownFieldInTypePredicate {
+        field_name: Spanned<FieldName>,
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("unknown field '{field_name}' for type '{type_name}' used in target mapping for relationship '{relationship_name}'")]
+    UnknownFieldInModelRelationshipTargetMapping {
         field_name: FieldName,
         type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
     },
     #[error("boolean expression '{boolean_expression_name:}' not found")]
     BooleanExpressionNotFound {
@@ -532,9 +536,10 @@ pub enum TypePredicateError {
         type_name: Qualified<CustomTypeName>,
         data_connector: Qualified<DataConnectorName>,
     },
-    #[error("field '{field_name:}' used in predicate for type '{type_name:}' should be mapped to non-array scalar field")]
-    UnsupportedFieldInTypePredicate {
-        field_name: FieldName,
+    #[error("field '{field_name}' of type '{type_name}' used in a field comparison is an array type and therefore cannot be compared to a single value")]
+    UnsupportedFieldComparisonToArrayType {
+        field_name: Spanned<FieldName>,
+        field_type: QualifiedTypeReference,
         type_name: Qualified<CustomTypeName>,
     },
     #[error("Invalid operator used in type '{type_name:}' predicate: '{operator_name:}'")]
@@ -546,10 +551,15 @@ pub enum TypePredicateError {
     NestedPredicateInTypePredicate {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("relationship '{relationship_name:}' is used in predicate but does not exist in comparableRelationships in boolean expression for type '{type_name:}'")]
+    #[error("relationship '{relationship_name}' is used in predicate but does not exist for type '{type_name}'")]
     UnknownRelationshipInTypePredicate {
-        relationship_name: RelationshipName,
+        relationship_name: Spanned<RelationshipName>,
         type_name: Qualified<CustomTypeName>,
+    },
+    #[error("relationship '{relationship_name}' is used in predicate but does not exist in comparableRelationships in boolean expression '{boolean_expression_type_name}'")]
+    RelationshipNotComparableInTypePredicate {
+        relationship_name: Spanned<RelationshipName>,
+        boolean_expression_type_name: Qualified<CustomTypeName>,
     },
     #[error("The model '{target_model_name:}' corresponding to the  relationship '{relationship_name:}' used in predicate for type '{type_name:}' is not defined")]
     UnknownModelUsedInRelationshipTypePredicate {
@@ -569,7 +579,7 @@ pub enum TypePredicateError {
     )]
     NoPredicateDefinedForRelationshipPredicate {
         type_name: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
+        relationship_name: Spanned<RelationshipName>,
     },
     #[error("{error:} in type {type_name:}")]
     TypeMappingCollectionError {
@@ -597,10 +607,11 @@ pub enum TypePredicateError {
         field_name: FieldName,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("Operator {operator_name:} not found for field {field_name:}")]
+    #[error("Comparison operator '{operator_name}' not found for field '{field_name}' of type '{field_type}'")]
     OperatorNotFoundForField {
-        field_name: FieldName,
-        operator_name: OperatorName,
+        field_name: Spanned<FieldName>,
+        field_type: QualifiedTypeReference,
+        operator_name: Spanned<OperatorName>,
     },
     #[error(
         "{location:} - missing equality operator for source column {ndc_column:} in data connector {data_connector_name:} \
@@ -619,16 +630,91 @@ pub enum TypePredicateError {
          and target data connector: {target_data_connector:}"
     )]
     RelationshipAcrossSubgraphs {
-        relationship_name: RelationshipName,
+        relationship_name: Spanned<RelationshipName>,
         source_data_connector: Qualified<DataConnectorName>,
         target_data_connector: Qualified<DataConnectorName>,
     },
+    #[error("{message}")]
+    UnsupportedFeature { message: String },
+    #[error("{0}")]
+    ScalarBooleanExpressionTypeError(
+        #[from] scalar_boolean_expressions::ScalarBooleanExpressionTypeError,
+    ),
+    #[error("type check error in value: {0}")]
+    ValueTypecheckError(#[from] typecheck::TypecheckError),
+    #[error("{0}")]
+    OtherError(Box<Error>),
 }
 
-impl From<TypePredicateError> for Error {
-    fn from(val: TypePredicateError) -> Self {
-        Error::TypePredicateError {
-            type_predicate_error: val,
+impl ContextualError for TypePredicateError {
+    fn create_error_context(&self) -> Option<Context> {
+        match self {
+            TypePredicateError::UnknownFieldInTypePredicate { field_name, type_name } => {
+                Some(Context(vec![
+                    error_context::Step {
+                        message: format!("This field is not found in the type '{type_name}'"),
+                        path: field_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                ]))
+            },
+            TypePredicateError::UnsupportedFieldComparisonToArrayType { field_name, field_type, type_name } => {
+                Some(Context(vec![
+                    error_context::Step {
+                        message: format!("The type of this field ({field_type}) is an array type and therefore it cannot be compared to a single value"),
+                        path: field_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                ]))
+            },
+            TypePredicateError::OperatorNotFoundForField { field_name, field_type, operator_name } => {
+                Some(Context(vec![
+                    error_context::Step {
+                        message: format!("The type of this field ({field_type}) does not support the comparison operator '{operator_name}'"),
+                        path: field_name.path.clone(),
+                        subgraph: field_type.get_subgraph().cloned(),
+                    }
+                ]))
+            }
+            TypePredicateError::UnknownRelationshipInTypePredicate { relationship_name, type_name } => {
+                Some(Context(vec![
+                    error_context::Step {
+                        message: format!("This relationship is not defined for the type '{type_name}'"),
+                        path: relationship_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                ]))
+            }
+            TypePredicateError::RelationshipNotComparableInTypePredicate { relationship_name, boolean_expression_type_name } => {
+                Some(Context(vec![
+                    error_context::Step {
+                        message: format!("This relationship is not defined as a comparableRelationship for the boolean expression type '{boolean_expression_type_name}'"),
+                        path: relationship_name.path.clone(),
+                        subgraph: Some(boolean_expression_type_name.subgraph.clone()),
+                    }
+                ]))
+            }
+            TypePredicateError::NoPredicateDefinedForRelationshipPredicate { type_name, relationship_name } => {
+                Some(Context(vec![
+                    error_context::Step {
+                        message: "This relationship is missing a predicate".to_owned(),
+                        path: relationship_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                ]))
+            }
+            TypePredicateError::RelationshipAcrossSubgraphs {  relationship_name, source_data_connector, target_data_connector: _ } => {
+                Some(Context(vec![
+                    error_context::Step {
+                        message: "This relationship crosses subgraphs".to_owned(),
+                        path: relationship_name.path.clone(),
+                        subgraph: Some(source_data_connector.subgraph.clone()),
+                    }
+                ]))
+            }
+            TypePredicateError::ScalarBooleanExpressionTypeError(error) => error.create_error_context(),
+            TypePredicateError::OtherError(error) => error.create_error_context(),
+            _ => None,
         }
     }
 }

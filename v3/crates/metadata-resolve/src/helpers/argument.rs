@@ -378,7 +378,6 @@ pub(crate) fn resolve_value_expression_for_argument(
                 .ok_or_else(|| Error::UnknownType {
                     data_type: base_type.clone(),
                 })?;
-            let boolean_expression_fields = boolean_expression_type.get_fields(flags);
             let object_type_representation =
                 get_object_type_for_boolean_expression(boolean_expression_type, object_types)?;
 
@@ -422,11 +421,9 @@ pub(crate) fn resolve_value_expression_for_argument(
             // Get available scalars defined for this data connector
             let specific_data_connector_scalars = data_connector_scalars
                 .get(&data_connector_link.name)
-                .ok_or(Error::TypePredicateError {
-                    type_predicate_error: TypePredicateError::UnknownTypeDataConnector {
-                        type_name: base_type.clone(),
-                        data_connector: data_connector_link.name.clone(),
-                    },
+                .ok_or_else(|| TypePredicateError::UnknownTypeDataConnector {
+                    type_name: base_type.clone(),
+                    data_connector: data_connector_link.name.clone(),
                 })?;
 
             let resolved_model_predicate = model_permissions::resolve_model_predicate_with_type(
@@ -434,7 +431,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 bool_exp,
                 &boolean_expression_type.object_type,
                 object_type_representation,
-                boolean_expression_fields,
+                Some(boolean_expression_type),
                 data_connector_field_mappings,
                 data_connector_link,
                 subgraph,

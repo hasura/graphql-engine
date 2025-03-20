@@ -6,11 +6,15 @@
 
 ### Changed
 
+- Improved error messages for ModelPermissions build errors that include more
+  contextual information
+
 ### Fixed
 
 - JSON paths in metadata parse errors involving externally tagged unions (such
   as `BooleanExpressionOperand`) now correctly include the tag property in the
   path.
+- ModelPermissions no longer allow roles to be defined more than once
 
 ## [v2025.03.17]
 

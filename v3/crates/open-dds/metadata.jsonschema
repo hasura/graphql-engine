@@ -3773,6 +3773,10 @@
         "disallow_procedure_command_relationships": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_duplicate_model_permissions_roles": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
