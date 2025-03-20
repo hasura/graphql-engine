@@ -6,6 +6,12 @@
 
 ### Changed
 
+### Fixed
+
+## [v2025.03.20]
+
+### Changed
+
 - Improved error messages for ModelPermissions build errors that include more
   contextual information
 
@@ -1508,7 +1514,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.17...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.20...HEAD
+[v2025.03.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.20
 [v2025.03.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.17
 [v2025.03.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.13
 [v2025.03.11]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.11
