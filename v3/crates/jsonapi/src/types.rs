@@ -115,7 +115,7 @@ pub struct JsonApiHttpError {
 
 impl JsonApiHttpError {
     // Converts the error into a JSON:API error document
-    fn into_document_error(self) -> jsonapi_library::api::DocumentError {
+    pub fn into_document_error(self) -> jsonapi_library::api::DocumentError {
         let jsonapi_error = jsonapi_library::api::JsonApiError {
             // The spec mandates the compulsory inclusion of status code
             // Ref: https://jsonapi.org/format/#error-objects

@@ -1,0 +1,46 @@
+[
+  [
+    {
+      "data": [
+        {
+          "type": "default_author",
+          "id": "1",
+          "attributes": {
+            "author_id": 1,
+            "first_name": "Peter",
+            "last_name": "Landin"
+          }
+        },
+        {
+          "type": "default_author",
+          "id": "2",
+          "attributes": {
+            "author_id": 2,
+            "first_name": "John",
+            "last_name": "Hughes"
+          }
+        }
+      ]
+    },
+    {
+      "data": [
+        {
+          "type": "default_author",
+          "id": "1",
+          "attributes": {
+            "author_id": 1,
+            "first_name": "Peter"
+          }
+        },
+        {
+          "type": "default_author",
+          "id": "2",
+          "attributes": {
+            "author_id": 2,
+            "first_name": "John"
+          }
+        }
+      ]
+    }
+  ]
+]
