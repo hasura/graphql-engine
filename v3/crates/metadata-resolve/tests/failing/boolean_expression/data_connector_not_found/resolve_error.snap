@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/data_connector_not_found/metadata.json
 ---
-data connector postgres_db (in subgraph __unknown_namespace) referenced in type mappings of type author (in subgraph __unknown_namespace) is not found in object type author (in subgraph __unknown_namespace)
+Error: data connector postgres_db (in subgraph __unknown_namespace) referenced in type mappings of type author (in subgraph __unknown_namespace) is not found in object type author (in subgraph __unknown_namespace)

@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/scalar/object_type_not_allowed/metadata.json
 ---
-error in boolean expression type 'MyObject_aggregate_bool_exp (in subgraph default)': the operand type 'MyObject (in subgraph default)' must be a scalar type
+Error: error in boolean expression type 'MyObject_aggregate_bool_exp (in subgraph default)': the operand type 'MyObject (in subgraph default)' must be a scalar type

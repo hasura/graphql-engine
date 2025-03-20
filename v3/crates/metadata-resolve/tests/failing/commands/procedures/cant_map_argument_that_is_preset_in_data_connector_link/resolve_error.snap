@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/commands/procedures/cant_map_argument_that_is_preset_in_data_connector_link/metadata.json
 ---
-An error occurred while mapping arguments in the command procedure_with_args (in subgraph default) to the procedure procedure_with_args in the data connector myconnector (in subgraph default): the argument http_headers is mapped to the data connector argument headers which is already used as an argument preset in the DataConnectorLink
+Error: An error occurred while mapping arguments in the command procedure_with_args (in subgraph default) to the procedure procedure_with_args in the data connector myconnector (in subgraph default): the argument http_headers is mapped to the data connector argument headers which is already used as an argument preset in the DataConnectorLink

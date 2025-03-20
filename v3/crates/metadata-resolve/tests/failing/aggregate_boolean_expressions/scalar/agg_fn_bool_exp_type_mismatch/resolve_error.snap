@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/scalar/agg_fn_bool_exp_type_mismatch/metadata.json
 ---
-error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': type mismatch between the aggregation function '_min' (return type: 'String') and the specified boolean expression type 'Int_bool_exp (in subgraph default)' (operand type: 'Int')
+Error: error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': type mismatch between the aggregation function '_min' (return type: 'String') and the specified boolean expression type 'Int_bool_exp (in subgraph default)' (operand type: 'Int')

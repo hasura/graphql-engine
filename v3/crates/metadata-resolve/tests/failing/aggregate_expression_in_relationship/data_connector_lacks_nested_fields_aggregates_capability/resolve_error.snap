@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expression_in_relationship/data_connector_lacks_nested_fields_aggregates_capability/metadata.json
 ---
-The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: the data connector mypg (in subgraph default) does not support aggregates over nested object fields, such as the field detail used in aggregate expression InvoiceLine_aggregate_exp (in subgraph default)
+Error: The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: the data connector mypg (in subgraph default) does not support aggregates over nested object fields, such as the field detail used in aggregate expression InvoiceLine_aggregate_exp (in subgraph default)

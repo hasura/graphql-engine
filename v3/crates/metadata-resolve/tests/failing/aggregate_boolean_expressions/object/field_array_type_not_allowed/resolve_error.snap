@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/field_array_type_not_allowed/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the type of the comparable field 'titles' ([String]) is an array type. Nested aggregation over array types is not supported
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the type of the comparable field 'titles' ([String]) is an array type. Nested aggregation over array types is not supported

@@ -222,7 +222,8 @@ fn resolve_internal(
         &scalar_types,
         &boolean_expression_types,
         &aggregate_expressions,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 

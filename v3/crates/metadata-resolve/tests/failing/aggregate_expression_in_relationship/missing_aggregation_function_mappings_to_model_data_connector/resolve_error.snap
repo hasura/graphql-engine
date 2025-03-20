@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expression_in_relationship/missing_aggregation_function_mappings_to_model_data_connector/metadata.json
 ---
-The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: the aggregate expression Int4_aggregate_exp (in subgraph default) is used with the model InvoiceLine (in subgraph default) but for the data connector mypg (in subgraph default) and scalar type int4, mappings are not provided for all aggregation functions in the aggregate expression
+Error: The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: the aggregate expression Int4_aggregate_exp (in subgraph default) is used with the model InvoiceLine (in subgraph default) but for the data connector mypg (in subgraph default) and scalar type int4, mappings are not provided for all aggregation functions in the aggregate expression

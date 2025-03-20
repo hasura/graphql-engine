@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/relationship_bool_exp_operand_type_mismatch/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the object type of the target of the relationship 'artist' (Artist (in subgraph default)) does not match the operand type of the boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': 'Album (in subgraph default)'
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the object type of the target of the relationship 'artist' (Artist (in subgraph default)) does not match the operand type of the boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': 'Album (in subgraph default)'

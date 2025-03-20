@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/order_by_expressions/no_enable_all/metadata.json
 ---
-Error in order by expression BrokenOrderByExpression (in subgraph default): Order by configuration is not fully supported yet. Please use "enableAll":true.
+Error: Error in order by expression BrokenOrderByExpression (in subgraph default): Order by configuration is not fully supported yet. Please use "enableAll":true.

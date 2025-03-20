@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/nested_object_relationship_filter/metadata.json
 ---
-The data connector 'db (in subgraph default)' does not support filtering across nested relationships. The nested object field 'songs' within 'institution_boolexp (in subgraph default)' references the boolean expression type 'institution_songs_boolexp (in subgraph default)' which has relationship comparisons, making them nested relationship comparisons.
+Error: The data connector 'db (in subgraph default)' does not support filtering across nested relationships. The nested object field 'songs' within 'institution_boolexp (in subgraph default)' references the boolean expression type 'institution_songs_boolexp (in subgraph default)' which has relationship comparisons, making them nested relationship comparisons.

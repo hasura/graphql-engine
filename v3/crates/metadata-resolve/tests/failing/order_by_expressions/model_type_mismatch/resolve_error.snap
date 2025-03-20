@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/order_by_expressions/model_type_mismatch/metadata.json
 ---
-Type of order by expression FooOrderByExpression (in subgraph default) does not match object type of model mymodel (in subgraph default).  Model type: RowType (in subgraph default); order by expression type: Foo (in subgraph default)
+Error: Type of order by expression FooOrderByExpression (in subgraph default) does not match object type of model mymodel (in subgraph default).  Model type: RowType (in subgraph default); order by expression type: Foo (in subgraph default)

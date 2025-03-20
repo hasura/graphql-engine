@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/data_connector_lacks_nested_fields_aggregates_capability/metadata.json
 ---
-the data connector mypg (in subgraph default) does not support aggregates over nested object fields, such as the field billingAddress used in aggregate expression Invoice_aggregate_exp (in subgraph default)
+Error: the data connector mypg (in subgraph default) does not support aggregates over nested object fields, such as the field billingAddress used in aggregate expression Invoice_aggregate_exp (in subgraph default)

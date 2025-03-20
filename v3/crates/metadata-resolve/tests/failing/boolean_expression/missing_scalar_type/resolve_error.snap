@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/missing_scalar_type/metadata.json
 ---
-could not find object boolean expression type postgres_int_comparison_bool_exp (in subgraph __unknown_namespace) referenced within boolean expression author_bool_exp (in subgraph __unknown_namespace)
+Error: could not find object boolean expression type postgres_int_comparison_bool_exp (in subgraph __unknown_namespace) referenced within boolean expression author_bool_exp (in subgraph __unknown_namespace)

@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/model_aggregate_exp_type_mismatch/metadata.json
 ---
-the aggregate expression Int4_aggregate_exp (in subgraph default) is used with the model Invoice (in subgraph default) but its operand type Int4 (in subgraph default) does not match the model's type Invoice (in subgraph default)
+Error: the aggregate expression Int4_aggregate_exp (in subgraph default) is used with the model Invoice (in subgraph default) but its operand type Int4 (in subgraph default) does not match the model's type Invoice (in subgraph default)

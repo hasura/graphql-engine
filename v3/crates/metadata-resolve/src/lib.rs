@@ -14,7 +14,7 @@ mod types;
 
 pub use helpers::http;
 pub use helpers::ndc_validation::NDCValidationError;
-pub use helpers::to_fancy_error;
+pub use helpers::to_fancy_errors;
 pub use helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
     NdcColumnForComparison, TypeRepresentation,

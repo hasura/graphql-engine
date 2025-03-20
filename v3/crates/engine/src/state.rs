@@ -29,21 +29,18 @@ pub fn resolve_metadata(
 
     let (resolved_metadata, warnings) =
         metadata_resolve::resolve(metadata, metadata_resolve_configuration).map_err(|error| {
-            match metadata_resolve::to_fancy_error(
+            let reports = metadata_resolve::to_fancy_errors(
                 opendd_metadata_json,
                 &error,
                 ariadne::Config::new(),
-            ) {
-                Some(report) => {
-                    report
-                        .eprint(ariadne::Source::from(opendd_metadata_json))
-                        .unwrap();
-
-                    // return empty error to stop printing twice
-                    anyhow::anyhow!("error building metadata")
-                }
-                None => anyhow::anyhow!(error),
+            );
+            for report in reports {
+                report
+                    .eprint(ariadne::Source::from(opendd_metadata_json))
+                    .unwrap();
             }
+            // return empty error to stop printing twice
+            anyhow::anyhow!("error building metadata")
         })?;
 
     print_warnings(auth_warnings);

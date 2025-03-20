@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/order_by_expressions/unknown_order_by_expression_in_field/metadata.json
 ---
-Error in order by expression MyOrderByExpression (in subgraph default): The order by expression Foo referenced in field test has not been defined
+Error: Error in order by expression MyOrderByExpression (in subgraph default): The order by expression Foo referenced in field test has not been defined

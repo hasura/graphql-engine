@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/field_scalar_aggregate_bool_exp_operand_type_mismatch/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the boolean expression type (Album_aggregate_bool_exp (in subgraph default)) used in the comparable field 'title' must have a 'scalar aggregate' operand, to match the field type 'String'
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the boolean expression type (Album_aggregate_bool_exp (in subgraph default)) used in the comparable field 'title' must have a 'scalar aggregate' operand, to match the field type 'String'

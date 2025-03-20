@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/disallow_duplicate_graphql_select_type_name/metadata.json
 ---
-graphql config error in Invoice_aggregate_exp (in subgraph default): multiple graphql types found with the same name: App_Invoice
+Error: graphql config error in Invoice_aggregate_exp (in subgraph default): multiple graphql types found with the same name: App_Invoice

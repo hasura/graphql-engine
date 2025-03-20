@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/relationships/model_argument_target_type_mismatch/metadata.json
 ---
-The source field 'Title' of type 'String!' in the relationship 'Artist' on type 'Album (in subgraph default)' cannot be mapped to the target argument 'tenantId' of type 'Int!' on the target model 'Artists (in subgraph default)' because their types are incompatible
+Error: The source field 'Title' of type 'String!' in the relationship 'Artist' on type 'Album (in subgraph default)' cannot be mapped to the target argument 'tenantId' of type 'Int!' on the target model 'Artists (in subgraph default)' because their types are incompatible

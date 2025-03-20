@@ -14,7 +14,7 @@ pub mod type_validation;
 pub mod typecheck;
 pub mod types;
 
-pub use fancy_errors::to_fancy_error;
+pub use fancy_errors::to_fancy_errors;
 
 /// Takes something that can be turned into an Iterator and then uses the `select_key` function
 /// to extract a key value for each item in the iterable. It then detects if any these keys are

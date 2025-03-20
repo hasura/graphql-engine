@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/count_return_type_on_scalar_operand_missing_type_representation/metadata.json
 ---
-the aggregate expression 'Int4_aggregate_exp (in subgraph default)' is used with the model 'Invoice (in subgraph default)' but the count aggregate's return type (Int) does not have a scalar type representation mapping to the 'mypg (in subgraph default)' data connector's count aggregate type 'count_agg_type'
+Error: the aggregate expression 'Int4_aggregate_exp (in subgraph default)' is used with the model 'Invoice (in subgraph default)' but the count aggregate's return type (Int) does not have a scalar type representation mapping to the 'mypg (in subgraph default)' data connector's count aggregate type 'count_agg_type'

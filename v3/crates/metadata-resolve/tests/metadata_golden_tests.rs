@@ -61,21 +61,14 @@ fn test_failing_metadata() {
                                 Err(msg) => {
                                     let config = ariadne::Config::new().with_color(false);
 
-                                    match metadata_resolve::to_fancy_error(metadata_json_text.as_str(),&msg,config) {
-                                        Some(report) =>
-                                        {
+                                    let reports =  metadata_resolve::to_fancy_errors(metadata_json_text.as_str(),&msg,config);
                                             // write an ariadne error to a String
                                             let mut buf = Vec::new();
-                                            let () = report.write(ariadne::Source::from(&metadata_json_text),&mut buf).unwrap();
+                                            for report in reports {
+                                                let () = report.write(ariadne::Source::from(&metadata_json_text),&mut buf).unwrap();
+                                            }
                                             let string = String::from_utf8(buf).unwrap();
                                             insta::assert_snapshot!("resolve_error",string);
-                                        }
-                                        None => {
-                                    insta::assert_snapshot!("resolve_error", msg);
-
-
-                                        }
-                                    }
                                 }
                             }
                         }

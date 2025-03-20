@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/field_not_defined/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the field 'nope' used in comparable fields is not an aggregatable field defined in the aggregate expression 'Album_agg_exp (in subgraph default)'
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the field 'nope' used in comparable fields is not an aggregatable field defined in the aggregate expression 'Album_agg_exp (in subgraph default)'
