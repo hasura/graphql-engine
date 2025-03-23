@@ -933,4 +933,4 @@ recreateSystemMetadata = do
         $ RelManualTableConfig
         $ RelManualTableConfigC
           (QualifiedObject schemaName tableName)
-          (RelManualCommon (RelMapping $ HashMap.fromList columns) Nothing)
+          (RelManualCommon (RelMapping $ HashMap.fromList columns) Nothing True)

@@ -250,12 +250,15 @@ defaultGenerateSQLSelect selectRewriter joinCondition selectSource selectNode =
     arrayRelationToFromItem ::
       (ArrayRelationSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
-      let ArrayRelationSource _ colMapping source = arrayRelationSource
+      let ArrayRelationSource _ colMapping source nullable = arrayRelationSource
           alias = S.toTableAlias $ _ssPrefix source
           select =
             generateSQLSelectFromArrayNode @pgKind source arraySelectNode
               $ mkJoinCond baseSelectIdentifier colMapping
-       in (S.mkLateralFromItem select alias, S.LeftOuter)
+          joinType = case nullable of
+            Nullable -> S.LeftOuter
+            NotNullable -> S.Inner
+       in (S.mkLateralFromItem select alias, joinType)
 
     arrayConnectionToFromItem ::
       (ArrayConnectionSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)

@@ -510,7 +510,7 @@ processArrayRelation ::
 processArrayRelation userInfo sourcePrefixes fieldAlias relAlias arrSel _tCase =
   case arrSel of
     ASSimple annArrRel -> withWriteArrayRelation $ do
-      let AnnRelationSelectG _ colMapping _ sel = annArrRel
+      let AnnRelationSelectG _ colMapping nullable sel = annArrRel
           permLimitSubQuery =
             maybe PLSQNotRequired PLSQRequired $ _tpLimit $ _asnPerm sel
       (source, nodeExtractors) <-
@@ -522,17 +522,17 @@ processArrayRelation userInfo sourcePrefixes fieldAlias relAlias arrSel _tCase =
               permLimitSubQuery
               $ orderByForJsonAgg source
       pure
-        ( ArrayRelationSource relAlias colMapping source,
+        ( ArrayRelationSource relAlias colMapping source nullable,
           topExtr,
           nodeExtractors,
           ()
         )
     ASAggregate aggSel -> withWriteArrayRelation $ do
-      let AnnRelationSelectG _ colMapping _ sel = aggSel
+      let AnnRelationSelectG _ colMapping nullable sel = aggSel
       (source, nodeExtractors, topExtr) <-
         processAnnAggregateSelect userInfo sourcePrefixes fieldAlias sel
       pure
-        ( ArrayRelationSource relAlias colMapping source,
+        ( ArrayRelationSource relAlias colMapping source nullable,
           topExtr,
           nodeExtractors,
           ()

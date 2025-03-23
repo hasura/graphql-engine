@@ -184,7 +184,8 @@ deriving instance Eq ObjectRelationSource
 data ArrayRelationSource = ArrayRelationSource
   { _arsAlias :: Postgres.TableAlias,
     _arsRelationMapping :: HashMap.HashMap Postgres.PGCol Postgres.PGCol,
-    _arsSelectSource :: SelectSource
+    _arsSelectSource :: SelectSource,
+    _arsNullable :: Nullable
   }
   deriving (Generic, Show)
 

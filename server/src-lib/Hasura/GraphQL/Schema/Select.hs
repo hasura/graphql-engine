@@ -1608,6 +1608,8 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
       -- suboptimality is merely that in introspection some fields might get
       -- marked nullable which are in fact known to always be non-null.
       nullable <- case (riIsManual ri, riInsertOrder ri) of
+        -- If this is a manual relationship, use NotNullable when riManualNullable is False
+        (True, _) -> pure (if not (riManualNullable ri) then NotNullable else Nullable)
         -- Automatically generated forward relationship
         (False, BeforeParent) -> do
           let columns = fmap (getColumnPathColumn @b) $ HashMap.keys $ unRelMapping $ riMapping ri
@@ -1619,15 +1621,15 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
             traverse findColumn columns
               `onNothing` throw500 "could not find column info in schema cache"
           pure $ boolToNullable $ any ciIsNullable colInfo
-        -- Manual or reverse relationships are always nullable
-        _ -> pure Nullable
+        -- Reverse relationships, respect riManualNullable setting
+        _ -> pure (if not (riManualNullable ri) then NotNullable else Nullable)
       pure
         $ pure
         $ case nullable of Nullable -> id; NotNullable -> IP.nonNullableField
         $ P.subselection_ relFieldName desc selectionSetParser
         <&> \fields ->
           IR.AFObjectRelation
-            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullable
             $ IR.AnnObjectSelectG fields (IR.FromTable otherTableName)
             $ deduplicatePermissions
             $ IR._tpFilter
@@ -1635,11 +1637,15 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
     ArrRel -> do
       let arrayRelDesc = Just $ G.Description "An array relationship"
       otherTableParser <- MaybeT $ selectTable otherTableInfo relFieldName arrayRelDesc
+
+      -- For array relationships, determine nullability based on riNullable when it's a manual relationship
+      let innerNullability = if riIsManual ri && not (riManualNullable ri) then NotNullable else Nullable
+
       let arrayRelField =
             otherTableParser <&> \selectExp ->
               IR.AFArrayRelation
                 $ IR.ASSimple
-                $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable
+                $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability
                 $ deduplicatePermissions' selectExp
           relAggFieldName = applyFieldNameCaseCust tCase $ relFieldName <> Name.__aggregate
           relAggDesc = Just $ G.Description "An aggregate relationship"
@@ -1658,8 +1664,8 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
       pure
         $ catMaybes
           [ Just arrayRelField,
-            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable) <$> remoteAggField,
-            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable) <$> remoteConnectionField
+            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability) <$> remoteAggField,
+            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability) <$> remoteConnectionField
           ]
 relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQueryName} = runMaybeT do
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
@@ -1674,7 +1680,8 @@ relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQuery
         MaybeT $ selectNativeQueryObject nativeQueryInfo relFieldName objectRelDesc
 
       -- this only affects the generated GraphQL type
-      let nullability = Nullable
+      -- Determine nullability
+      let nullability = if riIsManual ri && not (riManualNullable ri) then NotNullable else Nullable
 
       pure
         $ pure
@@ -1686,7 +1693,7 @@ relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQuery
 
       let objectRelDesc = Just $ G.Description "An array relationship"
           arrayNullability = Nullable
-          innerNullability = Nullable
+          innerNullability = if riIsManual ri && not (riManualNullable ri) then NotNullable else Nullable
 
       nativeQueryParser <-
         MaybeT $ selectNativeQuery nativeQueryInfo relFieldName arrayNullability objectRelDesc
