@@ -14,13 +14,13 @@ pub fn to_fancy_errors<'a>(
             .iter()
             .map(|e| {
                 to_fancy_error(raw_metadata, e, config)
-                    .unwrap_or_else(|| to_fallback_error(e.into_inner()))
+                    .unwrap_or_else(|| to_fallback_error(e.into_inner(), config))
             })
             .collect(),
 
         _ => {
             vec![to_fancy_error(raw_metadata, error, config)
-                .unwrap_or_else(|| to_fallback_error(error.into_inner()))]
+                .unwrap_or_else(|| to_fallback_error(error.into_inner(), config))]
         }
     }
 }
@@ -63,8 +63,9 @@ fn to_fancy_error<'a>(
     }
 }
 
-fn to_fallback_error(error: &Error) -> ariadne::Report<'static> {
+fn to_fallback_error(error: &Error, config: ariadne::Config) -> ariadne::Report<'static> {
     ariadne::Report::build(ariadne::ReportKind::Error, 0..0)
         .with_message(error.to_string())
+        .with_config(config)
         .finish()
 }
