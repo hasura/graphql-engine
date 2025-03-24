@@ -9,8 +9,9 @@ use datafusion::{
     error::DataFusionError,
     execution::{runtime_env::RuntimeEnv, SessionStateBuilder},
     functions_aggregate::{count::Count, sum::Sum},
+    functions_window::{expr_fn::row_number, ntile},
     logical_expr::{build_join_schema, AggregateUDF, ExprSchemable, Literal as _, SubqueryAlias},
-    prelude::{SessionConfig, SessionContext},
+    prelude::{ExprFunctionExt, SessionConfig, SessionContext},
     scalar::ScalarValue,
     sql::TableReference,
 };
@@ -253,6 +254,17 @@ fn convert_plan_to_logical_plan(
                     group_by,
                     aggr_expr,
                 )?,
+            );
+            Ok(logical_plan)
+        }
+        Rel::Window { input, exprs } => {
+            let input_plan = convert_plan_to_logical_plan(input, state)?;
+            let exprs = exprs
+                .iter()
+                .map(|e| convert_expression_to_logical_expr(e, input_plan.schema()))
+                .collect::<datafusion::error::Result<Vec<_>>>()?;
+            let logical_plan = datafusion::logical_expr::LogicalPlan::Window(
+                datafusion::logical_expr::Window::try_new(exprs, Arc::new(input_plan))?,
             );
             Ok(logical_plan)
         }
@@ -613,6 +625,59 @@ fn convert_expression_to_logical_expr(
             },
         )),
         Expression::Var { expr: _ } => unimplemented!(),
+        Expression::RowNumber {
+            order_by,
+            partition_by,
+        } => {
+            let order_by = order_by
+                .iter()
+                .map(|s| convert_sort_to_logical_sort(s, schema))
+                .collect::<datafusion::error::Result<Vec<_>>>()?;
+            let partition_by = partition_by
+                .iter()
+                .map(|s| convert_expression_to_logical_expr(s, schema))
+                .collect::<datafusion::error::Result<Vec<_>>>()?;
+
+            row_number()
+                .order_by(order_by)
+                .partition_by(partition_by)
+                .build()
+        }
+        Expression::DenseRank {
+            order_by: _,
+            partition_by: _,
+        } => unimplemented!(),
+        Expression::NTile {
+            order_by,
+            partition_by,
+            n,
+        } => {
+            let order_by = order_by
+                .iter()
+                .map(|s| convert_sort_to_logical_sort(s, schema))
+                .collect::<datafusion::error::Result<Vec<_>>>()?;
+            let partition_by = partition_by
+                .iter()
+                .map(|s| convert_expression_to_logical_expr(s, schema))
+                .collect::<datafusion::error::Result<Vec<_>>>()?;
+
+            ntile::ntile(n.lit())
+                .order_by(order_by)
+                .partition_by(partition_by)
+                .build()
+        }
+        Expression::Rank {
+            order_by: _,
+            partition_by: _,
+        } => unimplemented!(),
+        Expression::CumeDist {
+            order_by: _,
+            partition_by: _,
+        } => unimplemented!(),
+        Expression::PercentRank {
+            order_by: _,
+            partition_by: _,
+        } => unimplemented!(),
     }
 }
 

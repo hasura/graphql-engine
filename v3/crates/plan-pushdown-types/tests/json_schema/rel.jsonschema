@@ -195,6 +195,31 @@
           }
         }
       }
+    },
+    {
+      "type": "object",
+      "required": [
+        "exprs",
+        "input",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Window"
+          ]
+        },
+        "input": {
+          "$ref": "#/definitions/Rel"
+        },
+        "exprs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Expression"
+          }
+        }
+      }
     }
   ],
   "definitions": {
@@ -1253,6 +1278,179 @@
               "$ref": "#/definitions/Expression"
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "order_by",
+            "partition_by",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "RowNumber"
+              ]
+            },
+            "order_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sort"
+              }
+            },
+            "partition_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "order_by",
+            "partition_by",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DenseRank"
+              ]
+            },
+            "order_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sort"
+              }
+            },
+            "partition_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "n",
+            "order_by",
+            "partition_by",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "NTile"
+              ]
+            },
+            "order_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sort"
+              }
+            },
+            "partition_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            },
+            "n": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "order_by",
+            "partition_by",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Rank"
+              ]
+            },
+            "order_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sort"
+              }
+            },
+            "partition_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "order_by",
+            "partition_by",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "CumeDist"
+              ]
+            },
+            "order_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sort"
+              }
+            },
+            "partition_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "order_by",
+            "partition_by",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "PercentRank"
+              ]
+            },
+            "order_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sort"
+              }
+            },
+            "partition_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
         }
       ]
     },
@@ -2125,6 +2323,31 @@
               }
             },
             "aggregates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "exprs",
+            "input",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Window"
+              ]
+            },
+            "input": {
+              "$ref": "#/definitions/Rel"
+            },
+            "exprs": {
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Expression"

@@ -39,6 +39,10 @@ pub enum Rel {
         group_by: Vec<Expression>,
         aggregates: Vec<Expression>,
     },
+    Window {
+        input: Arc<Rel>,
+        exprs: Vec<Expression>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -673,16 +677,32 @@ pub enum Expression {
     // var_sample
 
     // Window functions
-
-    // cume_dist
-    // dense_rank
-    // first_value
+    RowNumber {
+        order_by: Vec<Sort>,
+        partition_by: Vec<Expression>,
+    },
+    DenseRank {
+        order_by: Vec<Sort>,
+        partition_by: Vec<Expression>,
+    },
+    NTile {
+        order_by: Vec<Sort>,
+        partition_by: Vec<Expression>,
+        n: i64,
+    },
+    Rank {
+        order_by: Vec<Sort>,
+        partition_by: Vec<Expression>,
+    },
+    CumeDist {
+        order_by: Vec<Sort>,
+        partition_by: Vec<Expression>,
+    },
+    PercentRank {
+        order_by: Vec<Sort>,
+        partition_by: Vec<Expression>,
+    },
     // lag
-    // last_value
     // lead
     // nth_value
-    // ntile
-    // percent_rank
-    // rank
-    // row_number
 }
