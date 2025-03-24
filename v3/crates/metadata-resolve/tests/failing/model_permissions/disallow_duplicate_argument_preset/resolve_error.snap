@@ -4,7 +4,7 @@ expression: string
 input_file: crates/metadata-resolve/tests/failing/model_permissions/disallow_duplicate_argument_preset/metadata.json
 ---
 Error: Error in model permission for model 'Albums (in subgraph subgraphs)' for role 'user': preset argument 'include_rereleases' is defined more than once
-    ╭─[<unknown>:61:25]
+    ╭─[ <unknown>:61:25 ]
     │
  61 │                 "role": "user",
     │                         ───┬──  

@@ -4,7 +4,7 @@ expression: string
 input_file: crates/metadata-resolve/tests/failing/model_permissions/unknown_model/metadata.json
 ---
 Error: unknown model used in model select permissions definition: Albums (in subgraph subgraphs)
-    ╭─[<unknown>:11:26]
+    ╭─[ <unknown>:11:26 ]
     │
  11 │             "modelName": "Albums",
     │                          ────┬───  

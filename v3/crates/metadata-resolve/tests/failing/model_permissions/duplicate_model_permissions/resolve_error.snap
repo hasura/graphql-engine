@@ -4,7 +4,7 @@ expression: string
 input_file: crates/metadata-resolve/tests/failing/model_permissions/duplicate_model_permissions/metadata.json
 ---
 Error: multiple model permissions defined for model: Albums (in subgraph subgraphs)
-    ╭─[<unknown>:81:26]
+    ╭─[ <unknown>:81:26 ]
     │
  81 │             "modelName": "Albums",
     │                          ────┬───  

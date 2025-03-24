@@ -4,7 +4,7 @@ expression: string
 input_file: crates/metadata-resolve/tests/failing/model_permissions/filter_permissions/comparison_to_array_type/metadata.json
 ---
 Error: Error in model permission for model 'Albums (in subgraph subgraphs)' for role 'user': in select filter permissions: field 'ReleaseYears' of type 'Album (in subgraph subgraphs)' used in a field comparison is an array type and therefore cannot be compared to a single value
-    ╭─[<unknown>:38:32]
+    ╭─[ <unknown>:38:32 ]
     │
  38 │                       "field": "ReleaseYears",
     │                                ───────┬──────  

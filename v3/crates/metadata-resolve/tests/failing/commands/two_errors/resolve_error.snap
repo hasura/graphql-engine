@@ -4,7 +4,7 @@ expression: string
 input_file: crates/metadata-resolve/tests/failing/commands/two_errors/metadata.json
 ---
 Error: the argument 'argument_with_unknown_type' in command 'function_with_unknown_argument_type (in subgraph default)' has an unknown type: MissingThing!
-    ╭─[<unknown>:15:25]
+    ╭─[ <unknown>:15:25 ]
     │
  14 │                 "name": "argument_with_unknown_type",
     │                         ──────────────┬─────────────  
@@ -14,7 +14,7 @@ Error: the argument 'argument_with_unknown_type' in command 'function_with_unkno
     │                                ╰───────── The argument type 'MissingThing!' has not been defined
 ────╯
 Error: the argument 'another_argument_with_unknown_type' in command 'another_function_with_unknown_argument_type (in subgraph default)' has an unknown type: MissingThing!
-    ╭─[<unknown>:29:25]
+    ╭─[ <unknown>:29:25 ]
     │
  28 │                 "name": "another_argument_with_unknown_type",
     │                         ──────────────────┬─────────────────  
