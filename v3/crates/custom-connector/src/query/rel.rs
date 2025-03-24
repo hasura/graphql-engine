@@ -635,6 +635,9 @@ fn convert_data_type(
         plan_pushdown_types::ScalarType::Decimal128 { scale, prec } => {
             datafusion::arrow::datatypes::DataType::Decimal128(*scale, *prec)
         }
+        plan_pushdown_types::ScalarType::Decimal256 { scale, prec } => {
+            datafusion::arrow::datatypes::DataType::Decimal256(*scale, *prec)
+        }
         plan_pushdown_types::ScalarType::Utf8 => datafusion::arrow::datatypes::DataType::Utf8,
         plan_pushdown_types::ScalarType::Date32 => datafusion::arrow::datatypes::DataType::Date32,
         plan_pushdown_types::ScalarType::Date64 => datafusion::arrow::datatypes::DataType::Date64,
@@ -722,6 +725,13 @@ fn convert_literal_to_logical_expr(literal: &Literal) -> ScalarValue {
         Literal::Decimal128 { value, scale, prec } => {
             ScalarValue::Decimal128(*value, *scale, *prec)
         }
+        Literal::Decimal256 { value, scale, prec } => ScalarValue::Decimal256(
+            value
+                .as_ref()
+                .and_then(|s| datafusion::arrow::datatypes::i256::from_string(s)),
+            *scale,
+            *prec,
+        ),
         Literal::Utf8 { value } => ScalarValue::Utf8(value.clone()),
         Literal::Date32 { value } => ScalarValue::Date32(*value),
         Literal::Date64 { value } => ScalarValue::Date64(*value),

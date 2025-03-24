@@ -1574,6 +1574,38 @@
           }
         },
         {
+          "description": "256-bit decimal",
+          "type": "object",
+          "required": [
+            "prec",
+            "scale",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Decimal256"
+              ]
+            },
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "scale": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            },
+            "prec": {
+              "type": "integer",
+              "format": "int8"
+            }
+          }
+        },
+        {
           "description": "utf-8 encoded string.",
           "type": "object",
           "required": [
@@ -2284,6 +2316,31 @@
               "type": "string",
               "enum": [
                 "Decimal128"
+              ]
+            },
+            "scale": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            },
+            "prec": {
+              "type": "integer",
+              "format": "int8"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "prec",
+            "scale",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Decimal256"
               ]
             },
             "scale": {

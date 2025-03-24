@@ -121,6 +121,12 @@ pub enum Literal {
         scale: u8,
         prec: i8,
     },
+    /// 256-bit decimal
+    Decimal256 {
+        value: Option<String>,
+        scale: u8,
+        prec: i8,
+    },
     /// utf-8 encoded string.
     Utf8 {
         value: Option<String>,
@@ -240,64 +246,70 @@ impl Hash for Literal {
                 scale.hash(state);
                 prec.hash(state);
             }
-            Literal::Utf8 { value } => {
+            Literal::Decimal256 { value, scale, prec } => {
                 13.hash(state);
                 value.hash(state);
+                scale.hash(state);
+                prec.hash(state);
             }
-            Literal::Date32 { value } => {
+            Literal::Utf8 { value } => {
                 14.hash(state);
                 value.hash(state);
             }
-            Literal::Date64 { value } => {
+            Literal::Date32 { value } => {
                 15.hash(state);
                 value.hash(state);
             }
-            Literal::Time32Second { value } => {
+            Literal::Date64 { value } => {
                 16.hash(state);
                 value.hash(state);
             }
-            Literal::Time32Millisecond { value } => {
+            Literal::Time32Second { value } => {
                 17.hash(state);
                 value.hash(state);
             }
-            Literal::Time64Microsecond { value } => {
+            Literal::Time32Millisecond { value } => {
                 18.hash(state);
                 value.hash(state);
             }
-            Literal::Time64Nanosecond { value } => {
+            Literal::Time64Microsecond { value } => {
                 19.hash(state);
                 value.hash(state);
             }
-            Literal::TimestampSecond { value } => {
+            Literal::Time64Nanosecond { value } => {
                 20.hash(state);
                 value.hash(state);
             }
-            Literal::TimestampMillisecond { value } => {
+            Literal::TimestampSecond { value } => {
                 21.hash(state);
                 value.hash(state);
             }
-            Literal::TimestampMicrosecond { value } => {
+            Literal::TimestampMillisecond { value } => {
                 22.hash(state);
                 value.hash(state);
             }
-            Literal::TimestampNanosecond { value } => {
+            Literal::TimestampMicrosecond { value } => {
                 23.hash(state);
                 value.hash(state);
             }
-            Literal::DurationSecond { value } => {
+            Literal::TimestampNanosecond { value } => {
                 24.hash(state);
                 value.hash(state);
             }
-            Literal::DurationMillisecond { value } => {
+            Literal::DurationSecond { value } => {
                 25.hash(state);
                 value.hash(state);
             }
-            Literal::DurationMicrosecond { value } => {
+            Literal::DurationMillisecond { value } => {
                 26.hash(state);
                 value.hash(state);
             }
-            Literal::DurationNanosecond { value } => {
+            Literal::DurationMicrosecond { value } => {
                 27.hash(state);
+                value.hash(state);
+            }
+            Literal::DurationNanosecond { value } => {
+                28.hash(state);
                 value.hash(state);
             }
         }
@@ -320,6 +332,7 @@ pub enum ScalarType {
     UInt32,
     UInt64,
     Decimal128 { scale: u8, prec: i8 },
+    Decimal256 { scale: u8, prec: i8 },
     Utf8,
     Date32,
     Date64,
