@@ -26,6 +26,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     corsDomainOption,
     disableCorsOption,
     enableConsoleOption,
+    preserve401ErrorsOption,
     consoleAssetsDirOption,
     consoleSentryDsnOption,
     enableTelemetryOption,
@@ -100,6 +101,7 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
+import Hasura.Server.Init.Config (Preserve401ErrorsStatus (..))
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Init.Env qualified as Env
 import Hasura.Server.Logging qualified as Server.Logging
@@ -174,6 +176,7 @@ serveCommandParser =
     <*> parseConfiguredHeaderPrecedence
     <*> parseTraceQueryStatus
     <*> parseDisableNativeQueryValidation
+    <*> parsePreserve401Errors
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1407,6 +1410,23 @@ traceQueryStatusOption =
         "Enable query tracing for all queries. (default: false)"
     }
 
+parsePreserve401Errors :: Opt.Parser Preserve401ErrorsStatus
+parsePreserve401Errors =
+  (bool MapEverythingTo200 Preserve401Errors)
+    <$> Opt.switch
+      ( Opt.long "preserve-401-errors"
+          <> Opt.help (Config._helpMessage preserve401ErrorsOption)
+      )
+
+preserve401ErrorsOption :: Config.Option Preserve401ErrorsStatus
+preserve401ErrorsOption =
+  Config.Option
+    { Config._default = MapEverythingTo200,
+      Config._envVar = "HASURA_GRAPHQL_PRESERVE_401_ERRORS",
+      Config._helpMessage =
+        "Preserve HTTP 401 status codes from webhook auth responses and JWT auth failures. (default: false)"
+    }
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1513,6 +1533,7 @@ serveCmdFooter =
         Config.optionPP asyncActionsFetchBatchSizeOption,
         Config.optionPP persistedQueriesOption,
         Config.optionPP persistedQueriesTtlOption,
-        Config.optionPP configuredHeaderPrecedenceOption
+        Config.optionPP configuredHeaderPrecedenceOption,
+        Config.optionPP preserve401ErrorsOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]
