@@ -1,9 +1,13 @@
+use crate::stages::models;
 use crate::types::error::ContextualError;
 use crate::types::subgraph::Qualified;
 use crate::{helpers::typecheck, types::error::TypePredicateError};
 use error_context::Context;
 use jsonpath::JSONPath;
-use open_dds::{models::ModelName, permissions::Role, query::ArgumentName, spanned::Spanned};
+use open_dds::{
+    models::ModelName, permissions::Role, query::ArgumentName, spanned::Spanned,
+    types::CustomTypeName,
+};
 
 #[derive(Debug, thiserror::Error)]
 #[error("Error in model permission for model '{model_name}' for role '{role}': {error}")]
@@ -40,6 +44,14 @@ pub enum ModelPermissionError {
 
     #[error("in select filter permissions: {error}")]
     SelectFilterPermissionTypePredicateError { error: TypePredicateError },
+
+    #[error("unknown type {custom_type_name}")]
+    UnknownType {
+        custom_type_name: Qualified<CustomTypeName>,
+    },
+
+    #[error("{0}")]
+    ModelsError(#[from] models::ModelsError),
 }
 
 impl ContextualError for NamedModelPermissionError {
@@ -103,6 +115,8 @@ impl ContextualError for NamedModelPermissionError {
             ModelPermissionError::SelectFilterPermissionTypePredicateError { error } => {
                 error.create_error_context()
             }
+            ModelPermissionError::UnknownType { .. } => None,
+            ModelPermissionError::ModelsError(error) => error.create_error_context(),
         }
     }
 }

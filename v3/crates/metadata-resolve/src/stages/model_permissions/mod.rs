@@ -1,4 +1,5 @@
 mod error;
+mod predicate;
 mod types;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, models_graphql, object_relationships,
@@ -13,7 +14,7 @@ pub use types::{
     ModelTargetSource, ModelWithPermissions, SelectPermission, UnaryComparisonOperator,
 };
 mod model_permission;
-pub(crate) use model_permission::resolve_model_predicate_with_type;
+pub(crate) use predicate::resolve_model_predicate_with_type;
 
 use crate::types::error::Error;
 
