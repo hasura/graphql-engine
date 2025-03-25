@@ -137,8 +137,6 @@ services:
   custom_connector:
     build:
       dockerfile: custom-connector.Dockerfile
-    entrypoint:
-      - ./bin/custom-connector
     ports:
       - "8102:8102"
     environment:
@@ -154,8 +152,6 @@ services:
   custom_connector_no_relationships:
     build:
       dockerfile: custom-connector.Dockerfile
-    entrypoint:
-      - ./bin/custom-connector
     ports:
       - "8103:8102"
     environment:
