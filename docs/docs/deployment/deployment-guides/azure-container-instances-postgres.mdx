@@ -97,6 +97,9 @@ az postgres server create --resource-group hasura \
 - Select a strong password for the `<server_admin_password>` variable, that must include uppercase, lowercase, and
   numeric characters. You will need the password later to connect to the database. (make sure you escape the special
   characters depending on your shell).
+- **Hasura [requires the `pgcrypto` extension](/deployment/postgres-requirements.mdx#pgcrypto-in-pg-search-path) —
+  ensure it's installed before proceeding.** You can learn more about installing extensions on Azure
+  [here](https://learn.microsoft.com/en-us/azure/postgresql/extensions/how-to-allow-extensions?tabs=allow-extensions-portal).
 
 :::
 
@@ -159,8 +162,8 @@ az container create --resource-group hasura \
 postgres://hasura%40<server_name>:<server_admin_password>@<hostname>:5432/hasura
 ```
 
-If you'd like to connect to an existing database, use that server's database url. Hasura requires a Postgres database
-to store its metadata. You can use the same database for both Hasura and the application data, or you can use a separate
+If you'd like to connect to an existing database, use that server's database url. Hasura requires a Postgres database to
+store its metadata. You can use the same database for both Hasura and the application data, or you can use a separate
 database for Hasura's metadata.
 
 :::info Note
