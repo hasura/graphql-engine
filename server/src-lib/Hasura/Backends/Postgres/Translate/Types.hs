@@ -27,7 +27,9 @@ module Hasura.Backends.Postgres.Translate.Types
     SelectWriter (..),
     applySortingAndSlicing,
     noSortingAndSlicing,
+    Limitation (..),
     objectSelectSourceToSelectSource,
+    objectSelectSourceToSelectSourceWithLimit,
     orderByForJsonAgg,
   )
 where
@@ -154,20 +156,33 @@ data ObjectSelectSource = ObjectSelectSource
 
 instance Hashable ObjectSelectSource
 
+data Limitation
+  = NoLimit
+  | LimitTo Int
+  deriving (Show, Eq)
+
 objectSelectSourceToSelectSource :: ObjectSelectSource -> SelectSource
-objectSelectSourceToSelectSource ObjectSelectSource {..} =
+objectSelectSourceToSelectSource objSelectSource =
+  -- We specify 'LIMIT 1' here to mitigate misconfigured object relationships with an
+  -- unexpected one-to-many/many-to-many relationship, instead of the expected one-to-one/many-to-one relationship.
+  -- Because we can't detect this misconfiguration statically (it depends on the data),
+  -- we force a single (or null) result instead by adding 'LIMIT 1'.
+  -- Which result is returned might be non-deterministic (though only in misconfigured cases).
+  -- Proper one-to-one/many-to-one object relationships should not be semantically affected by this.
+  -- See: https://github.com/hasura/graphql-engine/issues/7936
+  objectSelectSourceToSelectSourceWithLimit objSelectSource (LimitTo 1)
+
+objectSelectSourceToSelectSourceWithLimit :: ObjectSelectSource -> Limitation -> SelectSource
+objectSelectSourceToSelectSourceWithLimit objSelectSource limitation =
   SelectSource _ossPrefix _ossFrom _ossWhere sortingAndSlicing
   where
-    sortingAndSlicing = SortingAndSlicing noSorting limit1
+    ObjectSelectSource {..} = objSelectSource
+    sortingAndSlicing = SortingAndSlicing noSorting selectSlicing
     noSorting = NoSorting Nothing
-    -- We specify 'LIMIT 1' here to mitigate misconfigured object relationships with an
-    -- unexpected one-to-many/many-to-many relationship, instead of the expected one-to-one/many-to-one relationship.
-    -- Because we can't detect this misconfiguration statically (it depends on the data),
-    -- we force a single (or null) result instead by adding 'LIMIT 1'.
-    -- Which result is returned might be non-deterministic (though only in misconfigured cases).
-    -- Proper one-to-one/many-to-one object relationships should not be semantically affected by this.
-    -- See: https://github.com/hasura/graphql-engine/issues/7936
-    limit1 = SelectSlicing (Just 1) Nothing
+    selectSlicing = SelectSlicing limitValue Nothing
+    limitValue = case limitation of
+      NoLimit -> Nothing
+      LimitTo n -> Just n
 
 data ObjectRelationSource = ObjectRelationSource
   { _orsRelationshipName :: RelName,

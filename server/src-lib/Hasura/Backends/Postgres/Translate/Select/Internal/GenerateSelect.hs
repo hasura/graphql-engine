@@ -216,11 +216,13 @@ defaultGenerateSQLSelect selectRewriter joinCondition selectSource selectNode =
       S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
     -- function to create a joined from item from two from items
+    leftOuterJoin :: S.FromItem -> (S.FromItem, S.JoinType) -> S.FromItem
+    leftOuterJoin current (S.FIJoin (S.JoinExpr _ joinType rhs joinCond), _) =
+      -- If the new item is already a JoinExpr create a new join with the current item as LHS
+      S.FIJoin $ S.JoinExpr current joinType rhs joinCond
     leftOuterJoin current (new, joinType) =
-      S.FIJoin
-        $ S.JoinExpr current joinType new
-        $ S.JoinOn
-        $ S.BELit True
+      -- For regular items or lateral joins, create a simple join with TRUE condition
+      S.FIJoin $ S.JoinExpr current joinType new $ S.JoinOn $ S.BELit True
 
     -- this is the from eexp for the final select
     joinedFrom :: S.FromItem
@@ -236,28 +238,56 @@ defaultGenerateSQLSelect selectRewriter joinCondition selectSource selectNode =
     objectRelationToFromItem (objectRelationSource, node) =
       let ObjectRelationSource
             { _orsRelationMapping = colMapping,
-              _orsSelectSource = objectSelectSource,
+              _orsSelectSource = objSelectSource,
               _orsNullable = nullable
             } = objectRelationSource
-          alias = S.toTableAlias $ _ossPrefix objectSelectSource
-          source = objectSelectSourceToSelectSource objectSelectSource
-          select = generateSQLSelect @pgKind (mkJoinCond baseSelectIdentifier colMapping) source node
+          -- Extract the components from ObjectSelectSource properly with different variable names
+          ObjectSelectSource objPrefix _ _ = objSelectSource
+          alias = S.toTableAlias objPrefix
           joinType = case nullable of
             Nullable -> S.LeftOuter
             NotNullable -> S.Inner
-       in (S.mkLateralFromItem select alias, joinType)
+       in case joinType of
+            S.Inner ->
+              let -- Use joinTableIdentifier for the join condition, not the base alias
+                  joinTableIdentifier = S.tableAliasToIdentifier alias
+                  joinCond = mkJoinCond baseSelectIdentifier joinTableIdentifier colMapping
+                  source = objectSelectSourceToSelectSourceWithLimit objSelectSource NoLimit
+
+                  -- For the subquery that extracts columns, still use the base table alias
+                  sourceBaseAlias = mkBaseTableAlias (S.toTableAlias $ _ssPrefix source)
+
+                  originalSelect = generateSQLSelect @pgKind (S.BELit True) source node
+
+                  -- Use the base alias for adding dynamic extractors
+                  select = addDynamicExtractors sourceBaseAlias colMapping originalSelect
+                  selectFromItem = S.mkSelFromItem select alias
+                  joinItem =
+                    S.FIJoin
+                      $ S.JoinExpr
+                        (S.FIIdentifier baseSelectIdentifier)
+                        joinType
+                        selectFromItem
+                        (S.JoinOn joinCond)
+               in (joinItem, joinType)
+            _ ->
+              -- For lateral joins, use the base table alias similarly
+              -- Make sure to use te limit 1
+              let source = objectSelectSourceToSelectSource objSelectSource
+                  joinCondWithBaseAlias = mkJoinCondWithoutPrefix baseSelectIdentifier colMapping
+                  select = generateSQLSelect @pgKind joinCondWithBaseAlias source node
+               in (S.mkLateralFromItem select alias, joinType)
 
     arrayRelationToFromItem ::
       (ArrayRelationSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
       let ArrayRelationSource _ colMapping source nullable = arrayRelationSource
           alias = S.toTableAlias $ _ssPrefix source
-          select =
-            generateSQLSelectFromArrayNode @pgKind source arraySelectNode
-              $ mkJoinCond baseSelectIdentifier colMapping
           joinType = case nullable of
             Nullable -> S.LeftOuter
             NotNullable -> S.Inner
+          joinCondWithBaseAlias = mkJoinCondWithoutPrefix baseSelectIdentifier colMapping
+          select = generateSQLSelectFromArrayNode @pgKind source arraySelectNode joinCondWithBaseAlias
        in (S.mkLateralFromItem select alias, joinType)
 
     arrayConnectionToFromItem ::
@@ -301,12 +331,67 @@ generateSQLSelectFromArrayNode selectSource (MultiRowSelectNode topExtractors se
             ]
     }
 
-mkJoinCond :: S.TableIdentifier -> HashMap PGCol PGCol -> S.BoolExp
-mkJoinCond baseTablepfx colMapn =
+mkJoinCond ::
+  -- | Base table identifier
+  S.TableIdentifier ->
+  -- | Joined table identifier (to qualify the right-hand side)
+  S.TableIdentifier ->
+  HashMap PGCol PGCol ->
+  S.BoolExp
+mkJoinCond baseTable joinTable colMapn =
   foldl' (S.BEBin S.AndOp) (S.BELit True)
     $ flip map (HashMap.toList colMapn)
     $ \(lCol, rCol) ->
-      S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
+      S.BECompare
+        S.SEQ
+        (S.mkQIdenExp baseTable lCol)
+        (S.mkQIdenExp joinTable rCol)
+
+mkJoinCondWithoutPrefix ::
+  -- | Base table identifier
+  S.TableIdentifier ->
+  HashMap PGCol PGCol ->
+  S.BoolExp
+mkJoinCondWithoutPrefix baseTable colMapn =
+  foldl' (S.BEBin S.AndOp) (S.BELit True)
+    $ flip map (HashMap.toList colMapn)
+    $ \(lCol, rCol) ->
+      S.BECompare
+        S.SEQ
+        (S.mkQIdenExp baseTable lCol)
+        (S.mkSIdenExp rCol)
+
+addDynamicExtractors ::
+  -- | The alias for the source subquery (e.g. "_root.or.firstAppearedInBlock.base")
+  S.TableAlias ->
+  -- | The join mapping (left column, right column)
+  HashMap PGCol PGCol ->
+  -- | The original select for the relation
+  S.Select ->
+  -- | The select with extra extractors added
+  S.Select
+addDynamicExtractors baseAlias colMapping select =
+  let extraExtractors =
+        mapMaybe
+          ( \(_lCol, rCol) ->
+              let colAlias = S.toColumnAlias rCol
+                  exists =
+                    any
+                      ( \(S.Extractor _ maybeAlias) ->
+                          maybe False (== colAlias) maybeAlias
+                      )
+                      (S.selExtr select)
+               in if exists
+                    then Nothing
+                    else
+                      Just
+                        ( S.Extractor
+                            (S.mkQIdenExp (S.tableAliasToIdentifier baseAlias) rCol)
+                            (Just colAlias)
+                        )
+          )
+          (HashMap.toList colMapping)
+   in select {S.selExtr = S.selExtr select <> extraExtractors}
 
 connectionToSelectWith ::
   forall pgKind.
@@ -353,7 +438,7 @@ connectionToSelectWith rootSelectAlias arrayConnectionSource arraySelectNode =
     endRowNumberExp = mkLastElementExp $ S.SEIdentifier rowNumberIdentifier
 
     fromBaseSelections =
-      let joinCond = mkJoinCond rootSelectIdentifier columnMapping
+      let joinCond = mkJoinCond rootSelectIdentifier (S.tableAliasToIdentifier baseSelectAlias) columnMapping
           baseSelectFrom =
             S.mkSelFromItem
               (generateSQLSelect @pgKind joinCond selectSource selectNode)
