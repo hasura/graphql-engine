@@ -8,6 +8,10 @@
 
 ### Fixed
 
+## [v2025.03.25]
+
+### Fixed
+
 - Apply validations for operators in scalar boolean expressions:
   - Disallow non-list argument types for the `_in` operator.
   - Argument type must match the scalar type for `_eq`, `_lt`, `_lte`, `_gt` and
@@ -1528,7 +1532,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.20...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.25...HEAD
+[v2025.03.25]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.25
 [v2025.03.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.20
 [v2025.03.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.17
 [v2025.03.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.13

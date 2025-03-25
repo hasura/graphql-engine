@@ -175,11 +175,6 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         }
         Flag::DisallowProcedureCommandRelationships => Some(new_compatibility_date(2025, 3, 12)),
         Flag::DisallowDuplicateModelPermissionsRoles => Some(new_compatibility_date(2025, 3, 21)),
-        Flag::ValidateScalarBooleanExpressionOperators => {
-            // TODO: Should be set on the next release
-            // Docs PR: https://github.com/hasura/ddn-docs/pull/964
-            // Please update docs as you add new flags
-            None
-        }
+        Flag::ValidateScalarBooleanExpressionOperators => Some(new_compatibility_date(2025, 3, 26)),
     }
 }
