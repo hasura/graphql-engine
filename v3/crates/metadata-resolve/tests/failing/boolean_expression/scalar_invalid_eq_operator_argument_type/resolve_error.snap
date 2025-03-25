@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/scalar_invalid_eq_operator_argument_type/metadata.json
+---
+Error: the argument type 'Boolean!' for the operator 'equals' in the boolean expression 'postgres_int_comparison_bool_exp (in subgraph default)' should match the scalar type 'Int'

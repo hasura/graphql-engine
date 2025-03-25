@@ -1,6 +1,7 @@
+use crate::helpers::type_validation;
 use crate::types::error::ContextualError;
-use crate::Qualified;
 use crate::{stages::graphql_config, types::error::ShouldBeAnError};
+use crate::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 use open_dds::flags;
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorScalarType},
@@ -84,6 +85,8 @@ pub enum ScalarBooleanExpressionTypeIssue {
         type_name: Qualified<CustomTypeName>,
         name: OperatorName,
     },
+    #[error("{0}")]
+    OperatorIssue(ScalarBooleanExpressionOperatorIssue),
 }
 
 impl ShouldBeAnError for ScalarBooleanExpressionTypeIssue {
@@ -100,8 +103,65 @@ impl ShouldBeAnError for ScalarBooleanExpressionTypeIssue {
             | ScalarBooleanExpressionTypeIssue::DuplicateComparableOperatorFound { .. } => {
                 flags.contains(flags::Flag::DisallowDuplicateNamesInBooleanExpressions)
             }
+            ScalarBooleanExpressionTypeIssue::OperatorIssue(issue) => {
+                issue.should_be_an_error(flags)
+            }
         }
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ScalarBooleanExpressionOperatorIssue {
+    #[error("The operator '{operator_name}' is mapped to '{mapped_operator_name}' for the data connector '{data_connector_name}' in the boolean expression '{type_name}', but the mapped operator is not found in the data connector.")]
+    MappedOperatorNotFound {
+        type_name: Qualified<CustomTypeName>,
+        operator_name: OperatorName,
+        mapped_operator_name: ndc_models::ComparisonOperatorName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("the argument type '{argument_type}' for the operator '{operator_name}' in the boolean expression '{type_name}' should be a list")]
+    ArgumentTypeShouldBeList {
+        type_name: Qualified<CustomTypeName>,
+        operator_name: OperatorName,
+        argument_type: QualifiedTypeReference,
+    },
+    #[error("the argument type '{argument_type}' for the operator '{operator_name}' in the boolean expression '{type_name}' should match the scalar type '{scalar_type}'")]
+    ArgumentTypeShouldMatchScalar {
+        type_name: Qualified<CustomTypeName>,
+        operator_name: OperatorName,
+        argument_type: QualifiedTypeReference,
+        scalar_type: QualifiedTypeName,
+    },
+    #[error("the argument type for the operator '{operator_name}' in the boolean expression '{type_name}' is not compatible with the mapped operator's argument type defined in the data connector: {issue}")]
+    ArgumentTypeMismatch {
+        type_name: Qualified<CustomTypeName>,
+        operator_name: OperatorName,
+        issue: type_validation::TypeCompatibilityIssue,
+    },
+    #[error("the operator '{operator_name}' in the boolean expression '{type_name}' is only applicable on string scalars: {reason}")]
+    OnlyApplicableOnStringScalar {
+        type_name: Qualified<CustomTypeName>,
+        operator_name: OperatorName,
+        reason: StringOperatorReason,
+    },
+}
+
+impl ShouldBeAnError for ScalarBooleanExpressionOperatorIssue {
+    fn should_be_an_error(&self, flags: &flags::OpenDdFlags) -> bool {
+        flags.contains(flags::Flag::ValidateScalarBooleanExpressionOperators)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum StringOperatorReason {
+    #[error("scalar type '{scalar_type}' is not a string")]
+    ScalarTypeNotString { scalar_type: QualifiedTypeName },
+    #[error("argument type '{argument_type}' is not a string")]
+    ArgumentTypeNotString { argument_type: QualifiedTypeName },
+    #[error("argument type '{argument_type}' is a list")]
+    ArgumentTypeShouldNotBeList {
+        argument_type: QualifiedTypeReference,
+    },
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]

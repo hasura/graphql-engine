@@ -63,7 +63,7 @@
                     "dataConnectorName": "postgres_db",
                     "dataConnectorScalarType": "int8",
                     "operatorMapping": {
-                      "equals": "_eq"
+                      "equals": "_eq_another"
                     }
                   }
                 ]
@@ -319,5 +319,9 @@
         }
       ]
     }
-  ]
+  ],
+  "flags": {
+    "logical_operators_in_scalar_boolean_expressions": true,
+    "validate_scalar_boolean_expression_operators": true
+  }
 }

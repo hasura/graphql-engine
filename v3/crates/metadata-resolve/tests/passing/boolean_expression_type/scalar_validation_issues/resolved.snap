@@ -1,7 +1,7 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: resolved
-input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/metadata.json
+input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/scalar_validation_issues/metadata.json
 ---
 (
     Metadata {
@@ -454,15 +454,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                     OperatorName(
                                         "_in",
                                     ): QualifiedTypeReference {
-                                        underlying_type: List(
-                                            QualifiedTypeReference {
-                                                underlying_type: Named(
-                                                    Inbuilt(
-                                                        Int,
-                                                    ),
-                                                ),
-                                                nullable: false,
-                                            },
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
                                         ),
                                         nullable: false,
                                     },
@@ -471,7 +466,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                     ): QualifiedTypeReference {
                                         underlying_type: Named(
                                             Inbuilt(
-                                                Int,
+                                                Boolean,
                                             ),
                                         ),
                                         nullable: false,
@@ -497,7 +492,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                         },
                                     ),
                                 },
-                                logical_operators: Exclude,
+                                logical_operators: Include {
+                                    graphql: Some(
+                                        LogicalOperatorsGraphqlConfig {
+                                            and_operator_name: Name(
+                                                "_and",
+                                            ),
+                                            or_operator_name: Name(
+                                                "_or",
+                                            ),
+                                            not_operator_name: Name(
+                                                "_not",
+                                            ),
+                                        },
+                                    ),
+                                },
                                 field_kind: Scalar,
                             },
                             FieldName(
@@ -519,7 +528,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 ),
                                 operators: {
                                     OperatorName(
-                                        "_in",
+                                        "_in_another",
                                     ): QualifiedTypeReference {
                                         underlying_type: List(
                                             QualifiedTypeReference {
@@ -559,12 +568,26 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                             OperatorName(
                                                 "equals",
                                             ): DataConnectorOperatorName(
-                                                "_eq",
+                                                "_eq_another",
                                             ),
                                         },
                                     ),
                                 },
-                                logical_operators: Exclude,
+                                logical_operators: Include {
+                                    graphql: Some(
+                                        LogicalOperatorsGraphqlConfig {
+                                            and_operator_name: Name(
+                                                "_and",
+                                            ),
+                                            or_operator_name: Name(
+                                                "_or",
+                                            ),
+                                            not_operator_name: Name(
+                                                "_not",
+                                            ),
+                                        },
+                                    ),
+                                },
                                 field_kind: Scalar,
                             },
                             FieldName(
@@ -586,7 +609,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 ),
                                 operators: {
                                     OperatorName(
-                                        "_in",
+                                        "_in_another",
                                     ): QualifiedTypeReference {
                                         underlying_type: List(
                                             QualifiedTypeReference {
@@ -626,12 +649,26 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                             OperatorName(
                                                 "equals",
                                             ): DataConnectorOperatorName(
-                                                "_eq",
+                                                "_eq_another",
                                             ),
                                         },
                                     ),
                                 },
-                                logical_operators: Exclude,
+                                logical_operators: Include {
+                                    graphql: Some(
+                                        LogicalOperatorsGraphqlConfig {
+                                            and_operator_name: Name(
+                                                "_and",
+                                            ),
+                                            or_operator_name: Name(
+                                                "_or",
+                                            ),
+                                            not_operator_name: Name(
+                                                "_not",
+                                            ),
+                                        },
+                                    ),
+                                },
                                 field_kind: Scalar,
                             },
                         },
@@ -661,15 +698,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                         OperatorName(
                             "_in",
                         ): QualifiedTypeReference {
-                            underlying_type: List(
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Inbuilt(
-                                            Int,
-                                        ),
-                                    ),
-                                    nullable: false,
-                                },
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
                             ),
                             nullable: false,
                         },
@@ -678,7 +710,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                         ): QualifiedTypeReference {
                             underlying_type: Named(
                                 Inbuilt(
-                                    Int,
+                                    Boolean,
                                 ),
                             ),
                             nullable: false,
@@ -717,7 +749,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                             "PostgresIntBoolExp",
                         ),
                     ),
-                    logical_operators: Exclude,
+                    logical_operators: Include {
+                        graphql: Some(
+                            LogicalOperatorsGraphqlConfig {
+                                and_operator_name: Name(
+                                    "_and",
+                                ),
+                                or_operator_name: Name(
+                                    "_or",
+                                ),
+                                not_operator_name: Name(
+                                    "_not",
+                                ),
+                            },
+                        ),
+                    },
                     is_null_operator: Include {
                         graphql: Some(
                             IsNullOperatorGraphqlConfig {
@@ -745,7 +791,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                     ),
                     comparison_operators: {
                         OperatorName(
-                            "_in",
+                            "_in_another",
                         ): QualifiedTypeReference {
                             underlying_type: List(
                                 QualifiedTypeReference {
@@ -793,7 +839,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                 OperatorName(
                                     "equals",
                                 ): DataConnectorOperatorName(
-                                    "_eq",
+                                    "_eq_another",
                                 ),
                             },
                         },
@@ -803,7 +849,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                             "PostgresStringBoolExp",
                         ),
                     ),
-                    logical_operators: Exclude,
+                    logical_operators: Include {
+                        graphql: Some(
+                            LogicalOperatorsGraphqlConfig {
+                                and_operator_name: Name(
+                                    "_and",
+                                ),
+                                or_operator_name: Name(
+                                    "_or",
+                                ),
+                                not_operator_name: Name(
+                                    "_not",
+                                ),
+                            },
+                        ),
+                    },
                     is_null_operator: Include {
                         graphql: Some(
                             IsNullOperatorGraphqlConfig {
@@ -871,32 +931,125 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
     },
     [
         ScalarBooleanExpressionIssue(
-            LogicalOperatorsUnavailable {
-                type_name: Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "postgres_int_comparison_bool_exp",
+            OperatorIssue(
+                ArgumentTypeShouldBeList {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
                         ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "postgres_int_comparison_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "_in",
                     ),
+                    argument_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Inbuilt(
+                                Int,
+                            ),
+                        ),
+                        nullable: false,
+                    },
                 },
-            },
+            ),
         ),
         ScalarBooleanExpressionIssue(
-            LogicalOperatorsUnavailable {
-                type_name: Qualified {
-                    subgraph: SubgraphName(
-                        "default",
-                    ),
-                    name: CustomTypeName(
-                        Identifier(
-                            "postgres_string_comparison_bool_exp",
+            OperatorIssue(
+                ArgumentTypeShouldMatchScalar {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
                         ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "postgres_int_comparison_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "equals",
+                    ),
+                    argument_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Inbuilt(
+                                Boolean,
+                            ),
+                        ),
+                        nullable: false,
+                    },
+                    scalar_type: Inbuilt(
+                        Int,
                     ),
                 },
-            },
+            ),
+        ),
+        ScalarBooleanExpressionIssue(
+            OperatorIssue(
+                MappedOperatorNotFound {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "postgres_string_comparison_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "_in_another",
+                    ),
+                    mapped_operator_name: ComparisonOperatorName(
+                        "_in_another",
+                    ),
+                    data_connector_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "postgres_db",
+                            ),
+                        ),
+                    },
+                },
+            ),
+        ),
+        ScalarBooleanExpressionIssue(
+            OperatorIssue(
+                MappedOperatorNotFound {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "postgres_string_comparison_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "equals",
+                    ),
+                    mapped_operator_name: ComparisonOperatorName(
+                        "_eq_another",
+                    ),
+                    data_connector_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "postgres_db",
+                            ),
+                        ),
+                    },
+                },
+            ),
         ),
     ],
 )

@@ -189,7 +189,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                                                         "_eq",
                                                     ),
                                                 ),
-                                                in_operator: None,
+                                                in_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ),
                                                 lt_operator: None,
                                                 lte_operator: None,
                                                 gt_operator: None,
@@ -258,7 +262,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                                                         "_eq",
                                                     ),
                                                 ),
-                                                in_operator: None,
+                                                in_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ),
                                                 lt_operator: None,
                                                 lte_operator: None,
                                                 gt_operator: None,

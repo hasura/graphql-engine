@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/string_operator_for_non_string_type/metadata.json
+---
+Error: the operator '_contains' in the boolean expression 'Int_bool_exp (in subgraph default)' is only applicable on string scalars: scalar type 'Int' is not a string

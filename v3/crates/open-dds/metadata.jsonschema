@@ -3777,6 +3777,10 @@
         "disallow_duplicate_model_permissions_roles": {
           "default": false,
           "type": "boolean"
+        },
+        "validate_scalar_boolean_expression_operators": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

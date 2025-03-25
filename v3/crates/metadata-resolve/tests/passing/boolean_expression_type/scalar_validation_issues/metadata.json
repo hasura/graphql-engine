@@ -51,11 +51,11 @@
                 "comparisonOperators": [
                   {
                     "name": "equals",
-                    "argumentType": "Int!"
+                    "argumentType": "Boolean!"
                   },
                   {
                     "name": "_in",
-                    "argumentType": "[Int!]!"
+                    "argumentType": "Int!"
                   }
                 ],
                 "dataConnectorOperatorMapping": [
@@ -94,7 +94,7 @@
                     "argumentType": "String!"
                   },
                   {
-                    "name": "_in",
+                    "name": "_in_another",
                     "argumentType": "[String!]!"
                   }
                 ],
@@ -103,7 +103,7 @@
                     "dataConnectorName": "postgres_db",
                     "dataConnectorScalarType": "String",
                     "operatorMapping": {
-                      "equals": "_eq"
+                      "equals": "_eq_another"
                     }
                   }
                 ]
@@ -319,5 +319,8 @@
         }
       ]
     }
-  ]
+  ],
+  "flags": {
+    "logical_operators_in_scalar_boolean_expressions": true
+  }
 }

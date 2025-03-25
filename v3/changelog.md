@@ -8,6 +8,17 @@
 
 ### Fixed
 
+- Apply validations for operators in scalar boolean expressions:
+  - Disallow non-list argument types for the `_in` operator.
+  - Argument type must match the scalar type for `_eq`, `_lt`, `_lte`, `_gt` and
+    `_gte` operators.
+  - Operators such as `contains`, `icontains`, `starts_with`, `istarts_with`,
+    `ends_with`, and `iends_with` now only applicable on string scalars, with
+    arguments strictly of type string.
+  - Check if mapped operators exist in the data connector.
+  - Check the argument type compatibility with the mapped operator's NDC
+    argument type.
+
 ## [v2025.03.20]
 
 ### Changed

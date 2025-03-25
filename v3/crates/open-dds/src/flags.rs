@@ -52,6 +52,7 @@ pub enum Flag {
     RequireJwtAudienceValidationIfAudClaimPresent,
     DisallowProcedureCommandRelationships,
     DisallowDuplicateModelPermissionsRoles,
+    ValidateScalarBooleanExpressionOperators,
 }
 
 impl Flag {
@@ -142,6 +143,9 @@ impl Flag {
             }
             Flag::DisallowDuplicateModelPermissionsRoles => {
                 "disallow_duplicate_model_permissions_roles"
+            }
+            Flag::ValidateScalarBooleanExpressionOperators => {
+                "validate_scalar_boolean_expression_operators"
             }
         }
     }
