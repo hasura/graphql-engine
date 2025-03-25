@@ -4,14 +4,21 @@ use axum::{http::StatusCode, Json};
 use core::unimplemented;
 use datafusion::{
     arrow::datatypes::{Field, SchemaBuilder, SchemaRef},
-    common::DFSchema,
+    common::{DFSchema, ToDFSchema},
     datasource::{DefaultTableSource, MemTable, TableProvider},
     error::DataFusionError,
     execution::{runtime_env::RuntimeEnv, SessionStateBuilder},
+    functions::{string::contains, unicode::substr},
     functions_aggregate::{count::Count, sum::Sum},
     functions_window::{expr_fn::row_number, ntile},
     logical_expr::{build_join_schema, AggregateUDF, ExprSchemable, Literal as _, SubqueryAlias},
-    prelude::{ExprFunctionExt, SessionConfig, SessionContext},
+    prelude::{
+        abs, btrim, ceil, character_length, coalesce, concat, cos, current_date, current_time,
+        date_part, date_trunc, exp, floor, greatest, isnan, iszero, least, left, ln, log, log10,
+        log2, lower, lpad, ltrim, now, nullif, nvl, power, random, replace, reverse, right, round,
+        rpad, rtrim, sqrt, strpos, substr_index, tan, to_date, to_timestamp, trunc, upper,
+        ExprFunctionExt, SessionConfig, SessionContext,
+    },
     scalar::ScalarValue,
     sql::TableReference,
 };
@@ -70,7 +77,7 @@ pub async fn execute_query_rel(
             )
         })?;
 
-    // TODO: stream the records back
+    // unimplemented: stream the records back
     let mut rows: Vec<Vec<serde_json::Value>> = vec![];
 
     for batch in results {
@@ -146,12 +153,27 @@ fn convert_plan_to_logical_plan(
         }
         Rel::Project { input, exprs } => {
             let input_plan = convert_plan_to_logical_plan(input, state)?;
-            let exprs = exprs
-                .iter()
-                .map(|e| convert_expression_to_logical_expr(e, input_plan.schema()))
-                .collect::<datafusion::error::Result<Vec<_>>>()?;
+
+            let mut logical_exprs: Vec<datafusion::logical_expr::Expr> = vec![];
+            let mut schema_builder = SchemaBuilder::new();
+
+            for (i, expr) in exprs.iter().enumerate() {
+                let name = format!("column_{i}");
+                let logical_expr: datafusion::logical_expr::Expr =
+                    convert_expression_to_logical_expr(expr, input_plan.schema())?;
+                let (data_type, nullable) =
+                    logical_expr.data_type_and_nullable(input_plan.schema())?;
+                logical_exprs.push(logical_expr.alias(&name));
+                schema_builder.push(Field::new(&name, data_type, nullable));
+            }
+
+            let explicit_schema = schema_builder.finish().to_dfschema_ref()?;
             let logical_plan = datafusion::logical_expr::LogicalPlan::Projection(
-                datafusion::logical_expr::Projection::try_new(exprs, Arc::new(input_plan))?,
+                datafusion::logical_expr::Projection::try_new_with_schema(
+                    logical_exprs,
+                    Arc::new(input_plan),
+                    explicit_schema,
+                )?,
             );
             Ok(logical_plan)
         }
@@ -606,8 +628,6 @@ fn convert_expression_to_logical_expr(
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
             Ok(convert_expression_to_logical_expr(expr, schema)?.in_list(list, true))
         }
-        Expression::ToLower { expr: _ } => unimplemented!(),
-        Expression::ToUpper { expr: _ } => unimplemented!(),
         Expression::Average { expr: _ } => unimplemented!(),
         Expression::BoolAnd { expr: _ } => unimplemented!(),
         Expression::BoolOr { expr: _ } => unimplemented!(),
@@ -692,6 +712,226 @@ fn convert_expression_to_logical_expr(
             order_by: _,
             partition_by: _,
         } => unimplemented!(),
+
+        // scalar functions
+        Expression::Abs { expr } => Ok(abs(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::BTrim { str, trim_str } => Ok(match trim_str {
+            None => btrim(vec![convert_expression_to_logical_expr(str, schema)?]),
+            Some(trim_str) => btrim(vec![
+                convert_expression_to_logical_expr(str, schema)?,
+                convert_expression_to_logical_expr(trim_str, schema)?,
+            ]),
+        }),
+        Expression::Ceil { expr } => Ok(ceil(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::CharacterLength { str } => Ok(character_length(
+            convert_expression_to_logical_expr(str, schema)?,
+        )),
+        Expression::Coalesce { exprs } => Ok(coalesce(
+            exprs
+                .iter()
+                .map(|expr| convert_expression_to_logical_expr(expr, schema))
+                .collect::<datafusion::error::Result<Vec<_>>>()?,
+        )),
+        Expression::Concat { exprs } => Ok(concat(
+            exprs
+                .iter()
+                .map(|expr| convert_expression_to_logical_expr(expr, schema))
+                .collect::<datafusion::error::Result<Vec<_>>>()?,
+        )),
+        Expression::Contains { str, search_str } => Ok(datafusion::prelude::Expr::ScalarFunction(
+            datafusion::logical_expr::expr::ScalarFunction {
+                func: contains(),
+                args: vec![
+                    convert_expression_to_logical_expr(str, schema)?,
+                    convert_expression_to_logical_expr(search_str, schema)?,
+                ],
+            },
+        )),
+        Expression::Cos { expr } => Ok(cos(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::CurrentDate => Ok(current_date()),
+        Expression::CurrentTime => Ok(current_time()),
+        Expression::CurrentTimestamp => Ok(now()),
+        Expression::DatePart { expr, part } => Ok(date_part(
+            convert_expression_to_logical_expr(part, schema)?,
+            convert_expression_to_logical_expr(expr, schema)?,
+        )),
+        Expression::DateTrunc { expr, part } => Ok(date_trunc(
+            convert_expression_to_logical_expr(part, schema)?,
+            convert_expression_to_logical_expr(expr, schema)?,
+        )),
+        Expression::Exp { expr } => Ok(exp(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::Floor { expr } => Ok(floor(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::Greatest { exprs } => Ok(greatest(
+            exprs
+                .iter()
+                .map(|expr| convert_expression_to_logical_expr(expr, schema))
+                .collect::<datafusion::error::Result<Vec<_>>>()?,
+        )),
+        Expression::IsNaN { expr } => Ok(isnan(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::IsZero { expr } => {
+            Ok(iszero(convert_expression_to_logical_expr(expr, schema)?))
+        }
+        Expression::Least { exprs } => Ok(least(
+            exprs
+                .iter()
+                .map(|expr| convert_expression_to_logical_expr(expr, schema))
+                .collect::<datafusion::error::Result<Vec<_>>>()?,
+        )),
+        Expression::Left { str, n } => Ok(left(
+            convert_expression_to_logical_expr(str, schema)?,
+            convert_expression_to_logical_expr(n, schema)?,
+        )),
+        Expression::Ln { expr } => Ok(ln(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::Log { expr, base } => Ok(log(
+            convert_expression_to_logical_expr(
+                base.as_ref()
+                    .unwrap_or(&Box::new(plan_pushdown_types::Expression::Literal {
+                        literal: Literal::Int64 { value: Some(10) },
+                    })),
+                schema,
+            )?,
+            convert_expression_to_logical_expr(expr, schema)?,
+        )),
+        Expression::Log10 { expr } => Ok(log10(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::Log2 { expr } => Ok(log2(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::LPad {
+            str,
+            n,
+            padding_str,
+        } => Ok(lpad(match padding_str {
+            None => vec![
+                convert_expression_to_logical_expr(str, schema)?,
+                convert_expression_to_logical_expr(n, schema)?,
+            ],
+            Some(padding_str) => vec![
+                convert_expression_to_logical_expr(str, schema)?,
+                convert_expression_to_logical_expr(n, schema)?,
+                convert_expression_to_logical_expr(padding_str, schema)?,
+            ],
+        })),
+        Expression::LTrim { str, trim_str } => Ok(ltrim(match trim_str {
+            None => vec![convert_expression_to_logical_expr(str, schema)?],
+            Some(trim_str) => {
+                vec![
+                    convert_expression_to_logical_expr(str, schema)?,
+                    convert_expression_to_logical_expr(trim_str, schema)?,
+                ]
+            }
+        })),
+        Expression::NullIf { expr1, expr2 } => Ok(nullif(
+            convert_expression_to_logical_expr(expr1, schema)?,
+            convert_expression_to_logical_expr(expr2, schema)?,
+        )),
+        Expression::Nvl { expr1, expr2 } => Ok(nvl(
+            convert_expression_to_logical_expr(expr1, schema)?,
+            convert_expression_to_logical_expr(expr2, schema)?,
+        )),
+        Expression::Power { base, exp } => Ok(power(
+            convert_expression_to_logical_expr(base, schema)?,
+            convert_expression_to_logical_expr(exp, schema)?,
+        )),
+        Expression::Random => Ok(random()),
+        Expression::Replace {
+            str,
+            substr,
+            replacement,
+        } => Ok(replace(
+            convert_expression_to_logical_expr(str, schema)?,
+            convert_expression_to_logical_expr(substr, schema)?,
+            convert_expression_to_logical_expr(replacement, schema)?,
+        )),
+        Expression::Reverse { str } => {
+            Ok(reverse(convert_expression_to_logical_expr(str, schema)?))
+        }
+        Expression::Right { str, n } => Ok(right(
+            convert_expression_to_logical_expr(str, schema)?,
+            convert_expression_to_logical_expr(n, schema)?,
+        )),
+        Expression::Round { expr, prec } => Ok(round(match prec {
+            None => vec![convert_expression_to_logical_expr(expr, schema)?],
+            Some(prec) => vec![
+                convert_expression_to_logical_expr(expr, schema)?,
+                convert_expression_to_logical_expr(prec, schema)?,
+            ],
+        })),
+        Expression::RPad {
+            str,
+            n,
+            padding_str,
+        } => Ok(rpad(match padding_str {
+            None => vec![
+                convert_expression_to_logical_expr(str, schema)?,
+                convert_expression_to_logical_expr(n, schema)?,
+            ],
+            Some(padding_str) => vec![
+                convert_expression_to_logical_expr(str, schema)?,
+                convert_expression_to_logical_expr(n, schema)?,
+                convert_expression_to_logical_expr(padding_str, schema)?,
+            ],
+        })),
+        Expression::RTrim { str, trim_str } => Ok(rtrim(match trim_str {
+            None => vec![convert_expression_to_logical_expr(str, schema)?],
+            Some(trim_str) => {
+                vec![
+                    convert_expression_to_logical_expr(str, schema)?,
+                    convert_expression_to_logical_expr(trim_str, schema)?,
+                ]
+            }
+        })),
+        Expression::Sqrt { expr } => Ok(sqrt(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::StrPos { str, substr } => Ok(strpos(
+            convert_expression_to_logical_expr(str, schema)?,
+            convert_expression_to_logical_expr(substr, schema)?,
+        )),
+        Expression::Substr {
+            str,
+            start_pos,
+            len,
+        } => Ok(datafusion::prelude::Expr::ScalarFunction(
+            datafusion::logical_expr::expr::ScalarFunction {
+                func: substr(),
+                args: match len {
+                    None => vec![
+                        convert_expression_to_logical_expr(str, schema)?,
+                        convert_expression_to_logical_expr(start_pos, schema)?,
+                    ],
+                    Some(len) => {
+                        vec![
+                            convert_expression_to_logical_expr(str, schema)?,
+                            convert_expression_to_logical_expr(start_pos, schema)?,
+                            convert_expression_to_logical_expr(len, schema)?,
+                        ]
+                    }
+                },
+            },
+        )),
+        Expression::SubstrIndex { str, delim, count } => Ok(substr_index(
+            convert_expression_to_logical_expr(str, schema)?,
+            convert_expression_to_logical_expr(delim, schema)?,
+            convert_expression_to_logical_expr(count, schema)?,
+        )),
+        Expression::Tan { expr } => Ok(tan(convert_expression_to_logical_expr(expr, schema)?)),
+        Expression::ToDate { expr } => Ok(to_date(vec![convert_expression_to_logical_expr(
+            expr, schema,
+        )?])),
+        Expression::ToLower { expr } => {
+            Ok(lower(convert_expression_to_logical_expr(expr, schema)?))
+        }
+        Expression::ToTimestamp { expr } => {
+            Ok(to_timestamp(vec![convert_expression_to_logical_expr(
+                expr, schema,
+            )?]))
+        }
+        Expression::ToUpper { expr } => {
+            Ok(upper(convert_expression_to_logical_expr(expr, schema)?))
+        }
+        Expression::Trunc { expr, prec } => Ok(trunc(match prec {
+            None => vec![convert_expression_to_logical_expr(expr, schema)?],
+            Some(prec) => vec![
+                convert_expression_to_logical_expr(expr, schema)?,
+                convert_expression_to_logical_expr(prec, schema)?,
+            ],
+        })),
     }
 }
 

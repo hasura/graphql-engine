@@ -1019,11 +1019,953 @@
             "type": {
               "type": "string",
               "enum": [
+                "Abs"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "BTrim"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "trim_str": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Ceil"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "CharacterLength"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "exprs",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Coalesce"
+              ]
+            },
+            "exprs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "exprs",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Concat"
+              ]
+            },
+            "exprs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "search_str",
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Contains"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "search_str": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Cos"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "CurrentDate"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "CurrentTime"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "CurrentTimestamp"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "part",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DatePart"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "part": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "part",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "DateTrunc"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "part": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Exp"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Floor"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "exprs",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Greatest"
+              ]
+            },
+            "exprs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsNaN"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "IsZero"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "exprs",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Least"
+              ]
+            },
+            "exprs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Expression"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "n",
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Left"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "n": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Ln"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Log"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "base": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Log10"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Log2"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
                 "ToLower"
               ]
             },
             "expr": {
               "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "n",
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "LPad"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "n": {
+              "$ref": "#/definitions/Expression"
+            },
+            "padding_str": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "LTrim"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "trim_str": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr1",
+            "expr2",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "NullIf"
+              ]
+            },
+            "expr1": {
+              "$ref": "#/definitions/Expression"
+            },
+            "expr2": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr1",
+            "expr2",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Nvl"
+              ]
+            },
+            "expr1": {
+              "$ref": "#/definitions/Expression"
+            },
+            "expr2": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "base",
+            "exp",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Power"
+              ]
+            },
+            "base": {
+              "$ref": "#/definitions/Expression"
+            },
+            "exp": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Random"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "replacement",
+            "str",
+            "substr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Replace"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "substr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "replacement": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Reverse"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "n",
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Right"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "n": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Round"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "prec": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "n",
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "RPad"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "n": {
+              "$ref": "#/definitions/Expression"
+            },
+            "padding_str": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "RTrim"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "trim_str": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Sqrt"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "str",
+            "substr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StrPos"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "substr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "start_pos",
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Substr"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "start_pos": {
+              "$ref": "#/definitions/Expression"
+            },
+            "len": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "count",
+            "delim",
+            "str",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "SubstrIndex"
+              ]
+            },
+            "str": {
+              "$ref": "#/definitions/Expression"
+            },
+            "delim": {
+              "$ref": "#/definitions/Expression"
+            },
+            "count": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Tan"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "ToDate"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "ToTimestamp"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "expr",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Trunc"
+              ]
+            },
+            "expr": {
+              "$ref": "#/definitions/Expression"
+            },
+            "prec": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expression"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           }
         },

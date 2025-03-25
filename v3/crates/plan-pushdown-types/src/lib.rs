@@ -499,132 +499,161 @@ pub enum Expression {
     },
 
     // Scalar functions
+    Abs {
+        expr: Box<Expression>,
+    },
+    BTrim {
+        str: Box<Expression>,
+        trim_str: Option<Box<Expression>>,
+    },
+    Ceil {
+        expr: Box<Expression>,
+    },
+    CharacterLength {
+        str: Box<Expression>,
+    },
+    Coalesce {
+        exprs: Vec<Expression>,
+    },
+    Concat {
+        exprs: Vec<Expression>,
+    },
+    Contains {
+        str: Box<Expression>,
+        search_str: Box<Expression>,
+    },
+    Cos {
+        expr: Box<Expression>,
+    },
+    CurrentDate,
+    CurrentTime,
+    CurrentTimestamp,
+    DatePart {
+        expr: Box<Expression>,
+        part: Box<Expression>,
+    },
+    DateTrunc {
+        expr: Box<Expression>,
+        part: Box<Expression>,
+    },
+    Exp {
+        expr: Box<Expression>,
+    },
+    Floor {
+        expr: Box<Expression>,
+    },
+    Greatest {
+        exprs: Vec<Expression>,
+    },
+    IsNaN {
+        expr: Box<Expression>,
+    },
+    IsZero {
+        expr: Box<Expression>,
+    },
+    Least {
+        exprs: Vec<Expression>,
+    },
+    Left {
+        str: Box<Expression>,
+        n: Box<Expression>,
+    },
+    Ln {
+        expr: Box<Expression>,
+    },
+    Log {
+        expr: Box<Expression>,
+        base: Option<Box<Expression>>,
+    },
+    Log10 {
+        expr: Box<Expression>,
+    },
+    Log2 {
+        expr: Box<Expression>,
+    },
     ToLower {
         expr: Box<Expression>,
+    },
+    LPad {
+        str: Box<Expression>,
+        n: Box<Expression>,
+        padding_str: Option<Box<Expression>>,
+    },
+    LTrim {
+        str: Box<Expression>,
+        trim_str: Option<Box<Expression>>,
+    },
+    NullIf {
+        expr1: Box<Expression>,
+        expr2: Box<Expression>,
+    },
+    Nvl {
+        expr1: Box<Expression>,
+        expr2: Box<Expression>,
+    },
+    Power {
+        base: Box<Expression>,
+        exp: Box<Expression>,
+    },
+    Random,
+    Replace {
+        str: Box<Expression>,
+        substr: Box<Expression>,
+        replacement: Box<Expression>,
+    },
+    Reverse {
+        str: Box<Expression>,
+    },
+    Right {
+        str: Box<Expression>,
+        n: Box<Expression>,
+    },
+    Round {
+        expr: Box<Expression>,
+        prec: Option<Box<Expression>>,
+    },
+    RPad {
+        str: Box<Expression>,
+        n: Box<Expression>,
+        padding_str: Option<Box<Expression>>,
+    },
+    RTrim {
+        str: Box<Expression>,
+        trim_str: Option<Box<Expression>>,
+    },
+    Sqrt {
+        expr: Box<Expression>,
+    },
+    StrPos {
+        str: Box<Expression>,
+        substr: Box<Expression>,
+    },
+    Substr {
+        str: Box<Expression>,
+        start_pos: Box<Expression>,
+        len: Option<Box<Expression>>,
+    },
+    SubstrIndex {
+        str: Box<Expression>,
+        delim: Box<Expression>,
+        count: Box<Expression>,
+    },
+    Tan {
+        expr: Box<Expression>,
+    },
+    ToDate {
+        expr: Box<Expression>,
+    },
+    ToTimestamp {
+        expr: Box<Expression>,
+    },
+    Trunc {
+        expr: Box<Expression>,
+        prec: Option<Box<Expression>>,
     },
     ToUpper {
         expr: Box<Expression>,
     },
-
-    // abs
-    // acos
-    // acosh
-    // ascii
-    // asin
-    // asinh
-    // atan
-    // atan2
-    // atanh
-    // bit_length
-    // btrim
-    // cbrt
-    // ceil
-    // char_length
-    // character_length
-    // chr
-    // coalesce
-    // concat
-    // concat_ws
-    // contains
-    // cos
-    // cosh
-    // cot
-    // current_date
-    // current_time
-    // current_timestamp
-    // date_bin
-    // date_format
-    // date_part
-    // date_trunc
-    // datepart
-    // datetrunc
-    // decode
-    // degrees
-    // digest
-    // encode
-    // ends_with
-    // exp
-    // factorial
-    // find_in_set
-    // floor
-    // from_unixtime
-    // gcd
-    // greatest
-    // ifnull
-    // initcap
-    // instr
-    // isnan
-    // iszero
-    // lcm
-    // least
-    // left
-    // length
-    // levenshtein
-    // ln
-    // log
-    // log10
-    // log2
-    // lower
-    // lpad
-    // ltrim
-    // make_date
-    // md5
-    // nanvl
-    // now
-    // nullif
-    // nvl
-    // nvl2
-    // octet_length
-    // pi
-    // position
-    // pow
-    // power
-    // radians
-    // random
-    // regexp_count
-    // regexp_like
-    // regexp_match
-    // regexp_replace
-    // repeat
-    // replace
-    // reverse
-    // right
-    // round
-    // rpad
-    // rtrim
-    // sha224
-    // sha256
-    // sha384
-    // sha512
-    // signum
-    // sin
-    // sinh
-    // split_part
-    // sqrt
-    // starts_with
-    // strpos
-    // substr
-    // substr_index
-    // substring
-    // substring_index
-    // tan
-    // tanh
-    // to_char
-    // to_date
-    // to_hex
-    // to_local_time
-    // to_timestamp
-    // to_timestamp_micros
-    // to_timestamp_millis
-    // to_timestamp_nanos
-    // to_timestamp_seconds
-    // to_unixtime
-    // today
-    // translate
-    // trim
-    // trunc
-    // upper
-    // uuid
 
     // Aggregate functions
     Average {
@@ -666,15 +695,6 @@ pub enum Expression {
     Var {
         expr: Box<Expression>,
     },
-    // array_agg
-    // bit_and
-    // bit_or
-    // bit_xor
-    // grouping
-    // var_pop
-    // var_population
-    // var_samp
-    // var_sample
 
     // Window functions
     RowNumber {
@@ -702,7 +722,4 @@ pub enum Expression {
         order_by: Vec<Sort>,
         partition_by: Vec<Expression>,
     },
-    // lag
-    // lead
-    // nth_value
 }
