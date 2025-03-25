@@ -300,6 +300,12 @@ fn get_table_provider(
                                 .clone(),
                         ),
                         (
+                            "rating".into(),
+                            row.get(&ndc_models::FieldName::from("rating"))
+                                .expect("'rating' field missing")
+                                .clone(),
+                        ),
+                        (
                             "release_date".into(),
                             row.get(&ndc_models::FieldName::from("release_date"))
                                 .expect("'release_date' field missing")
@@ -325,6 +331,14 @@ fn get_table_provider(
                         r#type: ndc_models::Type::Named {
                             name: "String".into(),
                         },
+                        arguments: BTreeMap::new(),
+                    },
+                ),
+                (
+                    "rating".into(),
+                    ndc_models::ObjectField {
+                        description: Some("The movie's rating".into()),
+                        r#type: ndc_models::Type::Named { name: "Int".into() },
                         arguments: BTreeMap::new(),
                     },
                 ),
