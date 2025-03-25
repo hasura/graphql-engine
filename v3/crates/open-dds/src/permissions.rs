@@ -676,7 +676,7 @@ pub enum ValueExpressionOrPredicate {
 #[opendd(externally_tagged, json_schema(title = "ValueExpression"))]
 // Either a literal value or a session variable or a reference to a Hasura secret
 pub enum ValueExpressionImpl {
-    #[opendd(json_schema(title = "Literal"))]
+    #[opendd(json_schema(title = "Literal"), alias = "value")]
     Literal(JsonValue),
     #[opendd(json_schema(title = "SessionVariable"))]
     SessionVariable(SessionVariableName),
@@ -692,7 +692,7 @@ pub enum ValueExpressionImpl {
 #[opendd(externally_tagged, json_schema(title = "ValueExpressionOrPredicate"))]
 // Either a literal value or a session variable or a boolean expression or a reference to a Hasura secret
 pub enum ValueExpressionOrPredicateImpl {
-    #[opendd(json_schema(title = "Literal"))]
+    #[opendd(json_schema(title = "Literal"), alias = "value")]
     Literal(JsonValue),
     #[opendd(json_schema(title = "SessionVariable"))]
     SessionVariable(SessionVariableName),

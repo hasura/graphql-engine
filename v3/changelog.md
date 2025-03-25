@@ -18,6 +18,9 @@
   - Check if mapped operators exist in the data connector.
   - Check the argument type compatibility with the mapped operator's NDC
     argument type.
+- The `value` alias for `literal` fields in `ValueExpression` and
+  `ValueExpressionOrPredicate` was removed in a recent change, and is now
+  reinstated.
 
 ## [v2025.03.20]
 
