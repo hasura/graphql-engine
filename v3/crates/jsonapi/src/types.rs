@@ -57,7 +57,10 @@ pub enum RequestError {
 }
 
 impl RequestError {
-    pub fn into_http_error(self) -> JsonApiHttpError {
+    pub fn into_http_error(
+        self,
+        expose_internal_errors: engine_types::ExposeInternalErrors,
+    ) -> JsonApiHttpError {
         let (status_code, message) = match self {
             RequestError::BadRequest(err) => (axum::http::StatusCode::BAD_REQUEST, err),
             RequestError::ParseError(err) => (axum::http::StatusCode::BAD_REQUEST, err.to_string()),
@@ -85,7 +88,10 @@ impl RequestError {
             ),
             RequestError::ExecuteError(field_error) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                field_error.to_string(),
+                // Fetch the error message from the error response
+                field_error
+                    .to_error_response(expose_internal_errors)
+                    .message,
             ),
         };
         JsonApiHttpError {

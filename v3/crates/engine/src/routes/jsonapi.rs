@@ -129,6 +129,8 @@ async fn handle_jsonapi_request(
     set_status_on_current_span(&response);
     match response {
         Ok(r) => (axum::http::StatusCode::OK, Json(r)).into_response(),
-        Err(e) => e.into_http_error().into_response(),
+        Err(e) => e
+            .into_http_error(state.expose_internal_errors)
+            .into_response(),
     }
 }

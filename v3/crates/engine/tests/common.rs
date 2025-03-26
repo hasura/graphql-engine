@@ -280,7 +280,10 @@ async fn test_jsonapi(
 
             let response = match result {
                 Ok(response) => serde_json::to_value(response)?,
-                Err(e) => serde_json::to_value(e.into_http_error().into_document_error())?,
+                Err(e) => serde_json::to_value(
+                    e.into_http_error(engine_types::ExposeInternalErrors::Expose)
+                        .into_document_error(),
+                )?,
             };
 
             session_responses.push(response);
