@@ -3,7 +3,7 @@
 --
 -- * The /catalog/ refers to the set of PostgreSQL tables and views that store all schema information
 --    known by Hasura. This includes any tracked Postgres tables, views, and functions, all remote
---    schemas, and any additionaly Hasura-specific information such as permissions and relationships.
+--    schemas, and any additionally Hasura-specific information such as permissions and relationships.
 --
 --    Primitive functions for loading and modifying the catalog are defined in
 --    "Hasura.RQL.DDL.Schema.Catalog", but most uses are wrapped by other functions to synchronize
