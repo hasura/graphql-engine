@@ -63,7 +63,6 @@ pub fn build_state(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let plugin_configs = resolved_metadata.plugin_configs.clone();
 
     let schema = graphql_schema::GDS {
         metadata: resolved_metadata.clone(),
@@ -80,7 +79,6 @@ pub fn build_state(
         jsonapi_catalog: Arc::new(jsonapi_catalog),
         resolved_metadata,
         auth_config: Arc::new(auth_config),
-        plugin_configs: Arc::new(plugin_configs),
         graphql_websocket_server: Arc::new(graphql_ws::WebSocketServer::new()),
     };
     Ok(state)

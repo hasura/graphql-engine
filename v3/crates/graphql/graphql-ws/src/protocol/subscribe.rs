@@ -64,7 +64,7 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
                             } else {
                                 // Execute pre-parse plugins
                                 let plugin_response = match NonEmpty::from_slice(
-                                    &connection.context.plugin_configs.pre_parse_plugins,
+                                    &connection.context.metadata.plugin_configs.pre_parse_plugins,
                                 ) {
                                     Some(pre_parse_plugins) => {
                                         pre_parse_plugin::execute_pre_parse_plugins(
@@ -672,6 +672,7 @@ fn run_pre_response_plugins<M: WebSocketMetrics>(
     if let Some(pre_response_plugins) = NonEmpty::from_vec(
         connection
             .context
+            .metadata
             .plugin_configs
             .pre_response_plugins
             .clone(),

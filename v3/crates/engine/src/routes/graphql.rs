@@ -123,7 +123,6 @@ pub async fn handle_websocket_request(
         expose_internal_errors: engine_state.expose_internal_errors,
         schema: engine_state.graphql_state,
         auth_config: engine_state.auth_config,
-        plugin_configs: engine_state.plugin_configs,
         metrics: graphql_ws::NoOpWebSocketMetrics, // No metrics implementation
         handshake_headers: Arc::new(headers), // Preserve the headers received during this handshake request.
     };

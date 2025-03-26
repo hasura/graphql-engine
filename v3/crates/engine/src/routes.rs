@@ -155,7 +155,7 @@ async fn pre_route_handler(
         method,
         uri,
         headers,
-        &state.plugin_configs.pre_route_plugins,
+        &state.resolved_metadata.plugin_configs.pre_route_plugins,
         &state.http_context.client,
         raw_query,
         request,

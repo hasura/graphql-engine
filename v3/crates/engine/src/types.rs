@@ -1,5 +1,4 @@
 use hasura_authn::ResolvedAuthConfig;
-use metadata_resolve::LifecyclePluginConfigs;
 use std::sync::Arc;
 
 use engine_types::{ExposeInternalErrors, HttpContext};
@@ -17,7 +16,6 @@ pub struct EngineState {
     pub resolved_metadata: Arc<metadata_resolve::Metadata>,
     pub jsonapi_catalog: Arc<jsonapi::Catalog>,
     pub auth_config: Arc<ResolvedAuthConfig>,
-    pub plugin_configs: Arc<LifecyclePluginConfigs>,
     pub graphql_websocket_server:
         Arc<graphql_ws::WebSocketServer<graphql_ws::NoOpWebSocketMetrics>>,
 }

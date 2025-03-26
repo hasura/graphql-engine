@@ -201,7 +201,7 @@ impl<T: Display> Display for SeparatedBy<T> {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ResolvedAuthConfig {
     pub auth_config: AuthConfig,
     pub auth_config_flags: AuthConfigFlags,

@@ -99,11 +99,6 @@ async fn start_websocket_server_inner(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let plugin_configs = metadata_resolve::LifecyclePluginConfigs {
-        pre_parse_plugins: Vec::new(),
-        pre_response_plugins: Vec::new(),
-        pre_route_plugins: Vec::new(),
-    };
     let context = Context {
         connection_expiry: expiry,
         http_context,
@@ -113,7 +108,6 @@ async fn start_websocket_server_inner(
         project_id: None,
         schema: Arc::new(schema),
         auth_config: Arc::new(auth_config),
-        plugin_configs: Arc::new(plugin_configs),
         metrics: graphql_ws::NoOpWebSocketMetrics,
         handshake_headers: Arc::new(HeaderMap::new()), // Will be populated in "ws_handler"
     };

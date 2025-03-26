@@ -8,7 +8,7 @@ use hasura_authn_core::{
 };
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
-use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
+use metadata_resolve::data_connectors::NdcVersion;
 use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
 use pretty_assertions::assert_eq;
 use serde_json as json;
@@ -837,11 +837,6 @@ async fn run_query_graphql_ws(
         project_id: project_id.cloned(),
         schema: Arc::new(schema.clone()),
         auth_config: Arc::new(dummy_auth_config),
-        plugin_configs: Arc::new(LifecyclePluginConfigs {
-            pre_parse_plugins: Vec::new(),
-            pre_response_plugins: Vec::new(),
-            pre_route_plugins: Vec::new(),
-        }),
         metrics: graphql_ws::NoOpWebSocketMetrics,
         handshake_headers: Arc::new(request_headers.clone()),
     };
