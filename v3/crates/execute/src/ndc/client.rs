@@ -50,7 +50,7 @@ impl tracing_util::TraceableError for Error {
 }
 
 #[derive(Debug, Clone, Error)]
-#[error("connector returned status code {status} with message: {}", error_response.message())]
+#[error("connector returned status code {status} with message: {}, details: {}", error_response.message(), error_response.details())]
 pub struct ConnectorError {
     pub status: reqwest::StatusCode,
     pub error_response: NdcErrorResponse,

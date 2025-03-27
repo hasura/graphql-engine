@@ -4,6 +4,9 @@
 
 ### Added
 
+- Add data connector error details to trace error messages. This will help
+  debugging data connector errors.
+
 ### Changed
 
 ### Fixed
