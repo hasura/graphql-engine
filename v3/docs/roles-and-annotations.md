@@ -84,13 +84,13 @@ happens in the `normalize_request` function in `lang-graphql`.
 
 The important thing to know here is that `lang-graphql` code does not know about
 `GDS` or our `NamespaceAnnotation` type. All it has to act on is whether a
-`Role` (or `Namespace`, to it's eyes) has a key in any namespaced annotations or
+`Role` (or `Namespace`, to its eyes) has a key in any namespaced annotations or
 not. Because we're using associated types the contents are "protected" from
 `lang-graphql` and so it can't peek inside.
 
 We're going to want the `user_id` argument to disappear from `user-1`'s schema
 
-- we do this by using `conditional_namespaced` when contructing schema for the
+- we do this by using `conditional_namespaced` when contracting schema for the
   `user_id` command argument itself:
 
 ```rust
