@@ -33,17 +33,17 @@ pub enum QueryRootField<'n, 's> {
     // Operation that selects a single row from a model
     ModelSelectOne {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: select_one::ModelSelectOne<'n, 's>,
+        ir: select_one::ModelSelectOne<'n>,
     },
     // Operation that selects many rows from a model
     ModelSelectMany {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: select_many::ModelSelectMany<'n, 's>,
+        ir: select_many::ModelSelectMany<'n>,
     },
     // Operation that selects an aggregate of rows from a model
     ModelSelectAggregate {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: select_aggregate::ModelSelectAggregate<'n, 's>,
+        ir: select_aggregate::ModelSelectAggregate<'n>,
     },
     // Operation that selects a single row from the model corresponding
     // to the Global Id input.
@@ -87,19 +87,19 @@ pub enum SubscriptionRootField<'n, 's> {
     // Operation that selects a single row from a model
     ModelSelectOne {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: select_one::ModelSelectOne<'n, 's>,
+        ir: select_one::ModelSelectOne<'n>,
         polling_interval_ms: u64,
     },
     // Operation that selects many rows from a model
     ModelSelectMany {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: select_many::ModelSelectMany<'n, 's>,
+        ir: select_many::ModelSelectMany<'n>,
         polling_interval_ms: u64,
     },
     // Operation that selects an aggregate of rows from a model
     ModelSelectAggregate {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: select_aggregate::ModelSelectAggregate<'n, 's>,
+        ir: select_aggregate::ModelSelectAggregate<'n>,
         polling_interval_ms: u64,
     },
 }

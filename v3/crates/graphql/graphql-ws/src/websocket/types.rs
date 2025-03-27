@@ -1,7 +1,6 @@
 use axum::extract::ws;
 use axum::http::HeaderMap;
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
-use graphql_ir::GraphqlRequestPipeline;
 use hasura_authn::ResolvedAuthConfig;
 use serde::Serialize;
 use smol_str::SmolStr;
@@ -20,7 +19,6 @@ pub struct Context<M> {
     pub connection_expiry: ConnectionExpiry,
     pub http_context: HttpContext,
     pub expose_internal_errors: ExposeInternalErrors,
-    pub request_pipeline: GraphqlRequestPipeline,
     pub project_id: Option<ProjectId>,
     pub schema: Arc<lang_graphql::schema::Schema<graphql_schema::GDS>>,
     pub metadata: Arc<metadata_resolve::Metadata>,

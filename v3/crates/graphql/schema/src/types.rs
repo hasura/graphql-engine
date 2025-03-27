@@ -109,14 +109,10 @@ pub enum RootFieldAnnotation {
         typename_mappings: HashMap<ast::TypeName, NodeFieldTypeNameMapping>,
     },
     Model {
-        data_type: Qualified<types::CustomTypeName>,
-        // select_permissions: HashMap<Role, metadata_resolve::SelectPermission>,
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,
     },
     ModelSubscription {
-        data_type: Qualified<types::CustomTypeName>,
-        // select_permissions: HashMap<Role, metadata_resolve::SelectPermission>,
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,
         polling_interval_ms: u64,

@@ -4,7 +4,7 @@ use engine_types::{ExposeInternalErrors, HttpContext};
 use graphql_frontend::{
     execute_mutation_plan, execute_query_internal, execute_query_plan, generate_ir,
 };
-use graphql_ir::{generate_request_plan, GraphqlRequestPipeline, RequestPlan};
+use graphql_ir::{generate_request_plan, RequestPlan};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;
@@ -149,7 +149,6 @@ pub fn bench_execute(
         |b, (runtime, schema)| {
             b.to_async(*runtime).iter(|| async {
                 generate_ir(
-                    GraphqlRequestPipeline::OpenDd,
                     schema,
                     &gds.metadata,
                     &session,
@@ -162,7 +161,6 @@ pub fn bench_execute(
     );
 
     let ir = generate_ir(
-        GraphqlRequestPipeline::OpenDd,
         &schema,
         &gds.metadata,
         &session,
@@ -223,7 +221,6 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 execute_query_internal(
-                    GraphqlRequestPipeline::OpenDd,
                     ExposeInternalErrors::Expose,
                     &http_context,
                     schema,

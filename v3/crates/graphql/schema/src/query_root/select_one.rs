@@ -59,7 +59,6 @@ pub(crate) fn select_one_field(
             select_unique.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::Model {
-                    data_type: model.model.data_type.clone(),
                     kind: types::RootFieldKind::SelectOne,
                     name: model.model.name.clone(),
                 },

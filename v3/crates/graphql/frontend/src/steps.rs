@@ -80,7 +80,6 @@ pub fn normalize_request<'s>(
 
 /// Generate IR for the request
 pub fn build_ir<'n, 's>(
-    request_pipeline: graphql_ir::GraphqlRequestPipeline,
     schema: &'s gql::schema::Schema<GDS>,
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
@@ -94,7 +93,6 @@ pub fn build_ir<'n, 's>(
         SpanVisibility::Internal,
         || {
             generate_ir(
-                request_pipeline,
                 schema,
                 metadata,
                 session,
@@ -113,7 +111,7 @@ pub fn build_request_plan<'n, 's, 'ir>(
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-) -> Result<graphql_ir::RequestPlan<'n, 's, 'ir>, graphql_ir::PlanError> {
+) -> Result<graphql_ir::RequestPlan<'n, 's, 'ir>, graphql_ir::GraphqlIrPlanError> {
     let tracer = tracing_util::global_tracer();
     let plan = tracer.in_span(
         "plan",
@@ -132,7 +130,6 @@ pub fn build_request_plan<'n, 's, 'ir>(
 }
 
 pub fn generate_ir<'n, 's>(
-    request_pipeline: graphql_ir::GraphqlRequestPipeline,
     schema: &'s gql::schema::Schema<GDS>,
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
@@ -142,7 +139,6 @@ pub fn generate_ir<'n, 's>(
     match &normalized_request.ty {
         ast::OperationType::Query => {
             let query_ir = graphql_ir::generate_query_ir(
-                request_pipeline,
                 schema,
                 metadata,
                 session,
@@ -153,7 +149,6 @@ pub fn generate_ir<'n, 's>(
         }
         ast::OperationType::Mutation => {
             let mutation_ir = graphql_ir::generate_mutation_ir(
-                request_pipeline,
                 &normalized_request.selection_set,
                 metadata,
                 session,
@@ -163,7 +158,6 @@ pub fn generate_ir<'n, 's>(
         }
         ast::OperationType::Subscription => {
             let (alias, field) = graphql_ir::generate_subscription_ir(
-                request_pipeline,
                 session,
                 metadata,
                 request_headers,

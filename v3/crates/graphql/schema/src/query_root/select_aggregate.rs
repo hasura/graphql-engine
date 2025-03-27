@@ -55,7 +55,6 @@ pub(crate) fn select_aggregate_field(
             select_aggregate.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 RootFieldAnnotation::Model {
-                    data_type: model.model.data_type.clone(),
                     kind: RootFieldKind::SelectAggregate,
                     name: model.model.name.clone(),
                 },

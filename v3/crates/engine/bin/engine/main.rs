@@ -5,7 +5,6 @@ use engine::{
     StartupError, VERSION,
 };
 use engine_types::ExposeInternalErrors;
-use graphql_ir::GraphqlRequestPipeline;
 use serde::Serialize;
 use std::net;
 use std::path::PathBuf;
@@ -127,15 +126,6 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         ExposeInternalErrors::Censor
     };
 
-    let request_pipeline = if server
-        .unstable_features
-        .contains(&UnstableFeature::EnableOpenDdPipelineForGraphql)
-    {
-        GraphqlRequestPipeline::OpenDd
-    } else {
-        GraphqlRequestPipeline::Old
-    };
-
     let raw_auth_config =
         std::fs::read_to_string(&server.authn_config_path).expect("could not read auth config");
     let opendd_metadata_json =
@@ -148,13 +138,8 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     )
     .map_err(StartupError::ReadSchema)?;
 
-    let state = engine::build_state(
-        request_pipeline,
-        expose_internal_errors,
-        auth_config,
-        resolved_metadata,
-    )
-    .map_err(StartupError::ReadSchema)?;
+    let state = engine::build_state(expose_internal_errors, auth_config, resolved_metadata)
+        .map_err(StartupError::ReadSchema)?;
 
     let mut app = get_base_routes(state.clone());
 

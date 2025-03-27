@@ -2,14 +2,12 @@ use hasura_authn::ResolvedAuthConfig;
 use std::sync::Arc;
 
 use engine_types::{ExposeInternalErrors, HttpContext};
-use graphql_ir::GraphqlRequestPipeline;
 use graphql_schema::GDS;
 use lang_graphql as gql;
 use tracing_util::{ErrorVisibility, TraceableError};
 
 #[derive(Clone)] // Cheap to clone as heavy fields are wrapped in `Arc`
 pub struct EngineState {
-    pub request_pipeline: GraphqlRequestPipeline,
     pub expose_internal_errors: ExposeInternalErrors,
     pub http_context: HttpContext,
     pub graphql_state: Arc<gql::schema::Schema<GDS>>,

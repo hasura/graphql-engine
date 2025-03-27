@@ -87,65 +87,28 @@
         "ir": {
           "field_name": "ArticleMany",
           "model_selection": {
-            "Ir": {
-              "data_connector": {
-                "name": {
-                  "name": "db"
-                },
-                "url": {
-                  "singleUrl": "http://localhost:8080/"
-                },
-                "headers": {
-                  "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                },
-                "capabilities": {
-                  "supported_ndc_version": "V01",
-                  "supports_explaining_queries": true,
-                  "supports_nested_object_filtering": true,
-                  "supports_nested_object_ordering": true,
-                  "supports_aggregates": {},
-                  "supports_query_variables": true,
-                  "supports_relationships": {
-                    "supports_relation_comparisons": true,
-                    "supports_nested_relationships": {
-                      "supports_nested_array_selection": true
-                    }
-                  }
+            "subgraph": "default",
+            "modelName": "Articles",
+            "arguments": {},
+            "filter": null,
+            "orderBy": [],
+            "limit": 1,
+            "offset": 1,
+            "selection": {
+              "hasura_global_id_col_id_article_id": {
+                "field": {
+                  "fieldName": "article_id",
+                  "arguments": {},
+                  "selection": null
                 }
               },
-              "collection": "article",
-              "arguments": {},
-              "filter_clause": {
-                "query_filter": {
-                  "where_clause": null,
-                  "additional_filter": null
-                },
-                "permission_filter": null,
-                "relationship_join_filter": null
-              },
-              "limit": 1,
-              "offset": 1,
-              "order_by": null,
-              "selection": {
-                "fields": {
-                  "hasura_global_id_col_id_article_id": {
-                    "Column": {
-                      "column": "id",
-                      "nested_selection": null,
-                      "arguments": {}
-                    }
-                  },
-                  "title": {
-                    "Column": {
-                      "column": "title",
-                      "nested_selection": null,
-                      "arguments": {}
-                    }
-                  }
+              "title": {
+                "field": {
+                  "fieldName": "title",
+                  "arguments": {},
+                  "selection": null
                 }
-              },
-              "aggregate_selection": null,
-              "variable_arguments": {}
+              }
             }
           },
           "type_container": {

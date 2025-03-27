@@ -71,7 +71,6 @@ pub(crate) fn select_many_field(
             select_many.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::Model {
-                    data_type: model.model.data_type.clone(),
                     kind: types::RootFieldKind::SelectMany,
                     name: model.model.name.clone(),
                 },

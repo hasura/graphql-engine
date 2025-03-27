@@ -2,7 +2,6 @@ use axum::http::HeaderMap;
 use axum::{extract::State, response::IntoResponse, routing::get};
 use engine_types::{ExposeInternalErrors, HttpContext};
 use futures_util::{SinkExt, StreamExt};
-use graphql_ir::GraphqlRequestPipeline;
 use graphql_ws::Context;
 use graphql_ws::GRAPHQL_WS_PROTOCOL;
 use std::{net, path::PathBuf, sync::Arc};
@@ -103,7 +102,6 @@ async fn start_websocket_server_inner(
         connection_expiry: expiry,
         http_context,
         metadata: resolved_metadata.into(),
-        request_pipeline: GraphqlRequestPipeline::Old,
         expose_internal_errors: ExposeInternalErrors::Expose,
         project_id: None,
         schema: Arc::new(schema),
