@@ -7,6 +7,9 @@
 - Add data connector error details to trace error messages. This will help
   debugging data connector errors.
 
+- Improved metadata JSON deserialization errors by adding more contextual
+  information.
+
 ### Changed
 
 ### Fixed
