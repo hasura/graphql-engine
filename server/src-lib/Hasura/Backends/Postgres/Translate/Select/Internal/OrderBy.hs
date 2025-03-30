@@ -149,7 +149,7 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
                       (tableIdentifierToIdentifier relSourcePrefix)
                       (S.FISimple relTable Nothing)
                       boolExp
-                  relSource = ObjectRelationSource relName colMapping selectSource nullable
+                  relSource = ObjectRelationSource relName colMapping selectSource nullable Nothing
               pure
                 ( relSource,
                   InsOrdHashMap.singleton relOrderByAlias relOrdByExp,
@@ -178,7 +178,7 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
                       (S.FISimple relTable Nothing)
                       boolExp
                       noSortingAndSlicing
-                  relSource = ArrayRelationSource relAlias colMapping selectSource nullable
+                  relSource = ArrayRelationSource relAlias colMapping selectSource nullable Nothing
               extractorExps <- aggregateFieldsToExtractorExps relSourcePrefix userInfo fields
               pure
                 ( relSource,

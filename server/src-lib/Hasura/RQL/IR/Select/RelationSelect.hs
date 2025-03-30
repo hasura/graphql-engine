@@ -7,6 +7,7 @@ module Hasura.RQL.IR.Select.RelationSelect
   )
 where
 
+import Hasura.GraphQL.Parser.Directives (ParsedDirectives)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -19,6 +20,7 @@ data AnnRelationSelectG (b :: BackendType) a = AnnRelationSelectG
   { _aarRelationshipName :: RelName, -- Relationship name
     _aarColumnMapping :: HashMap (ColumnPath b) (ColumnPath b), -- Column of left table to join with
     _aarNullable :: Nullable, -- is the target object allowed to be missing?
+    _aarDirectives :: Maybe ParsedDirectives, -- Directives on the relationship field
     _aarAnnSelect :: a -- Current table. Almost ~ to SQL Select
   }
   deriving stock (Functor, Foldable, Traversable)

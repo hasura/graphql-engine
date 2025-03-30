@@ -397,7 +397,19 @@ rawSelection name description argumentsParser resultParser =
     { fDefinition =
         Definition name description Nothing [] $
           FieldInfo (ifDefinitions argumentsParser) (pType resultParser),
-      fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
+      fParser = \Field {_fAlias, _fArguments, _fSelectionSet, _fDirectives} -> do
+        dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
+
+        -- If the directive is present but this is not a selectionSet (Array or Object type), throw an error
+        withDirective dirMap nullableJoin $ \maybeDirective ->
+          case maybeDirective of
+            Just _ -> parseError $ "The @nullable directive can only be used on fields with selection sets (objects or arrays)"
+            Nothing -> pure ()
+        withDirective dirMap lateralJoin $ \maybeDirective ->
+          case maybeDirective of
+            Just _ -> parseError $ "The @lateral directive can only be used on object relationship fields"
+            Nothing -> pure ()
+
         unless (null _fSelectionSet) $
           parseError "unexpected subselection set for non-object field"
         -- check for extraneous arguments here, since the InputFieldsParser just
@@ -434,11 +446,11 @@ subselection ::
   InputFieldsParser origin m a ->
   -- | parser for the subselection set
   Parser origin 'Output m b ->
-  FieldParser origin m (a, b)
+  FieldParser origin m (a, b, ParsedDirectives)
 {-# INLINE subselection #-}
 subselection name description argumentsParser bodyParser =
   rawSubselection name description argumentsParser bodyParser
-    <&> \(_alias, _args, a, b) -> (a, b)
+    <&> \(_alias, _args, a, b, directives) -> (a, b, directives)
 
 rawSubselection ::
   forall m origin a b.
@@ -449,21 +461,35 @@ rawSubselection ::
   InputFieldsParser origin m a ->
   -- | parser for the subselection set
   Parser origin 'Output m b ->
-  FieldParser origin m (Maybe Name, HashMap Name (Value Variable), a, b)
+  FieldParser origin m (Maybe Name, HashMap Name (Value Variable), a, b, ParsedDirectives)
 {-# INLINE rawSubselection #-}
 rawSubselection name description argumentsParser bodyParser =
   FieldParser
     { fDefinition =
         Definition name description Nothing [] $
           FieldInfo (ifDefinitions argumentsParser) (pType bodyParser),
-      fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
+      fParser = \Field {_fAlias, _fArguments, _fSelectionSet, _fDirectives} -> do
+        dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
+
+        hasLateralDirective <- withDirective dirMap lateralJoin $ pure . Maybe.isJust
+        when hasLateralDirective $ do
+          let fieldType = pType bodyParser
+          let isArrayType = case fieldType of
+                TList _ _ -> True
+                _ -> False
+
+          when isArrayType $
+            parseError $
+              "The @lateral directive cannot be used on array relationship fields"
+
         -- check for extraneous arguments here, since the InputFieldsParser just
         -- handles parsing the fields it cares about
         for_ (HashMap.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
             parseError $
               toErrorValue name <> " has no argument named " <> toErrorValue argumentName
-        (_fAlias,_fArguments,,)
+        let parsedDirectives = extractDirectives dirMap
+        (_fAlias,_fArguments,,,parsedDirectives)
           <$> withKey (Key "args") (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
           <*> pParser bodyParser _fSelectionSet
     }
@@ -488,7 +514,8 @@ subselection_ ::
   Maybe Description ->
   -- | parser for the subselection set
   Parser origin 'Output m a ->
-  FieldParser origin m a
+  FieldParser origin m (a, ParsedDirectives)
 {-# INLINE subselection_ #-}
 subselection_ name description bodyParser =
-  snd <$> subselection name description (pure ()) bodyParser
+  rawSubselection name description (pure ()) bodyParser
+    <&> \(_alias, _args, (), result, directives) -> (result, directives)

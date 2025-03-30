@@ -81,7 +81,7 @@ cursorOrderingArgParser = do
       [ ( define enumNameVal,
           snd enumNameVal
         )
-        | enumNameVal <- [(Name._ASC, COAscending), (Name._DESC, CODescending)]
+      | enumNameVal <- [(Name._ASC, COAscending), (Name._DESC, CODescending)]
       ]
   where
     define (name, val) =
@@ -271,7 +271,7 @@ selectStreamTable tableInfo fieldName description = runMaybeT $ do
       pure
         $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
         $ P.subselection fieldName description tableStreamArgsParser selectionSetParser
-        <&> \(args, fields) ->
+        <&> \(args, fields, _) ->
           IR.AnnSelectStreamG
             { IR._assnXStreamingSubscription = xStreamSubscription,
               IR._assnFields = fields,

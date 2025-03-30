@@ -113,7 +113,7 @@ nodeField sourceCache context options = do
     RelaySchema nodeBuilder -> runNodeBuilder nodeBuilder context options
   pure
     $ P.subselection Name._node Nothing idArgument nodeObject
-    `P.bindField` \(ident, parseds) -> do
+    `P.bindField` \(ident, parseds, _) -> do
       nodeId <- parseNodeId ident
       case nodeId of
         NodeIdV1 (V1NodeId tableName pKeys) -> do
@@ -185,6 +185,7 @@ nodeField sourceCache context options = do
                   IR._saOffset = Nothing,
                   IR._saDistinct = Nothing
                 },
+            IR._asnDirectives = Nothing,
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just $ _rscNamingConvention $ _siCustomization sourceInfo
           }

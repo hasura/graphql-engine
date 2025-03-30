@@ -35,9 +35,11 @@ module Hasura.Backends.Postgres.Translate.Types
 where
 
 import Data.HashMap.Strict qualified as HashMap
+import Data.Hashable (Hashable (..))
 import Data.Int (Int64)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
+import Hasura.GraphQL.Parser.Directives (ParsedDirectives)
 import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
@@ -188,19 +190,43 @@ data ObjectRelationSource = ObjectRelationSource
   { _orsRelationshipName :: RelName,
     _orsRelationMapping :: HashMap.HashMap Postgres.PGCol Postgres.PGCol,
     _orsSelectSource :: ObjectSelectSource,
-    _orsNullable :: Nullable
+    _orsNullable :: Nullable,
+    _orsDirectives :: Maybe ParsedDirectives
   }
   deriving (Generic, Show)
 
-instance Hashable ObjectRelationSource
+-- TODO: Rollback if find a way to pass directives into processAnnotatedOrderByElement
+--
+-- instance Hashable ObjectRelationSource
+-- deriving instance Eq ObjectRelationSource
 
-deriving instance Eq ObjectRelationSource
+-- Directives excluded from comparison
+instance Eq ObjectRelationSource where
+  a == b =
+    _orsRelationshipName a
+      == _orsRelationshipName b
+      && _orsRelationMapping a
+      == _orsRelationMapping b
+      && _orsSelectSource a
+      == _orsSelectSource b
+      && _orsNullable a
+      == _orsNullable b
+
+-- Directives excluded from comparison
+instance Hashable ObjectRelationSource where
+  hashWithSalt salt ors =
+    salt
+      `hashWithSalt` _orsRelationshipName ors
+      `hashWithSalt` _orsRelationMapping ors
+      `hashWithSalt` _orsSelectSource ors
+      `hashWithSalt` _orsNullable ors
 
 data ArrayRelationSource = ArrayRelationSource
   { _arsAlias :: Postgres.TableAlias,
     _arsRelationMapping :: HashMap.HashMap Postgres.PGCol Postgres.PGCol,
     _arsSelectSource :: SelectSource,
-    _arsNullable :: Nullable
+    _arsNullable :: Nullable,
+    _arsDirectives :: Maybe ParsedDirectives
   }
   deriving (Generic, Show)
 
@@ -253,13 +279,73 @@ data JoinTree = JoinTree
   }
   deriving stock (Eq, Show)
 
+-- TODO: Rollback if find a way to pass directives into processAnnotatedOrderByElement
+-- The current approach selects the the directives from the left object to no override it into Nothing
+--
+-- instance Semigroup JoinTree where
+--   JoinTree lObjs lArrs lArrConns lCfts <> JoinTree rObjs rArrs rArrConns rCfts =
+--     JoinTree
+--       (HashMap.unionWith (<>) lObjs rObjs)
+--       (HashMap.unionWith (<>) lArrs rArrs)
+--       (HashMap.unionWith (<>) lArrConns rArrConns)
+--       (HashMap.unionWith (<>) lCfts rCfts)
+
 instance Semigroup JoinTree where
   JoinTree lObjs lArrs lArrConns lCfts <> JoinTree rObjs rArrs rArrConns rCfts =
     JoinTree
-      (HashMap.unionWith (<>) lObjs rObjs)
+      (mergeObjectRelations lObjs rObjs)
       (HashMap.unionWith (<>) lArrs rArrs)
       (HashMap.unionWith (<>) lArrConns rArrConns)
       (HashMap.unionWith (<>) lCfts rCfts)
+    where
+      -- Custom merge function that preserves directives
+      mergeObjectRelations ::
+        HashMap.HashMap ObjectRelationSource SelectNode ->
+        HashMap.HashMap ObjectRelationSource SelectNode ->
+        HashMap.HashMap ObjectRelationSource SelectNode
+      mergeObjectRelations leftMap rightMap =
+        HashMap.foldlWithKey'
+          ( \acc rightKey rightNode ->
+              let mLeftNode = HashMap.lookup rightKey acc
+                  finalAcc = case mLeftNode of
+                    -- If key exists in left map, merge the nodes and preserve directives
+                    Just leftNode ->
+                      let mergedNode = leftNode <> rightNode
+                          -- Get the original left key (with directives)
+                          leftKey = findOriginalKey leftMap rightKey
+                          -- If right key has no directives but left key does, use left key's directives
+                          finalKey = case (_orsDirectives rightKey, _orsDirectives leftKey) of
+                            (Nothing, Just dirs) -> rightKey {_orsDirectives = Just dirs}
+                            _ -> rightKey
+                       in HashMap.insert finalKey mergedNode (HashMap.delete rightKey acc)
+                    -- If key doesn't exist, simply add it
+                    Nothing -> HashMap.insert rightKey rightNode acc
+               in finalAcc
+          )
+          leftMap -- Start with the left map
+          rightMap -- Fold over the right map
+
+      -- Helper to find the original key in a map, even with directives difference
+      findOriginalKey ::
+        HashMap.HashMap ObjectRelationSource a ->
+        ObjectRelationSource ->
+        ObjectRelationSource
+      findOriginalKey sourceMap key =
+        HashMap.foldrWithKey
+          ( \k _ acc ->
+              if _orsRelationshipName k
+                == _orsRelationshipName key
+                && _orsRelationMapping k
+                == _orsRelationMapping key
+                && _orsSelectSource k
+                == _orsSelectSource key
+                && _orsNullable k
+                == _orsNullable key
+                then k -- Found matching key
+                else acc
+          )
+          key -- Default to original key if not found
+          sourceMap
 
 instance Monoid JoinTree where
   mempty = JoinTree mempty mempty mempty mempty

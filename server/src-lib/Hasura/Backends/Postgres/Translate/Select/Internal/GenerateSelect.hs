@@ -32,6 +32,8 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     startCursorIdentifier,
   )
 import Hasura.Backends.Postgres.Translate.Types
+import Hasura.GraphQL.Parser.DirectiveName (_lateral, _nullable)
+import Hasura.GraphQL.Parser.Directives (ParsedDirectives, getDirective)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (ConnectionSlice (SliceFirst, SliceLast))
 import Hasura.RQL.Types.BackendType (PostgresKind (..))
@@ -156,6 +158,33 @@ applyCockroachDistinctOnWorkaround select =
     replaceOrderByItem replacementExtractors orderByItem =
       orderByItem {S.oExpression = replaceExp replacementExtractors (S.oExpression orderByItem)}
 
+-- | Given an optional ParsedDirectives HashMap and a Nullable flag,
+-- extract the join type and lateral flag.
+extractJoinTypeAndLateral ::
+  Maybe ParsedDirectives -> Nullable -> (S.JoinType, Bool)
+extractJoinTypeAndLateral maybeDirectives nullable =
+  let -- Extract nullable directive value (default to Nothing if not present)
+      nullableDirectiveValue = case maybeDirectives of
+        Just parsedDirectives -> getDirective _nullable parsedDirectives
+        Nothing -> Nothing
+      -- Extract lateral directive value (default to Nothing if not present)
+      lateralDirectiveValue = case maybeDirectives of
+        Just parsedDirectives -> getDirective _lateral parsedDirectives
+        Nothing -> Nothing
+      -- Determine join type based on nullable directive or default behavior
+      joinType = case nullableDirectiveValue of
+        Just True -> S.LeftOuter
+        Just False -> S.Inner
+        Nothing ->
+          case nullable of
+            Nullable -> S.LeftOuter
+            NotNullable -> S.Inner
+      -- Determine lateral based on lateral directive (default to True)
+      lateral = case lateralDirectiveValue of
+        Just lateralValue -> lateralValue
+        Nothing -> True -- Default to LATERAL JOIN
+   in (joinType, lateral)
+
 defaultGenerateSQLSelect ::
   forall pgKind.
   (PostgresGenerateSQLSelect pgKind) =>
@@ -239,16 +268,16 @@ defaultGenerateSQLSelect selectRewriter joinCondition selectSource selectNode =
       let ObjectRelationSource
             { _orsRelationMapping = colMapping,
               _orsSelectSource = objSelectSource,
-              _orsNullable = nullable
+              _orsNullable = nullable,
+              _orsDirectives = directives
             } = objectRelationSource
           -- Extract the components from ObjectSelectSource properly with different variable names
           ObjectSelectSource objPrefix _ _ = objSelectSource
           alias = S.toTableAlias objPrefix
-          joinType = case nullable of
-            Nullable -> S.LeftOuter
-            NotNullable -> S.Inner
-       in case joinType of
-            S.Inner ->
+
+          (joinType, lateral) = extractJoinTypeAndLateral directives nullable
+       in case lateral of
+            False ->
               let -- Use joinTableIdentifier for the join condition, not the base alias
                   joinTableIdentifier = S.tableAliasToIdentifier alias
                   joinCond = mkJoinCond baseSelectIdentifier joinTableIdentifier colMapping
@@ -270,7 +299,7 @@ defaultGenerateSQLSelect selectRewriter joinCondition selectSource selectNode =
                         selectFromItem
                         (S.JoinOn joinCond)
                in (joinItem, joinType)
-            _ ->
+            True ->
               -- For lateral joins, use the base table alias similarly
               -- Make sure to use te limit 1
               let source = objectSelectSourceToSelectSource objSelectSource
@@ -281,11 +310,18 @@ defaultGenerateSQLSelect selectRewriter joinCondition selectSource selectNode =
     arrayRelationToFromItem ::
       (ArrayRelationSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
-      let ArrayRelationSource _ colMapping source nullable = arrayRelationSource
+      let ArrayRelationSource _ colMapping source nullable directives = arrayRelationSource
           alias = S.toTableAlias $ _ssPrefix source
-          joinType = case nullable of
-            Nullable -> S.LeftOuter
-            NotNullable -> S.Inner
+
+          joinType = case directives of
+            Just parsedDirectives ->
+              case getDirective _nullable parsedDirectives of
+                Just True -> S.LeftOuter
+                Just False -> S.Inner
+                Nothing -> if nullable == Nullable then S.LeftOuter else S.Inner
+            Nothing ->
+              if nullable == Nullable then S.LeftOuter else S.Inner
+
           joinCondWithBaseAlias = mkJoinCondWithoutPrefix baseSelectIdentifier colMapping
           select = generateSQLSelectFromArrayNode @pgKind source arraySelectNode joinCondWithBaseAlias
        in (S.mkLateralFromItem select alias, joinType)

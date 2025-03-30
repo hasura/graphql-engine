@@ -205,12 +205,13 @@ selectFunction mkRootFieldName fi@RQL.FunctionInfo {..} description = runMaybeT 
         functionFieldName = RQL.runMkRootFieldName mkRootFieldName _fiGQLName
     pure
       $ P.subselection functionFieldName description argsParser selectionSetParser
-      <&> \((funcArgs, tableArgs''), fields) ->
+      <&> \((funcArgs, tableArgs''), fields, directives) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
             IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
             IR._asnPerm = GS.C.tablePermissionsInfo selectPermissions,
             IR._asnArgs = tableArgs'',
+            IR._asnDirectives = (Just directives),
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
           }
@@ -439,7 +440,7 @@ updateCustomOp (API.UpdateColumnOperatorName operatorName) operatorUsages = GS.U
             argumentType <-
               ( HashMap.lookup columnScalarType operatorUsages
                   <&> (\API.UpdateColumnOperatorDefinition {..} -> RQL.ColumnScalar $ Witch.from _ucodArgumentType)
-                )
+              )
                 -- This shouldn't happen 😬 because updateOperatorApplicableColumn should protect this
                 -- parser from being used with unsupported column types
                 `onNothing` throw500 ("updateOperatorParser: Unable to find argument type for update column operator " <> toTxt operatorName <> " used with column scalar type " <> toTxt columnScalarType)

@@ -312,7 +312,7 @@ mutateAndFetchCols userInfo qt cols (cte, p) strfyNum tCase = do
       <$> mkSQLSelect
         userInfo
         JASMultipleRows
-        ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+        ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs Nothing strfyNum tCase
         )
   let selectWith =
         S.SelectWith
@@ -473,9 +473,9 @@ validateDeleteMutation env manager logger userInfo resolvedWebHook confHeaders t
           --     id
           --    }
           -- }
-          do
-            let deleteInputValByPk = J.object ["pk_columns" J..= deleteInputVal]
-            return (J.object ["input" J..= [deleteInputValByPk]])
+            do
+              let deleteInputValByPk = J.object ["pk_columns" J..= deleteInputVal]
+              return (J.object ["input" J..= [deleteInputValByPk]])
           else return (J.object ["input" J..= [deleteInputVal]])
       Nothing -> return J.Null
   validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData headerPrecedence

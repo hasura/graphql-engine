@@ -129,12 +129,13 @@ defaultSelectTable tableInfo fieldName description = runMaybeT do
     pure
       $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
       $ P.subselection fieldName description tableArgsParser selectionSetParser
-      <&> \(args, fields) ->
+      <&> \(args, fields, directives) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
             IR._asnFrom = IR.FromTable tableName,
             IR._asnPerm = tablePermissionsInfo selectPermissions,
             IR._asnArgs = args,
+            IR._asnDirectives = (Just directives),
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
           }
@@ -186,7 +187,7 @@ selectTableConnection tableInfo fieldName description pkeyColumns = runMaybeT do
     selectArgsParser <- tableConnectionArgs pkeyColumns tableInfo selectPermissions
     pure
       $ P.subselection fieldName description selectArgsParser selectionSetParser
-      <&> \((args, split, slice), fields) ->
+      <&> \((args, split, slice), fields, directives) ->
         IR.ConnectionSelect
           { IR._csXRelay = xRelayInfo,
             IR._csPrimaryKeyColumns = pkeyColumns,
@@ -198,6 +199,7 @@ selectTableConnection tableInfo fieldName description pkeyColumns = runMaybeT do
                   IR._asnFrom = IR.FromTable tableName,
                   IR._asnPerm = tablePermissionsInfo selectPermissions,
                   IR._asnArgs = args,
+                  IR._asnDirectives = (Just directives),
                   IR._asnStrfyNum = stringifyNumbers,
                   IR._asnNamingConvention = Just tCase
                 }
@@ -249,7 +251,7 @@ selectTableByPk tableInfo fieldName description = runMaybeT do
     pure
       $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
       $ P.subselection fieldName description argsParser selectionSetParser
-      <&> \(boolExpr, fields) ->
+      <&> \(boolExpr, fields, directives) ->
         let defaultPerms = tablePermissionsInfo selectPermissions
             -- Do not account permission limit since the result is just a nullable object
             permissions = defaultPerms {IR._tpLimit = Nothing}
@@ -259,6 +261,7 @@ selectTableByPk tableInfo fieldName description = runMaybeT do
                 IR._asnFrom = IR.FromTable tableName,
                 IR._asnPerm = permissions,
                 IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
+                IR._asnDirectives = (Just directives),
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Just tCase
               }
@@ -303,8 +306,8 @@ defaultSelectTableAggregate tableInfo fieldName description = runMaybeT $ do
     aggregateParser <- tableAggregationFields tableInfo
     groupByParser <- groupBy tableInfo
     let aggregateFields =
-          [ IR.TAFNodes xNodesAgg <$> P.subselection_ Name._nodes Nothing nodesParser,
-            IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
+          [ IR.TAFNodes xNodesAgg <$> (fst <$> P.subselection_ Name._nodes Nothing nodesParser),
+            IR.TAFAgg <$> (fst <$> P.subselection_ Name._aggregate Nothing aggregateParser)
           ]
             <> (maybeToList groupByParser)
     let selectionName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateTypeName tableGQLName
@@ -318,12 +321,13 @@ defaultSelectTableAggregate tableInfo fieldName description = runMaybeT $ do
     pure
       $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
       $ P.subselection fieldName description tableArgsParser aggregationParser
-      <&> \(args, fields) ->
+      <&> \(args, fields, directives) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
             IR._asnFrom = IR.FromTable tableName,
             IR._asnPerm = tablePermissionsInfo selectPermissions,
             IR._asnArgs = args,
+            IR._asnDirectives = (Just directives),
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
           }
@@ -353,7 +357,7 @@ groupBy tableInfo = runMaybeT $ do
 
   selectionSetParser <- groupBySelectionSet tableInfo
   P.subselection groupByFieldName (Just "Groups the table by the specified keys") groupByInputFieldsParser selectionSetParser
-    <&> (\(keys, fields) -> IR.TAFGroupBy xGroupBy (IR.GroupByG keys fields))
+    <&> (\(keys, fields, _) -> IR.TAFGroupBy xGroupBy (IR.GroupByG keys fields))
     & pure
   where
     guardGroupByFeatureSupported :: MaybeT (SchemaT r m) (XGroupBy b)
@@ -436,8 +440,8 @@ groupBySelectionSet tableInfo = do
   P.selectionSet
     groupByTypeName
     (Just groupByDescription)
-    [ IR.GBFGroupKey <$> P.subselection_ groupKeyName Nothing groupByKeyParser,
-      IR.GBFAggregate <$> P.subselection_ aggregateFieldName Nothing aggregateParser
+    [ IR.GBFGroupKey <$> (fst <$> P.subselection_ groupKeyName Nothing groupByKeyParser),
+      IR.GBFAggregate <$> (fst <$> P.subselection_ aggregateFieldName Nothing aggregateParser)
     ]
     <&> parsedSelectionsToFields IR.GBFExp
     & P.nonNullableParser
@@ -691,17 +695,17 @@ tableConnectionSelectionSet tableInfo = runMaybeT do
   lift $ P.memoizeOn 'tableConnectionSelectionSet (sourceName, tableName) do
     let connectionTypeName = mkTypename $ tableGQLName <> Name._Connection
         pageInfo =
-          P.subselection_
-            Name._pageInfo
-            Nothing
-            pageInfoSelectionSet
-            <&> IR.ConnectionPageInfo
+          (IR.ConnectionPageInfo . fst)
+            <$> P.subselection_
+              Name._pageInfo
+              Nothing
+              pageInfoSelectionSet
         edges =
-          P.subselection_
-            Name._edges
-            Nothing
-            edgesParser
-            <&> IR.ConnectionEdges
+          (IR.ConnectionEdges . fst)
+            <$> P.subselection_
+              Name._edges
+              Nothing
+              edgesParser
         connectionDescription = G.Description $ "A Relay connection object on " <>> tableName
     pure
       $ P.nonNullableParser
@@ -758,11 +762,11 @@ tableConnectionSelectionSet tableInfo = runMaybeT do
               P.string
               $> IR.EdgeCursor
           edgeNode =
-            P.subselection_
-              Name._node
-              Nothing
-              edgeNodeParser
-              <&> IR.EdgeNode
+            (IR.EdgeNode . fst)
+              <$> P.subselection_
+                Name._node
+                Nothing
+                edgeNodeParser
       pure
         $ nonNullableObjectList
         $ P.selectionSet edgesType Nothing [cursor, edgeNode]
@@ -1234,8 +1238,8 @@ tableAggregationFields tableInfo = do
           subselectionParser =
             P.selectionSet setName setDesc columns
               <&> parsedSelectionsToFields IR.SFExp
-       in P.subselection_ opFieldName Nothing subselectionParser
-            <&> IR.AFOp . IR.AggregateOp opText
+       in (IR.AFOp . IR.AggregateOp opText . fst)
+            <$> P.subselection_ opFieldName Nothing subselectionParser
 
 -- | shared implementation between tables and logical models
 defaultArgsParser ::
@@ -1368,7 +1372,7 @@ fieldSelection logicalModelCache table tableInfo = \case
       case HashMap.lookup _noiType logicalModelCache of
         Just objectType -> do
           parser <- nestedObjectParser _noiSupportsNestedObjects logicalModelCache objectType _noiColumn _noiIsNullable
-          pure $ P.subselection_ _noiName _noiDescription parser
+          pure $ fmap fst $ P.subselection_ _noiName _noiDescription parser
         _ -> throw500 $ "fieldSelection: object type " <> _noiType <<> " not found"
 
 outputParserModifier :: Bool -> IP.Parser origin 'Output m a -> IP.Parser origin 'Output m a
@@ -1412,7 +1416,7 @@ nestedObjectParser supportsNestedObjects objectTypes LogicalModelInfo {..} colum
               LogicalModelTypeReference LogicalModelTypeReferenceC {..} -> do
                 objectType' <- HashMap.lookup lmtrReference objectTypes `onNothing` throw500 ("Custom logical model type " <> lmtrReference <<> " not found")
                 parser <- fmap (IR.AFNestedObject @b) <$> nestedObjectParser supportsNestedObjects objectTypes objectType' lmfName lmtrNullable
-                pure $ P.subselection_ name (G.Description <$> lmfDescription) parser
+                pure $ fmap fst $ P.subselection_ name (G.Description <$> lmfDescription) parser
               LogicalModelTypeArray LogicalModelTypeArrayC {..} -> do
                 nestedArrayFieldParser supportsNestedObjects lmtaNullable <$> go lmtaArray
         go lmfType
@@ -1627,9 +1631,9 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
         $ pure
         $ case nullable of Nullable -> id; NotNullable -> IP.nonNullableField
         $ P.subselection_ relFieldName desc selectionSetParser
-        <&> \fields ->
+        <&> \(fields, directives) ->
           IR.AFObjectRelation
-            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullable
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullable (Just directives)
             $ IR.AnnObjectSelectG fields (IR.FromTable otherTableName)
             $ deduplicatePermissions
             $ IR._tpFilter
@@ -1645,7 +1649,7 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
             otherTableParser <&> \selectExp ->
               IR.AFArrayRelation
                 $ IR.ASSimple
-                $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability
+                $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability (IR._asnDirectives selectExp)
                 $ deduplicatePermissions' selectExp
           relAggFieldName = applyFieldNameCaseCust tCase $ relFieldName <> Name.__aggregate
           relAggDesc = Just $ G.Description "An aggregate relationship"
@@ -1664,8 +1668,8 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
       pure
         $ catMaybes
           [ Just arrayRelField,
-            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability) <$> remoteAggField,
-            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability) <$> remoteConnectionField
+            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability Nothing) <$> remoteAggField,
+            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability Nothing) <$> remoteConnectionField
           ]
 relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQueryName} = runMaybeT do
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
@@ -1686,8 +1690,8 @@ relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQuery
       pure
         $ pure
         $ nativeQueryParser
-        <&> \selectExp ->
-          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullability selectExp)
+        <&> \(selectExp) ->
+          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullability Nothing selectExp)
     ArrRel -> do
       nativeQueryInfo <- askNativeQueryInfo nativeQueryName
 
@@ -1701,7 +1705,7 @@ relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQuery
       pure
         $ pure
         $ nativeQueryParser
-        <&> \selectExp ->
+        <&> \(selectExp) ->
           IR.AFArrayRelation
             $ IR.ASSimple
-            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability selectExp
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability Nothing selectExp

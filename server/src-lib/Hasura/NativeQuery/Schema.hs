@@ -109,7 +109,7 @@ defaultSelectNativeQueryObject nqi@NativeQueryInfo {..} fieldName description = 
         description
         nativeQueryArgsParser
         selectionSetParser
-      <&> \(nqArgs, fields) ->
+      <&> \(nqArgs, fields, _) ->
         IR.AnnObjectSelectG
           fields
           ( IR.FromNativeQuery
@@ -205,7 +205,7 @@ defaultSelectNativeQuery nqi@NativeQueryInfo {..} fieldName nullability descript
           <*> nativeQueryArgsParser
       )
       selectionListParser
-    <&> \((lmArgs, nqArgs), fields) ->
+    <&> \((lmArgs, nqArgs), fields, directives) ->
       IR.AnnSelectG
         { IR._asnFields = fields,
           IR._asnFrom =
@@ -217,6 +217,7 @@ defaultSelectNativeQuery nqi@NativeQueryInfo {..} fieldName nullability descript
                 },
           IR._asnPerm = logicalModelPermissions,
           IR._asnArgs = lmArgs,
+          IR._asnDirectives = (Just directives),
           IR._asnStrfyNum = stringifyNumbers,
           IR._asnNamingConvention = Just tCase
         }
@@ -328,7 +329,7 @@ nativeQueryRelationshipField ri | riType ri == ObjRel = runMaybeT do
       pure
         $ nativeQueryParser
         <&> \selectExp ->
-          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullability selectExp)
+          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullability Nothing selectExp)
     RelTargetTable otherTableName -> do
       let desc = Just $ G.Description "An object relationship"
       roleName <- retrieve scRole
@@ -337,9 +338,9 @@ nativeQueryRelationshipField ri | riType ri == ObjRel = runMaybeT do
       selectionSetParser <- MaybeT $ tableSelectionSet otherTableInfo
       pure
         $ P.subselection_ relFieldName desc selectionSetParser
-        <&> \fields ->
+        <&> \(fields, directives) ->
           IR.AFObjectRelation
-            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable (Just directives)
             $ IR.AnnObjectSelectG fields (IR.FromTable otherTableName)
             $ IR._tpFilter
             $ tablePermissionsInfo remotePerms
@@ -361,7 +362,7 @@ nativeQueryRelationshipField ri = do
         <&> \selectExp ->
           IR.AFArrayRelation
             $ IR.ASSimple
-            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability selectExp
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability Nothing selectExp
     RelTargetTable otherTableName -> runMaybeT $ do
       let arrayRelDesc = Just $ G.Description "An array relationship"
 
@@ -371,6 +372,6 @@ nativeQueryRelationshipField ri = do
             otherTableParser <&> \selectExp ->
               IR.AFArrayRelation
                 $ IR.ASSimple
-                $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable
+                $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable Nothing
                 $ selectExp
       pure arrayRelField

@@ -99,7 +99,7 @@ insertIntoTable backendInsertAction scenario tableInfo fieldName description = r
     pure
       $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
       $ P.subselection fieldName description argsParser selectionParser
-      <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
+      <&> \(insertObject, output, _) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
   where
     mkObjectsArg objectParser =
       P.field
@@ -150,7 +150,7 @@ insertOneIntoTable backendInsertAction scenario tableInfo fieldName description 
     pure
       $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
       $ P.subselection fieldName description argsParser selectionParser
-      <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
+      <&> \(insertObject, output, _) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
   where
     mkObjectArg objectParser =
       P.field
@@ -420,8 +420,14 @@ deleteFromTable scenario tableInfo fieldName description = runMaybeT $ do
     pure
       $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
       $ P.subselection fieldName description whereArg selection
-      <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) False
-      . fmap IR.MOutMultirowFields
+      <&> \(whereExp, mutationFields, _) ->
+        mkDeleteObject
+          (tableInfoName tableInfo)
+          columns
+          deletePerms
+          (Just tCase)
+          False
+          (whereExp, IR.MOutMultirowFields mutationFields)
 
 -- | Construct a root field, normally called delete_tablename_by_pk, that can be used to delete an
 -- individual rows from a DB table, specified by primary key. Select permissions are required, as
@@ -457,8 +463,14 @@ deleteFromTableByPk scenario tableInfo fieldName description = runMaybeT $ do
   pure
     $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
     $ P.subselection fieldName description pkArgs selection
-    <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) True
-    . fmap IR.MOutSinglerowObject
+    <&> \(whereExp, mutationFields, _) ->
+      mkDeleteObject
+        (tableInfoName tableInfo)
+        columns
+        deletePerms
+        (Just tCase)
+        True
+        (whereExp, IR.MOutSinglerowObject mutationFields)
 
 mkDeleteObject ::
   (Backend b) =>
@@ -507,7 +519,7 @@ mutationSelectionSet tableInfo = do
       tableSet <- MaybeT $ tableSelectionList tableInfo
       let returningName = Name._returning
           returningDesc = "data from the rows affected by the mutation"
-      pure $ IR.MRet <$> P.subselection_ returningName (Just returningDesc) tableSet
+      pure $ fmap (IR.MRet . fst) $ P.subselection_ returningName (Just returningDesc) tableSet
     let selectionName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableMutationResponseTypeName tableGQLName
         affectedRowsName = applyFieldNameCaseIdentifier tCase affectedRowsFieldName
         affectedRowsDesc = "number of rows affected by the mutation"

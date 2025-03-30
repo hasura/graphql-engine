@@ -114,7 +114,7 @@ mkMutFldExp userInfo cteAlias preCalAffRows strfyNum tCase = \case
           <$> mkSQLSelect
             userInfo
             JASMultipleRows
-            ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+            ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs Nothing strfyNum tCase
             )
 
 toFIIdentifier :: TableIdentifier -> FIIdentifier
@@ -213,7 +213,7 @@ mkMutationOutputExp userInfo qt allCols preCalAffRows cte mutOutput strfyNum tCa
                   <$> mkSQLSelect
                     userInfo
                     JASSingleObject
-                    ( AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+                    ( AnnSelectG annFlds tabFrom tabPerm noSelectArgs Nothing strfyNum tCase
                     )
 
 mkCheckErrorExp :: TableIdentifier -> S.SQLExp
