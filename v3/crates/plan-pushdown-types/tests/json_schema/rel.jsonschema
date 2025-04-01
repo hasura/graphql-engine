@@ -2704,12 +2704,12 @@
             },
             "scale": {
               "type": "integer",
-              "format": "uint8",
-              "minimum": 0.0
+              "format": "int8"
             },
             "prec": {
               "type": "integer",
-              "format": "int8"
+              "format": "uint8",
+              "minimum": 0.0
             }
           }
         },
@@ -2736,12 +2736,12 @@
             },
             "scale": {
               "type": "integer",
-              "format": "uint8",
-              "minimum": 0.0
+              "format": "int8"
             },
             "prec": {
               "type": "integer",
-              "format": "int8"
+              "format": "uint8",
+              "minimum": 0.0
             }
           }
         },
@@ -3485,12 +3485,12 @@
             },
             "scale": {
               "type": "integer",
-              "format": "uint8",
-              "minimum": 0.0
+              "format": "int8"
             },
             "prec": {
               "type": "integer",
-              "format": "int8"
+              "format": "uint8",
+              "minimum": 0.0
             }
           }
         },
@@ -3510,12 +3510,12 @@
             },
             "scale": {
               "type": "integer",
-              "format": "uint8",
-              "minimum": 0.0
+              "format": "int8"
             },
             "prec": {
               "type": "integer",
-              "format": "int8"
+              "format": "uint8",
+              "minimum": 0.0
             }
           }
         },

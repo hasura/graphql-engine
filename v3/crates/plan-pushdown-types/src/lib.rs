@@ -122,14 +122,14 @@ pub enum Literal {
     /// 128-bit decimal
     Decimal128 {
         value: Option<i128>,
-        scale: u8,
-        prec: i8,
+        scale: i8,
+        prec: u8,
     },
     /// 256-bit decimal
     Decimal256 {
         value: Option<String>,
-        scale: u8,
-        prec: i8,
+        scale: i8,
+        prec: u8,
     },
     /// utf-8 encoded string.
     Utf8 {
@@ -335,8 +335,8 @@ pub enum ScalarType {
     UInt16,
     UInt32,
     UInt64,
-    Decimal128 { scale: u8, prec: i8 },
-    Decimal256 { scale: u8, prec: i8 },
+    Decimal128 { scale: i8, prec: u8 },
+    Decimal256 { scale: i8, prec: u8 },
     Utf8,
     Date32,
     Date64,
