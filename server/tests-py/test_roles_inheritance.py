@@ -89,3 +89,15 @@ class TestCustomFunctionPermissionsInheritance:
 
     def test_override_inherited_permission(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'override_inherited_permission.yaml')
+
+@pytest.mark.usefixtures('per_class_db_schema_for_mutation_tests', 'per_method_db_data_for_mutation_tests')
+class TestNestedInheritedRolesSelectPermissions:
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_query/permissions/roles_inheritance/"
+
+    setup_metadata_api_version = "v2"
+
+    def test_nested_inherited_roles_column_permissions(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'nested_inherited_roles_column_permissions.yaml')
