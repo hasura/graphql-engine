@@ -257,7 +257,8 @@ fn resolve_internal(
         &commands,
         &aggregate_expressions,
         &graphql_config,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 

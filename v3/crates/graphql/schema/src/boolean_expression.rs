@@ -417,6 +417,7 @@ fn build_model_relationship_schema(
     // the target_model is backed by a source
     let target_model_source =
         metadata_resolve::ModelTargetSource::from_model_source(target_source, relationship)
+            .map_err(metadata_resolve::Error::from)
             .map_err(metadata_resolve::WithContext::from)?;
 
     let annotation = FilterRelationshipAnnotation {

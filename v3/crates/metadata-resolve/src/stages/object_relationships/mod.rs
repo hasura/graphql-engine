@@ -1,4 +1,5 @@
 use std::sync::Arc;
+mod error;
 mod types;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -23,8 +24,8 @@ use crate::stages::{
     aggregates, commands, data_connector_scalar_types, data_connectors, graphql_config, models,
     object_types, relationships, type_permissions,
 };
-use crate::types::error::{Error, RelationshipError};
 use crate::types::subgraph::{Qualified, QualifiedBaseType, QualifiedTypeReference};
+pub use error::RelationshipError;
 
 pub use types::{
     AggregateRelationship, CommandRelationshipTarget, FieldNestedness, ModelRelationshipTarget,
@@ -52,12 +53,12 @@ pub fn resolve(
         aggregates::AggregateExpression,
     >,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<ObjectRelationshipsOutput, Error> {
+) -> Result<ObjectRelationshipsOutput, Vec<RelationshipError>> {
     let mut issues = Vec::new();
 
     // For each object type, get all its relationships and resolve them into the fields
     // we add to the object type that represent the relationship navigation
-    let mut object_type_relationship_fields = object_types_with_permissions
+    let object_type_relationship_fields = object_types_with_permissions
         .iter()
         .map(|(object_type_name, object_type_with_permissions)| {
             let object_type_relationships =
@@ -88,11 +89,13 @@ pub fn resolve(
                             )
                             .is_some()
                         {
-                            return Err(Error::DuplicateRelationshipFieldInSourceType {
-                                field_name,
-                                type_name: object_type_name.clone(),
-                                relationship_name: relationship_name.clone(),
-                            });
+                            return Err(
+                                RelationshipError::DuplicateRelationshipFieldInSourceType {
+                                    field_name,
+                                    type_name: object_type_name.clone(),
+                                    relationship_name: relationship_name.clone(),
+                                },
+                            );
                         }
                     }
                     // If the relationship is to an unknown subgraph, we ignore it since we're
@@ -103,36 +106,45 @@ pub fn resolve(
 
             Ok((object_type_name.clone(), relationship_fields))
         })
-        .collect::<Result<BTreeMap<_, _>, _>>()?;
+        .collect::<Vec<Result<_, _>>>();
 
-    // Create the ObjectTypeWithRelationships by consuming the ObjectTypeWithPermissions and adding
-    // the newly resolved relationship fields
-    let object_types_with_relationships = object_types_with_permissions
-        .0
-        .into_iter()
-        .map(|(object_type_name, object_type_with_permissions)| {
-            // Take ownership of the relationship fields out of the map and leave behind an empty value in its place
-            let relationship_fields = object_type_relationship_fields
-                .get_mut(&object_type_name)
-                .map(std::mem::take)
-                .unwrap_or_default();
+    partition_eithers::collect_any_errors(object_type_relationship_fields).map(
+        |object_type_relationship_fields| {
+            let mut object_type_relationship_fields = object_type_relationship_fields
+                .into_iter()
+                .collect::<BTreeMap<_, _>>();
 
-            let object_type_with_relationships = ObjectTypeWithRelationships {
-                object_type: object_type_with_permissions.object_type,
-                type_output_permissions: object_type_with_permissions.type_output_permissions,
-                type_input_permissions: object_type_with_permissions.type_input_permissions,
-                relationship_fields,
-                type_mappings: object_type_with_permissions.type_mappings,
-            };
+            // Create the ObjectTypeWithRelationships by consuming the ObjectTypeWithPermissions and adding
+            // the newly resolved relationship fields
+            let object_types_with_relationships = object_types_with_permissions
+                .0
+                .into_iter()
+                .map(|(object_type_name, object_type_with_permissions)| {
+                    // Take ownership of the relationship fields out of the map and leave behind an empty value in its place
+                    let relationship_fields = object_type_relationship_fields
+                        .get_mut(&object_type_name)
+                        .map(std::mem::take)
+                        .unwrap_or_default();
 
-            (object_type_name, object_type_with_relationships)
-        })
-        .collect::<BTreeMap<_, _>>();
+                    let object_type_with_relationships = ObjectTypeWithRelationships {
+                        object_type: object_type_with_permissions.object_type,
+                        type_output_permissions: object_type_with_permissions
+                            .type_output_permissions,
+                        type_input_permissions: object_type_with_permissions.type_input_permissions,
+                        relationship_fields,
+                        type_mappings: object_type_with_permissions.type_mappings,
+                    };
 
-    Ok(ObjectRelationshipsOutput {
-        object_types: object_types_with_relationships,
-        issues,
-    })
+                    (object_type_name, object_type_with_relationships)
+                })
+                .collect::<BTreeMap<_, _>>();
+
+            ObjectRelationshipsOutput {
+                object_types: object_types_with_relationships,
+                issues,
+            }
+        },
+    )
 }
 
 /// Tests whether a relationship in a field selection should be evaluated as a local or a remote relationship.
@@ -188,15 +200,14 @@ fn resolve_relationship_source_mapping<'a, 'b>(
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &'b object_types::ObjectTypeRepresentation,
     relationship_mapping: &'a open_dds::relationships::RelationshipMapping,
-) -> Result<(&'a FieldAccess, &'b QualifiedTypeReference), Error> {
+) -> Result<(&'a FieldAccess, &'b QualifiedTypeReference), RelationshipError> {
     match &relationship_mapping.source {
-        open_dds::relationships::RelationshipMappingSource::Value(_v) => Err(Error::NotSupported {
-            reason: "Relationship mappings from value expressions are not supported yet."
-                .to_string(),
-        }),
+        open_dds::relationships::RelationshipMappingSource::Value(_v) => {
+            Err(RelationshipError::ValueExpressionMappingsNotSupportedYet)
+        }
         open_dds::relationships::RelationshipMappingSource::FieldPath(field_path) => {
             match &field_path[..] {
-                [] => Err(Error::EmptyFieldPath {
+                [] => Err(RelationshipError::EmptyFieldPath {
                     location: "source".to_string(),
                     type_name: source_type_name.clone(),
                     relationship_name: relationship_name.clone(),
@@ -205,22 +216,16 @@ fn resolve_relationship_source_mapping<'a, 'b>(
                     let Some(field_definition) =
                         source_type.fields.get(&field_access.field_name.value)
                     else {
-                        return Err(Error::ObjectRelationshipError {
-                            relationship_error:
-                                RelationshipError::UnknownSourceFieldInRelationshipMapping {
-                                    relationship_name: relationship_name.clone(),
-                                    source_type: source_type_name.clone(),
-                                    field_name: field_access.field_name.value.clone(),
-                                },
+                        return Err(RelationshipError::UnknownSourceFieldInRelationshipMapping {
+                            relationship_name: relationship_name.clone(),
+                            source_type: source_type_name.clone(),
+                            field_name: field_access.field_name.value.clone(),
                         });
                     };
 
                     Ok((field_access, &field_definition.field_type))
                 }
-                _ => Err(Error::NotSupported {
-                    reason: "Relationships with nested field paths are not supported yet."
-                        .to_string(),
-                }),
+                _ => Err(RelationshipError::NestedFieldPathsNotSupportedYet),
             }
         }
     }
@@ -231,7 +236,7 @@ fn resolve_relationship_mappings_model(
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &object_types::ObjectTypeRepresentation,
     target_model: &models::Model,
-) -> Result<Vec<RelationshipModelMapping>, Error> {
+) -> Result<Vec<RelationshipModelMapping>, RelationshipError> {
     let mut resolved_relationship_mappings = Vec::new();
     let mut source_fields_already_mapped = BTreeSet::new();
     let mut target_arguments_already_mapped = BTreeSet::new();
@@ -248,12 +253,10 @@ fn resolve_relationship_mappings_model(
         if !source_fields_already_mapped
             .insert(&resolved_relationship_source_field.field_name.value)
         {
-            return Err(Error::ObjectRelationshipError {
-                relationship_error: RelationshipError::MappingExistsInRelationship {
-                    type_name: source_type_name.clone(),
-                    field_name: resolved_relationship_source_field.field_name.value.clone(),
-                    relationship_name: relationship.name.clone(),
-                },
+            return Err(RelationshipError::MappingExistsInRelationship {
+                type_name: source_type_name.clone(),
+                field_name: resolved_relationship_source_field.field_name.value.clone(),
+                relationship_name: relationship.name.clone(),
             });
         }
 
@@ -297,23 +300,19 @@ fn resolve_relationship_mappings_model_field_target(
     target_model: &models::Model,
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
-) -> Result<RelationshipModelMappingTarget, Error> {
+) -> Result<RelationshipModelMappingTarget, RelationshipError> {
     // Check that the target field path is only one field deep,
     // since we don't support nested field targets yet
     let resolved_relationship_target_mapping = match resolved_relationship_target_model_field_path {
         [t] => t,
         [] => {
-            return Err(Error::EmptyFieldPath {
+            return Err(RelationshipError::EmptyFieldPath {
                 location: "target".to_string(),
                 type_name: source_type_name.clone(),
                 relationship_name: relationship.name.clone(),
             })
         }
-        _ => {
-            return Err(Error::NotSupported {
-                reason: "Relationships with nested field paths are not supported yet.".to_string(),
-            })
-        }
+        _ => return Err(RelationshipError::NestedFieldPathsNotSupportedYet),
     };
 
     // Make sure the target model contains the target field
@@ -321,16 +320,14 @@ fn resolve_relationship_mappings_model_field_target(
         .type_fields
         .contains_key(&resolved_relationship_target_mapping.field_name.value)
     {
-        return Err(Error::ObjectRelationshipError {
-            relationship_error: RelationshipError::UnknownTargetFieldInRelationshipMapping {
-                relationship_name: relationship.name.clone(),
-                source_type: source_type_name.clone(),
-                model_name: target_model.name.clone(),
-                field_name: resolved_relationship_target_mapping
-                    .field_name
-                    .value
-                    .clone(),
-            },
+        return Err(RelationshipError::UnknownTargetFieldInRelationshipMapping {
+            relationship_name: relationship.name.clone(),
+            source_type: source_type_name.clone(),
+            model_name: target_model.name.clone(),
+            field_name: resolved_relationship_target_mapping
+                .field_name
+                .value
+                .clone(),
         });
     }
 
@@ -376,47 +373,44 @@ fn resolve_relationship_mappings_model_argument_target<'a>(
     source_field_type: &QualifiedTypeReference,
     source_type_name: &Qualified<CustomTypeName>,
     target_arguments_already_mapped: &mut BTreeSet<&'a ArgumentName>,
-) -> Result<RelationshipModelMappingTarget, Error> {
+) -> Result<RelationshipModelMappingTarget, RelationshipError> {
     // Check if the target argument exists in the target model.
     let Some(target_argument) = target_model
         .arguments
         .get(&argument_mapping_target.argument_name)
     else {
-        return Err(Error::ObjectRelationshipError {
-            relationship_error:
-                RelationshipError::UnknownTargetModelArgumentInRelationshipMapping {
-                    relationship_name: relationship.name.clone(),
-                    source_type: source_type_name.clone(),
-                    model_name: target_model.name.clone(),
-                    argument_name: argument_mapping_target.argument_name.clone(),
-                },
-        });
+        return Err(
+            RelationshipError::UnknownTargetModelArgumentInRelationshipMapping {
+                relationship_name: relationship.name.clone(),
+                source_type: source_type_name.clone(),
+                model_name: target_model.name.clone(),
+                argument_name: argument_mapping_target.argument_name.clone(),
+            },
+        );
     };
 
     // Check if the target argument is already mapped to a field in the source type.
     if !target_arguments_already_mapped.insert(&argument_mapping_target.argument_name) {
-        return Err(Error::ObjectRelationshipError {
-            relationship_error: RelationshipError::ModelArgumentMappingExistsInRelationship {
+        return Err(
+            RelationshipError::ModelArgumentMappingExistsInRelationship {
                 argument_name: argument_mapping_target.argument_name.clone(),
                 model_name: target_model.name.clone(),
                 relationship_name: relationship.name.clone(),
                 type_name: source_type_name.clone(),
             },
-        });
+        );
     }
 
     // Check that the source field's type matches the argument's type
     if !target_argument_type_is_compatible(source_field_type, &target_argument.argument_type) {
-        return Err(Error::ObjectRelationshipError {
-            relationship_error: RelationshipError::ModelArgumentTargetMappingTypeMismatch {
-                source_type: source_type_name.clone(),
-                relationship_name: relationship.name.clone(),
-                source_field_name: source_field_name.clone(),
-                source_field_type: source_field_type.clone(),
-                target_model_name: target_model.name.clone(),
-                target_argument_name: argument_mapping_target.argument_name.clone(),
-                target_argument_type: target_argument.argument_type.clone(),
-            },
+        return Err(RelationshipError::ModelArgumentTargetMappingTypeMismatch {
+            source_type: source_type_name.clone(),
+            relationship_name: relationship.name.clone(),
+            source_field_name: source_field_name.clone(),
+            source_field_type: source_field_type.clone(),
+            target_model_name: target_model.name.clone(),
+            target_argument_name: argument_mapping_target.argument_name.clone(),
+            target_argument_type: target_argument.argument_type.clone(),
         });
     }
 
@@ -459,7 +453,7 @@ fn resolve_relationship_mappings_command(
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &object_types::ObjectTypeRepresentation,
     target_command: &commands::Command,
-) -> Result<Vec<RelationshipCommandMapping>, Error> {
+) -> Result<Vec<RelationshipCommandMapping>, RelationshipError> {
     let mut resolved_relationship_mappings = Vec::new();
     let mut source_fields_already_mapped = BTreeSet::new();
     let mut target_arguments_already_mapped = BTreeSet::new();
@@ -477,36 +471,37 @@ fn resolve_relationship_mappings_command(
                 argument_mapping_target,
             ) => &argument_mapping_target.argument_name,
             open_dds::relationships::RelationshipMappingTarget::ModelField(_field_path) => {
-                return Err(Error::ModelFieldCannotBeUsedInCommandRelationship {
-                    relationship_name: relationship.name.clone(),
-                    type_name: source_type_name.clone(),
-                })
+                return Err(
+                    RelationshipError::ModelFieldCannotBeUsedInCommandRelationship {
+                        relationship_name: relationship.name.clone(),
+                        type_name: source_type_name.clone(),
+                    },
+                )
             }
         };
 
         // Check if the target argument exists in the target command.
         if !target_command.arguments.contains_key(target_argument_name) {
-            return Err(Error::ObjectRelationshipError {
-                relationship_error:
-                    RelationshipError::UnknownTargetCommandArgumentInRelationshipMapping {
-                        relationship_name: relationship.name.clone(),
-                        source_type: source_type_name.clone(),
-                        command_name: target_command.name.clone(),
-                        argument_name: target_argument_name.clone(),
-                    },
-            });
+            return Err(
+                RelationshipError::UnknownTargetCommandArgumentInRelationshipMapping {
+                    relationship_name: relationship.name.clone(),
+                    source_type: source_type_name.clone(),
+                    command_name: target_command.name.clone(),
+                    argument_name: target_argument_name.clone(),
+                },
+            );
         }
 
         // Check if the target argument is already mapped to a field in the source type.
         if !target_arguments_already_mapped.insert(target_argument_name) {
-            return Err(Error::ObjectRelationshipError {
-                relationship_error: RelationshipError::CommandArgumentMappingExistsInRelationship {
+            return Err(
+                RelationshipError::CommandArgumentMappingExistsInRelationship {
                     argument_name: target_argument_name.clone(),
                     command_name: target_command.name.clone(),
                     relationship_name: relationship.name.clone(),
                     type_name: source_type_name.clone(),
                 },
-            });
+            );
         };
 
         // Check if the source field is already mapped to a target argument
@@ -524,15 +519,13 @@ fn resolve_relationship_mappings_command(
                     argument_name: target_argument_name.clone(),
                 })
             } else {
-                Err(Error::ObjectRelationshipError {
-                    relationship_error: RelationshipError::MappingExistsInRelationship {
-                        type_name: source_type_name.clone(),
-                        field_name: resolved_relationship_source_mapping
-                            .field_name
-                            .value
-                            .clone(),
-                        relationship_name: relationship.name.clone(),
-                    },
+                Err(RelationshipError::MappingExistsInRelationship {
+                    type_name: source_type_name.clone(),
+                    field_name: resolved_relationship_source_mapping
+                        .field_name
+                        .value
+                        .clone(),
+                    relationship_name: relationship.name.clone(),
                 })
             }
         }?;
@@ -551,7 +544,7 @@ fn get_relationship_capabilities(
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     issues: &mut Vec<ObjectRelationshipsIssue>,
-) -> Result<Option<RelationshipCapabilities>, Error> {
+) -> Result<Option<RelationshipCapabilities>, RelationshipError> {
     let Some(data_connector) = source_data_connector else {
         return Ok(None);
     };
@@ -562,18 +555,18 @@ fn get_relationship_capabilities(
             .get(&data_connector.name)
             .ok_or_else(|| match target_name {
                 RelationshipTargetName::Model(model_name) => {
-                    Error::from(models::ModelsError::UnknownModelDataConnector {
+                    RelationshipError::ModelError(models::ModelsError::UnknownModelDataConnector {
                         model_name: model_name.clone(),
                         data_connector: data_connector.name.clone(),
                         data_connector_path: None,
                     })
                 }
-                RelationshipTargetName::Command(command_name) => {
-                    Error::from(commands::CommandsError::UnknownCommandDataConnector {
+                RelationshipTargetName::Command(command_name) => RelationshipError::CommandError(
+                    commands::CommandsError::UnknownCommandDataConnector {
                         command_name: command_name.clone(),
                         data_connector: data_connector.name.clone(),
-                    })
-                }
+                    },
+                ),
             })?;
 
     // which data connector is the target using?
@@ -595,12 +588,10 @@ fn get_relationship_capabilities(
     if capabilities.supports_query_variables
         && Some(&data_connector.name) != target_data_connector.as_ref()
     {
-        return Err(Error::ObjectRelationshipError {
-            relationship_error: RelationshipError::RelationshipTargetDoesNotSupportForEach {
-                type_name: type_name.clone(),
-                relationship_name: relationship_name.clone(),
-                data_connector_name: data_connector.name.clone(),
-            },
+        return Err(RelationshipError::RelationshipTargetDoesNotSupportForEach {
+            type_name: type_name.clone(),
+            relationship_name: relationship_name.clone(),
+            data_connector_name: data_connector.name.clone(),
         });
     };
 
@@ -637,20 +628,19 @@ fn resolve_aggregate_relationship(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
     >,
-) -> Result<Option<AggregateRelationship>, Error> {
+) -> Result<Option<AggregateRelationship>, RelationshipError> {
     // If an aggregate has been specified
     let aggregate_expression_name_and_description = model_relationship_target
         .aggregate
         .as_ref()
-        .map(|aggregate| -> Result<_, Error> {
+        .map(|aggregate| -> Result<_, RelationshipError> {
             // Ensure the relationship is an array relationship
             if model_relationship_target.relationship_type != RelationshipType::Array {
                 return Err(
                     RelationshipError::AggregateIsOnlyAllowedOnArrayRelationships {
                         type_name: source_type_name.clone(),
                         relationship_name: relationship.name.clone(),
-                    }
-                    .into(),
+                    },
                 );
             }
 
@@ -695,10 +685,9 @@ fn resolve_aggregate_relationship(
                 .aggregate_config
                 .as_ref()
                 .map(|agg| agg.filter_input_field_name.clone())
-                .ok_or_else::<Error, _>(|| Error::GraphqlConfigError {
-                    graphql_config_error:
-                        graphql_config::GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig,
-                })?;
+                .ok_or_else(||
+                        RelationshipError::GraphqlError(graphql_config::GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig),
+                )?;
 
             Ok(AggregateRelationship {
                 field_name,
@@ -728,7 +717,7 @@ fn resolve_model_relationship_fields(
     object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
     issues: &mut Vec<ObjectRelationshipsIssue>,
-) -> Result<RelationshipField, Error> {
+) -> Result<RelationshipField, RelationshipError> {
     let qualified_target_model_name = Qualified::new(
         target_model
             .subgraph()
@@ -736,7 +725,7 @@ fn resolve_model_relationship_fields(
         target_model.name.clone(),
     );
     let resolved_target_model = models.get(&qualified_target_model_name).ok_or_else(|| {
-        Error::UnknownTargetModelUsedInRelationship {
+        RelationshipError::UnknownTargetModelUsedInRelationship {
             type_name: source_type_name.clone(),
             relationship_name: relationship.name.clone(),
             model_name: qualified_target_model_name.clone(),
@@ -799,8 +788,8 @@ fn resolve_model_relationship_fields(
 // create the graphql name for a non-aggregate relationship field name
 pub fn make_relationship_field_name(
     relationship_name: &RelationshipName,
-) -> Result<ast::Name, Error> {
-    mk_name(relationship_name.as_str()).map_err(Error::from)
+) -> Result<ast::Name, RelationshipError> {
+    mk_name(relationship_name.as_str()).map_err(RelationshipError::from)
 }
 
 fn resolve_command_relationship_field(
@@ -811,7 +800,7 @@ fn resolve_command_relationship_field(
     relationship: &RelationshipV1,
     source_type: &object_types::ObjectTypeRepresentation,
     issues: &mut Vec<ObjectRelationshipsIssue>,
-) -> Result<RelationshipField, Error> {
+) -> Result<RelationshipField, RelationshipError> {
     let qualified_target_command_name = Qualified::new(
         target_command
             .subgraph()
@@ -821,11 +810,13 @@ fn resolve_command_relationship_field(
     let resolved_target_command =
         commands
             .get(&qualified_target_command_name)
-            .ok_or_else(|| Error::UnknownTargetCommandUsedInRelationship {
-                type_name: source_type_name.clone(),
-                relationship_name: relationship.name.clone(),
-                command_name: qualified_target_command_name.clone(),
-            })?;
+            .ok_or_else(
+                || RelationshipError::UnknownTargetCommandUsedInRelationship {
+                    type_name: source_type_name.clone(),
+                    relationship_name: relationship.name.clone(),
+                    command_name: qualified_target_command_name.clone(),
+                },
+            )?;
 
     // validate the command source
     if let Some(command_source) = &resolved_target_command.source {
@@ -918,7 +909,7 @@ fn resolve_relationship_field(
     graphql_config: &graphql_config::GraphqlConfig,
     source_type: &object_types::ObjectTypeRepresentation,
     issues: &mut Vec<ObjectRelationshipsIssue>,
-) -> Result<RelationshipField, Error> {
+) -> Result<RelationshipField, RelationshipError> {
     match &relationship.target {
         open_dds::relationships::RelationshipTarget::Model(target_model) => {
             resolve_model_relationship_fields(

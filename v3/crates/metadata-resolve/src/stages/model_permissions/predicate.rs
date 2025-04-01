@@ -358,7 +358,7 @@ fn resolve_relationship(
 
     let target_source =
         ModelTargetSource::from_model_source(&target_model_source.clone(), relationship)
-            .map_err(|error| TypePredicateError::OtherError(Box::new(error)))?;
+            .map_err(TypePredicateError::RelationshipError)?;
 
     let target_object_type_representation = object_types
         .get(&target_model.inner.data_type)

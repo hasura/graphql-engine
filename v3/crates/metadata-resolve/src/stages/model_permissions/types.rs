@@ -13,7 +13,7 @@ use open_dds::{
     types::{CustomTypeName, Deprecated, FieldName},
 };
 
-use crate::types::error::{ContextualError, Error, RelationshipError};
+use crate::types::error::ContextualError;
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
@@ -110,7 +110,7 @@ impl ModelTargetSource {
     pub fn new(
         model: &model_permissions::ModelWithPermissions,
         relationship: &object_relationships::RelationshipField,
-    ) -> Result<Option<Self>, Error> {
+    ) -> Result<Option<Self>, object_relationships::RelationshipError> {
         model
             .model
             .source
@@ -122,18 +122,18 @@ impl ModelTargetSource {
     pub fn from_model_source(
         model_source: &Arc<models::ModelSource>,
         relationship: &object_relationships::RelationshipField,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, object_relationships::RelationshipError> {
         Ok(Self {
             model: model_source.clone(),
             capabilities: relationship
                 .target_capabilities
                 .as_ref()
-                .ok_or_else(|| Error::ObjectRelationshipError {
-                    relationship_error: RelationshipError::NoRelationshipCapabilitiesDefined {
+                .ok_or_else(|| {
+                    object_relationships::RelationshipError::NoRelationshipCapabilitiesDefined {
                         type_name: relationship.source.clone(),
                         relationship_name: relationship.relationship_name.clone(),
                         data_connector_name: model_source.data_connector.name.clone(),
-                    },
+                    }
                 })?
                 .clone(),
         })
