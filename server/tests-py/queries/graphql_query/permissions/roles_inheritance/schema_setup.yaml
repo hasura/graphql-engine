@@ -1,0 +1,28 @@
+type: run_sql
+args:
+  sql: |
+    DROP TABLE IF EXISTS users;
+    CREATE TABLE users (
+      id INT PRIMARY KEY,
+      name TEXT NOT NULL,
+      restricted_field TEXT
+    );
+
+    INSERT INTO users (id, name, restricted_field)
+    VALUES
+      (1, 'User 1', 'Allowed Data 1'),
+      (2, 'User 2', 'Allowed Data 2'),
+      (3, 'User 3', 'Allowed Data 3');
+
+    DROP TABLE IF EXISTS dummy_table;
+
+    CREATE TABLE dummy_table (
+      id INT PRIMARY KEY,
+      name TEXT NOT NULL
+    );
+
+    INSERT INTO dummy_table (id, name)
+    VALUES
+      (1, 'Dummy 1'),
+      (2, 'Dummy 2'),
+      (3, 'Dummy 3');
