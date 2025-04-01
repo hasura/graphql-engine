@@ -74,6 +74,7 @@ pub use stages::{
 pub use stages::{resolve, Metadata};
 pub use types::configuration;
 pub use types::error::{Error, WithContext};
+pub use types::flags;
 pub use types::permission::{ValueExpression, ValueExpressionOrPredicate};
 pub use types::subgraph::{
     deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,

@@ -355,6 +355,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         CommandIssue(

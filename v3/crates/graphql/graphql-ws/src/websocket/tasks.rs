@@ -87,6 +87,7 @@ pub(crate) async fn process_incoming_message<M: WebSocketMetrics>(
     connection: types::Connection<M>,
     mut websocket_receiver: futures_util::stream::SplitStream<ws::WebSocket>,
     parent_span_link: tracing_util::SpanLink,
+    runtime_flags: metadata_resolve::flags::RuntimeFlags,
 ) {
     let tracer = tracing_util::global_tracer();
     while let Some(message) = websocket_receiver.next().await {
@@ -115,6 +116,7 @@ pub(crate) async fn process_incoming_message<M: WebSocketMetrics>(
                                     client_address,
                                     connection.clone(),
                                     client_message,
+                                    runtime_flags.clone(),
                                 )
                                 .await;
                                 BreakLoop::Dont

@@ -1322,6 +1322,9 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/predicate_
                 "user",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

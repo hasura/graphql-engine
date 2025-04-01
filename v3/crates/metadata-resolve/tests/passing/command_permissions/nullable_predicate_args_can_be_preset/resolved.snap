@@ -1324,6 +1324,9 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                 "user",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

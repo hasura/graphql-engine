@@ -25,15 +25,26 @@ pub fn bench_validation(c: &mut Criterion) {
             query: parsed_query,
             variables: BTreeMap::new(),
         };
-        validation::normalize_request(&sdl::SDLNamespacedGetter(), &fake_schema, &request).unwrap();
+        validation::normalize_request(
+            &sdl::SDLNamespacedGetter(),
+            &fake_schema,
+            &request,
+            validation::NonNullGraphqlVariablesValidation::Validate,
+        )
+        .unwrap();
         // parse with our parser
         group.bench_with_input(
             BenchmarkId::new("hasura", query_name),
             &(request, fake_schema),
             |b, (request, schema)| {
                 b.iter(|| {
-                    validation::normalize_request(&sdl::SDLNamespacedGetter(), schema, request)
-                        .unwrap()
+                    validation::normalize_request(
+                        &sdl::SDLNamespacedGetter(),
+                        schema,
+                        request,
+                        validation::NonNullGraphqlVariablesValidation::Validate,
+                    )
+                    .unwrap()
                 });
             },
         );

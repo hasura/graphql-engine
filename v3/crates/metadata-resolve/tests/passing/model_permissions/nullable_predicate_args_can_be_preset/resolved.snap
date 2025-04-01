@@ -1880,6 +1880,9 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                 "user",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

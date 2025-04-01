@@ -6,6 +6,8 @@
 
 - Add data connector error details to trace error messages. This will help
   debugging data connector errors.
+- Add a flag `validate_non_null_graphql_variables` to enable runtime validations
+  for non-nullable GraphQL variables.
 
 - Improved metadata JSON deserialization errors by adding more contextual
   information.

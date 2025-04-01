@@ -1474,6 +1474,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                 "user2",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

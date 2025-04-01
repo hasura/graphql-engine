@@ -715,6 +715,8 @@ async fn run_query_graphql_ws(
         auth_config_flags: hasura_authn::AuthConfigFlags::default(),
     };
 
+    let runtime_flags = metadata.runtime_flags.clone();
+
     let context = graphql_ws::Context {
         connection_expiry: graphql_ws::ConnectionExpiry::Never,
         http_context: http_context.clone(),
@@ -741,6 +743,7 @@ async fn run_query_graphql_ws(
         request_headers.clone(),
         &dummy_conn,
         request,
+        &runtime_flags,
     )
     .await;
     match result {

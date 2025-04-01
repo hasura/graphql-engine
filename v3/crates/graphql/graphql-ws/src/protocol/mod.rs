@@ -21,6 +21,7 @@ pub async fn handle_graphql_ws_message<M: WebSocketMetrics>(
     client_address: std::net::SocketAddr,
     connection: ws::Connection<M>,
     message: ClientMessage,
+    runtime_flags: metadata_resolve::flags::RuntimeFlags,
 ) {
     let tracer = tracing_util::global_tracer();
     let message_type = message.message_type();
@@ -46,6 +47,7 @@ pub async fn handle_graphql_ws_message<M: WebSocketMetrics>(
                                 connection,
                                 operation_id,
                                 payload,
+                                runtime_flags,
                             )
                             .await;
                         }

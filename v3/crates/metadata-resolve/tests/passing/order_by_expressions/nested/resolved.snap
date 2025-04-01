@@ -1301,6 +1301,9 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

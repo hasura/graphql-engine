@@ -5710,6 +5710,9 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                 "admin",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

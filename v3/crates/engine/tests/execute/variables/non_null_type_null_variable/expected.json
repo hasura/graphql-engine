@@ -1,0 +1,10 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: null value provided for non-nullable variable id of type Int!"
+      }
+    ]
+  }
+]

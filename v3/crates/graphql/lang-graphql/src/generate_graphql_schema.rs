@@ -47,6 +47,8 @@ pub fn build_namespace_schema<
                 namespaced_getter,
                 schema,
                 introspection_request(),
+                // We can safely ignore this because we don't have any variables
+                crate::validation::NonNullGraphqlVariablesValidation::Validate,
             )
             .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
             // Build a Value directly to avoid the same performance hit we fixed in f709e4f8a

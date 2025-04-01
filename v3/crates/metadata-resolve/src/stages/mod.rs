@@ -30,6 +30,7 @@ use model_permissions::ModelPermissionsOutput;
 use open_dds::flags;
 pub use types::Metadata;
 
+use crate::flags::RuntimeFlags;
 use crate::helpers::types::TrackGraphQLRootFields;
 use crate::types::configuration::Configuration;
 use crate::types::error::{ContextualError, Error, SeparatedBy, ShouldBeAnError, WithContext};
@@ -341,6 +342,8 @@ fn resolve_internal(
         &boolean_expression_types,
     ));
 
+    let runtime_flags = RuntimeFlags::from_open_dds_flags(&metadata_accessor.flags);
+
     let all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_issues)?;
 
     Ok((
@@ -355,6 +358,7 @@ fn resolve_internal(
             graphql_config: graphql_config.global,
             roles,
             plugin_configs,
+            runtime_flags,
         },
         all_warnings,
     ))

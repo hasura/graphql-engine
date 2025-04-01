@@ -932,6 +932,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/nested_r
                 "admin",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

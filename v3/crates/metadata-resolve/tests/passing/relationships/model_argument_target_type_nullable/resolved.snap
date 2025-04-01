@@ -1953,6 +1953,9 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                 "user",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

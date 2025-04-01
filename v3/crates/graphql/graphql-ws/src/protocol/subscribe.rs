@@ -36,6 +36,7 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
     connection: ws::Connection<M>,
     operation_id: OperationId,
     payload: lang_graphql::http::RawRequest,
+    runtime_flags: metadata_resolve::flags::RuntimeFlags,
 ) {
     let tracer = tracing_util::global_tracer();
     let result = tracer
@@ -94,6 +95,7 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
                                             connection.clone(),
                                             payload,
                                             current_span_link,
+                                            runtime_flags,
                                         );
                                         connection
                                             .insert_poller(operation_id.clone(), poller)
@@ -165,6 +167,7 @@ fn start_poller<M: WebSocketMetrics>(
     connection: ws::Connection<M>,
     raw_request: lang_graphql::http::RawRequest,
     parent_span_link: tracing_util::SpanLink,
+    runtime_flags: metadata_resolve::flags::RuntimeFlags,
 ) -> poller::Poller {
     // Record the start of the poller in the metrics.
     connection
@@ -182,6 +185,7 @@ fn start_poller<M: WebSocketMetrics>(
                 &connection,
                 raw_request,
                 parent_span_link,
+                runtime_flags,
             )
             .await;
         })
@@ -197,6 +201,7 @@ async fn execute_query<M: WebSocketMetrics>(
     connection: &ws::Connection<M>,
     raw_request: lang_graphql::http::RawRequest,
     parent_span_link: tracing_util::SpanLink,
+    runtime_flags: metadata_resolve::flags::RuntimeFlags,
 ) {
     let tracer = tracing_util::global_tracer();
     // Execute the GraphQL request and handle any errors.
@@ -223,6 +228,7 @@ async fn execute_query<M: WebSocketMetrics>(
                         headers,
                         connection,
                         raw_request,
+                        &runtime_flags,
                     )
                     .await
                 })
@@ -268,6 +274,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
     headers: http::HeaderMap,
     connection: &ws::Connection<M>,
     raw_request: lang_graphql::http::RawRequest,
+    runtime_flags: &metadata_resolve::flags::RuntimeFlags,
 ) -> Result<(), graphql_frontend::RequestError> {
     let schema = &connection.context.schema;
     let metadata = &connection.context.metadata;
@@ -275,7 +282,7 @@ pub async fn execute_query_internal<M: WebSocketMetrics>(
     let query = graphql_frontend::parse_query(&raw_request.query)?;
     // Normalize the parsed GraphQL query.
     let normalized_request =
-        graphql_frontend::normalize_request(schema, &session, query, &raw_request)?;
+        graphql_frontend::normalize_request(schema, &session, query, &raw_request, runtime_flags)?;
 
     // Generate Intermediate Representation (IR) from the query.
     let ir = graphql_frontend::build_ir(schema, metadata, &session, &headers, &normalized_request)?;

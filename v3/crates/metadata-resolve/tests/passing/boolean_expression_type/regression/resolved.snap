@@ -22220,6 +22220,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                 "user",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

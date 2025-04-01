@@ -23,7 +23,10 @@ mod tests {
     use goldenfile::{differs::text_diff, Mint};
     use hasura_authn_core::{Identity, Role, Session, SessionVariableValue};
     use lang_graphql::http::Request;
-    use lang_graphql::{parser::Parser, validation::normalize_request};
+    use lang_graphql::{
+        parser::Parser, validation::normalize_request,
+        validation::NonNullGraphqlVariablesValidation,
+    };
     use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
     use serde_json as json;
     use std::collections::BTreeMap;
@@ -46,6 +49,14 @@ mod tests {
         let schema = fs::read_to_string(test_dir.join("schema.json"))?;
 
         let gds = GDS::new_with_default_flags(open_dds::Metadata::from_json_str(&schema)?)?;
+        let validate_non_null_graphql_variables =
+            if gds.metadata.runtime_flags.contains(
+                metadata_resolve::flags::ResolvedRuntimeFlag::ValidateNonNullGraphqlVariables,
+            ) {
+                NonNullGraphqlVariablesValidation::Validate
+            } else {
+                NonNullGraphqlVariablesValidation::DoNotValidate
+            };
         let schema = GDS::build_schema(&gds)?;
 
         for input_file in fs::read_dir(test_dir.join("generate_ir"))? {
@@ -78,6 +89,7 @@ mod tests {
                 },
                 &schema,
                 &request,
+                validate_non_null_graphql_variables,
             )?;
 
             let ir = generate_ir(
@@ -147,6 +159,7 @@ mod tests {
                 },
                 &schema,
                 &request,
+                NonNullGraphqlVariablesValidation::Validate,
             )?;
 
             let query_usage = analyze_query_usage(&normalized_request);

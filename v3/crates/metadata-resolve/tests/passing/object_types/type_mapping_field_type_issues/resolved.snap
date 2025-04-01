@@ -3247,6 +3247,9 @@ input_file: crates/metadata-resolve/tests/passing/object_types/type_mapping_fiel
                 "admin",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ObjectTypesIssue(

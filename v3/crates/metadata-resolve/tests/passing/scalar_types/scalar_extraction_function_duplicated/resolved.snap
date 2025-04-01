@@ -235,6 +235,9 @@ input_file: crates/metadata-resolve/tests/passing/scalar_types/scalar_extraction
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

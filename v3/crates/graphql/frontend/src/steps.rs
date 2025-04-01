@@ -39,6 +39,7 @@ pub fn normalize_request<'s>(
     session: &Session,
     query: gql::ast::executable::ExecutableDocument,
     raw_request: &gql::http::RawRequest,
+    runtime_flags: &metadata_resolve::flags::RuntimeFlags,
 ) -> Result<Operation<'s, GDS>, gql::validation::Error> {
     let tracer = tracing_util::global_tracer();
     let normalized_request = tracer
@@ -64,12 +65,21 @@ pub fn normalize_request<'s>(
                         .as_ref()
                         .map_or_else(BTreeMap::default, Clone::clone),
                 };
+                let validate_non_null_graphql_variables = if runtime_flags.contains(
+                    metadata_resolve::flags::ResolvedRuntimeFlag::ValidateNonNullGraphqlVariables,
+                ) {
+                    gql::validation::NonNullGraphqlVariablesValidation::Validate
+                } else {
+                    gql::validation::NonNullGraphqlVariablesValidation::DoNotValidate
+                };
+
                 gql::validation::normalize_request(
                     &GDSRoleNamespaceGetter {
                         scope: session.role.clone(),
                     },
                     schema,
                     &request,
+                    validate_non_null_graphql_variables,
                 )
                 .map_err(GraphQlValidationError)
             },

@@ -53,6 +53,7 @@ pub enum Flag {
     DisallowProcedureCommandRelationships,
     DisallowDuplicateModelPermissionsRoles,
     ValidateScalarBooleanExpressionOperators,
+    ValidateNonNullGraphqlVariables,
 }
 
 impl Flag {
@@ -147,6 +148,7 @@ impl Flag {
             Flag::ValidateScalarBooleanExpressionOperators => {
                 "validate_scalar_boolean_expression_operators"
             }
+            Flag::ValidateNonNullGraphqlVariables => "validate_non_null_graphql_variables",
         }
     }
 }

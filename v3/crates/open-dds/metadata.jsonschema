@@ -3781,6 +3781,10 @@
         "validate_scalar_boolean_expression_operators": {
           "default": false,
           "type": "boolean"
+        },
+        "validate_non_null_graphql_variables": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

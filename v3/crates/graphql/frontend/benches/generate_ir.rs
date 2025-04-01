@@ -3,7 +3,7 @@ use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::Request;
 use lang_graphql::parser::Parser;
-use lang_graphql::validation::normalize_request;
+use lang_graphql::validation::{normalize_request, NonNullGraphqlVariablesValidation};
 use open_dds::permissions::Role;
 use std::collections::BTreeMap;
 use std::fs;
@@ -15,6 +15,15 @@ pub fn bench_generate_ir(c: &mut Criterion) {
     let metadata_json_str = fs::read_to_string(test_dir.join("schema.json")).unwrap();
     let metadata = open_dds::Metadata::from_json_str(&metadata_json_str).unwrap();
     let gds = GDS::new_with_default_flags(metadata).unwrap();
+    let validate_non_null_graphql_variables = if gds
+        .metadata
+        .runtime_flags
+        .contains(metadata_resolve::flags::ResolvedRuntimeFlag::ValidateNonNullGraphqlVariables)
+    {
+        NonNullGraphqlVariablesValidation::Validate
+    } else {
+        NonNullGraphqlVariablesValidation::DoNotValidate
+    };
     let schema = GDS::build_schema(&gds).unwrap();
 
     let mut group = c.benchmark_group("generate_ir");
@@ -56,6 +65,7 @@ pub fn bench_generate_ir(c: &mut Criterion) {
             },
             &schema,
             &request,
+            validate_non_null_graphql_variables,
         )
         .unwrap();
 

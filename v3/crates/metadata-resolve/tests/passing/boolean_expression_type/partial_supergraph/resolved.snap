@@ -2163,6 +2163,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                 "user2",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

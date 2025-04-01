@@ -71,8 +71,13 @@ pub async fn execute_query_internal(
                     let query = steps::parse_query(&raw_request.query)?;
 
                     // normalize the parsed GQL query
-                    let normalized_request =
-                        steps::normalize_request(schema, session, query, &raw_request)?;
+                    let normalized_request = steps::normalize_request(
+                        schema,
+                        session,
+                        query,
+                        &raw_request,
+                        &metadata.runtime_flags,
+                    )?;
 
                     // generate IR
                     let ir = steps::build_ir(

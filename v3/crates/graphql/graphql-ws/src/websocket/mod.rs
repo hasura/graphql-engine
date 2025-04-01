@@ -180,6 +180,8 @@ async fn start_websocket_session<M: WebSocketMetrics>(
                     let (channel_sender, channel_receiver) =
                         tokio::sync::mpsc::channel::<types::Message>(WEBSOCKET_CHANNEL_SIZE);
 
+                    let runtime_flags = context.metadata.runtime_flags.clone();
+
                     // Create a new WebSocket connection instance
                     let connection = connections
                         .new_connection(websocket_id, context, channel_sender)
@@ -221,6 +223,7 @@ async fn start_websocket_session<M: WebSocketMetrics>(
                         connection.clone(),
                         websocket_receiver,
                         this_span_link,
+                        runtime_flags,
                     ));
 
                     // Spawn a task to send keep-alive messages at regular intervals
