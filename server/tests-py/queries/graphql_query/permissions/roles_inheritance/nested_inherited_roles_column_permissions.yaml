@@ -1,0 +1,55 @@
+- description: Test column permissions with base_role
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: base_role
+    X-Hasura-User-Id: "1"
+  query:
+    query: |
+      query {
+        users {
+          id
+          name
+          restricted_field
+        }
+      }
+  status: 200
+  response:
+    data:
+      users:
+        - id: 1
+          name: User 1
+          restricted_field: Allowed Data 1
+        - id: 2
+          name: User 2
+          restricted_field: null
+        - id: 3
+          name: User 3
+          restricted_field: null
+
+- description: Test column permissions with nested_role (should inherit base_role's column permissions)
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: nested_role
+    X-Hasura-User-Id: "1"
+  query:
+    query: |
+      query {
+        users {
+          id
+          name
+          restricted_field
+        }
+      }
+  status: 200
+  response:
+    data:
+      users:
+        - id: 1
+          name: User 1
+          restricted_field: Allowed Data 1
+        - id: 2
+          name: User 2
+          restricted_field: null
+        - id: 3
+          name: User 3
+          restricted_field: null
