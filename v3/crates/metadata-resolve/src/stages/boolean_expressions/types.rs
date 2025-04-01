@@ -1,9 +1,12 @@
-use crate::stages::{
-    aggregate_boolean_expressions,
-    scalar_boolean_expressions::{self, LogicalOperators, LogicalOperatorsGraphqlConfig},
-};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
+use crate::{
+    stages::{
+        aggregate_boolean_expressions,
+        scalar_boolean_expressions::{self, LogicalOperators, LogicalOperatorsGraphqlConfig},
+    },
+    types::error::ContextualError,
+};
 use lang_graphql::ast::common as ast;
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName},
@@ -59,6 +62,12 @@ pub enum BooleanExpressionIssue {
     DuplicateBooleanExpressionType {
         type_name: Qualified<CustomTypeName>,
     },
+}
+
+impl ContextualError for BooleanExpressionIssue {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
 
 impl ShouldBeAnError for BooleanExpressionIssue {

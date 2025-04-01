@@ -3,7 +3,7 @@ use crate::helpers::{
     ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
 };
 use crate::stages::{
-    aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo,
+    aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, arguments,
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
     model_permissions, models, object_relationships, object_types, order_by_expressions,
     relationships, relay, scalar_boolean_expressions, scalar_types, type_permissions,
@@ -291,6 +291,8 @@ pub enum Error {
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
     ),
+    #[error("{0}")]
+    ArgumentError(#[from] arguments::NamedArgumentError),
     #[error("{warning_as_error}")]
     CompatibilityError { warning_as_error: crate::Warning },
     #[error("{errors}")]
@@ -351,6 +353,7 @@ impl ContextualError for Error {
             Error::BooleanExpressionError(error) => error.create_error_context(),
             Error::OrderByExpressionError(error) => error.create_error_context(),
             Error::ModelPermissionsError(error) => error.create_error_context(),
+            Error::ArgumentError(error) => error.create_error_context(),
             Error::CompatibilityError { warning_as_error } => {
                 warning_as_error.create_error_context()
             }
