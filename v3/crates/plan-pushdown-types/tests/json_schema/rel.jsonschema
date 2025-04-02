@@ -2044,6 +2044,7 @@
         {
           "type": "object",
           "required": [
+            "distinct",
             "expr",
             "type"
           ],
@@ -2056,6 +2057,9 @@
             },
             "expr": {
               "$ref": "#/definitions/Expression"
+            },
+            "distinct": {
+              "type": "boolean"
             }
           }
         },

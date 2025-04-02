@@ -667,6 +667,7 @@ pub enum Expression {
     },
     Count {
         expr: Box<Expression>,
+        distinct: bool,
     },
     FirstValue {
         expr: Box<Expression>,

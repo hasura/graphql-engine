@@ -632,11 +632,11 @@ fn convert_expression_to_logical_expr(
         Expression::Average { expr: _ } => unimplemented!(),
         Expression::BoolAnd { expr: _ } => unimplemented!(),
         Expression::BoolOr { expr: _ } => unimplemented!(),
-        Expression::Count { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
+        Expression::Count { expr, distinct } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: Arc::new(AggregateUDF::from(Count::new())),
                 args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                distinct: false,
+                distinct: *distinct,
                 filter: None,
                 order_by: None,
                 null_treatment: None,
