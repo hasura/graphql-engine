@@ -176,9 +176,6 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowProcedureCommandRelationships => Some(new_compatibility_date(2025, 3, 12)),
         Flag::DisallowDuplicateModelPermissionsRoles => Some(new_compatibility_date(2025, 3, 21)),
         Flag::ValidateScalarBooleanExpressionOperators => Some(new_compatibility_date(2025, 3, 26)),
-        Flag::ValidateNonNullGraphqlVariables => {
-            //TODO: Should be set on next release
-            None
-        }
+        Flag::ValidateNonNullGraphqlVariables => Some(new_compatibility_date(2025, 4, 3)),
     }
 }

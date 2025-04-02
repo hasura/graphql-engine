@@ -4,11 +4,18 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [v2025.04.02]
+
+### Added
+
 - Add data connector error details to trace error messages. This will help
   debugging data connector errors.
 - Add a flag `validate_non_null_graphql_variables` to enable runtime validations
   for non-nullable GraphQL variables.
-
 - Improved metadata JSON deserialization errors by adding more contextual
   information.
 
@@ -38,8 +45,6 @@ definition:
                     value:
                       literal: UK
 ```
-
-### Fixed
 
 ## [v2025.03.25]
 
@@ -1565,7 +1570,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.25...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.04.02...HEAD
+[v2025.04.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.02
 [v2025.03.25]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.25
 [v2025.03.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.20
 [v2025.03.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.17
