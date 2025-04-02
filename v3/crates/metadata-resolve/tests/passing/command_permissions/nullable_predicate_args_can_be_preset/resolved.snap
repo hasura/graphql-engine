@@ -830,6 +830,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                                         operator: DataConnectorOperatorName(
                                             "eq",
                                         ),
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(

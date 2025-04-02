@@ -1,0 +1,44 @@
+[
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "id": 1,
+          "location": {
+            "city": "London",
+            "campuses": [
+              "Mile End",
+              "Whitechapel",
+              "Charterhouse Square",
+              "West Smithfield"
+            ]
+          },
+          "staff": [
+            {
+              "last_name": "Landin",
+              "specialities": ["Computer Science", "Education"]
+            }
+          ],
+          "staff_first_name": [
+            {
+              "first_name": "Peter"
+            }
+          ],
+          "departments": [
+            "Humanities and Social Sciences",
+            "Science and Engineering",
+            "Medicine and Dentistry"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Query: InstitutionMany"
+      }
+    ]
+  }
+]

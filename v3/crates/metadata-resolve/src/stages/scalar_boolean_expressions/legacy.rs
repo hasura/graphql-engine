@@ -142,7 +142,7 @@ pub fn resolve_data_connector_scalar_representation(
             ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => {
                 // only keep this around if we find it (it might be an object type, not a scalar)
                 if let Ok(open_dd_type) =
-                    resolve_ndc_type(&data_connector_name, argument_type, scalar_types, subgraph)
+                    resolve_ndc_type(&data_connector_name, argument_type, scalar_types)
                 {
                     comparison_operators.insert(operator_name, open_dd_type);
                 }

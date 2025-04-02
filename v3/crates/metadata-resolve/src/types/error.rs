@@ -9,7 +9,7 @@ use crate::stages::{
     relationships, relay, scalar_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
-use error_context::Context;
+use error_context::{Context, Step};
 use hasura_authn_core::Role;
 use open_dds::{
     arguments::ArgumentName,
@@ -325,19 +325,19 @@ impl ContextualError for Error {
     fn create_error_context(&self) -> Option<error_context::Context> {
         match self {
             Error::UnknownModelInModelPermissions { model_name } => {
-                Some(Context(vec![error_context::Step {
+                Some(Context::from_step(error_context::Step {
                     message: "This model is not defined".to_owned(),
                     path: model_name.path.clone(),
                     subgraph: None,
-                }]))
+                }))
             }
             Error::DuplicateModelPermissions { model_name } => {
-                Some(Context(vec![error_context::Step {
+                Some(Context::from_step(error_context::Step {
                     message: "A model permissions has already been defined for this model"
                         .to_owned(),
                     path: model_name.path.clone(),
                     subgraph: None,
-                }]))
+                }))
             }
             Error::ModelsError(error) => error.create_error_context(),
             Error::CommandsError(error) => error.create_error_context(),
@@ -389,6 +389,16 @@ pub enum TypePredicateError {
         field_name: Spanned<FieldName>,
         type_name: Qualified<CustomTypeName>,
     },
+    #[error("field '{field_name:}' could not be found in field mappings for type '{type_name:}'")]
+    UnknownFieldInFieldMappings {
+        field_name: Spanned<FieldName>,
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("field '{field_name:}' of type '{type_name:}' is an array type and cannot be used in a nested field predicate")]
+    ArrayFieldInNestedFieldPredicate {
+        field_name: Spanned<FieldName>,
+        type_name: Qualified<CustomTypeName>,
+    },
     #[error("unknown field '{field_name}' for type '{type_name}' used in target mapping for relationship '{relationship_name}'")]
     UnknownFieldInModelRelationshipTargetMapping {
         field_name: FieldName,
@@ -398,6 +408,13 @@ pub enum TypePredicateError {
     #[error("boolean expression '{boolean_expression_name:}' not found")]
     BooleanExpressionNotFound {
         boolean_expression_name: Qualified<CustomTypeName>,
+    },
+    #[error(
+        "field '{field_name:}' could not be found in boolean expression type for object type '{type_name:}'"
+    )]
+    BooleanExpressionFieldNotFound {
+        field_name: Spanned<FieldName>,
+        type_name: Qualified<CustomTypeName>,
     },
     #[error(
         "the source data connector {data_connector:} for type {type_name:} has not been defined"
@@ -419,6 +436,11 @@ pub enum TypePredicateError {
     },
     #[error("Nested predicate used in type '{type_name:}'")]
     NestedPredicateInTypePredicate {
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("no boolean expression found for type '{type_name:}' This is required when filtering a nested field. Please ensure the model you are filtering has a filterExpressionType defined.")]
+    NoBooleanExpressionFields {
+        field_name: Spanned<FieldName>,
         type_name: Qualified<CustomTypeName>,
     },
     #[error("relationship '{relationship_name}' is used in predicate but does not exist for type '{type_name}'")]
@@ -455,6 +477,11 @@ pub enum TypePredicateError {
     TypeMappingCollectionError {
         type_name: Qualified<CustomTypeName>,
         error: TypeMappingCollectionError,
+    },
+    #[error("expected object type for field {field_name:} but field had type {field_type:}")]
+    ExpectedObjectType {
+        field_type: QualifiedTypeReference,
+        field_name: Spanned<FieldName>,
     },
     #[error("object type {type_name:} not found")]
     ObjectTypeNotFound {
@@ -514,79 +541,121 @@ pub enum TypePredicateError {
     RelationshipError(#[from] object_relationships::RelationshipError),
     #[error("type check error in value: {0}")]
     ValueTypecheckError(#[from] typecheck::TypecheckError),
-    #[error("{0}")]
-    OtherError(Box<Error>),
 }
 
 impl ContextualError for TypePredicateError {
     fn create_error_context(&self) -> Option<Context> {
         match self {
             TypePredicateError::UnknownFieldInTypePredicate { field_name, type_name } => {
-                Some(Context(vec![
+                Some(Context::from_step(
                     error_context::Step {
                         message: format!("This field is not found in the type '{type_name}'"),
                         path: field_name.path.clone(),
                         subgraph: Some(type_name.subgraph.clone()),
                     }
-                ]))
+                ))
             },
             TypePredicateError::UnsupportedFieldComparisonToArrayType { field_name, field_type, type_name } => {
-                Some(Context(vec![
+                Some(Context::from_step(
                     error_context::Step {
                         message: format!("The type of this field ({field_type}) is an array type and therefore it cannot be compared to a single value"),
                         path: field_name.path.clone(),
                         subgraph: Some(type_name.subgraph.clone()),
                     }
-                ]))
+                ))
             },
             TypePredicateError::OperatorNotFoundForField { field_name, field_type, operator_name } => {
-                Some(Context(vec![
+                Some(Context::from_step(
                     error_context::Step {
                         message: format!("The type of this field ({field_type}) does not support the comparison operator '{operator_name}'"),
                         path: field_name.path.clone(),
                         subgraph: field_type.get_subgraph().cloned(),
                     }
-                ]))
+                ))
             }
             TypePredicateError::UnknownRelationshipInTypePredicate { relationship_name, type_name } => {
-                Some(Context(vec![
+                Some(Context::from_step(
                     error_context::Step {
                         message: format!("This relationship is not defined for the type '{type_name}'"),
                         path: relationship_name.path.clone(),
                         subgraph: Some(type_name.subgraph.clone()),
                     }
-                ]))
+                ))
             }
             TypePredicateError::RelationshipNotComparableInTypePredicate { relationship_name, boolean_expression_type_name } => {
-                Some(Context(vec![
+                Some(Context::from_step(
                     error_context::Step {
                         message: format!("This relationship is not defined as a comparableRelationship for the boolean expression type '{boolean_expression_type_name}'"),
                         path: relationship_name.path.clone(),
                         subgraph: Some(boolean_expression_type_name.subgraph.clone()),
                     }
-                ]))
+                ))
             }
             TypePredicateError::NoPredicateDefinedForRelationshipPredicate { type_name, relationship_name } => {
-                Some(Context(vec![
+                Some(Context::from_step(
                     error_context::Step {
                         message: "This relationship is missing a predicate".to_owned(),
                         path: relationship_name.path.clone(),
                         subgraph: Some(type_name.subgraph.clone()),
                     }
-                ]))
+                ))
             }
+
             TypePredicateError::RelationshipAcrossSubgraphs {  relationship_name, source_data_connector, target_data_connector: _ } => {
-                Some(Context(vec![
+                Some(Context::from_step(
                     error_context::Step {
                         message: "This relationship crosses subgraphs".to_owned(),
                         path: relationship_name.path.clone(),
                         subgraph: Some(source_data_connector.subgraph.clone()),
                     }
-                ]))
+                ))
             }
+            TypePredicateError::UnknownFieldInFieldMappings { field_name, type_name } => {
+                Some(Context::from_step(
+                    error_context::Step {
+                        message: format!("This field is not found in the type mappings for type '{type_name}'"),
+                        path: field_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                ))
+            },
+
+            TypePredicateError::ArrayFieldInNestedFieldPredicate { field_name, type_name } => Some(Context::from_step(
+                error_context::Step {
+                    message: "This field is an array type and cannot be used in a nested field predicate".to_string(),
+                    path: field_name.path.clone(),
+                    subgraph: Some(type_name.subgraph.clone()),
+                }
+            )),
+
+            TypePredicateError::BooleanExpressionFieldNotFound { field_name, type_name } => Some(Context::from_step(
+                error_context::Step {
+                    message: format!("This field could not be found in the boolean expression for type '{type_name}'"),
+                    path: field_name.path.clone(),
+                    subgraph: Some(type_name.subgraph.clone()),
+                }
+            )),
+
+            TypePredicateError::NoBooleanExpressionFields { type_name,field_name } => Some(Context::from_step(
+                error_context::Step {
+                    message: "Cannot filter a nested field without a boolean expression type. Please ensure the model you are filtering has a filterExpressionType defined.".to_string(),
+                    path: field_name.path.clone(),
+                    subgraph: Some(type_name.subgraph.clone()),
+                }
+            )),
+
+            TypePredicateError::ExpectedObjectType { field_type, field_name } => {
+                Some(Context::from_step(
+                    Step {
+                        message: format!("Expected field '{field_name}' to have an object type but instead found '{field_type}'"),
+                        path: field_name.path.clone(),
+                        subgraph: field_type.get_subgraph().cloned(),
+                    }
+                ))
+            }
+
             TypePredicateError::ScalarBooleanExpressionTypeError(error) => error.create_error_context(),
-            TypePredicateError::OtherError(error) => error.create_error_context(),
-            _ => None,
+            _ => None
         }
     }
 }

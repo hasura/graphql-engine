@@ -19,29 +19,29 @@ impl ContextualError for CommandsError {
             Self::DuplicateCommandArgumentDefinition {
                 command_name,
                 argument_name,
-            } => Some(Context(vec![Step {
+            } => Some(Context::from_step(Step {
                 subgraph: Some(command_name.subgraph.clone()),
                 path: argument_name.path.clone(),
                 message: format!(
                     "Command '{}' has a duplicate argument definition for '{}'",
                     command_name.name, argument_name.value
                 ),
-            }])),
+            })),
 
             Self::UnknownCommandArgumentType {
                 command_name,
                 argument_name,
                 argument_type,
-            } => Some(Context(vec![
-                Step {
+            } => Some(
+                Context::from_step(Step {
                     message: format!(
                         "Command '{}' has an argument '{}'",
                         command_name.name, argument_name.value
                     ),
                     path: argument_name.path.clone(),
                     subgraph: Some(command_name.subgraph.clone()),
-                },
-                Step {
+                })
+                .append(Step {
                     subgraph: Some(command_name.subgraph.clone()),
                     path: argument_name
                         .path
@@ -49,8 +49,8 @@ impl ContextualError for CommandsError {
                         .parent()
                         .append_key("type".into()),
                     message: format!("The argument type '{argument_type}' has not been defined",),
-                },
-            ])),
+                }),
+            ),
 
             _other => None,
         }

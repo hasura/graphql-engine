@@ -2,7 +2,7 @@ use crate::stages::models;
 use crate::types::error::ContextualError;
 use crate::types::subgraph::Qualified;
 use crate::{helpers::typecheck, types::error::TypePredicateError};
-use error_context::Context;
+use error_context::{Context, Step};
 use jsonpath::JSONPath;
 use open_dds::{
     models::ModelName, permissions::Role, query::ArgumentName, spanned::Spanned,
@@ -57,63 +57,70 @@ pub enum ModelPermissionError {
 impl ContextualError for NamedModelPermissionError {
     fn create_error_context(&self) -> Option<Context> {
         match &self.error {
-            ModelPermissionError::DuplicateModelArgumentPreset { argument_name } => {
-                Some(Context(vec![
-                    error_context::Step {
-                        message: "This argument preset is a duplicate".to_owned(),
-                        path: argument_name.path.clone(),
-                        subgraph: Some(self.model_name.subgraph.clone()),
-                    },
-                    error_context::Step {
-                        message: "The duplicate is defined in argument presets for this role"
-                            .to_owned(),
-                        path: self.role.path.clone(),
-                        subgraph: Some(self.model_name.subgraph.clone()),
-                    },
-                ]))
-            }
+            ModelPermissionError::DuplicateModelArgumentPreset { argument_name } => Some(
+                Context::from_step(Step {
+                    message: "This argument preset is a duplicate".to_owned(),
+                    path: argument_name.path.clone(),
+                    subgraph: Some(self.model_name.subgraph.clone()),
+                })
+                .append(Step {
+                    message: "The duplicate is defined in argument presets for this role"
+                        .to_owned(),
+                    path: self.role.path.clone(),
+                    subgraph: Some(self.model_name.subgraph.clone()),
+                }),
+            ),
 
             ModelPermissionError::ModelSourceRequiredForPredicate { model_name } => {
-                Some(Context(vec![error_context::Step {
+                Some(Context::from_step(Step {
                     message: "No source is defined for this model".to_owned(),
                     path: model_name.path.clone(),
                     subgraph: Some(self.model_name.subgraph.clone()),
-                }]))
+                }))
             }
             ModelPermissionError::ModelArgumentValuePresetTypeError {
                 argument_name,
                 value_path,
                 type_error: _,
-            } => Some(Context(vec![
-                error_context::Step {
+            } => Some(
+                Context::from_step(Step {
                     message: "This argument preset value has a type error".to_owned(),
                     path: value_path.clone(),
                     subgraph: Some(self.model_name.subgraph.clone()),
-                },
-                error_context::Step {
+                })
+                .append(Step {
                     message: "This argument preset's value has a type error".to_owned(),
                     path: argument_name.path.clone(),
                     subgraph: Some(self.model_name.subgraph.clone()),
-                },
-            ])),
+                }),
+            ),
             ModelPermissionError::ModelArgumentPresetArgumentNotFound {
                 model_name,
                 argument_name,
-            } => Some(Context(vec![
-                error_context::Step {
+            } => Some(
+                Context::from_step(Step {
                     message: "This argument preset references an argument that does not exist"
                         .to_owned(),
                     path: argument_name.path.clone(),
                     subgraph: Some(self.model_name.subgraph.clone()),
-                },
-                error_context::Step {
+                })
+                .append(Step {
                     message: "Arguments are defined on this model".to_owned(),
                     path: model_name.path.clone(),
                     subgraph: Some(self.model_name.subgraph.clone()),
-                },
-            ])),
+                }),
+            ),
             ModelPermissionError::SelectFilterPermissionTypePredicateError { error } => {
-                error.create_error_context()
+                error.create_error_context().map(|context| {
+                    context.prepend(Step {
+                        message: format!(
+                            "Error in model permission for the role '{}' on the model '{}'",
+                            self.role, self.model_name.name
+                        ),
+                        path: self.role.path.clone(),
+                        subgraph: Some(self.model_name.subgraph.clone()),
+                    })
+                })
             }
             ModelPermissionError::UnknownType { .. } => None,
             ModelPermissionError::ModelsError(error) => error.create_error_context(),

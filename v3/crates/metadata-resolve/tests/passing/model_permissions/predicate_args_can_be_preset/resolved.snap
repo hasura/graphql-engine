@@ -969,6 +969,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                         operator: DataConnectorOperatorName(
                                             "eq",
                                         ),
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(

@@ -60,7 +60,6 @@ pub fn select_many_generate_ir<'n, 's>(
     let mut limit = None;
     let mut offset = None;
     let mut where_input = None;
-    let mut model_arguments = BTreeMap::new();
 
     // For opendd execution pipeline
     let mut model_arguments_input = None;
@@ -91,19 +90,6 @@ pub fn select_many_generate_ir<'n, 's>(
                 }
                 ModelInputAnnotation::ModelArgumentsExpression => match &argument.value {
                     normalized_ast::Value::Object(arguments) => {
-                        for argument in arguments.values() {
-                            let (ndc_arg_name, ndc_val) = arguments::build_ndc_argument_as_value(
-                                &field_call.name,
-                                argument,
-                                &model_source.type_mappings,
-                                object_types,
-                                &model_source.data_connector,
-                                &session.variables,
-                                &mut usage_counts,
-                            )?;
-
-                            model_arguments.insert(ndc_arg_name, ndc_val);
-                        }
                         model_arguments_input = Some(arguments);
                     }
                     _ => Err(error::InternalEngineError::InternalGeneric {

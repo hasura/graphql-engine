@@ -12,7 +12,6 @@ mod model_selection;
 mod model_tracking;
 mod mutation_root;
 mod order_by;
-mod permissions;
 mod plan;
 mod query_root;
 mod relationship;

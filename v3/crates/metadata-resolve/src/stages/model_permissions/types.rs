@@ -25,6 +25,7 @@ use crate::{
     },
     types::error::ShouldBeAnError,
 };
+use error_context::{Context, Step};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
@@ -56,6 +57,7 @@ pub enum ModelPredicate {
         field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
         operator: UnaryComparisonOperator,
+        column_path: Vec<DataConnectorColumnName>,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
         deprecated: Option<Deprecated>,
     },
@@ -64,6 +66,7 @@ pub enum ModelPredicate {
         field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
         operator: DataConnectorOperatorName,
+        column_path: Vec<DataConnectorColumnName>,
         argument_type: QualifiedTypeReference,
         value: ValueExpression,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
@@ -71,6 +74,7 @@ pub enum ModelPredicate {
     },
     Relationship {
         relationship_info: PredicateRelationshipInfo,
+        column_path: Vec<DataConnectorColumnName>,
         predicate: Box<ModelPredicate>,
     },
     And(Vec<ModelPredicate>),
@@ -160,11 +164,11 @@ impl ContextualError for ModelPermissionIssue {
     fn create_error_context(&self) -> Option<error_context::Context> {
         match self {
             ModelPermissionIssue::DuplicateRole { role, model_name } => {
-                Some(error_context::Context(vec![error_context::Step {
+                Some(Context::from_step(Step {
                     message: "This role is a duplicate".to_owned(),
                     path: role.path.clone(),
                     subgraph: Some(model_name.subgraph.clone()),
-                }]))
+                }))
             }
             ModelPermissionIssue::ModelArgumentPresetTypecheckIssue { .. } => None,
         }

@@ -75,7 +75,6 @@ pub fn resolve(
             let select_permissions = model_permission::resolve_all_model_select_permissions(
                 &metadata_accessor.flags,
                 &model.model,
-                subgraph,
                 permissions,
                 boolean_expression,
                 data_connector_scalars,

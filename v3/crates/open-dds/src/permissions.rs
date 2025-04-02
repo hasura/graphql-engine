@@ -517,6 +517,19 @@ pub struct RelationshipPredicate {
     pub predicate: Option<Box<ModelPredicate>>,
 }
 
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "NestedFieldPredicate"))]
+/// Nested field predicate filters objects of a source model based on a predicate on the nested
+/// field.
+pub struct NestedFieldPredicate {
+    /// The name of the field in the object type of the model to follow.
+    pub field_name: Spanned<FieldName>,
+    /// The predicate to apply on the related objects.
+    pub predicate: Box<ModelPredicate>,
+}
+
 // Predicates that use NDC operators pushed down to NDC. `ValueExpressions` are
 // evaluated on the server.
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
@@ -537,6 +550,8 @@ pub enum ModelPredicate {
     FieldComparison(FieldComparisonPredicate),
     FieldIsNull(FieldIsNullPredicate),
     // TODO: Remote relationships are disallowed for now
+    /// Filters objects based on the nested field of a model.
+    NestedField(NestedFieldPredicate),
     /// Filters objects based on the relationship of a model.
     Relationship(RelationshipPredicate),
     #[opendd(json_schema(title = "And"))]

@@ -6,6 +6,7 @@ use crate::stages::{
 use crate::types::error::ContextualError;
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use crate::OrderByExpressionIdentifier;
+use error_context::{Context, Step};
 use jsonpath::JSONPath;
 use open_dds::{
     aggregates::AggregateExpressionName,
@@ -139,30 +140,30 @@ pub enum ModelsError {
 }
 
 impl ContextualError for ModelsError {
-    fn create_error_context(&self) -> Option<error_context::Context> {
+    fn create_error_context(&self) -> Option<Context> {
         match self {
             Self::UnknownModelDataConnector {
                 data_connector,
                 data_connector_path,
                 ..
-            } => Some(error_context::Context(vec![error_context::Step {
+            } => Some(Context::from_step(Step {
                 message: "There is no DataConnectorLink defined with this name".to_string(),
                 path: data_connector_path.clone()?,
                 subgraph: Some(data_connector.subgraph.clone()),
-            }])),
+            })),
 
             Self::UnknownModelCollection {
                 collection,
                 data_connector,
                 ..
-            } => Some(error_context::Context(vec![error_context::Step {
+            } => Some(Context::from_step(Step {
                 message: format!(
                     "This collection is not defined in the data connector schema for {}",
                     data_connector.name
                 ),
                 path: collection.path.clone(),
                 subgraph: Some(data_connector.subgraph.clone()),
-            }])),
+            })),
             Self::UnknownModelDataType {
                 model_name,
                 data_type:
@@ -170,25 +171,25 @@ impl ContextualError for ModelsError {
                         path,
                         value: data_type,
                     },
-            } => Some(error_context::Context(vec![error_context::Step {
+            } => Some(Context::from_step(Step {
                 message: format!(
                     "Model '{}' uses data type '{}', but it cannot be found in this subgraph",
                     model_name.name, data_type.name
                 ),
                 path: path.clone(),
                 subgraph: Some(model_name.subgraph.clone()),
-            }])),
+            })),
             Self::DuplicateModelArgumentDefinition {
                 model_name,
                 argument_name,
-            } => Some(error_context::Context(vec![error_context::Step {
+            } => Some(Context::from_step(Step {
                 subgraph: Some(model_name.subgraph.clone()),
                 path: argument_name.path.clone(),
                 message: format!(
                     "Model '{}' has a duplicate argument definition for '{}'",
                     model_name.name, argument_name.value
                 ),
-            }])),
+            })),
             _other => None,
         }
     }

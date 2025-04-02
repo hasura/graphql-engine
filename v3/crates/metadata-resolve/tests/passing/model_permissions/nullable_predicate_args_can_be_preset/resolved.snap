@@ -971,6 +971,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                         operator: DataConnectorOperatorName(
                                             "eq",
                                         ),
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(

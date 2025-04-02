@@ -6072,6 +6072,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ],
                                 },
+                                column_path: [],
                                 predicate: BinaryFieldComparison {
                                     field: FieldName(
                                         Identifier(
@@ -6094,6 +6095,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     operator: DataConnectorOperatorName(
                                         "_eq",
                                     ),
+                                    column_path: [],
                                     argument_type: QualifiedTypeReference {
                                         underlying_type: Named(
                                             Inbuilt(
@@ -12745,6 +12747,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ],
                                 },
+                                column_path: [],
                                 predicate: BinaryFieldComparison {
                                     field: FieldName(
                                         Identifier(
@@ -12767,6 +12770,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     operator: DataConnectorOperatorName(
                                         "_ilike",
                                     ),
+                                    column_path: [],
                                     argument_type: QualifiedTypeReference {
                                         underlying_type: Named(
                                             Inbuilt(
@@ -15277,6 +15281,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         operator: DataConnectorOperatorName(
                                             "_eq",
                                         ),
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(
@@ -16193,6 +16198,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         operator: DataConnectorOperatorName(
                                             "_eq",
                                         ),
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(
@@ -17303,6 +17309,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         operator: DataConnectorOperatorName(
                                             "_eq",
                                         ),
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(
@@ -17363,6 +17370,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         operator: DataConnectorOperatorName(
                                             "_eq",
                                         ),
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(

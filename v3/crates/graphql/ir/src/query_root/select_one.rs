@@ -90,22 +90,6 @@ pub fn select_one_generate_ir<'n, 's>(
     let mut usage_counts = UsagesCounts::new();
     count_model(model_name, &mut usage_counts);
 
-    let mut model_arguments = BTreeMap::new();
-
-    for argument in &model_argument_fields {
-        let (ndc_arg_name, ndc_val) = arguments::build_ndc_argument_as_value(
-            &field_call.name,
-            argument,
-            &model_source.type_mappings,
-            object_types,
-            &model_source.data_connector,
-            &session.variables,
-            &mut usage_counts,
-        )?;
-
-        model_arguments.insert(ndc_arg_name, ndc_val);
-    }
-
     let filter_expressions: Vec<_> = unique_identifier_arguments
         .into_iter()
         .map(|(_ndc_column, field_name, argument_value)| {

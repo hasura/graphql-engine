@@ -14,6 +14,31 @@
 
 ### Changed
 
+- Model permissions can now reference nested object fields. For instance, to
+  select all institutions where the country of their location is "UK":
+
+```yaml
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: institutions
+  permissions:
+    - role: admin
+      select:
+        filter:
+          nestedField:
+            fieldName: location
+            predicate:
+              nestedField:
+                fieldName: country
+                predicate:
+                  fieldComparison:
+                    field: name
+                    operator: _eq
+                    value:
+                      literal: UK
+```
+
 ### Fixed
 
 ## [v2025.03.25]

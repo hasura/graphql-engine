@@ -1,10 +1,10 @@
 use crate::process_model_predicate;
 mod helpers;
-
 use super::column::{to_resolved_column, ResolvedColumn};
 use super::types::{PermissionError, PlanError};
 use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
+pub use helpers::with_nesting_path;
 use metadata_resolve::{
     DataConnectorLink, ObjectComparisonKind, ObjectTypeWithRelationships, Qualified,
     QualifiedBaseType, ResolvedObjectBooleanExpressionType, TypeMapping,
