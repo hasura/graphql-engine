@@ -6092,9 +6092,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ndc_column: DataConnectorColumnName(
                                         "Title",
                                     ),
-                                    operator: DataConnectorOperatorName(
-                                        "_eq",
-                                    ),
+                                    operator: ResolvedOperator {
+                                        data_connector_operator_name: DataConnectorOperatorName(
+                                            "_eq",
+                                        ),
+                                        comparison_operator: Equals,
+                                    },
                                     column_path: [],
                                     argument_type: QualifiedTypeReference {
                                         underlying_type: Named(
@@ -12767,9 +12770,16 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ndc_column: DataConnectorColumnName(
                                         "Title",
                                     ),
-                                    operator: DataConnectorOperatorName(
-                                        "_ilike",
-                                    ),
+                                    operator: ResolvedOperator {
+                                        data_connector_operator_name: DataConnectorOperatorName(
+                                            "_ilike",
+                                        ),
+                                        comparison_operator: Custom(
+                                            OperatorName(
+                                                "_ilike",
+                                            ),
+                                        ),
+                                    },
                                     column_path: [],
                                     argument_type: QualifiedTypeReference {
                                         underlying_type: Named(
@@ -15278,9 +15288,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         ndc_column: DataConnectorColumnName(
                                             "TrackId",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
                                         column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
@@ -16195,9 +16208,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         ndc_column: DataConnectorColumnName(
                                             "Name",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
                                         column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
@@ -17306,9 +17322,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         ndc_column: DataConnectorColumnName(
                                             "Name",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
                                         column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
@@ -17367,9 +17386,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         ndc_column: DataConnectorColumnName(
                                             "Name",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
                                         column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(

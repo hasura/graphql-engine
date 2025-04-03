@@ -8,6 +8,7 @@ use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     models::ModelName,
     permissions::Role,
+    query::ComparisonOperator,
     relationships::{RelationshipName, RelationshipType},
     spanned::Spanned,
     types::{CustomTypeName, Deprecated, FieldName},
@@ -51,6 +52,12 @@ pub struct SelectPermission {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ResolvedOperator {
+    pub data_connector_operator_name: DataConnectorOperatorName,
+    pub comparison_operator: ComparisonOperator,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ModelPredicate {
     UnaryFieldComparison {
         field: FieldName,
@@ -65,7 +72,7 @@ pub enum ModelPredicate {
         field: FieldName,
         field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
-        operator: DataConnectorOperatorName,
+        operator: ResolvedOperator,
         column_path: Vec<DataConnectorColumnName>,
         argument_type: QualifiedTypeReference,
         value: ValueExpression,

@@ -432,7 +432,7 @@ pub enum TypePredicateError {
     #[error("Invalid operator used in type '{type_name:}' predicate: '{operator_name:}'")]
     InvalidOperatorInTypePredicate {
         type_name: Qualified<CustomTypeName>,
-        operator_name: OperatorName,
+        operator_name: Spanned<OperatorName>,
     },
     #[error("Nested predicate used in type '{type_name:}'")]
     NestedPredicateInTypePredicate {

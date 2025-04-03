@@ -1,4 +1,6 @@
-use super::types::{ModelPredicate, ModelTargetSource, PredicateRelationshipInfo};
+use super::types::{
+    ModelPredicate, ModelTargetSource, PredicateRelationshipInfo, ResolvedOperator,
+};
 use super::ModelPermissionError;
 
 use crate::helpers::type_mappings;
@@ -18,7 +20,10 @@ use ndc_models;
 use open_dds::data_connector::{DataConnectorColumnName, DataConnectorOperatorName};
 use open_dds::spanned::Spanned;
 use open_dds::types::{FieldName, OperatorName};
-use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
+use open_dds::{
+    data_connector::DataConnectorName, models::ModelName, query::ComparisonOperator,
+    types::CustomTypeName,
+};
 use std::collections::BTreeMap;
 
 pub fn resolve_model_predicate_with_model(
@@ -717,7 +722,7 @@ fn resolve_field_comparison(
 
     // for newer boolean expressions we already have the information we need
     let bool_exp_fields = boolean_expression.and_then(|b| b.get_fields(flags));
-    let (resolved_operator, argument_type) = match bool_exp_fields {
+    let (data_connector_operator_name, argument_type) = match bool_exp_fields {
         Some(fields) => resolve_operator_and_argument_type_from_boolean_expression(
             field,
             operator,
@@ -773,6 +778,13 @@ fn resolve_field_comparison(
         }
     };
 
+    let resolved_operator = resolve_operator(
+        operator,
+        data_connector_operator_name,
+        scalar_type_info,
+        type_name,
+    )?;
+
     Ok(ModelPredicate::BinaryFieldComparison {
         field: field.value.clone(),
         field_parent_type: type_name.to_owned(),
@@ -782,6 +794,56 @@ fn resolve_field_comparison(
         column_path,
         value: value_expression,
         deprecated: field_definition.deprecated.clone(),
+    })
+}
+
+fn resolve_operator(
+    operator: &Spanned<open_dds::types::OperatorName>,
+    data_connector_operator_name: DataConnectorOperatorName,
+    scalar_type_info: &data_connector_scalar_types::ScalarTypeWithRepresentationInfo,
+    type_name: &Qualified<CustomTypeName>,
+) -> Result<ResolvedOperator, TypePredicateError> {
+    let comparison_operator_name =
+        ndc_models::ComparisonOperatorName::new(data_connector_operator_name.as_str().into());
+
+    let comparison_operator = match scalar_type_info
+        .scalar_type
+        .comparison_operators
+        .get(&comparison_operator_name)
+        .ok_or_else(|| TypePredicateError::InvalidOperatorInTypePredicate {
+            operator_name: operator.clone(),
+            type_name: type_name.clone(),
+        })? {
+        ndc_models::ComparisonOperatorDefinition::StartsWith => ComparisonOperator::StartsWith,
+        ndc_models::ComparisonOperatorDefinition::EndsWith => ComparisonOperator::EndsWith,
+        ndc_models::ComparisonOperatorDefinition::Contains => ComparisonOperator::Contains,
+        ndc_models::ComparisonOperatorDefinition::Equal => ComparisonOperator::Equals,
+        ndc_models::ComparisonOperatorDefinition::GreaterThan => ComparisonOperator::GreaterThan,
+        ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual => {
+            ComparisonOperator::GreaterThanOrEqual
+        }
+        ndc_models::ComparisonOperatorDefinition::LessThan => ComparisonOperator::LessThan,
+        ndc_models::ComparisonOperatorDefinition::LessThanOrEqual => {
+            ComparisonOperator::LessThanOrEqual
+        }
+        ndc_models::ComparisonOperatorDefinition::ContainsInsensitive => {
+            ComparisonOperator::ContainsInsensitive
+        }
+        ndc_models::ComparisonOperatorDefinition::StartsWithInsensitive => {
+            ComparisonOperator::StartsWithInsensitive
+        }
+        ndc_models::ComparisonOperatorDefinition::EndsWithInsensitive => {
+            ComparisonOperator::EndsWithInsensitive
+        }
+        ndc_models::ComparisonOperatorDefinition::In
+        | ndc_models::ComparisonOperatorDefinition::Custom { .. } => {
+            ComparisonOperator::Custom(operator.value.clone())
+        }
+    };
+
+    Ok(ResolvedOperator {
+        data_connector_operator_name,
+        comparison_operator,
     })
 }
 
@@ -827,7 +889,7 @@ fn lookup_relationship_in_boolean_expression<'a>(
 // this is only used for the older `ObjectBooleanExpressionType` where we
 // don't have this information explicitly provided in metadata
 fn resolve_binary_operator_for_type<'a>(
-    operator: &'a open_dds::types::OperatorName,
+    operator: &'a Spanned<open_dds::types::OperatorName>,
     type_name: &'a Qualified<CustomTypeName>,
     data_connector: &'a Qualified<DataConnectorName>,
     field_name: &'a Spanned<FieldName>,

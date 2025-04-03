@@ -46,7 +46,7 @@ pub fn process_model_predicate<'s>(
         } => Ok(make_permission_binary_boolean_expression(
             ndc_column,
             argument_type,
-            operator,
+            &operator.data_connector_operator_name,
             value,
             column_path.iter().collect::<Vec<_>>().as_slice(),
             session_variables,

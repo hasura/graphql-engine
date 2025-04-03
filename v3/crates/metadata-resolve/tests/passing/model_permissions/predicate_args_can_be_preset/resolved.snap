@@ -966,9 +966,12 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                                         ndc_column: DataConnectorColumnName(
                                             "AlbumId",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
                                         column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
