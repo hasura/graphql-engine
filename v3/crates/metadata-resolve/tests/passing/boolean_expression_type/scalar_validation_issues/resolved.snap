@@ -485,6 +485,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/scalar
                                     }: OperatorMapping(
                                         {
                                             OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
                                                 "equals",
                                             ): DataConnectorOperatorName(
                                                 "_eq",
@@ -566,6 +571,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/scalar
                                     }: OperatorMapping(
                                         {
                                             OperatorName(
+                                                "_in_another",
+                                            ): DataConnectorOperatorName(
+                                                "_in_another",
+                                            ),
+                                            OperatorName(
                                                 "equals",
                                             ): DataConnectorOperatorName(
                                                 "_eq_another",
@@ -646,6 +656,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/scalar
                                         ),
                                     }: OperatorMapping(
                                         {
+                                            OperatorName(
+                                                "_in_another",
+                                            ): DataConnectorOperatorName(
+                                                "_in_another",
+                                            ),
                                             OperatorName(
                                                 "equals",
                                             ): DataConnectorOperatorName(
@@ -736,6 +751,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/scalar
                                 "int8",
                             ),
                             operator_mapping: {
+                                OperatorName(
+                                    "_in",
+                                ): DataConnectorOperatorName(
+                                    "_in",
+                                ),
                                 OperatorName(
                                     "equals",
                                 ): DataConnectorOperatorName(
@@ -836,6 +856,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/scalar
                                 "String",
                             ),
                             operator_mapping: {
+                                OperatorName(
+                                    "_in_another",
+                                ): DataConnectorOperatorName(
+                                    "_in_another",
+                                ),
                                 OperatorName(
                                     "equals",
                                 ): DataConnectorOperatorName(

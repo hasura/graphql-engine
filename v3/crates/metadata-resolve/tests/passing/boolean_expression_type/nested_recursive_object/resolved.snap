@@ -2245,7 +2245,48 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             ),
                                         }: OperatorMapping(
-                                            {},
+                                            {
+                                                OperatorName(
+                                                    "_eq",
+                                                ): DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                OperatorName(
+                                                    "_gt",
+                                                ): DataConnectorOperatorName(
+                                                    "_gt",
+                                                ),
+                                                OperatorName(
+                                                    "_gte",
+                                                ): DataConnectorOperatorName(
+                                                    "_gte",
+                                                ),
+                                                OperatorName(
+                                                    "_in",
+                                                ): DataConnectorOperatorName(
+                                                    "_in",
+                                                ),
+                                                OperatorName(
+                                                    "_lt",
+                                                ): DataConnectorOperatorName(
+                                                    "_lt",
+                                                ),
+                                                OperatorName(
+                                                    "_lte",
+                                                ): DataConnectorOperatorName(
+                                                    "_lte",
+                                                ),
+                                                OperatorName(
+                                                    "_neq",
+                                                ): DataConnectorOperatorName(
+                                                    "_neq",
+                                                ),
+                                                OperatorName(
+                                                    "_nin",
+                                                ): DataConnectorOperatorName(
+                                                    "_nin",
+                                                ),
+                                            },
                                         ),
                                     },
                                     logical_operators: Include {
@@ -2381,7 +2422,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             ),
                                         }: OperatorMapping(
-                                            {},
+                                            {
+                                                OperatorName(
+                                                    "_eq",
+                                                ): DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                OperatorName(
+                                                    "_in",
+                                                ): DataConnectorOperatorName(
+                                                    "_in",
+                                                ),
+                                                OperatorName(
+                                                    "_neq",
+                                                ): DataConnectorOperatorName(
+                                                    "_neq",
+                                                ),
+                                                OperatorName(
+                                                    "_nin",
+                                                ): DataConnectorOperatorName(
+                                                    "_nin",
+                                                ),
+                                            },
                                         ),
                                     },
                                     logical_operators: Include {
@@ -2541,7 +2603,58 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             ),
                                         }: OperatorMapping(
-                                            {},
+                                            {
+                                                OperatorName(
+                                                    "_eq",
+                                                ): DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                OperatorName(
+                                                    "_gt",
+                                                ): DataConnectorOperatorName(
+                                                    "_gt",
+                                                ),
+                                                OperatorName(
+                                                    "_gte",
+                                                ): DataConnectorOperatorName(
+                                                    "_gte",
+                                                ),
+                                                OperatorName(
+                                                    "_in",
+                                                ): DataConnectorOperatorName(
+                                                    "_in",
+                                                ),
+                                                OperatorName(
+                                                    "_iregex",
+                                                ): DataConnectorOperatorName(
+                                                    "_iregex",
+                                                ),
+                                                OperatorName(
+                                                    "_lt",
+                                                ): DataConnectorOperatorName(
+                                                    "_lt",
+                                                ),
+                                                OperatorName(
+                                                    "_lte",
+                                                ): DataConnectorOperatorName(
+                                                    "_lte",
+                                                ),
+                                                OperatorName(
+                                                    "_neq",
+                                                ): DataConnectorOperatorName(
+                                                    "_neq",
+                                                ),
+                                                OperatorName(
+                                                    "_nin",
+                                                ): DataConnectorOperatorName(
+                                                    "_nin",
+                                                ),
+                                                OperatorName(
+                                                    "_regex",
+                                                ): DataConnectorOperatorName(
+                                                    "_regex",
+                                                ),
+                                            },
                                         ),
                                     },
                                     logical_operators: Include {
@@ -2701,7 +2814,58 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             ),
                                         }: OperatorMapping(
-                                            {},
+                                            {
+                                                OperatorName(
+                                                    "_eq",
+                                                ): DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                OperatorName(
+                                                    "_gt",
+                                                ): DataConnectorOperatorName(
+                                                    "_gt",
+                                                ),
+                                                OperatorName(
+                                                    "_gte",
+                                                ): DataConnectorOperatorName(
+                                                    "_gte",
+                                                ),
+                                                OperatorName(
+                                                    "_in",
+                                                ): DataConnectorOperatorName(
+                                                    "_in",
+                                                ),
+                                                OperatorName(
+                                                    "_iregex",
+                                                ): DataConnectorOperatorName(
+                                                    "_iregex",
+                                                ),
+                                                OperatorName(
+                                                    "_lt",
+                                                ): DataConnectorOperatorName(
+                                                    "_lt",
+                                                ),
+                                                OperatorName(
+                                                    "_lte",
+                                                ): DataConnectorOperatorName(
+                                                    "_lte",
+                                                ),
+                                                OperatorName(
+                                                    "_neq",
+                                                ): DataConnectorOperatorName(
+                                                    "_neq",
+                                                ),
+                                                OperatorName(
+                                                    "_nin",
+                                                ): DataConnectorOperatorName(
+                                                    "_nin",
+                                                ),
+                                                OperatorName(
+                                                    "_regex",
+                                                ): DataConnectorOperatorName(
+                                                    "_regex",
+                                                ),
+                                            },
                                         ),
                                     },
                                     logical_operators: Include {
@@ -2861,7 +3025,58 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             ),
                                         }: OperatorMapping(
-                                            {},
+                                            {
+                                                OperatorName(
+                                                    "_eq",
+                                                ): DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                OperatorName(
+                                                    "_gt",
+                                                ): DataConnectorOperatorName(
+                                                    "_gt",
+                                                ),
+                                                OperatorName(
+                                                    "_gte",
+                                                ): DataConnectorOperatorName(
+                                                    "_gte",
+                                                ),
+                                                OperatorName(
+                                                    "_in",
+                                                ): DataConnectorOperatorName(
+                                                    "_in",
+                                                ),
+                                                OperatorName(
+                                                    "_iregex",
+                                                ): DataConnectorOperatorName(
+                                                    "_iregex",
+                                                ),
+                                                OperatorName(
+                                                    "_lt",
+                                                ): DataConnectorOperatorName(
+                                                    "_lt",
+                                                ),
+                                                OperatorName(
+                                                    "_lte",
+                                                ): DataConnectorOperatorName(
+                                                    "_lte",
+                                                ),
+                                                OperatorName(
+                                                    "_neq",
+                                                ): DataConnectorOperatorName(
+                                                    "_neq",
+                                                ),
+                                                OperatorName(
+                                                    "_nin",
+                                                ): DataConnectorOperatorName(
+                                                    "_nin",
+                                                ),
+                                                OperatorName(
+                                                    "_regex",
+                                                ): DataConnectorOperatorName(
+                                                    "_regex",
+                                                ),
+                                            },
                                         ),
                                     },
                                     logical_operators: Include {
@@ -3374,7 +3589,48 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_gt",
+                                            ): DataConnectorOperatorName(
+                                                "_gt",
+                                            ),
+                                            OperatorName(
+                                                "_gte",
+                                            ): DataConnectorOperatorName(
+                                                "_gte",
+                                            ),
+                                            OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
+                                                "_lt",
+                                            ): DataConnectorOperatorName(
+                                                "_lt",
+                                            ),
+                                            OperatorName(
+                                                "_lte",
+                                            ): DataConnectorOperatorName(
+                                                "_lte",
+                                            ),
+                                            OperatorName(
+                                                "_neq",
+                                            ): DataConnectorOperatorName(
+                                                "_neq",
+                                            ),
+                                            OperatorName(
+                                                "_nin",
+                                            ): DataConnectorOperatorName(
+                                                "_nin",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Include {
@@ -3510,7 +3766,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
+                                                "_neq",
+                                            ): DataConnectorOperatorName(
+                                                "_neq",
+                                            ),
+                                            OperatorName(
+                                                "_nin",
+                                            ): DataConnectorOperatorName(
+                                                "_nin",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Include {
@@ -3670,7 +3947,58 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_gt",
+                                            ): DataConnectorOperatorName(
+                                                "_gt",
+                                            ),
+                                            OperatorName(
+                                                "_gte",
+                                            ): DataConnectorOperatorName(
+                                                "_gte",
+                                            ),
+                                            OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
+                                                "_iregex",
+                                            ): DataConnectorOperatorName(
+                                                "_iregex",
+                                            ),
+                                            OperatorName(
+                                                "_lt",
+                                            ): DataConnectorOperatorName(
+                                                "_lt",
+                                            ),
+                                            OperatorName(
+                                                "_lte",
+                                            ): DataConnectorOperatorName(
+                                                "_lte",
+                                            ),
+                                            OperatorName(
+                                                "_neq",
+                                            ): DataConnectorOperatorName(
+                                                "_neq",
+                                            ),
+                                            OperatorName(
+                                                "_nin",
+                                            ): DataConnectorOperatorName(
+                                                "_nin",
+                                            ),
+                                            OperatorName(
+                                                "_regex",
+                                            ): DataConnectorOperatorName(
+                                                "_regex",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Include {
@@ -3830,7 +4158,58 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_gt",
+                                            ): DataConnectorOperatorName(
+                                                "_gt",
+                                            ),
+                                            OperatorName(
+                                                "_gte",
+                                            ): DataConnectorOperatorName(
+                                                "_gte",
+                                            ),
+                                            OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
+                                                "_iregex",
+                                            ): DataConnectorOperatorName(
+                                                "_iregex",
+                                            ),
+                                            OperatorName(
+                                                "_lt",
+                                            ): DataConnectorOperatorName(
+                                                "_lt",
+                                            ),
+                                            OperatorName(
+                                                "_lte",
+                                            ): DataConnectorOperatorName(
+                                                "_lte",
+                                            ),
+                                            OperatorName(
+                                                "_neq",
+                                            ): DataConnectorOperatorName(
+                                                "_neq",
+                                            ),
+                                            OperatorName(
+                                                "_nin",
+                                            ): DataConnectorOperatorName(
+                                                "_nin",
+                                            ),
+                                            OperatorName(
+                                                "_regex",
+                                            ): DataConnectorOperatorName(
+                                                "_regex",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Include {
@@ -3990,7 +4369,58 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_gt",
+                                            ): DataConnectorOperatorName(
+                                                "_gt",
+                                            ),
+                                            OperatorName(
+                                                "_gte",
+                                            ): DataConnectorOperatorName(
+                                                "_gte",
+                                            ),
+                                            OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
+                                                "_iregex",
+                                            ): DataConnectorOperatorName(
+                                                "_iregex",
+                                            ),
+                                            OperatorName(
+                                                "_lt",
+                                            ): DataConnectorOperatorName(
+                                                "_lt",
+                                            ),
+                                            OperatorName(
+                                                "_lte",
+                                            ): DataConnectorOperatorName(
+                                                "_lte",
+                                            ),
+                                            OperatorName(
+                                                "_neq",
+                                            ): DataConnectorOperatorName(
+                                                "_neq",
+                                            ),
+                                            OperatorName(
+                                                "_nin",
+                                            ): DataConnectorOperatorName(
+                                                "_nin",
+                                            ),
+                                            OperatorName(
+                                                "_regex",
+                                            ): DataConnectorOperatorName(
+                                                "_regex",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Include {
@@ -4149,7 +4579,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             data_connector_scalar_type: DataConnectorScalarType(
                                 "Bool",
                             ),
-                            operator_mapping: {},
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                                OperatorName(
+                                    "_in",
+                                ): DataConnectorOperatorName(
+                                    "_in",
+                                ),
+                                OperatorName(
+                                    "_neq",
+                                ): DataConnectorOperatorName(
+                                    "_neq",
+                                ),
+                                OperatorName(
+                                    "_nin",
+                                ): DataConnectorOperatorName(
+                                    "_nin",
+                                ),
+                            },
                         },
                     },
                     graphql_name: Some(
@@ -4389,7 +4840,48 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             data_connector_scalar_type: DataConnectorScalarType(
                                 "Date",
                             ),
-                            operator_mapping: {},
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                                OperatorName(
+                                    "_gt",
+                                ): DataConnectorOperatorName(
+                                    "_gt",
+                                ),
+                                OperatorName(
+                                    "_gte",
+                                ): DataConnectorOperatorName(
+                                    "_gte",
+                                ),
+                                OperatorName(
+                                    "_in",
+                                ): DataConnectorOperatorName(
+                                    "_in",
+                                ),
+                                OperatorName(
+                                    "_lt",
+                                ): DataConnectorOperatorName(
+                                    "_lt",
+                                ),
+                                OperatorName(
+                                    "_lte",
+                                ): DataConnectorOperatorName(
+                                    "_lte",
+                                ),
+                                OperatorName(
+                                    "_neq",
+                                ): DataConnectorOperatorName(
+                                    "_neq",
+                                ),
+                                OperatorName(
+                                    "_nin",
+                                ): DataConnectorOperatorName(
+                                    "_nin",
+                                ),
+                            },
                         },
                     },
                     graphql_name: Some(
@@ -4548,7 +5040,48 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             data_connector_scalar_type: DataConnectorScalarType(
                                 "Int",
                             ),
-                            operator_mapping: {},
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                                OperatorName(
+                                    "_gt",
+                                ): DataConnectorOperatorName(
+                                    "_gt",
+                                ),
+                                OperatorName(
+                                    "_gte",
+                                ): DataConnectorOperatorName(
+                                    "_gte",
+                                ),
+                                OperatorName(
+                                    "_in",
+                                ): DataConnectorOperatorName(
+                                    "_in",
+                                ),
+                                OperatorName(
+                                    "_lt",
+                                ): DataConnectorOperatorName(
+                                    "_lt",
+                                ),
+                                OperatorName(
+                                    "_lte",
+                                ): DataConnectorOperatorName(
+                                    "_lte",
+                                ),
+                                OperatorName(
+                                    "_neq",
+                                ): DataConnectorOperatorName(
+                                    "_neq",
+                                ),
+                                OperatorName(
+                                    "_nin",
+                                ): DataConnectorOperatorName(
+                                    "_nin",
+                                ),
+                            },
                         },
                     },
                     graphql_name: Some(
@@ -4712,7 +5245,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             data_connector_scalar_type: DataConnectorScalarType(
                                 "ObjectId",
                             ),
-                            operator_mapping: {},
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                                OperatorName(
+                                    "_in",
+                                ): DataConnectorOperatorName(
+                                    "_in",
+                                ),
+                                OperatorName(
+                                    "_neq",
+                                ): DataConnectorOperatorName(
+                                    "_neq",
+                                ),
+                                OperatorName(
+                                    "_nin",
+                                ): DataConnectorOperatorName(
+                                    "_nin",
+                                ),
+                            },
                         },
                     },
                     graphql_name: Some(
@@ -4891,7 +5445,58 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             data_connector_scalar_type: DataConnectorScalarType(
                                 "String",
                             ),
-                            operator_mapping: {},
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                                OperatorName(
+                                    "_gt",
+                                ): DataConnectorOperatorName(
+                                    "_gt",
+                                ),
+                                OperatorName(
+                                    "_gte",
+                                ): DataConnectorOperatorName(
+                                    "_gte",
+                                ),
+                                OperatorName(
+                                    "_in",
+                                ): DataConnectorOperatorName(
+                                    "_in",
+                                ),
+                                OperatorName(
+                                    "_iregex",
+                                ): DataConnectorOperatorName(
+                                    "_iregex",
+                                ),
+                                OperatorName(
+                                    "_lt",
+                                ): DataConnectorOperatorName(
+                                    "_lt",
+                                ),
+                                OperatorName(
+                                    "_lte",
+                                ): DataConnectorOperatorName(
+                                    "_lte",
+                                ),
+                                OperatorName(
+                                    "_neq",
+                                ): DataConnectorOperatorName(
+                                    "_neq",
+                                ),
+                                OperatorName(
+                                    "_nin",
+                                ): DataConnectorOperatorName(
+                                    "_nin",
+                                ),
+                                OperatorName(
+                                    "_regex",
+                                ): DataConnectorOperatorName(
+                                    "_regex",
+                                ),
+                            },
                         },
                     },
                     graphql_name: Some(

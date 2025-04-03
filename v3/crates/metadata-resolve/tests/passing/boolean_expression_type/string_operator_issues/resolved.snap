@@ -1138,6 +1138,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
                             ),
                             operator_mapping: {
                                 OperatorName(
+                                    "_contains",
+                                ): DataConnectorOperatorName(
+                                    "_contains",
+                                ),
+                                OperatorName(
                                     "_eq",
                                 ): DataConnectorOperatorName(
                                     "_eq",
