@@ -4,7 +4,6 @@ use crate::types::PlanError;
 use crate::{column::to_resolved_column, OutputObjectTypeView};
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
-use open_dds::types::CustomTypeName;
 use open_dds::{
     aggregates::{
         AggregateExpressionName, AggregationFunctionName, DataConnectorAggregationFunctionName,
@@ -76,7 +75,6 @@ pub fn from_model_group_by(
                     &session.role,
                     metadata,
                     &model_source.type_mappings,
-                    &model.model.data_type,
                     &model_object_type,
                     operand,
                 )?;
@@ -203,7 +201,6 @@ pub fn from_model_group_by(
             metadata,
             session,
             &model.model.name,
-            &model.model.data_type,
             &model_object_type,
             model_source,
             model.model.aggregate_expression.as_ref(),
@@ -322,7 +319,6 @@ pub fn from_model_aggregate_selection(
             metadata,
             session,
             &model.model.name,
-            &model.model.data_type,
             &model_object_type,
             model_source,
             aggregate_expression_name,
@@ -401,7 +397,6 @@ fn to_ndc_aggregate(
     metadata: &Metadata,
     session: &Session,
     model_name: &Qualified<ModelName>,
-    model_data_type: &Qualified<CustomTypeName>,
     model_object_type: &OutputObjectTypeView,
     model_source: &metadata_resolve::ModelSource,
     aggregate_expression: Option<&Qualified<AggregateExpressionName>>,
@@ -418,7 +413,6 @@ fn to_ndc_aggregate(
                 &session.role,
                 metadata,
                 &model_source.type_mappings,
-                model_data_type,
                 model_object_type,
                 &field_operand,
             )

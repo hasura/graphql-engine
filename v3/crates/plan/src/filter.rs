@@ -32,7 +32,6 @@ pub fn to_filter_expression<'metadata>(
     metadata: &'metadata metadata_resolve::Metadata,
     session: &'_ Session,
     type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &'metadata Qualified<CustomTypeName>,
     model_object_type: &'_ OutputObjectTypeView<'metadata>,
     boolean_expression_type: Option<
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
@@ -45,7 +44,6 @@ pub fn to_filter_expression<'metadata>(
         metadata,
         session,
         type_mappings,
-        type_name,
         model_object_type,
         boolean_expression_type,
         expr,
@@ -59,7 +57,6 @@ fn to_filter_expression_internal<'metadata>(
     metadata: &'metadata metadata_resolve::Metadata,
     session: &'_ Session,
     type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &'metadata Qualified<CustomTypeName>,
     model_object_type: &'_ OutputObjectTypeView<'metadata>,
     boolean_expression_type: Option<
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
@@ -78,7 +75,6 @@ fn to_filter_expression_internal<'metadata>(
                         metadata,
                         session,
                         type_mappings,
-                        type_name,
                         model_object_type,
                         boolean_expression_type,
                         expr,
@@ -97,7 +93,6 @@ fn to_filter_expression_internal<'metadata>(
                         metadata,
                         session,
                         type_mappings,
-                        type_name,
                         model_object_type,
                         boolean_expression_type,
                         expr,
@@ -112,7 +107,6 @@ fn to_filter_expression_internal<'metadata>(
             metadata,
             session,
             type_mappings,
-            type_name,
             model_object_type,
             boolean_expression_type,
             expr,
@@ -129,7 +123,6 @@ fn to_filter_expression_internal<'metadata>(
                 &session.role,
                 metadata,
                 type_mappings,
-                type_name,
                 model_object_type,
                 field,
             )?;
@@ -155,7 +148,6 @@ fn to_filter_expression_internal<'metadata>(
             metadata,
             session,
             type_mappings,
-            type_name,
             model_object_type,
             boolean_expression_type,
             data_connector,
@@ -249,7 +241,6 @@ fn to_filter_expression_internal<'metadata>(
                             metadata,
                             session,
                             &target_model_source.source.type_mappings,
-                            &target_boolean_expression_type.object_type,
                             &target_model_object_type,
                             Some(target_boolean_expression_type),
                             predicate,
@@ -279,7 +270,6 @@ fn to_filter_expression_internal<'metadata>(
                                     &session.role,
                                     metadata,
                                     type_mappings,
-                                    type_name,
                                     model_object_type,
                                     object_field_operand,
                                 )?;
@@ -386,7 +376,6 @@ fn to_comparison_expression<'metadata>(
     metadata: &'metadata metadata_resolve::Metadata,
     session: &'_ Session,
     type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &'metadata Qualified<CustomTypeName>,
     source_object_type: &'_ OutputObjectTypeView<'metadata>,
     boolean_expression_type: Option<
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
@@ -404,7 +393,6 @@ fn to_comparison_expression<'metadata>(
             metadata,
             session,
             type_mappings,
-            type_name,
             source_object_type,
             boolean_expression_type,
             data_connector,
@@ -448,7 +436,6 @@ fn to_field_comparison_expression<'metadata>(
     metadata: &'metadata metadata_resolve::Metadata,
     session: &'_ Session,
     type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &'metadata Qualified<CustomTypeName>,
     source_object_type: &OutputObjectTypeView<'metadata>,
     boolean_expression_type: Option<
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
@@ -457,6 +444,7 @@ fn to_field_comparison_expression<'metadata>(
     nesting: Nesting,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'metadata>, PlanError> {
+    let type_name = source_object_type.object_type_name;
     if let Some(nested_field) = &field.nested {
         // Boolean expression type is required to resolve custom operators
         let boolean_expression_type = boolean_expression_type.ok_or_else(|| {
@@ -516,7 +504,6 @@ fn to_field_comparison_expression<'metadata>(
                         metadata,
                         session,
                         type_mappings,
-                        &nested_boolean_expression_type.object_type,
                         &target_object_type,
                         Some(nested_boolean_expression_type),
                         data_connector,
@@ -533,7 +520,6 @@ fn to_field_comparison_expression<'metadata>(
                         metadata,
                         session,
                         type_mappings,
-                        &nested_boolean_expression_type.object_type,
                         &target_object_type,
                         Some(nested_boolean_expression_type),
                         data_connector,
@@ -597,7 +583,6 @@ fn to_field_comparison_expression<'metadata>(
                     metadata,
                     session,
                     type_mappings,
-                    type_name,
                     source_object_type,
                     boolean_expression_type,
                     data_connector,
@@ -618,7 +603,6 @@ fn to_field_comparison_expression<'metadata>(
                 metadata,
                 session,
                 type_mappings,
-                type_name,
                 source_object_type,
                 boolean_expression_type,
                 data_connector,
@@ -632,12 +616,11 @@ fn to_field_comparison_expression<'metadata>(
     }
 }
 
-fn to_scalar_comparison_field<'metadata, 'other>(
+fn to_scalar_comparison_field<'metadata>(
     metadata: &'metadata metadata_resolve::Metadata,
     session: &'_ Session,
     type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &'other Qualified<CustomTypeName>,
-    source_object_type: &'other OutputObjectTypeView,
+    source_object_type: &'_ OutputObjectTypeView,
     boolean_expression_type: Option<
         &'metadata metadata_resolve::ResolvedObjectBooleanExpressionType,
     >,
@@ -648,6 +631,8 @@ fn to_scalar_comparison_field<'metadata, 'other>(
     argument: &'_ open_dds::query::Value,
     nesting: Nesting,
 ) -> Result<Expression<'metadata>, PlanError> {
+    let type_name = source_object_type.object_type_name;
+
     let ResolvedColumn {
         column_name: source_column,
         field_path: more_column_path,
@@ -656,7 +641,6 @@ fn to_scalar_comparison_field<'metadata, 'other>(
         &session.role,
         metadata,
         type_mappings,
-        type_name,
         source_object_type,
         object_field_operand,
     )?;
@@ -679,7 +663,7 @@ fn to_scalar_comparison_field<'metadata, 'other>(
     // mean equality there
     let comparison_operators = field_mapping.comparison_operators.ok_or_else(|| {
         PlanError::Internal(format!(
-            "no comparisons operators found for type: {type_name:?}"
+            "no comparisons operators found for type: {type_name:?}",
         ))
     })?;
 

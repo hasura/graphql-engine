@@ -575,7 +575,6 @@ pub fn get_unresolved_arguments<'s>(
                     metadata,
                     session,
                     type_mappings,
-                    &boolean_expression_type.object_type,
                     &argument_object_type,
                     Some(boolean_expression_type),
                     bool_exp,
