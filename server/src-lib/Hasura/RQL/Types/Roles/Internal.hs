@@ -95,8 +95,13 @@ rolePermInfoToCombineRolePermInfo RolePermInfo {..} =
     (maybeToCheckPermission _permDel)
   where
     modifySingleSelectPerm SelPermInfo {..} =
-      let colsWithRedactionExp = spiCols $> RedactIfFalse spiFilter
-          scalarCompFieldsWithRedactionExp = spiComputedFields $> RedactIfFalse spiFilter
+      let colsWithRedactionExp = buildFieldAccessFilter <$> spiCols
+          scalarCompFieldsWithRedactionExp = buildFieldAccessFilter <$> spiComputedFields
+          buildFieldAccessFilter redactExp =
+            FieldAccessFilter
+              { _fafPermissionFilter = spiFilter,
+                _fafRedactionExp = redactExp
+              }
        in CombinedSelPermInfo
             [colsWithRedactionExp]
             [scalarCompFieldsWithRedactionExp]
