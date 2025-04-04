@@ -35,7 +35,7 @@ following for successful calls (with warnings):
 }
 ```
 
-In case of successfull API call (without warning), the API response remains
+In case of successful API call (without warning), the API response remains
 unchanged. i.e.
 ```json
 {
@@ -81,7 +81,7 @@ We should also include a strict-mode (`fail_on_warning: true`). In strict-mode, 
 - For unsuccessful API calls, should we show warnings and error separately?
   Or should we include warnings as error?
 
-## Possible implemetation using `MonadWriter`
+## Possible implementation using `MonadWriter`
 
 Writer monad allows us to accumulate some logs (or warnings in our case) while
 performing actions applicatively.

@@ -49,7 +49,7 @@ For more information on integration tests, see its [README](./lib/api-tests/READ
 #### Adding property tests
 
 When adding property tests, it might be helpful to add some reasoning about how
-you extracted the property you are testing. Often times, this can help clarify
+you extracted the property you are testing. Oftentimes, this can help clarify
 the property. Are there any other related properties you can test?
 
 Secondly, you should consider the generator(s) you are using. Do they

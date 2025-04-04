@@ -152,7 +152,7 @@ React APIs includes "reactivity" by definition. Vanilla JavaScript APIs cannot o
 
 _What about getting the APIs accepting an array of features instead of just one?_
 
-We wil evaluate if the feature is really needed because the TypeScript gymnastics needed for the `doMatch`/`doNotMatch` objects returned by the APIs are not trivial, and making them working with arrays is even worse.
+We will evaluate if the feature is really needed because the TypeScript gymnastics needed for the `doMatch`/`doNotMatch` objects returned by the APIs are not trivial, and making them working with arrays is even worse.
 
 _What about specifying only the required properties in the compatibility object?_
 

@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine on Azure
 
-_This manifest is about provisioning Hasura with a new database. If you're looking for a manifest that provisions Hasura to use with an exising Postgres databse, checkout [`../azure-container`](../azure-container) directory._
+_This manifest is about provisioning Hasura with a new database. If you're looking for a manifest that provisions Hasura to use with an exising Postgres database, checkout [`../azure-container`](../azure-container) directory._
 
 Click the button below to create a Hasura GraphQL Engine container on
 [Azure Container
