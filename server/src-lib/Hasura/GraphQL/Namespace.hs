@@ -93,7 +93,7 @@ customizeNamespace (Just _) _ _ [] = [] -- The nampespace doesn't contain any Fi
 customizeNamespace (Just namespace) fromParsedSelection mkNamespaceTypename fieldParsers =
   -- Source or remote schema has a namespace field so wrap the parsers
   -- in a new namespace field parser.
-  [P.subselection_ namespace Nothing parser]
+  [fmap fst $ P.subselection_ namespace Nothing parser]
   where
     parser :: Parser 'Output n (NamespacedField a)
     parser =

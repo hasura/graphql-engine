@@ -3,6 +3,7 @@ module Hasura.Backends.Postgres.RQLGenerator.GenAnnSelectG
   )
 where
 
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.RQLGenerator.GenSelectArgsG (genSelectArgsG)
 import Hasura.Backends.Postgres.RQLGenerator.GenSelectFromG (genSelectFromG)
 import Hasura.Backends.Postgres.RQLGenerator.GenTablePermG (genTablePermG)
@@ -24,6 +25,7 @@ genAnnSelectG genA genFA =
     <*> genSelectFromG genA
     <*> genTablePermG genA
     <*> genArgs
+    <*> genDirectives
     <*> genStringifyNumbers
     <*> (pure Nothing)
   where
@@ -32,3 +34,4 @@ genAnnSelectG genA genFA =
         False -> Options.Don'tStringifyNumbers
         True -> Options.StringifyNumbers
     genArgs = genSelectArgsG genA
+    genDirectives = Gen.maybe (pure HashMap.empty)
