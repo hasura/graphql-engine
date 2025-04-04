@@ -5,8 +5,9 @@ use crate::helpers::{
 use crate::stages::{
     aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, arguments,
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
-    model_permissions, models, object_relationships, object_types, order_by_expressions,
-    relationships, relay, scalar_boolean_expressions, scalar_types, type_permissions,
+    model_permissions, models, models_graphql, object_relationships, object_types,
+    order_by_expressions, relationships, relay, scalar_boolean_expressions, scalar_types,
+    type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use error_context::{Context, Step};
@@ -14,7 +15,7 @@ use hasura_authn_core::Role;
 use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
-    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorObjectType},
+    data_connector::{DataConnectorColumnName, DataConnectorName},
     flags,
     models::ModelName,
     relationships::RelationshipName,
@@ -112,36 +113,10 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         argument_name: ArgumentName,
     },
-    #[error("filter input type name graphql configuration must be specified for model {model_name:} because aggregates are used with it")]
-    MissingFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
-    #[error("unknown field {field_name:} in unique identifier defined for model {model_name:}")]
-    UnknownFieldInUniqueIdentifier {
-        model_name: Qualified<ModelName>,
-        field_name: FieldName,
-    },
-    #[error("duplicate field {field_name:} in unique identifier defined for model {model_name:}")]
-    DuplicateFieldInUniqueIdentifier {
-        model_name: Qualified<ModelName>,
-        field_name: FieldName,
-    },
     #[error("graphql config must be defined for a filter expression to be used in a {model:}")]
     CannotUseFilterExpressionsWithoutGraphQlConfig {
         model: Qualified<ModelName>,
         filter_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("Model {model:} has source data connector {model_data_connector:} but its filter expression type {filter_expression_type:} is backed by data connector {filter_expression_data_connector:}")]
-    DifferentDataConnectorInFilterExpression {
-        model: Qualified<ModelName>,
-        model_data_connector: Qualified<DataConnectorName>,
-        filter_expression_type: Qualified<CustomTypeName>,
-        filter_expression_data_connector: Qualified<DataConnectorName>,
-    },
-    #[error("Model {model:} has source data connector object type {model_data_connector_object_type:} but its filter expression type {filter_expression_type:} is backed by data connector {filter_expression_data_connector_object_type:}")]
-    DifferentDataConnectorObjectTypeInFilterExpression {
-        model: Qualified<ModelName>,
-        model_data_connector_object_type: DataConnectorObjectType,
-        filter_expression_type: Qualified<CustomTypeName>,
-        filter_expression_data_connector_object_type: DataConnectorObjectType,
     },
     #[error("Type error in argument {argument_name:}: {type_error:}")]
     ArgumentTypeError {
@@ -240,11 +215,8 @@ pub enum Error {
         argument_name: ArgumentName,
         type_error: typecheck::TypecheckError,
     },
-    #[error("{graphql_config_error:}")]
-    GraphqlConfigError {
-        #[from]
-        graphql_config_error: graphql_config::GraphqlConfigError,
-    },
+    #[error("{0}")]
+    GraphqlConfigError(#[from] graphql_config::GraphqlConfigError),
     #[error("{0}")]
     OrderByExpressionError(#[from] order_by_expressions::NamedOrderByExpressionError),
     #[error("{0}")]
@@ -293,6 +265,8 @@ pub enum Error {
     ),
     #[error("{0}")]
     ArgumentError(#[from] arguments::NamedArgumentError),
+    #[error("{0}")]
+    ModelGraphqlError(#[from] models_graphql::ModelGraphqlError),
     #[error("{warning_as_error}")]
     CompatibilityError { warning_as_error: crate::Warning },
     #[error("{errors}")]
@@ -354,6 +328,8 @@ impl ContextualError for Error {
             Error::OrderByExpressionError(error) => error.create_error_context(),
             Error::ModelPermissionsError(error) => error.create_error_context(),
             Error::ArgumentError(error) => error.create_error_context(),
+            Error::ModelGraphqlError(error) => error.create_error_context(),
+            Error::GraphqlConfigError(error) => error.create_error_context(),
             Error::CompatibilityError { warning_as_error } => {
                 warning_as_error.create_error_context()
             }

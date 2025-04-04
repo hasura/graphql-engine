@@ -292,7 +292,8 @@ fn resolve_internal(
         &scalar_types,
         &mut order_by_expressions,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues);
 

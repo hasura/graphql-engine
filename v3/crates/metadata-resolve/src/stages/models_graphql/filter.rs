@@ -1,5 +1,3 @@
-use crate::types::error::Error;
-
 use crate::helpers::boolean_expression::validate_data_connector_with_object_boolean_expression_type;
 use crate::stages::{boolean_expressions, models, object_relationships};
 use crate::types::subgraph::Qualified;
@@ -26,7 +24,7 @@ pub(crate) fn resolve_filter_expression_type(
         boolean_expressions::ResolvedObjectBooleanExpressionType,
         Vec<boolean_expressions::BooleanExpressionIssue>,
     ),
-    Error,
+    boolean_expressions::BooleanExpressionError,
 > {
     match boolean_expression_types
         .objects
@@ -37,14 +35,14 @@ pub(crate) fn resolve_filter_expression_type(
                 // For boolean expressions from `ObjectBooleanExpressionType` we have to
                 // check that the model object type and boolean expression object type agree
                 if boolean_expression_object_type.object_type != *model_data_type {
-                    return Err(Error::from(
+                    return Err(
                     boolean_expressions::BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel {
                         name: boolean_expression_type_name.clone(),
                         boolean_expression_object_type: boolean_expression_object_type.object_type.clone(),
                         model: model_name.clone(),
                         model_object_type: model_data_type.clone(),
                     },
-                ));
+                );
                 }
 
                 // The `ObjectBooleanExpressionType` allows specifying Data Connector related information
@@ -53,7 +51,7 @@ pub(crate) fn resolve_filter_expression_type(
                 // do not need this check there
 
                 if data_connector.name != model_source.data_connector.name {
-                    return Err(Error::DifferentDataConnectorInFilterExpression {
+                    return Err(boolean_expressions::BooleanExpressionError::DifferentDataConnectorInFilterExpression {
                         model: model_name.clone(),
                         model_data_connector: model_source.data_connector.name.clone(),
                         filter_expression_type: boolean_expression_object_type.name.clone(),
@@ -62,7 +60,7 @@ pub(crate) fn resolve_filter_expression_type(
                 }
 
                 if data_connector.object_type != model_source.collection_type {
-                    return Err(Error::DifferentDataConnectorObjectTypeInFilterExpression {
+                    return Err(boolean_expressions::BooleanExpressionError::DifferentDataConnectorObjectTypeInFilterExpression {
                         model: model_name.clone(),
                         model_data_connector_object_type: model_source.collection_type.clone(),
                         filter_expression_type: boolean_expression_type_name.clone(),
@@ -88,11 +86,11 @@ pub(crate) fn resolve_filter_expression_type(
                 data_connector_issues,
             ))
         }
-        None => Err(Error::from(
+        None => Err(
             boolean_expressions::BooleanExpressionError::UnknownBooleanExpressionTypeInModel {
                 name: boolean_expression_type_name.clone(),
                 model: model_name.clone(),
             },
-        )),
+        ),
     }
 }

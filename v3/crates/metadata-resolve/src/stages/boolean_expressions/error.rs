@@ -134,6 +134,21 @@ pub enum BooleanExpressionError {
         model_name: Qualified<ModelName>,
     },
 
+    #[error("Model {model:} has source data connector {model_data_connector:} but its filter expression type {filter_expression_type:} is backed by data connector {filter_expression_data_connector:}")]
+    DifferentDataConnectorInFilterExpression {
+        model: Qualified<ModelName>,
+        model_data_connector: Qualified<DataConnectorName>,
+        filter_expression_type: Qualified<CustomTypeName>,
+        filter_expression_data_connector: Qualified<DataConnectorName>,
+    },
+    #[error("Model {model:} has source data connector object type {model_data_connector_object_type:} but its filter expression type {filter_expression_type:} is backed by data connector {filter_expression_data_connector_object_type:}")]
+    DifferentDataConnectorObjectTypeInFilterExpression {
+        model: Qualified<ModelName>,
+        model_data_connector_object_type: DataConnectorObjectType,
+        filter_expression_type: Qualified<CustomTypeName>,
+        filter_expression_data_connector_object_type: DataConnectorObjectType,
+    },
+
     #[error("The relationship '{relationship_name}' cannot be used as a comparable relationship in boolean expression type '{boolean_expression_type_name}' because it is a remote relationship with an argument mapping target. Relationship '{relationship_name}' on type '{source_type}' has source field '{source_field}' mapped to target argument '{target_argument}'")]
     RemoteComparableRelationshipWithArgumentMappingTargetNotSupported {
         boolean_expression_type_name: Qualified<CustomTypeName>,

@@ -1,5 +1,7 @@
 use lang_graphql::ast::common as ast;
 
+use crate::types::error::ContextualError;
+
 #[derive(Debug, thiserror::Error)]
 pub enum GraphqlConfigError {
     #[error("graphql configuration is not defined in supergraph")]
@@ -30,4 +32,10 @@ pub enum GraphqlConfigError {
     InvalidGraphQlName { name: String },
     #[error("multiple graphql types found with the same name: {graphql_type_name:}")]
     ConflictingGraphQlType { graphql_type_name: ast::TypeName },
+}
+
+impl ContextualError for GraphqlConfigError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }

@@ -3,8 +3,8 @@ use std::path::PathBuf;
 
 use graphql_schema::Error as SchemaError;
 use graphql_schema::GDS;
-use metadata_resolve::BooleanExpressionError;
 use metadata_resolve::Error as ResolveError;
+use metadata_resolve::{BooleanExpressionError, ModelGraphqlError};
 
 #[test]
 fn test_select_many_model_arguments_without_arguments_input_type() -> anyhow::Result<()> {
@@ -239,8 +239,10 @@ fn test_disallow_filter_expression_without_source() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: metadata_resolve::WithContext::Raw(ResolveError::BooleanExpressionError(
-                    BooleanExpressionError::CannotUseFilterExpressionsWithoutSource { .. }
+                error: metadata_resolve::WithContext::Raw(ResolveError::ModelGraphqlError(
+                    ModelGraphqlError::BooleanExpressionError(
+                        BooleanExpressionError::CannotUseFilterExpressionsWithoutSource { .. }
+                    )
                 ))
             })
         ),
@@ -259,8 +261,10 @@ fn test_disallow_filter_expression_with_object_type_mismatch() -> anyhow::Result
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: metadata_resolve::WithContext::Raw(ResolveError::BooleanExpressionError(
-                    BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
+                error: metadata_resolve::WithContext::Raw(ResolveError::ModelGraphqlError(
+                    ModelGraphqlError::BooleanExpressionError(
+                        BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
+                    )
                 ))
             })
         ),

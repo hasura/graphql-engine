@@ -42,8 +42,9 @@ pub use stages::model_permissions::{
 };
 pub use stages::models::{Model, ModelSource, ModelsError};
 pub use stages::models_graphql::{
-    ModelOrderByExpression, SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition,
-    SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition, UniqueIdentifierField,
+    ModelGraphqlError, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
+    UniqueIdentifierField,
 };
 pub use stages::object_relationships::{
     field_selection_relationship_execution_category, AggregateRelationship,
