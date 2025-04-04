@@ -2,10 +2,11 @@ use crate::error::InternalError;
 use crate::query::{ArgumentPresetExecutionError, RelationshipFieldMappingError};
 use hasura_authn_core::Role;
 use metadata_resolve::Qualified;
+use open_dds::data_connector::DataConnectorOperatorName;
 use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
-    data_connector::DataConnectorColumnName,
+    data_connector::{DataConnectorColumnName, DataConnectorName},
     models::ModelName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
@@ -20,6 +21,8 @@ pub enum PlanError {
     Relationship(#[from] RelationshipError),
     #[error("{0}")]
     OrderBy(#[from] OrderByError),
+    #[error("{0}")]
+    BooleanExpression(#[from] BooleanExpressionError),
     #[error("{0}")]
     ArgumentPresetExecutionError(#[from] ArgumentPresetExecutionError),
     #[error("{0}")]
@@ -38,6 +41,9 @@ impl TraceableError for PlanError {
             Self::Permission(permission_error) => permission_error.visibility(),
             Self::Relationship(relationship_error) => relationship_error.visibility(),
             Self::OrderBy(order_by_error) => order_by_error.visibility(),
+            Self::BooleanExpression(boolean_expression_error) => {
+                boolean_expression_error.visibility()
+            }
             Self::External(_) => ErrorVisibility::User,
             Self::Internal(_) => ErrorVisibility::Internal,
         }
@@ -226,6 +232,24 @@ impl TraceableError for OrderByError {
             | Self::NestedOrderByNotSupported(_)
             | Self::RemoteRelationshipNotSupported(_) => ErrorVisibility::User,
             Self::Internal(_) | Self::FieldMappingNotFound { .. } => ErrorVisibility::Internal,
+        }
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum BooleanExpressionError {
+    #[error("Comparison operator {comparison_operator} not defined for data connector {data_connector_name} in scalar boolean expression type {boolean_expression_type_name}")]
+    ComparisonOperatorNotFound {
+        comparison_operator: DataConnectorOperatorName,
+        boolean_expression_type_name: metadata_resolve::BooleanExpressionTypeIdentifier,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+}
+
+impl TraceableError for BooleanExpressionError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::ComparisonOperatorNotFound { .. } => ErrorVisibility::User,
         }
     }
 }

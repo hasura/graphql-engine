@@ -68,7 +68,7 @@ impl RequestError {
                 axum::http::StatusCode::NOT_FOUND,
                 "invalid route or path".to_string(),
             ),
-            RequestError::PlanError(plan::PlanError::Permission(_msg)) => (
+            RequestError::PlanError(plan::PlanError::Permission(_err)) => (
                 axum::http::StatusCode::FORBIDDEN,
                 "Access forbidden".to_string(), // need to decide how much
                                                 // we tell the user, for
@@ -81,6 +81,7 @@ impl RequestError {
                 | plan::PlanError::External(_)
                 | plan::PlanError::Relationship(_)
                 | plan::PlanError::OrderBy(_)
+                | plan::PlanError::BooleanExpression(_)
                 | plan::PlanError::ArgumentPresetExecutionError(_),
             ) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,

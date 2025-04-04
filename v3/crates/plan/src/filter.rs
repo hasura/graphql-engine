@@ -1,7 +1,7 @@
 use crate::process_model_predicate;
 mod helpers;
 use super::column::{to_resolved_column, ResolvedColumn};
-use super::types::{PermissionError, PlanError};
+use super::types::{BooleanExpressionError, PermissionError, PlanError};
 use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;
 pub use helpers::with_nesting_path;
@@ -883,7 +883,7 @@ fn operator_reverse_lookup(
     data_connector_name: &Qualified<DataConnectorName>,
     operator: &DataConnectorOperatorName,
 ) -> Result<(), PlanError> {
-    let data_connector_operator_mapping = boolean_expression_type
+    let comparison_expression_info = boolean_expression_type
         .fields
         .scalar_fields
         .get(field_name)
@@ -893,7 +893,7 @@ fn operator_reverse_lookup(
             ))
         })?;
 
-    let operator_mapping = data_connector_operator_mapping
+    let operator_mapping = comparison_expression_info
         .operator_mapping
         .get(data_connector_name)
         .ok_or_else(|| {
@@ -902,6 +902,7 @@ fn operator_reverse_lookup(
             ))
         })?;
 
+    // is there a mapping to this name?
     if operator_mapping
         .0
         .iter()
@@ -909,8 +910,14 @@ fn operator_reverse_lookup(
     {
         Ok(())
     } else {
-        Err(PlanError::Internal(
-            "operator not found in boolean expression".into(),
+        Err(PlanError::BooleanExpression(
+            BooleanExpressionError::ComparisonOperatorNotFound {
+                comparison_operator: operator.clone(),
+                boolean_expression_type_name: comparison_expression_info
+                    .boolean_expression_type_name
+                    .clone(),
+                data_connector_name: data_connector_name.clone(),
+            },
         ))
     }
 }
