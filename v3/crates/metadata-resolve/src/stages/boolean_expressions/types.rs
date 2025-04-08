@@ -21,38 +21,50 @@ use std::fmt::Display;
 
 #[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
 pub enum BooleanExpressionIssue {
-    #[error("The data connector '{data_connector_name}' does not support filtering by nested object arrays. The comparable field '{field_name}' within {boolean_expression_type_name}' is of an object array type: {field_type}")]
+    #[error(
+        "The data connector '{data_connector_name}' does not support filtering by nested object arrays. The comparable field '{field_name}' within {boolean_expression_type_name}' is of an object array type: {field_type}"
+    )]
     DataConnectorDoesNotSupportNestedObjectArrayFiltering {
         data_connector_name: Qualified<DataConnectorName>,
         boolean_expression_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
-    #[error("The data connector '{data_connector_name}' does not support filtering by nested scalar arrays. The comparable field '{field_name}' within '{boolean_expression_type_name}' is of a scalar array type: {field_type}")]
+    #[error(
+        "The data connector '{data_connector_name}' does not support filtering by nested scalar arrays. The comparable field '{field_name}' within '{boolean_expression_type_name}' is of a scalar array type: {field_type}"
+    )]
     DataConnectorDoesNotSupportNestedScalarArrayFiltering {
         data_connector_name: Qualified<DataConnectorName>,
         boolean_expression_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
-    #[error("the comparable field '{name}' is defined more than once in the boolean expression type '{type_name}'")]
+    #[error(
+        "the comparable field '{name}' is defined more than once in the boolean expression type '{type_name}'"
+    )]
     DuplicateComparableFieldFound {
         type_name: Qualified<CustomTypeName>,
         name: FieldName,
     },
-    #[error("the comparable relationship '{name}' is defined more than once in the boolean expression type '{type_name}'")]
+    #[error(
+        "the comparable relationship '{name}' is defined more than once in the boolean expression type '{type_name}'"
+    )]
     DuplicateComparableRelationshipFound {
         type_name: Qualified<CustomTypeName>,
         name: RelationshipName,
     },
-    #[error("the boolean expression '{type_name}' has a GraphQL field name conflict between the '{name}' {name_source_1} and the '{name}' {name_source_2}. One of these will need to be renamed.")]
+    #[error(
+        "the boolean expression '{type_name}' has a GraphQL field name conflict between the '{name}' {name_source_1} and the '{name}' {name_source_2}. One of these will need to be renamed."
+    )]
     GraphqlFieldNameConflict {
         type_name: Qualified<CustomTypeName>,
         name: String,
         name_source_1: FieldNameSource,
         name_source_2: FieldNameSource,
     },
-    #[error("the type of the comparable field '{field_name}' on the boolean expresssion '{boolean_expression_type_name}' is a multidimensional array type: {field_type}. Multidimensional arrays are not supported in boolean expressions")]
+    #[error(
+        "the type of the comparable field '{field_name}' on the boolean expresssion '{boolean_expression_type_name}' is a multidimensional array type: {field_type}. Multidimensional arrays are not supported in boolean expressions"
+    )]
     MultidimensionalArrayComparableFieldNotSupported {
         boolean_expression_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,

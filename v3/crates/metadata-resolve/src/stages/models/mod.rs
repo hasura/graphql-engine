@@ -18,7 +18,7 @@ use crate::stages::{
     aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors, relay,
     scalar_types, type_permissions,
 };
-use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
+use crate::types::subgraph::{ArgumentInfo, Qualified, mk_qualified_type_reference};
 use indexmap::IndexMap;
 use open_dds::{
     aggregates::AggregateExpressionName, data_connector::DataConnectorName, models::ModelName,

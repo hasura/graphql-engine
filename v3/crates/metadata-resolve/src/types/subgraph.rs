@@ -6,7 +6,7 @@ use open_dds::identifier::SubgraphName;
 use open_dds::spanned::Spanned;
 use open_dds::types::{BaseType, CustomTypeName, InbuiltType, TypeName, TypeReference};
 use schemars::JsonSchema;
-use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned, ser::SerializeMap};
 use serde_json;
 
 #[derive(

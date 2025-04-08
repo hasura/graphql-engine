@@ -7,7 +7,7 @@ use smol_str::SmolStr;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc::Sender, RwLock};
+use tokio::sync::{RwLock, mpsc::Sender};
 
 use crate::metrics::WebSocketMetrics;
 use crate::poller;

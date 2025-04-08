@@ -10,7 +10,7 @@ use crate::helpers::check_for_duplicates;
 use crate::helpers::types::unwrap_qualified_type_name;
 use crate::stages::{data_connector_scalar_types, graphql_config, scalar_types, type_permissions};
 use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
-use crate::{mk_name, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
+use crate::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, mk_name};
 
 mod types;
 pub use types::*;
@@ -616,7 +616,9 @@ fn unwrap_aggregation_function_return_type<'a>(
             if return_type.nullable {
                 Ok(underlying_type.as_ref())
             } else {
-                Err(mk_error("The data connector's return type is nullable, but the Open DD return type is not"))
+                Err(mk_error(
+                    "The data connector's return type is nullable, but the Open DD return type is not",
+                ))
             }
         }
         other => Ok(other),
@@ -627,9 +629,15 @@ fn unwrap_aggregation_function_return_type<'a>(
         QualifiedBaseType::Named(named_type) => {
             match ndc_nullable_unwrapped {
                 ndc_models::Type::Named { name } => Ok((named_type, name)),
-                ndc_models::Type::Nullable { .. } => Err(mk_error("The data connector's return type is doubly-nullable")), // This shouldn't happen, would be an invalid NDC type
-                ndc_models::Type::Array { .. } => Err(mk_error("The data connector's return type is an array, but the Open DD return type is not")),
-                ndc_models::Type::Predicate { .. } => Err(mk_error("The data connector's return type is a predicate type, which is unsupported in aggregation return types")),
+                ndc_models::Type::Nullable { .. } => Err(mk_error(
+                    "The data connector's return type is doubly-nullable",
+                )), // This shouldn't happen, would be an invalid NDC type
+                ndc_models::Type::Array { .. } => Err(mk_error(
+                    "The data connector's return type is an array, but the Open DD return type is not",
+                )),
+                ndc_models::Type::Predicate { .. } => Err(mk_error(
+                    "The data connector's return type is a predicate type, which is unsupported in aggregation return types",
+                )),
             }
         }
         // Ensure if the Open DD type is a list, the NDC type is an array, and then recur to unwrap and check the element type
@@ -790,7 +798,7 @@ fn resolve_aggregate_count(
                         aggregate_expression_name: aggregate_expression_name.clone(),
                         count_type,
                         return_type: QualifiedTypeName::Inbuilt(*inbuilt),
-                    })
+                    });
                 }
 
                 // We can't really validate custom types as they don't have a representation until they're

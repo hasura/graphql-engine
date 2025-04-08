@@ -36,7 +36,9 @@ pub enum DataConnectorError {
         version: String,
         error: semver::Error,
     },
-    #[error("The version specified in the capabilities (\"{version}\") is not compatible with the schema version specified. The version requirement is {requirement}")]
+    #[error(
+        "The version specified in the capabilities (\"{version}\") is not compatible with the schema version specified. The version requirement is {requirement}"
+    )]
     IncompatibleNdcVersion {
         version: String,
         requirement: semver::VersionReq,

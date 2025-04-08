@@ -11,8 +11,8 @@ use open_dds::models;
 use super::error;
 use super::query_root::{select_aggregate, select_many, select_one};
 use super::root_field;
-use graphql_schema::RootFieldKind;
 use graphql_schema::GDS;
+use graphql_schema::RootFieldKind;
 use graphql_schema::{Annotation, NamespaceAnnotation, OutputAnnotation, RootFieldAnnotation};
 
 pub fn generate_ir<'n, 's>(

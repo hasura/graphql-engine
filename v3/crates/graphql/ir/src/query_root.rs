@@ -18,8 +18,8 @@ use graphql_schema::ApolloFederationRootFields;
 use graphql_schema::EntityFieldTypeNameMapping;
 use graphql_schema::RootFieldKind;
 use graphql_schema::TypeKind;
-use graphql_schema::{mk_typename, GDS};
 use graphql_schema::{Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation};
+use graphql_schema::{GDS, mk_typename};
 
 pub mod apollo_federation;
 pub mod node_field;

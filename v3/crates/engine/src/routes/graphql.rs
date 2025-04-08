@@ -1,16 +1,16 @@
 use std::sync::Arc;
 
 use axum::{
+    Extension, Json,
     extract::{ConnectInfo, State},
     response::IntoResponse,
-    Extension, Json,
 };
 use futures_util::FutureExt;
 
 use crate::EngineState;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
-use tracing_util::{set_status_on_current_span, SpanVisibility};
+use tracing_util::{SpanVisibility, set_status_on_current_span};
 
 #[allow(clippy::print_stdout)]
 pub async fn handle_request(

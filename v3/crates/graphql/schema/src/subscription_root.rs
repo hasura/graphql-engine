@@ -10,14 +10,14 @@ use open_dds::types::FieldName;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
+use crate::Annotation;
+use crate::GDS;
 use crate::aggregates::get_aggregate_select_output_type;
 use crate::mk_deprecation_status;
 use crate::model_arguments;
 use crate::types;
 use crate::types::output_type::get_custom_output_type;
 use crate::types::output_type::get_object_type_representation;
-use crate::Annotation;
-use crate::GDS;
 
 use super::query_root::{select_aggregate, select_many, select_one};
 

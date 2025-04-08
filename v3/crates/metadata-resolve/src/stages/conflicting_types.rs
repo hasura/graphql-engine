@@ -1,6 +1,6 @@
+use crate::Qualified;
 use crate::stages::boolean_expressions::BooleanExpressionTypeIdentifier;
 use crate::types::warning::{ConflictingNameAcrossTypes, ConflictingSources, TypeSource, Warning};
-use crate::Qualified;
 use open_dds::types::CustomTypeName;
 use std::collections::{BTreeMap, HashMap};
 

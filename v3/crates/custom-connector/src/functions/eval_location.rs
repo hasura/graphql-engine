@@ -6,7 +6,7 @@ use crate::{
     arguments::{
         check_all_arguments_used, parse_expression_argument, parse_nullable_object_argument,
     },
-    query::{eval_expression, Result},
+    query::{Result, eval_expression},
     state::{AppState, Row},
 };
 

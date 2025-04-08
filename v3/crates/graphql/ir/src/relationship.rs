@@ -16,11 +16,11 @@ use super::{
 use crate::order_by;
 use crate::{
     error,
-    query_root::select_aggregate::{aggregate_query, AggregateQuery},
+    query_root::select_aggregate::{AggregateQuery, aggregate_query},
 };
 use graphql_schema::{
-    Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, InputAnnotation,
-    ModelAggregateRelationshipAnnotation, ModelInputAnnotation, ModelRelationshipAnnotation, GDS,
+    Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, GDS, InputAnnotation,
+    ModelAggregateRelationshipAnnotation, ModelInputAnnotation, ModelRelationshipAnnotation,
 };
 use metadata_resolve::{self, ObjectTypeWithRelationships, Qualified, QualifiedTypeReference};
 use plan::{count_command, count_model};
@@ -128,9 +128,9 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                             }
                         }
                         _ => {
-                            return Err(error::InternalEngineError::UnexpectedAnnotation {
+                            Err(error::InternalEngineError::UnexpectedAnnotation {
                                 annotation: annotation.clone(),
-                            })?
+                            })?;
                         }
                     }
                 }
@@ -147,16 +147,16 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                 }
 
                 _ => {
-                    return Err(error::InternalEngineError::UnexpectedAnnotation {
+                    Err(error::InternalEngineError::UnexpectedAnnotation {
                         annotation: annotation.clone(),
-                    })?
+                    })?;
                 }
             },
 
             annotation => {
-                return Err(error::InternalEngineError::UnexpectedAnnotation {
+                Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
-                })?
+                })?;
             }
         }
     }

@@ -1,11 +1,11 @@
 use super::{
+    CommandPlan,
     relationships::{
+        CommandRemoteRelationshipParts, ModelRemoteRelationshipParts,
         calculate_remote_relationship_fields_for_command_target,
         calculate_remote_relationship_fields_for_model_target,
         process_command_relationship_definition, process_model_relationship_definition,
-        CommandRemoteRelationshipParts, ModelRemoteRelationshipParts,
     },
-    CommandPlan,
 };
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::types::{PlanError, RelationshipError};

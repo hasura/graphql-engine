@@ -6,7 +6,7 @@ use http::HeaderMap;
 use opentelemetry::baggage::{BaggageExt, KeyValueMetadata};
 use opentelemetry::global::{self, BoxedTracer};
 use opentelemetry::trace::{
-    get_active_span, FutureExt, Span, SpanContext, SpanRef, TraceContextExt, Tracer as OtelTracer,
+    FutureExt, Span, SpanContext, SpanRef, TraceContextExt, Tracer as OtelTracer, get_active_span,
 };
 use opentelemetry::{Context, Key};
 use opentelemetry_http::HeaderExtractor;

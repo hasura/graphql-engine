@@ -5,7 +5,7 @@ use crate::websocket::types as ws;
 use axum::http;
 use blake2::{Blake2b, Digest};
 use engine_types::ExposeInternalErrors;
-use graphql_frontend::{process_response, ExecuteQueryResult, RootFieldResult};
+use graphql_frontend::{ExecuteQueryResult, RootFieldResult, process_response};
 use graphql_ir::RequestPlan;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;

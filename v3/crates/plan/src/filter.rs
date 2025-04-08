@@ -1,6 +1,6 @@
 use crate::process_model_predicate;
 mod helpers;
-use super::column::{to_resolved_column, ResolvedColumn};
+use super::column::{ResolvedColumn, to_resolved_column};
 use super::types::{BooleanExpressionError, PermissionError, PlanError};
 use crate::metadata_accessor::OutputObjectTypeView;
 use hasura_authn_core::Session;

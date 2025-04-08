@@ -37,7 +37,7 @@ pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::Namespaced
                         Some(operation_name) => {
                             return Err(Error::DuplicateOperationDefinitions {
                                 operation_name: operation_name.item.clone(),
-                            })
+                            });
                         }
                         None => return Err(Error::AnonymousOperationMustBeUnique),
                     }

@@ -61,7 +61,9 @@ impl ContextualError for CommandsError {
 pub enum CommandsError {
     #[error("the following command is defined more than once: {name:}")]
     DuplicateCommandDefinition { name: Qualified<CommandName> },
-    #[error("the argument '{argument_name}' in command '{command_name}' has an unknown type: {argument_type}")]
+    #[error(
+        "the argument '{argument_name}' in command '{command_name}' has an unknown type: {argument_type}"
+    )]
     UnknownCommandArgumentType {
         command_name: Qualified<CommandName>,
         argument_name: Spanned<ArgumentName>,
@@ -78,7 +80,9 @@ pub enum CommandsError {
     DuplicateCommandSourceDefinition {
         command_name: Qualified<CommandName>,
     },
-    #[error("the source data connector {data_connector:} for command {command_name:} has not been defined")]
+    #[error(
+        "the source data connector {data_connector:} for command {command_name:} has not been defined"
+    )]
     UnknownCommandDataConnector {
         command_name: Qualified<CommandName>,
         data_connector: Qualified<DataConnectorName>,
@@ -94,31 +98,41 @@ pub enum CommandsError {
     CommandSourceRequiredForPredicate {
         command_name: Qualified<CommandName>,
     },
-    #[error("a preset argument {argument_name:} has been set for the command {command_name:} but no such argument exists for this command")]
+    #[error(
+        "a preset argument {argument_name:} has been set for the command {command_name:} but no such argument exists for this command"
+    )]
     CommandArgumentPresetMismatch {
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
     },
-    #[error("the procedure {procedure:} in the data connector {data_connector:} for command {command_name:} has not been defined")]
+    #[error(
+        "the procedure {procedure:} in the data connector {data_connector:} for command {command_name:} has not been defined"
+    )]
     UnknownCommandProcedure {
         command_name: Qualified<CommandName>,
         data_connector: Qualified<DataConnectorName>,
         procedure: ProcedureName,
     },
-    #[error("the function {function:} in the data connector {data_connector:} for command {command_name:} has not been defined")]
+    #[error(
+        "the function {function:} in the data connector {data_connector:} for command {command_name:} has not been defined"
+    )]
     UnknownCommandFunction {
         command_name: Qualified<CommandName>,
         data_connector: Qualified<DataConnectorName>,
         function: FunctionName,
     },
-    #[error("An error occurred while mapping arguments in the command {command_name:} to the function {function_name:} in the data connector {data_connector_name:}: {error:}")]
+    #[error(
+        "An error occurred while mapping arguments in the command {command_name:} to the function {function_name:} in the data connector {data_connector_name:}: {error:}"
+    )]
     CommandFunctionArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,
         function_name: FunctionName,
         error: ArgumentMappingError,
     },
-    #[error("An error occurred while mapping arguments in the command {command_name:} to the procedure {procedure_name:} in the data connector {data_connector_name:}: {error:}")]
+    #[error(
+        "An error occurred while mapping arguments in the command {command_name:} to the procedure {procedure_name:} in the data connector {data_connector_name:}: {error:}"
+    )]
     CommandProcedureArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,

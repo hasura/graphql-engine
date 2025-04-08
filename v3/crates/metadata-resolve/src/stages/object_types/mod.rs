@@ -29,7 +29,7 @@ use crate::stages::{
     apollo, data_connector_scalar_types, data_connectors, graphql_config, scalar_types,
 };
 
-use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference, Qualified};
+use crate::types::subgraph::{Qualified, mk_qualified_type_name, mk_qualified_type_reference};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;

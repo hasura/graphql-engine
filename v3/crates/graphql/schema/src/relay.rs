@@ -5,13 +5,12 @@ use std::collections::{BTreeMap, HashMap};
 
 use super::permissions;
 use crate::types::{
-    self,
+    self, Annotation, OutputAnnotation,
     output_type::{
-        get_custom_output_type, get_object_type_representation, get_output_type, ID_TYPE_REFERENCE,
+        ID_TYPE_REFERENCE, get_custom_output_type, get_object_type_representation, get_output_type,
     },
-    Annotation, OutputAnnotation,
 };
-use crate::{mk_typename, Role, GDS};
+use crate::{GDS, Role, mk_typename};
 
 pub fn node_interface_schema(
     builder: &mut gql_schema::Builder<GDS>,

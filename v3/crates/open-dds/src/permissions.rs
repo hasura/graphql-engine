@@ -1,6 +1,6 @@
 use indexmap::IndexSet;
 use schemars::JsonSchema;
-use serde::{de::Error, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error};
 use serde_json::Value as JsonValue;
 
 use crate::{
@@ -373,8 +373,8 @@ impl traits::OpenDd for NullableModelPredicate {
         }
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        <Self as schemars::JsonSchema>::json_schema(gen)
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        <Self as schemars::JsonSchema>::json_schema(generator)
     }
 
     fn _schema_name() -> String {
@@ -727,8 +727,8 @@ impl traits::OpenDd for ValueExpression {
             error: e.into_inner(),
         })
     }
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut s = ValueExpressionImpl::json_schema(gen);
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut s = ValueExpressionImpl::json_schema(generator);
         if let schemars::schema::Schema::Object(o) = &mut s {
             if let Some(m) = &mut o.metadata {
                 m.id = Some("https://hasura.io/jsonschemas/metadata/ValueExpression".into());
@@ -767,8 +767,8 @@ impl traits::OpenDd for ValueExpressionOrPredicate {
             }),
         }
     }
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut s = ValueExpressionOrPredicateImpl::json_schema(gen);
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut s = ValueExpressionOrPredicateImpl::json_schema(generator);
         if let schemars::schema::Schema::Object(o) = &mut s {
             if let Some(m) = &mut o.metadata {
                 m.id = Some(

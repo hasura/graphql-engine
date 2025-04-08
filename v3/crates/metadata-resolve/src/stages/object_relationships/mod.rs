@@ -310,7 +310,7 @@ fn resolve_relationship_mappings_model_field_target(
                 location: "target".to_string(),
                 type_name: source_type_name.clone(),
                 relationship_name: relationship.name.clone(),
-            })
+            });
         }
         _ => return Err(RelationshipError::NestedFieldPathsNotSupportedYet),
     };
@@ -476,7 +476,7 @@ fn resolve_relationship_mappings_command(
                         relationship_name: relationship.name.clone(),
                         type_name: source_type_name.clone(),
                     },
-                )
+                );
             }
         };
 

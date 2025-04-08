@@ -15,19 +15,18 @@ use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{ObjectFieldKind, TypeId};
 use metadata_resolve::{
-    mk_name, BooleanExpressionComparableRelationship, ComparisonExpressionInfo,
-    GlobalGraphqlConfig, IncludeLogicalOperators, ModelWithPermissions,
-    ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo, ObjectComparisonKind,
-    ObjectTypeWithRelationships, OperatorMapping, Qualified, QualifiedTypeReference,
-    RelationshipCapabilities, RelationshipField, RelationshipModelMapping,
-    ResolvedObjectBooleanExpressionType, ScalarBooleanExpressionGraphqlConfig,
-    ScalarComparisonKind,
+    BooleanExpressionComparableRelationship, ComparisonExpressionInfo, GlobalGraphqlConfig,
+    IncludeLogicalOperators, ModelWithPermissions, ObjectBooleanExpressionGraphqlConfig,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, ObjectTypeWithRelationships,
+    OperatorMapping, Qualified, QualifiedTypeReference, RelationshipCapabilities,
+    RelationshipField, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
+    ScalarBooleanExpressionGraphqlConfig, ScalarComparisonKind, mk_name,
 };
 
+use crate::GDS;
 use crate::mk_deprecation_status;
 use crate::permissions;
 use crate::types;
-use crate::GDS;
 
 use crate::Error;
 

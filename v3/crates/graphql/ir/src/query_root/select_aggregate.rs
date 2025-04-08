@@ -3,7 +3,7 @@
 //! A 'select_aggregate' operation fetches a set of aggregates over rows of a model
 
 use graphql_schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
-use graphql_schema::{InputAnnotation, GDS};
+use graphql_schema::{GDS, InputAnnotation};
 /// Generates the IR for a 'select_aggregate' operation
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -174,7 +174,7 @@ pub fn aggregate_query(
                             return Err(error::InternalEngineError::UnexpectedAnnotation {
                                 annotation: filter_input_field_arg.info.generic.clone(),
                             }
-                            .into())
+                            .into());
                         }
                     }
                 }
@@ -184,7 +184,7 @@ pub fn aggregate_query(
                 return Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: field_call_argument.info.generic.clone(),
                 }
-                .into())
+                .into());
             }
         }
     }

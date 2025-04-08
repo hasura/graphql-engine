@@ -11,8 +11,8 @@ use open_dds::{
     models::ModelName,
     types::{CustomTypeName, DataConnectorArgumentName},
 };
-use plan::count_model;
 use plan::UnresolvedArgument;
+use plan::count_model;
 use plan_types::{UsagesCounts, VariableName};
 use serde::Serialize;
 use std::collections::BTreeMap;

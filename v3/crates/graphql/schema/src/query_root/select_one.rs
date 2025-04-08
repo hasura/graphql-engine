@@ -8,12 +8,12 @@ use open_dds::types::FieldName;
 use std::collections::BTreeMap;
 
 use crate::types::output_type::get_object_type_representation;
-use crate::{mk_deprecation_status, GDS};
+use crate::{GDS, mk_deprecation_status};
 use crate::{
     model_arguments, permissions,
     types::{
-        self, input_type::get_input_type, output_type::get_custom_output_type, Annotation,
-        ModelInputAnnotation,
+        self, Annotation, ModelInputAnnotation, input_type::get_input_type,
+        output_type::get_custom_output_type,
     },
 };
 use metadata_resolve;

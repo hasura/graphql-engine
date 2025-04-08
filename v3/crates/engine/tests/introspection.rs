@@ -104,8 +104,8 @@ fn test_graphql_deprecated() -> anyhow::Result<()> {
 // old `object_boolean_expression_type`
 
 #[test]
-fn test_introspect_boolean_expression_in_command_object_boolean_expression_type(
-) -> anyhow::Result<()> {
+fn test_introspect_boolean_expression_in_command_object_boolean_expression_type()
+-> anyhow::Result<()> {
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
@@ -114,7 +114,8 @@ fn test_introspect_boolean_expression_in_command_object_boolean_expression_type(
         &[
             common_metadata_path_string,
             common_command_metadata_path_string,
-        ])
+        ],
+    )
 }
 
 // new `boolean_expression_type`
@@ -136,8 +137,8 @@ fn test_introspect_boolean_expression_in_command_boolean_expression_type() -> an
 // new `boolean_expression_type` with manually passed argument
 
 #[test]
-fn test_introspect_boolean_expression_in_command_boolean_expression_type_passed_in_query(
-) -> anyhow::Result<()> {
+fn test_introspect_boolean_expression_in_command_boolean_expression_type_passed_in_query()
+-> anyhow::Result<()> {
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
@@ -234,8 +235,8 @@ fn test_introspect_aggregates_relationship_field_filtering() -> anyhow::Result<(
 }
 
 #[test]
-fn test_introspect_relationship_comparison_capabilities_with_object_boolean_expression_types(
-) -> anyhow::Result<()> {
+fn test_introspect_relationship_comparison_capabilities_with_object_boolean_expression_types()
+-> anyhow::Result<()> {
     let test_path_string = "execute/relationships/no_relationship_comparison_capability/with_object_boolean_expression_type";
     common::test_introspection_expectation(
         test_path_string,
@@ -244,8 +245,8 @@ fn test_introspect_relationship_comparison_capabilities_with_object_boolean_expr
 }
 
 #[test]
-fn test_introspect_relationship_comparison_capabilities_with_boolean_expression_types(
-) -> anyhow::Result<()> {
+fn test_introspect_relationship_comparison_capabilities_with_boolean_expression_types()
+-> anyhow::Result<()> {
     let test_path_string =
         "execute/relationships/no_relationship_comparison_capability/with_boolean_expression_type";
     common::test_introspection_expectation(
@@ -255,13 +256,12 @@ fn test_introspect_relationship_comparison_capabilities_with_boolean_expression_
 }
 
 #[test]
-fn test_introspect_model_select_many_where_object_boolean_array_relationship_simple(
-) -> anyhow::Result<()> {
+fn test_introspect_model_select_many_where_object_boolean_array_relationship_simple()
+-> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/relationships/object_boolean_expression_type/array/simple";
     let common_metadata_path_string =
         "execute/common_metadata/postgres_connector_ndc_v01_schema.json";
-    let boolean_exp_rel_metadata_path_string =
-        "execute/models/select_many/where/relationships/object_boolean_expression_type/common_metadata.json";
+    let boolean_exp_rel_metadata_path_string = "execute/models/select_many/where/relationships/object_boolean_expression_type/common_metadata.json";
     common::test_introspection_expectation(
         test_path_string,
         &[

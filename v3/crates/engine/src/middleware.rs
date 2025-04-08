@@ -3,11 +3,11 @@ use std::borrow::Cow;
 use crate::EngineState;
 use crate::VERSION;
 use axum::{
+    Extension,
     extract::{ConnectInfo, State},
     http::{HeaderMap, Request},
     middleware::Next,
     response::IntoResponse,
-    Extension,
 };
 use axum_core::body::Body;
 use engine_types::WithMiddlewareErrorConverter;

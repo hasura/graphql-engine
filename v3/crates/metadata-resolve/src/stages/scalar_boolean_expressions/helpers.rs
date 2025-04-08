@@ -1,7 +1,7 @@
 use crate::stages::data_connector_scalar_types;
 
 use crate::types::subgraph::{
-    mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
+    Qualified, QualifiedBaseType, QualifiedTypeReference, mk_qualified_type_name,
 };
 
 use ndc_models;

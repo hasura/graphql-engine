@@ -23,14 +23,14 @@ pub use aggregates::mk_alias_from_graphql_field_path;
 pub use commands::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
 pub use error::{Error, InternalDeveloperError, InternalEngineError};
 pub use filter::FilterExpression;
-pub use global_id::{global_id_col_format, GLOBAL_ID_VERSION};
+pub use global_id::{GLOBAL_ID_VERSION, global_id_col_format};
 pub use model_selection::ModelSelection;
 pub use model_tracking::get_all_usage_counts_in_query;
 pub use mutation_root::generate_ir as generate_mutation_ir;
 pub use order_by::OrderBy;
 pub use plan::{
-    generate_request_plan, ApolloFederationSelect, Error as GraphqlIrPlanError, MutationPlan,
-    NodeQueryPlan, QueryPlan, RequestPlan,
+    ApolloFederationSelect, Error as GraphqlIrPlanError, MutationPlan, NodeQueryPlan, QueryPlan,
+    RequestPlan, generate_request_plan,
 };
 pub use query_root::generate_ir as generate_query_ir;
 pub use root_field::{

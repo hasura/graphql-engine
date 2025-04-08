@@ -41,7 +41,9 @@ pub enum FieldError {
     #[error("subscription are not supported over HTTP")]
     SubscriptionsNotSupported,
 
-    #[error("Relationship '{name}' is either remote or not having 'relation_comparisons' NDC capability; not supported for filtering")]
+    #[error(
+        "Relationship '{name}' is either remote or not having 'relation_comparisons' NDC capability; not supported for filtering"
+    )]
     RelationshipPredicatesNotSupported { name: RelationshipName },
 
     #[error("internal error: {0}")]

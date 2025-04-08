@@ -9,18 +9,18 @@ mod relationships;
 mod types;
 use crate::types::PlanError;
 pub use arguments::{
-    process_argument_presets_for_command, process_argument_presets_for_model,
     ArgumentPresetExecutionError, MapFieldNamesError, UnresolvedArgument,
+    process_argument_presets_for_command, process_argument_presets_for_model,
 };
-pub use command::{from_command, CommandPlan, FromCommand};
+pub use command::{CommandPlan, FromCommand, from_command};
 pub use filter::{build_relationship_comparison_expression, plan_expression};
 use indexmap::IndexMap;
 pub use model::{from_model_aggregate_selection, from_model_group_by, from_model_selection};
 pub use permissions::process_model_predicate;
 pub use relationships::{
-    collect_remote_join_object_type_field_mappings, get_relationship_field_mapping_of_field_name,
-    process_command_relationship_definition, process_model_relationship_definition,
-    RelationshipFieldMappingError,
+    RelationshipFieldMappingError, collect_remote_join_object_type_field_mappings,
+    get_relationship_field_mapping_of_field_name, process_command_relationship_definition,
+    process_model_relationship_definition,
 };
 
 use hasura_authn_core::Session;

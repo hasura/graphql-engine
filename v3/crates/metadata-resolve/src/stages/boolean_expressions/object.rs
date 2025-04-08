@@ -1,9 +1,9 @@
 use super::{
-    error::BooleanExpressionError, graphql, helpers, BooleanExpressionComparableRelationship,
-    BooleanExpressionIssue, BooleanExpressionTypeIdentifier, ComparableFieldKind,
-    ComparisonExpressionInfo, ObjectComparisonExpressionInfo, ObjectComparisonKind,
-    OperatorMapping, ResolvedObjectBooleanExpressionType,
-    ResolvedObjectBooleanExpressionTypeFields, ScalarComparisonKind,
+    BooleanExpressionComparableRelationship, BooleanExpressionIssue,
+    BooleanExpressionTypeIdentifier, ComparableFieldKind, ComparisonExpressionInfo,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, OperatorMapping,
+    ResolvedObjectBooleanExpressionType, ResolvedObjectBooleanExpressionTypeFields,
+    ScalarComparisonKind, error::BooleanExpressionError, graphql, helpers,
 };
 use crate::stages::{
     graphql_config, object_types, relationships, scalar_boolean_expressions, type_permissions,

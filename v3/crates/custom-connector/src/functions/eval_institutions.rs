@@ -4,7 +4,7 @@ use ndc_models;
 
 use crate::{
     arguments::{check_all_arguments_used, parse_expression_argument, parse_object_array_argument},
-    query::{eval_expression, Result},
+    query::{Result, eval_expression},
     state::{AppState, Row},
 };
 

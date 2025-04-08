@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use goldenfile::{differs::text_diff, Mint};
+use goldenfile::{Mint, differs::text_diff};
 use graphql_frontend::execute_query;
 use graphql_schema::GDS;
 use hasura_authn_core::{
@@ -8,7 +8,7 @@ use hasura_authn_core::{
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::data_connectors::NdcVersion;
-use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
+use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName};
 use pretty_assertions::assert_eq;
 use serde_json as json;
 use std::collections::BTreeMap;

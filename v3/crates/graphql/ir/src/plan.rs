@@ -2,11 +2,11 @@ mod commands;
 mod error;
 mod types;
 use crate::{
-    ApolloFederationRootFields, MutationRootField, ProcedureBasedCommand, QueryRootField,
-    SubscriptionRootField, IR,
+    ApolloFederationRootFields, IR, MutationRootField, ProcedureBasedCommand, QueryRootField,
+    SubscriptionRootField,
 };
 pub use error::Error;
-use graphql_schema::{GDSRoleNamespaceGetter, GDS};
+use graphql_schema::{GDS, GDSRoleNamespaceGetter};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql as gql;

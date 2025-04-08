@@ -164,7 +164,9 @@ fn graphql_files_in_dir(dir: &Path) -> Vec<PathBuf> {
 
         if let Some(existing) = seen.get(&number) {
             let suggest = dir.join(format!("{next_number:03}_{name}"));
-            panic!("Conflicting test file: {path:?} has the same number as {existing:?}. Suggested name: {suggest:?}");
+            panic!(
+                "Conflicting test file: {path:?} has the same number as {existing:?}. Suggested name: {suggest:?}"
+            );
         }
 
         seen.insert(number, path);

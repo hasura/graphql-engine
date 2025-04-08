@@ -2,7 +2,7 @@
 resolver = "2"
 
 package.version = "3.0.0"
-package.edition = "2021"
+package.edition = "2024"
 package.license = "Apache-2.0"
 
 members = [

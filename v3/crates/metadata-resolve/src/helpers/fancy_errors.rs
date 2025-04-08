@@ -19,8 +19,10 @@ pub fn to_fancy_errors<'a>(
             .collect(),
 
         _ => {
-            vec![to_fancy_error(raw_metadata, error, config)
-                .unwrap_or_else(|| to_fallback_error(error.into_inner(), config))]
+            vec![
+                to_fancy_error(raw_metadata, error, config)
+                    .unwrap_or_else(|| to_fallback_error(error.into_inner(), config)),
+            ]
         }
     }
 }

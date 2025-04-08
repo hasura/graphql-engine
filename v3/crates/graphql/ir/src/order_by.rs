@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
 use crate::error;
-use graphql_schema::OrderByRelationshipAnnotation;
 use graphql_schema::GDS;
+use graphql_schema::OrderByRelationshipAnnotation;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use indexmap::IndexMap;
 use lang_graphql::normalized_ast::{self as normalized_ast, Value};
@@ -156,7 +156,7 @@ pub fn build_order_by_element_open_dd_ir<'s>(
                     &annotation => {
                         return Err(error::InternalEngineError::UnexpectedAnnotation {
                             annotation: annotation.clone(),
-                        })?
+                        })?;
                     }
                 };
                 let operand =

@@ -1,7 +1,7 @@
 use super::helpers::get_object_type;
 use super::types::{RelationshipNode, RelationshipTree};
-use crate::catalog::ObjectType;
 use crate::RequestError;
+use crate::catalog::ObjectType;
 use jsonapi_library::query::Query;
 use metadata_resolve::Qualified;
 use open_dds::{relationships::RelationshipType, types::CustomTypeName};

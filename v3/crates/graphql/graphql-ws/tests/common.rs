@@ -7,9 +7,8 @@ use graphql_ws::GRAPHQL_WS_PROTOCOL;
 use std::{net, path::PathBuf, sync::Arc};
 use tokio::{net::TcpStream, task::JoinHandle};
 use tokio_tungstenite::{
-    connect_async,
+    MaybeTlsStream, WebSocketStream, connect_async,
     tungstenite::{self, client::IntoClientRequest},
-    MaybeTlsStream, WebSocketStream,
 };
 
 #[allow(dead_code)]

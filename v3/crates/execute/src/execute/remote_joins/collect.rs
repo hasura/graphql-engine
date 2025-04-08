@@ -12,10 +12,10 @@ use std::collections::{BTreeMap, HashSet};
 
 use super::error;
 use plan_types::{CommandReturnKind, ProcessResponseAs, VariableName};
+use plan_types::{FUNCTION_IR_VALUE_COLUMN_NAME, RemoteJoinVariable};
 use plan_types::{
     JoinLocations, JoinNode, LocationKind, RemoteJoin, RemoteJoinVariableSet, SourceFieldAlias,
 };
-use plan_types::{RemoteJoinVariable, FUNCTION_IR_VALUE_COLUMN_NAME};
 
 /// An executable join node is a remote join node, it's collected join values
 /// from a LHS response, and the rest of the join sub-tree
@@ -109,7 +109,7 @@ fn collect_argument_from_rows(
                                 "Unexpected aggregate response on the LHS of a remote join"
                                     .to_owned(),
                         }
-                        .into())
+                        .into());
                     }
                     ProcessResponseAs::CommandResponse {
                         command_name: _,

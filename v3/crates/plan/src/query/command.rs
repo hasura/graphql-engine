@@ -18,7 +18,7 @@ use plan_types::{
     NdcFieldAlias, NdcRelationshipName, NestedArray, NestedField, NestedObject,
     PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode, Relationship,
 };
-use plan_types::{UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME};
+use plan_types::{FUNCTION_IR_VALUE_COLUMN_NAME, UniqueNumber};
 use std::collections::BTreeMap;
 
 #[derive(Debug)]

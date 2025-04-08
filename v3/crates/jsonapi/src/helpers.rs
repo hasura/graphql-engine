@@ -1,5 +1,5 @@
-use crate::catalog::ObjectType;
 use crate::ParseError;
+use crate::catalog::ObjectType;
 use metadata_resolve::{Qualified, QualifiedBaseType, QualifiedTypeReference};
 use open_dds::{relationships::RelationshipType, types::CustomTypeName};
 use std::collections::BTreeMap;

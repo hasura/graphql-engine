@@ -30,7 +30,7 @@ The `OpenDd` trait is defined as follows,
 pub trait OpenDd: Sized {
     fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError>;
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema;
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema;
 
     fn _schema_name() -> String;
 

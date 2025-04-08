@@ -4,11 +4,11 @@ use crate::helpers::ndc_validation;
 use crate::helpers::type_mappings;
 use crate::helpers::type_validation;
 use crate::helpers::typecheck::{
-    typecheck_qualified_type_reference, TypecheckError, TypecheckIssue,
+    TypecheckError, TypecheckIssue, typecheck_qualified_type_reference,
 };
 use crate::helpers::types::{
-    get_object_type_for_boolean_expression, get_type_representation, unwrap_custom_type_name,
-    TypeRepresentation,
+    TypeRepresentation, get_object_type_for_boolean_expression, get_type_representation,
+    unwrap_custom_type_name,
 };
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions,
@@ -49,7 +49,9 @@ pub enum ArgumentMappingError {
     DuplicateNdcArgumentMapping {
         ndc_argument_name: DataConnectorArgumentName,
     },
-    #[error("the argument {argument_name} is mapped to the data connector argument {ndc_argument_name} which is already used as an argument preset in the DataConnectorLink")]
+    #[error(
+        "the argument {argument_name} is mapped to the data connector argument {ndc_argument_name} which is already used as an argument preset in the DataConnectorLink"
+    )]
     ArgumentAlreadyPresetInDataConnectorLink {
         argument_name: ArgumentName,
         ndc_argument_name: DataConnectorArgumentName,
@@ -81,7 +83,9 @@ pub enum ArgumentMappingIssue {
     UnmappedNdcArguments {
         ndc_argument_names: Vec<DataConnectorArgumentName>,
     },
-    #[error("the type of argument '{argument_name:}' is not compatible with the type of the data connector argument '{ndc_argument_name:}': {issue:}")]
+    #[error(
+        "the type of argument '{argument_name:}' is not compatible with the type of the data connector argument '{ndc_argument_name:}': {issue:}"
+    )]
     IncompatibleType {
         argument_name: ArgumentName,
         ndc_argument_name: DataConnectorArgumentName,

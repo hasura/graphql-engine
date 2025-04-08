@@ -3,12 +3,12 @@ use std::collections::BTreeMap;
 use super::types::{GraphQlParseError, GraphQlValidationError};
 use crate::query_usage;
 use gql::normalized_ast::Operation;
-use graphql_schema::{GDSRoleNamespaceGetter, GDS};
+use graphql_schema::{GDS, GDSRoleNamespaceGetter};
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use std::sync::Arc;
-use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
+use tracing_util::{AttributeVisibility, SpanVisibility, set_attribute_on_active_span};
 
 /// Parses a raw GraphQL request into a GQL query AST
 pub fn parse_query(

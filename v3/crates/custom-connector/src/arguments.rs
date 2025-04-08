@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, collections::BTreeMap, fmt::Display};
 
-use axum::{http::StatusCode, Json};
+use axum::{Json, http::StatusCode};
 use ndc_models::Argument;
 use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
 
@@ -130,7 +130,7 @@ fn change_case(
                     message: "change_case argument must be 'lower' or 'upper'".into(),
                     details: serde_json::Value::Null,
                 }),
-            ))
+            ));
         }
     };
 
@@ -266,7 +266,7 @@ fn hash(
                         .into(),
                     details: serde_json::Value::Null,
                 }),
-            ))
+            ));
         }
     };
     Ok(serde_json::Value::String(hash))

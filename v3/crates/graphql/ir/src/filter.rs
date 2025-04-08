@@ -9,7 +9,7 @@ use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKi
 use graphql_schema::{
     FilterRelationshipAnnotation, ObjectBooleanExpressionField, ScalarBooleanExpressionField,
 };
-use graphql_schema::{LogicalOperatorField, GDS};
+use graphql_schema::{GDS, LogicalOperatorField};
 use open_dds::types::FieldName;
 use plan::count_model;
 use plan_types::{Expression, UsagesCounts};

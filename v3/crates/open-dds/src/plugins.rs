@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{data_connector::HttpHeaders, impl_OpenDd_default_for, EnvironmentValue};
+use crate::{EnvironmentValue, data_connector::HttpHeaders, impl_OpenDd_default_for};
 
 #[derive(
     Serialize, Deserialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd, JsonSchema,

@@ -9,8 +9,8 @@ use open_dds::{
 };
 
 pub use super::{
-    resolve_ndc_type, IsNullOperator, IsNullOperatorGraphqlConfig, LogicalOperators,
-    ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionTypeError,
+    IsNullOperator, IsNullOperatorGraphqlConfig, LogicalOperators,
+    ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionTypeError, resolve_ndc_type,
 };
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,

@@ -1,4 +1,4 @@
-use metadata_resolve::{self, serialize_qualified_btreemap, Qualified};
+use metadata_resolve::{self, Qualified, serialize_qualified_btreemap};
 use open_dds::{
     arguments::ArgumentName,
     commands::{CommandName, FunctionName},

@@ -1,6 +1,6 @@
 //! Join tree and related types for remote joins.
 //!
-use super::{super::variable_name::VariableName, query, ProcessResponseAs};
+use super::{super::variable_name::VariableName, ProcessResponseAs, query};
 use indexmap::IndexMap;
 use metadata_resolve::Qualified;
 use metadata_resolve::QualifiedTypeReference;

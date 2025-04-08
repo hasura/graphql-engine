@@ -1,11 +1,11 @@
 use crate::types::error::TypePredicateError;
 
+use crate::QualifiedTypeReference;
 use crate::stages::{
     boolean_expressions, data_connectors, models, object_relationships, object_types,
     scalar_boolean_expressions,
 };
 use crate::types::subgraph::Qualified;
-use crate::QualifiedTypeReference;
 use indexmap::IndexMap;
 use open_dds::{
     models::ModelName,

@@ -5,7 +5,7 @@ use std::{
     sync::LazyLock,
 };
 
-use schemars::{schema, JsonSchema};
+use schemars::{JsonSchema, schema};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -285,7 +285,7 @@ impl JsonSchema for OpenDdFlags {
         "OpenDdFlags".to_owned()
     }
 
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schema::Schema {
         let mut properties = schemars::Map::<String, schema::Schema>::new();
 
         for flag in Flag::iter() {

@@ -15,8 +15,8 @@ use crate::{
 use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{
-    de::value::{StrDeserializer, StringDeserializer},
     Deserialize, Serialize,
+    de::value::{StrDeserializer, StringDeserializer},
 };
 
 #[derive(
@@ -148,7 +148,7 @@ impl JsonSchema for TypeReference {
     }
 
     // TODO: Add description / examples to the json schema
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         schemars::schema::Schema::Object(schemars::schema::SchemaObject {
             metadata: Some(Box::new(schemars::schema::Metadata {
                 title: Some(Self::schema_name()),
@@ -177,8 +177,8 @@ impl JsonSchema for BaseType {
     }
 
     // TODO: Add description / examples to the json schema
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        String::json_schema(gen)
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        String::json_schema(generator)
     }
 }
 

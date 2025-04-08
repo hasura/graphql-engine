@@ -4,20 +4,20 @@ use metadata_resolve::http::SerializableHeaderMap;
 use serde_json as json;
 use tracing_util::SpanVisibility;
 
-use std::collections::hash_map::RandomState;
 use std::collections::BTreeMap;
+use std::collections::hash_map::RandomState;
 
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Alias, TypeName};
 use lang_graphql::normalized_ast;
 use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 
-use graphql_ir::{global_id_col_format, GLOBAL_ID_VERSION};
-use graphql_schema::{AggregateOutputAnnotation, Annotation, GlobalID, OutputAnnotation, GDS};
-use metadata_resolve::data_connectors;
+use graphql_ir::{GLOBAL_ID_VERSION, global_id_col_format};
+use graphql_schema::{AggregateOutputAnnotation, Annotation, GDS, GlobalID, OutputAnnotation};
 use metadata_resolve::Qualified;
+use metadata_resolve::data_connectors;
 use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{CommandReturnKind, ProcessResponseAs};
 

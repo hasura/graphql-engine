@@ -1,14 +1,13 @@
 use clap::Parser;
 use engine::{
-    get_base_routes, get_cors_layer, get_jsonapi_route, get_metadata_routes,
-    internal_flags::{resolve_unstable_features, UnstableFeature},
-    StartupError, VERSION,
+    StartupError, VERSION, get_base_routes, get_cors_layer, get_jsonapi_route, get_metadata_routes,
+    internal_flags::{UnstableFeature, resolve_unstable_features},
 };
 use engine_types::ExposeInternalErrors;
 use serde::Serialize;
 use std::net;
 use std::path::PathBuf;
-use tracing_util::{add_event_on_active_span, set_attribute_on_active_span, SpanVisibility};
+use tracing_util::{SpanVisibility, add_event_on_active_span, set_attribute_on_active_span};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;

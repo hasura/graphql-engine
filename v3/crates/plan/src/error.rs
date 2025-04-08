@@ -35,24 +35,32 @@ pub enum InternalDeveloperError {
         session_variable: SessionVariableName,
     },
 
-    #[error("The session variables {session_variable} is not encoded as a string. JSON-typed session variables are not supported unless you update your compatibility date")]
+    #[error(
+        "The session variables {session_variable} is not encoded as a string. JSON-typed session variables are not supported unless you update your compatibility date"
+    )]
     VariableJsonNotSupported {
         session_variable: SessionVariableName,
     },
 
-    #[error("Session variable {session_variable} value is of an unexpected type. Expected: {expected}, but found: {found}")]
+    #[error(
+        "Session variable {session_variable} value is of an unexpected type. Expected: {expected}, but found: {found}"
+    )]
     VariableTypeCast {
         session_variable: SessionVariableName,
         expected: String,
         found: String,
     },
 
-    #[error("Typecasting session variable {session_variable} to an array is not supported. Update your compatibility date to enable JSON session variables")]
+    #[error(
+        "Typecasting session variable {session_variable} to an array is not supported. Update your compatibility date to enable JSON session variables"
+    )]
     VariableArrayTypeCastNotSupported {
         session_variable: SessionVariableName,
     },
 
-    #[error("Expected session variable {session_variable} to be a valid JSON value, but encountered a JSON parsing error: {parse_error}")]
+    #[error(
+        "Expected session variable {session_variable} to be a valid JSON value, but encountered a JSON parsing error: {parse_error}"
+    )]
     VariableExpectedJson {
         session_variable: SessionVariableName,
         parse_error: serde_json::Error,
@@ -75,7 +83,9 @@ pub enum InternalDeveloperError {
     #[error("{0}")]
     MapFieldNamesError(#[from] MapFieldNamesError),
 
-    #[error("The relationship '{relationship_name}' is from a nested object and cannot be used in a predicate")]
+    #[error(
+        "The relationship '{relationship_name}' is from a nested object and cannot be used in a predicate"
+    )]
     NestedObjectRelationshipInPredicate { relationship_name: RelationshipName },
 }
 

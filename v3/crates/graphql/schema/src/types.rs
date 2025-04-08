@@ -20,9 +20,9 @@ use open_dds::{
 };
 
 use metadata_resolve::{
-    self, deserialize_non_string_key_btreemap, serialize_non_string_key_btreemap, FieldPresetInfo,
-    LogicalOperators, NdcColumnForComparison, OperatorMapping, OrderByExpressionIdentifier,
-    Qualified, QualifiedTypeReference,
+    self, FieldPresetInfo, LogicalOperators, NdcColumnForComparison, OperatorMapping,
+    OrderByExpressionIdentifier, Qualified, QualifiedTypeReference,
+    deserialize_non_string_key_btreemap, serialize_non_string_key_btreemap,
 };
 
 use json_ext::HashMapWithJsonKey;

@@ -127,7 +127,7 @@ mod tests {
     use hasura_authn_core::JsonSessionVariableValue;
     use jsonwebtoken as jwt;
     use jsonwebtoken::Algorithm;
-    use jwt::{encode, EncodingKey};
+    use jwt::{EncodingKey, encode};
     use open_dds::session_variables::SessionVariableName;
     use reqwest::header::AUTHORIZATION;
     use serde_json::json;

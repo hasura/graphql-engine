@@ -1,7 +1,7 @@
 use super::{field_selection, model_target};
 
 use crate::types::PlanError;
-use crate::{column::to_resolved_column, OutputObjectTypeView};
+use crate::{OutputObjectTypeView, column::to_resolved_column};
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
 use open_dds::{

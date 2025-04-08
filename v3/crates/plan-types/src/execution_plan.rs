@@ -20,9 +20,9 @@ pub use query::{
 };
 pub use relationships::{Relationship, RelationshipArgument};
 pub use remote_joins::{
-    mk_argument_target_variable_name, JoinLocations, JoinNode, Location, LocationKind, RemoteJoin,
-    RemoteJoinFieldMapping, RemoteJoinObjectFieldMapping, RemoteJoinObjectTargetField,
-    RemoteJoinType, RemoteJoinVariable, RemoteJoinVariableSet, SourceFieldAlias, TargetField,
+    JoinLocations, JoinNode, Location, LocationKind, RemoteJoin, RemoteJoinFieldMapping,
+    RemoteJoinObjectFieldMapping, RemoteJoinObjectTargetField, RemoteJoinType, RemoteJoinVariable,
+    RemoteJoinVariableSet, SourceFieldAlias, TargetField, mk_argument_target_variable_name,
 };
 
 // these versions of the types are equivalent to the old "Resolved" versions

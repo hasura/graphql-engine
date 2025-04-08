@@ -1,6 +1,6 @@
+use crate::Qualified;
 use crate::stages::boolean_expressions;
 use crate::types::error::ContextualError;
-use crate::Qualified;
 use open_dds::{
     arguments::ArgumentName, commands::CommandName, models::ModelName, types::CustomTypeName,
 };

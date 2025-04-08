@@ -7,10 +7,10 @@ mod query_usage;
 mod steps;
 mod types;
 
-pub use error::{build_state_with_middleware_error_converter, RequestError};
-pub use execute::{execute_mutation_plan, execute_query_plan, ExecuteQueryResult, RootFieldResult};
+pub use error::{RequestError, build_state_with_middleware_error_converter};
+pub use execute::{ExecuteQueryResult, RootFieldResult, execute_mutation_plan, execute_query_plan};
 pub use explain::execute_explain;
-pub use explain::types::{redact_ndc_explain, ExplainResponse};
+pub use explain::types::{ExplainResponse, redact_ndc_explain};
 pub use process_response::process_response;
 pub use query::{
     execute_query, execute_query_internal, set_request_metadata_attributes, set_usage_attributes,
@@ -20,14 +20,14 @@ pub use types::{GraphQLErrors, GraphQLResponse};
 
 #[cfg(test)]
 mod tests {
-    use goldenfile::{differs::text_diff, Mint};
+    use goldenfile::{Mint, differs::text_diff};
     use hasura_authn_core::{Identity, Role, Session, SessionVariableValue};
     use lang_graphql::http::Request;
     use lang_graphql::{
-        parser::Parser, validation::normalize_request,
-        validation::NonNullGraphqlVariablesValidation,
+        parser::Parser, validation::NonNullGraphqlVariablesValidation,
+        validation::normalize_request,
     };
-    use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
+    use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName};
     use serde_json as json;
     use std::collections::BTreeMap;
     use std::{

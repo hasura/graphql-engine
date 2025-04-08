@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql::{ast::common as ast, normalized_ast};

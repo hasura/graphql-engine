@@ -2,8 +2,8 @@ use indexmap::IndexMap;
 use open_dds::types::FieldName;
 use std::collections::HashMap;
 
-use crate::types;
 use crate::Role;
+use crate::types;
 use metadata_resolve::{self};
 
 /// Build namespace annotation for select permissions

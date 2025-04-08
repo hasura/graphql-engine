@@ -1,9 +1,9 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use criterion::{BenchmarkId, Criterion, SamplingMode, criterion_group, criterion_main};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::Request;
 use lang_graphql::parser::Parser;
-use lang_graphql::validation::{normalize_request, NonNullGraphqlVariablesValidation};
+use lang_graphql::validation::{NonNullGraphqlVariablesValidation, normalize_request};
 use open_dds::permissions::Role;
 use std::collections::BTreeMap;
 use std::fs;

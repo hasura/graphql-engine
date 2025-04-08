@@ -5,9 +5,9 @@ use std::sync::Arc;
 mod ndc_request;
 mod remote_joins;
 mod remote_predicates;
+use crate::FieldInternalError;
 use crate::error::FieldError;
 use crate::ndc;
-use crate::FieldInternalError;
 use async_recursion::async_recursion;
 use engine_types::{HttpContext, ProjectId};
 use indexmap::IndexMap;
@@ -15,9 +15,9 @@ pub use ndc_request::{
     make_ndc_mutation_request, make_ndc_query_request, v01::NdcV01CompatibilityError,
 };
 use plan_types::{
-    JoinLocations, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
-    PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree,
-    RemotePredicateKey, ResolvedFilterExpression, FUNCTION_IR_VALUE_COLUMN_NAME,
+    FUNCTION_IR_VALUE_COLUMN_NAME, JoinLocations, NDCMutationExecution, NDCQueryExecution,
+    NDCSubscriptionExecution, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan,
+    QueryExecutionTree, RemotePredicateKey, ResolvedFilterExpression,
 };
 pub use remote_predicates::replace_predicates_in_query_execution_plan;
 use std::collections::BTreeMap;

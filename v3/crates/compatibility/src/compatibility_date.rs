@@ -46,7 +46,7 @@ impl schemars::JsonSchema for CompatibilityDate {
         "CompatibilityDate".to_string()
     }
 
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let any_date_schema = schemars::schema::SchemaObject {
             metadata: Some(Box::new(schemars::schema::Metadata {
                 description: Some("Any date".to_owned()),

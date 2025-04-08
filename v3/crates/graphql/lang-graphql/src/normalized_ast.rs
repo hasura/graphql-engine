@@ -10,7 +10,9 @@ use indexmap::IndexMap;
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     // TODO: uses 'Debug' trait
-    #[error("expected argument '{argument_name}' not found on field: {field_call_name}, arguments found: {arguments:?}")]
+    #[error(
+        "expected argument '{argument_name}' not found on field: {field_call_name}, arguments found: {arguments:?}"
+    )]
     ArgumentNotFound {
         field_call_name: ast::Name,
         argument_name: ast::Name,

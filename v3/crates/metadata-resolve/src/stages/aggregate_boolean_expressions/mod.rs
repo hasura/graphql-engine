@@ -5,14 +5,14 @@ use std::collections::BTreeMap;
 use super::{
     aggregates::{AggregateCountDefinition, AggregateExpression, CountAggregateType},
     boolean_expressions, graphql_config, relationships,
-    scalar_boolean_expressions::{self, resolve_logical_operators, LogicalOperators},
+    scalar_boolean_expressions::{self, LogicalOperators, resolve_logical_operators},
     scalar_types::ScalarTypeRepresentation,
     type_permissions::ObjectTypeWithPermissions,
 };
 use crate::{
+    Qualified, QualifiedBaseType, QualifiedTypeName, ResolvedScalarBooleanExpressionType,
     configuration::UnstableFeatures, helpers::check_for_duplicates, mk_name,
-    types::subgraph::mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeName,
-    ResolvedScalarBooleanExpressionType,
+    types::subgraph::mk_qualified_type_name,
 };
 use lang_graphql::ast::common as ast;
 use open_dds::{
@@ -847,7 +847,7 @@ fn resolve_comparable_relationship(
                     operand_type: operand_type_name.clone(),
                     relationship_name: comparable_relationship.relationship_name.clone(),
                 },
-            )
+            );
         }
     }
 

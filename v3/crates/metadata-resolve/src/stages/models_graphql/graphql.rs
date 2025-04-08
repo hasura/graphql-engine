@@ -7,11 +7,11 @@ use super::types::{
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
     SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
-use crate::helpers::types::{mk_name, TrackGraphQLRootFields};
+use crate::Warning;
+use crate::helpers::types::{TrackGraphQLRootFields, mk_name};
 use crate::stages::order_by_expressions::{OrderByExpressionIdentifier, OrderByExpressions};
 use crate::stages::{graphql_config, models, object_types};
 use crate::types::subgraph::Qualified;
-use crate::Warning;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
 use open_dds::aggregates::AggregateExpressionName;

@@ -35,7 +35,9 @@ pub enum ApolloError {
         object_type: Qualified<CustomTypeName>,
     },
 
-    #[error("unknown field {field_name:} in apollo federation keys defined for the object type {object_type:}")]
+    #[error(
+        "unknown field {field_name:} in apollo federation keys defined for the object type {object_type:}"
+    )]
     UnknownFieldInApolloFederationKey {
         field_name: FieldName,
         object_type: Qualified<CustomTypeName>,
@@ -46,7 +48,9 @@ pub enum ApolloError {
     EmptyKeysInApolloFederationConfigForObject {
         object_type: Qualified<CustomTypeName>,
     },
-    #[error("'apolloFederation.keys' for type {object_type:} found, but no model found with 'apolloFederation.entitySource: true' for type {object_type:}")]
+    #[error(
+        "'apolloFederation.keys' for type {object_type:} found, but no model found with 'apolloFederation.entitySource: true' for type {object_type:}"
+    )]
     ApolloFederationEntitySourceNotDefined {
         object_type: Qualified<CustomTypeName>,
     },
@@ -55,7 +59,9 @@ pub enum ApolloError {
     )]
     ModelWithArgumentsAsApolloFederationEntitySource { model_name: Qualified<ModelName> },
 
-    #[error("Model {model_name:} is marked as an Apollo Federation entity source but there are no keys fields present in the related object type {type_name:}")]
+    #[error(
+        "Model {model_name:} is marked as an Apollo Federation entity source but there are no keys fields present in the related object type {type_name:}"
+    )]
     NoKeysFieldsPresentInEntitySource {
         type_name: Qualified<CustomTypeName>,
         model_name: ModelName,

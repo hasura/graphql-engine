@@ -16,8 +16,8 @@ use open_dds::{
 
 use crate::types::error::ContextualError;
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
-use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use crate::{
     helpers::typecheck,
     stages::{
@@ -153,12 +153,16 @@ impl ModelTargetSource {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelPermissionIssue {
-    #[error("The role '{role}' has been defined more than once in model permissions for model '{model_name}'")]
+    #[error(
+        "The role '{role}' has been defined more than once in model permissions for model '{model_name}'"
+    )]
     DuplicateRole {
         role: Spanned<Role>,
         model_name: Qualified<ModelName>,
     },
-    #[error("Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {typecheck_issue:}")]
+    #[error(
+        "Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {typecheck_issue:}"
+    )]
     ModelArgumentPresetTypecheckIssue {
         role: Role,
         model_name: Qualified<ModelName>,

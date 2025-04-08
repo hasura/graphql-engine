@@ -1,9 +1,9 @@
 use open_dds::{models::ModelName, types::FieldName};
 
 use crate::{
+    Qualified,
     stages::{boolean_expressions, graphql_config, models},
     types::error::ContextualError,
-    Qualified,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -18,7 +18,9 @@ pub enum ModelGraphqlError {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
-    #[error("filter input type name graphql configuration must be specified for model {model_name:} because aggregates are used with it")]
+    #[error(
+        "filter input type name graphql configuration must be specified for model {model_name:} because aggregates are used with it"
+    )]
     MissingFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
 
     #[error("{0}")]

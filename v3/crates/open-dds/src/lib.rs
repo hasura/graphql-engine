@@ -3,7 +3,7 @@ extern crate self as open_dds;
 use std::borrow::Cow;
 
 use open_dds::spanned::Spanned;
-use schemars::{schema::Schema::Object as SchemaObjectVariant, JsonSchema};
+use schemars::{JsonSchema, schema::Schema::Object as SchemaObjectVariant};
 use serde::{Deserialize, Serialize};
 
 pub mod accessor;
@@ -48,9 +48,9 @@ impl traits::OpenDd for EnvironmentValue {
         })
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         // This is copied from ndc-sdk to avoid establishing a dependency.
-        let mut s = EnvironmentValueImpl::json_schema(gen);
+        let mut s = EnvironmentValueImpl::json_schema(generator);
         if let SchemaObjectVariant(o) = &mut s {
             if let Some(m) = &mut o.metadata {
                 m.id = Some("https://hasura.io/jsonschemas/EnvironmentValue".into());
@@ -164,12 +164,12 @@ impl traits::OpenDd for Metadata {
         }
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let mut schema_object = schemars::schema::SchemaObject {
             subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
                 any_of: Some(vec![
-                    traits::gen_subschema_for::<Vec<OpenDdSubgraphObject>>(gen),
-                    traits::gen_subschema_for::<MetadataWithVersion>(gen),
+                    traits::gen_subschema_for::<Vec<OpenDdSubgraphObject>>(generator),
+                    traits::gen_subschema_for::<MetadataWithVersion>(generator),
                 ]),
                 ..Default::default()
             })),
@@ -329,7 +329,7 @@ pub struct Subgraph {
 #[cfg(test)]
 pub mod tests {
     use crate::{
-        test_utils::{validate_root_json_schema, JsonSchemaValidationConfig},
+        test_utils::{JsonSchemaValidationConfig, validate_root_json_schema},
         traits::gen_root_schema_for,
     };
     use goldenfile::Mint;
@@ -340,8 +340,9 @@ pub mod tests {
     fn test_metadata_schema() {
         let mut mint = Mint::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
         let mut expected = mint.new_goldenfile("metadata.jsonschema").unwrap();
-        let mut schema =
-            gen_root_schema_for::<super::Metadata>(&mut schemars::gen::SchemaGenerator::default());
+        let mut schema = gen_root_schema_for::<super::Metadata>(
+            &mut schemars::r#gen::SchemaGenerator::default(),
+        );
         schema.definitions.sort_keys();
         write!(
             expected,
@@ -372,7 +373,7 @@ pub mod tests {
     /// Runs various checks on the generated JSONSchema to ensure it follows certain conventions.
     fn test_validate_json_schema() {
         validate_root_json_schema(
-            gen_root_schema_for::<super::Metadata>(&mut schemars::gen::SchemaGenerator::default()),
+            gen_root_schema_for::<super::Metadata>(&mut schemars::r#gen::SchemaGenerator::default()),
             &JsonSchemaValidationConfig::new(),
         );
     }

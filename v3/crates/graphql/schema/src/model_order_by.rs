@@ -6,14 +6,14 @@ use open_dds::types::{CustomTypeName, Deprecated};
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::relationship::OrderByRelationshipAnnotation;
-use super::types::{output_type::get_object_type_representation, Annotation, TypeId};
+use super::types::{Annotation, TypeId, output_type::get_object_type_representation};
 use crate::types::{self};
-use crate::{mk_deprecation_status, GDS};
-use crate::{permissions, ModelInputAnnotation};
+use crate::{GDS, mk_deprecation_status};
+use crate::{ModelInputAnnotation, permissions};
 use metadata_resolve::Qualified;
 use metadata_resolve::{
-    mk_name, ObjectTypeWithRelationships, OrderByExpressionGraphqlConfig,
-    OrderByExpressionIdentifier, OrderableField, OrderableObjectField, OrderableRelationship,
+    ObjectTypeWithRelationships, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
+    OrderableField, OrderableObjectField, OrderableRelationship, mk_name,
 };
 
 use crate::Error;

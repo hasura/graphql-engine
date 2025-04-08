@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::env;
 use std::net;
 
-use axum::{http::header::HeaderMap, response::Json, routing::post, Router};
+use axum::{Router, http::header::HeaderMap, response::Json, routing::post};
 use axum_core::body::Body;
 use clap::Parser;
 use serde::Serialize;

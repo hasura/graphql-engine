@@ -1,8 +1,9 @@
+use super::ModelPermissionError;
 use super::types::{
     ModelPredicate, ModelTargetSource, PredicateRelationshipInfo, ResolvedOperator,
 };
-use super::ModelPermissionError;
 
+use crate::UnaryComparisonOperator;
 use crate::helpers::type_mappings;
 use crate::helpers::typecheck::typecheck_value_expression;
 use crate::stages::{
@@ -12,8 +13,7 @@ use crate::stages::{
 use crate::types::error::TypePredicateError;
 use crate::types::permission::ValueExpression;
 use crate::types::subgraph::{Qualified, QualifiedBaseType, QualifiedTypeReference};
-use crate::UnaryComparisonOperator;
-use crate::{unwrap_custom_type_name, FieldMapping};
+use crate::{FieldMapping, unwrap_custom_type_name};
 
 use indexmap::IndexMap;
 use ndc_models;

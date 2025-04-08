@@ -1,10 +1,10 @@
 use core::time::Duration;
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use criterion::{BenchmarkId, Criterion, SamplingMode, criterion_group, criterion_main};
 use engine_types::{ExposeInternalErrors, HttpContext};
 use graphql_frontend::{
     execute_mutation_plan, execute_query_internal, execute_query_plan, generate_ir,
 };
-use graphql_ir::{generate_request_plan, RequestPlan};
+use graphql_ir::{RequestPlan, generate_request_plan};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;

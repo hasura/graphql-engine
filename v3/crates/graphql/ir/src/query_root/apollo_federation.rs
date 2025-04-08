@@ -14,8 +14,8 @@ use graphql_schema::GDS;
 use graphql_schema::{EntityFieldTypeNameMapping, NamespaceAnnotation};
 use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
-use metadata_resolve::mk_name;
 use metadata_resolve::Qualified;
+use metadata_resolve::mk_name;
 use plan_types::UsagesCounts;
 
 /// IR for the '_entities' operation for a model

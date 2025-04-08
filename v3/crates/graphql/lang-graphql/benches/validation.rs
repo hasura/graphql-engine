@@ -3,7 +3,7 @@ use lang_graphql::parser::Parser;
 use lang_graphql::schema::sdl;
 use lang_graphql::validation;
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::collections::BTreeMap;
 use std::fs;
 use std::str::FromStr;

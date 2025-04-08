@@ -11,7 +11,7 @@ use hasura_authn_core::Session;
 use lang_graphql::{ast::common as ast, http::RawRequest};
 use open_dds::plugins::LifecyclePreParsePluginHook;
 use tracing_util::{
-    set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Traceable, TraceableError,
+    ErrorVisibility, SpanVisibility, Traceable, TraceableError, set_attribute_on_active_span,
 };
 
 #[derive(Debug, thiserror::Error)]

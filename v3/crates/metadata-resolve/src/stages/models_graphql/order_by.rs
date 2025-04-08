@@ -1,5 +1,5 @@
 use crate::Warning;
-use crate::{mk_name, QualifiedTypeName};
+use crate::{QualifiedTypeName, mk_name};
 use lang_graphql::ast::common as ast;
 use open_dds::commands::CommandName;
 use open_dds::types::CustomTypeName;

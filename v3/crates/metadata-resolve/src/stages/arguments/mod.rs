@@ -2,7 +2,7 @@ mod error;
 mod types;
 
 use crate::helpers::boolean_expression::validate_data_connector_with_object_boolean_expression_type;
-use crate::helpers::types::{get_type_representation, unwrap_custom_type_name, TypeRepresentation};
+use crate::helpers::types::{TypeRepresentation, get_type_representation, unwrap_custom_type_name};
 use crate::stages::{
     boolean_expressions, commands, data_connectors, models, object_relationships, scalar_types,
 };

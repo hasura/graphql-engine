@@ -19,7 +19,7 @@ use crate::global_id;
 use graphql_schema::{
     AggregateOutputAnnotation, AggregationFunctionAnnotation, InputAnnotation, TypeKind,
 };
-use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
+use graphql_schema::{Annotation, GDS, OutputAnnotation, RootFieldAnnotation};
 use metadata_resolve::{ObjectTypeWithRelationships, Qualified};
 use plan::UnresolvedArgument;
 use plan_types::{

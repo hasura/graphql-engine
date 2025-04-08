@@ -103,9 +103,9 @@ pub fn select_many_generate_ir<'n, 's>(
                     }
                 }
                 _ => {
-                    return Err(error::InternalEngineError::UnexpectedAnnotation {
+                    Err(error::InternalEngineError::UnexpectedAnnotation {
                         annotation: annotation.clone(),
-                    })?
+                    })?;
                 }
             },
 
@@ -119,9 +119,9 @@ pub fn select_many_generate_ir<'n, 's>(
             }
 
             annotation => {
-                return Err(error::InternalEngineError::UnexpectedAnnotation {
+                Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
-                })?
+                })?;
             }
         }
     }

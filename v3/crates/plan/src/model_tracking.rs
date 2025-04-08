@@ -78,7 +78,7 @@ pub fn count_command(command: &Qualified<CommandName>, all_usage_counts: &mut Us
 #[cfg(test)]
 mod tests {
     use crate::model_tracking::{
-        count_command, count_model, extend_usage_count, CommandCount, ModelCount, UsagesCounts,
+        CommandCount, ModelCount, UsagesCounts, count_command, count_model, extend_usage_count,
     };
     use metadata_resolve::Qualified;
     use open_dds::{commands::CommandName, identifier, models::ModelName, subgraph_identifier};

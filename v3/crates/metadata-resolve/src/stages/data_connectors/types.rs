@@ -647,12 +647,12 @@ fn mk_ndc_02_capabilities(
 
 #[cfg(test)]
 mod tests {
-    use open_dds::{accessor::MetadataAccessor, data_connector::DataConnectorLinkV1, Metadata};
+    use open_dds::{Metadata, accessor::MetadataAccessor, data_connector::DataConnectorLinkV1};
     use strum::IntoEnumIterator;
 
     use crate::{
         data_connectors::{
-            error::DataConnectorIssue, types::NdcVersion, DataConnectorCapabilities,
+            DataConnectorCapabilities, error::DataConnectorIssue, types::NdcVersion,
         },
         stages::data_connectors::types::DataConnectorContext,
     };
@@ -801,23 +801,35 @@ mod tests {
             for (version, assertion) in test_cases {
                 let result = validate_ndc_version(ndc_version, version);
                 match assertion {
-                    AssertNdcVersionShould::Validate => {
-                        match result {
-                            Ok(issues) => {
-                                assert!(issues.is_empty(), "When testing ndc version {ndc_version:?}, the version '{version}' validated but had issues: {issues:#?}");
-                            },
-                            Err(error) => panic!("When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"),
+                    AssertNdcVersionShould::Validate => match result {
+                        Ok(issues) => {
+                            assert!(
+                                issues.is_empty(),
+                                "When testing ndc version {ndc_version:?}, the version '{version}' validated but had issues: {issues:#?}"
+                            );
                         }
+                        Err(error) => panic!(
+                            "When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"
+                        ),
                     },
-                    AssertNdcVersionShould::HaveIssue => {
-                        match result {
-                            Ok(issues) => {
-                                assert!(issues.iter().any(|i| matches!(i, DataConnectorIssue::InvalidNdcV01Version { .. })), "When testing ndc version {ndc_version:?}, the version '{version}' validated but did not have the InvalidNdcV1Version issue. Issues: {issues:#?}");
-                            },
-                            Err(error) => panic!("When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"),
+                    AssertNdcVersionShould::HaveIssue => match result {
+                        Ok(issues) => {
+                            assert!(
+                                issues.iter().any(|i| matches!(
+                                    i,
+                                    DataConnectorIssue::InvalidNdcV01Version { .. }
+                                )),
+                                "When testing ndc version {ndc_version:?}, the version '{version}' validated but did not have the InvalidNdcV1Version issue. Issues: {issues:#?}"
+                            );
                         }
+                        Err(error) => panic!(
+                            "When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"
+                        ),
                     },
-                    AssertNdcVersionShould::FailToValidate => assert!(result.is_err(), "When testing ndc version {ndc_version:?}, the version '{version}' validated when it shouldn't have: {result:#?}"),
+                    AssertNdcVersionShould::FailToValidate => assert!(
+                        result.is_err(),
+                        "When testing ndc version {ndc_version:?}, the version '{version}' validated when it shouldn't have: {result:#?}"
+                    ),
                 }
             }
         }

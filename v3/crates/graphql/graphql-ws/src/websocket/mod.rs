@@ -4,8 +4,8 @@ pub mod types;
 use axum::{
     extract::ws,
     http::{
-        header::{InvalidHeaderValue, ToStrError},
         HeaderMap, StatusCode,
+        header::{InvalidHeaderValue, ToStrError},
     },
     response::{IntoResponse, Response},
 };

@@ -303,7 +303,7 @@ fn impl_json_schema_untagged(variants: &[EnumVariant<'_>]) -> proc_macro2::Token
             }
             let ty = &variant.field.ty.clone();
             Some(quote! {
-                open_dds::traits::gen_subschema_for::<#ty>(gen)
+                open_dds::traits::gen_subschema_for::<#ty>(generator)
             })
         })
         .collect::<Vec<_>>();
@@ -331,7 +331,7 @@ fn impl_json_schema_tagged(
                     let name = &variant.renamed_variant;
                     let ty = &variant.field.ty.clone();
                     Some(quote! {{
-                        let mut schema = <#ty as open_dds::traits::OpenDd>::json_schema(gen);
+                        let mut schema = <#ty as open_dds::traits::OpenDd>::json_schema(generator);
 
                         fn add_tag_to_json_schema(schema_internal: &mut schemars::schema::Schema) {
                             if let schemars::schema::Schema::Object(schemars::schema::SchemaObject {
@@ -408,7 +408,7 @@ fn impl_json_schema_tagged(
                     });
                     let ty = &variant.field.ty.clone();
                     let content_schema = quote! {
-                        open_dds::traits::gen_subschema_for::<#ty>(gen)
+                        open_dds::traits::gen_subschema_for::<#ty>(generator)
                     };
                     let metadata_expr = build_variant_json_schema_metadata(
                         variant.doc_description.as_ref(),
@@ -455,7 +455,7 @@ fn impl_json_schema_tagged(
                     let name = &variant.renamed_variant;
                     let ty = &variant.field.ty.clone();
                     let content_schema = quote! {
-                        open_dds::traits::gen_subschema_for::<#ty>(gen)
+                        open_dds::traits::gen_subschema_for::<#ty>(generator)
                     };
                     let metadata_expr = build_variant_json_schema_metadata(
                         variant.doc_description.as_ref(),

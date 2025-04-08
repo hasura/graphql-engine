@@ -94,7 +94,9 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         type_name: CustomTypeName,
     },
-    #[error("the mapping for type {type_name:} is defined against multiple data connector objects: {ndc_object_types:?}")]
+    #[error(
+        "the mapping for type {type_name:} is defined against multiple data connector objects: {ndc_object_types:?}"
+    )]
     MultipleNDCObjectForOpenDDObjectType {
         type_name: Qualified<CustomTypeName>,
         ndc_object_types: Vec<String>,
@@ -150,7 +152,9 @@ pub enum Error {
         field_name: FieldName,
         model_name: Qualified<ModelName>,
     },
-    #[error("field '{field_name:}' used in select permissions of model '{model_name:}' should be mapped to non-array scalar field")]
+    #[error(
+        "field '{field_name:}' used in select permissions of model '{model_name:}' should be mapped to non-array scalar field"
+    )]
     UnsupportedFieldInSelectPermissionsPredicate {
         field_name: FieldName,
         model_name: Qualified<ModelName>,
@@ -158,21 +162,23 @@ pub enum Error {
     #[error("Nested predicate used in select permissions of model '{model_name:}'")]
     NestedPredicateInSelectPermissionPredicate { model_name: Qualified<ModelName> },
 
-    #[error("relationship '{relationship_name:}' used in select permissions of model '{model_name:}' does not exist on type {type_name:}")]
+    #[error(
+        "relationship '{relationship_name:}' used in select permissions of model '{model_name:}' does not exist on type {type_name:}"
+    )]
     UnknownRelationshipInSelectPermissionsPredicate {
         relationship_name: RelationshipName,
         model_name: Qualified<ModelName>,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("The model '{target_model_name:}' corresponding to the  relationship '{relationship_name:}' used in select permissions of model '{model_name:}' is not defined")]
+    #[error(
+        "The model '{target_model_name:}' corresponding to the  relationship '{relationship_name:}' used in select permissions of model '{model_name:}' is not defined"
+    )]
     UnknownModelUsedInRelationshipSelectPermissionsPredicate {
         model_name: Qualified<ModelName>,
         target_model_name: Qualified<ModelName>,
         relationship_name: RelationshipName,
     },
-    #[error(
-        "Invalid operator used in model '{model_name:}' select permission: '{operator_name:}'"
-    )]
+    #[error("Invalid operator used in model '{model_name:}' select permission: '{operator_name:}'")]
     InvalidOperatorInModelSelectPermission {
         model_name: Qualified<ModelName>,
         operator_name: OperatorName,
@@ -370,12 +376,16 @@ pub enum TypePredicateError {
         field_name: Spanned<FieldName>,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("field '{field_name:}' of type '{type_name:}' is an array type and cannot be used in a nested field predicate")]
+    #[error(
+        "field '{field_name:}' of type '{type_name:}' is an array type and cannot be used in a nested field predicate"
+    )]
     ArrayFieldInNestedFieldPredicate {
         field_name: Spanned<FieldName>,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("unknown field '{field_name}' for type '{type_name}' used in target mapping for relationship '{relationship_name}'")]
+    #[error(
+        "unknown field '{field_name}' for type '{type_name}' used in target mapping for relationship '{relationship_name}'"
+    )]
     UnknownFieldInModelRelationshipTargetMapping {
         field_name: FieldName,
         type_name: Qualified<CustomTypeName>,
@@ -399,7 +409,9 @@ pub enum TypePredicateError {
         type_name: Qualified<CustomTypeName>,
         data_connector: Qualified<DataConnectorName>,
     },
-    #[error("field '{field_name}' of type '{type_name}' used in a field comparison is an array type and therefore cannot be compared to a single value")]
+    #[error(
+        "field '{field_name}' of type '{type_name}' used in a field comparison is an array type and therefore cannot be compared to a single value"
+    )]
     UnsupportedFieldComparisonToArrayType {
         field_name: Spanned<FieldName>,
         field_type: QualifiedTypeReference,
@@ -414,22 +426,30 @@ pub enum TypePredicateError {
     NestedPredicateInTypePredicate {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("no boolean expression found for type '{type_name:}' This is required when filtering a nested field. Please ensure the model you are filtering has a filterExpressionType defined.")]
+    #[error(
+        "no boolean expression found for type '{type_name:}' This is required when filtering a nested field. Please ensure the model you are filtering has a filterExpressionType defined."
+    )]
     NoBooleanExpressionFields {
         field_name: Spanned<FieldName>,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("relationship '{relationship_name}' is used in predicate but does not exist for type '{type_name}'")]
+    #[error(
+        "relationship '{relationship_name}' is used in predicate but does not exist for type '{type_name}'"
+    )]
     UnknownRelationshipInTypePredicate {
         relationship_name: Spanned<RelationshipName>,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("relationship '{relationship_name}' is used in predicate but does not exist in comparableRelationships in boolean expression '{boolean_expression_type_name}'")]
+    #[error(
+        "relationship '{relationship_name}' is used in predicate but does not exist in comparableRelationships in boolean expression '{boolean_expression_type_name}'"
+    )]
     RelationshipNotComparableInTypePredicate {
         relationship_name: Spanned<RelationshipName>,
         boolean_expression_type_name: Qualified<CustomTypeName>,
     },
-    #[error("The model '{target_model_name:}' corresponding to the  relationship '{relationship_name:}' used in predicate for type '{type_name:}' is not defined")]
+    #[error(
+        "The model '{target_model_name:}' corresponding to the  relationship '{relationship_name:}' used in predicate for type '{type_name:}' is not defined"
+    )]
     UnknownModelUsedInRelationshipTypePredicate {
         type_name: Qualified<CustomTypeName>,
         target_model_name: Qualified<ModelName>,
@@ -467,20 +487,22 @@ pub enum TypePredicateError {
     OperatorMappingsNotFound {
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error(
-        "no type mapping found for type {type_name:} in data connector {data_connector_name:}"
-    )]
+    #[error("no type mapping found for type {type_name:} in data connector {data_connector_name:}")]
     UnknownTypeMapping {
         type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("no field mapping found for field {field_name:} in type {type_name:} in data connector {data_connector_name:}")]
+    #[error(
+        "no field mapping found for field {field_name:} in type {type_name:} in data connector {data_connector_name:}"
+    )]
     UnknownFieldMapping {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("Comparison operator '{operator_name}' not found for field '{field_name}' of type '{field_type}'")]
+    #[error(
+        "Comparison operator '{operator_name}' not found for field '{field_name}' of type '{field_type}'"
+    )]
     OperatorNotFoundForField {
         field_name: Spanned<FieldName>,
         field_type: QualifiedTypeReference,

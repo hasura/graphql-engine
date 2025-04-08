@@ -340,13 +340,13 @@ where
 #[cfg(test)]
 mod test {
     use crate::parser::Parser;
-    use crate::schema::sdl::SDL;
     use crate::schema::Schema;
+    use crate::schema::sdl::SDL;
     use crate::validation::input::source::LocationType::List;
     use crate::{
         ast::{common as ast, value},
         mk_name, normalized_ast,
-        schema::{sdl, InputType, Scalar},
+        schema::{InputType, Scalar, sdl},
         validation::input::normalize,
     };
 

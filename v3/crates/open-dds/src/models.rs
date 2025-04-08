@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Spanned,
     aggregates::AggregateExpressionName,
     arguments::ArgumentDefinition,
     commands::ArgumentMapping,
@@ -11,7 +12,6 @@ use crate::{
     str_newtype,
     traits::{OpenDd, OpenDdDeserializeError},
     types::{CustomTypeName, Deprecated, FieldName, GraphQlFieldName, GraphQlTypeName},
-    Spanned,
 };
 
 str_newtype!(ModelName over Identifier | doc "The name of data model.");
@@ -452,8 +452,8 @@ impl<'de, T: serde::Deserialize<'de> + JsonSchema> OpenDd for EnableAllOrSpecifi
         })
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        <Self as ::schemars::JsonSchema>::json_schema(gen)
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        <Self as ::schemars::JsonSchema>::json_schema(generator)
     }
 
     fn _schema_name() -> String {

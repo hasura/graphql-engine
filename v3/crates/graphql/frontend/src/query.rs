@@ -3,7 +3,7 @@ use indexmap::IndexMap;
 
 use super::types::GraphQLResponse;
 use crate::execute::{
-    execute_mutation_plan, execute_query_plan, ExecuteQueryResult, RootFieldResult,
+    ExecuteQueryResult, RootFieldResult, execute_mutation_plan, execute_query_plan,
 };
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
 use graphql_schema::GDS;
@@ -12,7 +12,7 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use std::sync::Arc;
-use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
+use tracing_util::{AttributeVisibility, SpanVisibility, set_attribute_on_active_span};
 
 pub async fn execute_query(
     expose_internal_errors: ExposeInternalErrors,

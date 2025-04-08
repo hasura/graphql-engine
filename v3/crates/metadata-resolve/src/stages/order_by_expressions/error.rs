@@ -36,19 +36,27 @@ pub enum OrderByExpressionError {
         relationship_name: RelationshipName,
         object_type_name: Qualified<CustomTypeName>,
     },
-    #[error("Invalid orderable field {field_name}. Exactly one of `enable_order_by_directions` or `order_by_expression_name` must be specified.")]
+    #[error(
+        "Invalid orderable field {field_name}. Exactly one of `enable_order_by_directions` or `order_by_expression_name` must be specified."
+    )]
     InvalidOrderByExpressionOrderableField { field_name: FieldName },
-    #[error("The order by expression {order_by_expression_name} referenced in field {field_name} has not been defined")]
+    #[error(
+        "The order by expression {order_by_expression_name} referenced in field {field_name} has not been defined"
+    )]
     UnknownOrderByExpressionNameInOrderableField {
         order_by_expression_name: OrderByExpressionName,
         field_name: FieldName,
     },
-    #[error("The order by expression {order_by_expression_name} referenced in orderable relationship {relationship_name} has not been defined")]
+    #[error(
+        "The order by expression {order_by_expression_name} referenced in orderable relationship {relationship_name} has not been defined"
+    )]
     UnknownOrderByExpressionNameInOrderableRelationship {
         order_by_expression_name: OrderByExpressionName,
         relationship_name: RelationshipName,
     },
-    #[error("The type of the order by expression {order_by_expression_name} referenced in field {field_name} does not match the field type. Order by expression type: {order_by_expression_type}; field type: {field_type}. ")]
+    #[error(
+        "The type of the order by expression {order_by_expression_name} referenced in field {field_name} does not match the field type. Order by expression type: {order_by_expression_type}; field type: {field_type}. "
+    )]
     OrderableFieldTypeError {
         order_by_expression_name: OrderByExpressionName,
         order_by_expression_type: TypeName,
@@ -64,18 +72,24 @@ pub enum OrderByExpressionError {
 #[derive(Debug, thiserror::Error)]
 #[allow(clippy::enum_variant_names)]
 pub enum OrderableRelationshipError {
-    #[error("The orderable relationship '{relationship_name}' defined for '{orderable_type}' is a remote relationship and remote relationships are not supported in ordering")]
+    #[error(
+        "The orderable relationship '{relationship_name}' defined for '{orderable_type}' is a remote relationship and remote relationships are not supported in ordering"
+    )]
     RemoteRelationshipsNotSupported {
         orderable_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
-    #[error("The orderable relationship '{relationship_name}' defined for '{orderable_type}' is not supported in ordering because the data connector '{data_connector_name}' does not support relationships")]
+    #[error(
+        "The orderable relationship '{relationship_name}' defined for '{orderable_type}' is not supported in ordering because the data connector '{data_connector_name}' does not support relationships"
+    )]
     RelationshipsNotSupported {
         orderable_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
         data_connector_name: Qualified<open_dds::data_connector::DataConnectorName>,
     },
-    #[error("The orderable relationship '{relationship_name}' defined for '{orderable_type}' is not supported in ordering because the data connector '{data_connector_name}' does not support nested relationships in ordering")]
+    #[error(
+        "The orderable relationship '{relationship_name}' defined for '{orderable_type}' is not supported in ordering because the data connector '{data_connector_name}' does not support nested relationships in ordering"
+    )]
     NestedRelationshipsNotSupported {
         orderable_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,

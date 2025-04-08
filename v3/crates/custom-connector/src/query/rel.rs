@@ -1,23 +1,23 @@
 use crate::state::AppState;
 
-use axum::{http::StatusCode, Json};
+use axum::{Json, http::StatusCode};
 use core::unimplemented;
 use datafusion::{
     arrow::datatypes::{Field, SchemaBuilder, SchemaRef},
     common::{DFSchema, ToDFSchema},
     datasource::{DefaultTableSource, MemTable, TableProvider},
     error::DataFusionError,
-    execution::{runtime_env::RuntimeEnv, SessionStateBuilder},
+    execution::{SessionStateBuilder, runtime_env::RuntimeEnv},
     functions::{string::contains, unicode::substr},
     functions_aggregate::{count::Count, sum::Sum},
     functions_window::{expr_fn::row_number, ntile},
-    logical_expr::{build_join_schema, AggregateUDF, ExprSchemable, Literal as _, SubqueryAlias},
+    logical_expr::{AggregateUDF, ExprSchemable, Literal as _, SubqueryAlias, build_join_schema},
     prelude::{
-        abs, btrim, ceil, character_length, coalesce, concat, cos, current_date, current_time,
-        date_part, date_trunc, exp, floor, greatest, isnan, iszero, least, left, ln, log, log10,
-        log2, lower, lpad, ltrim, now, nullif, nvl, power, random, replace, reverse, right, round,
-        rpad, rtrim, sqrt, strpos, substr_index, tan, to_date, to_timestamp, trunc, upper,
-        ExprFunctionExt, SessionConfig, SessionContext,
+        ExprFunctionExt, SessionConfig, SessionContext, abs, btrim, ceil, character_length,
+        coalesce, concat, cos, current_date, current_time, date_part, date_trunc, exp, floor,
+        greatest, isnan, iszero, least, left, ln, log, log2, log10, lower, lpad, ltrim, now,
+        nullif, nvl, power, random, replace, reverse, right, round, rpad, rtrim, sqrt, strpos,
+        substr_index, tan, to_date, to_timestamp, trunc, upper,
     },
     scalar::ScalarValue,
     sql::TableReference,
@@ -300,12 +300,12 @@ fn get_table_provider(
     let (rows, collection_fields) = match collection_name.as_str() {
         "actors" => (
             crate::collections::actors::rows(&BTreeMap::new(), state)
-                .map_err(|e| DataFusionError::Internal(e.1 .0.message))?,
+                .map_err(|e| DataFusionError::Internal(e.1.0.message))?,
             crate::types::actor::definition().fields,
         ),
         "movies" => (
             crate::collections::movies::rows(&BTreeMap::new(), state)
-                .map_err(|e| DataFusionError::Internal(e.1 .0.message))?
+                .map_err(|e| DataFusionError::Internal(e.1.0.message))?
                 .iter()
                 .map(|row| {
                     BTreeMap::from_iter([

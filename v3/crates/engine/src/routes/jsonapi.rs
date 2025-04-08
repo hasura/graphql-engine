@@ -1,16 +1,16 @@
 use axum::{
+    Extension, Json, Router,
     http::{HeaderMap, Method, Uri},
     response::IntoResponse,
     routing::get,
-    Extension, Json, Router,
 };
 use hasura_authn_core::Session;
 use std::convert::Infallible;
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
-use tracing_util::{set_status_on_current_span, SpanVisibility, Traceable};
+use tracing_util::{SpanVisibility, Traceable, set_status_on_current_span};
 
-use crate::{authentication_middleware, EngineState};
+use crate::{EngineState, authentication_middleware};
 
 pub fn create_json_api_router(state: EngineState) -> axum::Router {
     // Create the base router and nest both paths to the same handler

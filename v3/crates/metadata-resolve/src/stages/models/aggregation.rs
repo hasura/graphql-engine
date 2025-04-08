@@ -11,7 +11,7 @@ use crate::stages::{
     aggregates, data_connector_scalar_types, data_connectors, models, object_types,
     type_permissions,
 };
-use crate::types::subgraph::{mk_qualified_type_name, Qualified, QualifiedTypeName};
+use crate::types::subgraph::{Qualified, QualifiedTypeName, mk_qualified_type_name};
 use open_dds::{models::ModelName, types::CustomTypeName};
 
 use std::collections::{BTreeMap, BTreeSet};

@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::{quote, quote_spanned};
-use syn::{parse_macro_input, spanned::Spanned, ItemFn, ReturnType};
+use syn::{ItemFn, ReturnType, parse_macro_input, spanned::Spanned};
 
 /// A helper attribute for limiting recursion to avoid stack overflows. Annotate any or all
 /// functions involved in recursion. Each entry of such a function will decrement `self`'s

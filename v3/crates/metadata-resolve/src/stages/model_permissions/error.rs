@@ -36,7 +36,9 @@ pub enum ModelPermissionError {
         type_error: typecheck::TypecheckError,
     },
 
-    #[error("a preset argument '{argument_name}' has been set for the model '{model_name}' but no such argument exists for this model")]
+    #[error(
+        "a preset argument '{argument_name}' has been set for the model '{model_name}' but no such argument exists for this model"
+    )]
     ModelArgumentPresetArgumentNotFound {
         model_name: Spanned<Qualified<ModelName>>,
         argument_name: Spanned<ArgumentName>,
