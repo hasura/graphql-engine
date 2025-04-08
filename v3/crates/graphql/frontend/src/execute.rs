@@ -128,7 +128,7 @@ async fn execute_query_field_plan(
                         }
 
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::from_processed_response(
-                            optional_query.as_ref().map_or(true, |(ndc_query,_selection_set)| {
+                            optional_query.as_ref().is_none_or( |(ndc_query,_selection_set)| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
                             resolve_optional_ndc_select(http_context, optional_query, project_id)
