@@ -1,4 +1,4 @@
-pub mod rel;
+pub mod relational;
 
 use std::{
     cmp::{Ord, Ordering},

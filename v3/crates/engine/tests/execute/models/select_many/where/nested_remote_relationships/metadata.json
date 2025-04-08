@@ -1726,6 +1726,499 @@
                       "filtering": {},
                       "ordering": {}
                     }
+                  },
+                  "relational_query": {
+                    "project": {
+                      "expression": {
+                        "conditional": {
+                          "case": {}
+                        },
+                        "comparison": {
+                          "like": {},
+                          "ilike": {},
+                          "between": {},
+                          "contains": {},
+                          "is_nan": {},
+                          "is_zero": {}
+                        },
+                        "scalar": {
+                          "abs": {},
+                          "btrim": {},
+                          "ceil": {},
+                          "character_length": {},
+                          "concat": {},
+                          "cos": {},
+                          "current_date": {},
+                          "current_time": {},
+                          "current_timestamp": {},
+                          "date_part": {
+                            "year": {},
+                            "quarter": {},
+                            "month": {},
+                            "week": {},
+                            "day_of_week": {},
+                            "day_of_year": {},
+                            "day": {},
+                            "hour": {},
+                            "minute": {},
+                            "second": {},
+                            "microsecond": {},
+                            "millisecond": {},
+                            "nanosecond": {}
+                          },
+                          "date_trunc": {},
+                          "exp": {},
+                          "floor": {},
+                          "greatest": {},
+                          "least": {},
+                          "left": {},
+                          "ln": {},
+                          "log": {},
+                          "log10": {},
+                          "log2": {},
+                          "lpad": {},
+                          "ltrim": {},
+                          "nvl": {},
+                          "power": {},
+                          "random": {},
+                          "replace": {},
+                          "reverse": {},
+                          "right": {},
+                          "round": {},
+                          "rpad": {},
+                          "rtrim": {},
+                          "sqrt": {},
+                          "str_pos": {},
+                          "substr": {},
+                          "substr_index": {},
+                          "tan": {},
+                          "to_date": {},
+                          "to_timestamp": {},
+                          "trunc": {},
+                          "to_lower": {},
+                          "to_upper": {}
+                        },
+                        "aggregate": {
+                          "count": {
+                            "distinct": {}
+                          }
+                        },
+                        "window": {
+                          "row_number": {},
+                          "ntile": {}
+                        }
+                      }
+                    },
+                    "filter": {
+                      "conditional": {
+                        "case": {}
+                      },
+                      "comparison": {
+                        "like": {},
+                        "ilike": {},
+                        "between": {},
+                        "contains": {},
+                        "is_nan": {},
+                        "is_zero": {}
+                      },
+                      "scalar": {
+                        "abs": {},
+                        "btrim": {},
+                        "ceil": {},
+                        "character_length": {},
+                        "concat": {},
+                        "cos": {},
+                        "current_date": {},
+                        "current_time": {},
+                        "current_timestamp": {},
+                        "date_part": {
+                          "year": {},
+                          "quarter": {},
+                          "month": {},
+                          "week": {},
+                          "day_of_week": {},
+                          "day_of_year": {},
+                          "day": {},
+                          "hour": {},
+                          "minute": {},
+                          "second": {},
+                          "microsecond": {},
+                          "millisecond": {},
+                          "nanosecond": {}
+                        },
+                        "date_trunc": {},
+                        "exp": {},
+                        "floor": {},
+                        "greatest": {},
+                        "least": {},
+                        "left": {},
+                        "ln": {},
+                        "log": {},
+                        "log10": {},
+                        "log2": {},
+                        "lpad": {},
+                        "ltrim": {},
+                        "nvl": {},
+                        "power": {},
+                        "random": {},
+                        "replace": {},
+                        "reverse": {},
+                        "right": {},
+                        "round": {},
+                        "rpad": {},
+                        "rtrim": {},
+                        "sqrt": {},
+                        "str_pos": {},
+                        "substr": {},
+                        "substr_index": {},
+                        "tan": {},
+                        "to_date": {},
+                        "to_timestamp": {},
+                        "trunc": {},
+                        "to_lower": {},
+                        "to_upper": {}
+                      },
+                      "aggregate": {
+                        "count": {
+                          "distinct": {}
+                        }
+                      },
+                      "window": {
+                        "row_number": {},
+                        "ntile": {}
+                      }
+                    },
+                    "sort": {
+                      "expression": {
+                        "conditional": {
+                          "case": {}
+                        },
+                        "comparison": {
+                          "like": {},
+                          "ilike": {},
+                          "between": {},
+                          "contains": {},
+                          "is_nan": {},
+                          "is_zero": {}
+                        },
+                        "scalar": {
+                          "abs": {},
+                          "btrim": {},
+                          "ceil": {},
+                          "character_length": {},
+                          "concat": {},
+                          "cos": {},
+                          "current_date": {},
+                          "current_time": {},
+                          "current_timestamp": {},
+                          "date_part": {
+                            "year": {},
+                            "quarter": {},
+                            "month": {},
+                            "week": {},
+                            "day_of_week": {},
+                            "day_of_year": {},
+                            "day": {},
+                            "hour": {},
+                            "minute": {},
+                            "second": {},
+                            "microsecond": {},
+                            "millisecond": {},
+                            "nanosecond": {}
+                          },
+                          "date_trunc": {},
+                          "exp": {},
+                          "floor": {},
+                          "greatest": {},
+                          "least": {},
+                          "left": {},
+                          "ln": {},
+                          "log": {},
+                          "log10": {},
+                          "log2": {},
+                          "lpad": {},
+                          "ltrim": {},
+                          "nvl": {},
+                          "power": {},
+                          "random": {},
+                          "replace": {},
+                          "reverse": {},
+                          "right": {},
+                          "round": {},
+                          "rpad": {},
+                          "rtrim": {},
+                          "sqrt": {},
+                          "str_pos": {},
+                          "substr": {},
+                          "substr_index": {},
+                          "tan": {},
+                          "to_date": {},
+                          "to_timestamp": {},
+                          "trunc": {},
+                          "to_lower": {},
+                          "to_upper": {}
+                        },
+                        "aggregate": {
+                          "count": {
+                            "distinct": {}
+                          }
+                        },
+                        "window": {
+                          "row_number": {},
+                          "ntile": {}
+                        }
+                      }
+                    },
+                    "join": {
+                      "expression": {
+                        "conditional": {
+                          "case": {}
+                        },
+                        "comparison": {
+                          "like": {},
+                          "ilike": {},
+                          "between": {},
+                          "contains": {},
+                          "is_nan": {},
+                          "is_zero": {}
+                        },
+                        "scalar": {
+                          "abs": {},
+                          "btrim": {},
+                          "ceil": {},
+                          "character_length": {},
+                          "concat": {},
+                          "cos": {},
+                          "current_date": {},
+                          "current_time": {},
+                          "current_timestamp": {},
+                          "date_part": {
+                            "year": {},
+                            "quarter": {},
+                            "month": {},
+                            "week": {},
+                            "day_of_week": {},
+                            "day_of_year": {},
+                            "day": {},
+                            "hour": {},
+                            "minute": {},
+                            "second": {},
+                            "microsecond": {},
+                            "millisecond": {},
+                            "nanosecond": {}
+                          },
+                          "date_trunc": {},
+                          "exp": {},
+                          "floor": {},
+                          "greatest": {},
+                          "least": {},
+                          "left": {},
+                          "ln": {},
+                          "log": {},
+                          "log10": {},
+                          "log2": {},
+                          "lpad": {},
+                          "ltrim": {},
+                          "nvl": {},
+                          "power": {},
+                          "random": {},
+                          "replace": {},
+                          "reverse": {},
+                          "right": {},
+                          "round": {},
+                          "rpad": {},
+                          "rtrim": {},
+                          "sqrt": {},
+                          "str_pos": {},
+                          "substr": {},
+                          "substr_index": {},
+                          "tan": {},
+                          "to_date": {},
+                          "to_timestamp": {},
+                          "trunc": {},
+                          "to_lower": {},
+                          "to_upper": {}
+                        },
+                        "aggregate": {
+                          "count": {
+                            "distinct": {}
+                          }
+                        },
+                        "window": {
+                          "row_number": {},
+                          "ntile": {}
+                        }
+                      },
+                      "join_types": {
+                        "left": {},
+                        "right": {},
+                        "inner": {},
+                        "full": {}
+                      }
+                    },
+                    "aggregate": {
+                      "expression": {
+                        "conditional": {
+                          "case": {}
+                        },
+                        "comparison": {
+                          "like": {},
+                          "ilike": {},
+                          "between": {},
+                          "contains": {},
+                          "is_nan": {},
+                          "is_zero": {}
+                        },
+                        "scalar": {
+                          "abs": {},
+                          "btrim": {},
+                          "ceil": {},
+                          "character_length": {},
+                          "concat": {},
+                          "cos": {},
+                          "current_date": {},
+                          "current_time": {},
+                          "current_timestamp": {},
+                          "date_part": {
+                            "year": {},
+                            "quarter": {},
+                            "month": {},
+                            "week": {},
+                            "day_of_week": {},
+                            "day_of_year": {},
+                            "day": {},
+                            "hour": {},
+                            "minute": {},
+                            "second": {},
+                            "microsecond": {},
+                            "millisecond": {},
+                            "nanosecond": {}
+                          },
+                          "date_trunc": {},
+                          "exp": {},
+                          "floor": {},
+                          "greatest": {},
+                          "least": {},
+                          "left": {},
+                          "ln": {},
+                          "log": {},
+                          "log10": {},
+                          "log2": {},
+                          "lpad": {},
+                          "ltrim": {},
+                          "nvl": {},
+                          "power": {},
+                          "random": {},
+                          "replace": {},
+                          "reverse": {},
+                          "right": {},
+                          "round": {},
+                          "rpad": {},
+                          "rtrim": {},
+                          "sqrt": {},
+                          "str_pos": {},
+                          "substr": {},
+                          "substr_index": {},
+                          "tan": {},
+                          "to_date": {},
+                          "to_timestamp": {},
+                          "trunc": {},
+                          "to_lower": {},
+                          "to_upper": {}
+                        },
+                        "aggregate": {
+                          "count": {
+                            "distinct": {}
+                          }
+                        },
+                        "window": {
+                          "row_number": {},
+                          "ntile": {}
+                        }
+                      },
+                      "group_by": {}
+                    },
+                    "window": {
+                      "expression": {
+                        "conditional": {
+                          "case": {}
+                        },
+                        "comparison": {
+                          "like": {},
+                          "ilike": {},
+                          "between": {},
+                          "contains": {},
+                          "is_nan": {},
+                          "is_zero": {}
+                        },
+                        "scalar": {
+                          "abs": {},
+                          "btrim": {},
+                          "ceil": {},
+                          "character_length": {},
+                          "concat": {},
+                          "cos": {},
+                          "current_date": {},
+                          "current_time": {},
+                          "current_timestamp": {},
+                          "date_part": {
+                            "year": {},
+                            "quarter": {},
+                            "month": {},
+                            "week": {},
+                            "day_of_week": {},
+                            "day_of_year": {},
+                            "day": {},
+                            "hour": {},
+                            "minute": {},
+                            "second": {},
+                            "microsecond": {},
+                            "millisecond": {},
+                            "nanosecond": {}
+                          },
+                          "date_trunc": {},
+                          "exp": {},
+                          "floor": {},
+                          "greatest": {},
+                          "least": {},
+                          "left": {},
+                          "ln": {},
+                          "log": {},
+                          "log10": {},
+                          "log2": {},
+                          "lpad": {},
+                          "ltrim": {},
+                          "nvl": {},
+                          "power": {},
+                          "random": {},
+                          "replace": {},
+                          "reverse": {},
+                          "right": {},
+                          "round": {},
+                          "rpad": {},
+                          "rtrim": {},
+                          "sqrt": {},
+                          "str_pos": {},
+                          "substr": {},
+                          "substr_index": {},
+                          "tan": {},
+                          "to_date": {},
+                          "to_timestamp": {},
+                          "trunc": {},
+                          "to_lower": {},
+                          "to_upper": {}
+                        },
+                        "aggregate": {
+                          "count": {
+                            "distinct": {}
+                          }
+                        },
+                        "window": {
+                          "row_number": {},
+                          "ntile": {}
+                        }
+                      }
+                    }
                   }
                 }
               }

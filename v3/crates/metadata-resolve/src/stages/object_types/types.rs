@@ -414,6 +414,7 @@ pub struct ExtractionFunctions {
     pub day_function: Option<DataConnectorExtractionFunctionName>,
     pub nanosecond_function: Option<DataConnectorExtractionFunctionName>,
     pub microsecond_function: Option<DataConnectorExtractionFunctionName>,
+    pub millisecond_function: Option<DataConnectorExtractionFunctionName>,
     pub second_function: Option<DataConnectorExtractionFunctionName>,
     pub minute_function: Option<DataConnectorExtractionFunctionName>,
     pub hour_function: Option<DataConnectorExtractionFunctionName>,

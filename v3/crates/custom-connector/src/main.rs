@@ -10,7 +10,7 @@ use axum::{
 };
 
 use custom_connector::state::AppState;
-use plan_pushdown_types::Rel;
+use ndc_models::{RelationalQuery, RelationalQueryResponse};
 
 type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/capabilities", get(get_capabilities))
         .route("/schema", get(get_schema))
         .route("/query", post(post_query))
-        .route("/query/rel", post(post_query_rel))
+        .route("/query/relational", post(post_query_relational))
         .route("/mutation", post(post_mutation))
         .route("/explain", post(post_explain))
         .with_state(app_state);
@@ -85,16 +85,11 @@ async fn post_explain(
     ))
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct PlanRequest {
-    pub rel: Rel,
-}
-
-async fn post_query_rel(
+async fn post_query_relational(
     State(state): State<Arc<AppState>>,
-    Json(request): Json<PlanRequest>,
-) -> Result<Json<Vec<Vec<serde_json::Value>>>> {
-    custom_connector::query::rel::execute_query_rel(state.borrow(), &request.rel)
+    Json(request): Json<RelationalQuery>,
+) -> Result<Json<RelationalQueryResponse>> {
+    custom_connector::query::relational::execute_relational_query(state.borrow(), &request)
         .await
-        .map(Json)
+        .map(|rows| Json(RelationalQueryResponse { rows }))
 }

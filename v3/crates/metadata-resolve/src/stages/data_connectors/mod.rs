@@ -11,8 +11,8 @@ pub use types::{
     ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig,
     DataConnectorAggregateCapabilities, DataConnectorCapabilities, DataConnectorContext,
     DataConnectorLink, DataConnectorNestedRelationshipCapabilities,
-    DataConnectorRelationshipCapabilities, DataConnectorSchema, DataConnectors,
-    DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
+    DataConnectorRelationalQueryCapabilities, DataConnectorRelationshipCapabilities,
+    DataConnectorSchema, DataConnectors, DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
 };
 
 /// Resolve data connectors.

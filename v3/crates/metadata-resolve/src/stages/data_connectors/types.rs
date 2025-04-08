@@ -482,6 +482,11 @@ pub struct DataConnectorCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_relationships: Option<DataConnectorRelationshipCapabilities>,
+
+    /// Whether or not relational queries are supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_relational_queries: Option<DataConnectorRelationalQueryCapabilities>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -542,6 +547,9 @@ pub struct DataConnectorNestedRelationshipCapabilities {
     pub supports_nested_in_ordering: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorRelationalQueryCapabilities {}
+
 fn mk_ndc_01_capabilities(
     capabilities: &ndc_models_v01::Capabilities,
 ) -> DataConnectorCapabilities {
@@ -582,6 +590,7 @@ fn mk_ndc_01_capabilities(
                 }),
             }
         }),
+        supports_relational_queries: None,
     }
 }
 
@@ -642,6 +651,10 @@ fn mk_ndc_02_capabilities(
                 }),
             }
         }),
+        supports_relational_queries: capabilities
+            .relational_query
+            .as_ref()
+            .map(|_| DataConnectorRelationalQueryCapabilities {}),
     }
 }
 
@@ -708,6 +721,7 @@ mod tests {
             supports_aggregates: None,
             supports_query_variables: false,
             supports_relationships: None,
+            supports_relational_queries: None,
         };
 
         // With explicit capabilities specified, we should use them
@@ -752,6 +766,7 @@ mod tests {
             supports_aggregates: None,
             supports_query_variables: false,
             supports_relationships: None,
+            supports_relational_queries: None,
         };
 
         // With explicit capabilities specified, we should use them

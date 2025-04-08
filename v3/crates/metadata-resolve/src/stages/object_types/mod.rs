@@ -920,6 +920,19 @@ fn make_extraction_functions(
                     });
                 }
             }
+            ndc_models::ExtractionFunctionDefinition::Millisecond { result_type: _ } => {
+                if extraction_functions.millisecond_function.is_none() {
+                    extraction_functions.millisecond_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "millisecond".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
             ndc_models::ExtractionFunctionDefinition::Second { result_type: _ } => {
                 if extraction_functions.second_function.is_none() {
                     extraction_functions.second_function = Some(

@@ -33,7 +33,8 @@ pub use stages::boolean_expressions::{
     ScalarComparisonKind, get_comparable_relationship_execution_strategy,
 };
 pub use stages::data_connectors::{
-    ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset, NdcVersion,
+    ArgumentPresetValue, DataConnectorLink, DataConnectorRelationalQueryCapabilities,
+    HttpHeadersPreset, NdcVersion,
 };
 pub use stages::graphql_config::{GlobalGraphqlConfig, MultipleOrderByInputObjectFields};
 pub use stages::model_permissions::{

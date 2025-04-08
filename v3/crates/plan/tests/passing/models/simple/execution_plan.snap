@@ -120,6 +120,7 @@ Queries(
                                 ),
                             },
                         ),
+                        supports_relational_queries: None,
                     },
                 },
             },

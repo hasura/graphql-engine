@@ -118,6 +118,13 @@ pub fn from_model_group_by(
                                 )
                             })
                         }
+                        ExtractionFunction::Millisecond => {
+                            extraction_functions.millisecond_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "millisecond extraction function not found".to_string(),
+                                )
+                            })
+                        }
                         ExtractionFunction::Second => {
                             extraction_functions.second_function.ok_or_else(|| {
                                 PlanError::Internal(
