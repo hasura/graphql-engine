@@ -1,0 +1,1530 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DuplicateRecordFields #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html"><span class="hs-identifier">Hasura.RQL.IR.Select.OrderBy</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier">AggregateOrderByColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier">AnnotatedOrderByElement</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItem"><span class="hs-identifier">AnnotatedOrderByItem</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItemG"><span class="hs-identifier">AnnotatedOrderByItemG</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier">ComputedFieldOrderBy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderByElement"><span class="hs-identifier">ComputedFieldOrderByElement</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html"><span class="hs-identifier">Hasura.Function.Cache</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.OrderBy.html"><span class="hs-identifier">Hasura.RQL.IR.OrderBy</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html"><span class="hs-identifier">Hasura.RQL.Types.ComputedField</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.Local</span></a></span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="AnnotatedOrderByElement"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-var">AnnotatedOrderByElement</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687674075"><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687674076"><span class="annot"><a href="#local-6989586621687674076"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AOCColumn"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCColumn"><span class="hs-identifier hs-var">AOCColumn</span></a></span></span><span>
+</span><span id="line-26"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>      </span><span class="hs-comment">-- | This type is used to determine whether the column should be redacted</span><span>
+</span><span id="line-28"></span><span>      </span><span class="hs-comment">-- before being ordered over</span><span>
+</span><span id="line-29"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnRedactionExp"><span class="hs-identifier hs-type">AnnRedactionExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674076"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AOCNestedObject"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCNestedObject"><span class="hs-identifier hs-var">AOCNestedObject</span></a></span></span><span>
+</span><span id="line-31"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#NestedObjectInfo"><span class="hs-identifier hs-type">NestedObjectInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-type">AnnotatedOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674076"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AOCObjectRelation"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCObjectRelation"><span class="hs-identifier hs-var">AOCObjectRelation</span></a></span></span><span>
+</span><span id="line-34"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="hs-comment">-- | Permission filter of the remote table to which the relationship is defined</span></span><span>
+</span><span id="line-36"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674076"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-type">AnnotatedOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674076"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AOCArrayAggregation"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCArrayAggregation"><span class="hs-identifier hs-var">AOCArrayAggregation</span></a></span></span><span>
+</span><span id="line-39"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>      </span><span class="annot"><span class="hs-comment">-- | Permission filter of the remote table to which the relationship is defined</span></span><span>
+</span><span id="line-41"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674076"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674076"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AOCComputedField"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCComputedField"><span class="hs-identifier hs-var">AOCComputedField</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-type">ComputedFieldOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674076"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687674083"><span id="local-6989586621687674085"><span class="annot"><span class="annottext">(forall x.
+ AnnotatedOrderByElement b v -&gt; Rep (AnnotatedOrderByElement b v) x)
+-&gt; (forall x.
+    Rep (AnnotatedOrderByElement b v) x -&gt; AnnotatedOrderByElement b v)
+-&gt; Generic (AnnotatedOrderByElement b v)
+forall x.
+Rep (AnnotatedOrderByElement b v) x -&gt; AnnotatedOrderByElement b v
+forall x.
+AnnotatedOrderByElement b v -&gt; Rep (AnnotatedOrderByElement b v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) v x.
+Rep (AnnotatedOrderByElement b v) x -&gt; AnnotatedOrderByElement b v
+forall (b :: BackendType) v x.
+AnnotatedOrderByElement b v -&gt; Rep (AnnotatedOrderByElement b v) x
+$cfrom :: forall (b :: BackendType) v x.
+AnnotatedOrderByElement b v -&gt; Rep (AnnotatedOrderByElement b v) x
+from :: forall x.
+AnnotatedOrderByElement b v -&gt; Rep (AnnotatedOrderByElement b v) x
+$cto :: forall (b :: BackendType) v x.
+Rep (AnnotatedOrderByElement b v) x -&gt; AnnotatedOrderByElement b v
+to :: forall x.
+Rep (AnnotatedOrderByElement b v) x -&gt; AnnotatedOrderByElement b v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674092"><span id="local-6989586621687674109"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b)
+ -&gt; AnnotatedOrderByElement b a -&gt; AnnotatedOrderByElement b b)
+-&gt; (forall a b.
+    a -&gt; AnnotatedOrderByElement b b -&gt; AnnotatedOrderByElement b a)
+-&gt; Functor (AnnotatedOrderByElement b)
+forall a b.
+a -&gt; AnnotatedOrderByElement b b -&gt; AnnotatedOrderByElement b a
+forall a b.
+(a -&gt; b)
+-&gt; AnnotatedOrderByElement b a -&gt; AnnotatedOrderByElement b b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; AnnotatedOrderByElement b b -&gt; AnnotatedOrderByElement b a
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b)
+-&gt; AnnotatedOrderByElement b a -&gt; AnnotatedOrderByElement b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b)
+-&gt; AnnotatedOrderByElement b a -&gt; AnnotatedOrderByElement b b
+fmap :: forall a b.
+(a -&gt; b)
+-&gt; AnnotatedOrderByElement b a -&gt; AnnotatedOrderByElement b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; AnnotatedOrderByElement b b -&gt; AnnotatedOrderByElement b a
+&lt;$ :: forall a b.
+a -&gt; AnnotatedOrderByElement b b -&gt; AnnotatedOrderByElement b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674123"><span id="local-6989586621687674129"><span id="local-6989586621687674157"><span id="local-6989586621687674162"><span id="local-6989586621687674173"><span id="local-6989586621687674176"><span id="local-6989586621687674179"><span id="local-6989586621687674182"><span id="local-6989586621687674185"><span id="local-6989586621687674188"><span id="local-6989586621687674191"><span id="local-6989586621687674202"><span id="local-6989586621687674205"><span id="local-6989586621687674210"><span id="local-6989586621687674215"><span id="local-6989586621687674220"><span id="local-6989586621687674225"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; AnnotatedOrderByElement b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedOrderByElement b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedOrderByElement b a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedOrderByElement b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedOrderByElement b a -&gt; a)
+-&gt; (forall a. AnnotatedOrderByElement b a -&gt; [a])
+-&gt; (forall a. AnnotatedOrderByElement b a -&gt; Bool)
+-&gt; (forall a. AnnotatedOrderByElement b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnotatedOrderByElement b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnotatedOrderByElement b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnotatedOrderByElement b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedOrderByElement b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedOrderByElement b a -&gt; a)
+-&gt; Foldable (AnnotatedOrderByElement b)
+forall a. Eq a =&gt; a -&gt; AnnotatedOrderByElement b a -&gt; Bool
+forall a. Num a =&gt; AnnotatedOrderByElement b a -&gt; a
+forall a. Ord a =&gt; AnnotatedOrderByElement b a -&gt; a
+forall m. Monoid m =&gt; AnnotatedOrderByElement b m -&gt; m
+forall a. AnnotatedOrderByElement b a -&gt; Bool
+forall a. AnnotatedOrderByElement b a -&gt; Int
+forall a. AnnotatedOrderByElement b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedOrderByElement b a -&gt; a
+forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnotatedOrderByElement b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; AnnotatedOrderByElement b a -&gt; Bool
+forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AnnotatedOrderByElement b a -&gt; a
+forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AnnotatedOrderByElement b a -&gt; a
+forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+AnnotatedOrderByElement b m -&gt; m
+forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedOrderByElement b a -&gt; Bool
+forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedOrderByElement b a -&gt; Int
+forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedOrderByElement b a -&gt; [a]
+forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedOrderByElement b a -&gt; a
+forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnotatedOrderByElement b a -&gt; m
+forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+AnnotatedOrderByElement b m -&gt; m
+fold :: forall m. Monoid m =&gt; AnnotatedOrderByElement b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnotatedOrderByElement b a -&gt; m
+foldMap :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnotatedOrderByElement b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnotatedOrderByElement b a -&gt; m
+foldMap' :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnotatedOrderByElement b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedOrderByElement b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedOrderByElement b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedOrderByElement b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedOrderByElement b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedOrderByElement b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedOrderByElement b a -&gt; [a]
+toList :: forall a. AnnotatedOrderByElement b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedOrderByElement b a -&gt; Bool
+null :: forall a. AnnotatedOrderByElement b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedOrderByElement b a -&gt; Int
+length :: forall a. AnnotatedOrderByElement b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; AnnotatedOrderByElement b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AnnotatedOrderByElement b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AnnotatedOrderByElement b a -&gt; a
+maximum :: forall a. Ord a =&gt; AnnotatedOrderByElement b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AnnotatedOrderByElement b a -&gt; a
+minimum :: forall a. Ord a =&gt; AnnotatedOrderByElement b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AnnotatedOrderByElement b a -&gt; a
+sum :: forall a. Num a =&gt; AnnotatedOrderByElement b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AnnotatedOrderByElement b a -&gt; a
+product :: forall a. Num a =&gt; AnnotatedOrderByElement b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674239"><span id="local-6989586621687674272"><span id="local-6989586621687674277"><span id="local-6989586621687674282"><span class="annot"><span class="annottext">Functor (AnnotatedOrderByElement b)
+Foldable (AnnotatedOrderByElement b)
+(Functor (AnnotatedOrderByElement b),
+ Foldable (AnnotatedOrderByElement b)) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b)
+ -&gt; AnnotatedOrderByElement b a -&gt; f (AnnotatedOrderByElement b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AnnotatedOrderByElement b (f a) -&gt; f (AnnotatedOrderByElement b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; AnnotatedOrderByElement b a -&gt; m (AnnotatedOrderByElement b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AnnotatedOrderByElement b (m a) -&gt; m (AnnotatedOrderByElement b a))
+-&gt; Traversable (AnnotatedOrderByElement b)
+forall (b :: BackendType).
+Backend b =&gt;
+Functor (AnnotatedOrderByElement b)
+forall (b :: BackendType).
+Backend b =&gt;
+Foldable (AnnotatedOrderByElement b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AnnotatedOrderByElement b (m a) -&gt; m (AnnotatedOrderByElement b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AnnotatedOrderByElement b (f a) -&gt; f (AnnotatedOrderByElement b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; AnnotatedOrderByElement b a -&gt; m (AnnotatedOrderByElement b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; AnnotatedOrderByElement b a -&gt; f (AnnotatedOrderByElement b b)
+forall (t :: * -&gt; *).
+(Functor t, Foldable t) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnotatedOrderByElement b (m a) -&gt; m (AnnotatedOrderByElement b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnotatedOrderByElement b (f a) -&gt; f (AnnotatedOrderByElement b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AnnotatedOrderByElement b a -&gt; m (AnnotatedOrderByElement b b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; AnnotatedOrderByElement b a -&gt; f (AnnotatedOrderByElement b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; AnnotatedOrderByElement b a -&gt; f (AnnotatedOrderByElement b b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; AnnotatedOrderByElement b a -&gt; f (AnnotatedOrderByElement b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AnnotatedOrderByElement b (f a) -&gt; f (AnnotatedOrderByElement b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnotatedOrderByElement b (f a) -&gt; f (AnnotatedOrderByElement b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; AnnotatedOrderByElement b a -&gt; m (AnnotatedOrderByElement b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AnnotatedOrderByElement b a -&gt; m (AnnotatedOrderByElement b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AnnotatedOrderByElement b (m a) -&gt; m (AnnotatedOrderByElement b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnotatedOrderByElement b (m a) -&gt; m (AnnotatedOrderByElement b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span id="local-6989586621687674292"><span id="local-6989586621687674317"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673840"><span id="local-6989586621687673841"><span class="annot"><a href="#local-6989586621687673840"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673840"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687673841"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-type">AnnotatedOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673840"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673841"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span id="local-6989586621687674324"><span id="local-6989586621687674352"><span id="local-6989586621687674355"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673859"><span id="local-6989586621687673860"><span class="annot"><a href="#local-6989586621687673859"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673859"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621687673860"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-type">AnnotatedOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673859"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673860"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621687673901"><span id="local-6989586621687673902"><span id="local-6989586621687674366"><span id="local-6989586621687674373"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673901"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673902"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-type">AnnotatedOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673901"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673902"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-keyword">data</span><span> </span><span id="AnnotatedAggregateOrderBy"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-var">AnnotatedAggregateOrderBy</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687674430"><span class="annot"><a href="#local-6989586621687674430"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687674431"><span class="annot"><a href="#local-6989586621687674431"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AAOCount"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AAOCount"><span class="hs-identifier hs-var">AAOCount</span></a></span></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Order by an aggregate function applied to a column</span></span><span>
+</span><span id="line-67"></span><span>    </span><span id="AAOOp"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AAOOp"><span class="hs-identifier hs-var">AAOOp</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier hs-type">AggregateOrderByColumn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674430"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674431"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687674435"><span id="local-6989586621687674437"><span class="annot"><span class="annottext">(forall x.
+ AnnotatedAggregateOrderBy b v
+ -&gt; Rep (AnnotatedAggregateOrderBy b v) x)
+-&gt; (forall x.
+    Rep (AnnotatedAggregateOrderBy b v) x
+    -&gt; AnnotatedAggregateOrderBy b v)
+-&gt; Generic (AnnotatedAggregateOrderBy b v)
+forall x.
+Rep (AnnotatedAggregateOrderBy b v) x
+-&gt; AnnotatedAggregateOrderBy b v
+forall x.
+AnnotatedAggregateOrderBy b v
+-&gt; Rep (AnnotatedAggregateOrderBy b v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) v x.
+Rep (AnnotatedAggregateOrderBy b v) x
+-&gt; AnnotatedAggregateOrderBy b v
+forall (b :: BackendType) v x.
+AnnotatedAggregateOrderBy b v
+-&gt; Rep (AnnotatedAggregateOrderBy b v) x
+$cfrom :: forall (b :: BackendType) v x.
+AnnotatedAggregateOrderBy b v
+-&gt; Rep (AnnotatedAggregateOrderBy b v) x
+from :: forall x.
+AnnotatedAggregateOrderBy b v
+-&gt; Rep (AnnotatedAggregateOrderBy b v) x
+$cto :: forall (b :: BackendType) v x.
+Rep (AnnotatedAggregateOrderBy b v) x
+-&gt; AnnotatedAggregateOrderBy b v
+to :: forall x.
+Rep (AnnotatedAggregateOrderBy b v) x
+-&gt; AnnotatedAggregateOrderBy b v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674441"><span id="local-6989586621687674445"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b)
+ -&gt; AnnotatedAggregateOrderBy b a -&gt; AnnotatedAggregateOrderBy b b)
+-&gt; (forall a b.
+    a
+    -&gt; AnnotatedAggregateOrderBy b b -&gt; AnnotatedAggregateOrderBy b a)
+-&gt; Functor (AnnotatedAggregateOrderBy b)
+forall a b.
+a -&gt; AnnotatedAggregateOrderBy b b -&gt; AnnotatedAggregateOrderBy b a
+forall a b.
+(a -&gt; b)
+-&gt; AnnotatedAggregateOrderBy b a -&gt; AnnotatedAggregateOrderBy b b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; AnnotatedAggregateOrderBy b b -&gt; AnnotatedAggregateOrderBy b a
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b)
+-&gt; AnnotatedAggregateOrderBy b a -&gt; AnnotatedAggregateOrderBy b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b)
+-&gt; AnnotatedAggregateOrderBy b a -&gt; AnnotatedAggregateOrderBy b b
+fmap :: forall a b.
+(a -&gt; b)
+-&gt; AnnotatedAggregateOrderBy b a -&gt; AnnotatedAggregateOrderBy b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; AnnotatedAggregateOrderBy b b -&gt; AnnotatedAggregateOrderBy b a
+&lt;$ :: forall a b.
+a -&gt; AnnotatedAggregateOrderBy b b -&gt; AnnotatedAggregateOrderBy b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674449"><span id="local-6989586621687674454"><span id="local-6989586621687674461"><span id="local-6989586621687674466"><span id="local-6989586621687674469"><span id="local-6989586621687674472"><span id="local-6989586621687674475"><span id="local-6989586621687674478"><span id="local-6989586621687674481"><span id="local-6989586621687674484"><span id="local-6989586621687674487"><span id="local-6989586621687674490"><span id="local-6989586621687674493"><span id="local-6989586621687674498"><span id="local-6989586621687674503"><span id="local-6989586621687674508"><span id="local-6989586621687674513"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; AnnotatedAggregateOrderBy b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedAggregateOrderBy b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedAggregateOrderBy b a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedAggregateOrderBy b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedAggregateOrderBy b a -&gt; a)
+-&gt; (forall a. AnnotatedAggregateOrderBy b a -&gt; [a])
+-&gt; (forall a. AnnotatedAggregateOrderBy b a -&gt; Bool)
+-&gt; (forall a. AnnotatedAggregateOrderBy b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnotatedAggregateOrderBy b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnotatedAggregateOrderBy b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnotatedAggregateOrderBy b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedAggregateOrderBy b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedAggregateOrderBy b a -&gt; a)
+-&gt; Foldable (AnnotatedAggregateOrderBy b)
+forall a. Eq a =&gt; a -&gt; AnnotatedAggregateOrderBy b a -&gt; Bool
+forall a. Num a =&gt; AnnotatedAggregateOrderBy b a -&gt; a
+forall a. Ord a =&gt; AnnotatedAggregateOrderBy b a -&gt; a
+forall m. Monoid m =&gt; AnnotatedAggregateOrderBy b m -&gt; m
+forall a. AnnotatedAggregateOrderBy b a -&gt; Bool
+forall a. AnnotatedAggregateOrderBy b a -&gt; Int
+forall a. AnnotatedAggregateOrderBy b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedAggregateOrderBy b a -&gt; a
+forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnotatedAggregateOrderBy b a -&gt; m
+forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; AnnotatedAggregateOrderBy b a -&gt; Bool
+forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AnnotatedAggregateOrderBy b a -&gt; a
+forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AnnotatedAggregateOrderBy b a -&gt; a
+forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+AnnotatedAggregateOrderBy b m -&gt; m
+forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedAggregateOrderBy b a -&gt; Bool
+forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedAggregateOrderBy b a -&gt; Int
+forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedAggregateOrderBy b a -&gt; [a]
+forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedAggregateOrderBy b a -&gt; a
+forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnotatedAggregateOrderBy b a -&gt; m
+forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+AnnotatedAggregateOrderBy b m -&gt; m
+fold :: forall m. Monoid m =&gt; AnnotatedAggregateOrderBy b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnotatedAggregateOrderBy b a -&gt; m
+foldMap :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnotatedAggregateOrderBy b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnotatedAggregateOrderBy b a -&gt; m
+foldMap' :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnotatedAggregateOrderBy b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+foldr :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+foldr' :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+foldl :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+foldl' :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedAggregateOrderBy b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedAggregateOrderBy b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedAggregateOrderBy b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedAggregateOrderBy b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedAggregateOrderBy b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedAggregateOrderBy b a -&gt; [a]
+toList :: forall a. AnnotatedAggregateOrderBy b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedAggregateOrderBy b a -&gt; Bool
+null :: forall a. AnnotatedAggregateOrderBy b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+AnnotatedAggregateOrderBy b a -&gt; Int
+length :: forall a. AnnotatedAggregateOrderBy b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; AnnotatedAggregateOrderBy b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AnnotatedAggregateOrderBy b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AnnotatedAggregateOrderBy b a -&gt; a
+maximum :: forall a. Ord a =&gt; AnnotatedAggregateOrderBy b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AnnotatedAggregateOrderBy b a -&gt; a
+minimum :: forall a. Ord a =&gt; AnnotatedAggregateOrderBy b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AnnotatedAggregateOrderBy b a -&gt; a
+sum :: forall a. Num a =&gt; AnnotatedAggregateOrderBy b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AnnotatedAggregateOrderBy b a -&gt; a
+product :: forall a. Num a =&gt; AnnotatedAggregateOrderBy b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674523"><span id="local-6989586621687674532"><span id="local-6989586621687674537"><span id="local-6989586621687674542"><span class="annot"><span class="annottext">Functor (AnnotatedAggregateOrderBy b)
+Foldable (AnnotatedAggregateOrderBy b)
+(Functor (AnnotatedAggregateOrderBy b),
+ Foldable (AnnotatedAggregateOrderBy b)) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b)
+ -&gt; AnnotatedAggregateOrderBy b a
+ -&gt; f (AnnotatedAggregateOrderBy b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AnnotatedAggregateOrderBy b (f a)
+    -&gt; f (AnnotatedAggregateOrderBy b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; AnnotatedAggregateOrderBy b a
+    -&gt; m (AnnotatedAggregateOrderBy b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AnnotatedAggregateOrderBy b (m a)
+    -&gt; m (AnnotatedAggregateOrderBy b a))
+-&gt; Traversable (AnnotatedAggregateOrderBy b)
+forall (b :: BackendType).
+Backend b =&gt;
+Functor (AnnotatedAggregateOrderBy b)
+forall (b :: BackendType).
+Backend b =&gt;
+Foldable (AnnotatedAggregateOrderBy b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AnnotatedAggregateOrderBy b (m a)
+-&gt; m (AnnotatedAggregateOrderBy b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AnnotatedAggregateOrderBy b (f a)
+-&gt; f (AnnotatedAggregateOrderBy b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; AnnotatedAggregateOrderBy b a
+-&gt; m (AnnotatedAggregateOrderBy b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; AnnotatedAggregateOrderBy b a
+-&gt; f (AnnotatedAggregateOrderBy b b)
+forall (t :: * -&gt; *).
+(Functor t, Foldable t) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnotatedAggregateOrderBy b (m a)
+-&gt; m (AnnotatedAggregateOrderBy b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnotatedAggregateOrderBy b (f a)
+-&gt; f (AnnotatedAggregateOrderBy b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AnnotatedAggregateOrderBy b a
+-&gt; m (AnnotatedAggregateOrderBy b b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; AnnotatedAggregateOrderBy b a
+-&gt; f (AnnotatedAggregateOrderBy b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; AnnotatedAggregateOrderBy b a
+-&gt; f (AnnotatedAggregateOrderBy b b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; AnnotatedAggregateOrderBy b a
+-&gt; f (AnnotatedAggregateOrderBy b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AnnotatedAggregateOrderBy b (f a)
+-&gt; f (AnnotatedAggregateOrderBy b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnotatedAggregateOrderBy b (f a)
+-&gt; f (AnnotatedAggregateOrderBy b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; AnnotatedAggregateOrderBy b a
+-&gt; m (AnnotatedAggregateOrderBy b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AnnotatedAggregateOrderBy b a
+-&gt; m (AnnotatedAggregateOrderBy b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AnnotatedAggregateOrderBy b (m a)
+-&gt; m (AnnotatedAggregateOrderBy b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnotatedAggregateOrderBy b (m a)
+-&gt; m (AnnotatedAggregateOrderBy b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span id="local-6989586621687674549"><span id="local-6989586621687674555"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673838"><span id="local-6989586621687673839"><span class="annot"><a href="#local-6989586621687673838"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673838"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687673839"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673838"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673839"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span id="local-6989586621687674560"><span id="local-6989586621687674565"><span id="local-6989586621687674568"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673857"><span id="local-6989586621687673858"><span class="annot"><a href="#local-6989586621687673857"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673857"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621687673858"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673857"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673858"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687673897"><span id="local-6989586621687673898"><span id="local-6989586621687674576"><span id="local-6989586621687674582"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673897"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673898"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673897"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673898"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">data</span><span> </span><span id="AggregateOrderByColumn"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier hs-var">AggregateOrderByColumn</span></a></span></span><span> </span><span id="local-6989586621687673939"><span class="annot"><a href="#local-6989586621687673939"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687673940"><span class="annot"><a href="#local-6989586621687673940"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AggregateOrderByColumn"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier hs-var">AggregateOrderByColumn</span></a></span></span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aobcAggregateFunctionName"><span class="annot"><span class="annottext">forall (b :: BackendType) v. AggregateOrderByColumn b v -&gt; Text
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_aobcAggregateFunctionName"><span class="hs-identifier hs-var hs-var">_aobcAggregateFunctionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span id="_aobcAggregateFunctionReturnType"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+AggregateOrderByColumn b v -&gt; ColumnType b
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_aobcAggregateFunctionReturnType"><span class="hs-identifier hs-var hs-var">_aobcAggregateFunctionReturnType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673939"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>    </span><span id="_aobcColumn"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+AggregateOrderByColumn b v -&gt; ColumnInfo b
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_aobcColumn"><span class="hs-identifier hs-var hs-var">_aobcColumn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673939"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-comment">-- | This type is used to determine whether the column should be redacted</span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-comment">-- before being aggregated and then ordered over</span><span>
+</span><span id="line-82"></span><span>    </span><span id="_aobcRedactionExpression"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+AggregateOrderByColumn b v -&gt; AnnRedactionExp b v
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_aobcRedactionExpression"><span class="hs-identifier hs-var hs-var">_aobcRedactionExpression</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnRedactionExp"><span class="hs-identifier hs-type">AnnRedactionExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673939"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673940"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687674599"><span id="local-6989586621687674601"><span class="annot"><span class="annottext">(forall x.
+ AggregateOrderByColumn b v -&gt; Rep (AggregateOrderByColumn b v) x)
+-&gt; (forall x.
+    Rep (AggregateOrderByColumn b v) x -&gt; AggregateOrderByColumn b v)
+-&gt; Generic (AggregateOrderByColumn b v)
+forall x.
+Rep (AggregateOrderByColumn b v) x -&gt; AggregateOrderByColumn b v
+forall x.
+AggregateOrderByColumn b v -&gt; Rep (AggregateOrderByColumn b v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) v x.
+Rep (AggregateOrderByColumn b v) x -&gt; AggregateOrderByColumn b v
+forall (b :: BackendType) v x.
+AggregateOrderByColumn b v -&gt; Rep (AggregateOrderByColumn b v) x
+$cfrom :: forall (b :: BackendType) v x.
+AggregateOrderByColumn b v -&gt; Rep (AggregateOrderByColumn b v) x
+from :: forall x.
+AggregateOrderByColumn b v -&gt; Rep (AggregateOrderByColumn b v) x
+$cto :: forall (b :: BackendType) v x.
+Rep (AggregateOrderByColumn b v) x -&gt; AggregateOrderByColumn b v
+to :: forall x.
+Rep (AggregateOrderByColumn b v) x -&gt; AggregateOrderByColumn b v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674605"><span id="local-6989586621687674608"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b)
+ -&gt; AggregateOrderByColumn b a -&gt; AggregateOrderByColumn b b)
+-&gt; (forall a b.
+    a -&gt; AggregateOrderByColumn b b -&gt; AggregateOrderByColumn b a)
+-&gt; Functor (AggregateOrderByColumn b)
+forall a b.
+a -&gt; AggregateOrderByColumn b b -&gt; AggregateOrderByColumn b a
+forall a b.
+(a -&gt; b)
+-&gt; AggregateOrderByColumn b a -&gt; AggregateOrderByColumn b b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; AggregateOrderByColumn b b -&gt; AggregateOrderByColumn b a
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b)
+-&gt; AggregateOrderByColumn b a -&gt; AggregateOrderByColumn b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b)
+-&gt; AggregateOrderByColumn b a -&gt; AggregateOrderByColumn b b
+fmap :: forall a b.
+(a -&gt; b)
+-&gt; AggregateOrderByColumn b a -&gt; AggregateOrderByColumn b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; AggregateOrderByColumn b b -&gt; AggregateOrderByColumn b a
+&lt;$ :: forall a b.
+a -&gt; AggregateOrderByColumn b b -&gt; AggregateOrderByColumn b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674612"><span id="local-6989586621687674617"><span id="local-6989586621687674622"><span id="local-6989586621687674627"><span id="local-6989586621687674630"><span id="local-6989586621687674633"><span id="local-6989586621687674636"><span id="local-6989586621687674639"><span id="local-6989586621687674642"><span id="local-6989586621687674645"><span id="local-6989586621687674648"><span id="local-6989586621687674651"><span id="local-6989586621687674654"><span id="local-6989586621687674659"><span id="local-6989586621687674664"><span id="local-6989586621687674669"><span id="local-6989586621687674674"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; AggregateOrderByColumn b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AggregateOrderByColumn b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AggregateOrderByColumn b a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AggregateOrderByColumn b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AggregateOrderByColumn b a -&gt; a)
+-&gt; (forall a. AggregateOrderByColumn b a -&gt; [a])
+-&gt; (forall a. AggregateOrderByColumn b a -&gt; Bool)
+-&gt; (forall a. AggregateOrderByColumn b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AggregateOrderByColumn b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AggregateOrderByColumn b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AggregateOrderByColumn b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AggregateOrderByColumn b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AggregateOrderByColumn b a -&gt; a)
+-&gt; Foldable (AggregateOrderByColumn b)
+forall a. Eq a =&gt; a -&gt; AggregateOrderByColumn b a -&gt; Bool
+forall a. Num a =&gt; AggregateOrderByColumn b a -&gt; a
+forall a. Ord a =&gt; AggregateOrderByColumn b a -&gt; a
+forall m. Monoid m =&gt; AggregateOrderByColumn b m -&gt; m
+forall a. AggregateOrderByColumn b a -&gt; Bool
+forall a. AggregateOrderByColumn b a -&gt; Int
+forall a. AggregateOrderByColumn b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AggregateOrderByColumn b a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AggregateOrderByColumn b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; AggregateOrderByColumn b a -&gt; Bool
+forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AggregateOrderByColumn b a -&gt; a
+forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AggregateOrderByColumn b a -&gt; a
+forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+AggregateOrderByColumn b m -&gt; m
+forall (b :: BackendType) a.
+Backend b =&gt;
+AggregateOrderByColumn b a -&gt; Bool
+forall (b :: BackendType) a.
+Backend b =&gt;
+AggregateOrderByColumn b a -&gt; Int
+forall (b :: BackendType) a.
+Backend b =&gt;
+AggregateOrderByColumn b a -&gt; [a]
+forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AggregateOrderByColumn b a -&gt; a
+forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AggregateOrderByColumn b a -&gt; m
+forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+AggregateOrderByColumn b m -&gt; m
+fold :: forall m. Monoid m =&gt; AggregateOrderByColumn b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AggregateOrderByColumn b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AggregateOrderByColumn b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AggregateOrderByColumn b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AggregateOrderByColumn b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AggregateOrderByColumn b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AggregateOrderByColumn b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AggregateOrderByColumn b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AggregateOrderByColumn b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AggregateOrderByColumn b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregateOrderByColumn b a -&gt; [a]
+toList :: forall a. AggregateOrderByColumn b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregateOrderByColumn b a -&gt; Bool
+null :: forall a. AggregateOrderByColumn b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregateOrderByColumn b a -&gt; Int
+length :: forall a. AggregateOrderByColumn b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; AggregateOrderByColumn b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AggregateOrderByColumn b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AggregateOrderByColumn b a -&gt; a
+maximum :: forall a. Ord a =&gt; AggregateOrderByColumn b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AggregateOrderByColumn b a -&gt; a
+minimum :: forall a. Ord a =&gt; AggregateOrderByColumn b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AggregateOrderByColumn b a -&gt; a
+sum :: forall a. Num a =&gt; AggregateOrderByColumn b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AggregateOrderByColumn b a -&gt; a
+product :: forall a. Num a =&gt; AggregateOrderByColumn b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674684"><span id="local-6989586621687674691"><span id="local-6989586621687674696"><span id="local-6989586621687674701"><span class="annot"><span class="annottext">Functor (AggregateOrderByColumn b)
+Foldable (AggregateOrderByColumn b)
+(Functor (AggregateOrderByColumn b),
+ Foldable (AggregateOrderByColumn b)) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b)
+ -&gt; AggregateOrderByColumn b a -&gt; f (AggregateOrderByColumn b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AggregateOrderByColumn b (f a) -&gt; f (AggregateOrderByColumn b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; AggregateOrderByColumn b a -&gt; m (AggregateOrderByColumn b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AggregateOrderByColumn b (m a) -&gt; m (AggregateOrderByColumn b a))
+-&gt; Traversable (AggregateOrderByColumn b)
+forall (b :: BackendType).
+Backend b =&gt;
+Functor (AggregateOrderByColumn b)
+forall (b :: BackendType).
+Backend b =&gt;
+Foldable (AggregateOrderByColumn b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AggregateOrderByColumn b (m a) -&gt; m (AggregateOrderByColumn b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AggregateOrderByColumn b (f a) -&gt; f (AggregateOrderByColumn b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; AggregateOrderByColumn b a -&gt; m (AggregateOrderByColumn b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; AggregateOrderByColumn b a -&gt; f (AggregateOrderByColumn b b)
+forall (t :: * -&gt; *).
+(Functor t, Foldable t) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AggregateOrderByColumn b (m a) -&gt; m (AggregateOrderByColumn b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AggregateOrderByColumn b (f a) -&gt; f (AggregateOrderByColumn b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AggregateOrderByColumn b a -&gt; m (AggregateOrderByColumn b b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; AggregateOrderByColumn b a -&gt; f (AggregateOrderByColumn b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; AggregateOrderByColumn b a -&gt; f (AggregateOrderByColumn b b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; AggregateOrderByColumn b a -&gt; f (AggregateOrderByColumn b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AggregateOrderByColumn b (f a) -&gt; f (AggregateOrderByColumn b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AggregateOrderByColumn b (f a) -&gt; f (AggregateOrderByColumn b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; AggregateOrderByColumn b a -&gt; m (AggregateOrderByColumn b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AggregateOrderByColumn b a -&gt; m (AggregateOrderByColumn b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AggregateOrderByColumn b (m a) -&gt; m (AggregateOrderByColumn b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AggregateOrderByColumn b (m a) -&gt; m (AggregateOrderByColumn b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span id="local-6989586621687674708"><span id="local-6989586621687674716"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673928"><span id="local-6989586621687673929"><span class="annot"><a href="#local-6989586621687673928"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673928"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687673929"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier hs-type">AggregateOrderByColumn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673928"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673929"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span id="local-6989586621687674721"><span id="local-6989586621687674730"><span id="local-6989586621687674733"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673932"><span id="local-6989586621687673933"><span class="annot"><a href="#local-6989586621687673932"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673932"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621687673933"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier hs-type">AggregateOrderByColumn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673932"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673933"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687673937"><span id="local-6989586621687673938"><span id="local-6989586621687674741"><span id="local-6989586621687674747"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673937"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673938"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier hs-type">AggregateOrderByColumn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673937"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673938"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-keyword">type</span><span> </span><span id="AnnotatedOrderByItemG"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItemG"><span class="hs-identifier hs-var">AnnotatedOrderByItemG</span></a></span></span><span> </span><span id="local-6989586621687674767"><span class="annot"><a href="#local-6989586621687674767"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687674768"><span class="annot"><a href="#local-6989586621687674768"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.OrderBy.html#OrderByItemG"><span class="hs-identifier hs-type">OrderByItemG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674767"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-type">AnnotatedOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674767"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674768"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="hs-keyword">type</span><span> </span><span id="AnnotatedOrderByItem"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItem"><span class="hs-identifier hs-var">AnnotatedOrderByItem</span></a></span></span><span> </span><span id="local-6989586621687674770"><span class="annot"><a href="#local-6989586621687674770"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItemG"><span class="hs-identifier hs-type">AnnotatedOrderByItemG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674770"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-type">SQLExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674770"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="annot"><span class="hs-comment">-- | The order by element for a computed field based on its return type</span></span><span>
+</span><span id="line-97"></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldOrderByElement"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderByElement"><span class="hs-identifier hs-var">ComputedFieldOrderByElement</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687674772"><span class="annot"><a href="#local-6989586621687674772"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687674773"><span class="annot"><a href="#local-6989586621687674773"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Sort by the scalar computed field</span></span><span>
+</span><span id="line-99"></span><span>    </span><span id="CFOBEScalar"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#CFOBEScalar"><span class="hs-identifier hs-var">CFOBEScalar</span></a></span></span><span>
+</span><span id="line-100"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674772"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>      </span><span class="hs-comment">-- | This type is used to determine whether the computed field should be redacted</span><span>
+</span><span id="line-102"></span><span>      </span><span class="hs-comment">-- before being ordered over</span><span>
+</span><span id="line-103"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnRedactionExp"><span class="hs-identifier hs-type">AnnRedactionExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674772"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674773"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFOBETableAggregation"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#CFOBETableAggregation"><span class="hs-identifier hs-var">CFOBETableAggregation</span></a></span></span><span>
+</span><span id="line-105"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674772"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>      </span><span class="annot"><span class="hs-comment">-- | Permission filter of the retuning table</span></span><span>
+</span><span id="line-107"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674772"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674773"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="hs-comment">-- | Sort by aggregation fields of table rows returned by computed field</span></span><span>
+</span><span id="line-109"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674772"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674773"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687674777"><span id="local-6989586621687674779"><span class="annot"><span class="annottext">(forall x.
+ ComputedFieldOrderByElement b v
+ -&gt; Rep (ComputedFieldOrderByElement b v) x)
+-&gt; (forall x.
+    Rep (ComputedFieldOrderByElement b v) x
+    -&gt; ComputedFieldOrderByElement b v)
+-&gt; Generic (ComputedFieldOrderByElement b v)
+forall x.
+Rep (ComputedFieldOrderByElement b v) x
+-&gt; ComputedFieldOrderByElement b v
+forall x.
+ComputedFieldOrderByElement b v
+-&gt; Rep (ComputedFieldOrderByElement b v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) v x.
+Rep (ComputedFieldOrderByElement b v) x
+-&gt; ComputedFieldOrderByElement b v
+forall (b :: BackendType) v x.
+ComputedFieldOrderByElement b v
+-&gt; Rep (ComputedFieldOrderByElement b v) x
+$cfrom :: forall (b :: BackendType) v x.
+ComputedFieldOrderByElement b v
+-&gt; Rep (ComputedFieldOrderByElement b v) x
+from :: forall x.
+ComputedFieldOrderByElement b v
+-&gt; Rep (ComputedFieldOrderByElement b v) x
+$cto :: forall (b :: BackendType) v x.
+Rep (ComputedFieldOrderByElement b v) x
+-&gt; ComputedFieldOrderByElement b v
+to :: forall x.
+Rep (ComputedFieldOrderByElement b v) x
+-&gt; ComputedFieldOrderByElement b v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674783"><span id="local-6989586621687674789"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b)
+ -&gt; ComputedFieldOrderByElement b a
+ -&gt; ComputedFieldOrderByElement b b)
+-&gt; (forall a b.
+    a
+    -&gt; ComputedFieldOrderByElement b b
+    -&gt; ComputedFieldOrderByElement b a)
+-&gt; Functor (ComputedFieldOrderByElement b)
+forall a b.
+a
+-&gt; ComputedFieldOrderByElement b b
+-&gt; ComputedFieldOrderByElement b a
+forall a b.
+(a -&gt; b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; ComputedFieldOrderByElement b b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+a
+-&gt; ComputedFieldOrderByElement b b
+-&gt; ComputedFieldOrderByElement b a
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; ComputedFieldOrderByElement b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; ComputedFieldOrderByElement b b
+fmap :: forall a b.
+(a -&gt; b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; ComputedFieldOrderByElement b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a
+-&gt; ComputedFieldOrderByElement b b
+-&gt; ComputedFieldOrderByElement b a
+&lt;$ :: forall a b.
+a
+-&gt; ComputedFieldOrderByElement b b
+-&gt; ComputedFieldOrderByElement b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674797"><span id="local-6989586621687674803"><span id="local-6989586621687674815"><span id="local-6989586621687674820"><span id="local-6989586621687674826"><span id="local-6989586621687674829"><span id="local-6989586621687674832"><span id="local-6989586621687674835"><span id="local-6989586621687674838"><span id="local-6989586621687674841"><span id="local-6989586621687674844"><span id="local-6989586621687674850"><span id="local-6989586621687674853"><span id="local-6989586621687674858"><span id="local-6989586621687674863"><span id="local-6989586621687674868"><span id="local-6989586621687674873"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; ComputedFieldOrderByElement b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; ComputedFieldOrderByElement b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; ComputedFieldOrderByElement b a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b)
+-&gt; (forall a.
+    (a -&gt; a -&gt; a) -&gt; ComputedFieldOrderByElement b a -&gt; a)
+-&gt; (forall a.
+    (a -&gt; a -&gt; a) -&gt; ComputedFieldOrderByElement b a -&gt; a)
+-&gt; (forall a. ComputedFieldOrderByElement b a -&gt; [a])
+-&gt; (forall a. ComputedFieldOrderByElement b a -&gt; Bool)
+-&gt; (forall a. ComputedFieldOrderByElement b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; ComputedFieldOrderByElement b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; ComputedFieldOrderByElement b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; ComputedFieldOrderByElement b a -&gt; a)
+-&gt; (forall a. Num a =&gt; ComputedFieldOrderByElement b a -&gt; a)
+-&gt; (forall a. Num a =&gt; ComputedFieldOrderByElement b a -&gt; a)
+-&gt; Foldable (ComputedFieldOrderByElement b)
+forall a. Eq a =&gt; a -&gt; ComputedFieldOrderByElement b a -&gt; Bool
+forall a. Num a =&gt; ComputedFieldOrderByElement b a -&gt; a
+forall a. Ord a =&gt; ComputedFieldOrderByElement b a -&gt; a
+forall m. Monoid m =&gt; ComputedFieldOrderByElement b m -&gt; m
+forall a. ComputedFieldOrderByElement b a -&gt; Bool
+forall a. ComputedFieldOrderByElement b a -&gt; Int
+forall a. ComputedFieldOrderByElement b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; ComputedFieldOrderByElement b a -&gt; a
+forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; ComputedFieldOrderByElement b a -&gt; m
+forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; ComputedFieldOrderByElement b a -&gt; Bool
+forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+ComputedFieldOrderByElement b a -&gt; a
+forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+ComputedFieldOrderByElement b a -&gt; a
+forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+ComputedFieldOrderByElement b m -&gt; m
+forall (b :: BackendType) a.
+Backend b =&gt;
+ComputedFieldOrderByElement b a -&gt; Bool
+forall (b :: BackendType) a.
+Backend b =&gt;
+ComputedFieldOrderByElement b a -&gt; Int
+forall (b :: BackendType) a.
+Backend b =&gt;
+ComputedFieldOrderByElement b a -&gt; [a]
+forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; ComputedFieldOrderByElement b a -&gt; a
+forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; ComputedFieldOrderByElement b a -&gt; m
+forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+ComputedFieldOrderByElement b m -&gt; m
+fold :: forall m. Monoid m =&gt; ComputedFieldOrderByElement b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; ComputedFieldOrderByElement b a -&gt; m
+foldMap :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; ComputedFieldOrderByElement b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; ComputedFieldOrderByElement b a -&gt; m
+foldMap' :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; ComputedFieldOrderByElement b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+foldr :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+foldr' :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+foldl :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+foldl' :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; ComputedFieldOrderByElement b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; ComputedFieldOrderByElement b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; ComputedFieldOrderByElement b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; ComputedFieldOrderByElement b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; ComputedFieldOrderByElement b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+ComputedFieldOrderByElement b a -&gt; [a]
+toList :: forall a. ComputedFieldOrderByElement b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+ComputedFieldOrderByElement b a -&gt; Bool
+null :: forall a. ComputedFieldOrderByElement b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+ComputedFieldOrderByElement b a -&gt; Int
+length :: forall a. ComputedFieldOrderByElement b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; ComputedFieldOrderByElement b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; ComputedFieldOrderByElement b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+ComputedFieldOrderByElement b a -&gt; a
+maximum :: forall a. Ord a =&gt; ComputedFieldOrderByElement b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+ComputedFieldOrderByElement b a -&gt; a
+minimum :: forall a. Ord a =&gt; ComputedFieldOrderByElement b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+ComputedFieldOrderByElement b a -&gt; a
+sum :: forall a. Num a =&gt; ComputedFieldOrderByElement b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+ComputedFieldOrderByElement b a -&gt; a
+product :: forall a. Num a =&gt; ComputedFieldOrderByElement b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687674883"><span id="local-6989586621687674897"><span id="local-6989586621687674903"><span id="local-6989586621687674908"><span class="annot"><span class="annottext">Functor (ComputedFieldOrderByElement b)
+Foldable (ComputedFieldOrderByElement b)
+(Functor (ComputedFieldOrderByElement b),
+ Foldable (ComputedFieldOrderByElement b)) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b)
+ -&gt; ComputedFieldOrderByElement b a
+ -&gt; f (ComputedFieldOrderByElement b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    ComputedFieldOrderByElement b (f a)
+    -&gt; f (ComputedFieldOrderByElement b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; ComputedFieldOrderByElement b a
+    -&gt; m (ComputedFieldOrderByElement b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    ComputedFieldOrderByElement b (m a)
+    -&gt; m (ComputedFieldOrderByElement b a))
+-&gt; Traversable (ComputedFieldOrderByElement b)
+forall (b :: BackendType).
+Backend b =&gt;
+Functor (ComputedFieldOrderByElement b)
+forall (b :: BackendType).
+Backend b =&gt;
+Foldable (ComputedFieldOrderByElement b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+ComputedFieldOrderByElement b (m a)
+-&gt; m (ComputedFieldOrderByElement b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+ComputedFieldOrderByElement b (f a)
+-&gt; f (ComputedFieldOrderByElement b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; m (ComputedFieldOrderByElement b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; f (ComputedFieldOrderByElement b b)
+forall (t :: * -&gt; *).
+(Functor t, Foldable t) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ComputedFieldOrderByElement b (m a)
+-&gt; m (ComputedFieldOrderByElement b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ComputedFieldOrderByElement b (f a)
+-&gt; f (ComputedFieldOrderByElement b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; m (ComputedFieldOrderByElement b b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; f (ComputedFieldOrderByElement b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; f (ComputedFieldOrderByElement b b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; f (ComputedFieldOrderByElement b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+ComputedFieldOrderByElement b (f a)
+-&gt; f (ComputedFieldOrderByElement b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ComputedFieldOrderByElement b (f a)
+-&gt; f (ComputedFieldOrderByElement b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; m (ComputedFieldOrderByElement b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; ComputedFieldOrderByElement b a
+-&gt; m (ComputedFieldOrderByElement b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+ComputedFieldOrderByElement b (m a)
+-&gt; m (ComputedFieldOrderByElement b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ComputedFieldOrderByElement b (m a)
+-&gt; m (ComputedFieldOrderByElement b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span id="local-6989586621687674915"><span id="local-6989586621687674927"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687674012"><span id="local-6989586621687674013"><span class="annot"><a href="#local-6989586621687674012"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674012"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687674013"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderByElement"><span class="hs-identifier hs-type">ComputedFieldOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674012"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674013"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span id="local-6989586621687674937"><span id="local-6989586621687674949"><span id="local-6989586621687674953"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687674016"><span id="local-6989586621687674017"><span class="annot"><a href="#local-6989586621687674016"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-119"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674016"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621687674017"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-122"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderByElement"><span class="hs-identifier hs-type">ComputedFieldOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674016"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674017"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621687674020"><span id="local-6989586621687674021"><span id="local-6989586621687674963"><span id="local-6989586621687674970"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674020"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674021"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderByElement"><span class="hs-identifier hs-type">ComputedFieldOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674020"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674021"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldOrderBy"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-var">ComputedFieldOrderBy</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687674022"><span class="annot"><a href="#local-6989586621687674022"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687674023"><span class="annot"><a href="#local-6989586621687674023"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldOrderBy"><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-var">ComputedFieldOrderBy</span></a></span></span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cfobXField"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+ComputedFieldOrderBy b v -&gt; XComputedField b
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_cfobXField"><span class="hs-identifier hs-var hs-var">_cfobXField</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XComputedField"><span class="hs-identifier hs-type">XComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674022"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span id="_cfobName"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+ComputedFieldOrderBy b v -&gt; ComputedFieldName
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_cfobName"><span class="hs-identifier hs-var hs-var">_cfobName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.Name.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span id="_cfobFunction"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+ComputedFieldOrderBy b v -&gt; FunctionName b
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_cfobFunction"><span class="hs-identifier hs-var hs-var">_cfobFunction</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674022"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>    </span><span id="_cfobFunctionArgsExp"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+ComputedFieldOrderBy b v -&gt; FunctionArgsExp b v
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_cfobFunctionArgsExp"><span class="hs-identifier hs-var hs-var">_cfobFunctionArgsExp</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionArgsExp"><span class="hs-identifier hs-type">FunctionArgsExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674022"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674023"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>    </span><span id="_cfobOrderByElement"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+ComputedFieldOrderBy b v -&gt; ComputedFieldOrderByElement b v
+</span><a href="Hasura.RQL.IR.Select.OrderBy.html#_cfobOrderByElement"><span class="hs-identifier hs-var hs-var">_cfobOrderByElement</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderByElement"><span class="hs-identifier hs-type">ComputedFieldOrderByElement</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674022"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687674023"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-136"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687675003"><span id="local-6989586621687675005"><span class="annot"><span class="annottext">(forall x.
+ ComputedFieldOrderBy b v -&gt; Rep (ComputedFieldOrderBy b v) x)
+-&gt; (forall x.
+    Rep (ComputedFieldOrderBy b v) x -&gt; ComputedFieldOrderBy b v)
+-&gt; Generic (ComputedFieldOrderBy b v)
+forall x.
+Rep (ComputedFieldOrderBy b v) x -&gt; ComputedFieldOrderBy b v
+forall x.
+ComputedFieldOrderBy b v -&gt; Rep (ComputedFieldOrderBy b v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) v x.
+Rep (ComputedFieldOrderBy b v) x -&gt; ComputedFieldOrderBy b v
+forall (b :: BackendType) v x.
+ComputedFieldOrderBy b v -&gt; Rep (ComputedFieldOrderBy b v) x
+$cfrom :: forall (b :: BackendType) v x.
+ComputedFieldOrderBy b v -&gt; Rep (ComputedFieldOrderBy b v) x
+from :: forall x.
+ComputedFieldOrderBy b v -&gt; Rep (ComputedFieldOrderBy b v) x
+$cto :: forall (b :: BackendType) v x.
+Rep (ComputedFieldOrderBy b v) x -&gt; ComputedFieldOrderBy b v
+to :: forall x.
+Rep (ComputedFieldOrderBy b v) x -&gt; ComputedFieldOrderBy b v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span id="local-6989586621687675009"><span id="local-6989586621687675016"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673764"><span class="annot"><a href="#local-6989586621687673764"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673764"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-type">ComputedFieldOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673764"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span id="local-6989586621687675025"><span id="local-6989586621687675030"><span id="local-6989586621687675042"><span id="local-6989586621687675047"><span id="local-6989586621687675052"><span id="local-6989586621687675055"><span id="local-6989586621687675058"><span id="local-6989586621687675061"><span id="local-6989586621687675064"><span id="local-6989586621687675067"><span id="local-6989586621687675070"><span id="local-6989586621687675075"><span id="local-6989586621687675078"><span id="local-6989586621687675083"><span id="local-6989586621687675088"><span id="local-6989586621687675093"><span id="local-6989586621687675098"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673794"><span class="annot"><a href="#local-6989586621687673794"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673794"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-type">ComputedFieldOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673794"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-142"></span><span>
+</span><span id="line-143"></span><span id="local-6989586621687675110"><span id="local-6989586621687675122"><span id="local-6989586621687675127"><span id="local-6989586621687675132"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673817"><span class="annot"><a href="#local-6989586621687673817"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673817"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-type">ComputedFieldOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673817"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span id="local-6989586621687675139"><span id="local-6989586621687675151"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673836"><span id="local-6989586621687673837"><span class="annot"><a href="#local-6989586621687673836"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673836"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687673837"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-149"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-type">ComputedFieldOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673836"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673837"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span id="local-6989586621687675164"><span id="local-6989586621687675177"><span id="local-6989586621687675180"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687673855"><span id="local-6989586621687673856"><span class="annot"><a href="#local-6989586621687673855"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-152"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673855"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-153"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621687673856"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-154"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-155"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-type">ComputedFieldOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673855"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673856"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-158"></span><span>  </span><span id="local-6989586621687673899"><span id="local-6989586621687673900"><span id="local-6989586621687675193"><span id="local-6989586621687675199"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673899"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673900"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#ComputedFieldOrderBy"><span class="hs-identifier hs-type">ComputedFieldOrderBy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673899"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687673900"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-162"></span></pre></body></html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html"><span class="hs-identifier">Hasura.ShutdownLatch</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier">ShutdownLatch</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.ShutdownLatch.html#newShutdownLatch"><span class="hs-identifier">newShutdownLatch</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.ShutdownLatch.html#shutdownGracefully"><span class="hs-identifier">shutdownGracefully</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.ShutdownLatch.html#waitForShutdown"><span class="hs-identifier">waitForShutdown</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.ShutdownLatch.html#shuttingDown"><span class="hs-identifier">shuttingDown</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html"><span class="hs-identifier">Control.Concurrent.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="annot"><span class="hs-comment">-- | A latch for the graceful shutdown of a server process.</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">newtype</span><span> </span><span id="ShutdownLatch"><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-var">ShutdownLatch</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ShutdownLatch"><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-var">ShutdownLatch</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unShutdownLatch"><span class="annot"><span class="annottext">ShutdownLatch -&gt; MVar ()
+</span><a href="Hasura.ShutdownLatch.html#unShutdownLatch"><span class="hs-identifier hs-var hs-var">unShutdownLatch</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.MVar</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="annot"><a href="Hasura.ShutdownLatch.html#newShutdownLatch"><span class="hs-identifier hs-type">newShutdownLatch</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-type">ShutdownLatch</span></a></span><span>
+</span><span id="line-17"></span><span id="newShutdownLatch"><span class="annot"><span class="annottext">newShutdownLatch :: IO ShutdownLatch
+</span><a href="Hasura.ShutdownLatch.html#newShutdownLatch"><span class="hs-identifier hs-var hs-var">newShutdownLatch</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MVar () -&gt; ShutdownLatch) -&gt; IO (MVar ()) -&gt; IO ShutdownLatch
+forall a b. (a -&gt; b) -&gt; IO a -&gt; IO b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">MVar () -&gt; ShutdownLatch
+</span><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-var">ShutdownLatch</span></a></span><span> </span><span class="annot"><span class="annottext">IO (MVar ())
+forall a. IO (MVar a)
+</span><span class="hs-identifier hs-var">C.newEmptyMVar</span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="annot"><span class="hs-comment">-- | Block the current thread, waiting on the latch.</span></span><span>
+</span><span id="line-20"></span><span class="annot"><a href="Hasura.ShutdownLatch.html#waitForShutdown"><span class="hs-identifier hs-type">waitForShutdown</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-type">ShutdownLatch</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span id="waitForShutdown"><span class="annot"><span class="annottext">waitForShutdown :: ShutdownLatch -&gt; IO ()
+</span><a href="Hasura.ShutdownLatch.html#waitForShutdown"><span class="hs-identifier hs-var hs-var">waitForShutdown</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MVar () -&gt; IO ()
+forall a. MVar a -&gt; IO a
+</span><span class="hs-identifier hs-var">C.readMVar</span></span><span> </span><span class="annot"><span class="annottext">(MVar () -&gt; IO ())
+-&gt; (ShutdownLatch -&gt; MVar ()) -&gt; ShutdownLatch -&gt; IO ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ShutdownLatch -&gt; MVar ()
+</span><a href="Hasura.ShutdownLatch.html#unShutdownLatch"><span class="hs-identifier hs-var">unShutdownLatch</span></a></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- | Initiate a graceful shutdown of the server associated with the provided</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- latch.</span><span>
+</span><span id="line-25"></span><span class="annot"><a href="Hasura.ShutdownLatch.html#shutdownGracefully"><span class="hs-identifier hs-type">shutdownGracefully</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-type">ShutdownLatch</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span id="shutdownGracefully"><span class="annot"><span class="annottext">shutdownGracefully :: ShutdownLatch -&gt; IO ()
+</span><a href="Hasura.ShutdownLatch.html#shutdownGracefully"><span class="hs-identifier hs-var hs-var">shutdownGracefully</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO Bool -&gt; IO ()
+forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(IO Bool -&gt; IO ())
+-&gt; (ShutdownLatch -&gt; IO Bool) -&gt; ShutdownLatch -&gt; IO ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(MVar () -&gt; () -&gt; IO Bool) -&gt; () -&gt; MVar () -&gt; IO Bool
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">MVar () -&gt; () -&gt; IO Bool
+forall a. MVar a -&gt; a -&gt; IO Bool
+</span><span class="hs-identifier hs-var">C.tryPutMVar</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(MVar () -&gt; IO Bool)
+-&gt; (ShutdownLatch -&gt; MVar ()) -&gt; ShutdownLatch -&gt; IO Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ShutdownLatch -&gt; MVar ()
+</span><a href="Hasura.ShutdownLatch.html#unShutdownLatch"><span class="hs-identifier hs-var">unShutdownLatch</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="annot"><span class="hs-comment">-- | Returns True if the latch is set for shutdown and vice-versa</span></span><span>
+</span><span id="line-29"></span><span class="annot"><a href="Hasura.ShutdownLatch.html#shuttingDown"><span class="hs-identifier hs-type">shuttingDown</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-type">ShutdownLatch</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-30"></span><span id="shuttingDown"><span class="annot"><span class="annottext">shuttingDown :: ShutdownLatch -&gt; IO Bool
+</span><a href="Hasura.ShutdownLatch.html#shuttingDown"><span class="hs-identifier hs-var hs-var">shuttingDown</span></a></span></span><span> </span><span id="local-6989586621687758272"><span class="annot"><span class="annottext">ShutdownLatch
+</span><a href="#local-6989586621687758272"><span class="hs-identifier hs-var">latch</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; IO Bool -&gt; IO Bool
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">MVar () -&gt; IO Bool
+forall a. MVar a -&gt; IO Bool
+</span><span class="hs-identifier hs-var">C.isEmptyMVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShutdownLatch -&gt; MVar ()
+</span><a href="Hasura.ShutdownLatch.html#unShutdownLatch"><span class="hs-identifier hs-var">unShutdownLatch</span></a></span><span> </span><span class="annot"><span class="annottext">ShutdownLatch
+</span><a href="#local-6989586621687758272"><span class="hs-identifier hs-var">latch</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span></pre></body></html>

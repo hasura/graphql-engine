@@ -1,0 +1,1095 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html"><span class="hs-identifier">Hasura.RQL.DDL.Permission.Internal</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#CreatePerm"><span class="hs-identifier">CreatePerm</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#DropPerm"><span class="hs-identifier">DropPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#permissionIsDefined"><span class="hs-identifier">permissionIsDefined</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#assertPermDefined"><span class="hs-identifier">assertPermDefined</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#interpColSpec"><span class="hs-identifier">interpColSpec</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#getDepHeadersFromVal"><span class="hs-identifier">getDepHeadersFromVal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#getDependentHeaders"><span class="hs-identifier">getDependentHeaders</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier">annBoolExp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#procBoolExp"><span class="hs-identifier">procBoolExp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#procLogicalModelBoolExp"><span class="hs-identifier">procLogicalModelBoolExp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lens-5.3.2-7ec14d641784087c1f1350eada3cde7884c62d1ab2707daec993ceeca3096d32/share/doc/html/src/Control.Lens.html/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lens-5.3.2-7ec14d641784087c1f1350eada3cde7884c62d1ab2707daec993ceeca3096d32/share/doc/html/src/Control.Lens.Setter.html/Control.Lens.Setter.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.KeyMap.html/Data.Aeson.KeyMap.html"><span class="hs-identifier">Data.Aeson.KeyMap</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">KM</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.html/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/data-has-0.4.0.0-53a688b2221046a4de0fb8e7927d1d69f385837da1af187d22b34ea76ed4183c/share/doc/html/src/Data.Has.html/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Internal.Strict.html/Data.HashMap.Internal.Strict.html"><span class="hs-identifier">Data.HashMap.Internal.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Strict.html/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.html/Data.HashSet.html"><span class="hs-identifier">Data.HashSet</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Authentication.Role.html"><span class="hs-identifier">Hasura.Authentication.Role</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Authentication.Role.html#RoleName"><span class="hs-identifier">RoleName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Authentication.Session.html"><span class="hs-identifier">Hasura.Authentication.Session</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Authentication.Session.html#fromSessionVariable"><span class="hs-identifier">fromSessionVariable</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Authentication.Session.html#isSessionVariable"><span class="hs-identifier">isSessionVariable</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Authentication.Session.html#userIdHeader"><span class="hs-identifier">userIdHeader</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Common.html"><span class="hs-identifier">Hasura.LogicalModel.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Common.html#logicalModelFieldsToFieldInfo"><span class="hs-identifier">logicalModelFieldsToFieldInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html"><span class="hs-identifier">Hasura.LogicalModel.Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier">LogicalModelFieldsRM</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html"><span class="hs-identifier">Hasura.LogicalModel.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelLocation"><span class="hs-identifier">LogicalModelLocation</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BoolExp.html"><span class="hs-identifier">Hasura.RQL.Types.BoolExp</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReference"><span class="hs-identifier">ColumnReference</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceColumn"><span class="hs-identifier">ColumnReferenceColumn</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#NestedObjectInfo"><span class="hs-identifier">NestedObjectInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#StructuredColumnInfo"><span class="hs-identifier">StructuredColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Backend</span></a></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html"><span class="hs-identifier">Hasura.RQL.Types.Permission</span></a></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.Local</span></a></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.Remote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#DBJoinField"><span class="hs-identifier">DBJoinField</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfo"><span class="hs-identifier">RemoteFieldInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfoRHS"><span class="hs-identifier">RemoteFieldInfoRHS</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSource.html#RemoteSourceFieldInfo"><span class="hs-identifier">RemoteSourceFieldInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCacheTypes</span></a></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AB</span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Utils.html#isReqUserId"><span class="hs-identifier">isReqUserId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html"><span class="hs-identifier">Hasura.Table.Cache</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- | Intrepet a 'PermColSpec' column specification, which can either refer to a</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- list of named columns or all columns.</span><span>
+</span><span id="line-52"></span><span id="local-6989586621687901513"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#interpColSpec"><span class="hs-identifier hs-type">interpColSpec</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901513"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermColSpec"><span class="hs-identifier hs-type">PermColSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901513"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901513"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-53"></span><span id="interpColSpec"><span class="annot"><span class="annottext">interpColSpec :: forall (b :: BackendType).
+[Column b] -&gt; PermColSpec b -&gt; [Column b]
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#interpColSpec"><span class="hs-identifier hs-var hs-var">interpColSpec</span></a></span></span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PCCols"><span class="hs-identifier hs-type">PCCols</span></a></span><span> </span><span id="local-6989586621687901933"><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687901933"><span class="hs-identifier hs-var">cols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687901933"><span class="hs-identifier hs-var">cols</span></a></span><span>
+</span><span id="line-54"></span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#interpColSpec"><span class="hs-identifier hs-var">interpColSpec</span></a></span><span> </span><span id="local-6989586621687901934"><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687901934"><span class="hs-identifier hs-var">allColumns</span></a></span></span><span> </span><span class="annot"><span class="annottext">PermColSpec b
+</span><a href="Hasura.RQL.Types.Permission.html#PCStar"><span class="hs-identifier hs-var">PCStar</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687901934"><span class="hs-identifier hs-var">allColumns</span></a></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span id="local-6989586621687901518"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#permissionIsDefined"><span class="hs-identifier hs-type">permissionIsDefined</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermType"><span class="hs-identifier hs-type">PermType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901518"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-58"></span><span id="permissionIsDefined"><span class="annot"><span class="annottext">permissionIsDefined :: forall (backend :: BackendType).
+PermType -&gt; RolePermInfo backend -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#permissionIsDefined"><span class="hs-identifier hs-var hs-var">permissionIsDefined</span></a></span></span><span> </span><span id="local-6989586621687901946"><span class="annot"><span class="annottext">PermType
+</span><a href="#local-6989586621687901946"><span class="hs-identifier hs-var">pt</span></a></span></span><span> </span><span id="local-6989586621687901947"><span class="annot"><span class="annottext">RolePermInfo backend
+</span><a href="#local-6989586621687901947"><span class="hs-identifier hs-var">rpi</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe () -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PermType
+</span><a href="#local-6989586621687901946"><span class="hs-identifier hs-var">pt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><span class="annottext">PermType
+</span><a href="Hasura.RQL.Types.Permission.html#PTSelect"><span class="hs-identifier hs-var">PTSelect</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RolePermInfo backend
+</span><a href="#local-6989586621687901947"><span class="hs-identifier hs-var">rpi</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo backend
+-&gt; Getting
+     (Maybe (SelPermInfo backend))
+     (RolePermInfo backend)
+     (Maybe (SelPermInfo backend))
+-&gt; Maybe (SelPermInfo backend)
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lens-5.3.2-7ec14d641784087c1f1350eada3cde7884c62d1ab2707daec993ceeca3096d32/share/doc/html/src/Control.Lens.Getter.html/Control.Lens.Getter.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
+  (Maybe (SelPermInfo backend))
+  (RolePermInfo backend)
+  (Maybe (SelPermInfo backend))
+forall (b :: BackendType) (f :: * -&gt; *).
+Functor f =&gt;
+(Maybe (SelPermInfo b) -&gt; f (Maybe (SelPermInfo b)))
+-&gt; RolePermInfo b -&gt; f (RolePermInfo b)
+</span><a href="Hasura.Table.Cache.html#permSel"><span class="hs-identifier hs-var">permSel</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo backend) -&gt; () -&gt; Maybe ()
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><span class="annottext">PermType
+</span><a href="Hasura.RQL.Types.Permission.html#PTInsert"><span class="hs-identifier hs-var">PTInsert</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RolePermInfo backend
+</span><a href="#local-6989586621687901947"><span class="hs-identifier hs-var">rpi</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo backend
+-&gt; Getting
+     (Maybe (InsPermInfo backend))
+     (RolePermInfo backend)
+     (Maybe (InsPermInfo backend))
+-&gt; Maybe (InsPermInfo backend)
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lens-5.3.2-7ec14d641784087c1f1350eada3cde7884c62d1ab2707daec993ceeca3096d32/share/doc/html/src/Control.Lens.Getter.html/Control.Lens.Getter.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
+  (Maybe (InsPermInfo backend))
+  (RolePermInfo backend)
+  (Maybe (InsPermInfo backend))
+forall (b :: BackendType) (f :: * -&gt; *).
+Functor f =&gt;
+(Maybe (InsPermInfo b) -&gt; f (Maybe (InsPermInfo b)))
+-&gt; RolePermInfo b -&gt; f (RolePermInfo b)
+</span><a href="Hasura.Table.Cache.html#permIns"><span class="hs-identifier hs-var">permIns</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (InsPermInfo backend) -&gt; () -&gt; Maybe ()
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">PermType
+</span><a href="Hasura.RQL.Types.Permission.html#PTUpdate"><span class="hs-identifier hs-var">PTUpdate</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RolePermInfo backend
+</span><a href="#local-6989586621687901947"><span class="hs-identifier hs-var">rpi</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo backend
+-&gt; Getting
+     (Maybe (UpdPermInfo backend))
+     (RolePermInfo backend)
+     (Maybe (UpdPermInfo backend))
+-&gt; Maybe (UpdPermInfo backend)
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lens-5.3.2-7ec14d641784087c1f1350eada3cde7884c62d1ab2707daec993ceeca3096d32/share/doc/html/src/Control.Lens.Getter.html/Control.Lens.Getter.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
+  (Maybe (UpdPermInfo backend))
+  (RolePermInfo backend)
+  (Maybe (UpdPermInfo backend))
+forall (b :: BackendType) (f :: * -&gt; *).
+Functor f =&gt;
+(Maybe (UpdPermInfo b) -&gt; f (Maybe (UpdPermInfo b)))
+-&gt; RolePermInfo b -&gt; f (RolePermInfo b)
+</span><a href="Hasura.Table.Cache.html#permUpd"><span class="hs-identifier hs-var">permUpd</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo backend) -&gt; () -&gt; Maybe ()
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">PermType
+</span><a href="Hasura.RQL.Types.Permission.html#PTDelete"><span class="hs-identifier hs-var">PTDelete</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RolePermInfo backend
+</span><a href="#local-6989586621687901947"><span class="hs-identifier hs-var">rpi</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo backend
+-&gt; Getting
+     (Maybe (DelPermInfo backend))
+     (RolePermInfo backend)
+     (Maybe (DelPermInfo backend))
+-&gt; Maybe (DelPermInfo backend)
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/lens-5.3.2-7ec14d641784087c1f1350eada3cde7884c62d1ab2707daec993ceeca3096d32/share/doc/html/src/Control.Lens.Getter.html/Control.Lens.Getter.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
+  (Maybe (DelPermInfo backend))
+  (RolePermInfo backend)
+  (Maybe (DelPermInfo backend))
+forall (b :: BackendType) (f :: * -&gt; *).
+Functor f =&gt;
+(Maybe (DelPermInfo b) -&gt; f (Maybe (DelPermInfo b)))
+-&gt; RolePermInfo b -&gt; f (RolePermInfo b)
+</span><a href="Hasura.Table.Cache.html#permDel"><span class="hs-identifier hs-var">permDel</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (DelPermInfo backend) -&gt; () -&gt; Maybe ()
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span id="local-6989586621687901542"><span id="local-6989586621687901545"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#assertPermDefined"><span class="hs-identifier hs-type">assertPermDefined</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901542"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901545"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.Authentication.Role.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermType"><span class="hs-identifier hs-type">PermType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901542"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="#local-6989586621687901545"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-71"></span><span id="assertPermDefined"><span class="annot"><span class="annottext">assertPermDefined :: forall (backend :: BackendType) (m :: * -&gt; *).
+(Backend backend, MonadError QErr m) =&gt;
+RoleName -&gt; PermType -&gt; TableInfo backend -&gt; m ()
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#assertPermDefined"><span class="hs-identifier hs-var hs-var">assertPermDefined</span></a></span></span><span> </span><span id="local-6989586621687901992"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687901992"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span id="local-6989586621687901993"><span class="annot"><span class="annottext">PermType
+</span><a href="#local-6989586621687901993"><span class="hs-identifier hs-var">pt</span></a></span></span><span> </span><span id="local-6989586621687901994"><span class="annot"><span class="annottext">TableInfo backend
+</span><a href="#local-6989586621687901994"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(RolePermInfo backend -&gt; Bool)
+-&gt; Maybe (RolePermInfo backend) -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PermType -&gt; RolePermInfo backend -&gt; Bool
+forall (backend :: BackendType).
+PermType -&gt; RolePermInfo backend -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#permissionIsDefined"><span class="hs-identifier hs-var">permissionIsDefined</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
+</span><a href="#local-6989586621687901993"><span class="hs-identifier hs-var">pt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (RolePermInfo backend)
+</span><a href="#local-6989586621687901997"><span class="hs-identifier hs-var">rpi</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#PermissionDenied"><span class="hs-identifier hs-var">PermissionDenied</span></a></span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">(Text -&gt; m ()) -&gt; Text -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;'&quot;</span></span><span>
+</span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">PermType -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
+</span><a href="#local-6989586621687901993"><span class="hs-identifier hs-var">pt</span></a></span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;'&quot;</span></span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; permission on &quot;</span></span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableInfo backend -&gt; TableName backend
+forall (b :: BackendType). TableInfo b -&gt; TableName b
+</span><a href="Hasura.Table.Cache.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo backend
+</span><a href="#local-6989586621687901994"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">TableName backend -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html/Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; for role &quot;</span></span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687901992"><span class="hs-keyword hs-var">role</span></a></span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">RoleName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html/Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; does not exist&quot;</span></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>    </span><span id="local-6989586621687901997"><span class="annot"><span class="annottext">rpi :: Maybe (RolePermInfo backend)
+</span><a href="#local-6989586621687901997"><span class="hs-identifier hs-var hs-var">rpi</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RoleName
+-&gt; HashMap RoleName (RolePermInfo backend)
+-&gt; Maybe (RolePermInfo backend)
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Internal.html/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687901992"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap RoleName (RolePermInfo backend)
+ -&gt; Maybe (RolePermInfo backend))
+-&gt; HashMap RoleName (RolePermInfo backend)
+-&gt; Maybe (RolePermInfo backend)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableInfo backend -&gt; HashMap RoleName (RolePermInfo backend)
+forall (b :: BackendType). TableInfo b -&gt; RolePermInfoMap b
+</span><a href="Hasura.Table.Cache.html#_tiRolePermInfoMap"><span class="hs-identifier hs-var">_tiRolePermInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo backend
+</span><a href="#local-6989586621687901994"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-keyword">newtype</span><span> </span><span id="CreatePerm"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#CreatePerm"><span class="hs-identifier hs-var">CreatePerm</span></a></span></span><span> </span><span id="local-6989586621687902005"><span class="annot"><a href="#local-6989586621687902005"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621687902006"><span class="annot"><a href="#local-6989586621687902006"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CreatePerm"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#CreatePerm"><span class="hs-identifier hs-var">CreatePerm</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#WithTable"><span class="hs-identifier hs-type">WithTable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687902006"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687902006"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687902005"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span id="local-6989586621687901594"><span id="local-6989586621687901595"><span id="local-6989586621687902011"><span id="local-6989586621687902016"><span id="local-6989586621687902020"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901594"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901594"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901595"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#CreatePerm"><span class="hs-identifier hs-type">CreatePerm</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901595"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901594"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-keyword">data</span><span> </span><span id="CreatePermP1Res"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#CreatePermP1Res"><span class="hs-identifier hs-var">CreatePermP1Res</span></a></span></span><span> </span><span id="local-6989586621687901596"><span class="annot"><a href="#local-6989586621687901596"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CreatePermP1Res"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#CreatePermP1Res"><span class="hs-identifier hs-var">CreatePermP1Res</span></a></span></span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="cprInfo"><span class="annot"><span class="annottext">forall a. CreatePermP1Res a -&gt; a
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#cprInfo"><span class="hs-identifier hs-var hs-var">cprInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687901596"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>    </span><span id="cprDeps"><span class="annot"><span class="annottext">forall a. CreatePermP1Res a -&gt; [SchemaDependency]
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#cprDeps"><span class="hs-identifier hs-var hs-var">cprDeps</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687902033"><span id="local-6989586621687902041"><span id="local-6989586621687902045"><span class="annot"><span class="annottext">Int -&gt; CreatePermP1Res a -&gt; ShowS
+[CreatePermP1Res a] -&gt; ShowS
+CreatePermP1Res a -&gt; String
+(Int -&gt; CreatePermP1Res a -&gt; ShowS)
+-&gt; (CreatePermP1Res a -&gt; String)
+-&gt; ([CreatePermP1Res a] -&gt; ShowS)
+-&gt; Show (CreatePermP1Res a)
+forall a. Show a =&gt; Int -&gt; CreatePermP1Res a -&gt; ShowS
+forall a. Show a =&gt; [CreatePermP1Res a] -&gt; ShowS
+forall a. Show a =&gt; CreatePermP1Res a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; CreatePermP1Res a -&gt; ShowS
+showsPrec :: Int -&gt; CreatePermP1Res a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; CreatePermP1Res a -&gt; String
+show :: CreatePermP1Res a -&gt; String
+$cshowList :: forall a. Show a =&gt; [CreatePermP1Res a] -&gt; ShowS
+showList :: [CreatePermP1Res a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687902052"><span id="local-6989586621687902058"><span class="annot"><span class="annottext">CreatePermP1Res a -&gt; CreatePermP1Res a -&gt; Bool
+(CreatePermP1Res a -&gt; CreatePermP1Res a -&gt; Bool)
+-&gt; (CreatePermP1Res a -&gt; CreatePermP1Res a -&gt; Bool)
+-&gt; Eq (CreatePermP1Res a)
+forall a. Eq a =&gt; CreatePermP1Res a -&gt; CreatePermP1Res a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a. Eq a =&gt; CreatePermP1Res a -&gt; CreatePermP1Res a -&gt; Bool
+== :: CreatePermP1Res a -&gt; CreatePermP1Res a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; CreatePermP1Res a -&gt; CreatePermP1Res a -&gt; Bool
+/= :: CreatePermP1Res a -&gt; CreatePermP1Res a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span id="local-6989586621687901610"><span id="local-6989586621687901611"><span id="local-6989586621687901616"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#procBoolExp"><span class="hs-identifier hs-type">procBoolExp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901610"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#TableCoreInfoRM"><span class="hs-identifier hs-type">TableCoreInfoRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901610"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901610"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#GetAggregationPredicatesDeps"><span class="hs-identifier hs-type">GetAggregationPredicatesDeps</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621687901616"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901610"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/data-has-0.4.0.0-53a688b2221046a4de0fb8e7927d1d69f385837da1af187d22b34ea76ed4183c/share/doc/html/src/Data.Has.html/Data.Has.html#Has"><span class="hs-identifier hs-type">Has</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#ScalarTypeParsingContext"><span class="hs-identifier hs-type">ScalarTypeParsingContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687901616"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolExp"><span class="hs-identifier hs-type">BoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><a href="#local-6989586621687901610"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpPartialSQL"><span class="hs-identifier hs-type">AnnBoolExpPartialSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901611"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-109"></span><span id="procBoolExp"><span class="annot"><span class="annottext">procBoolExp :: forall (m :: * -&gt; *) (b :: BackendType) r.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b, GetAggregationPredicatesDeps b, MonadReader r m,
+ Has (ScalarTypeParsingContext b) r) =&gt;
+SourceName
+-&gt; TableName b
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; BoolExp b
+-&gt; m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#procBoolExp"><span class="hs-identifier hs-var hs-var">procBoolExp</span></a></span></span><span> </span><span id="local-6989586621687902528"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687902528"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621687902529"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687902529"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span id="local-6989586621687902530"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687902530"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span></span><span> </span><span id="local-6989586621687902531"><span class="annot"><span class="annottext">BoolExp b
+</span><a href="#local-6989586621687902531"><span class="hs-identifier hs-var">be</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687902964"><span class="annot"><span class="annottext">rhsParser :: BoolExpRHSParser b m (PartialSQLExp b)
+</span><a href="#local-6989586621687902964"><span class="hs-identifier hs-var hs-var hs-var">rhsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser b m (PartialSQLExp b)
+-&gt; PartialSQLExp b -&gt; BoolExpRHSParser b m (PartialSQLExp b)
+forall (b :: BackendType) (m :: * -&gt; *) v.
+ValueParser b m v -&gt; v -&gt; BoolExpRHSParser b m v
+</span><a href="Hasura.RQL.Types.BoolExp.html#BoolExpRHSParser"><span class="hs-identifier hs-var">BoolExpRHSParser</span></a></span><span> </span><span class="annot"><span class="annottext">ValueParser b m (PartialSQLExp b)
+forall (b :: BackendType) (m :: * -&gt; *) r.
+(BackendMetadata b, MonadError QErr m, MonadReader r m,
+ Has (ScalarTypeParsingContext b) r) =&gt;
+CollectableType (ColumnType b) -&gt; Value -&gt; m (PartialSQLExp b)
+forall (m :: * -&gt; *) r.
+(MonadError QErr m, MonadReader r m,
+ Has (ScalarTypeParsingContext b) r) =&gt;
+CollectableType (ColumnType b) -&gt; Value -&gt; m (PartialSQLExp b)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var">parseCollectableType</span></a></span><span> </span><span class="annot"><span class="annottext">PartialSQLExp b
+forall (backend :: BackendType). PartialSQLExp backend
+</span><a href="Hasura.RQL.IR.BoolExp.html#PSESession"><span class="hs-identifier hs-var">PSESession</span></a></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621687902968"><span class="annot"><a href="#local-6989586621687902968"><span class="hs-identifier hs-var">rootFieldInfoMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><span class="annottext">(TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
+ -&gt; FieldInfoMap (FieldInfo b))
+-&gt; m (TableCoreInfoG b (FieldInfo b) (ColumnInfo b))
+-&gt; m (FieldInfoMap (FieldInfo b))
+forall a b. (a -&gt; b) -&gt; m a -&gt; m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+forall (b :: BackendType) field primaryKeyColumn.
+TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
+</span><a href="Hasura.Table.Cache.html#_tciFieldInfoMap"><span class="hs-identifier hs-var">_tciFieldInfoMap</span></a></span><span>
+</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">(m (TableCoreInfoG b (FieldInfo b) (ColumnInfo b))
+ -&gt; m (FieldInfoMap (FieldInfo b)))
+-&gt; m (TableCoreInfoG b (FieldInfo b) (ColumnInfo b))
+-&gt; m (FieldInfoMap (FieldInfo b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+-&gt; m (Maybe (TableCoreInfoG b (FieldInfo b) (ColumnInfo b)))
+forall (b :: BackendType) (m :: * -&gt; *).
+TableCoreInfoRM b m =&gt;
+TableName b -&gt; m (Maybe (TableCoreInfo b))
+</span><a href="Hasura.RQL.Types.SchemaCache.html#lookupTableCoreInfo"><span class="hs-identifier hs-var">lookupTableCoreInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687902529"><span class="hs-identifier hs-var">tn</span></a></span><span>
+</span><span id="line-115"></span><span>      </span><span class="annot"><span class="annottext">m (Maybe (TableCoreInfoG b (FieldInfo b) (ColumnInfo b)))
+-&gt; m (TableCoreInfoG b (FieldInfo b) (ColumnInfo b))
+-&gt; m (TableCoreInfoG b (FieldInfo b) (ColumnInfo b))
+forall (m :: * -&gt; *) a. Monad m =&gt; m (Maybe a) -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#onNothingM"><span class="hs-operator hs-var">`onNothingM`</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (TableCoreInfoG b (FieldInfo b) (ColumnInfo b))
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;unexpected: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687902529"><span class="hs-identifier hs-var">tn</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html/Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; doesn't exist&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621687902973"><span class="annot"><a href="#local-6989586621687902973"><span class="hs-identifier hs-var">abe</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-type">annBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687902964"><span class="hs-identifier hs-type">rhsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687902968"><span class="hs-identifier hs-type">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687902530"><span class="hs-identifier hs-type">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#unBoolExp"><span class="hs-identifier hs-var">unBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687902531"><span class="hs-identifier hs-type">be</span></a></span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687902975"><span class="annot"><a href="#local-6989586621687902975"><span class="hs-identifier hs-var hs-var">deps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+-&gt; TableName b
+-&gt; AnnBoolExp b (PartialSQLExp b)
+-&gt; [SchemaDependency]
+forall (b :: BackendType).
+GetAggregationPredicatesDeps b =&gt;
+SourceName
+-&gt; TableName b -&gt; AnnBoolExpPartialSQL b -&gt; [SchemaDependency]
+</span><a href="Hasura.RQL.Types.SchemaCache.html#getBoolExpDeps"><span class="hs-identifier hs-var">getBoolExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687902528"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687902529"><span class="hs-identifier hs-var">tn</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp b (PartialSQLExp b)
+</span><a href="#local-6989586621687902973"><span class="hs-identifier hs-var">abe</span></a></span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687902973"><span class="hs-identifier hs-type">abe</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq.fromList</span></span><span> </span><span class="annot"><a href="#local-6989586621687902975"><span class="hs-identifier hs-type">deps</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- | Interpret a 'BoolExp' into an 'AnnBoolExp', collecting any dependencies as</span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- we go. At the moment, the only dependencies we're likely to encounter are</span><span>
+</span><span id="line-123"></span><span class="hs-comment">-- independent dependencies on other tables. For example, &quot;this user can only</span><span>
+</span><span id="line-124"></span><span class="hs-comment">-- select from this logical model if their ID is in the @allowed_users@ table&quot;.</span><span>
+</span><span id="line-125"></span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#procLogicalModelBoolExp"><span class="hs-identifier hs-type">procLogicalModelBoolExp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687901744"><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687901743"><span class="annot"><a href="#local-6989586621687901743"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621687901745"><span class="annot"><a href="#local-6989586621687901745"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901743"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#TableCoreInfoRM"><span class="hs-identifier hs-type">TableCoreInfoRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901743"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>    </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901743"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-130"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#GetAggregationPredicatesDeps"><span class="hs-identifier hs-type">GetAggregationPredicatesDeps</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621687901745"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901743"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/data-has-0.4.0.0-53a688b2221046a4de0fb8e7927d1d69f385837da1af187d22b34ea76ed4183c/share/doc/html/src/Data.Has.html/Data.Has.html#Has"><span class="hs-identifier hs-type">Has</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#ScalarTypeParsingContext"><span class="hs-identifier hs-type">ScalarTypeParsingContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687901745"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelLocation"><span class="hs-identifier hs-type">LogicalModelLocation</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolExp"><span class="hs-identifier hs-type">BoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="#local-6989586621687901743"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpPartialSQL"><span class="hs-identifier hs-type">AnnBoolExpPartialSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-140"></span><span id="procLogicalModelBoolExp"><span class="annot"><span class="annottext">procLogicalModelBoolExp :: forall (b :: BackendType) (m :: * -&gt; *) r.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b, GetAggregationPredicatesDeps b, MonadReader r m,
+ Has (ScalarTypeParsingContext b) r) =&gt;
+SourceName
+-&gt; LogicalModelLocation
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; BoolExp b
+-&gt; m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#procLogicalModelBoolExp"><span class="hs-identifier hs-var hs-var">procLogicalModelBoolExp</span></a></span></span><span> </span><span id="local-6989586621687902998"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687902998"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621687902999"><span class="annot"><span class="annottext">LogicalModelLocation
+</span><a href="#local-6989586621687902999"><span class="hs-identifier hs-var">logicalModelLocation</span></a></span></span><span> </span><span id="local-6989586621687903000"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903000"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span></span><span> </span><span id="local-6989586621687903001"><span class="annot"><span class="annottext">BoolExp b
+</span><a href="#local-6989586621687903001"><span class="hs-identifier hs-var">be</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-141"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-comment">-- The parser for the &quot;right hand side&quot; of operations. We use @rhsParser@</span><span>
+</span><span id="line-142"></span><span>      </span><span class="hs-comment">-- as the name here for ease of grepping, though it's maybe a bit vague.</span><span>
+</span><span id="line-143"></span><span>      </span><span class="hs-comment">-- More specifically, if we think of an operation that combines a field</span><span>
+</span><span id="line-144"></span><span>      </span><span class="hs-comment">-- (such as those in tables or native queries) on the /left/ with a value</span><span>
+</span><span id="line-145"></span><span>      </span><span class="hs-comment">-- or session variable on the /right/, this is a parser for the latter.</span><span>
+</span><span id="line-146"></span><span>      </span><span class="annot"><a href="#local-6989586621687903002"><span class="hs-identifier hs-type">rhsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BoolExp.html#BoolExpRHSParser"><span class="hs-identifier hs-type">BoolExpRHSParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901743"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901744"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span>      </span><span id="local-6989586621687903002"><span class="annot"><span class="annottext">rhsParser :: BoolExpRHSParser b m (PartialSQLExp b)
+</span><a href="#local-6989586621687903002"><span class="hs-identifier hs-var hs-var hs-var">rhsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser b m (PartialSQLExp b)
+-&gt; PartialSQLExp b -&gt; BoolExpRHSParser b m (PartialSQLExp b)
+forall (b :: BackendType) (m :: * -&gt; *) v.
+ValueParser b m v -&gt; v -&gt; BoolExpRHSParser b m v
+</span><a href="Hasura.RQL.Types.BoolExp.html#BoolExpRHSParser"><span class="hs-identifier hs-var">BoolExpRHSParser</span></a></span><span> </span><span class="annot"><span class="annottext">ValueParser b m (PartialSQLExp b)
+forall (b :: BackendType) (m :: * -&gt; *) r.
+(BackendMetadata b, MonadError QErr m, MonadReader r m,
+ Has (ScalarTypeParsingContext b) r) =&gt;
+CollectableType (ColumnType b) -&gt; Value -&gt; m (PartialSQLExp b)
+forall (m :: * -&gt; *) r.
+(MonadError QErr m, MonadReader r m,
+ Has (ScalarTypeParsingContext b) r) =&gt;
+CollectableType (ColumnType b) -&gt; Value -&gt; m (PartialSQLExp b)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var">parseCollectableType</span></a></span><span> </span><span class="annot"><span class="annottext">PartialSQLExp b
+forall (backend :: BackendType). PartialSQLExp backend
+</span><a href="Hasura.RQL.IR.BoolExp.html#PSESession"><span class="hs-identifier hs-var">PSESession</span></a></span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-comment">-- In Native Queries, there are no relationships (unlike tables, where one</span><span>
+</span><span id="line-150"></span><span>  </span><span class="hs-comment">-- table can reference another). This means that our root fieldInfoMap is</span><span>
+</span><span id="line-151"></span><span>  </span><span class="hs-comment">-- always going to be the same as our current fieldInfoMap, so we just pass</span><span>
+</span><span id="line-152"></span><span>  </span><span class="hs-comment">-- the same one in twice.</span><span>
+</span><span id="line-153"></span><span>  </span><span id="local-6989586621687903003"><span class="annot"><a href="#local-6989586621687903003"><span class="hs-identifier hs-var">abe</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m (PartialSQLExp b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b (PartialSQLExp b))
+forall (m :: * -&gt; *) (b :: BackendType) v.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b) =&gt;
+BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b v)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-var">annBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m (PartialSQLExp b)
+</span><a href="#local-6989586621687903002"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903000"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903000"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BoolExp b -&gt; GBoolExp b ColExp
+forall (b :: BackendType). BoolExp b -&gt; GBoolExp b ColExp
+</span><a href="Hasura.RQL.IR.BoolExp.html#unBoolExp"><span class="hs-identifier hs-var">unBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExp b
+</span><a href="#local-6989586621687903001"><span class="hs-identifier hs-var">be</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-comment">-- What dependencies do we have on the schema cache in order to process</span><span>
+</span><span id="line-156"></span><span>      </span><span class="hs-comment">-- this boolean expression? This dependency system is explained more</span><span>
+</span><span id="line-157"></span><span>      </span><span class="hs-comment">-- thoroughly in the 'buildLogicalModelSelPermInfo' inline comments.</span><span>
+</span><span id="line-158"></span><span>      </span><span class="annot"><a href="#local-6989586621687903004"><span class="hs-identifier hs-type">deps</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-159"></span><span>      </span><span id="local-6989586621687903004"><span class="annot"><a href="#local-6989586621687903004"><span class="hs-identifier hs-var hs-var">deps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+-&gt; LogicalModelLocation
+-&gt; AnnBoolExp b (PartialSQLExp b)
+-&gt; [SchemaDependency]
+forall (b :: BackendType).
+GetAggregationPredicatesDeps b =&gt;
+SourceName
+-&gt; LogicalModelLocation
+-&gt; AnnBoolExpPartialSQL b
+-&gt; [SchemaDependency]
+</span><a href="Hasura.RQL.Types.SchemaCache.html#getLogicalModelBoolExpDeps"><span class="hs-identifier hs-var">getLogicalModelBoolExpDeps</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687902998"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelLocation
+</span><a href="#local-6989586621687902999"><span class="hs-identifier hs-var">logicalModelLocation</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp b (PartialSQLExp b)
+</span><a href="#local-6989586621687903003"><span class="hs-identifier hs-var">abe</span></a></span><span>
+</span><span id="line-160"></span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687903003"><span class="hs-identifier hs-type">abe</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq.fromList</span></span><span> </span><span class="annot"><a href="#local-6989586621687903004"><span class="hs-identifier hs-type">deps</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span id="local-6989586621687901736"><span id="local-6989586621687901737"><span id="local-6989586621687901738"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-type">annBoolExp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901736"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#TableCoreInfoRM"><span class="hs-identifier hs-type">TableCoreInfoRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901737"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901736"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901737"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901736"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901737"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.BoolExp.html#BoolExpRHSParser"><span class="hs-identifier hs-type">BoolExpRHSParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901737"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901736"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901738"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-166"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901737"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-167"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901737"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-168"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#GBoolExp"><span class="hs-identifier hs-type">GBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901737"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#ColExp"><span class="hs-identifier hs-type">ColExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-169"></span><span>  </span><span class="annot"><a href="#local-6989586621687901736"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901737"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901738"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-170"></span><span id="annBoolExp"><span class="annot"><span class="annottext">annBoolExp :: forall (m :: * -&gt; *) (b :: BackendType) v.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b) =&gt;
+BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b v)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-var hs-var">annBoolExp</span></a></span></span><span> </span><span id="local-6989586621687903049"><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+</span><a href="#local-6989586621687903049"><span class="hs-identifier hs-var">rhsParser</span></a></span></span><span> </span><span id="local-6989586621687903050"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903050"><span class="hs-identifier hs-var">rootFieldInfoMap</span></a></span></span><span> </span><span id="local-6989586621687903051"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903051"><span class="hs-identifier hs-var">fim</span></a></span></span><span> </span><span id="local-6989586621687903052"><span class="annot"><span class="annottext">GBoolExp b ColExp
+</span><a href="#local-6989586621687903052"><span class="hs-identifier hs-var">boolExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-171"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">GBoolExp b ColExp
+</span><a href="#local-6989586621687903052"><span class="hs-identifier hs-var">boolExp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-172"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolAnd"><span class="hs-identifier hs-type">BoolAnd</span></a></span><span> </span><span id="local-6989586621687903054"><span class="annot"><span class="annottext">[GBoolExp b ColExp]
+</span><a href="#local-6989586621687903054"><span class="hs-identifier hs-var">exps</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[AnnBoolExp b v] -&gt; AnnBoolExp b v
+forall (backend :: BackendType) field.
+[GBoolExp backend field] -&gt; GBoolExp backend field
+</span><a href="Hasura.RQL.IR.BoolExp.html#BoolAnd"><span class="hs-identifier hs-var">BoolAnd</span></a></span><span> </span><span class="annot"><span class="annottext">([AnnBoolExp b v] -&gt; AnnBoolExp b v)
+-&gt; m [AnnBoolExp b v] -&gt; m (AnnBoolExp b v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[GBoolExp b ColExp] -&gt; m [AnnBoolExp b v]
+</span><a href="#local-6989586621687903056"><span class="hs-identifier hs-var">procExps</span></a></span><span> </span><span class="annot"><span class="annottext">[GBoolExp b ColExp]
+</span><a href="#local-6989586621687903054"><span class="hs-identifier hs-var">exps</span></a></span><span>
+</span><span id="line-173"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolOr"><span class="hs-identifier hs-type">BoolOr</span></a></span><span> </span><span id="local-6989586621687903058"><span class="annot"><span class="annottext">[GBoolExp b ColExp]
+</span><a href="#local-6989586621687903058"><span class="hs-identifier hs-var">exps</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[AnnBoolExp b v] -&gt; AnnBoolExp b v
+forall (backend :: BackendType) field.
+[GBoolExp backend field] -&gt; GBoolExp backend field
+</span><a href="Hasura.RQL.IR.BoolExp.html#BoolOr"><span class="hs-identifier hs-var">BoolOr</span></a></span><span> </span><span class="annot"><span class="annottext">([AnnBoolExp b v] -&gt; AnnBoolExp b v)
+-&gt; m [AnnBoolExp b v] -&gt; m (AnnBoolExp b v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[GBoolExp b ColExp] -&gt; m [AnnBoolExp b v]
+</span><a href="#local-6989586621687903056"><span class="hs-identifier hs-var">procExps</span></a></span><span> </span><span class="annot"><span class="annottext">[GBoolExp b ColExp]
+</span><a href="#local-6989586621687903058"><span class="hs-identifier hs-var">exps</span></a></span><span>
+</span><span id="line-174"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolNot"><span class="hs-identifier hs-type">BoolNot</span></a></span><span> </span><span id="local-6989586621687903060"><span class="annot"><span class="annottext">GBoolExp b ColExp
+</span><a href="#local-6989586621687903060"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AnnBoolExp b v -&gt; AnnBoolExp b v
+forall (backend :: BackendType) field.
+GBoolExp backend field -&gt; GBoolExp backend field
+</span><a href="Hasura.RQL.IR.BoolExp.html#BoolNot"><span class="hs-identifier hs-var">BoolNot</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnBoolExp b v -&gt; AnnBoolExp b v)
+-&gt; m (AnnBoolExp b v) -&gt; m (AnnBoolExp b v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b v)
+forall (m :: * -&gt; *) (b :: BackendType) v.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b) =&gt;
+BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b v)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-var">annBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+</span><a href="#local-6989586621687903049"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903050"><span class="hs-identifier hs-var">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903051"><span class="hs-identifier hs-var">fim</span></a></span><span> </span><span class="annot"><span class="annottext">GBoolExp b ColExp
+</span><a href="#local-6989586621687903060"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-175"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolExists"><span class="hs-identifier hs-type">BoolExists</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#GExists"><span class="hs-identifier hs-type">GExists</span></a></span><span> </span><span id="local-6989586621687903063"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687903063"><span class="hs-identifier hs-var">refqt</span></a></span></span><span> </span><span id="local-6989586621687903064"><span class="annot"><span class="annottext">GBoolExp b ColExp
+</span><a href="#local-6989586621687903064"><span class="hs-identifier hs-var">whereExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-176"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m (AnnBoolExp b v) -&gt; m (AnnBoolExp b v)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_exists&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m (AnnBoolExp b v) -&gt; m (AnnBoolExp b v))
+-&gt; m (AnnBoolExp b v) -&gt; m (AnnBoolExp b v)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-177"></span><span>        </span><span id="local-6989586621687903066"><span class="annot"><a href="#local-6989586621687903066"><span class="hs-identifier hs-var">refFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; m (FieldInfoMap (FieldInfo b)) -&gt; m (FieldInfoMap (FieldInfo b))
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_table&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m (FieldInfoMap (FieldInfo b)) -&gt; m (FieldInfoMap (FieldInfo b)))
+-&gt; m (FieldInfoMap (FieldInfo b)) -&gt; m (FieldInfoMap (FieldInfo b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; m (FieldInfoMap (FieldInfo b))
+forall (m :: * -&gt; *) (b :: BackendType).
+(QErrM m, Backend b, TableCoreInfoRM b m) =&gt;
+TableName b -&gt; m (FieldInfoMap (FieldInfo b))
+</span><a href="Hasura.RQL.Types.SchemaCache.html#askFieldInfoMapSource"><span class="hs-identifier hs-var">askFieldInfoMapSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687903063"><span class="hs-identifier hs-var">refqt</span></a></span><span>
+</span><span id="line-178"></span><span>        </span><span id="local-6989586621687903068"><span class="annot"><a href="#local-6989586621687903068"><span class="hs-identifier hs-var">annWhereExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-type">withPathK</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;_where&quot;</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-type">annBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903049"><span class="hs-identifier hs-type">rhsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903050"><span class="hs-identifier hs-type">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903066"><span class="hs-identifier hs-type">refFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903064"><span class="hs-identifier hs-type">whereExp</span></a></span><span>
+</span><span id="line-179"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">return</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolExists"><span class="hs-identifier hs-type">BoolExists</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#GExists"><span class="hs-identifier hs-type">GExists</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903063"><span class="hs-identifier hs-type">refqt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903068"><span class="hs-identifier hs-type">annWhereExp</span></a></span><span>
+</span><span id="line-180"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolField"><span class="hs-identifier hs-type">BoolField</span></a></span><span> </span><span id="local-6989586621687903070"><span class="annot"><span class="annottext">ColExp
+</span><a href="#local-6989586621687903070"><span class="hs-identifier hs-var">fld</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AnnBoolExpFld b v -&gt; AnnBoolExp b v
+forall (backend :: BackendType) field.
+field -&gt; GBoolExp backend field
+</span><a href="Hasura.RQL.IR.BoolExp.html#BoolField"><span class="hs-identifier hs-var">BoolField</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnBoolExpFld b v -&gt; AnnBoolExp b v)
+-&gt; m (AnnBoolExpFld b v) -&gt; m (AnnBoolExp b v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ColExp
+-&gt; m (AnnBoolExpFld b v)
+forall (m :: * -&gt; *) (b :: BackendType) v.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b) =&gt;
+BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ColExp
+-&gt; m (AnnBoolExpFld b v)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#annColExp"><span class="hs-identifier hs-var">annColExp</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+</span><a href="#local-6989586621687903049"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903050"><span class="hs-identifier hs-var">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903051"><span class="hs-identifier hs-var">fim</span></a></span><span> </span><span class="annot"><span class="annottext">ColExp
+</span><a href="#local-6989586621687903070"><span class="hs-identifier hs-var">fld</span></a></span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-182"></span><span>    </span><span id="local-6989586621687903056"><span class="annot"><span class="annottext">procExps :: [GBoolExp b ColExp] -&gt; m [AnnBoolExp b v]
+</span><a href="#local-6989586621687903056"><span class="hs-identifier hs-var hs-var">procExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(GBoolExp b ColExp -&gt; m (AnnBoolExp b v))
+-&gt; [GBoolExp b ColExp] -&gt; m [AnnBoolExp b v]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Traversable t, Monad m) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; [a] -&gt; m [b]
+</span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b v)
+forall (m :: * -&gt; *) (b :: BackendType) v.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b) =&gt;
+BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b v)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-var">annBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+</span><a href="#local-6989586621687903049"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903050"><span class="hs-identifier hs-var">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903051"><span class="hs-identifier hs-var">fim</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-183"></span><span>
+</span><span id="line-184"></span><span id="local-6989586621687901767"><span id="local-6989586621687901768"><span id="local-6989586621687901769"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#annColExp"><span class="hs-identifier hs-type">annColExp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-185"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901767"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#TableCoreInfoRM"><span class="hs-identifier hs-type">TableCoreInfoRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901768"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901767"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901768"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901767"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901768"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-186"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.BoolExp.html#BoolExpRHSParser"><span class="hs-identifier hs-type">BoolExpRHSParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901768"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901767"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901769"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-187"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901768"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901768"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-189"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#ColExp"><span class="hs-identifier hs-type">ColExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-190"></span><span>  </span><span class="annot"><a href="#local-6989586621687901767"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901768"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901769"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-191"></span><span id="annColExp"><span class="annot"><span class="annottext">annColExp :: forall (m :: * -&gt; *) (b :: BackendType) v.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b) =&gt;
+BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ColExp
+-&gt; m (AnnBoolExpFld b v)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#annColExp"><span class="hs-identifier hs-var hs-var">annColExp</span></a></span></span><span> </span><span id="local-6989586621687903188"><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+</span><a href="#local-6989586621687903188"><span class="hs-identifier hs-var">rhsParser</span></a></span></span><span> </span><span id="local-6989586621687903189"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903189"><span class="hs-identifier hs-var">rootFieldInfoMap</span></a></span></span><span> </span><span id="local-6989586621687903190"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903190"><span class="hs-identifier hs-var">colInfoMap</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#ColExp"><span class="hs-identifier hs-type">ColExp</span></a></span><span> </span><span id="local-6989586621687903192"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687903192"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621687903193"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903193"><span class="hs-identifier hs-var">colVal</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621687903194"><span class="annot"><a href="#local-6989586621687903194"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b) -&gt; FieldName -&gt; m (FieldInfo b)
+forall (m :: * -&gt; *) fieldInfo.
+MonadError QErr m =&gt;
+FieldInfoMap fieldInfo -&gt; FieldName -&gt; m fieldInfo
+</span><a href="Hasura.Table.Cache.html#askFieldInfo"><span class="hs-identifier hs-var">askFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903190"><span class="hs-identifier hs-var">colInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687903192"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><span id="line-193"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621687903194"><span class="hs-identifier hs-type">colInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-194"></span><span>    </span><span class="annot"><a href="Hasura.Table.Cache.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#SCIScalarColumn"><span class="hs-identifier hs-type">SCIScalarColumn</span></a></span><span> </span><span id="local-6989586621687903198"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621687903198"><span class="hs-identifier hs-var">pgi</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-195"></span><span>      </span><span class="annot"><span class="annottext">ColumnInfo b
+-&gt; AnnRedactionExp b v -&gt; [OpExpG b v] -&gt; AnnBoolExpFld b v
+forall (backend :: BackendType) leaf.
+ColumnInfo backend
+-&gt; AnnRedactionExp backend leaf
+-&gt; [OpExpG backend leaf]
+-&gt; AnnBoolExpFld backend leaf
+</span><a href="Hasura.RQL.IR.BoolExp.html#AVColumn"><span class="hs-identifier hs-var">AVColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621687903198"><span class="hs-identifier hs-var">pgi</span></a></span><span> </span><span class="annot"><span class="annottext">AnnRedactionExp b v
+forall (b :: BackendType) v. AnnRedactionExp b v
+</span><a href="Hasura.RQL.IR.BoolExp.html#NoRedaction"><span class="hs-identifier hs-var">NoRedaction</span></a></span><span>
+</span><span id="line-196"></span><span>        </span><span class="annot"><span class="annottext">([OpExpG b v] -&gt; AnnBoolExpFld b v)
+-&gt; m [OpExpG b v] -&gt; m (AnnBoolExpFld b v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ValueParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ColumnReference b
+-&gt; Value
+-&gt; m [OpExpG b v]
+forall (b :: BackendType) (m :: * -&gt; *) v.
+(BackendMetadata b, MonadError QErr m) =&gt;
+ValueParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ColumnReference b
+-&gt; Value
+-&gt; m [OpExpG b v]
+forall (m :: * -&gt; *) v.
+MonadError QErr m =&gt;
+ValueParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ColumnReference b
+-&gt; Value
+-&gt; m [OpExpG b v]
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseBoolExpOperations"><span class="hs-identifier hs-var">parseBoolExpOperations</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BoolExpRHSParser b m v -&gt; ValueParser b m v
+forall (b :: BackendType) (m :: * -&gt; *) v.
+BoolExpRHSParser b m v -&gt; ValueParser b m v
+</span><a href="Hasura.RQL.Types.BoolExp.html#_berpValueParser"><span class="hs-identifier hs-var">_berpValueParser</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+</span><a href="#local-6989586621687903188"><span class="hs-identifier hs-var">rhsParser</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903189"><span class="hs-identifier hs-var">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903190"><span class="hs-identifier hs-var">colInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnReference b
+forall (b :: BackendType). ColumnInfo b -&gt; ColumnReference b
+</span><a href="Hasura.RQL.Types.Column.html#ColumnReferenceColumn"><span class="hs-identifier hs-var">ColumnReferenceColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621687903198"><span class="hs-identifier hs-var">pgi</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903193"><span class="hs-identifier hs-var">colVal</span></a></span><span>
+</span><span id="line-197"></span><span>    </span><span class="annot"><a href="Hasura.Table.Cache.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#SCIObjectColumn"><span class="hs-identifier hs-type">SCIObjectColumn</span></a></span><span> </span><span id="local-6989586621687903204"><span class="annot"><span class="annottext">nestedObjectInfo :: NestedObjectInfo b
+</span><a href="#local-6989586621687903204"><span class="hs-identifier hs-var">nestedObjectInfo</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#NestedObjectInfo"><span class="hs-identifier hs-type">NestedObjectInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687903206"><span id="local-6989586621687903207"><span id="local-6989586621687903208"><span id="local-6989586621687903209"><span id="local-6989586621687903210"><span id="local-6989586621687903211"><span id="local-6989586621687903212"><span class="annot"><span class="annottext">Bool
+Maybe Description
+Name
+Column b
+XNestedObjects b
+LogicalModelName
+ColumnMutability
+_noiSupportsNestedObjects :: XNestedObjects b
+_noiColumn :: Column b
+_noiName :: Name
+_noiType :: LogicalModelName
+_noiIsNullable :: Bool
+_noiDescription :: Maybe Description
+_noiMutability :: ColumnMutability
+_noiMutability :: forall (b :: BackendType). NestedObjectInfo b -&gt; ColumnMutability
+_noiDescription :: forall (b :: BackendType). NestedObjectInfo b -&gt; Maybe Description
+_noiIsNullable :: forall (b :: BackendType). NestedObjectInfo b -&gt; Bool
+_noiType :: forall (b :: BackendType). NestedObjectInfo b -&gt; LogicalModelName
+_noiName :: forall (b :: BackendType). NestedObjectInfo b -&gt; Name
+_noiColumn :: forall (b :: BackendType). NestedObjectInfo b -&gt; Column b
+_noiSupportsNestedObjects :: forall (b :: BackendType). NestedObjectInfo b -&gt; XNestedObjects b
+</span><a href="#local-6989586621687903206"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-198"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m (AnnBoolExpFld b v) -&gt; m (AnnBoolExpFld b v)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Column b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621687903207"><span class="hs-identifier hs-var">_noiColumn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (AnnBoolExpFld b v) -&gt; m (AnnBoolExpFld b v))
+-&gt; m (AnnBoolExpFld b v) -&gt; m (AnnBoolExpFld b v)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-199"></span><span>        </span><span id="local-6989586621687903221"><span class="annot"><a href="#local-6989586621687903221"><span class="hs-identifier hs-var">boolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; m (GBoolExp b ColExp)
+forall a (m :: * -&gt; *). (FromJSON a, QErrM m) =&gt; Value -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#decodeValue"><span class="hs-identifier hs-var">decodeValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903193"><span class="hs-identifier hs-var">colVal</span></a></span><span>
+</span><span id="line-200"></span><span>        </span><span id="local-6989586621687903223"><span class="annot"><a href="#local-6989586621687903223"><span class="hs-identifier hs-var">logicalModelFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-201"></span><span>          </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-type">lookupLogicalModelFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903209"><span class="hs-identifier hs-type">_noiType</span></a></span><span>
+</span><span id="line-202"></span><span>            </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#onNothingM"><span class="hs-operator hs-type">`onNothingM`</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-type">throw500</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-string">&quot;Logical model &quot;</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">&lt;&gt;</span></span><span> </span><span class="annot"><a href="#local-6989586621687903209"><span class="hs-identifier hs-type">_noiType</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html/Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-type">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot; not found&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-203"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687903225"><span class="annot"><a href="#local-6989586621687903225"><span class="hs-identifier hs-var hs-var">logicalModelFieldMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap (Column b) (LogicalModelField b)
+-&gt; FieldInfoMap (FieldInfo b)
+forall (b :: BackendType).
+Backend b =&gt;
+InsOrdHashMap (Column b) (LogicalModelField b)
+-&gt; FieldInfoMap (FieldInfo b)
+</span><a href="Hasura.LogicalModel.Common.html#logicalModelFieldsToFieldInfo"><span class="hs-identifier hs-var">logicalModelFieldsToFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap (Column b) (LogicalModelField b)
+</span><a href="#local-6989586621687903223"><span class="hs-identifier hs-var">logicalModelFields</span></a></span><span>
+</span><span id="line-204"></span><span>        </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AVNestedObject"><span class="hs-identifier hs-type">AVNestedObject</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903204"><span class="hs-identifier hs-type">nestedObjectInfo</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&lt;$&gt;</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-type">annBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903188"><span class="hs-identifier hs-type">rhsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903189"><span class="hs-identifier hs-type">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903225"><span class="hs-identifier hs-type">logicalModelFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903221"><span class="hs-identifier hs-type">boolExp</span></a></span><span>
+</span><span id="line-205"></span><span>    </span><span class="annot"><a href="Hasura.Table.Cache.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#SCIArrayColumn"><span class="hs-identifier hs-type">SCIArrayColumn</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-206"></span><span>      </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (AnnBoolExpFld b v)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;nested array not supported&quot;</span></span><span>
+</span><span id="line-207"></span><span>    </span><span class="annot"><a href="Hasura.Table.Cache.html#FIRelationship"><span class="hs-identifier hs-type">FIRelationship</span></a></span><span> </span><span id="local-6989586621687903230"><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621687903230"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-208"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; RelTarget b
+forall (b :: BackendType). RelInfo b -&gt; RelTarget b
+</span><a href="Hasura.RQL.Types.Relationships.Local.html#riTarget"><span class="hs-identifier hs-var">riTarget</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621687903230"><span class="hs-identifier hs-var">relInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-209"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelTargetNativeQuery"><span class="hs-identifier hs-type">RelTargetNativeQuery</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryName
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; m (AnnBoolExpFld b v)
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;annColExp RelTargetNativeQuery&quot;</span></span><span>
+</span><span id="line-210"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelTargetTable"><span class="hs-identifier hs-type">RelTargetTable</span></a></span><span> </span><span id="local-6989586621687903235"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687903235"><span class="hs-identifier hs-var">rhsTableName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-211"></span><span>          </span><span id="local-6989586621687903236"><span class="annot"><a href="#local-6989586621687903236"><span class="hs-identifier hs-var">relBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; m (BoolExp b)
+forall a (m :: * -&gt; *). (FromJSON a, QErrM m) =&gt; Value -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#decodeValue"><span class="hs-identifier hs-var">decodeValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903193"><span class="hs-identifier hs-var">colVal</span></a></span><span>
+</span><span id="line-212"></span><span>          </span><span id="local-6989586621687903237"><span class="annot"><a href="#local-6989586621687903237"><span class="hs-identifier hs-var">relFieldInfoMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#askFieldInfoMapSource"><span class="hs-identifier hs-type">askFieldInfoMapSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903235"><span class="hs-identifier hs-type">rhsTableName</span></a></span><span>
+</span><span id="line-213"></span><span>          </span><span id="local-6989586621687903238"><span class="annot"><a href="#local-6989586621687903238"><span class="hs-identifier hs-var">annRelBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-type">annBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903188"><span class="hs-identifier hs-type">rhsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903189"><span class="hs-identifier hs-type">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903237"><span class="hs-identifier hs-type">relFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#unBoolExp"><span class="hs-identifier hs-var">unBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903236"><span class="hs-identifier hs-type">relBoolExp</span></a></span><span>
+</span><span id="line-214"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">return</span></span><span>
+</span><span id="line-215"></span><span>            </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AVRelationship"><span class="hs-identifier hs-type">AVRelationship</span></a></span><span>
+</span><span id="line-216"></span><span>              </span><span class="annot"><a href="#local-6989586621687903230"><span class="hs-identifier hs-type">relInfo</span></a></span><span>
+</span><span id="line-217"></span><span>              </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#RelationshipFilters"><span class="hs-identifier hs-type">RelationshipFilters</span></a></span><span>
+</span><span id="line-218"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">--  Note that what we are building here are the permissions of the _current_ table.</span><span>
+</span><span id="line-219"></span><span>                    </span><span class="hs-comment">--  Therefore, they need to go into `rfFilter`.  `rfTargetTablePermissions` refers</span><span>
+</span><span id="line-220"></span><span>                    </span><span class="hs-comment">-- to the permissions of the _target_ table, which do not apply to the permissions</span><span>
+</span><span id="line-221"></span><span>                    </span><span class="hs-comment">-- definition of the _current_ table.</span><span>
+</span><span id="line-222"></span><span>                    </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#rfTargetTablePermissions"><span class="hs-identifier hs-var">rfTargetTablePermissions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolAnd"><span class="hs-identifier hs-type">BoolAnd</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-223"></span><span>                    </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#rfFilter"><span class="hs-identifier hs-var">rfFilter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621687903238"><span class="hs-identifier hs-type">annRelBoolExp</span></a></span><span>
+</span><span id="line-224"></span><span>                  </span><span class="hs-special">}</span><span>
+</span><span id="line-225"></span><span>              </span><span class="hs-special">)</span><span>
+</span><span id="line-226"></span><span>    </span><span class="annot"><a href="Hasura.Table.Cache.html#FIComputedField"><span class="hs-identifier hs-type">FIComputedField</span></a></span><span> </span><span id="local-6989586621687903244"><span class="annot"><span class="annottext">ComputedFieldInfo b
+</span><a href="#local-6989586621687903244"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-227"></span><span>      </span><span class="annot"><span class="annottext">AnnComputedFieldBoolExp b v -&gt; AnnBoolExpFld b v
+forall (backend :: BackendType) leaf.
+AnnComputedFieldBoolExp backend leaf -&gt; AnnBoolExpFld backend leaf
+</span><a href="Hasura.RQL.IR.BoolExp.html#AVComputedField"><span class="hs-identifier hs-var">AVComputedField</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnComputedFieldBoolExp b v -&gt; AnnBoolExpFld b v)
+-&gt; m (AnnComputedFieldBoolExp b v) -&gt; m (AnnBoolExpFld b v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">BoolExpResolver b m v
+-&gt; BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ComputedFieldInfo b
+-&gt; Value
+-&gt; m (AnnComputedFieldBoolExp b v)
+forall (b :: BackendType) (m :: * -&gt; *) v.
+(BackendMetadata b, MonadError QErr m, TableCoreInfoRM b m) =&gt;
+BoolExpResolver b m v
+-&gt; BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ComputedFieldInfo b
+-&gt; Value
+-&gt; m (AnnComputedFieldBoolExp b v)
+forall (m :: * -&gt; *) v.
+(MonadError QErr m, TableCoreInfoRM b m) =&gt;
+BoolExpResolver b m v
+-&gt; BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; ComputedFieldInfo b
+-&gt; Value
+-&gt; m (AnnComputedFieldBoolExp b v)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#buildComputedFieldBooleanExp"><span class="hs-identifier hs-var">buildComputedFieldBooleanExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(BoolExpRHSParser b m v
+ -&gt; FieldInfoMap (FieldInfo b)
+ -&gt; FieldInfoMap (FieldInfo b)
+ -&gt; GBoolExp b ColExp
+ -&gt; m (AnnBoolExp b v))
+-&gt; BoolExpResolver b m v
+forall (b :: BackendType) (m :: * -&gt; *) v.
+(BoolExpRHSParser b m v
+ -&gt; FieldInfoMap (FieldInfo b)
+ -&gt; FieldInfoMap (FieldInfo b)
+ -&gt; GBoolExp b ColExp
+ -&gt; m (AnnBoolExp b v))
+-&gt; BoolExpResolver b m v
+</span><a href="Hasura.RQL.Types.BoolExp.html#BoolExpResolver"><span class="hs-identifier hs-var">BoolExpResolver</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b v)
+forall (m :: * -&gt; *) (b :: BackendType) v.
+(QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m,
+ BackendMetadata b) =&gt;
+BoolExpRHSParser b m v
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; FieldInfoMap (FieldInfo b)
+-&gt; GBoolExp b ColExp
+-&gt; m (AnnBoolExp b v)
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#annBoolExp"><span class="hs-identifier hs-var">annBoolExp</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">BoolExpRHSParser b m v
+</span><a href="#local-6989586621687903188"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903189"><span class="hs-identifier hs-var">rootFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621687903190"><span class="hs-identifier hs-var">colInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldInfo b
+</span><a href="#local-6989586621687903244"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903193"><span class="hs-identifier hs-var">colVal</span></a></span><span>
+</span><span id="line-228"></span><span>    </span><span class="hs-comment">-- Using remote fields in the boolean expression is not supported.</span><span>
+</span><span id="line-229"></span><span>    </span><span class="annot"><a href="Hasura.Table.Cache.html#FIRemoteRelationship"><span class="hs-identifier hs-type">FIRemoteRelationship</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfo"><span class="hs-identifier hs-type">RemoteFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687903250"><span id="local-6989586621687903251"><span class="annot"><span class="annottext">HashMap FieldName (DBJoinField b)
+RemoteFieldInfoRHS
+_rfiLHS :: HashMap FieldName (DBJoinField b)
+_rfiRHS :: RemoteFieldInfoRHS
+_rfiRHS :: forall lhsJoinField.
+RemoteFieldInfo lhsJoinField -&gt; RemoteFieldInfoRHS
+_rfiLHS :: forall lhsJoinField.
+RemoteFieldInfo lhsJoinField -&gt; HashMap FieldName lhsJoinField
+</span><a href="#local-6989586621687903250"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-230"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621687903254"><span class="annot"><a href="#local-6989586621687903254"><span class="hs-identifier hs-var">lhsFieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687903255"><span class="annot"><a href="#local-6989586621687903255"><span class="hs-identifier hs-var">lhsJoinField</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-231"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap FieldName (DBJoinField b) -&gt; [(FieldName, DBJoinField b)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Internal.html/Data.HashMap.Internal.html#toList"><span class="hs-identifier hs-var">Map.toList</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (DBJoinField b)
+</span><a href="#local-6989586621687903250"><span class="hs-identifier hs-var">_rfiLHS</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-232"></span><span>          </span><span class="hs-special">[</span><span id="local-6989586621687903257"><span class="annot"><span class="annottext">(FieldName, DBJoinField b)
+</span><a href="#local-6989586621687903257"><span class="hs-identifier hs-var">lhsField</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(FieldName, DBJoinField b) -&gt; m (FieldName, DBJoinField b)
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(FieldName, DBJoinField b)
+</span><a href="#local-6989586621687903257"><span class="hs-identifier hs-var">lhsField</span></a></span><span>
+</span><span id="line-233"></span><span>          </span><span class="annot"><span class="annottext">[(FieldName, DBJoinField b)]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (FieldName, DBJoinField b)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remote field mapping should have exactly one column&quot;</span></span><span>
+</span><span id="line-234"></span><span>      </span><span id="local-6989586621687903259"><span class="annot"><a href="#local-6989586621687903259"><span class="hs-identifier hs-var">lhsJoinCol</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-235"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621687903255"><span class="hs-identifier hs-type">lhsJoinField</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-236"></span><span>          </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#JoinColumn"><span class="hs-identifier hs-type">JoinColumn</span></a></span><span> </span><span id="local-6989586621687903261"><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621687903261"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span id="local-6989586621687903262"><span class="annot"><span class="annottext">ColumnType b
+</span><a href="#local-6989586621687903262"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Column b, ColumnType b) -&gt; m (Column b, ColumnType b)
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Column b
+</span><a href="#local-6989586621687903261"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ColumnType b
+</span><a href="#local-6989586621687903262"><span class="hs-identifier hs-var">colType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-237"></span><span>          </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#JoinComputedField"><span class="hs-identifier hs-type">JoinComputedField</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarComputedField b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (Column b, ColumnType b)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remote field mapping should not have computed field&quot;</span></span><span>
+</span><span id="line-238"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621687903251"><span class="hs-identifier hs-type">_rfiRHS</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-239"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RFISchema"><span class="hs-identifier hs-type">RFISchema</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (AnnBoolExpFld b v)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remote schema field unsupported&quot;</span></span><span>
+</span><span id="line-240"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RFISource"><span class="hs-identifier hs-type">RFISource</span></a></span><span> </span><span id="local-6989586621687903266"><span class="annot"><span class="annottext">AnyBackend RemoteSourceFieldInfo
+</span><a href="#local-6989586621687903266"><span class="hs-identifier hs-var">backendRemoteSourceFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-241"></span><span>          </span><span class="annot"><span class="annottext">forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
+AllBackendsSatisfy c =&gt;
+AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
+</span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceFieldInfo
+</span><a href="#local-6989586621687903266"><span class="hs-identifier hs-var">backendRemoteSourceFieldInfo</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687903285"><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSource.html#RemoteSourceFieldInfo"><span class="hs-identifier hs-type">RemoteSourceFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687903287"><span id="local-6989586621687903288"><span id="local-6989586621687903289"><span id="local-6989586621687903290"><span id="local-6989586621687903291"><span id="local-6989586621687903292"><span class="annot"><span class="annottext">HashMap FieldName (ScalarType b, Column b)
+SourceName
+RelType
+RelName
+SourceConfig b
+TableName b
+_rsfiName :: RelName
+_rsfiType :: RelType
+_rsfiSource :: SourceName
+_rsfiSourceConfig :: SourceConfig b
+_rsfiTable :: TableName b
+_rsfiMapping :: HashMap FieldName (ScalarType b, Column b)
+_rsfiMapping :: forall (tgt :: BackendType).
+RemoteSourceFieldInfo tgt
+-&gt; HashMap FieldName (ScalarType tgt, Column tgt)
+_rsfiTable :: forall (tgt :: BackendType).
+RemoteSourceFieldInfo tgt -&gt; TableName tgt
+_rsfiSourceConfig :: forall (tgt :: BackendType).
+RemoteSourceFieldInfo tgt -&gt; SourceConfig tgt
+_rsfiSource :: forall (tgt :: BackendType).
+RemoteSourceFieldInfo tgt -&gt; SourceName
+_rsfiType :: forall (tgt :: BackendType). RemoteSourceFieldInfo tgt -&gt; RelType
+_rsfiName :: forall (tgt :: BackendType). RemoteSourceFieldInfo tgt -&gt; RelName
+</span><a href="#local-6989586621687903287"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSource.html#RemoteSourceFieldInfo"><span class="hs-identifier hs-type">RemoteSourceFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903285"><span class="hs-identifier hs-type">tb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-242"></span><span>            </span><span id="local-6989586621687903299"><span class="annot"><a href="#local-6989586621687903299"><span class="hs-identifier hs-var">fetchCol</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-243"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName
+-&gt; HashMap FieldName (ScalarType b, Column b)
+-&gt; Maybe (ScalarType b, Column b)
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Internal.html/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687903254"><span class="hs-identifier hs-var">lhsFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (ScalarType b, Column b)
+</span><a href="#local-6989586621687903292"><span class="hs-identifier hs-var">_rsfiMapping</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-244"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687903300"><span class="annot"><span class="annottext">(ScalarType b, Column b)
+</span><a href="#local-6989586621687903300"><span class="hs-identifier hs-var">col</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(ScalarType b, Column b) -&gt; m (ScalarType b, Column b)
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ScalarType b, Column b)
+</span><a href="#local-6989586621687903300"><span class="hs-identifier hs-var">col</span></a></span><span>
+</span><span id="line-245"></span><span>                </span><span class="annot"><span class="annottext">Maybe (ScalarType b, Column b)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (ScalarType b, Column b)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;LHS field name not found in the RHS mapping&quot;</span></span><span>
+</span><span id="line-246"></span><span>            </span><span class="hs-special">(</span><span id="local-6989586621687903301"><span class="annot"><a href="#local-6989586621687903301"><span class="hs-identifier hs-var">relBoolExp</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier">RemoteRelRHSFetchWhereExp</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Column</span></span><span> </span><span class="annot"><span class="hs-identifier">tb</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#decodeValue"><span class="hs-identifier hs-type">decodeValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687903193"><span class="hs-identifier hs-type">colVal</span></a></span><span>
+</span><span id="line-247"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span>
+</span><span id="line-248"></span><span>              </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AVRemoteRelationship"><span class="hs-identifier hs-type">AVRemoteRelationship</span></a></span><span>
+</span><span id="line-249"></span><span>              </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#RemoteRelPermBoolExp"><span class="hs-identifier hs-type">RemoteRelPermBoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687903287"><span class="hs-identifier hs-type">_rsfiName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621687903193"><span class="hs-identifier hs-type">colVal</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687903259"><span class="hs-identifier hs-type">lhsJoinCol</span></a></span><span>
+</span><span id="line-250"></span><span>              </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-type">AB.mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687903285"><span class="hs-identifier hs-type">tb</span></a></span><span>
+</span><span id="line-251"></span><span>              </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#RemoteRelRHSFetchInfo"><span class="hs-identifier hs-type">RemoteRelRHSFetchInfo</span></a></span><span>
+</span><span id="line-252"></span><span>                </span><span class="annot"><a href="#local-6989586621687903299"><span class="hs-identifier hs-type">fetchCol</span></a></span><span>
+</span><span id="line-253"></span><span>                </span><span class="annot"><a href="#local-6989586621687903291"><span class="hs-identifier hs-type">_rsfiTable</span></a></span><span>
+</span><span id="line-254"></span><span>                </span><span class="annot"><a href="#local-6989586621687903301"><span class="hs-identifier hs-type">relBoolExp</span></a></span><span>
+</span><span id="line-255"></span><span>                </span><span class="annot"><a href="#local-6989586621687903289"><span class="hs-identifier hs-type">_rsfiSource</span></a></span><span>
+</span><span id="line-256"></span><span>                </span><span class="annot"><a href="#local-6989586621687903290"><span class="hs-identifier hs-type">_rsfiSourceConfig</span></a></span><span>
+</span><span id="line-257"></span><span>
+</span><span id="line-258"></span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#getDepHeadersFromVal"><span class="hs-identifier hs-type">getDepHeadersFromVal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
+</span><span id="line-259"></span><span id="getDepHeadersFromVal"><span class="annot"><span class="annottext">getDepHeadersFromVal :: Value -&gt; [Text]
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#getDepHeadersFromVal"><span class="hs-identifier hs-var hs-var">getDepHeadersFromVal</span></a></span></span><span> </span><span id="local-6989586621687903306"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903306"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903306"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-260"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687903308"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687903308"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Object -&gt; [Text]
+</span><a href="#local-6989586621687903309"><span class="hs-identifier hs-var">parseObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687903308"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-261"></span><span>  </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; [Text]
+</span><a href="#local-6989586621687903310"><span class="hs-identifier hs-var">parseOnlyString</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903306"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-262"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-263"></span><span>    </span><span id="local-6989586621687903310"><span class="annot"><span class="annottext">parseOnlyString :: Value -&gt; [Text]
+</span><a href="#local-6989586621687903310"><span class="hs-identifier hs-var hs-var">parseOnlyString</span></a></span></span><span> </span><span id="local-6989586621687903314"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903314"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903314"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-264"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621687903316"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687903316"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-265"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
+forall a. ToSessionVariable a =&gt; a -&gt; Bool
+</span><a href="Hasura.Authentication.Session.html#isSessionVariable"><span class="hs-identifier hs-var">isSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687903316"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier hs-var">T.toLower</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687903316"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-266"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
+</span><a href="Hasura.Server.Utils.html#isReqUserId"><span class="hs-identifier hs-var">isReqUserId</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687903316"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
+forall a. ToSessionVariable a =&gt; SessionVariable -&gt; a
+</span><a href="Hasura.Authentication.Session.html#fromSessionVariable"><span class="hs-identifier hs-var">fromSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
+</span><a href="Hasura.Authentication.Session.html#userIdHeader"><span class="hs-identifier hs-var">userIdHeader</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-267"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-268"></span><span>      </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-269"></span><span>    </span><span id="local-6989586621687903309"><span class="annot"><span class="annottext">parseObject :: Object -&gt; [Text]
+</span><a href="#local-6989586621687903309"><span class="hs-identifier hs-var hs-var">parseObject</span></a></span></span><span> </span><span id="local-6989586621687903320"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687903320"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-270"></span><span>      </span><span class="annot"><span class="annottext">(Value -&gt; [Text]) -&gt; [Value] -&gt; [Text]
+forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
+</span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; [Text]
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#getDepHeadersFromVal"><span class="hs-identifier hs-var">getDepHeadersFromVal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; [Value]
+forall v. KeyMap v -&gt; [v]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.KeyMap.html/Data.Aeson.KeyMap.html#elems"><span class="hs-identifier hs-var">KM.elems</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687903320"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-271"></span><span>
+</span><span id="line-272"></span><span id="local-6989586621687901891"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#getDependentHeaders"><span class="hs-identifier hs-type">getDependentHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolExp"><span class="hs-identifier hs-type">BoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901891"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.Internal.html/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
+</span><span id="line-273"></span><span id="getDependentHeaders"><span class="annot"><span class="annottext">getDependentHeaders :: forall (b :: BackendType). BoolExp b -&gt; HashSet Text
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#getDependentHeaders"><span class="hs-identifier hs-var hs-var">getDependentHeaders</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolExp"><span class="hs-identifier hs-type">BoolExp</span></a></span><span> </span><span id="local-6989586621687903331"><span class="annot"><span class="annottext">GBoolExp b ColExp
+</span><a href="#local-6989586621687903331"><span class="hs-identifier hs-var">boolExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-274"></span><span>  </span><span class="annot"><span class="annottext">[Text] -&gt; HashSet Text
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.Internal.html/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; HashSet Text) -&gt; [Text] -&gt; HashSet Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((ColExp -&gt; [Text]) -&gt; GBoolExp b ColExp -&gt; [Text])
+-&gt; GBoolExp b ColExp -&gt; (ColExp -&gt; [Text]) -&gt; [Text]
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">(ColExp -&gt; [Text]) -&gt; GBoolExp b ColExp -&gt; [Text]
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; GBoolExp b a -&gt; m
+forall (t :: * -&gt; *) m a.
+(Foldable t, Monoid m) =&gt;
+(a -&gt; m) -&gt; t a -&gt; m
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">GBoolExp b ColExp
+</span><a href="#local-6989586621687903331"><span class="hs-identifier hs-var">boolExp</span></a></span><span> </span><span class="annot"><span class="annottext">((ColExp -&gt; [Text]) -&gt; [Text]) -&gt; (ColExp -&gt; [Text]) -&gt; [Text]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#ColExp"><span class="hs-identifier hs-type">ColExp</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687903335"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903335"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; [Text]
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#getDepHeadersFromVal"><span class="hs-identifier hs-var">getDepHeadersFromVal</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687903335"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-275"></span><span>
+</span><span id="line-276"></span><span class="hs-keyword">data</span><span> </span><span id="DropPerm"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#DropPerm"><span class="hs-identifier hs-var">DropPerm</span></a></span></span><span> </span><span id="local-6989586621687901903"><span class="annot"><a href="#local-6989586621687901903"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropPerm"><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#DropPerm"><span class="hs-identifier hs-var">DropPerm</span></a></span></span><span>
+</span><span id="line-277"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="dipSource"><span class="annot"><span class="annottext">forall (b :: BackendType). DropPerm b -&gt; SourceName
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#dipSource"><span class="hs-identifier hs-var hs-var">dipSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-278"></span><span>    </span><span id="dipTable"><span class="annot"><span class="annottext">forall (b :: BackendType). DropPerm b -&gt; TableName b
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#dipTable"><span class="hs-identifier hs-var hs-var">dipTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901903"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-279"></span><span>    </span><span id="dipRole"><span class="annot"><span class="annottext">forall (b :: BackendType). DropPerm b -&gt; RoleName
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#dipRole"><span class="hs-identifier hs-var hs-var">dipRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Authentication.Role.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
+</span><span id="line-280"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-281"></span><span>
+</span><span id="line-282"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687901909"><span id="local-6989586621687903343"><span id="local-6989586621687903347"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901909"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Permission.Internal.html#DropPerm"><span class="hs-identifier hs-type">DropPerm</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687901909"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-283"></span><span>  </span><span id="local-6989586621687903364"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (DropPerm b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser (DropPerm b)) -&gt; Value -&gt; Parser (DropPerm b)
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;DropPerm&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser (DropPerm b)) -&gt; Value -&gt; Parser (DropPerm b))
+-&gt; (Object -&gt; Parser (DropPerm b)) -&gt; Value -&gt; Parser (DropPerm b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687903366"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687903366"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-284"></span><span>    </span><span class="annot"><span class="annottext">SourceName -&gt; TableName b -&gt; RoleName -&gt; DropPerm b
+forall (b :: BackendType).
+SourceName -&gt; TableName b -&gt; RoleName -&gt; DropPerm b
+</span><a href="Hasura.RQL.DDL.Permission.Internal.html#DropPerm"><span class="hs-identifier hs-var">DropPerm</span></a></span><span>
+</span><span id="line-285"></span><span>      </span><span class="annot"><span class="annottext">(SourceName -&gt; TableName b -&gt; RoleName -&gt; DropPerm b)
+-&gt; Parser SourceName
+-&gt; Parser (TableName b -&gt; RoleName -&gt; DropPerm b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687903366"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-286"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SourceName)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;source&quot;</span></span><span>
+</span><span id="line-287"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe SourceName) -&gt; SourceName -&gt; Parser SourceName
+forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span>
+</span><span id="line-288"></span><span>      </span><span class="annot"><span class="annottext">Parser (TableName b -&gt; RoleName -&gt; DropPerm b)
+-&gt; Parser (TableName b) -&gt; Parser (RoleName -&gt; DropPerm b)
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687903366"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-289"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (TableName b)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;table&quot;</span></span><span>
+</span><span id="line-290"></span><span>      </span><span class="annot"><span class="annottext">Parser (RoleName -&gt; DropPerm b)
+-&gt; Parser RoleName -&gt; Parser (DropPerm b)
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687903366"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-291"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RoleName
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;role&quot;</span></span><span>
+</span><span id="line-292"></span></pre></body></html>
