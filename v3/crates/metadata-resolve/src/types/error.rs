@@ -371,6 +371,15 @@ pub enum TypePredicateError {
         field_name: Spanned<FieldName>,
         type_name: Qualified<CustomTypeName>,
     },
+    #[error(
+        "field '{field_name:}' used in predicate for type '{type_name:}' could not be found in boolean expression {boolean_expression_type}"
+    )]
+    TypePredicateFieldNotFoundInBooleanExpression {
+        field_name: Spanned<FieldName>,
+        type_name: Qualified<CustomTypeName>,
+        boolean_expression_type: Qualified<CustomTypeName>,
+    },
+
     #[error("field '{field_name:}' could not be found in field mappings for type '{type_name:}'")]
     UnknownFieldInFieldMappings {
         field_name: Spanned<FieldName>,

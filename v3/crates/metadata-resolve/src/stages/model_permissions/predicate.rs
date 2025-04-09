@@ -626,15 +626,19 @@ fn resolve_operator_and_argument_type_from_boolean_expression(
     type_name: &Qualified<CustomTypeName>,
     data_connector_link: &data_connectors::DataConnectorLink,
     bool_exp_fields: &boolean_expressions::ResolvedObjectBooleanExpressionTypeFields,
+    boolean_expression_type: &Qualified<CustomTypeName>,
 ) -> Result<(DataConnectorOperatorName, QualifiedTypeReference), TypePredicateError> {
     // lookup this field
     let comparable_field = bool_exp_fields
         .scalar_fields
         .get(&field.value)
-        .ok_or_else(|| TypePredicateError::UnknownFieldInTypePredicate {
-            field_name: field.clone(),
-            type_name: type_name.clone(),
-        })?;
+        .ok_or_else(
+            || TypePredicateError::TypePredicateFieldNotFoundInBooleanExpression {
+                field_name: field.clone(),
+                type_name: type_name.clone(),
+                boolean_expression_type: boolean_expression_type.clone(),
+            },
+        )?;
 
     // get any operator mappings
     let operator_mappings = comparable_field
@@ -721,16 +725,21 @@ fn resolve_field_comparison(
             )?;
 
     // for newer boolean expressions we already have the information we need
-    let bool_exp_fields = boolean_expression.and_then(|b| b.get_fields(flags));
-    let (data_connector_operator_name, argument_type) = match bool_exp_fields {
-        Some(fields) => resolve_operator_and_argument_type_from_boolean_expression(
-            field,
-            operator,
-            field_definition,
-            type_name,
-            data_connector_link,
-            fields,
-        ),
+    let (data_connector_operator_name, argument_type) = match boolean_expression.and_then(|b| {
+        let fields = b.get_fields(flags)?;
+        Some((fields, &b.name))
+    }) {
+        Some((fields, boolean_expression_type)) => {
+            resolve_operator_and_argument_type_from_boolean_expression(
+                field,
+                operator,
+                field_definition,
+                type_name,
+                data_connector_link,
+                fields,
+                boolean_expression_type,
+            )
+        }
         None => {
             // otherwise we need to infer a lot of it from data_connector_scalar_types info
             resolve_binary_operator_for_type(
