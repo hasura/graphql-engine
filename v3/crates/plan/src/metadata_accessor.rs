@@ -102,6 +102,7 @@ pub fn get_output_object_type<'metadata>(
 }
 
 pub struct ModelView<'metadata> {
+    pub data_type: &'metadata Qualified<CustomTypeName>,
     pub source: &'metadata metadata_resolve::ModelSource,
     pub select_permission: &'metadata metadata_resolve::SelectPermission,
 }
@@ -125,6 +126,7 @@ pub fn get_model<'metadata>(
             {
                 if let Some(model_source) = &model.model.source {
                     return Ok(ModelView {
+                        data_type: &model.model.data_type,
                         source: model_source,
                         select_permission,
                     });
