@@ -12,7 +12,7 @@ A PR [#3614](https://github.com/hasura/graphql-engine/pull/3614) has been submit
 
 #### Approach 2: Delegate adding seed data completely to the user
 
-A user can use whatever interface they want to communicate with the database, let it be GraphQL mutations or any ORM. From this [comment](https://github.com/hasura/graphql-engine/issues/2431#issuecomment-566033630) it is evident that atleast some users have this in mind.
+A user can use whatever interface they want to communicate with the database, let it be GraphQL mutations or any ORM. From this [comment](https://github.com/hasura/graphql-engine/issues/2431#issuecomment-566033630) it is evident that at least some users have this in mind.
 
 In this approach, everything is left to the user, from connecting to the underlying database to writing and managing seeds.
 
