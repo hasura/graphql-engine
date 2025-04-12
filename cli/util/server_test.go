@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/testutil"
 	"github.com/sirupsen/logrus"
 )
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/metadatautil"
 
 	"github.com/gin-contrib/cors"
 

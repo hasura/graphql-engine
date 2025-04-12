@@ -3,7 +3,7 @@ package deploy
 import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/commands"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 )
 
 type projectDeployExecutor struct {

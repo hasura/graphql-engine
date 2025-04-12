@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/contrib/renders/multitemplate"
-	errors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	errors "github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 	"github.com/hasura/graphql-engine/cli/v2/version"
 )
 

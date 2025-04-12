@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 )
 
 type move struct {

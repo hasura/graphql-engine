@@ -10,10 +10,10 @@ import (
 	"path"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/statestore/settings"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 
 	"github.com/mitchellh/mapstructure"

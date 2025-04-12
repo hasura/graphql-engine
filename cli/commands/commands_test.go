@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/testutil"
 
 	"github.com/hasura/graphql-engine/cli/v2/util"
 

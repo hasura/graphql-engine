@@ -3,9 +3,9 @@ package database
 import (
 	"sort"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/statestore"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
 )
 
 // Migrations wraps Migration and has an internal index

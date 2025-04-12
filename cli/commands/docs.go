@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"

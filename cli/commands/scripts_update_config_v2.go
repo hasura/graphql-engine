@@ -8,16 +8,16 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/cliext"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/projectmetadata"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 
 	"gopkg.in/yaml.v3"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/source/file"

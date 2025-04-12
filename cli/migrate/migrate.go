@@ -20,8 +20,8 @@ import (
 	"github.com/cheggaaa/pb/v3"
 	"golang.org/x/term"
 
-	herrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	herrors "github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	"github.com/hasura/graphql-engine/cli/v2/util"

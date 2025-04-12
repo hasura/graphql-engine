@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 )
 
 // DefaultBufferSize sets the in memory buffer size (in Bytes) for every

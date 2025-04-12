@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/fsm"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/fsm"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

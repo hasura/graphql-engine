@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	herrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+	herrors "github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/metadatautil"
 	migrate "github.com/hasura/graphql-engine/cli/v2/migrate"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"

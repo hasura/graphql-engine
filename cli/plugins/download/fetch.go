@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 )
 
 // Fetcher is used to get files from a URI.

@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/projectmetadata"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"

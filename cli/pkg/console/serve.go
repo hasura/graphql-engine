@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 
 	"github.com/fatih/color"
 	"github.com/skratchdot/open-golang/open"

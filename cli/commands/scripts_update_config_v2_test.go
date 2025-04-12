@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/testutil"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	. "github.com/onsi/ginkgo"
 	"io/ioutil"

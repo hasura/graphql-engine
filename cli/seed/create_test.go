@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura/pgdump"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura/v1query"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/testutil"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
 )
 
 func TestDriver_ExportDatadump(t *testing.T) {

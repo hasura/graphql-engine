@@ -9,14 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/pkg/migrate"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/testutil"
 )
 
 func TestProjectMetadataOps_Apply(t *testing.T) {

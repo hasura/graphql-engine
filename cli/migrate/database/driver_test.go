@@ -4,8 +4,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"

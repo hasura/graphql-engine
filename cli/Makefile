@@ -52,24 +52,24 @@ build-cli-ext:
 
 .PHONY: clean-cli-ext
 clean-cli-ext:
-	git clean -fx ./internal/cliext/static-bin
+	git clean -fx ./pkg/cliext/static-bin
 
 .PHONY: copy-cli-ext
-copy-cli-ext: ./internal/cliext/static-bin/linux/amd64/cli-ext ./internal/cliext/static-bin/linux/arm64/cli-ext ./internal/cliext/static-bin/darwin/amd64/cli-ext ./internal/cliext/static-bin/darwin/arm64/cli-ext ./internal/cliext/static-bin/windows/amd64/cli-ext.exe
+copy-cli-ext: ./pkg/cliext/static-bin/linux/amd64/cli-ext ./pkg/cliext/static-bin/linux/arm64/cli-ext ./pkg/cliext/static-bin/darwin/amd64/cli-ext ./pkg/cliext/static-bin/darwin/arm64/cli-ext ./pkg/cliext/static-bin/windows/amd64/cli-ext.exe
 
-./internal/cliext/static-bin/linux/amd64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-linux-amd64
+./pkg/cliext/static-bin/linux/amd64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-linux-amd64
 	cp $< $@
 
-./internal/cliext/static-bin/linux/arm64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-linux-arm64
+./pkg/cliext/static-bin/linux/arm64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-linux-arm64
 	cp $< $@
 
-./internal/cliext/static-bin/darwin/amd64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-darwin-amd64
+./pkg/cliext/static-bin/darwin/amd64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-darwin-amd64
 	cp $< $@
 
-./internal/cliext/static-bin/darwin/arm64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-darwin-arm64
+./pkg/cliext/static-bin/darwin/arm64/cli-ext: $(CLI_EXT_BIN_DIR)/cli-ext-darwin-arm64
 	cp $< $@
 
-./internal/cliext/static-bin/windows/amd64/cli-ext.exe: $(CLI_EXT_BIN_DIR)/cli-ext-windows-amd64
+./pkg/cliext/static-bin/windows/amd64/cli-ext.exe: $(CLI_EXT_BIN_DIR)/cli-ext-windows-amd64
 	cp $< $@
 
 # run tests

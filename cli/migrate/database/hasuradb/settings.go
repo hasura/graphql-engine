@@ -1,7 +1,7 @@
 package hasuradb
 
 import (
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 )
 
 func (h *HasuraDB) GetSetting(name string) (value string, err error) {

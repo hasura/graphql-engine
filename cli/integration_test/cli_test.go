@@ -12,7 +12,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli/v2"
 	integrationtest "github.com/hasura/graphql-engine/cli/v2/integration_test"
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/testutil"
 	"github.com/spf13/viper"
 
 	v2 "github.com/hasura/graphql-engine/cli/v2/integration_test/v2"

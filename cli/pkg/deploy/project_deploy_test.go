@@ -2,7 +2,7 @@ package deploy
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/testutil"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

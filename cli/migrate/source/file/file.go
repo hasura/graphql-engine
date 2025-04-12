@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"

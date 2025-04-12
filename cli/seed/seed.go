@@ -3,7 +3,7 @@ package seed
 import (
 	"io"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
 )
 
 type sendBulk func([]hasura.RequestBody) (io.Reader, error)

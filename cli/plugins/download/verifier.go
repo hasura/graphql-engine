@@ -22,7 +22,7 @@ import (
 	"hash"
 	"io"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 )
 
 // Verifier can check a reader against it's correctness.

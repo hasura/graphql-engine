@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/metadataobject/actions/types"
 
 	"github.com/spf13/cobra"
 )

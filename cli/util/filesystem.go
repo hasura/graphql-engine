@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 )
 
 func FSCheckIfDirPathExists(path string) error {

@@ -19,7 +19,7 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 	"github.com/hasura/graphql-engine/cli/v2/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/sirupsen/logrus"

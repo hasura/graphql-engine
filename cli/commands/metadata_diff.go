@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
-	diffpkg "github.com/hasura/graphql-engine/cli/v2/internal/diff"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
-	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+	diffpkg "github.com/hasura/graphql-engine/cli/v2/pkg/diff"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/projectmetadata"
 
 	"github.com/aryann/difflib"
 	"github.com/hasura/graphql-engine/cli/v2"

@@ -3,7 +3,7 @@ package util
 import (
 	"github.com/AlecAivazis/survey/v2"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/errors"
 )
 
 func GetYesNoPrompt(message string) (promptResp bool, err error) {

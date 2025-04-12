@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	internalerrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	internalerrors "github.com/hasura/graphql-engine/cli/v2/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/hasura"
 
 	"github.com/spf13/afero"
 )
