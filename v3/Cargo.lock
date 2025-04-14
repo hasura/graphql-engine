@@ -2644,7 +2644,7 @@ dependencies = [
  "hasura-authn-core",
  "mockito",
  "open-dds",
- "rand 0.8.5",
+ "rand 0.9.0",
  "reqwest",
  "schemars",
  "serde",

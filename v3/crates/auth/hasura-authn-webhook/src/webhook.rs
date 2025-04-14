@@ -839,7 +839,7 @@ mod tests {
     use super::*;
     use auth_base::Role;
     use mockito;
-    use rand::{Rng, thread_rng};
+    use rand::{Rng, rng};
     use reqwest::header::CONTENT_TYPE;
     use serde_json::json;
 
@@ -1242,14 +1242,14 @@ mod tests {
 
         let url = server.url();
 
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         // Generate a random HTTP status code
-        let mut http_status_code: usize = rng.gen_range(100..600);
+        let mut http_status_code: usize = rng.random_range(100..600);
 
         // Make sure that it's not either 200/401.
         while http_status_code == 200 || http_status_code == 401 {
-            http_status_code = rng.gen_range(100..600);
+            http_status_code = rng.random_range(100..600);
         }
 
         // Create a mock
