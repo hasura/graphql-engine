@@ -510,7 +510,7 @@ fn from_model_relationship(
             };
 
             remote_join_executions.locations.insert(
-                relationship_name.as_str().to_owned(),
+                ndc_field_alias.to_string(),
                 Location {
                     join_node: JoinNode::Remote(remote_join),
                     rest: sub_join_locations,
@@ -738,7 +738,7 @@ fn from_command_relationship(
             };
 
             remote_join_executions.locations.insert(
-                relationship_name.as_str().to_owned(),
+                ndc_field_alias.to_string(),
                 Location {
                     join_node: JoinNode::Remote(rj_info),
                     rest: new_remote_join_executions,

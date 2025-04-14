@@ -8,6 +8,9 @@
 
 ### Fixed
 
+- Fixed a bug in which using a graphql alias in a query involving a remote
+  relationship would result in a runtime error
+
 ## [v2025.04.02]
 
 ### Added
