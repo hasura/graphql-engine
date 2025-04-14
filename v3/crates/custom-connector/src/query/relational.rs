@@ -295,6 +295,7 @@ fn convert_relation_to_logical_plan(
     }
 }
 
+// return types for tables, with columns / data we don't current support filtered out
 fn get_table_provider(
     collection_name: &ndc_models::CollectionName,
     state: &AppState,
@@ -304,6 +305,50 @@ fn get_table_provider(
             crate::collections::actors::rows(&BTreeMap::new(), state)
                 .map_err(|e| DataFusionError::Internal(e.1.0.message))?,
             crate::types::actor::definition().fields,
+        ),
+        "countries" => (
+            crate::collections::countries::rows(&BTreeMap::new(), state)
+                .map_err(|e| DataFusionError::Internal(e.1.0.message))?
+                .iter()
+                .map(|row| {
+                    BTreeMap::from_iter([
+                        (
+                            "id".into(),
+                            row.get(&ndc_models::FieldName::from("id"))
+                                .expect("'id' field missing")
+                                .clone(),
+                        ),
+                        (
+                            "name".into(),
+                            row.get(&ndc_models::FieldName::from("name"))
+                                .expect("'name' field missing")
+                                .clone(),
+                        ),
+                        (
+                            "area_km2".into(),
+                            row.get(&ndc_models::FieldName::from("area_km2"))
+                                .expect("'area_km2' field missing")
+                                .clone(),
+                        ),
+                        (
+                            "continent_id".into(),
+                            row.get(&ndc_models::FieldName::from("continent_id"))
+                                .unwrap_or_else(|| &serde_json::Value::Null)
+                                .clone(),
+                        ),
+                    ])
+                })
+                .collect(),
+            crate::types::country::definition()
+                .fields
+                .into_iter()
+                .filter(|(k, _)| k.as_str() != "cities")
+                .collect(),
+        ),
+        "continents" => (
+            crate::collections::continents::rows(&BTreeMap::new(), state)
+                .map_err(|e| DataFusionError::Internal(e.1.0.message))?,
+            crate::types::continent::definition().fields,
         ),
         "movies" => (
             crate::collections::movies::rows(&BTreeMap::new(), state)

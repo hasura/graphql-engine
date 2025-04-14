@@ -66,6 +66,14 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     arguments: argument_any(),
                 },
             ),
+            (
+                "country_id".into(),
+                ndc_models::ObjectField {
+                    description: Some("The actor's country of origin".into()),
+                    r#type: ndc_models::Type::Named { name: "Int".into() },
+                    arguments: argument_any(),
+                },
+            ),
         ]),
         foreign_keys: BTreeMap::new(),
     }

@@ -222,6 +222,22 @@
                   "actor": {
                     "description": "An actor",
                     "fields": {
+                      "country_id": {
+                        "description": "The actor's country of origin",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
                       "favourite_author_id": {
                         "description": "The actor's favourite author ID",
                         "type": {
@@ -355,6 +371,40 @@
                     },
                     "foreign_keys": {}
                   },
+                  "continent": {
+                    "description": "A continent",
+                    "fields": {
+                      "area_km2": {
+                        "description": "The continents's area size in square kilometers",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "biggest_country_id": {
+                        "description": "The primary key of the continent's biggest country",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "id": {
+                        "description": "The continent's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "The continents's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
                   "country": {
                     "description": "A country",
                     "fields": {
@@ -372,6 +422,16 @@
                           "element_type": {
                             "type": "named",
                             "name": "city"
+                          }
+                        }
+                      },
+                      "continent_id": {
+                        "description": "The country's continent's primary key",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
                           }
                         }
                       },
@@ -1137,6 +1197,17 @@
                     "type": "country",
                     "uniqueness_constraints": {
                       "CountryByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "name": "continents",
+                    "description": "A collection of continents",
+                    "arguments": {},
+                    "type": "continent",
+                    "uniqueness_constraints": {
+                      "ContinentByID": {
                         "unique_columns": ["id"]
                       }
                     }
