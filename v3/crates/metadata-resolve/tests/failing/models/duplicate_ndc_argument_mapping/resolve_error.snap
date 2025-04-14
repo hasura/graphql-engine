@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/models/duplicate_ndc_argument_mapping/metadata.json
 ---
-An error occurred while mapping arguments in the model collection_with_args (in subgraph default) to the collection collection_with_args in the data connector myconnector (in subgraph default): the data connector argument arg1 has been mapped to more than once
+Error: An error occurred while mapping arguments in the model collection_with_args (in subgraph default) to the collection collection_with_args in the data connector myconnector (in subgraph default): the data connector argument arg1 has been mapped to more than once

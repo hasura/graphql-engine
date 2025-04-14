@@ -1,0 +1,16 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/model_permissions/filter_permissions/comparison_operator_not_found/metadata.json
+---
+Error: Error in model permission for model 'Albums (in subgraph subgraphs)' for role 'user': in select filter permissions: Comparison operator '_unknown' not found for field 'Title' of type 'String!'
+    ╭─[ <unknown>:38:32 ]
+    │
+ 34 │                 "role": "user",
+    │                         ───┬──  
+    │                            ╰──── Error in model permission for the role 'user' on the model 'Albums'
+    │ 
+ 38 │                       "field": "Title",
+    │                                ───┬───  
+    │                                   ╰───── The type of this field (String!) does not support the comparison operator '_unknown'
+────╯

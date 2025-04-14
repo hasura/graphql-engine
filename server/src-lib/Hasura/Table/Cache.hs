@@ -9,6 +9,7 @@ module Hasura.Table.Cache
     DBTableMetadata (..),
     DBTablesMetadata,
     DelPermInfo (..),
+    FieldAccessFilter (..),
     FieldInfo (..),
     FieldInfoMap,
     ForeignKey (..),
@@ -130,7 +131,6 @@ import Hasura.Base.Error
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.IR.BoolExp.Lenses (_RedactIfFalse)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
@@ -476,8 +476,8 @@ instance
 -- | This type is only used as an intermediate type
 --   to combine more than one select permissions for inherited roles.
 data CombinedSelPermInfo (b :: BackendType) = CombinedSelPermInfo
-  { cspiCols :: [(HashMap.HashMap (Column b) (AnnRedactionExpPartialSQL b))],
-    cspiComputedFields :: [(HashMap.HashMap ComputedFieldName (AnnRedactionExpPartialSQL b))],
+  { cspiCols :: [(HashMap.HashMap (Column b) (FieldAccessFilter b))],
+    cspiComputedFields :: [(HashMap.HashMap ComputedFieldName (FieldAccessFilter b))],
     cspiFilter :: [(AnnBoolExpPartialSQL b)],
     cspiLimit :: Maybe (Max Int),
     cspiAllowAgg :: Any,
@@ -499,7 +499,14 @@ instance (Backend b) => Semigroup (CombinedSelPermInfo b) where
         (allowedQueryRFTypesL <> allowedQueryRFTypesR)
         (allowedSubsRFTypesL <> allowedSubsRFTypesR)
 
+-- | This type is used to store the permission filter and redaction expression for a column or computed field.
+data FieldAccessFilter (b :: BackendType) = FieldAccessFilter
+  { _fafPermissionFilter :: AnnBoolExpPartialSQL b,
+    _fafRedactionExp :: AnnRedactionExpPartialSQL b
+  }
+
 combinedSelPermInfoToSelPermInfo ::
+  forall b.
   (Backend b) =>
   Int ->
   CombinedSelPermInfo b ->
@@ -515,8 +522,25 @@ combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
     cspiAllowedQueryRootFieldTypes
     cspiAllowedSubscriptionRootFieldTypes
   where
+    -- Helper function to check if all the redaction expressions are NoRedaction
+    -- This is used to ensure we only optimize away redactions when all expressions are NoRedaction
+    -- This is important for nested inherited roles where redaction expressions might contain filters
+    -- Ref: https://github.com/hasura/graphql-engine/issues/10711
+    allAreNoRedaction :: NonEmpty (FieldAccessFilter b) -> Bool
+    allAreNoRedaction = all ((== NoRedaction) . _fafRedactionExp)
+
+    -- Helper function to build the final redaction expression for a column or computed field.
+    -- This function ensures proper handling of redaction expressions for nested inherited roles
+    -- For NoRedaction, we create a new RedactIfFalse with the permission filter
+    -- For existing RedactIfFalse, we combine it with the current permission's filter using BoolAnd
+    -- This ensures that row filters are properly propagated through multiple levels of inheritance
+    mergeFieldAccessFilter :: FieldAccessFilter b -> AnnBoolExpPartialSQL b
+    mergeFieldAccessFilter (FieldAccessFilter {..}) = case _fafRedactionExp of
+      NoRedaction -> _fafPermissionFilter
+      RedactIfFalse redactBoolExp -> BoolAnd [redactBoolExp, _fafPermissionFilter]
+
     mergeColumnsWithBoolExp ::
-      NonEmpty (AnnRedactionExp b (PartialSQLExp b)) ->
+      NonEmpty (FieldAccessFilter b) ->
       AnnRedactionExp b (PartialSQLExp b)
     mergeColumnsWithBoolExp redactionExpressions
       -- when all the parent roles have a select permission, then we set
@@ -537,10 +561,12 @@ combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
       -- boolean expression will always evaluate to `True`; and since the `RedactIfFalse` boolean expression
       -- will always evaluate to `True`, we simply change the `RedactIfFalse` to a `NoRedaction` redaction expression
       -- when for a column all the select permissions exists.
-      | selPermsCount == length redactionExpressions = NoRedaction
+      -- Only optimize to NoRedaction when all parent roles have select permissions AND all redaction expressions are NoRedaction
+      -- This additional check for allAreNoRedaction is crucial for nested inherited roles to ensure row filters are properly applied
+      | selPermsCount == length redactionExpressions && allAreNoRedaction redactionExpressions = NoRedaction
       | otherwise =
-          let redactionBoolExps = mapMaybe (^? _RedactIfFalse) $ toList redactionExpressions
-           in bool (RedactIfFalse $ BoolOr redactionBoolExps) NoRedaction $ null redactionBoolExps
+          let fieldAccessBoolExps = map mergeFieldAccessFilter $ toList redactionExpressions
+           in RedactIfFalse $ BoolOr fieldAccessBoolExps
 
 data SelPermInfo (b :: BackendType) = SelPermInfo
   { -- | HashMap of accessible columns to the role, the `Column` may be mapped to

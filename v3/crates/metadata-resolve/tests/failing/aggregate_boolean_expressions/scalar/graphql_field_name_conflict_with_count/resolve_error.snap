@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/scalar/graphql_field_name_conflict_with_count/metadata.json
 ---
-error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': a GraphQL field name conflict exists between the '_min' comparable aggregation function and the '_min' count aggregation function. One of these will need to be renamed.
+Error: error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': a GraphQL field name conflict exists between the '_min' comparable aggregation function and the '_min' count aggregation function. One of these will need to be renamed.

@@ -2,12 +2,382 @@
 
 ## [Unreleased]
 
+### Fixed
+
 ### Added
+
+### Changed
+
+## [v2025.04.14]
+
+### Fixed
+
+- Fixed a bug in which using a graphql alias in a query involving a remote
+  relationship would result in a runtime error
+
+## [v2025.04.02]
+
+### Added
+
+- Add data connector error details to trace error messages. This will help
+  debugging data connector errors.
+- Add a flag `validate_non_null_graphql_variables` to enable runtime validations
+  for non-nullable GraphQL variables.
+- Improved metadata JSON deserialization errors by adding more contextual
+  information.
+
+### Changed
+
+- Model permissions can now reference nested object fields. For instance, to
+  select all institutions where the country of their location is "UK":
+
+```yaml
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: institutions
+  permissions:
+    - role: admin
+      select:
+        filter:
+          nestedField:
+            fieldName: location
+            predicate:
+              nestedField:
+                fieldName: country
+                predicate:
+                  fieldComparison:
+                    field: name
+                    operator: _eq
+                    value:
+                      literal: UK
+```
+
+## [v2025.03.25]
+
+### Fixed
+
+- Apply validations for operators in scalar boolean expressions:
+  - Disallow non-list argument types for the `_in` operator.
+  - Argument type must match the scalar type for `_eq`, `_lt`, `_lte`, `_gt` and
+    `_gte` operators.
+  - Operators such as `contains`, `icontains`, `starts_with`, `istarts_with`,
+    `ends_with`, and `iends_with` now only applicable on string scalars, with
+    arguments strictly of type string.
+  - Check if mapped operators exist in the data connector.
+  - Check the argument type compatibility with the mapped operator's NDC
+    argument type.
+- The `value` alias for `literal` fields in `ValueExpression` and
+  `ValueExpressionOrPredicate` was removed in a recent change, and is now
+  reinstated.
+
+## [v2025.03.20]
+
+### Changed
+
+- Improved error messages for ModelPermissions build errors that include more
+  contextual information
+
+### Fixed
+
+- JSON paths in metadata parse errors involving externally tagged unions (such
+  as `BooleanExpressionOperand`) now correctly include the tag property in the
+  path.
+- ModelPermissions no longer allow roles to be defined more than once
+
+## [v2025.03.17]
+
+### Added
+
+- Added `/v1/jsonapi` as an alias for `/v1/rest` endpoints to better reflect the
+  JSONAPI specification compliance.
+
+## [v2025.03.13]
+
+### Changed
+
+- Data connectors resolve step now returns multiple errors rather than failing
+  on the first one.
+- Improved build errors for when older versions of the ddn CLI generate invalid
+  metadata in the DataConnectorLink; the new error guides users to upgrade their
+  CLI version.
+- Scalar types resolve step now returns multiple errors rather than failing on
+  the first one.
+
+### Fixed
+
+- Remote joins that map fields that contain objects now correctly pass the whole
+  object contained in that field to the target data connector, instead of
+  sometimes a subset based on what's been selected in the GraphQL query. In
+  addition, the fields of the object are now mapped correctly to the target data
+  connector's field names.
+
+## [v2025.03.11]
+
+### Added
+
+- Add error contexts and paths to some argument errors for Models and Commands.
+
+### Changed
+
+- Empty filter expressions are consistent between old and OpenDD execution
+  pipelines
+
+- Fixed error responses from JSON:API by making it spec-compliant.
+
+## [v2025.03.10]
+
+### Added
+
+#### Native Data Connector (NDC) Specification v0.2.0 Support
+
+Engine now supports the
+[NDC specification v0.2.0](https://hasura.github.io/ndc-spec/specification/changelog.html#020).
+This new version of the specification adds many new capabilities to data
+connectors that engine will support over time. As of this release, engine
+supports the following new features for data connectors that support NDC Spec
+v0.2.0:
+
+##### Filtering by items in a nested array of scalars
+
+Consider an `ObjectType` with a field that is an array of scalars, such as the
+`Country` type with its `cities` array of string field below.
+
+```yaml
+kind: ObjectType
+version: v1
+definition:
+  name: Country
+  fields:
+    - name: id
+      type: Int!
+    - name: name
+      type: String!
+    - name: cities
+      type: [String!]!
+  graphql:
+    typeName: Country
+  dataConnectorTypeMapping: {}
+```
+
+It is now possible to write the following `where` clause in GraphQL, which
+returns all countries whose cities array contains a string equalling
+"Melbourne":
+
+```graphql
+query {
+  CountryMany(where: { cities: { _eq: "Melbourne" } }) {
+    id
+    name
+    cities
+  }
+}
+```
+
+In order to do this, the `cities` field must be added as a `comparableField` to
+Country's `BooleanExpressionType`:
+
+```yaml
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: Country_bool_exp
+  operand:
+    object:
+      type: Country
+      comparableFields:
+        - fieldName: cities
+          booleanExpressionType: String_bool_exp # New!
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: false
+  graphql:
+    typeName: Country_bool_exp
+```
+
+The `booleanExpressionType` of the `comparableField` must be for the scalar type
+of the array element (in this case a `BooleanExpressionType` for `String`).
+
+However, doing this is only supported if the data connector your `Model` sources
+itself from supports filtering by nested scalar arrays, which is new in NDC Spec
+v0.2.0.
+
+##### Count aggregates can return ScalarTypes other than Int
+
+Some data sources return count aggregates using a scalar type other than a
+32-bit integer (for example, a 64-bit integer). If the data connector declares
+that counts are returned in a different scalar type, the engine can now return
+those counts using the approprate ScalarType.
+
+This is done by specifying the correct ScalarType in the `AggregateExpression`
+`count` and `countDistinct`'s `resultType` field, like so:
+
+```yaml
+kind: AggregateExpression
+version: v1
+definition:
+  name: String_aggregate_exp
+  operand:
+    scalar:
+      aggregatedType: String
+      aggregationFunctions:
+        - name: _min
+          returnType: String
+        - name: _max
+          returnType: String
+      dataConnectorAggregationFunctionMapping:
+        - dataConnectorName: custom
+          dataConnectorScalarType: String
+          functionMapping:
+            _min:
+              name: min
+            _max:
+              name: max
+  count:
+    enable: true
+    returnType: Int64 # New!
+  countDistinct:
+    enable: true
+    returnType: Int64 # New!
+  description: Aggregate expression for the String type
+  graphql:
+    selectTypeName: String_aggregate_exp
+```
+
+If `returnType` is omitted, it defaults to the `Int` type.
+
+##### Filtering and ordering of relationships that start from inside a nested object
+
+Consider an `Institution` type with a nested `campuses` field, where each
+`Campus` has a relationship to a `Country` type:
+
+```yaml
+kind: ObjectType
+version: v1
+definition:
+  name: Institution
+  fields:
+    - name: id
+      type: Int!
+    - name: name
+      type: String!
+    - name: campuses
+      type: "[Campus!]!" # Array of Campus objects
+
+kind: ObjectType
+version: v1
+definition:
+  name: Campus
+  fields:
+    - name: id
+      type: Int!
+    - name: name
+      type: String!
+    - name: country_id # Foreign key to Country
+      type: Int!
+
+kind: Relationship
+version: v1
+definition:
+  name: country
+  sourceType: Campus
+  target:
+    model:
+      name: Country
+      relationshipType: Object
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: country_id
+      target:
+        modelField:
+          - fieldName: id
+```
+
+If the data connector declares support for doing so, you can filter and order
+institutions based on their campuses' countries:
+
+```graphql
+query {
+  InstitutionMany(
+    where: { campuses: { country: { name: { _eq: "USA" } } } }
+    order_by: { campuses: { country: { name: Asc } } }
+  ) {
+    id
+    name
+    campuses {
+      name
+      country {
+        name
+      }
+    }
+  }
+}
+```
+
+To do so, you will need to declare the `country` relationship as a
+`comparableRelationship` in the `Campus`'s `BooleanExpressionType`, an as an
+`orderableRelationship` in the `Campus`'s `OrderByExpression`:
+
+```yaml
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: Campus_bool_exp
+  operand:
+    object:
+      type: Campus
+      comparableFields:
+        - fieldName: id
+          booleanExpressionType: Int_bool_exp
+        - fieldName: name
+          booleanExpressionType: String_bool_exp
+      comparableRelationships:
+        - relationshipName: country # New!
+          booleanExpressionType: Country_bool_exp
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: false
+  graphql:
+    typeName: Campus_bool_exp
+
+kind: OrderByExpression
+version: v1
+definition:
+  name: Campus_order_by_exp
+  operand:
+    object:
+      orderedType: Campus
+      orderableFields:
+        - fieldName: id
+          orderByExpression: Int_order_by_exp
+        - fieldName: name
+          orderByExpression: String_order_by_exp
+      orderableRelationships:
+        - relationshipName: country # New!
+          orderByExpression: Country_order_by_exp
+  graphql:
+    expressionTypeName: Campus_order_by_exp
+```
+
+#### Other
+
+- Relationships that target models are now able to provide mappings that target
+  model arguments.
+- Pretty print errors where they have had contexts and paths provided
 
 ### Fixed
 
 - Validate `ObjectType` field types against mapped NDC types, ensuring
   compatibility of nullability, arrays, and scalar representations.
+- Validate argument types against mapped NDC types, ensuring compatibility of
+  nullability, arrays, and scalar representations.
+- Validate `AuthConfig` headers to ensure they are valid HTTP headers.
+- GraphQL API: Fixed a bug where `null` inputs for nullable query parameters
+  like `limit`, `offset`, `order_by` and `where` would cause an error.
+- Disallow relationships targeting procedure based commands.
 
 ### Changed
 
@@ -17,8 +387,6 @@
 
 - Added validation for command output types to ensure they reference valid types
   in the schema.
-- Relationships that target models are now able to provide mappings that target
-  model arguments.
 
 ### Fixed
 
@@ -1209,7 +1577,15 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.02.26...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.04.14...HEAD
+[v2025.04.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.14
+[v2025.04.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.02
+[v2025.03.25]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.25
+[v2025.03.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.20
+[v2025.03.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.17
+[v2025.03.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.13
+[v2025.03.11]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.11
+[v2025.03.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.10
 [v2025.02.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.26
 [v2025.02.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.20
 [v2025.02.19]: https://github.com/hasura/v3-engine/releases/tag/v2025.02.19

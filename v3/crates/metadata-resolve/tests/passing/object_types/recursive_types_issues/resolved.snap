@@ -514,6 +514,34 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: Some(
@@ -584,6 +612,34 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        3,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: Some(
@@ -654,6 +710,34 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        7,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: Some(
@@ -720,6 +804,9 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ObjectTypesIssue(

@@ -743,6 +743,12 @@
       },
       "additionalProperties": false
     },
+    "CollectionName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/CollectionName",
+      "title": "CollectionName",
+      "description": "The name of a collection in a data connector.",
+      "type": "string"
+    },
     "ColumnFieldMapping": {
       "$id": "https://hasura.io/jsonschemas/metadata/ColumnFieldMapping",
       "title": "ColumnFieldMapping",
@@ -2918,6 +2924,19 @@
           "additionalProperties": false
         },
         {
+          "description": "Filters objects based on the nested field of a model.",
+          "type": "object",
+          "required": [
+            "nestedField"
+          ],
+          "properties": {
+            "nestedField": {
+              "$ref": "#/definitions/NestedFieldPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
           "description": "Filters objects based on the relationship of a model.",
           "type": "object",
           "required": [
@@ -3072,17 +3091,20 @@
       ],
       "properties": {
         "dataConnectorName": {
-          "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorName",
-          "title": "DataConnectorName",
           "description": "The name of the data connector backing this model.",
-          "type": "string",
-          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorName"
+            }
+          ]
         },
         "collection": {
-          "$id": "https://hasura.io/jsonschemas/metadata/CollectionName",
-          "title": "CollectionName",
           "description": "The collection in the data connector that backs this model.",
-          "type": "string"
+          "allOf": [
+            {
+              "$ref": "#/definitions/CollectionName"
+            }
+          ]
         },
         "argumentMapping": {
           "description": "Mapping from model argument names to data connector collection argument names.",
@@ -3339,6 +3361,35 @@
           "items": {
             "$ref": "#/definitions/OpenDdSubgraphObject"
           }
+        }
+      },
+      "additionalProperties": false
+    },
+    "NestedFieldPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/NestedFieldPredicate",
+      "title": "NestedFieldPredicate",
+      "description": "Nested field predicate filters objects of a source model based on a predicate on the nested field.",
+      "type": "object",
+      "required": [
+        "fieldName",
+        "predicate"
+      ],
+      "properties": {
+        "fieldName": {
+          "description": "The name of the field in the object type of the model to follow.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
+        },
+        "predicate": {
+          "description": "The predicate to apply on the related objects.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ModelPredicate"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -3748,6 +3799,34 @@
         "validate_object_type_data_connector_type_mapping_field_types": {
           "default": false,
           "type": "boolean"
+        },
+        "validate_argument_mapping_types": {
+          "default": false,
+          "type": "boolean"
+        },
+        "disallow_invalid_headers_in_auth_config": {
+          "default": false,
+          "type": "boolean"
+        },
+        "require_jwt_audience_validation_if_aud_claim_present": {
+          "default": false,
+          "type": "boolean"
+        },
+        "disallow_procedure_command_relationships": {
+          "default": false,
+          "type": "boolean"
+        },
+        "disallow_duplicate_model_permissions_roles": {
+          "default": false,
+          "type": "boolean"
+        },
+        "validate_scalar_boolean_expression_operators": {
+          "default": false,
+          "type": "boolean"
+        },
+        "validate_non_null_graphql_variables": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3869,6 +3948,8 @@
       ]
     },
     "OpenDdSessionVariable": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSessionVariable",
+      "title": "OpenDdSessionVariable",
       "description": "Used to represent the name of a session variable, like \"x-hasura-role\".",
       "type": "string"
     },
@@ -6534,6 +6615,31 @@
             },
             "capabilities": {
               "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.6/ndc-models/tests/json_schema/capabilities_response.jsonschema"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "SchemaAndCapabilitiesV02",
+          "description": "Version 0.2 of schema and capabilities for a data connector.",
+          "type": "object",
+          "required": [
+            "capabilities",
+            "schema",
+            "version"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "enum": [
+                "v0.2"
+              ]
+            },
+            "schema": {
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.1-rc.0/ndc-models/tests/json_schema/schema_response.jsonschema"
+            },
+            "capabilities": {
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.1-rc.0/ndc-models/tests/json_schema/capabilities_response.jsonschema"
             }
           },
           "additionalProperties": false

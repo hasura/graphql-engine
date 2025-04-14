@@ -7,10 +7,10 @@ mod query_usage;
 mod steps;
 mod types;
 
-pub use error::RequestError;
-pub use execute::{execute_mutation_plan, execute_query_plan, ExecuteQueryResult, RootFieldResult};
+pub use error::{RequestError, build_state_with_middleware_error_converter};
+pub use execute::{ExecuteQueryResult, RootFieldResult, execute_mutation_plan, execute_query_plan};
 pub use explain::execute_explain;
-pub use explain::types::{redact_ndc_explain, ExplainResponse};
+pub use explain::types::{ExplainResponse, redact_ndc_explain};
 pub use process_response::process_response;
 pub use query::{
     execute_query, execute_query_internal, set_request_metadata_attributes, set_usage_attributes,
@@ -20,11 +20,14 @@ pub use types::{GraphQLErrors, GraphQLResponse};
 
 #[cfg(test)]
 mod tests {
-    use goldenfile::{differs::text_diff, Mint};
+    use goldenfile::{Mint, differs::text_diff};
     use hasura_authn_core::{Identity, Role, Session, SessionVariableValue};
     use lang_graphql::http::Request;
-    use lang_graphql::{parser::Parser, validation::normalize_request};
-    use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
+    use lang_graphql::{
+        parser::Parser, validation::NonNullGraphqlVariablesValidation,
+        validation::normalize_request,
+    };
+    use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName};
     use serde_json as json;
     use std::collections::BTreeMap;
     use std::{
@@ -46,6 +49,14 @@ mod tests {
         let schema = fs::read_to_string(test_dir.join("schema.json"))?;
 
         let gds = GDS::new_with_default_flags(open_dds::Metadata::from_json_str(&schema)?)?;
+        let validate_non_null_graphql_variables =
+            if gds.metadata.runtime_flags.contains(
+                metadata_resolve::flags::ResolvedRuntimeFlag::ValidateNonNullGraphqlVariables,
+            ) {
+                NonNullGraphqlVariablesValidation::Validate
+            } else {
+                NonNullGraphqlVariablesValidation::DoNotValidate
+            };
         let schema = GDS::build_schema(&gds)?;
 
         for input_file in fs::read_dir(test_dir.join("generate_ir"))? {
@@ -78,10 +89,10 @@ mod tests {
                 },
                 &schema,
                 &request,
+                validate_non_null_graphql_variables,
             )?;
 
             let ir = generate_ir(
-                graphql_ir::GraphqlRequestPipeline::Old,
                 &schema,
                 &gds.metadata,
                 &session,
@@ -148,6 +159,7 @@ mod tests {
                 },
                 &schema,
                 &request,
+                NonNullGraphqlVariablesValidation::Validate,
             )?;
 
             let query_usage = analyze_query_usage(&normalized_request);

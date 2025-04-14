@@ -9,18 +9,20 @@ mod usage_counts;
 mod variable_name;
 
 pub use execution_plan::{
-    mk_argument_target_variable_name, AggregateFieldSelection, AggregateFieldsSelection,
-    AggregateSelectionSet, Argument, CommandReturnKind, Dimension, Field, FieldsSelection,
-    Grouping, JoinLocations, JoinNode, Location, LocationKind, MutationArgument,
-    MutationExecutionPlan, MutationExecutionTree, NDCMutationExecution, NDCQueryExecution,
-    NDCSubscriptionExecution, NestedArray, NestedField, NestedObject, PredicateQueryTree,
-    PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree, QueryNodeNew,
-    Relationship, RelationshipArgument, RemoteJoin, RemoteJoinArgument, RemoteJoinType,
-    RemotePredicateKey, ResolvedFilterExpression, SourceFieldAlias, TargetField, UniqueNumber,
+    AggregateFieldSelection, AggregateFieldsSelection, AggregateSelectionSet, Argument,
+    CommandReturnKind, Dimension, Field, FieldsSelection, Grouping, JoinLocations, JoinNode,
+    Location, LocationKind, MutationArgument, MutationExecutionPlan, MutationExecutionTree,
+    NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution, NestedArray, NestedField,
+    NestedObject, PredicateQueryTree, PredicateQueryTrees, ProcessResponseAs, QueryExecutionPlan,
+    QueryExecutionTree, QueryNode, Relationship, RelationshipArgument, RemoteJoin,
+    RemoteJoinFieldMapping, RemoteJoinObjectFieldMapping, RemoteJoinObjectTargetField,
+    RemoteJoinType, RemoteJoinVariable, RemoteJoinVariableSet, RemotePredicateKey,
+    ResolvedFilterExpression, SourceFieldAlias, TargetField, UniqueNumber,
+    mk_argument_target_variable_name,
 };
 pub use expression::{
-    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,
-    SourceNdcColumn, EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME,
+    ComparisonTarget, ComparisonValue, EXPRESSION_SCALAR_VALUE_VIRTUAL_COLUMN_NAME, Expression,
+    LocalFieldComparison, RelationshipColumnMapping, SourceNdcColumn,
 };
 pub use ndc_field_alias::NdcFieldAlias;
 pub use ndc_function_ir_value::FUNCTION_IR_VALUE_COLUMN_NAME;

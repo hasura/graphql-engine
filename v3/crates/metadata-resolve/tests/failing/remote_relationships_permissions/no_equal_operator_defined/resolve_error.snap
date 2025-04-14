@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/remote_relationships_permissions/no_equal_operator_defined/metadata.json
 ---
-While building a remote relationship predicate TracksRemote - missing equality operator for source column AlbumId in data connector db (in subgraph default) which is mapped to field AlbumId in type Album (in subgraph default)
+Error: Error in model permission for model 'Albums (in subgraph default)' for role 'user': in select filter permissions: While building a remote relationship predicate TracksRemote - missing equality operator for source column AlbumId in data connector db (in subgraph default) which is mapped to field AlbumId in type Album (in subgraph default)

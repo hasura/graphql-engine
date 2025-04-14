@@ -46,7 +46,7 @@ impl schemars::JsonSchema for CompatibilityDate {
         "CompatibilityDate".to_string()
     }
 
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         let any_date_schema = schemars::schema::SchemaObject {
             metadata: Some(Box::new(schemars::schema::Metadata {
                 description: Some("Any date".to_owned()),
@@ -167,9 +167,15 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
             Some(new_compatibility_date(2025, 2, 20))
         }
         Flag::RequireValidCommandOutputType => Some(new_compatibility_date(2025, 2, 27)),
-        Flag::ValidateObjectTypeDataConnectorTypeMappingFieldTypes => {
-            //TODO: Should be set on next release
-            None
+        Flag::ValidateObjectTypeDataConnectorTypeMappingFieldTypes
+        | Flag::ValidateArgumentMappingTypes
+        | Flag::DisallowInvalidHeadersInAuthConfig
+        | Flag::RequireJwtAudienceValidationIfAudClaimPresent => {
+            Some(new_compatibility_date(2025, 3, 11))
         }
+        Flag::DisallowProcedureCommandRelationships => Some(new_compatibility_date(2025, 3, 12)),
+        Flag::DisallowDuplicateModelPermissionsRoles => Some(new_compatibility_date(2025, 3, 21)),
+        Flag::ValidateScalarBooleanExpressionOperators => Some(new_compatibility_date(2025, 3, 26)),
+        Flag::ValidateNonNullGraphqlVariables => Some(new_compatibility_date(2025, 4, 3)),
     }
 }

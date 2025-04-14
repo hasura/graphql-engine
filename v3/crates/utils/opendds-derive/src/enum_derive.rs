@@ -120,7 +120,7 @@ fn impl_read_tag_value_str(
             format!("object with only one of the following properties: {variants_list}");
         quote! {
             let mut __object_map_iter = __object_map.into_iter();
-            let (__tag_value_string, __inner) = __object_map_iter.next().ok_or_else(||
+            let (__tag_value_string, __tag_value) = __object_map_iter.next().ok_or_else(||
                 open_dds::traits::OpenDdDeserializeError  {
                     error: serde::de::Error::invalid_type(
                         serde::de::Unexpected::Other("found empty object"),
@@ -139,18 +139,6 @@ fn impl_read_tag_value_str(
                 });
             }
             let __tag_value_str = __tag_value_string.as_str();
-            let mut __object_map = match __inner {
-                serde_json::Value::Object(map) => map,
-                _ => {
-                    return Err(open_dds::traits::OpenDdDeserializeError  {
-                        error: serde::de::Error::invalid_type(
-                            serde::de::Unexpected::Other("not an object"),
-                            &"object",
-                        ),
-                        path: jsonpath::JSONPath::new_key(__tag_value_str),
-                    })
-                }
-            };
         }
     }
 }
@@ -237,7 +225,10 @@ fn generate_enum_variants(
         let variant_name_string = variant.renamed_variant.to_string();
         let variant_name_str = variant_name_string.as_str();
         let parsed_variant = match tag_type {
-            EnumTagType::Internal {..} | EnumTagType::External => quote! {
+            EnumTagType::External => quote! {
+                open_dds::traits::deserialize_key(#deserialize_from, path, __tag_value_string)?
+            },
+            EnumTagType::Internal {..} => quote! {
                 open_dds::traits::OpenDd::deserialize(#deserialize_from, path)?
             },
             EnumTagType::Adjacent {tag:_, content} => quote! {
@@ -268,7 +259,10 @@ fn generate_enum_variants(
 
 fn gen_deserialize_from(tag_type: &EnumTagType) -> proc_macro2::TokenStream {
     match tag_type {
-        EnumTagType::Internal { .. } | EnumTagType::External { .. } => quote! {
+        EnumTagType::External { .. } => quote! {
+            __tag_value
+        },
+        EnumTagType::Internal { .. } => quote! {
             serde_json::Value::Object(__object_map)
         },
         EnumTagType::Adjacent { tag: _, content } => quote! {
@@ -309,7 +303,7 @@ fn impl_json_schema_untagged(variants: &[EnumVariant<'_>]) -> proc_macro2::Token
             }
             let ty = &variant.field.ty.clone();
             Some(quote! {
-                open_dds::traits::gen_subschema_for::<#ty>(gen)
+                open_dds::traits::gen_subschema_for::<#ty>(generator)
             })
         })
         .collect::<Vec<_>>();
@@ -337,7 +331,7 @@ fn impl_json_schema_tagged(
                     let name = &variant.renamed_variant;
                     let ty = &variant.field.ty.clone();
                     Some(quote! {{
-                        let mut schema = <#ty as open_dds::traits::OpenDd>::json_schema(gen);
+                        let mut schema = <#ty as open_dds::traits::OpenDd>::json_schema(generator);
 
                         fn add_tag_to_json_schema(schema_internal: &mut schemars::schema::Schema) {
                             if let schemars::schema::Schema::Object(schemars::schema::SchemaObject {
@@ -414,7 +408,7 @@ fn impl_json_schema_tagged(
                     });
                     let ty = &variant.field.ty.clone();
                     let content_schema = quote! {
-                        open_dds::traits::gen_subschema_for::<#ty>(gen)
+                        open_dds::traits::gen_subschema_for::<#ty>(generator)
                     };
                     let metadata_expr = build_variant_json_schema_metadata(
                         variant.doc_description.as_ref(),
@@ -461,7 +455,7 @@ fn impl_json_schema_tagged(
                     let name = &variant.renamed_variant;
                     let ty = &variant.field.ty.clone();
                     let content_schema = quote! {
-                        open_dds::traits::gen_subschema_for::<#ty>(gen)
+                        open_dds::traits::gen_subschema_for::<#ty>(generator)
                     };
                     let metadata_expr = build_variant_json_schema_metadata(
                         variant.doc_description.as_ref(),

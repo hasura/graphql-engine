@@ -5,6 +5,7 @@ use schemars::schema::{
 use schemars::schema::{InstanceType, SingleOrVec};
 use serde_json;
 use smol_str::SmolStr;
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
 
@@ -26,7 +27,7 @@ pub trait OpenDd: Sized {
         path: jsonpath::JSONPath,
     ) -> Result<Self, OpenDdDeserializeError>;
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema;
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema;
 
     fn _schema_name() -> String;
 
@@ -64,6 +65,7 @@ impl_OpenDd_default_for!(i32);
 impl_OpenDd_default_for!(u32);
 impl_OpenDd_default_for!(u64);
 impl_OpenDd_default_for!(());
+impl_OpenDd_default_for!(serde_json::Value);
 
 impl<T: OpenDd> OpenDd for Box<T> {
     fn deserialize(
@@ -73,12 +75,38 @@ impl<T: OpenDd> OpenDd for Box<T> {
         T::deserialize(json, path).map(Box::new)
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        T::json_schema(gen)
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        T::json_schema(generator)
     }
 
     fn _schema_name() -> String {
         T::_schema_name()
+    }
+
+    fn _schema_is_referenceable() -> bool {
+        T::_schema_is_referenceable()
+    }
+}
+
+impl<T> OpenDd for Cow<'static, T>
+where
+    T: ToOwned + ?Sized,
+    T::Owned: OpenDd,
+    // Concrete example: T is str and T::Owned is String - so we deserialize a String and store it as an Owned str in the Cow
+{
+    fn deserialize(
+        json: serde_json::Value,
+        path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError> {
+        <<T as ToOwned>::Owned>::deserialize(json, path).map(Cow::Owned)
+    }
+
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        String::json_schema(generator)
+    }
+
+    fn _schema_name() -> String {
+        String::_schema_name()
     }
 }
 
@@ -93,12 +121,12 @@ impl<T: OpenDd> OpenDd for Option<T> {
         }
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut schema = gen_subschema_for::<T>(gen);
-        if gen.settings().option_add_null_type {
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut schema = gen_subschema_for::<T>(generator);
+        if generator.settings().option_add_null_type {
             schema = match schema {
                 Schema::Bool(true) => Schema::Bool(true),
-                Schema::Bool(false) => <()>::json_schema(gen),
+                Schema::Bool(false) => <()>::json_schema(generator),
                 Schema::Object(SchemaObject {
                     instance_type: Some(ref mut instance_type),
                     ..
@@ -109,7 +137,7 @@ impl<T: OpenDd> OpenDd for Option<T> {
                 schema => SchemaObject {
                     // TODO technically the schema already accepts null, so this may be unnecessary
                     subschemas: Some(Box::new(SubschemaValidation {
-                        any_of: Some(vec![schema, <()>::json_schema(gen)]),
+                        any_of: Some(vec![schema, <()>::json_schema(generator)]),
                         ..Default::default()
                     })),
                     ..Default::default()
@@ -117,7 +145,7 @@ impl<T: OpenDd> OpenDd for Option<T> {
                 .into(),
             }
         }
-        if gen.settings().option_nullable {
+        if generator.settings().option_nullable {
             let mut schema_obj = schema.into_object();
             schema_obj
                 .extensions
@@ -153,7 +181,7 @@ map_impl!(BTreeMap<K: Ord, V>);
 
 /// Generate subschema for an OpenDd object
 pub fn gen_subschema_for<T: OpenDd>(
-    gen: &mut schemars::gen::SchemaGenerator,
+    generator: &mut schemars::r#gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
     struct Wrapper<T>(T);
 
@@ -166,17 +194,17 @@ pub fn gen_subschema_for<T: OpenDd>(
             U::_schema_name()
         }
 
-        fn json_schema(i_gen: &mut schemars::gen::SchemaGenerator) -> Schema {
+        fn json_schema(i_gen: &mut schemars::r#gen::SchemaGenerator) -> Schema {
             U::json_schema(i_gen)
         }
     }
 
-    gen.subschema_for::<Wrapper<T>>()
+    generator.subschema_for::<Wrapper<T>>()
 }
 
 /// Generate Root Schema for an OpenDd object
 pub fn gen_root_schema_for<T: OpenDd>(
-    gen: &mut schemars::gen::SchemaGenerator,
+    generator: &mut schemars::r#gen::SchemaGenerator,
 ) -> schemars::schema::RootSchema {
     struct Wrapper<T>(T);
 
@@ -189,15 +217,15 @@ pub fn gen_root_schema_for<T: OpenDd>(
             U::_schema_name()
         }
 
-        fn json_schema(i_gen: &mut schemars::gen::SchemaGenerator) -> Schema {
+        fn json_schema(i_gen: &mut schemars::r#gen::SchemaGenerator) -> Schema {
             U::json_schema(i_gen)
         }
     }
 
-    let mut root_schema = gen.root_schema_for::<Wrapper<T>>();
+    let mut root_schema = generator.root_schema_for::<Wrapper<T>>();
     // Generate `$id` metadata field for subschemas
     for (schema_name, schema) in &mut root_schema.definitions {
-        if let schemars::schema::Schema::Object(ref mut object) = schema {
+        if let schemars::schema::Schema::Object(object) = schema {
             // Don't set $id for references, the $id should be set on the referenced schema
             if !object.is_ref() {
                 let metadata = object
@@ -628,8 +656,8 @@ mod tests {
             my_int: i32,
         }
 
-        let mut gen = schemars::gen::SchemaGenerator::default();
-        let root_schema = traits::gen_root_schema_for::<MyStruct>(&mut gen);
+        let mut generator = schemars::r#gen::SchemaGenerator::default();
+        let root_schema = traits::gen_root_schema_for::<MyStruct>(&mut generator);
         let exp = serde_json::json!(
             {
                 "$schema": "http://json-schema.org/draft-07/schema#",
@@ -720,8 +748,8 @@ mod tests {
             Horse(Horse),
         }
 
-        let mut gen = schemars::gen::SchemaGenerator::default();
-        let root_schema = traits::gen_root_schema_for::<Animal>(&mut gen);
+        let mut generator = schemars::r#gen::SchemaGenerator::default();
+        let root_schema = traits::gen_root_schema_for::<Animal>(&mut generator);
         let exp = serde_json::json!(
             {
                 "$schema": "http://json-schema.org/draft-07/schema#",
@@ -923,9 +951,27 @@ mod tests {
     }
 
     #[test]
+    fn test_externally_tagged_nested_error() {
+        let json = serde_json::json!({
+            "variantTwo": {
+                "prop1": "wrong type",
+                "prop2": "testing"
+            }
+        });
+        let err =
+            <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
+                .unwrap_err();
+        assert_eq!(
+            "invalid type: string \"wrong type\", expected a boolean".to_string(),
+            err.error.to_string()
+        );
+        assert_eq!("$.variantTwo.prop1", err.path.to_string());
+    }
+
+    #[test]
     fn test_externally_tagged_enum_json_schema() {
-        let mut gen = schemars::gen::SchemaGenerator::default();
-        let root_schema = traits::gen_root_schema_for::<ExternallyTaggedEnum>(&mut gen);
+        let mut generator = schemars::r#gen::SchemaGenerator::default();
+        let root_schema = traits::gen_root_schema_for::<ExternallyTaggedEnum>(&mut generator);
         let exp = serde_json::json!(
             {
                 "$schema": "http://json-schema.org/draft-07/schema#",

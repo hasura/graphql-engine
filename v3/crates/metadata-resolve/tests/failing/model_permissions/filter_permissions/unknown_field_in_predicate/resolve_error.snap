@@ -1,0 +1,16 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/model_permissions/filter_permissions/unknown_field_in_predicate/metadata.json
+---
+Error: Error in model permission for model 'Albums (in subgraph subgraphs)' for role 'user': in select filter permissions: unknown field 'UnknownField' used in predicate for type 'Album (in subgraph subgraphs)'
+    ╭─[ <unknown>:57:32 ]
+    │
+ 53 │                 "role": "user",
+    │                         ───┬──  
+    │                            ╰──── Error in model permission for the role 'user' on the model 'Albums'
+    │ 
+ 57 │                       "field": "UnknownField",
+    │                                ───────┬──────  
+    │                                       ╰──────── This field is not found in the type 'Album (in subgraph subgraphs)'
+────╯

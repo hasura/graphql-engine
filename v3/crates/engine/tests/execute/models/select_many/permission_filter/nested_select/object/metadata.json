@@ -1,0 +1,43 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "institutions",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": {
+                    "nestedField": {
+                      "fieldName": "location",
+                      "predicate": {
+                        "nestedField": {
+                          "fieldName": "country",
+                          "predicate": {
+                            "fieldComparison": {
+                              "field": "name",
+                              "operator": "_eq",
+                              "value": {
+                                "literal": "UK"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

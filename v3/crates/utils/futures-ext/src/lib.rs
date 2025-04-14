@@ -19,7 +19,7 @@ where
 #[cfg(test)]
 mod execute_utils_tests {
     use std::time::SystemTime;
-    use tokio::time::{sleep, Duration};
+    use tokio::time::{Duration, sleep};
 
     use super::*;
 

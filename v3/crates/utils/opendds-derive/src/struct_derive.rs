@@ -27,7 +27,7 @@ pub fn impl_opendd_struct(name: &syn::Ident, data: &StructData<'_>) -> TraitImpl
 fn impl_json_schema_newtype(field: &syn::Field) -> proc_macro2::TokenStream {
     let ty = &field.ty.clone();
     quote! {
-        open_dds::traits::gen_subschema_for::<#ty>(gen)
+        open_dds::traits::gen_subschema_for::<#ty>(generator)
     }
 }
 
@@ -199,7 +199,7 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
 
         let field_schema_exp = quote! {
             {
-                let schema = open_dds::traits::gen_subschema_for::<#ty>(gen);
+                let schema = open_dds::traits::gen_subschema_for::<#ty>(generator);
                 #schema_with_metadata
             }
         };

@@ -1,9 +1,11 @@
+pub mod relational;
+
 use std::{
     cmp::{Ord, Ordering},
     collections::{BTreeMap, HashSet},
 };
 
-use axum::{http::StatusCode, Json};
+use axum::{Json, http::StatusCode};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use ndc_models;

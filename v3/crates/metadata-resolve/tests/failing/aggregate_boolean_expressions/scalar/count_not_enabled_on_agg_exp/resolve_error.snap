@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/scalar/count_not_enabled_on_agg_exp/metadata.json
 ---
-error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': the count aggregation cannot be compared to because it is not enabled on the aggregate expression 'String_agg_exp (in subgraph default)'
+Error: error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': the count aggregation cannot be compared to because it is not enabled on the aggregate expression 'String_agg_exp (in subgraph default)'

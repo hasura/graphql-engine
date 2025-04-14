@@ -3,12 +3,12 @@ use std::collections::BTreeMap;
 use super::types::{GraphQlParseError, GraphQlValidationError};
 use crate::query_usage;
 use gql::normalized_ast::Operation;
-use graphql_schema::{GDSRoleNamespaceGetter, GDS};
+use graphql_schema::{GDS, GDSRoleNamespaceGetter};
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use std::sync::Arc;
-use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
+use tracing_util::{AttributeVisibility, SpanVisibility, set_attribute_on_active_span};
 
 /// Parses a raw GraphQL request into a GQL query AST
 pub fn parse_query(
@@ -39,6 +39,7 @@ pub fn normalize_request<'s>(
     session: &Session,
     query: gql::ast::executable::ExecutableDocument,
     raw_request: &gql::http::RawRequest,
+    runtime_flags: &metadata_resolve::flags::RuntimeFlags,
 ) -> Result<Operation<'s, GDS>, gql::validation::Error> {
     let tracer = tracing_util::global_tracer();
     let normalized_request = tracer
@@ -64,12 +65,21 @@ pub fn normalize_request<'s>(
                         .as_ref()
                         .map_or_else(BTreeMap::default, Clone::clone),
                 };
+                let validate_non_null_graphql_variables = if runtime_flags.contains(
+                    metadata_resolve::flags::ResolvedRuntimeFlag::ValidateNonNullGraphqlVariables,
+                ) {
+                    gql::validation::NonNullGraphqlVariablesValidation::Validate
+                } else {
+                    gql::validation::NonNullGraphqlVariablesValidation::DoNotValidate
+                };
+
                 gql::validation::normalize_request(
                     &GDSRoleNamespaceGetter {
                         scope: session.role.clone(),
                     },
                     schema,
                     &request,
+                    validate_non_null_graphql_variables,
                 )
                 .map_err(GraphQlValidationError)
             },
@@ -80,7 +90,6 @@ pub fn normalize_request<'s>(
 
 /// Generate IR for the request
 pub fn build_ir<'n, 's>(
-    request_pipeline: graphql_ir::GraphqlRequestPipeline,
     schema: &'s gql::schema::Schema<GDS>,
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
@@ -94,7 +103,6 @@ pub fn build_ir<'n, 's>(
         SpanVisibility::Internal,
         || {
             generate_ir(
-                request_pipeline,
                 schema,
                 metadata,
                 session,
@@ -113,7 +121,7 @@ pub fn build_request_plan<'n, 's, 'ir>(
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-) -> Result<graphql_ir::RequestPlan<'n, 's, 'ir>, graphql_ir::PlanError> {
+) -> Result<graphql_ir::RequestPlan<'n, 's, 'ir>, graphql_ir::GraphqlIrPlanError> {
     let tracer = tracing_util::global_tracer();
     let plan = tracer.in_span(
         "plan",
@@ -132,7 +140,6 @@ pub fn build_request_plan<'n, 's, 'ir>(
 }
 
 pub fn generate_ir<'n, 's>(
-    request_pipeline: graphql_ir::GraphqlRequestPipeline,
     schema: &'s gql::schema::Schema<GDS>,
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
@@ -142,7 +149,6 @@ pub fn generate_ir<'n, 's>(
     match &normalized_request.ty {
         ast::OperationType::Query => {
             let query_ir = graphql_ir::generate_query_ir(
-                request_pipeline,
                 schema,
                 metadata,
                 session,
@@ -153,7 +159,6 @@ pub fn generate_ir<'n, 's>(
         }
         ast::OperationType::Mutation => {
             let mutation_ir = graphql_ir::generate_mutation_ir(
-                request_pipeline,
                 &normalized_request.selection_set,
                 metadata,
                 session,
@@ -163,7 +168,6 @@ pub fn generate_ir<'n, 's>(
         }
         ast::OperationType::Subscription => {
             let (alias, field) = graphql_ir::generate_subscription_ir(
-                request_pipeline,
                 session,
                 metadata,
                 request_headers,

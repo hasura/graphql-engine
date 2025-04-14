@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/commands/procedures/duplicate_command_name/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-Cannot add the command not_hello (in subgraph default) to GraphQL schema: Cannot add query root field hello as it already in use
+Error: Cannot add the command not_hello (in subgraph default) to GraphQL schema: Cannot add query root field hello as it already in use

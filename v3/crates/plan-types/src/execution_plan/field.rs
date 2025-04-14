@@ -19,7 +19,7 @@ pub enum Field {
     },
     Relationship {
         /// The relationship query
-        query_node: Box<query::QueryNodeNew>,
+        query_node: Box<query::QueryNode>,
         /// The name of the relationship to follow for the subquery
         relationship: NdcRelationshipName,
         /// Values to be provided to any collection arguments

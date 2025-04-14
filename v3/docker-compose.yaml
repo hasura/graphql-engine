@@ -21,7 +21,7 @@ services:
     extra_hosts:
       - local.hasura.dev=${LOCALHOST_GATEWAY:-host-gateway}
     volumes:
-      - ./static/auth/auth_config.json:/app/auth_config.json
+      - ./static/auth/auth_config_v3.json:/app/auth_config.json
       - ./static/metadata.json:/app/metadata.json
       - ./crates/open-dds/examples/reference.json:/app/crates/open-dds/examples/reference.json
 
@@ -64,6 +64,9 @@ services:
   auth_hook:
     build:
       dockerfile: dev-auth-webhook.Dockerfile
+    # this tag will only be found on images built in CI,
+    # otherwise we build from Dockerfile
+    image: build.internal/dev-auth-webhook-x86_64-linux:ci
     environment:
       OTLP_ENDPOINT: "http://jaeger:4317"
       RUST_LOG: debug
@@ -73,6 +76,7 @@ services:
       jaeger:
         condition: service_started
 
+  # browse traces at: http://localhost:16686/search
   jaeger:
     image: jaegertracing/all-in-one:1.55
     restart: always
@@ -88,6 +92,7 @@ services:
       - 4317:4317 # OTLP gRPC
       - 4318:4318 # OTLP HTTP
       - 9411:9411
+      - 16686:16686
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
       COLLECTOR_ZIPKIN_HOST_PORT: "9411"
@@ -135,8 +140,9 @@ services:
   custom_connector:
     build:
       dockerfile: custom-connector.Dockerfile
-    entrypoint:
-      - ./bin/custom-connector
+    # this tag will only be found on images built in CI
+    # otherwise we build from Dockerfile
+    image: build.internal/custom-connector-x86_64-linux:ci
     ports:
       - "8102:8102"
     environment:
@@ -152,8 +158,9 @@ services:
   custom_connector_no_relationships:
     build:
       dockerfile: custom-connector.Dockerfile
-    entrypoint:
-      - ./bin/custom-connector
+    # this tag will only be found on images built in CI
+    # otherwise we build from Dockerfile
+    image: build.internal/custom-connector-x86_64-linux:ci
     ports:
       - "8103:8102"
     environment:

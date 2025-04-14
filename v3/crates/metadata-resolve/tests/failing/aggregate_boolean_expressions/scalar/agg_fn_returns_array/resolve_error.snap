@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/scalar/agg_fn_returns_array/metadata.json
 ---
-error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': the aggregation function '_crazy' returns an array type ([String]). Array types are not supported in aggregate comparisons
+Error: error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': the aggregation function '_crazy' returns an array type ([String]). Array types are not supported in aggregate comparisons

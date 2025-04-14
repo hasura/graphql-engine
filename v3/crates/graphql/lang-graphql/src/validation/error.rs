@@ -40,7 +40,9 @@ pub enum Error {
     UnknownType(ast::TypeName),
     #[error("an internal error occured during validation: type lookup failed for {type_name}")]
     InternalTypeNotFound { type_name: ast::TypeName },
-    #[error("an internal error occured during validation: field {field_name} lookup failed for sub type '{sub_type_name}' of type '{type_name}'")]
+    #[error(
+        "an internal error occured during validation: field {field_name} lookup failed for sub type '{sub_type_name}' of type '{type_name}'"
+    )]
     InternalNoFieldOnSubtype {
         type_name: ast::TypeName,
         sub_type_name: ast::TypeName,
@@ -54,7 +56,9 @@ pub enum Error {
         field1: ast::Name,
         field2: ast::Name,
     },
-    #[error("fields of different type {type1} and {type2} cannot be merged under the same alias: {alias}")]
+    #[error(
+        "fields of different type {type1} and {type2} cannot be merged under the same alias: {alias}"
+    )]
     FieldsConflictDifferingTypes {
         alias: ast::Alias,
         type1: ast::Type,
@@ -100,7 +104,9 @@ pub enum Error {
         variable_name: ast::Name,
         type_name: ast::TypeName,
     },
-    #[error("an internal error occured: expected {type_name} to be an input type but is of {actual_type}")]
+    #[error(
+        "an internal error occured: expected {type_name} to be an input type but is of {actual_type}"
+    )]
     InternalNotInputType {
         type_name: ast::TypeName,
         actual_type: &'static str,
@@ -109,7 +115,9 @@ pub enum Error {
     VariableNotDefined { variable_name: ast::Name },
     #[error("required variable {variable_name} not provided")]
     RequiredVariableNotProvided { variable_name: ast::Name },
-    #[error("the variable {variable_name} of type {variable_type} cannot be used at a location of type {location_type}")]
+    #[error(
+        "the variable {variable_name} of type {variable_type} cannot be used at a location of type {location_type}"
+    )]
     VariableSpreadNotAllowed {
         variable_name: ast::Name,
         variable_type: ast::Type,
@@ -117,6 +125,20 @@ pub enum Error {
     },
     #[error("the following variable is defined more than once: {variable_name}")]
     DuplicateVariableDeclarations { variable_name: ast::Name },
+    #[error(
+        "null value provided for non-nullable variable {variable_name} of type {variable_type}"
+    )]
+    NullValueForNonNullVariable {
+        variable_name: ast::Name,
+        variable_type: ast::Type,
+    },
+    #[error(
+        "expected a value for non-nullable variable {variable_name} of type {variable_type} but no value was provided"
+    )]
+    ExpectingValueForNonNullableVariable {
+        variable_name: ast::Name,
+        variable_type: ast::Type,
+    },
     #[error("the following fragment is defined more than once: {fragment_name}")]
     DuplicateFragmentDefinitions { fragment_name: ast::Name },
     #[error("the following operation is defined more than once: {operation_name}")]
@@ -145,7 +167,9 @@ pub enum Error {
         field_name: ast::Name,
         argument_name: ast::Name,
     },
-    #[error("argument {argument_name} on field {field_name} of type {type_name} is defined more than once")]
+    #[error(
+        "argument {argument_name} on field {field_name} of type {type_name} is defined more than once"
+    )]
     DuplicateArguments {
         type_name: ast::TypeName,
         field_name: ast::Name,

@@ -132,6 +132,7 @@ input_file: crates/metadata-resolve/tests/passing/scalar_types/scalar_extraction
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -235,6 +236,9 @@ input_file: crates/metadata-resolve/tests/passing/scalar_types/scalar_extraction
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

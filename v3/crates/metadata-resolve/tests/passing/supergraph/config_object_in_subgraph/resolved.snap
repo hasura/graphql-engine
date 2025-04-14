@@ -58,6 +58,9 @@ input_file: crates/metadata-resolve/tests/passing/supergraph/config_object_in_su
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

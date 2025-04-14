@@ -16,8 +16,8 @@ use super::{
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(
-        "request to connector failed with status code {}: {0}",
-        .0.status().map_or_else(|| "N/A".to_string(), |s| s.to_string())
+        "request to connector failed with status code {status_code}: {0}",
+        status_code = .0.status().map_or_else(|| "N/A".to_string(), |s| s.to_string()) 
     )]
     Reqwest(#[from] reqwest::Error),
 
@@ -50,7 +50,7 @@ impl tracing_util::TraceableError for Error {
 }
 
 #[derive(Debug, Clone, Error)]
-#[error("connector returned status code {status} with message: {}", error_response.message())]
+#[error("connector returned status code {status} with message: {}, details: {}", error_response.message(), error_response.details())]
 pub struct ConnectorError {
     pub status: reqwest::StatusCode,
     pub error_response: NdcErrorResponse,
@@ -299,6 +299,40 @@ pub async fn query_post(
                             Ok(NdcQueryResponse::V02(response))
                         }
                     }
+                })
+            },
+        )
+        .await
+}
+
+/// POST on undocumented /query/rel endpoint
+pub async fn query_relational_post(
+    configuration: Configuration<'_>,
+    request: &ndc_models::RelationalQuery,
+) -> Result<ndc_models::RelationalQueryResponse, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "query_rel_post",
+            "Post relation for query",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let url = append_path(configuration.base_path, &["query", "relational"])?;
+                    let response_size_limit = configuration.response_size_limit;
+
+                    let request = construct_request(
+                        configuration,
+                        NdcVersion::V02,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+                    let response =
+                        execute_request(request, response_size_limit, NdcErrorResponse::V02)
+                            .await?;
+                    Ok(response)
                 })
             },
         )

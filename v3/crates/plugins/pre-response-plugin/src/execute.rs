@@ -10,7 +10,7 @@ use lang_graphql::{ast::common as ast, http::RawRequest};
 use open_dds::plugins::LifecyclePreResponsePluginHook;
 use reqwest::header::HeaderValue;
 use serde::Serialize;
-use tracing_util::{set_attribute_on_active_span, ErrorVisibility, SpanVisibility, TraceableError};
+use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError, set_attribute_on_active_span};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

@@ -1,0 +1,19 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/models/two_missing_object_types/metadata.json
+---
+Error: The data type 'dogs_object (in subgraph default)' for model 'dogs (in subgraph default)' has not been defined
+    ╭─[ <unknown>:12:27 ]
+    │
+ 12 │             "objectType": "dogs_object",
+    │                           ──────┬──────  
+    │                                 ╰──────── Model 'dogs' uses data type 'dogs_object', but it cannot be found in this subgraph
+────╯
+Error: The data type 'cats_object (in subgraph default)' for model 'cats (in subgraph default)' has not been defined
+    ╭─[ <unknown>:21:27 ]
+    │
+ 21 │             "objectType": "cats_object",
+    │                           ──────┬──────  
+    │                                 ╰──────── Model 'cats' uses data type 'cats_object', but it cannot be found in this subgraph
+────╯

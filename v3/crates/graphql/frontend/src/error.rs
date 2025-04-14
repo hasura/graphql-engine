@@ -1,3 +1,4 @@
+use axum::response::IntoResponse;
 use engine_types::ExposeInternalErrors;
 use gql::http::GraphQLError;
 use lang_graphql as gql;
@@ -17,7 +18,7 @@ pub enum RequestError {
     IRConversionError(#[from] graphql_ir::Error),
 
     #[error("{0}")]
-    GraphQlPlanError(#[from] graphql_ir::PlanError),
+    GraphQlPlanError(#[from] graphql_ir::GraphqlIrPlanError),
 
     #[error("explain error: {0}")]
     ExplainError(String),
@@ -56,4 +57,18 @@ impl TraceableError for RequestError {
             }
         }
     }
+}
+
+/// Utility to build any server state with middleware error converter for GraphQL
+pub fn build_state_with_middleware_error_converter<S>(
+    state: S,
+) -> engine_types::WithMiddlewareErrorConverter<S> {
+    engine_types::WithMiddlewareErrorConverter::new(state, |error| {
+        gql::http::Response::error_message_with_status(
+            error.status,
+            error.message,
+            error.is_internal,
+        )
+        .into_response()
+    })
 }

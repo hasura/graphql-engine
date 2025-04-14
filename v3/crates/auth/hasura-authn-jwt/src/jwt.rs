@@ -2,21 +2,20 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use axum::http::{HeaderMap, HeaderValue};
-use axum::response::IntoResponse;
 use cookie::{self, Cookie};
 use hasura_authn_core::{JsonSessionVariableValue, Role};
 use jsonptr::Pointer;
-use jsonwebtoken::{self as jwt, decode, DecodingKey, Validation};
+use jsonwebtoken::{self as jwt, DecodingKey, Validation, decode};
 use jwt::decode_header;
 use open_dds::session_variables::SessionVariableName;
-use reqwest::header::{AUTHORIZATION, COOKIE};
 use reqwest::StatusCode;
-use schemars::gen::SchemaGenerator;
+use reqwest::header::{AUTHORIZATION, COOKIE};
+use schemars::r#gen::SchemaGenerator;
 use schemars::schema::{Schema, SchemaObject};
 
 use schemars::JsonSchema;
-use serde::{de::Error as SerdeDeError, Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::{json, Value};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error as SerdeDeError};
+use serde_json::{Value, json};
 use std::collections::HashSet;
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError};
 use url::Url;
@@ -120,10 +119,8 @@ impl Error {
             | Error::ClaimMustBeAString { claim_name: _ } => StatusCode::BAD_REQUEST,
         }
     }
-}
 
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
+    pub fn into_middleware_error(self) -> engine_types::MiddlewareError {
         let is_internal = match self {
             Error::Internal(_) => true,
             Error::ErrorDecodingAuthorizationHeader(_)
@@ -146,12 +143,11 @@ impl IntoResponse for Error {
             | Error::MissingCookieValue { cookie_name: _ }
             | Error::ClaimMustBeAString { claim_name: _ } => false,
         };
-        lang_graphql::http::Response::error_message_with_status(
-            self.to_status_code(),
-            self.to_string(),
+        engine_types::MiddlewareError {
+            status: self.to_status_code(),
+            message: self.to_string(),
             is_internal,
-        )
-        .into_response()
+        }
     }
 }
 
@@ -233,8 +229,8 @@ pub enum JWTClaimsFormat {
     StringifiedJson,
 }
 
-fn json_pointer_schema(gen: &mut SchemaGenerator) -> Schema {
-    let mut schema: SchemaObject = <String>::json_schema(gen).into();
+fn json_pointer_schema(generator: &mut SchemaGenerator) -> Schema {
+    let mut schema: SchemaObject = <String>::json_schema(generator).into();
     schema.format = Some("JSON pointer".to_string());
     schema.into()
 }
@@ -549,10 +545,23 @@ fn get_claims_mapping_entry_value<T: for<'de> serde::Deserialize<'de> + Clone>(
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AudienceValidationMode {
+    /// If the JWT contains an aud claim, it must be validated against the audience configured in the AuthConfig.
+    /// If one is not configured, the JWT will be rejected.
+    Required,
+
+    /// If the JWT contains an aud claim, it will be validated against the audience configured in the AuthConfig,
+    /// but only if one is configured. This is a serious security issue, but this behaviour is retained for
+    /// backwards compatibility and is disabled via the OpenDDFlag `RequireJwtAudienceValidationIfAudClaimPresent`
+    Optional,
+}
+
 pub(crate) async fn decode_and_parse_hasura_claims(
     http_client: &reqwest::Client,
     jwt_config: &JWTConfig,
     jwt: String,
+    audience_validation_mode: AudienceValidationMode,
 ) -> Result<HasuraClaims, Error> {
     let (acceptable_algorithms, decoding_key) = match &jwt_config.key {
         JWTKey::Fixed(conf) => (vec![conf.algorithm], get_decoding_key(conf)?),
@@ -563,6 +572,10 @@ pub(crate) async fn decode_and_parse_hasura_claims(
 
     let mut validation = Validation::default();
     validation.algorithms = acceptable_algorithms;
+    validation.validate_aud = match audience_validation_mode {
+        AudienceValidationMode::Required => true,
+        AudienceValidationMode::Optional => false,
+    };
 
     // Additional validations according to the `jwt_config`.
     if let Some(aud) = &jwt_config.audience {
@@ -733,7 +746,7 @@ mod tests {
 
     use jsonwebkey as jwk;
     use jwk::{Algorithm::ES256, JsonWebKey};
-    use jwt::{encode, EncodingKey};
+    use jwt::{EncodingKey, encode};
     use openssl::pkey::PKey;
     use openssl::rsa::Rsa;
     use tokio;
@@ -904,8 +917,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -957,8 +975,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1022,8 +1045,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1096,8 +1124,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1169,8 +1202,13 @@ mod tests {
 
         let http_client = reqwest::Client::new();
 
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims).await?;
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await?;
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }
@@ -1310,9 +1348,13 @@ mod tests {
 
         let jwt_config: JWTConfig = serde_json::from_value(jwt_config_json)?;
 
-        let decoded_hasura_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, authorization_token_1)
-                .await?;
+        let decoded_hasura_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            authorization_token_1,
+            AudienceValidationMode::Required,
+        )
+        .await?;
 
         mock.assert();
 
@@ -1332,10 +1374,15 @@ mod tests {
         )?;
 
         assert_eq!(
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, authorization_token_2)
-                .await
-                .unwrap_err()
-                .to_string(),
+            decode_and_parse_hasura_claims(
+                &http_client,
+                &jwt_config,
+                authorization_token_2,
+                AudienceValidationMode::Required
+            )
+            .await
+            .unwrap_err()
+            .to_string(),
             "Internal Error - No matching JWK found for the given kid: random_kid_3"
         );
         Ok(())
@@ -1523,10 +1570,14 @@ mod tests {
         });
         let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
         let http_client = reqwest::Client::new();
-        let decoded_claims =
-            decode_and_parse_hasura_claims(&http_client, &jwt_config, encoded_claims)
-                .await
-                .unwrap();
+        let decoded_claims = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await
+        .unwrap();
         assert_eq!(hasura_claims, decoded_claims);
         Ok(())
     }

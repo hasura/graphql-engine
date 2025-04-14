@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/scalar/agg_exp_type_mismatch/metadata.json
 ---
-error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': the operand type 'String' does not match the operand type 'Int' from the aggregate expression 'Int_agg_exp (in subgraph default)'
+Error: error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': the operand type 'String' does not match the operand type 'Int' from the aggregate expression 'Int_agg_exp (in subgraph default)'

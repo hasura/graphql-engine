@@ -1,5 +1,5 @@
 # This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
-FROM rust:1.84.1
+FROM rust:1.85.0 AS chef
 
 WORKDIR /app
 
@@ -18,22 +18,54 @@ ENV PATH="$PATH:$CARGO_HOME/bin"
 ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
 # Building with build.rs requires the Git context to be available across volumes.
 ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+# This Dockerfile is only for local development, we don't need to stamp it with
+# a version
+ENV RELEASE_VERSION=dev
 
 # Install Rust tools.
 COPY rust-toolchain.toml .
 RUN rustup show
+RUN cargo install cargo-chef
 
-COPY Cargo.toml Cargo.lock .
+###
+# Plan recipe
+FROM chef AS planner
 
-RUN mkdir bin
+# Copy files
+COPY .cargo ./.cargo
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
 
-# Build the binaries and tests
-RUN --mount=type=cache,target=/app/.cargo/git --mount=type=cache,target=/app/.cargo/registry \
-    --mount=type=cache,target=./target \
-    --mount=type=bind,source=./crates,target=./crates \
-    set -ex; \
-    cargo build --bin custom-connector
+# Prepare the recipe
+RUN cargo chef prepare --recipe-path recipe.json
 
-# Copy the binaries out of the cache
-RUN --mount=type=cache,target=./target \
-    find target/debug -maxdepth 1 -type f -executable -exec cp '{}' bin \;
+###
+# Build recipe
+FROM chef AS builder
+
+COPY --from=planner /app/recipe.json recipe.json
+COPY --from=planner /app/.cargo/config.toml /app/.cargo/config.toml
+
+# Build dependencies - this is the caching Docker layer!
+RUN cargo chef cook --bin engine --recipe-path recipe.json
+
+# Copy files
+COPY .cargo ./.cargo
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+
+# Build the app in debug mode as build speed is more important
+RUN cargo build --bin custom-connector
+
+###
+# Ship the app in an image with `curl` and very little else
+FROM ubuntu:jammy
+
+# Install `curl` for health checks
+RUN set -ex; \
+    apt-get update; \
+    apt-get install --assume-yes curl
+
+# Install the custom-connector
+COPY --from=builder /app/target/debug/custom-connector /usr/local/bin
+ENTRYPOINT ["custom-connector"]

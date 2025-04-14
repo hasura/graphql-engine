@@ -1,0 +1,12 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/model_permissions/duplicate_model_permissions/metadata.json
+---
+Error: multiple model permissions defined for model: Albums (in subgraph subgraphs)
+    ╭─[ <unknown>:81:26 ]
+    │
+ 81 │             "modelName": "Albums",
+    │                          ────┬───  
+    │                              ╰───── A model permissions has already been defined for this model
+────╯

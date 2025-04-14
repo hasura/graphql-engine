@@ -17,9 +17,7 @@
 )]
 #[serde(rename_all = "snake_case")]
 pub enum UnstableFeature {
-    EnableNdcV02Support,
     EnableAggregationPredicates,
-    EnableOpenDdPipelineForGraphql,
 }
 
 pub fn resolve_unstable_features(
@@ -29,14 +27,8 @@ pub fn resolve_unstable_features(
 
     for unstable_feature in unstable_features {
         match unstable_feature {
-            UnstableFeature::EnableNdcV02Support => {
-                features.enable_ndc_v02_support = true;
-            }
             UnstableFeature::EnableAggregationPredicates => {
                 features.enable_aggregation_predicates = true;
-            }
-            UnstableFeature::EnableOpenDdPipelineForGraphql => {
-                // this does not currently affect metadata resolve behaviour
             }
         }
     }

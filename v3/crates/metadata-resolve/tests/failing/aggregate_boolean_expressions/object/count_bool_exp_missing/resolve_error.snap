@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/count_bool_exp_missing/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': could not find a scalar-operanded boolean expression type named 'Nope_bool_exp (in subgraph default)'
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': could not find a scalar-operanded boolean expression type named 'Nope_bool_exp (in subgraph default)'

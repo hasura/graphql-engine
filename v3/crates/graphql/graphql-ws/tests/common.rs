@@ -2,22 +2,20 @@ use axum::http::HeaderMap;
 use axum::{extract::State, response::IntoResponse, routing::get};
 use engine_types::{ExposeInternalErrors, HttpContext};
 use futures_util::{SinkExt, StreamExt};
-use graphql_ir::GraphqlRequestPipeline;
 use graphql_ws::Context;
 use graphql_ws::GRAPHQL_WS_PROTOCOL;
 use std::{net, path::PathBuf, sync::Arc};
 use tokio::{net::TcpStream, task::JoinHandle};
 use tokio_tungstenite::{
-    connect_async,
+    MaybeTlsStream, WebSocketStream, connect_async,
     tungstenite::{self, client::IntoClientRequest},
-    MaybeTlsStream, WebSocketStream,
 };
 
 #[allow(dead_code)]
 static METADATA_PATH: &str = "tests/static/metadata.json";
 
 #[allow(dead_code)]
-static AUTH_CONFIG_PATH: &str = "tests/static/auth_config_v2.json";
+static AUTH_CONFIG_PATH: &str = "tests/static/auth_config_v3.json";
 
 #[allow(dead_code)]
 pub(crate) struct ServerState<M> {
@@ -72,19 +70,21 @@ async fn start_websocket_server_inner(
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
 
-    // Auth Config
-    let auth_config_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(AUTH_CONFIG_PATH);
-    let raw_auth_config = std::fs::read_to_string(auth_config_path).unwrap();
-    let (auth_config, _auth_warnings) =
-        hasura_authn::resolve_auth_config(&raw_auth_config).unwrap();
-
     // Metadata
     let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(METADATA_PATH);
     let raw_metadata = std::fs::read_to_string(metadata_path).unwrap();
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata).unwrap();
+    let flags = metadata.get_flags().into_owned();
     let metadata_resolve_configuration = metadata_resolve::configuration::Configuration::default();
     let (resolved_metadata, _warnings) =
         metadata_resolve::resolve(metadata, &metadata_resolve_configuration).unwrap();
+
+    // Auth Config
+    let auth_config_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(AUTH_CONFIG_PATH);
+    let raw_auth_config = std::fs::read_to_string(auth_config_path).unwrap();
+    let auth_config = hasura_authn::parse_auth_config(&raw_auth_config).unwrap();
+    let (auth_config, _auth_warnings) =
+        hasura_authn::resolve_auth_config(auth_config, &flags).unwrap();
 
     let schema = graphql_schema::GDS {
         metadata: resolved_metadata.clone().into(),
@@ -97,21 +97,14 @@ async fn start_websocket_server_inner(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let plugin_configs = metadata_resolve::LifecyclePluginConfigs {
-        pre_parse_plugins: Vec::new(),
-        pre_response_plugins: Vec::new(),
-        pre_route_plugins: Vec::new(),
-    };
     let context = Context {
         connection_expiry: expiry,
         http_context,
         metadata: resolved_metadata.into(),
-        request_pipeline: GraphqlRequestPipeline::Old,
         expose_internal_errors: ExposeInternalErrors::Expose,
         project_id: None,
         schema: Arc::new(schema),
         auth_config: Arc::new(auth_config),
-        plugin_configs: Arc::new(plugin_configs),
         metrics: graphql_ws::NoOpWebSocketMetrics,
         handshake_headers: Arc::new(HeaderMap::new()), // Will be populated in "ws_handler"
     };

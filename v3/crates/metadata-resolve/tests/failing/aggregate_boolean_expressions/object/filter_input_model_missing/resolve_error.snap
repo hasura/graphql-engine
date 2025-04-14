@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/filter_input_model_missing/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the filter input model 'AlbumsNope (in subgraph default)' cannot be found
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the filter input model 'AlbumsNope (in subgraph default)' cannot be found

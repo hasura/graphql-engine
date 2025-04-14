@@ -1,10 +1,10 @@
 use hasura_authn_core::{SessionVariableName, SessionVariableValue, SessionVariables};
 use std::collections::BTreeMap;
 
-use super::arguments::{map_field_names_to_ndc_field_names, UnresolvedArgument};
+use super::arguments::{UnresolvedArgument, map_field_names_to_ndc_field_names};
+use crate::ArgumentPresetExecutionError;
 use crate::error::{InternalDeveloperError, InternalEngineError, InternalError};
 use crate::types::PlanError;
-use crate::ArgumentPresetExecutionError;
 use metadata_resolve::{
     ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference, TypeMapping, UnaryComparisonOperator,
@@ -29,21 +29,26 @@ pub fn process_model_predicate<'s>(
         metadata_resolve::ModelPredicate::UnaryFieldComparison {
             ndc_column,
             operator,
+            column_path,
             ..
         } => Ok(make_permission_unary_boolean_expression(
-            ndc_column, *operator,
+            ndc_column,
+            *operator,
+            column_path.iter().collect::<Vec<_>>().as_slice(),
         )),
         metadata_resolve::ModelPredicate::BinaryFieldComparison {
             ndc_column,
             argument_type,
             operator,
             value,
+            column_path,
             ..
         } => Ok(make_permission_binary_boolean_expression(
             ndc_column,
             argument_type,
-            operator,
+            &operator.data_connector_operator_name,
             value,
+            column_path.iter().collect::<Vec<_>>().as_slice(),
             session_variables,
             type_mappings,
             object_types,
@@ -96,6 +101,7 @@ pub fn process_model_predicate<'s>(
         metadata_resolve::ModelPredicate::Relationship {
             relationship_info,
             predicate,
+            column_path,
         } => {
             // Add the target model being used in the usage counts
             crate::model_tracking::count_model(&relationship_info.target_model_name, usage_counts);
@@ -112,7 +118,7 @@ pub fn process_model_predicate<'s>(
             // build and return relationshp comparison expression
             Ok(super::filter::build_relationship_comparison_expression(
                 type_mappings,
-                Vec::new(), // Field path is empty for now
+                column_path.clone(),
                 data_connector_link,
                 &relationship_info.relationship_name,
                 &relationship_info.relationship_type,
@@ -133,10 +139,13 @@ fn make_permission_binary_boolean_expression<'s>(
     argument_type: &QualifiedTypeReference,
     operator: &DataConnectorOperatorName,
     value_expression: &'s metadata_resolve::ValueExpression,
+    column_path: &[&DataConnectorColumnName],
     session_variables: &SessionVariables,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 ) -> Result<Expression<'s>, PlanError> {
+    let (name, field_path) = crate::filter::with_nesting_path(ndc_column, column_path);
+
     let ndc_expression_value = make_argument_from_value_expression(
         value_expression,
         argument_type,
@@ -146,10 +155,7 @@ fn make_permission_binary_boolean_expression<'s>(
     )?;
     Ok(Expression::LocalField(
         LocalFieldComparison::BinaryComparison {
-            column: ComparisonTarget::Column {
-                name: ndc_column.clone(),
-                field_path: vec![],
-            },
+            column: ComparisonTarget::Column { name, field_path },
             operator: operator.clone(),
             value: ComparisonValue::Scalar {
                 value: ndc_expression_value,
@@ -161,12 +167,12 @@ fn make_permission_binary_boolean_expression<'s>(
 fn make_permission_unary_boolean_expression<'s>(
     ndc_column: &DataConnectorColumnName,
     operator: UnaryComparisonOperator,
+    column_path: &[&DataConnectorColumnName],
 ) -> Expression<'s> {
+    let (name, field_path) = crate::filter::with_nesting_path(ndc_column, column_path);
+
     Expression::LocalField(LocalFieldComparison::UnaryComparison {
-        column: ComparisonTarget::Column {
-            name: ndc_column.clone(),
-            field_path: vec![],
-        },
+        column: ComparisonTarget::Column { name, field_path },
         operator,
     })
 }

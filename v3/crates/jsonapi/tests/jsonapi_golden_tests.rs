@@ -235,7 +235,6 @@ fn create_default_session() -> hasura_authn_core::Session {
 
 fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
     let unstable_features = metadata_resolve::configuration::UnstableFeatures {
-        enable_ndc_v02_support: false,
         enable_aggregation_predicates: false,
     };
 

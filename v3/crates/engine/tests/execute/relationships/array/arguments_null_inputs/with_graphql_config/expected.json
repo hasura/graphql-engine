@@ -1,0 +1,110 @@
+[
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "first_name": "Peter",
+          "author_id": 1,
+          "Articles": [
+            {
+              "title": "The Next 700 Programming Languages",
+              "article_id": 1
+            },
+            {
+              "title": "The Mechanical Evaluation of Expressions",
+              "article_id": 4
+            }
+          ]
+        },
+        {
+          "first_name": "John",
+          "author_id": 2,
+          "Articles": [
+            {
+              "title": "Why Functional Programming Matters",
+              "article_id": 2
+            },
+            {
+              "title": "The Design And Implementation Of Programming Languages",
+              "article_id": 3
+            },
+            {
+              "title": "Generalizing monads to arrows",
+              "article_id": 5
+            }
+          ]
+        }
+      ],
+      "AuthorByID": {
+        "Articles": [
+          {
+            "title": "Why Functional Programming Matters",
+            "article_id": 2
+          },
+          {
+            "title": "The Design And Implementation Of Programming Languages",
+            "article_id": 3
+          },
+          {
+            "title": "Generalizing monads to arrows",
+            "article_id": 5
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "first_name": "Peter",
+          "author_id": 1,
+          "Articles": [
+            {
+              "title": "The Next 700 Programming Languages",
+              "article_id": 1
+            },
+            {
+              "title": "The Mechanical Evaluation of Expressions",
+              "article_id": 4
+            }
+          ]
+        },
+        {
+          "first_name": "John",
+          "author_id": 2,
+          "Articles": [
+            {
+              "title": "Why Functional Programming Matters",
+              "article_id": 2
+            },
+            {
+              "title": "The Design And Implementation Of Programming Languages",
+              "article_id": 3
+            },
+            {
+              "title": "Generalizing monads to arrows",
+              "article_id": 5
+            }
+          ]
+        }
+      ],
+      "AuthorByID": {
+        "Articles": [
+          {
+            "title": "Why Functional Programming Matters",
+            "article_id": 2
+          },
+          {
+            "title": "The Design And Implementation Of Programming Languages",
+            "article_id": 3
+          },
+          {
+            "title": "Generalizing monads to arrows",
+            "article_id": 5
+          }
+        ]
+      }
+    }
+  }
+]

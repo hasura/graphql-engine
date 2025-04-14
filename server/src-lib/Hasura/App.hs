@@ -502,7 +502,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvTriggersErrorLogLevelStatus = soTriggersErrorLogLevelStatus,
           appEnvAsyncActionsFetchBatchSize = soAsyncActionsFetchBatchSize,
           appEnvPersistedQueries = soPersistedQueries,
-          appEnvPersistedQueriesTtl = soPersistedQueriesTtl
+          appEnvPersistedQueriesTtl = soPersistedQueriesTtl,
+          appEnvPreserve401Errors = soPreserve401Errors
         }
     )
 

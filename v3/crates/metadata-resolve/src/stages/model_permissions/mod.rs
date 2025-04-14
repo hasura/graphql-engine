@@ -1,8 +1,11 @@
+mod error;
+mod predicate;
 mod types;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, models_graphql, object_relationships,
     scalar_types,
 };
+pub use error::{ModelPermissionError, NamedModelPermissionError};
 use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
@@ -11,7 +14,7 @@ pub use types::{
     ModelTargetSource, ModelWithPermissions, SelectPermission, UnaryComparisonOperator,
 };
 mod model_permission;
-pub(crate) use model_permission::resolve_model_predicate_with_type;
+pub(crate) use predicate::resolve_model_predicate_with_type;
 
 use crate::types::error::Error;
 
@@ -57,25 +60,23 @@ pub fn resolve(
         object: permissions,
     } in &metadata_accessor.model_permissions
     {
-        let model_name = Qualified::new(subgraph.clone(), permissions.model_name.clone());
+        let model_name =
+            Qualified::new(subgraph.clone(), permissions.model_name.clone()).transpose_spanned();
+
         let model = models_with_permissions
-            .get_mut(&model_name)
-            .ok_or_else(|| Error::UnknownModelInModelSelectPermissions {
+            .get_mut(&model_name.value)
+            .ok_or_else(|| Error::UnknownModelInModelPermissions {
                 model_name: model_name.clone(),
             })?;
 
         if model.select_permissions.is_empty() {
-            let boolean_expression_fields = model
-                .filter_expression_type
-                .as_ref()
-                .and_then(|filter| filter.get_fields(&metadata_accessor.flags));
+            let boolean_expression = model.filter_expression_type.as_ref();
 
-            let select_permissions = model_permission::resolve_model_select_permissions(
+            let select_permissions = model_permission::resolve_all_model_select_permissions(
                 &metadata_accessor.flags,
                 &model.model,
-                subgraph,
                 permissions,
-                boolean_expression_fields,
+                boolean_expression,
                 data_connector_scalars,
                 object_types,
                 scalar_types,
@@ -86,7 +87,7 @@ pub fn resolve(
 
             model.select_permissions = select_permissions;
         } else {
-            return Err(Error::DuplicateModelSelectPermission {
+            return Err(Error::DuplicateModelPermissions {
                 model_name: model_name.clone(),
             });
         }

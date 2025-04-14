@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use schemars::schema::{Schema::Object as SchemaObjectVariant, SchemaObject, StringValidation};
-use serde::{de::Error, Deserialize};
+use serde::{Deserialize, de::Error};
 use smol_str::SmolStr;
 
 use crate::{
@@ -85,7 +85,7 @@ impl OpenDd for Identifier {
         })
     }
 
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         SchemaObjectVariant(SchemaObject {
             instance_type: Some(schemars::schema::SingleOrVec::Single(Box::new(
                 schemars::schema::InstanceType::String,
@@ -117,7 +117,7 @@ impl<'de> Deserialize<'de> for Identifier {
         D: serde::Deserializer<'de>,
     {
         OpenDd::deserialize(
-            serde_json::Value::deserialize(deserializer)?,
+            <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?,
             jsonpath::JSONPath::new(),
         )
         .map_err(D::Error::custom)
@@ -179,7 +179,7 @@ impl OpenDd for SubgraphNameInput {
         })
     }
 
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         SchemaObjectVariant(SchemaObject {
             instance_type: Some(schemars::schema::SingleOrVec::Single(Box::new(
                 schemars::schema::InstanceType::String,
@@ -209,7 +209,7 @@ impl<'de> Deserialize<'de> for SubgraphNameInput {
         D: serde::Deserializer<'de>,
     {
         OpenDd::deserialize(
-            serde_json::Value::deserialize(deserializer)?,
+            <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?,
             jsonpath::JSONPath::new(),
         )
         .map_err(D::Error::custom)

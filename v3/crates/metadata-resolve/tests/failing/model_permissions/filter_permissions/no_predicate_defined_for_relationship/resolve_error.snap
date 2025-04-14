@@ -1,0 +1,16 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/model_permissions/filter_permissions/no_predicate_defined_for_relationship/metadata.json
+---
+Error: Error in model permission for model 'Albums (in subgraph subgraphs)' for role 'user': in select filter permissions: no relationship predicate is defined for relationship 'Artist' in type 'Album (in subgraph subgraphs)'
+    ╭─[ <unknown>:38:31 ]
+    │
+ 34 │                 "role": "user",
+    │                         ───┬──  
+    │                            ╰──── Error in model permission for the role 'user' on the model 'Albums'
+    │ 
+ 38 │                       "name": "Artist"
+    │                               ────┬───  
+    │                                   ╰───── This relationship is missing a predicate
+────╯

@@ -1726,7 +1726,9 @@
                     "relation_comparisons": {},
                     "order_by_aggregate": {},
                     "nested": {
-                      "array": {}
+                      "array": {},
+                      "filtering": {},
+                      "ordering": {}
                     }
                   }
                 }

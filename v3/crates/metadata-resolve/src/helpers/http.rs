@@ -2,11 +2,11 @@
 
 use indexmap::IndexMap;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use serde::{Deserialize, Serialize};
 use serde::{
     de::Error as DeError,
     ser::{Error as SerError, SerializeMap},
 };
-use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt::Display, str::FromStr};
 
 #[derive(Debug)]

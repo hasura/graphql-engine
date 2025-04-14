@@ -62,7 +62,9 @@ pub enum NDCValidationError {
         command_name: Qualified<CommandName>,
         function_name: FunctionName,
     },
-    #[error("column {column_name} is not defined in function/procedure {func_proc_name} in data connector {db_name}")]
+    #[error(
+        "column {column_name} is not defined in function/procedure {func_proc_name} in data connector {db_name}"
+    )]
     NoSuchColumnForCommand {
         db_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,
@@ -70,7 +72,9 @@ pub enum NDCValidationError {
         func_proc_name: String,
         column_name: DataConnectorColumnName,
     },
-    #[error("column {column_name} has type {column_type} in collection {collection_name} in data connector {db_name}, not type {field_type}")]
+    #[error(
+        "column {column_name} has type {column_type} in collection {collection_name} in data connector {db_name}, not type {field_type}"
+    )]
     ColumnTypeDoesNotMatch {
         db_name: DataConnectorName,
         model_name: ModelName,
@@ -80,7 +84,9 @@ pub enum NDCValidationError {
         field_type: String,
         column_type: String,
     },
-    #[error("internal error: data connector does not define the scalar type {r#type}, used by field {field_name} in model {model_name}")]
+    #[error(
+        "internal error: data connector does not define the scalar type {type}, used by field {field_name} in model {model_name}"
+    )]
     TypeCapabilityNotDefined {
         model_name: ModelName,
         field_name: FieldName,
@@ -106,14 +112,18 @@ pub enum NDCValidationError {
         type_name: CustomTypeName,
         field_name: FieldName,
     },
-    #[error("Result type of function/procedure {function_or_procedure_name:} is {function_or_procedure_output_type:} but output type of command {command_name:} is {command_output_type:}")]
+    #[error(
+        "Result type of function/procedure {function_or_procedure_name:} is {function_or_procedure_output_type:} but output type of command {command_name:} is {command_output_type:}"
+    )]
     FuncProcAndCommandScalarOutputTypeMismatch {
         function_or_procedure_name: String,
         function_or_procedure_output_type: String,
         command_name: String,
         command_output_type: String,
     },
-    #[error("Custom result type of function {function_or_procedure_name:} does not match custom output type of command: {command_name:}")]
+    #[error(
+        "Custom result type of function {function_or_procedure_name:} does not match custom output type of command: {command_name:}"
+    )]
     FuncProcAndCommandCustomOutputTypeMismatch {
         function_or_procedure_name: String,
         command_name: String,
@@ -124,14 +134,18 @@ pub enum NDCValidationError {
     MutationCapabilityUnsupported,
 
     // for `DataConnectorLink.argumentPresets` not all type representations are supported.
-    #[error("Unsupported type representation {representation:} in scalar type {scalar_type:}, for argument preset name {argument_name:}. Only 'json' representation is supported.")]
+    #[error(
+        "Unsupported type representation {representation:} in scalar type {scalar_type:}, for argument preset name {argument_name:}. Only 'json' representation is supported."
+    )]
     UnsupportedTypeInDataConnectorLinkArgumentPreset {
         representation: String,
         scalar_type: DataConnectorScalarType,
         argument_name: open_dds::types::DataConnectorArgumentName,
     },
 
-    #[error("Argument '{argument_name:}' used in argument mapping for the field '{field_name:}' in object type '{object_type_name:}' is not defined in the data connector '{data_connector_name:}'.")]
+    #[error(
+        "Argument '{argument_name:}' used in argument mapping for the field '{field_name:}' in object type '{object_type_name:}' is not defined in the data connector '{data_connector_name:}'."
+    )]
     NoSuchArgumentInNDCArgumentMapping {
         argument_name: open_dds::arguments::ArgumentName,
         field_name: FieldName,
@@ -139,7 +153,9 @@ pub enum NDCValidationError {
         data_connector_name: Qualified<DataConnectorName>,
     },
 
-    #[error("Field {field_name:} not found in object type {object_type:} in data connector {data_connector_name:}.")]
+    #[error(
+        "Field {field_name:} not found in object type {object_type:} in data connector {data_connector_name:}."
+    )]
     NoSuchFieldInObjectType {
         data_connector_name: Qualified<DataConnectorName>,
         field_name: String,
@@ -519,13 +535,5 @@ pub fn get_underlying_named_type(result_type: &ndc_models::Type) -> &ndc_models:
             get_underlying_named_type(underlying_type)
         }
         ndc_models::Type::Predicate { object_type_name } => object_type_name.as_ref(),
-    }
-}
-
-pub fn unwrap_nullable_type(ndc_type: &ndc_models::Type) -> &ndc_models::Type {
-    if let ndc_models::Type::Nullable { underlying_type } = ndc_type {
-        unwrap_nullable_type(underlying_type)
-    } else {
-        ndc_type
     }
 }

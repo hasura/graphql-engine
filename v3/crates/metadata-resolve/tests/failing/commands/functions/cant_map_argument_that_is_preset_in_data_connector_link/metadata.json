@@ -12,15 +12,15 @@
             "arguments": [
               {
                 "name": "argA",
-                "type": "String"
+                "type": "String!"
               },
               {
                 "name": "argB",
-                "type": "Int"
+                "type": "Int!"
               },
               {
                 "name": "http_headers",
-                "type": "Headers"
+                "type": "Headers!"
               }
             ],
             "outputType": "String",

@@ -18,19 +18,14 @@ use crate::stages::{
     aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors, relay,
     scalar_types, type_permissions,
 };
-use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
-
+use crate::types::subgraph::{ArgumentInfo, Qualified, mk_qualified_type_reference};
 use indexmap::IndexMap;
-
 use open_dds::{
     aggregates::AggregateExpressionName, data_connector::DataConnectorName, models::ModelName,
     types::CustomTypeName,
 };
-
 use std::collections::BTreeMap;
 
-/// resolve models and their sources
-/// we check aggregations, filtering and graphql in the next stage (`models_graphql`)
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
@@ -50,12 +45,11 @@ pub fn resolve(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-) -> Result<ModelsOutput, ModelsError> {
-    // resolve models
-    // TODO: validate types
+) -> Result<ModelsOutput, Vec<ModelsError>> {
     let mut models = IndexMap::new();
     let mut global_id_models = BTreeMap::new();
     let mut issues = vec![];
+    let mut results = vec![];
 
     for open_dds::accessor::QualifiedObject {
         path,
@@ -63,81 +57,131 @@ pub fn resolve(
         object: model,
     } in &metadata_accessor.models
     {
-        let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
-        let mut resolved_model = resolve_model(
-            path.clone(),
+        results.push(process_model(
+            path,
             subgraph,
             model,
             object_types,
             boolean_expression_types,
+            data_connectors,
+            data_connector_scalars,
+            scalar_types,
+            aggregate_expressions,
+            &mut models,
             &mut global_id_enabled_types,
             &mut apollo_federation_entity_enabled_types,
-        )?;
-        if resolved_model.global_id_source.is_some() {
-            match global_id_models.insert(
-                resolved_model.data_type.clone(),
-                resolved_model.name.clone(),
-            ) {
-                None => {}
-                Some(duplicate_model_name) => {
-                    Err(ModelsError::from(
-                        relay::RelayError::DuplicateModelGlobalIdSource {
-                            model_1: resolved_model.name.clone(),
-                            model_2: duplicate_model_name,
-                            object_type: resolved_model.data_type.clone(),
-                        },
-                    ))?;
-                }
-            }
-        }
-
-        if let Some(model_source) = &model.source() {
-            let (resolved_model_source, model_source_issues) = source::resolve_model_source(
-                model_source,
-                &mut resolved_model,
-                subgraph,
-                data_connectors,
-                object_types,
-                scalar_types,
-                boolean_expression_types,
-            )?;
-            resolved_model.source = Some(Arc::new(resolved_model_source));
-            issues.extend(model_source_issues);
-        }
-
-        let qualified_aggregate_expression_name = model
-            .aggregate_expression()
-            .as_ref()
-            .map(|aggregate_expression_name| {
-                aggregation::resolve_aggregate_expression(
-                    &Qualified::new(subgraph.clone(), aggregate_expression_name.clone()),
-                    &qualified_model_name,
-                    &resolved_model.data_type,
-                    resolved_model.source.as_ref(),
-                    aggregate_expressions,
-                    object_types,
-                    data_connector_scalars,
-                )
-            })
-            .transpose()?;
-
-        resolved_model.aggregate_expression = qualified_aggregate_expression_name;
-
-        if models
-            .insert(qualified_model_name.clone(), resolved_model)
-            .is_some()
-        {
-            Err(ModelsError::DuplicateModelDefinition {
-                name: qualified_model_name,
-            })?;
-        }
+            &mut global_id_models,
+            &mut issues,
+        ));
     }
-    Ok(ModelsOutput {
+
+    partition_eithers::collect_any_errors(results).map(|_| ModelsOutput {
         models,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         issues,
     })
+}
+
+/// resolve models and their sources
+/// we check aggregations, filtering and graphql in the next stage (`models_graphql`)
+fn process_model(
+    path: &jsonpath::JSONPath,
+    subgraph: &SubgraphName,
+    model: &open_dds::models::Model,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
+    >,
+    models: &mut IndexMap<Qualified<ModelName>, Model>,
+    global_id_enabled_types: &mut BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    apollo_federation_entity_enabled_types: &mut BTreeMap<
+        Qualified<CustomTypeName>,
+        Option<Qualified<ModelName>>,
+    >,
+    global_id_models: &mut BTreeMap<Qualified<CustomTypeName>, Qualified<ModelName>>,
+    issues: &mut Vec<ModelsIssue>,
+) -> Result<(), ModelsError> {
+    let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
+    let mut resolved_model = resolve_model(
+        path.clone(),
+        subgraph,
+        model,
+        object_types,
+        boolean_expression_types,
+        global_id_enabled_types,
+        apollo_federation_entity_enabled_types,
+    )?;
+
+    if resolved_model.global_id_source.is_some() {
+        match global_id_models.insert(
+            resolved_model.data_type.clone(),
+            resolved_model.name.clone(),
+        ) {
+            None => {}
+            Some(duplicate_model_name) => {
+                Err(ModelsError::from(
+                    relay::RelayError::DuplicateModelGlobalIdSource {
+                        model_1: resolved_model.name.clone(),
+                        model_2: duplicate_model_name,
+                        object_type: resolved_model.data_type.clone(),
+                    },
+                ))?;
+            }
+        }
+    }
+
+    if let Some(model_source) = &model.source() {
+        let (resolved_model_source, model_source_issues) = source::resolve_model_source(
+            model_source,
+            &mut resolved_model,
+            subgraph,
+            data_connectors,
+            data_connector_scalars,
+            object_types,
+            scalar_types,
+            boolean_expression_types,
+        )?;
+        resolved_model.source = Some(Arc::new(resolved_model_source));
+        issues.extend(model_source_issues);
+    }
+
+    let qualified_aggregate_expression_name = model
+        .aggregate_expression()
+        .as_ref()
+        .map(|aggregate_expression_name| {
+            aggregation::resolve_aggregate_expression(
+                &Qualified::new(subgraph.clone(), aggregate_expression_name.clone()),
+                &qualified_model_name,
+                &resolved_model.data_type,
+                resolved_model.source.as_ref(),
+                aggregate_expressions,
+                object_types,
+                data_connector_scalars,
+            )
+        })
+        .transpose()?;
+
+    resolved_model.aggregate_expression = qualified_aggregate_expression_name;
+
+    if models
+        .insert(qualified_model_name.clone(), resolved_model)
+        .is_some()
+    {
+        Err(ModelsError::DuplicateModelDefinition {
+            name: qualified_model_name,
+        })?;
+    }
+
+    Ok(())
 }
 
 fn resolve_model(
@@ -152,12 +196,14 @@ fn resolve_model(
         Option<Qualified<ModelName>>,
     >,
 ) -> Result<Model, ModelsError> {
-    let qualified_object_type_name = Qualified::new(subgraph.clone(), model.object_type().clone());
+    let qualified_object_type_name =
+        Qualified::new(subgraph.clone(), model.object_type().value.clone());
     let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
     let object_type_representation = source::get_model_object_type_representation(
         object_types,
         &qualified_object_type_name,
         &qualified_model_name,
+        &model.object_type().path,
     )?;
     let mut global_id_source = None;
     if model.global_id_source() {
@@ -264,11 +310,12 @@ fn resolve_model(
 
         if arguments
             .insert(
-                argument.name.clone(),
+                argument.name.value.clone(),
                 ArgumentInfo {
                     argument_type: mk_qualified_type_reference(&argument.argument_type, subgraph),
                     argument_kind,
                     description: argument.description.clone(),
+                    path: argument.name.path.clone(),
                 },
             )
             .is_some()
@@ -308,6 +355,7 @@ fn resolve_model(
         path,
         name: qualified_model_name,
         data_type: qualified_object_type_name,
+        data_type_path: model.object_type().path.clone(),
         aggregate_expression: None, // we fill this in once we have resolved the model source
         type_fields: object_type_representation.object_type.fields.clone(),
         global_id_fields: object_type_representation

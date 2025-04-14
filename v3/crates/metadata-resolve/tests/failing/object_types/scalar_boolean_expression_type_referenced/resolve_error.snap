@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/object_types/scalar_boolean_expression_type_referenced/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-Field type IntBoolExp (in subgraph default) could not be found in field int_filter for object type Zoo (in subgraph default)
+Error: Field type IntBoolExp (in subgraph default) could not be found in field int_filter for object type Zoo (in subgraph default)

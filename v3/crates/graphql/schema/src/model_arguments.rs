@@ -1,11 +1,10 @@
 use lang_graphql::ast::common as ast;
 
 use crate::{
-    permissions,
+    GDS, permissions,
     types::{
-        input_type::get_input_type, Annotation, InputAnnotation, ModelInputAnnotation, TypeId,
+        Annotation, InputAnnotation, ModelInputAnnotation, TypeId, input_type::get_input_type,
     },
-    GDS,
 };
 use lang_graphql::schema as gql_schema;
 use metadata_resolve::Qualified;

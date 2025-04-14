@@ -1,0 +1,28 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "function_with_duplicate_args",
+            "arguments": [
+              {
+                "name": "duplicate_argument",
+                "type": "String!"
+              },
+              {
+                "name": "duplicate_argument",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "String"
+          }
+        }
+      ]
+    }
+  ]
+}

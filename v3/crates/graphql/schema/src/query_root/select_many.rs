@@ -13,9 +13,8 @@ use crate::model_filter_input::{
     add_limit_input_field, add_offset_input_field, add_order_by_input_field, add_where_input_field,
 };
 use crate::{
-    permissions,
-    types::{self, output_type::get_custom_output_type, Annotation},
-    GDS,
+    GDS, permissions,
+    types::{self, Annotation, output_type::get_custom_output_type},
 };
 use metadata_resolve;
 
@@ -71,7 +70,6 @@ pub(crate) fn select_many_field(
             select_many.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::Model {
-                    data_type: model.model.data_type.clone(),
                     kind: types::RootFieldKind::SelectMany,
                     name: model.model.name.clone(),
                 },

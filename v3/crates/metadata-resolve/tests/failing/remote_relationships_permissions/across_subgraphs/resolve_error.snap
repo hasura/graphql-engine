@@ -1,6 +1,16 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/remote_relationships_permissions/across_subgraphs/metadata.json
 ---
-Relationships across subgraphs are not supported in filter predicates. Relationship: TracksRemote is defined between source data connector: db (in subgraph default) and target data connector: remote_db (in subgraph remote)
+Error: Error in model permission for model 'Albums (in subgraph default)' for role 'user': in select filter permissions: Relationships across subgraphs are not supported in filter predicates. Relationship: TracksRemote is defined between source data connector: db (in subgraph default) and target data connector: remote_db (in subgraph remote)
+      ╭─[ <unknown>:3272:31 ]
+      │
+ 3268 │                 "role": "user",
+      │                         ───┬──  
+      │                            ╰──── Error in model permission for the role 'user' on the model 'Albums'
+      │ 
+ 3272 │                       "name": "TracksRemote",
+      │                               ───────┬──────  
+      │                                      ╰──────── This relationship crosses subgraphs
+──────╯

@@ -177,7 +177,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "ArtistTenantId",
@@ -193,7 +193,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                         ),
                                     },
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "ArtistId",
@@ -202,7 +202,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "ArtistId",
@@ -319,6 +319,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -384,6 +385,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -449,6 +451,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -514,6 +517,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -683,6 +687,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -748,6 +753,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -816,6 +822,28 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                4,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -948,6 +976,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -1024,6 +1053,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1089,6 +1119,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1154,6 +1185,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1219,6 +1251,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1409,6 +1442,28 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                6,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -1462,6 +1517,34 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        6,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     source: Some(
@@ -1524,6 +1607,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -1600,6 +1684,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1665,6 +1750,7 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1879,6 +1965,9 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                 "user",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

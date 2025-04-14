@@ -1,6 +1,6 @@
 use proc_macro::{self, TokenStream};
 use quote::quote;
-use syn::{self, parse_macro_input, DeriveInput};
+use syn::{self, DeriveInput, parse_macro_input};
 
 mod container;
 mod enum_derive;
@@ -25,7 +25,7 @@ fn impl_opendd(input: &DeriveInput) -> MacroResult<proc_macro2::TokenStream> {
         Data::Enum(EnumData::DefaultImpl) => {
             return Ok(quote! {
                 open_dds::impl_OpenDd_default_for!(#name);
-            })
+            });
         }
         Data::Enum(EnumData::Impl(impl_style, enum_variants)) => {
             enum_derive::impl_opendd_enum(impl_style, &enum_variants)
@@ -42,7 +42,7 @@ fn impl_opendd(input: &DeriveInput) -> MacroResult<proc_macro2::TokenStream> {
                 #impl_deserialize
             }
 
-            fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+            fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
                 #impl_json_schema
             }
 

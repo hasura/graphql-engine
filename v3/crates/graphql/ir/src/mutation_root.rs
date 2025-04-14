@@ -11,12 +11,10 @@ use graphql_schema::GDS;
 
 use super::{commands, root_field};
 use crate::error;
-use crate::GraphqlRequestPipeline;
 use graphql_schema::{OutputAnnotation, RootFieldAnnotation};
 
 /// Generates IR for the selection set of type 'mutation root'
 pub fn generate_ir<'n, 's>(
-    request_pipeline: GraphqlRequestPipeline,
     selection_set: &'s gql::normalized_ast::SelectionSet<'s, GDS>,
     metadata: &'s metadata_resolve::Metadata,
     session: &Session,
@@ -69,40 +67,19 @@ pub fn generate_ir<'n, 's>(
 
                             Ok(root_field::MutationRootField::ProcedureBasedCommand {
                                 selection_set: &field.selection_set,
-                                ir: match request_pipeline {
-                                    GraphqlRequestPipeline::Old => {
-                                        commands::generate_procedure_based_command(
-                                            name,
-                                            procedure_name,
-                                            field,
-                                            field_call,
-                                            result_type,
-                                            *result_base_type_kind,
-                                            command,
-                                            source,
-                                            &metadata.models,
-                                            &metadata.commands,
-                                            &metadata.object_types,
-                                            session,
-                                            request_headers,
-                                        )?
-                                    }
-                                    GraphqlRequestPipeline::OpenDd => {
-                                        commands::generate_procedure_based_command_open_dd(
-                                            &metadata.models,
-                                            &metadata.object_types,
-                                            name,
-                                            procedure_name,
-                                            field,
-                                            field_call,
-                                            result_type,
-                                            *result_base_type_kind,
-                                            source,
-                                            &session.variables,
-                                            request_headers,
-                                        )?
-                                    }
-                                },
+                                ir: commands::generate_procedure_based_command_open_dd(
+                                    &metadata.models,
+                                    &metadata.object_types,
+                                    name,
+                                    procedure_name,
+                                    field,
+                                    field_call,
+                                    result_type,
+                                    *result_base_type_kind,
+                                    source,
+                                    &session.variables,
+                                    request_headers,
+                                )?,
                             })
                         }
                         annotation => Err(error::InternalEngineError::UnexpectedAnnotation {

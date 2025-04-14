@@ -29,7 +29,7 @@ use crate::stages::{
     apollo, data_connector_scalar_types, data_connectors, graphql_config, scalar_types,
 };
 
-use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference, Qualified};
+use crate::types::subgraph::{Qualified, mk_qualified_type_name, mk_qualified_type_reference};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -44,13 +44,13 @@ pub(crate) fn resolve(
     >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
-) -> Result<ObjectTypesOutput, ObjectTypesError> {
+) -> Result<ObjectTypesOutput, Vec<ObjectTypesError>> {
     let mut object_types = BTreeMap::new();
     let mut global_id_enabled_types = BTreeMap::new();
     let mut apollo_federation_entity_enabled_types = BTreeMap::new();
     let mut issues = Vec::new();
-
     let mut raw_object_types = BTreeMap::new();
+    let mut results = vec![];
     for open_dds::accessor::QualifiedObject {
         path: _,
         subgraph,
@@ -81,76 +81,117 @@ pub(crate) fn resolve(
     }
 
     for (qualified_object_type_name, object_type_definition) in &raw_object_types {
-        let resolved_object_type = resolve_object_type(
+        results.push(resolve_object_type(
             object_type_definition,
             qualified_object_type_name,
             &raw_object_types,
             scalar_types,
             &object_boolean_expression_type_names,
             graphql_types,
+            data_connectors,
+            data_connector_scalar_types,
             &mut global_id_enabled_types,
             &mut apollo_federation_entity_enabled_types,
             &mut issues,
-        )?;
-
-        let mut type_mappings = DataConnectorTypeMappingsForObject::new();
-
-        // resolve object types' type mappings
-        for dc_type_mapping in &object_type_definition.data_connector_type_mapping {
-            let qualified_data_connector_name = Qualified::new(
-                qualified_object_type_name.subgraph.clone(),
-                dc_type_mapping.data_connector_name.clone(),
-            );
-            let (type_mapping, new_issues) = resolve_data_connector_type_mapping(
-                dc_type_mapping,
-                qualified_object_type_name,
-                &resolved_object_type,
-                data_connectors,
-                data_connector_scalar_types,
-            )
-            .map_err(|type_validation_error| {
-                ObjectTypesError::DataConnectorTypeMappingValidationError {
-                    type_name: qualified_object_type_name.clone(),
-                    error: type_validation_error,
-                }
-            })?;
-
-            issues.extend(new_issues);
-
-            type_mappings.insert(
-                &qualified_data_connector_name,
-                &dc_type_mapping.data_connector_object_type,
-                type_mapping,
-            )?;
-        }
-
-        let object_type_with_type_mappings = ObjectTypeWithTypeMappings {
-            object_type: resolved_object_type,
-            type_mappings,
-        };
-
-        if object_types
-            .insert(
-                qualified_object_type_name.clone(),
-                object_type_with_type_mappings,
-            )
-            .is_some()
-        {
-            return Err(ObjectTypesError::DuplicateTypeDefinition {
-                name: qualified_object_type_name.clone(),
-            });
-        }
+            &mut object_types,
+        ));
     }
 
     // Check for recursive object types
     issues.extend(recursive_types::check_recursive_object_types(&object_types));
 
-    Ok(ObjectTypesOutput {
+    // if everything succeeds, return results, otherwise collect all errors together
+    partition_eithers::collect_any_errors(results).map(|_| ObjectTypesOutput {
         issues,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         object_types: ObjectTypesWithTypeMappings(object_types),
     })
+}
+
+fn resolve_object_type(
+    object_type_definition: &open_dds::types::ObjectTypeV1,
+    qualified_object_type_name: &Qualified<CustomTypeName>,
+    raw_object_types: &BTreeMap<Qualified<CustomTypeName>, &open_dds::types::ObjectTypeV1>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_type_names: &BTreeSet<Qualified<CustomTypeName>>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalar_types: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
+    global_id_enabled_types: &mut BTreeMap<
+        Qualified<CustomTypeName>,
+        Vec<Qualified<open_dds::models::ModelName>>,
+    >,
+    apollo_federation_entity_enabled_types: &mut BTreeMap<
+        Qualified<CustomTypeName>,
+        Option<Qualified<open_dds::models::ModelName>>,
+    >,
+    issues: &mut Vec<ObjectTypesIssue>,
+    object_types: &mut BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>,
+) -> Result<(), ObjectTypesError> {
+    let resolved_object_type = resolve_object_type_representation(
+        object_type_definition,
+        qualified_object_type_name,
+        raw_object_types,
+        scalar_types,
+        object_boolean_expression_type_names,
+        graphql_types,
+        global_id_enabled_types,
+        apollo_federation_entity_enabled_types,
+        issues,
+    )?;
+
+    let mut type_mappings = DataConnectorTypeMappingsForObject::new();
+
+    // resolve object types' type mappings
+    for dc_type_mapping in &object_type_definition.data_connector_type_mapping {
+        let qualified_data_connector_name = Qualified::new(
+            qualified_object_type_name.subgraph.clone(),
+            dc_type_mapping.data_connector_name.clone(),
+        );
+        let (type_mapping, new_issues) = resolve_data_connector_type_mapping(
+            dc_type_mapping,
+            qualified_object_type_name,
+            &resolved_object_type,
+            data_connectors,
+            data_connector_scalar_types,
+        )
+        .map_err(|type_validation_error| {
+            ObjectTypesError::DataConnectorTypeMappingValidationError {
+                type_name: qualified_object_type_name.clone(),
+                error: type_validation_error,
+            }
+        })?;
+
+        issues.extend(new_issues);
+
+        type_mappings.insert(
+            &qualified_data_connector_name,
+            &dc_type_mapping.data_connector_object_type,
+            type_mapping,
+        )?;
+    }
+
+    let object_type_with_type_mappings = ObjectTypeWithTypeMappings {
+        object_type: resolved_object_type,
+        type_mappings,
+    };
+
+    if object_types
+        .insert(
+            qualified_object_type_name.clone(),
+            object_type_with_type_mappings,
+        )
+        .is_some()
+    {
+        return Err(ObjectTypesError::DuplicateTypeDefinition {
+            name: qualified_object_type_name.clone(),
+        });
+    }
+    Ok(())
 }
 
 fn resolve_field(
@@ -206,7 +247,7 @@ fn resolve_field(
     })
 }
 
-pub fn resolve_object_type(
+pub fn resolve_object_type_representation(
     object_type_definition: &open_dds::types::ObjectTypeV1,
     qualified_type_name: &Qualified<CustomTypeName>,
     raw_object_types: &BTreeMap<Qualified<CustomTypeName>, &open_dds::types::ObjectTypeV1>,
@@ -875,6 +916,19 @@ fn make_extraction_functions(
                     issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
                         scalar_type: scalar_type_name.clone(),
                         function_name: "microsecond".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Millisecond { result_type: _ } => {
+                if extraction_functions.millisecond_function.is_none() {
+                    extraction_functions.millisecond_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "millisecond".to_string(),
                         data_connector_name: data_connector_name.clone(),
                     });
                 }

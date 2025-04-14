@@ -1,0 +1,38 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "function_with_unknown_argument_type",
+            "arguments": [
+              {
+                "name": "argument_with_unknown_type",
+                "type": "MissingThing!"
+              }
+            ],
+            "outputType": "String"
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "another_function_with_unknown_argument_type",
+            "arguments": [
+              {
+                "name": "another_argument_with_unknown_type",
+                "type": "MissingThing!"
+              }
+            ],
+            "outputType": "String"
+          }
+        }
+      ]
+    }
+  ]
+}

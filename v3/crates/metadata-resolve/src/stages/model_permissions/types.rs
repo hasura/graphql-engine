@@ -8,14 +8,16 @@ use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     models::ModelName,
     permissions::Role,
+    query::ComparisonOperator,
     relationships::{RelationshipName, RelationshipType},
+    spanned::Spanned,
     types::{CustomTypeName, Deprecated, FieldName},
 };
 
-use crate::types::error::{Error, RelationshipError};
+use crate::types::error::ContextualError;
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
-use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use crate::{
     helpers::typecheck,
     stages::{
@@ -24,6 +26,7 @@ use crate::{
     },
     types::error::ShouldBeAnError,
 };
+use error_context::{Context, Step};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
@@ -49,12 +52,19 @@ pub struct SelectPermission {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ResolvedOperator {
+    pub data_connector_operator_name: DataConnectorOperatorName,
+    pub comparison_operator: ComparisonOperator,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ModelPredicate {
     UnaryFieldComparison {
         field: FieldName,
         field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
         operator: UnaryComparisonOperator,
+        column_path: Vec<DataConnectorColumnName>,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
         deprecated: Option<Deprecated>,
     },
@@ -62,7 +72,8 @@ pub enum ModelPredicate {
         field: FieldName,
         field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
-        operator: DataConnectorOperatorName,
+        operator: ResolvedOperator,
+        column_path: Vec<DataConnectorColumnName>,
         argument_type: QualifiedTypeReference,
         value: ValueExpression,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
@@ -70,6 +81,7 @@ pub enum ModelPredicate {
     },
     Relationship {
         relationship_info: PredicateRelationshipInfo,
+        column_path: Vec<DataConnectorColumnName>,
         predicate: Box<ModelPredicate>,
     },
     And(Vec<ModelPredicate>),
@@ -109,7 +121,7 @@ impl ModelTargetSource {
     pub fn new(
         model: &model_permissions::ModelWithPermissions,
         relationship: &object_relationships::RelationshipField,
-    ) -> Result<Option<Self>, Error> {
+    ) -> Result<Option<Self>, object_relationships::RelationshipError> {
         model
             .model
             .source
@@ -121,18 +133,18 @@ impl ModelTargetSource {
     pub fn from_model_source(
         model_source: &Arc<models::ModelSource>,
         relationship: &object_relationships::RelationshipField,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, object_relationships::RelationshipError> {
         Ok(Self {
             model: model_source.clone(),
             capabilities: relationship
                 .target_capabilities
                 .as_ref()
-                .ok_or_else(|| Error::ObjectRelationshipError {
-                    relationship_error: RelationshipError::NoRelationshipCapabilitiesDefined {
+                .ok_or_else(|| {
+                    object_relationships::RelationshipError::NoRelationshipCapabilitiesDefined {
                         type_name: relationship.source.clone(),
                         relationship_name: relationship.relationship_name.clone(),
                         data_connector_name: model_source.data_connector.name.clone(),
-                    },
+                    }
                 })?
                 .clone(),
         })
@@ -141,7 +153,16 @@ impl ModelTargetSource {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelPermissionIssue {
-    #[error("Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {typecheck_issue:}")]
+    #[error(
+        "The role '{role}' has been defined more than once in model permissions for model '{model_name}'"
+    )]
+    DuplicateRole {
+        role: Spanned<Role>,
+        model_name: Qualified<ModelName>,
+    },
+    #[error(
+        "Type error in preset argument {argument_name:} for role {role:} in model {model_name:}: {typecheck_issue:}"
+    )]
     ModelArgumentPresetTypecheckIssue {
         role: Role,
         model_name: Qualified<ModelName>,
@@ -150,9 +171,27 @@ pub enum ModelPermissionIssue {
     },
 }
 
+impl ContextualError for ModelPermissionIssue {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        match self {
+            ModelPermissionIssue::DuplicateRole { role, model_name } => {
+                Some(Context::from_step(Step {
+                    message: "This role is a duplicate".to_owned(),
+                    path: role.path.clone(),
+                    subgraph: Some(model_name.subgraph.clone()),
+                }))
+            }
+            ModelPermissionIssue::ModelArgumentPresetTypecheckIssue { .. } => None,
+        }
+    }
+}
+
 impl ShouldBeAnError for ModelPermissionIssue {
     fn should_be_an_error(&self, flags: &open_dds::flags::OpenDdFlags) -> bool {
         match self {
+            ModelPermissionIssue::DuplicateRole { .. } => {
+                flags.contains(open_dds::flags::Flag::DisallowDuplicateModelPermissionsRoles)
+            }
             ModelPermissionIssue::ModelArgumentPresetTypecheckIssue {
                 typecheck_issue, ..
             } => typecheck_issue.should_be_an_error(flags),

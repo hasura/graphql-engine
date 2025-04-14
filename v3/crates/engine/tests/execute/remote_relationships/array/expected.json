@@ -3,7 +3,7 @@
     "data": {
       "AuthorByID": {
         "author_id": 2,
-        "Articles": [
+        "my_articles": [
           {
             "title": "Why Functional Programming Matters"
           },
@@ -21,7 +21,7 @@
     "data": {
       "AuthorByID": {
         "author_id": 2,
-        "Articles": [
+        "my_articles": [
           {
             "title": "Why Functional Programming Matters"
           }
@@ -33,7 +33,7 @@
     "data": {
       "AuthorByID": {
         "author_id": 2,
-        "Articles": []
+        "my_articles": []
       }
     }
   },
@@ -41,7 +41,7 @@
     "data": {
       "AuthorByID": {
         "author_id": 2,
-        "Articles": []
+        "my_articles": []
       }
     }
   }

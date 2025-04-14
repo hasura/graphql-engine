@@ -1,7 +1,7 @@
 use lang_graphql::{ast::common as ast, schema as gql_schema};
 use open_dds::arguments::ArgumentName;
 
-use crate::{types, Annotation, GDS};
+use crate::{Annotation, GDS, types};
 
 pub fn generate_field_argument(
     gds: &GDS,

@@ -8,8 +8,8 @@ use lang_graphql::{
     schema as gql_schema,
 };
 use metadata_resolve::{
-    mk_name, AggregateExpression, DataConnectorAggregationFunctionInfo,
-    ObjectTypeWithRelationships, Qualified, QualifiedTypeName,
+    AggregateExpression, DataConnectorAggregationFunctionInfo, ObjectTypeWithRelationships,
+    Qualified, QualifiedTypeName, mk_name,
 };
 use open_dds::{
     aggregates::{AggregateExpressionName, AggregationFunctionName},
@@ -17,9 +17,8 @@ use open_dds::{
 };
 
 use crate::{
-    mk_deprecation_status,
-    types::{output_type, TypeId},
-    Annotation, Error, NamespaceAnnotation, GDS,
+    Annotation, Error, GDS, NamespaceAnnotation, mk_deprecation_status,
+    types::{TypeId, output_type},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
@@ -37,7 +36,6 @@ pub enum AggregationFunctionAnnotation {
     CountDistinct,
     Function {
         function_name: AggregationFunctionName,
-        aggregate_expression: AggregateExpressionName,
         data_connector_functions: Vec<DataConnectorAggregationFunctionInfo>,
     },
 }
@@ -300,7 +298,6 @@ fn add_aggregation_functions(
                 AggregateOutputAnnotation::AggregationFunctionField(
                     AggregationFunctionAnnotation::Function {
                         function_name: aggregatable_function_info.name.clone(),
-                        aggregate_expression: aggregate_expression.name.name.clone(),
                         data_connector_functions: aggregatable_function_info
                             .data_connector_functions
                             .clone(),

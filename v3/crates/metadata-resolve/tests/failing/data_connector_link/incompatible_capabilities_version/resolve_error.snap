@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/data_connector_link/incompatible_capabilities_version/metadata.json
 ---
-The data connector myconnector (in subgraph default) has an error: The version specified in the capabilities ("0.2.0") is not compatible with the schema version specified. The version requirement is ^0.1.0
+Error: The data connector myconnector (in subgraph default) has an error: The version specified in the capabilities ("0.2.0") is not compatible with the schema version specified. The version requirement is ^0.1.0

@@ -14,6 +14,5 @@ pub struct Configuration {
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct UnstableFeatures {
-    pub enable_ndc_v02_support: bool,
     pub enable_aggregation_predicates: bool,
 }

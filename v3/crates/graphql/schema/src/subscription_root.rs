@@ -10,14 +10,14 @@ use open_dds::types::FieldName;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
+use crate::Annotation;
+use crate::GDS;
 use crate::aggregates::get_aggregate_select_output_type;
 use crate::mk_deprecation_status;
 use crate::model_arguments;
 use crate::types;
 use crate::types::output_type::get_custom_output_type;
 use crate::types::output_type::get_object_type_representation;
-use crate::Annotation;
-use crate::GDS;
 
 use super::query_root::{select_aggregate, select_many, select_one};
 
@@ -118,7 +118,6 @@ fn select_one_field(
             subscription.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::ModelSubscription {
-                    data_type: model.model.data_type.clone(),
                     kind: types::RootFieldKind::SelectOne,
                     name: model.model.name.clone(),
                     polling_interval_ms: subscription.polling_interval_ms,
@@ -168,7 +167,6 @@ fn select_many_field(
             subscription.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::ModelSubscription {
-                    data_type: model.model.data_type.clone(),
                     kind: types::RootFieldKind::SelectMany,
                     name: model.model.name.clone(),
                     polling_interval_ms: subscription.polling_interval_ms,
@@ -227,7 +225,6 @@ fn select_aggregate_field(
             subscription.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::ModelSubscription {
-                    data_type: model.model.data_type.clone(),
                     kind: types::RootFieldKind::SelectAggregate,
                     name: model.model.name.clone(),
                     polling_interval_ms: subscription.polling_interval_ms,

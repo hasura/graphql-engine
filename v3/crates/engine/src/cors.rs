@@ -49,9 +49,9 @@ pub fn build_cors_layer(cors_allow_origin: &[String]) -> cors::CorsLayer {
 #[cfg(test)]
 mod test {
     use axum::{
+        Router,
         body::Body,
         http::{HeaderValue, Request},
-        Router,
     };
     use pretty_assertions::assert_eq;
     use reqwest::StatusCode;

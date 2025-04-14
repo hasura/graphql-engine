@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/disallow_remote_predicate_with_argument_mapping_target/metadata.json
 ---
-The relationship 'Artist' cannot be used as a comparable relationship in boolean expression type 'Album_bool_exp (in subgraph default)' because it is a remote relationship with an argument mapping target. Relationship 'Artist' on type 'Album (in subgraph default)' has source field 'ArtistTenantId' mapped to target argument 'tenantId'
+Error: The relationship 'Artist' cannot be used as a comparable relationship in boolean expression type 'Album_bool_exp (in subgraph default)' because it is a remote relationship with an argument mapping target. Relationship 'Artist' on type 'Album (in subgraph default)' has source field 'ArtistTenantId' mapped to target argument 'tenantId'

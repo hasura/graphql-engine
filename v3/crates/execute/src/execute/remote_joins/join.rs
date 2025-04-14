@@ -10,7 +10,7 @@ use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 
 use super::collect::LocationInfo;
 use super::{collect, error};
-use plan_types::{LocationKind, RemoteJoin, RemoteJoinArgument};
+use plan_types::{LocationKind, RemoteJoin, RemoteJoinVariableSet};
 
 /// Inserts values in the LHS response from values in RHS response, based on the
 /// mapping field
@@ -22,7 +22,7 @@ pub(crate) fn join_responses(
     join_node: &RemoteJoin,
     remote_alias: &str,
     lhs_response: &mut [ndc_models::RowSet],
-    rhs_response: &HashMap<RemoteJoinArgument, ndc_models::RowSet>,
+    rhs_response: &HashMap<RemoteJoinVariableSet, ndc_models::RowSet>,
 ) -> Result<(), error::FieldError> {
     for row_set in lhs_response.iter_mut() {
         if let Some(rows) = row_set.rows.as_mut() {
@@ -68,10 +68,10 @@ fn join_command_response(
     join_node: &RemoteJoin,
     remote_alias: &str,
     row_field_value: &mut ndc_models::RowFieldValue,
-    rhs_response: &HashMap<RemoteJoinArgument, ndc_models::RowSet>,
+    rhs_response: &HashMap<RemoteJoinVariableSet, ndc_models::RowSet>,
 ) -> Result<(), error::FieldError> {
     match &mut row_field_value.0 {
-        json::Value::Array(ref mut arr) => {
+        json::Value::Array(arr) => {
             for command_row in arr.iter_mut() {
                 let new_val = command_row.clone();
                 let mut command_row_parsed: IndexMap<
@@ -127,13 +127,13 @@ fn insert_value_into_row(
     join_node: &RemoteJoin,
     row: &mut IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
     remote_alias: ndc_models::FieldName,
-    rhs_response: &HashMap<RemoteJoinArgument, ndc_models::RowSet>,
+    rhs_response: &HashMap<RemoteJoinVariableSet, ndc_models::RowSet>,
 ) -> Result<(), error::FieldError> {
     match NonEmpty::from_slice(location_path) {
         // no location path; so remote join available at this level
         None => {
             let join_fields = collect::get_join_fields(join_node);
-            let argument = collect::create_argument(&join_fields, row);
+            let argument = collect::extract_variable_set(&join_fields, row);
             let rhs_value = json::to_value(rhs_response.get(&argument))?;
             row.insert(remote_alias, ndc_models::RowFieldValue(rhs_value));
             Ok(())
@@ -175,7 +175,7 @@ fn visit_location_path_and_insert_value(
     path_tail: &[LocationInfo],
     join_node: &RemoteJoin,
     remote_alias: ndc_models::FieldName,
-    rhs_response: &HashMap<RemoteJoinArgument, ndc_models::RowSet>,
+    rhs_response: &HashMap<RemoteJoinVariableSet, ndc_models::RowSet>,
 ) -> Result<(), error::FieldError> {
     match location_kind {
         LocationKind::LocalRelationship => {

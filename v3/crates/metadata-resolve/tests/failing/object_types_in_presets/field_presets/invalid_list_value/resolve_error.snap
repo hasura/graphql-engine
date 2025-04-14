@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/field_presets/invalid_list_value/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-Type error in field preset of Location, for input type permissions definition of type Institution: Typecheck failed for field Campuses in object type Location (in subgraph default): Expected an array but instead got value "Main"
+Error: Type error in field preset of Location, for input type permissions definition of type Institution: Typecheck failed for field Campuses in object type Location (in subgraph default): Expected an array but instead got value "Main"

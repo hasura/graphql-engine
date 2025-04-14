@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/relationship_array_not_allowed/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the comparable relationship 'tracks' for the operand type 'Album (in subgraph default)' is an array relationship. This is not supported
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the comparable relationship 'tracks' for the operand type 'Album (in subgraph default)' is an array relationship. This is not supported

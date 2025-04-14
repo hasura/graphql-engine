@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/aggregatable_field_not_found/metadata.json
 ---
-the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'randoField' that does not exist on its operand type Invoice (in subgraph default)
+Error: the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'randoField' that does not exist on its operand type Invoice (in subgraph default)

@@ -3,11 +3,13 @@ use std::collections::BTreeMap;
 
 pub mod actor;
 pub mod city;
+pub mod continent;
 pub mod country;
 pub mod evaluated_institution;
 pub mod genre;
 pub mod institution;
 pub mod location;
+pub mod location_pascalcase;
 pub mod login;
 pub mod movie;
 pub mod name_query;
@@ -135,6 +137,36 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
             },
         ),
         (
+            "BigInt".into(),
+            ndc_models::ScalarType {
+                representation: ndc_models::TypeRepresentation::BigInteger,
+                aggregate_functions: BTreeMap::from_iter([
+                    ("max".into(), ndc_models::AggregateFunctionDefinition::Max),
+                    ("min".into(), ndc_models::AggregateFunctionDefinition::Min),
+                ]),
+                comparison_operators: BTreeMap::from_iter([(
+                    "_eq".into(),
+                    ndc_models::ComparisonOperatorDefinition::Equal,
+                )]),
+                extraction_functions: BTreeMap::new(),
+            },
+        ),
+        (
+            "Int64".into(),
+            ndc_models::ScalarType {
+                representation: ndc_models::TypeRepresentation::Int64,
+                aggregate_functions: BTreeMap::from_iter([
+                    ("max".into(), ndc_models::AggregateFunctionDefinition::Max),
+                    ("min".into(), ndc_models::AggregateFunctionDefinition::Min),
+                ]),
+                comparison_operators: BTreeMap::from_iter([(
+                    "_eq".into(),
+                    ndc_models::ComparisonOperatorDefinition::Equal,
+                )]),
+                extraction_functions: BTreeMap::new(),
+            },
+        ),
+        (
             "Bool".into(),
             ndc_models::ScalarType {
                 representation: ndc_models::TypeRepresentation::Boolean,
@@ -176,6 +208,7 @@ pub(crate) fn object_types() -> BTreeMap<ndc_models::ObjectTypeName, ndc_models:
         ("actor".into(), actor::definition()),
         ("city".into(), city::definition()),
         ("country".into(), country::definition()),
+        ("continent".into(), continent::definition()),
         (
             "evaluated_institution".into(),
             evaluated_institution::definition(),
@@ -185,6 +218,10 @@ pub(crate) fn object_types() -> BTreeMap<ndc_models::ObjectTypeName, ndc_models:
         ("name_query".into(), name_query::definition()),
         ("institution".into(), institution::definition()),
         ("location".into(), location::definition()),
+        (
+            "location_pascalcase".into(),
+            location_pascalcase::definition(),
+        ),
         ("staff_member".into(), staff_member::definition()),
         ("login_response".into(), login::definition_login_response()),
         (

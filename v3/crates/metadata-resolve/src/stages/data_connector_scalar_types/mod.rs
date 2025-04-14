@@ -7,7 +7,7 @@ pub use types::{DataConnectorScalars, ScalarTypeWithRepresentationInfo};
 
 use lang_graphql::ast::common as ast;
 
-use open_dds::types::{CustomTypeName, TypeName};
+use open_dds::types::{CustomTypeName, DataConnectorScalarRepresentationV1, TypeName};
 
 use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 
@@ -24,12 +24,14 @@ pub fn resolve<'a>(
     graphql_types: &mut graphql_config::GraphqlTypeNames,
 ) -> Result<
     BTreeMap<Qualified<DataConnectorName>, DataConnectorScalars<'a>>,
-    DataConnectorScalarTypesError,
+    Vec<DataConnectorScalarTypesError>,
 > {
     // we convert data from the old types to the new types and then start mutating everything
     // there is no doubt room for improvement here, but at least we are keeping the mutation
     // contained to this resolving stage
     let mut data_connector_scalars = convert_data_connectors_contexts(data_connectors);
+
+    let mut results = vec![];
 
     for open_dds::accessor::QualifiedObject {
         path: _,
@@ -37,21 +39,43 @@ pub fn resolve<'a>(
         object: scalar_type_representation,
     } in &metadata_accessor.data_connector_scalar_representations
     {
-        let scalar_type_name = &scalar_type_representation.data_connector_scalar_type;
+        results.push(resolve_data_connector_scalar_type(
+            scalar_type_representation,
+            subgraph,
+            scalar_types,
+            graphql_types,
+            &mut data_connector_scalars,
+            data_connectors,
+        ));
+    }
 
-        let qualified_data_connector_name = Qualified::new(
-            subgraph.clone(),
-            scalar_type_representation.data_connector_name.clone(),
-        );
+    // if everything succeeds, return results, otherwise collect all errors together
+    partition_eithers::collect_any_errors(results).map(|_| data_connector_scalars)
+}
 
-        let scalars = data_connector_scalars
+fn resolve_data_connector_scalar_type(
+    scalar_type_representation: &DataConnectorScalarRepresentationV1,
+    subgraph: &SubgraphName,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
+    data_connector_scalars: &mut BTreeMap<Qualified<DataConnectorName>, DataConnectorScalars>,
+    data_connectors: &data_connectors::DataConnectors,
+) -> Result<(), DataConnectorScalarTypesError> {
+    let scalar_type_name = &scalar_type_representation.data_connector_scalar_type;
+
+    let qualified_data_connector_name = Qualified::new(
+        subgraph.clone(),
+        scalar_type_representation.data_connector_name.clone(),
+    );
+
+    let scalars = data_connector_scalars
             .get_mut(&qualified_data_connector_name)
             .ok_or_else(|| scalar_boolean_expressions::ScalarBooleanExpressionTypeError::ScalarTypeFromUnknownDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),
             })?;
 
-        let scalar_type_by_ndc_type = scalars
+    let scalar_type_by_ndc_type = scalars
             .by_ndc_type
             .get_mut(&scalar_type_representation.data_connector_scalar_type)
             .ok_or_else(|| scalar_boolean_expressions::ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
@@ -59,68 +83,66 @@ pub fn resolve<'a>(
                 data_connector: qualified_data_connector_name.clone(),
             })?;
 
-        if scalar_type_by_ndc_type.representation.is_none() {
-            validate_type_name(
-                &scalar_type_representation.representation,
-                subgraph,
-                scalar_types,
-                scalar_type_name,
-            )?;
+    if scalar_type_by_ndc_type.representation.is_none() {
+        validate_type_name(
+            &scalar_type_representation.representation,
+            subgraph,
+            scalar_types,
+            scalar_type_name,
+        )?;
 
-            scalar_type_by_ndc_type.representation =
-                Some(scalar_type_representation.representation.clone());
+        scalar_type_by_ndc_type.representation =
+            Some(scalar_type_representation.representation.clone());
 
-            // if this is a custom scalar type,
-            // record the TypeRepresentation for it (ie, `String`, `JSON`, etc)
-            if let TypeName::Custom(custom_type_name) = &scalar_type_representation.representation {
-                let data_connector_context = data_connectors
-                    .0
-                    .get(&qualified_data_connector_name)
-                    .unwrap();
+        // if this is a custom scalar type,
+        // record the TypeRepresentation for it (ie, `String`, `JSON`, etc)
+        if let TypeName::Custom(custom_type_name) = &scalar_type_representation.representation {
+            let data_connector_context = data_connectors
+                .0
+                .get(&qualified_data_connector_name)
+                .unwrap();
 
-                let ndc_scalar_name = ndc_models::ScalarTypeName::new(ndc_models::TypeName::new(
-                    scalar_type_representation
-                        .data_connector_scalar_type
-                        .clone()
-                        .into(),
-                ));
+            let ndc_scalar_name = ndc_models::ScalarTypeName::new(ndc_models::TypeName::new(
+                scalar_type_representation
+                    .data_connector_scalar_type
+                    .clone()
+                    .into(),
+            ));
 
-                let ndc_scalar_type = data_connector_context
-                    .schema
-                    .scalar_types
-                    .get(&ndc_scalar_name)
-                    .unwrap();
+            let ndc_scalar_type = data_connector_context
+                .schema
+                .scalar_types
+                .get(&ndc_scalar_name)
+                .unwrap();
 
-                scalars.by_custom_type_name.insert(
-                    Qualified::new(subgraph.clone(), custom_type_name.clone()),
-                    ndc_scalar_type.representation.clone(),
-                );
-            }
-        } else {
-            return Err(
-                DataConnectorScalarTypesError::DuplicateDataConnectorScalarRepresentation {
-                    data_connector: qualified_data_connector_name.clone(),
-                    scalar_type: scalar_type_name.clone(),
-                },
+            scalars.by_custom_type_name.insert(
+                Qualified::new(subgraph.clone(), custom_type_name.clone()),
+                ndc_scalar_type.representation.clone(),
             );
         }
-        scalar_type_by_ndc_type.comparison_expression_name =
-            match scalar_type_representation.graphql.as_ref() {
-                None => Ok(None),
-                Some(graphql) => match &graphql.comparison_expression_type_name {
-                    None => Ok(None),
-                    Some(type_name) => mk_name(type_name.as_ref()).map(ast::TypeName).map(Some),
-                },
-            }?;
-
-        // We are allowing conflicting graphql types for scalar comparison expressions, but we still want the typename
-        // to not conflict with other graphql type names
-        if let Some(new_graphql_type) = &scalar_type_by_ndc_type.comparison_expression_name {
-            let _ = graphql_types.store(Some(new_graphql_type));
-        };
+    } else {
+        return Err(
+            DataConnectorScalarTypesError::DuplicateDataConnectorScalarRepresentation {
+                data_connector: qualified_data_connector_name.clone(),
+                scalar_type: scalar_type_name.clone(),
+            },
+        );
     }
+    scalar_type_by_ndc_type.comparison_expression_name =
+        match scalar_type_representation.graphql.as_ref() {
+            None => Ok(None),
+            Some(graphql) => match &graphql.comparison_expression_type_name {
+                None => Ok(None),
+                Some(type_name) => mk_name(type_name.as_ref()).map(ast::TypeName).map(Some),
+            },
+        }?;
 
-    Ok(data_connector_scalars)
+    // We are allowing conflicting graphql types for scalar comparison expressions, but we still want the typename
+    // to not conflict with other graphql type names
+    if let Some(new_graphql_type) = &scalar_type_by_ndc_type.comparison_expression_name {
+        let _ = graphql_types.store(Some(new_graphql_type));
+    };
+    Ok(())
 }
 
 fn validate_type_name(

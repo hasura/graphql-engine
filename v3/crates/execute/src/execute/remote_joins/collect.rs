@@ -5,17 +5,16 @@
 //! relationship field mapping.
 
 use indexmap::IndexMap;
+use metadata_resolve::QualifiedTypeReference;
 use nonempty::NonEmpty;
 use serde_json as json;
 use std::collections::{BTreeMap, HashSet};
 
-use json_ext::ValueExt;
-
 use super::error;
-use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{CommandReturnKind, ProcessResponseAs, VariableName};
+use plan_types::{FUNCTION_IR_VALUE_COLUMN_NAME, RemoteJoinVariable};
 use plan_types::{
-    JoinLocations, JoinNode, LocationKind, RemoteJoin, RemoteJoinArgument, SourceFieldAlias,
+    JoinLocations, JoinNode, LocationKind, RemoteJoin, RemoteJoinVariableSet, SourceFieldAlias,
 };
 
 /// An executable join node is a remote join node, it's collected join values
@@ -25,7 +24,7 @@ pub(crate) struct ExecutableJoinNode {
     pub(crate) join_node: RemoteJoin,
     pub(crate) remote_alias: String,
     pub(crate) location_path: Vec<LocationInfo>,
-    pub(crate) arguments: HashSet<RemoteJoinArgument>,
+    pub(crate) variable_sets: HashSet<RemoteJoinVariableSet>,
     pub(crate) sub_tree: JoinLocations,
 }
 
@@ -42,7 +41,7 @@ pub(crate) fn collect_next_join_nodes(
     lhs_response: &Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     join_locations: &JoinLocations,
-    path: &mut [LocationInfo],
+    path: &[LocationInfo],
 ) -> Result<Vec<ExecutableJoinNode>, error::FieldError> {
     let mut arguments_results = Vec::new();
 
@@ -62,7 +61,7 @@ pub(crate) fn collect_next_join_nodes(
                     path,
                 )?;
                 arguments_results.push(ExecutableJoinNode {
-                    arguments,
+                    variable_sets: arguments,
                     location_path: path.to_owned(),
                     join_node: join_node.clone(),
                     sub_tree: location.rest.clone(),
@@ -79,7 +78,7 @@ pub(crate) fn collect_next_join_nodes(
                     lhs_response,
                     lhs_response_type,
                     &location.rest,
-                    &mut new_path,
+                    &new_path,
                 )?;
                 arguments_results.extend(inner_arguments_by_remote);
             }
@@ -93,9 +92,9 @@ pub(crate) fn collect_next_join_nodes(
 fn collect_argument_from_rows(
     lhs_response: &Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_fields: &Vec<(&SourceFieldAlias, VariableName)>,
+    join_fields: &Vec<JoinField<'_>>,
     path: &[LocationInfo],
-) -> Result<HashSet<RemoteJoinArgument>, error::FieldError> {
+) -> Result<HashSet<RemoteJoinVariableSet>, error::FieldError> {
     let mut arguments = HashSet::new();
     for row_set in lhs_response {
         if let Some(ref rows) = row_set.rows {
@@ -110,7 +109,7 @@ fn collect_argument_from_rows(
                                 "Unexpected aggregate response on the LHS of a remote join"
                                     .to_owned(),
                         }
-                        .into())
+                        .into());
                     }
                     ProcessResponseAs::CommandResponse {
                         command_name: _,
@@ -139,13 +138,13 @@ fn collect_argument_from_rows(
 /// From each row gather arguments based on join fields
 fn collect_argument_from_row(
     row: &IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
-    join_fields: &Vec<(&SourceFieldAlias, VariableName)>,
+    join_fields: &Vec<JoinField<'_>>,
     path: &[LocationInfo],
-    arguments: &mut HashSet<RemoteJoinArgument>,
+    arguments: &mut HashSet<RemoteJoinVariableSet>,
 ) -> Result<(), error::FieldError> {
     match NonEmpty::from_slice(path) {
         None => {
-            let argument = create_argument(join_fields, row);
+            let argument = extract_variable_set(join_fields, row);
             // de-duplicate arguments
             arguments.insert(argument);
         }
@@ -157,12 +156,12 @@ fn collect_argument_from_row(
                 },
                 path_tail,
             ) = nonempty_path.split_first();
-            let nested_val =
-                row.get(alias.as_str())
-                    .ok_or(error::FieldInternalError::InternalGeneric {
-                        description: "invalid NDC response; could not find {key} in response"
-                            .to_string(),
-                    })?;
+            let nested_val = row.get(alias.as_str()).ok_or_else(|| {
+                error::FieldInternalError::InternalGeneric {
+                    description: "invalid NDC response; could not find {key} in response"
+                        .to_string(),
+                }
+            })?;
             if let Some(parsed_rows) = rows_from_row_field_value(*location_kind, nested_val)? {
                 for inner_row in parsed_rows {
                     collect_argument_from_row(&inner_row, join_fields, path_tail, arguments)?;
@@ -175,26 +174,52 @@ fn collect_argument_from_row(
 
 /// Get all the field aliases in LHS used for the join (i.e. fields used in the
 /// Relationship mapping), and also the variables used in the RHS IR
-pub(crate) fn get_join_fields(join_node: &RemoteJoin) -> Vec<(&SourceFieldAlias, VariableName)> {
+pub(crate) fn get_join_fields(join_node: &RemoteJoin) -> Vec<JoinField<'_>> {
     let mut join_fields = vec![];
-    for (src_alias, target_field) in join_node.join_mapping.values() {
-        join_fields.push((src_alias, target_field.make_variable_name()));
+    for mapping in join_node.join_mapping.values() {
+        join_fields.push(JoinField {
+            source_field_alias: &mapping.source_field_alias,
+            field_type: &mapping.source_field_type,
+            variable_name: mapping.target_field.make_variable_name(),
+        });
     }
     join_fields
 }
 
+pub struct JoinField<'a> {
+    /// The name of the field to read the value from
+    pub source_field_alias: &'a SourceFieldAlias,
+
+    /// The type of the field
+    pub field_type: &'a QualifiedTypeReference,
+
+    /// The variable name to put the field value in in the remote query
+    pub variable_name: VariableName,
+}
+
 /// From a row, given the join fields, collect the values of the fields and
-/// return them as 'RemoteJoinArgument'
-pub(crate) fn create_argument(
-    join_fields: &Vec<(&SourceFieldAlias, VariableName)>,
+/// return them as 'RemoteJoinVariableSet'
+pub(crate) fn extract_variable_set(
+    join_fields: &Vec<JoinField<'_>>,
     row: &IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
-) -> RemoteJoinArgument {
-    let mut argument = BTreeMap::new();
-    for (src_alias, variable_name) in join_fields {
-        let val = get_value(src_alias, row);
-        argument.insert(variable_name.clone(), ValueExt::from(val.clone()));
+) -> RemoteJoinVariableSet {
+    let mut variable_set = BTreeMap::new();
+    for JoinField {
+        source_field_alias,
+        field_type,
+        variable_name,
+    } in join_fields
+    {
+        let val = get_value(source_field_alias, row);
+        variable_set.insert(
+            variable_name.clone(),
+            RemoteJoinVariable {
+                variable_type: (*field_type).clone(),
+                value: val.clone(),
+            },
+        );
     }
-    argument
+    variable_set
 }
 
 pub(crate) fn get_value<'n>(

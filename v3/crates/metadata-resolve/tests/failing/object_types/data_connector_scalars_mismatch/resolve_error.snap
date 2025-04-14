@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/object_types/data_connector_scalars_mismatch/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-the field id in author (in subgraph default) should have the type Int for data connector db (in subgraph default) but the field has type String
+Error: the field id in author (in subgraph default) should have the type Int for data connector db (in subgraph default) but the field has type String

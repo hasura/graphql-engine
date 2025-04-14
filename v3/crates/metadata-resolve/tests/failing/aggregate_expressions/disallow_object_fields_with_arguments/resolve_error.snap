@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/disallow_object_fields_with_arguments/metadata.json
 ---
-the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'invoiceId' (from the operand type Invoice (in subgraph default)) that has field arguments. Fields with arguments cannot be aggregated
+Error: the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'invoiceId' (from the operand type Invoice (in subgraph default)) that has field arguments. Fields with arguments cannot be aggregated

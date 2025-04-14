@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_model_source/metadata.json
 ---
-a source must be defined for model Invoice (in subgraph default) in order to use aggregate expressions
+Error: a source must be defined for model Invoice (in subgraph default) in order to use aggregate expressions

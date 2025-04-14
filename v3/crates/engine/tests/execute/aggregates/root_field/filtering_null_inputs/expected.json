@@ -1,0 +1,48 @@
+[
+  {
+    "data": {
+      "Invoice_aggregate": {
+        "BillingState": {
+          "_min": "AB",
+          "_max": "WI",
+          "_count_distinct": 25
+        },
+        "InvoiceId": {
+          "min": 1,
+          "max": 412,
+          "count": 412
+        },
+        "Total": {
+          "_min": 0.99,
+          "_max": 25.86,
+          "_sum": 2328.6,
+          "_stddev": 4.745319693568106
+        },
+        "count_all": 412
+      }
+    }
+  },
+  {
+    "data": {
+      "Invoice_aggregate": {
+        "BillingState": {
+          "_min": "AB",
+          "_max": "WI",
+          "_count_distinct": 25
+        },
+        "InvoiceId": {
+          "min": 1,
+          "max": 412,
+          "count": 412
+        },
+        "Total": {
+          "_min": 0.99,
+          "_max": 25.86,
+          "_sum": 2328.6,
+          "_stddev": 4.745319693568106
+        },
+        "count_all": 412
+      }
+    }
+  }
+]

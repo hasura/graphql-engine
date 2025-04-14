@@ -136,8 +136,8 @@
                 "aggregationFunctions": [
                   {
                     "name": "_min",
-                    "returnType": "String",
-                    "description": "The lexicographically least string"
+                    "returnType": "Int",
+                    "description": "The smallest integer"
                   }
                 ],
                 "dataConnectorAggregationFunctionMapping": []

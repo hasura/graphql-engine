@@ -1,40 +1,54 @@
 use axum::{
+    Extension, Json, Router,
     http::{HeaderMap, Method, Uri},
     response::IntoResponse,
     routing::get,
-    Extension, Json, Router,
 };
 use hasura_authn_core::Session;
 use std::convert::Infallible;
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
-use tracing_util::{set_status_on_current_span, SpanVisibility, Traceable};
+use tracing_util::{SpanVisibility, Traceable, set_status_on_current_span};
 
-use crate::{authentication_middleware, EngineState};
+use crate::{EngineState, authentication_middleware};
 
 pub fn create_json_api_router(state: EngineState) -> axum::Router {
-    let router = Router::new()
-        .route("/__schema", get(handle_rest_schema))
+    // Create the base router and nest both paths to the same handler
+    Router::new()
+        .nest(
+            jsonapi::EndPoint::V1Rest.as_str(),
+            build_router(state.clone(), jsonapi::EndPoint::V1Rest),
+        )
+        .nest(
+            jsonapi::EndPoint::V1Jsonapi.as_str(),
+            build_router(state, jsonapi::EndPoint::V1Jsonapi),
+        )
+}
+
+fn build_router(state: EngineState, endpoint: jsonapi::EndPoint) -> axum::Router {
+    Router::new()
+        .route("/__schema", get(handle_jsonapi_schema))
         // TODO: update method GET; for now we are only supporting queries. And
         // in JSON:API spec, all queries have the GET method. Not even HEAD is
         // supported. So this should be fine.
-        .route("/*path", get(handle_rest_request))
-        .layer(axum::middleware::from_fn(
+        .route("/*path", get(handle_jsonapi_request))
+        .layer(axum::middleware::from_fn_with_state(
+            jsonapi::build_state_with_middleware_error_converter(()),
             hasura_authn_core::resolve_session,
         ))
         .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
+            jsonapi::build_state_with_middleware_error_converter(state.clone()),
             authentication_middleware,
         ))
-        .layer(axum::middleware::from_fn(
-            jsonapi::rest_request_tracing_middleware,
+        .layer(axum::middleware::from_fn_with_state(
+            endpoint,
+            jsonapi::jsonapi_request_tracing_middleware,
         ))
         // *PLEASE DO NOT ADD ANY MIDDLEWARE
-        // BEFORE THE `explain_request_tracing_middleware`*
+        // BEFORE THE `jsonapi_request_tracing_middleware`*
         // Refer to it for more details.
         .layer(TraceLayer::new_for_http())
-        .with_state(state);
-    Router::new().nest("/v1/rest", router)
+        .with_state(state)
 }
 
 struct JsonApiSchemaResponse {
@@ -59,7 +73,7 @@ impl Traceable for JsonApiSchemaResponse {
     }
 }
 
-async fn handle_rest_schema(
+async fn handle_jsonapi_schema(
     axum::extract::State(state): axum::extract::State<EngineState>,
     Extension(session): Extension<Session>,
 ) -> impl IntoResponse {
@@ -83,7 +97,7 @@ async fn handle_rest_schema(
     )
 }
 
-async fn handle_rest_request(
+async fn handle_jsonapi_request(
     request_headers: HeaderMap,
     method: Method,
     uri: Uri,
@@ -94,8 +108,8 @@ async fn handle_rest_request(
     let tracer = tracing_util::global_tracer();
     let response = tracer
         .in_span_async(
-            "handle_rest_request",
-            "Handle rest request",
+            "handle_jsonapi_request",
+            "Handle jsonapi request",
             SpanVisibility::User,
             || {
                 Box::pin(jsonapi::handler_internal(
@@ -115,51 +129,8 @@ async fn handle_rest_request(
     set_status_on_current_span(&response);
     match response {
         Ok(r) => (axum::http::StatusCode::OK, Json(r)).into_response(),
-        Err(e) => (match e {
-            jsonapi::RequestError::BadRequest(err) => (
-                axum::http::StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({"error": err})),
-            ),
-            jsonapi::RequestError::ParseError(err) => (
-                axum::http::StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({"error": err})),
-            ),
-            jsonapi::RequestError::NotFound => (
-                axum::http::StatusCode::NOT_FOUND,
-                Json(serde_json::json!({"error": "invalid route or path"})),
-            ),
-            jsonapi::RequestError::InternalError(jsonapi::InternalError::EmptyQuerySet)
-            | jsonapi::RequestError::PlanError(
-                plan::PlanError::Internal(_)
-                | plan::PlanError::InternalError(_)
-                | plan::PlanError::ArgumentPresetExecutionError(_),
-            ) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error" })),
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::External(_err)) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error" })),
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::Permission(_msg)) => (
-                axum::http::StatusCode::FORBIDDEN,
-                Json(serde_json::json!({"error": "Access forbidden" })), // need to decide how much
-                                                                         // we tell the user, for
-                                                                         // now default to nothing
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::Relationship(_error)) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error" })),
-            ),
-            jsonapi::RequestError::PlanError(plan::PlanError::OrderBy(_error)) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal error" })),
-            ),
-            jsonapi::RequestError::ExecuteError(field_error) => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": field_error.to_string() })),
-            ),
-        })
-        .into_response(),
+        Err(e) => e
+            .into_http_error(state.expose_internal_errors)
+            .into_response(),
     }
 }

@@ -135,6 +135,9 @@ input_file: crates/metadata-resolve/tests/passing/conflicting_type_names_warning
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

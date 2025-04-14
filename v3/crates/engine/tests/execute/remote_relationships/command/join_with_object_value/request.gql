@@ -1,0 +1,11 @@
+query MyQuery {
+  Institutions {
+    Id
+    Location {
+      Country
+      CountryId
+    }
+    # test aliases with relationships too (ENG-1712), for the command case:
+    the_eval_loc: EvaluatedLocation
+  }
+}

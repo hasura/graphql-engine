@@ -16,11 +16,13 @@ pub use types::{Relationship, Relationships};
 pub fn resolve<'s>(
     metadata_accessor: &'s open_dds::accessor::MetadataAccessor,
     object_types_with_permissions: &type_permissions::ObjectTypesWithPermissions,
-) -> Result<Relationships<'s>, RelationshipError> {
+) -> Result<Relationships<'s>, Vec<RelationshipError>> {
     let mut relationships: BTreeMap<
         Qualified<CustomTypeName>,
         BTreeMap<RelationshipName, Relationship<'s>>,
     > = BTreeMap::new();
+
+    let mut results = vec![];
 
     for open_dds::accessor::QualifiedObject {
         path: _,
@@ -28,49 +30,69 @@ pub fn resolve<'s>(
         object: relationship,
     } in &metadata_accessor.relationships
     {
-        let qualified_type_name =
-            Qualified::new(subgraph.clone(), relationship.source_type.clone());
+        results.push(resolve_relationship(
+            object_types_with_permissions,
+            subgraph,
+            relationship,
+            metadata_accessor,
+            &mut relationships,
+        ));
+    }
 
-        if !object_types_with_permissions.contains_key(&qualified_type_name) {
-            return Err(RelationshipError::RelationshipDefinedOnUnknownType {
+    partition_eithers::collect_any_errors(results).map(|_| Relationships(relationships))
+}
+
+fn resolve_relationship<'s>(
+    object_types_with_permissions: &type_permissions::ObjectTypesWithPermissions,
+    subgraph: &SubgraphName,
+    relationship: &'s RelationshipV1,
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    relationships: &mut BTreeMap<
+        Qualified<CustomTypeName>,
+        BTreeMap<RelationshipName, Relationship<'s>>,
+    >,
+) -> Result<(), RelationshipError> {
+    let qualified_type_name = Qualified::new(subgraph.clone(), relationship.source_type.clone());
+
+    if !object_types_with_permissions.contains_key(&qualified_type_name) {
+        return Err(RelationshipError::RelationshipDefinedOnUnknownType {
+            relationship_name: relationship.name.clone(),
+            object_type_name: qualified_type_name,
+        });
+    }
+
+    // build up map of maps
+    if let Some(existing_relationship) = relationships.get_mut(&qualified_type_name) {
+        let result = existing_relationship.insert(
+            relationship.name.clone(),
+            mk_relationship(
+                &metadata_accessor.flags,
+                &metadata_accessor.subgraphs,
+                relationship,
+            ),
+        );
+
+        // explode if we find duplicates for a name
+        if result.is_some() {
+            return Err(RelationshipError::DuplicateRelationshipForType {
                 relationship_name: relationship.name.clone(),
                 object_type_name: qualified_type_name,
             });
         }
+    } else {
+        let mut inner_map = BTreeMap::new();
+        inner_map.insert(
+            relationship.name.clone(),
+            mk_relationship(
+                &metadata_accessor.flags,
+                &metadata_accessor.subgraphs,
+                relationship,
+            ),
+        );
+        relationships.insert(qualified_type_name, inner_map);
+    };
 
-        // build up map of maps
-        if let Some(existing_relationship) = relationships.get_mut(&qualified_type_name) {
-            let result = existing_relationship.insert(
-                relationship.name.clone(),
-                mk_relationship(
-                    &metadata_accessor.flags,
-                    &metadata_accessor.subgraphs,
-                    relationship,
-                ),
-            );
-
-            // explode if we find duplicates for a name
-            if result.is_some() {
-                return Err(RelationshipError::DuplicateRelationshipForType {
-                    relationship_name: relationship.name.clone(),
-                    object_type_name: qualified_type_name,
-                });
-            }
-        } else {
-            let mut inner_map = BTreeMap::new();
-            inner_map.insert(
-                relationship.name.clone(),
-                mk_relationship(
-                    &metadata_accessor.flags,
-                    &metadata_accessor.subgraphs,
-                    relationship,
-                ),
-            );
-            relationships.insert(qualified_type_name, inner_map);
-        };
-    }
-
-    Ok(Relationships(relationships))
+    Ok(())
 }
 
 fn mk_relationship<'s>(

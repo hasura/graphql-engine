@@ -11,11 +11,12 @@ use open_dds::{
 };
 
 use crate::{
-    stages::aggregates::CountAggregateType,
-    stages::boolean_expressions::BooleanExpressionTypeIdentifier,
-    stages::graphql_config::GraphqlConfigError,
-    stages::scalar_boolean_expressions::LogicalOperators, Qualified, QualifiedTypeName,
-    QualifiedTypeReference,
+    Qualified, QualifiedTypeName, QualifiedTypeReference,
+    stages::{
+        aggregates::CountAggregateType, boolean_expressions::BooleanExpressionTypeIdentifier,
+        graphql_config::GraphqlConfigError, scalar_boolean_expressions::LogicalOperators,
+    },
+    types::error::ContextualError,
 };
 
 #[derive(Debug)]
@@ -128,6 +129,12 @@ pub struct NamedAggregateBooleanExpressionError {
     pub error: AggregateBooleanExpressionError,
 }
 
+impl ContextualError for NamedAggregateBooleanExpressionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum AggregateBooleanExpressionError {
     #[error("boolean expressions with aggregate operands are not supported")]
@@ -154,19 +161,25 @@ pub enum AggregateBooleanExpressionError {
         aggregate_expression: Qualified<AggregateExpressionName>,
     },
 
-    #[error("the operand type '{operand_type}' does not match the operand type '{aggregate_operand}' from the aggregate expression '{aggregate_expression}'")]
+    #[error(
+        "the operand type '{operand_type}' does not match the operand type '{aggregate_operand}' from the aggregate expression '{aggregate_expression}'"
+    )]
     AggregateOperandTypeMismatch {
         operand_type: QualifiedTypeName,
         aggregate_expression: Qualified<AggregateExpressionName>,
         aggregate_operand: QualifiedTypeName,
     },
 
-    #[error("the aggregate function '{aggregation_function_name}' is defined more than once in the comparable aggregation functions")]
+    #[error(
+        "the aggregate function '{aggregation_function_name}' is defined more than once in the comparable aggregation functions"
+    )]
     DuplicateAggregationFunctionFound {
         aggregation_function_name: AggregationFunctionName,
     },
 
-    #[error("the aggregation function '{aggregation_function_name}' is not defined in the aggregate expression '{aggregate_expression}'")]
+    #[error(
+        "the aggregation function '{aggregation_function_name}' is not defined in the aggregate expression '{aggregate_expression}'"
+    )]
     AggregationFunctionNotFound {
         aggregation_function_name: AggregationFunctionName,
         aggregate_expression: Qualified<AggregateExpressionName>,
@@ -179,7 +192,9 @@ pub enum AggregateBooleanExpressionError {
         boolean_expression_type: BooleanExpressionTypeIdentifier,
     },
 
-    #[error("type mismatch between the aggregation function '{aggregation_function_name}' (return type: '{aggregation_function_return_type}') and the specified boolean expression type '{boolean_expression_type}' (operand type: '{boolean_expression_operand_type}')")]
+    #[error(
+        "type mismatch between the aggregation function '{aggregation_function_name}' (return type: '{aggregation_function_return_type}') and the specified boolean expression type '{boolean_expression_type}' (operand type: '{boolean_expression_operand_type}')"
+    )]
     AggregationFunctionTypeMismatch {
         aggregation_function_name: AggregationFunctionName,
         aggregation_function_return_type: QualifiedTypeName,
@@ -187,19 +202,25 @@ pub enum AggregateBooleanExpressionError {
         boolean_expression_operand_type: QualifiedTypeName,
     },
 
-    #[error("the aggregation function '{aggregation_function_name}' returns an array type ({aggregation_function_return_type}). Array types are not supported in aggregate comparisons")]
+    #[error(
+        "the aggregation function '{aggregation_function_name}' returns an array type ({aggregation_function_return_type}). Array types are not supported in aggregate comparisons"
+    )]
     ComparisonAgainstArrayTypesNotSupported {
         aggregation_function_name: AggregationFunctionName,
         aggregation_function_return_type: QualifiedTypeReference,
     },
 
-    #[error("the {count_type} aggregation cannot be compared to because it is not enabled on the aggregate expression '{aggregate_expression}'")]
+    #[error(
+        "the {count_type} aggregation cannot be compared to because it is not enabled on the aggregate expression '{aggregate_expression}'"
+    )]
     CountAggregateNotEnabled {
         count_type: CountAggregateType,
         aggregate_expression: Qualified<AggregateExpressionName>,
     },
 
-    #[error("type mismatch between the '{count_type}' aggregate (return type: '{count_return_type}') and the specified boolean expression type '{boolean_expression_type}' (operand type: '{boolean_expression_operand_type}')")]
+    #[error(
+        "type mismatch between the '{count_type}' aggregate (return type: '{count_return_type}') and the specified boolean expression type '{boolean_expression_type}' (operand type: '{boolean_expression_operand_type}')"
+    )]
     CountAggregateTypeMismatch {
         count_type: CountAggregateType,
         count_return_type: QualifiedTypeName,
@@ -207,7 +228,9 @@ pub enum AggregateBooleanExpressionError {
         boolean_expression_operand_type: QualifiedTypeName,
     },
 
-    #[error("the operand type '{operand_type}' does not match the operand type of the filter boolean expression type '{boolean_expression_type}': '{boolean_expression_operand_type}'")]
+    #[error(
+        "the operand type '{operand_type}' does not match the operand type of the filter boolean expression type '{boolean_expression_type}': '{boolean_expression_operand_type}'"
+    )]
     FilterInputFilterExpressionTypeMismatch {
         operand_type: QualifiedTypeName,
         boolean_expression_type: Qualified<CustomTypeName>,
@@ -222,31 +245,41 @@ pub enum AggregateBooleanExpressionError {
     #[error("the field '{field_name}' is defined more than once in the comparable fields")]
     DuplicateComparableFieldsFound { field_name: FieldName },
 
-    #[error("the field '{field_name}' used in comparable fields is not an aggregatable field defined in the aggregate expression '{aggregate_expression}'")]
+    #[error(
+        "the field '{field_name}' used in comparable fields is not an aggregatable field defined in the aggregate expression '{aggregate_expression}'"
+    )]
     ComparableFieldNotFound {
         field_name: FieldName,
         aggregate_expression: Qualified<AggregateExpressionName>,
     },
 
-    #[error("the operand object type '{operand_type}' does not contain the field '{field_name}' used in the comparable fields")]
+    #[error(
+        "the operand object type '{operand_type}' does not contain the field '{field_name}' used in the comparable fields"
+    )]
     ComparableFieldNotFoundOnObjectType {
         operand_type: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
 
-    #[error("the type of the comparable field '{field_name}' ({field_type}) is an array type. Nested aggregation over array types is not supported")]
+    #[error(
+        "the type of the comparable field '{field_name}' ({field_type}) is an array type. Nested aggregation over array types is not supported"
+    )]
     ComparableFieldNestedArrayTypeNotSupported {
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
 
-    #[error("the boolean expression type ({boolean_expression_type}) used in the comparable field '{field_name}' could not be found")]
+    #[error(
+        "the boolean expression type ({boolean_expression_type}) used in the comparable field '{field_name}' could not be found"
+    )]
     ComparableFieldBooleanExpressionNotFound {
         field_name: FieldName,
         boolean_expression_type: Qualified<CustomTypeName>,
     },
 
-    #[error("the boolean expression type ({boolean_expression_type}) used in the comparable field '{field_name}' must have a '{aggregate_operand_type}' operand, to match the field type '{field_type}'")]
+    #[error(
+        "the boolean expression type ({boolean_expression_type}) used in the comparable field '{field_name}' must have a '{aggregate_operand_type}' operand, to match the field type '{field_type}'"
+    )]
     ComparableFieldBooleanExpressionIncorrectOperandType {
         boolean_expression_type: Qualified<CustomTypeName>,
         aggregate_operand_type: AggregateOperandType,
@@ -254,7 +287,9 @@ pub enum AggregateBooleanExpressionError {
         field_type: QualifiedTypeName,
     },
 
-    #[error("the type of the comparable field '{field_name}' ({field_type}) does not match the operand type of the boolean expression type '{boolean_expression_type}': '{boolean_expression_operand_type}'")]
+    #[error(
+        "the type of the comparable field '{field_name}' ({field_type}) does not match the operand type of the boolean expression type '{boolean_expression_type}': '{boolean_expression_operand_type}'"
+    )]
     ComparableFieldBooleanExpressionTypeMismatch {
         field_name: FieldName,
         field_type: QualifiedTypeName,
@@ -262,50 +297,66 @@ pub enum AggregateBooleanExpressionError {
         boolean_expression_operand_type: QualifiedTypeName,
     },
 
-    #[error("the relationship '{relationship_name}' is defined more than once in the comparable relationships")]
+    #[error(
+        "the relationship '{relationship_name}' is defined more than once in the comparable relationships"
+    )]
     DuplicateComparableRelationshipsFound {
         relationship_name: open_dds::relationships::RelationshipName,
     },
 
-    #[error("the comparable relationship '{relationship_name}' was not found for the operand type '{operand_type}'")]
+    #[error(
+        "the comparable relationship '{relationship_name}' was not found for the operand type '{operand_type}'"
+    )]
     ComparableRelationshipNotFound {
         operand_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
 
-    #[error("the comparable relationship '{relationship_name}' for the operand type '{operand_type}' targets a command. This is not supported")]
+    #[error(
+        "the comparable relationship '{relationship_name}' for the operand type '{operand_type}' targets a command. This is not supported"
+    )]
     ComparableRelationshipCommandTargetNotSupported {
         operand_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
 
-    #[error("the comparable relationship '{relationship_name}' for the operand type '{operand_type}' is an array relationship. This is not supported")]
+    #[error(
+        "the comparable relationship '{relationship_name}' for the operand type '{operand_type}' is an array relationship. This is not supported"
+    )]
     ComparableArrayRelationshipNotSupported {
         operand_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
 
-    #[error("the comparable relationship '{relationship_name}' for the operand type '{operand_type}' targets a model than cannot be found: '{target_model_name}'")]
+    #[error(
+        "the comparable relationship '{relationship_name}' for the operand type '{operand_type}' targets a model than cannot be found: '{target_model_name}'"
+    )]
     ComparableRelationshipTargetModelNotFound {
         operand_type: Qualified<CustomTypeName>,
         relationship_name: open_dds::relationships::RelationshipName,
         target_model_name: Qualified<open_dds::models::ModelName>,
     },
 
-    #[error("the comparable relationship '{relationship_name}' for the operand type '{operand_type}' references a boolean expression type that cannot be found: '{boolean_expression_type}'")]
+    #[error(
+        "the comparable relationship '{relationship_name}' for the operand type '{operand_type}' references a boolean expression type that cannot be found: '{boolean_expression_type}'"
+    )]
     ComparableRelationshipBooleanExpressionNotFound {
         operand_type: Qualified<CustomTypeName>,
         relationship_name: open_dds::relationships::RelationshipName,
         boolean_expression_type: Qualified<CustomTypeName>,
     },
 
-    #[error("the boolean expression type '{boolean_expression_type}' used in the comparable relationship '{relationship_name}' does not have an object aggregate operand")]
+    #[error(
+        "the boolean expression type '{boolean_expression_type}' used in the comparable relationship '{relationship_name}' does not have an object aggregate operand"
+    )]
     ComparableRelationshipBooleanExpressionIncorrectOperandType {
         relationship_name: open_dds::relationships::RelationshipName,
         boolean_expression_type: Qualified<CustomTypeName>,
     },
 
-    #[error("the object type of the target of the relationship '{relationship_name}' ({relationship_target_object_type}) does not match the operand type of the boolean expression type '{boolean_expression_type}': '{boolean_expression_operand_type}'")]
+    #[error(
+        "the object type of the target of the relationship '{relationship_name}' ({relationship_target_object_type}) does not match the operand type of the boolean expression type '{boolean_expression_type}': '{boolean_expression_operand_type}'"
+    )]
     ComparableRelationshipBooleanExpressionTypeMismatch {
         relationship_name: open_dds::relationships::RelationshipName,
         relationship_target_object_type: Qualified<CustomTypeName>,
@@ -316,14 +367,18 @@ pub enum AggregateBooleanExpressionError {
     #[error("the filter input model '{model_name}' cannot be found")]
     FilterInputModelNotFound { model_name: Qualified<ModelName> },
 
-    #[error("the operand type '{operand_type}' does not match the type of the model '{model_name}': '{model_type}'")]
+    #[error(
+        "the operand type '{operand_type}' does not match the type of the model '{model_name}': '{model_type}'"
+    )]
     FilterInputModelTypeMismatch {
         operand_type: Qualified<CustomTypeName>,
         model_name: Qualified<ModelName>,
         model_type: Qualified<CustomTypeName>,
     },
 
-    #[error("a GraphQL field name conflict exists between the '{name}' {name_source_1} and the '{name}' {name_source_2}. One of these will need to be renamed.")]
+    #[error(
+        "a GraphQL field name conflict exists between the '{name}' {name_source_1} and the '{name}' {name_source_2}. One of these will need to be renamed."
+    )]
     GraphqlNameConflict {
         name: String,
         name_source_1: NameSource,
@@ -364,9 +419,13 @@ pub struct NamedAggregateBooleanExpressionIssue {
 
 #[derive(Debug, thiserror::Error)]
 pub enum AggregateBooleanExpressionIssue {
-    #[error("a graphql section is defined but it will not appear in the GraphQL API unless logical operator field names are also configured in the GraphqlConfig in query.filterInputConfig")]
+    #[error(
+        "a graphql section is defined but it will not appear in the GraphQL API unless logical operator field names are also configured in the GraphqlConfig in query.filterInputConfig"
+    )]
     MissingLogicalOperatorNamesInGraphqlConfig,
 
-    #[error("a {count_type} aggregation is defined but it will not appear in the GraphQL API unless count aggregate field names are also configured in the GraphqlConfig in query.aggregate")]
+    #[error(
+        "a {count_type} aggregation is defined but it will not appear in the GraphQL API unless count aggregate field names are also configured in the GraphqlConfig in query.aggregate"
+    )]
     MissingCountAggregationNamesInGraphqlConfig { count_type: CountAggregateType },
 }

@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/order_by_expressions/disallow_nested_field_ordering_when_unsupported/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-The order by expression 'MyOrderByExpression (in subgraph default)' used in model 'mymodel (in subgraph default)' contains a nested field 'test', however the data connector 'myconnector (in subgraph default)' used in the model does not support ordering by nested fields
+Error: The order by expression 'MyOrderByExpression (in subgraph default)' used in model 'mymodel (in subgraph default)' contains a nested field 'test', however the data connector 'myconnector (in subgraph default)' used in the model does not support ordering by nested fields

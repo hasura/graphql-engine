@@ -60,7 +60,7 @@
           "comparisonOperators": [
             {
               "name": "range",
-              "argumentType": "int_range"
+              "argumentType": "int_range!"
             }
           ],
           "dataConnectorOperatorMapping": [

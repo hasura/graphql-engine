@@ -17,7 +17,6 @@ metadata-resolve = {path = "../../metadata-resolve" }
 
 base64 = { workspace = true }
 indexmap = { workspace = true }
-ndc-models = { workspace = true }
 nonempty = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

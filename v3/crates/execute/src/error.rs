@@ -3,7 +3,6 @@ use gql::{ast::common as ast, http::GraphQLError};
 use lang_graphql as gql;
 use open_dds::relationships::RelationshipName;
 use plan_types::RemotePredicateKey;
-use reqwest::StatusCode;
 use serde_json as json;
 use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
@@ -12,6 +11,14 @@ use transitive::Transitive;
 use crate::{execute, ndc::client as ndc_client};
 
 use graphql_schema::Annotation;
+
+/// An intermediate type to represent a field error response to be returned
+/// to an API client (GraphQL or JSON:API)
+pub struct FieldErrorResponse {
+    pub message: String,
+    pub details: Option<serde_json::Value>,
+    pub is_internal: bool,
+}
 
 /// Field errors are raised during execution from a root field
 /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Field-errors>
@@ -34,7 +41,9 @@ pub enum FieldError {
     #[error("subscription are not supported over HTTP")]
     SubscriptionsNotSupported,
 
-    #[error("Relationship '{name}' is either remote or not having 'relation_comparisons' NDC capability; not supported for filtering")]
+    #[error(
+        "Relationship '{name}' is either remote or not having 'relation_comparisons' NDC capability; not supported for filtering"
+    )]
     RelationshipPredicatesNotSupported { name: RelationshipName },
 
     #[error("internal error: {0}")]
@@ -54,27 +63,42 @@ impl FieldError {
         }
     }
 
+    pub fn to_error_response(
+        &self,
+        expose_internal_errors: ExposeInternalErrors,
+    ) -> FieldErrorResponse {
+        let details = self.get_details();
+        match (self, expose_internal_errors) {
+            (Self::InternalError(_internal), ExposeInternalErrors::Censor) => FieldErrorResponse {
+                message: "internal error".into(),
+                details: None,
+                is_internal: true,
+            },
+            (e, _) => FieldErrorResponse {
+                message: e.to_string(),
+                details,
+                is_internal: false,
+            },
+        }
+    }
+
     pub fn to_graphql_error(
         &self,
         expose_internal_errors: ExposeInternalErrors,
         path: Option<Vec<gql::http::PathSegment>>,
     ) -> GraphQLError {
-        let details = self.get_details();
-        match (self, expose_internal_errors) {
-            (Self::InternalError(_internal), ExposeInternalErrors::Censor) => GraphQLError {
-                message: "internal error".into(),
-                path,
-                // Internal errors showing up in the API response is not desirable.
-                // Hence, extensions are masked for internal errors.
-                extensions: None,
-                is_internal: true,
-            },
-            (e, _) => GraphQLError {
-                message: e.to_string(),
-                path,
-                extensions: details.map(|details| gql::http::Extensions { details }),
-                is_internal: false,
-            },
+        // Convert the error to an error response
+        let FieldErrorResponse {
+            message,
+            details,
+            is_internal,
+        } = self.to_error_response(expose_internal_errors);
+        // Build a GraphQL error from the error response
+        GraphQLError {
+            message,
+            path,
+            extensions: details.map(|details| gql::http::Extensions { details }),
+            is_internal,
         }
     }
 }
@@ -195,22 +219,25 @@ impl NDCUnexpectedError {
 // Convert NDC errors
 impl From<ndc_client::Error> for FieldError {
     fn from(ndc_client_error: ndc_client::Error) -> FieldError {
-        if let ndc_client::Error::Connector(err) = &ndc_client_error {
-            if matches!(
-                err.status,
-                // We forward the errors with status code 200 (OK), 403(FORBIDDEN), 409(CONFLICT) and 422(UNPROCESSABLE_ENTITY)
-                StatusCode::OK
-                    | StatusCode::FORBIDDEN
-                    | StatusCode::CONFLICT
-                    | StatusCode::UNPROCESSABLE_ENTITY
-            ) {
-                return FieldError::NDCExpected {
-                    connector_error: err.clone(),
-                };
+        match ndc_client_error {
+            // We forward the errors with status code 200 (OK), 403(FORBIDDEN), 409(CONFLICT) and 422(UNPROCESSABLE_ENTITY)
+            ndc_client::Error::Connector(err)
+                if matches!(
+                    err.status,
+                    reqwest::StatusCode::OK
+                        | reqwest::StatusCode::FORBIDDEN
+                        | reqwest::StatusCode::CONFLICT
+                        | reqwest::StatusCode::UNPROCESSABLE_ENTITY
+                ) =>
+            {
+                FieldError::NDCExpected {
+                    connector_error: err,
+                }
             }
+            // Rest all errors are internal
+            ndc_client_error => FieldError::InternalError(FieldInternalError::NDCUnexpected(
+                NDCUnexpectedError::NDCClientError(ndc_client_error),
+            )),
         }
-        FieldError::InternalError(FieldInternalError::NDCUnexpected(
-            NDCUnexpectedError::NDCClientError(ndc_client_error),
-        ))
     }
 }

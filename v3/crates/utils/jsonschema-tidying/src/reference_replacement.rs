@@ -13,15 +13,15 @@ pub fn in_schema(schema: &mut Schema, search: &str, replace: &str) {
 
 /// Replace any `search` reference with the `replace` reference in the given schema object.
 pub fn in_schema_object(schema_object: &mut SchemaObject, search: &str, replace: &str) {
-    if let Some(ref mut subschema_validation) = &mut schema_object.subschemas {
+    if let Some(subschema_validation) = &mut schema_object.subschemas {
         in_subschema_validation(&mut *subschema_validation, search, replace)
     }
 
-    if let Some(ref mut array_validation) = &mut schema_object.array {
+    if let Some(array_validation) = &mut schema_object.array {
         in_array_validation(&mut *array_validation, search, replace)
     }
 
-    if let Some(ref mut object_validation) = &mut schema_object.object {
+    if let Some(object_validation) = &mut schema_object.object {
         in_object_validation(&mut *object_validation, search, replace)
     }
 

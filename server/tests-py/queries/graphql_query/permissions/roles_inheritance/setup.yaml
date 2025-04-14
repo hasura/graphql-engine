@@ -1,0 +1,60 @@
+type: bulk
+args:
+
+# Track tables
+- type: pg_track_table
+  args:
+    table: users
+
+- type: pg_track_table
+  args:
+    table: dummy_table
+
+# Create roles and permissions
+- type: pg_create_select_permission
+  args:
+    table: users
+    role: public
+    permission:
+      columns:
+        - id
+        - name
+      filter: {}
+
+- type: pg_create_select_permission
+  args:
+    table: users
+    role: reader_role
+    permission:
+      columns:
+        - id
+        - name
+        - restricted_field
+      filter:
+        id: X-Hasura-User-Id
+
+# Create inherited roles
+- type: add_inherited_role
+  args:
+    role_name: base_role
+    role_set:
+      - public
+      - reader_role
+
+# Create a select permission with writer_role in dummy_table
+- type: pg_create_select_permission
+  args:
+    table: dummy_table
+    role: writer_role
+    permission:
+      columns:
+        - id
+        - name
+      filter: {}
+
+- type: add_inherited_role
+  args:
+    role_name: nested_role
+    role_set:
+      - base_role
+      - writer_role

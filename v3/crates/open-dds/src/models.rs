@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Spanned,
     aggregates::AggregateExpressionName,
     arguments::ArgumentDefinition,
     commands::ArgumentMapping,
@@ -11,7 +12,6 @@ use crate::{
     str_newtype,
     traits::{OpenDd, OpenDdDeserializeError},
     types::{CustomTypeName, Deprecated, FieldName, GraphQlFieldName, GraphQlTypeName},
-    Spanned,
 };
 
 str_newtype!(ModelName over Identifier | doc "The name of data model.");
@@ -105,7 +105,7 @@ impl Model {
         }
     }
 
-    pub fn object_type(&self) -> &CustomTypeName {
+    pub fn object_type(&self) -> &Spanned<CustomTypeName> {
         match self {
             Model::V1(v1) => &v1.object_type,
             Model::V2(v2) => &v2.object_type,
@@ -171,7 +171,7 @@ pub struct ModelV1 {
     /// The name of the data model.
     pub name: ModelName,
     /// The type of the objects of which this model is a collection.
-    pub object_type: CustomTypeName,
+    pub object_type: Spanned<CustomTypeName>,
     /// Whether this model should be used as the global ID source for all objects of its type.
     #[opendd(default)]
     pub global_id_source: bool,
@@ -203,7 +203,7 @@ pub struct ModelV2 {
     /// The name of the data model.
     pub name: ModelName,
     /// The type of the objects of which this model is a collection.
-    pub object_type: CustomTypeName,
+    pub object_type: Spanned<CustomTypeName>,
     /// Whether this model should be used as the global ID source for all objects of its type.
     #[opendd(default)]
     pub global_id_source: bool,
@@ -452,8 +452,8 @@ impl<'de, T: serde::Deserialize<'de> + JsonSchema> OpenDd for EnableAllOrSpecifi
         })
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        <Self as ::schemars::JsonSchema>::json_schema(gen)
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        <Self as ::schemars::JsonSchema>::json_schema(generator)
     }
 
     fn _schema_name() -> String {

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
-use nonempty::{nonempty, NonEmpty};
+use nonempty::{NonEmpty, nonempty};
 use serde::{Deserialize, Serialize};
 
 use crate::ast::common as ast;

@@ -1,7 +1,7 @@
 use axum::http;
 use engine_types::HttpContext;
-use hasura_authn::{authenticate, AuthConfig, AuthError};
-use hasura_authn_core::{authorize_identity, Session, SessionError};
+use hasura_authn::{AuthError, ResolvedAuthConfig, authenticate};
+use hasura_authn_core::{Session, SessionError, authorize_identity};
 use std::collections::HashMap;
 
 use super::types::{ConnectionInitState, InitPayload, ServerMessage};
@@ -66,7 +66,7 @@ async fn initialize(
     init_state: &ConnectionInitState,
     http_context: &HttpContext,
     client_headers: &http::HeaderMap,
-    auth_config: &AuthConfig,
+    auth_config: &ResolvedAuthConfig,
     payload: Option<InitPayload>,
 ) -> Result<(Session, http::HeaderMap), ConnectionInitError> {
     let tracer = tracing_util::global_tracer();

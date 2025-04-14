@@ -1,20 +1,20 @@
 use super::error::BooleanExpressionError;
 use super::types::FieldNameSource;
 use super::{
-    helpers, BooleanExpressionComparableRelationship, BooleanExpressionIssue,
-    IncludeLogicalOperators,
+    BooleanExpressionComparableRelationship, BooleanExpressionIssue, IncludeLogicalOperators,
+    helpers,
 };
 pub use super::{
     BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig,
     BooleanExpressionTypeIdentifier, ComparableFieldKind, ObjectBooleanExpressionGraphqlConfig,
     ScalarBooleanExpressionGraphqlConfig,
 };
+use crate::Qualified;
 use crate::helpers::types::mk_name;
 use crate::stages::{
     graphql_config,
     scalar_boolean_expressions::{self, LogicalOperatorsGraphqlConfig},
 };
-use crate::Qualified;
 use lang_graphql::ast::common::{self as ast};
 use open_dds::types::{CustomTypeName, FieldName, GraphQlTypeName};
 use std::collections::BTreeMap;

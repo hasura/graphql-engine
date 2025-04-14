@@ -958,6 +958,19 @@ Each connection's idle time, measured in seconds, before it's closed.
 | **Default**         | `180`                                                  |
 | **Supported in**    | Deprecated in versions > `v2.0.0`                      |
 
+### Preserve 401 Errors
+
+Preserves HTTP 401 (Unauthorized) status codes from webhook auth responses and JWT auth failures. By default, all GraphQL errors are returned with HTTP status code 200, even authentication errors. When enabled, 401 errors will be propagated back to the client.
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--preserve-401-errors`                          |
+| **Env var**         | `HASURA_GRAPHQL_PRESERVE_401_ERRORS`             |
+| **Accepted values** | Boolean                                          |
+| **Options**         | `true` or `false`                                |
+| **Default**         | `false`                                          |
+| **Supported in**    | CE, Enterprise Edition                           |
+
 ### Query Plan Cache Size
 
 :::warning Notice

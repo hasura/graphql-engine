@@ -9,6 +9,7 @@ use crate::{
     impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
     permissions::ValueExpression,
+    spanned::Spanned,
     str_newtype,
     types::{CustomTypeName, Deprecated, FieldName},
 };
@@ -110,49 +111,45 @@ impl RelationshipTarget {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "RelationshipSourceFieldAccess")]
+#[opendd(json_schema(title = "RelationshipSourceFieldAccess"))]
 /// A field access in a relationship mapping.
 pub struct FieldAccess {
-    pub field_name: FieldName,
+    pub field_name: Spanned<FieldName>,
     // #[serde(default)]
     // pub arguments: HashMap<ArgumentName, ValueExpression>,
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-#[schemars(title = "RelationshipMappingSource")]
+#[opendd(externally_tagged, json_schema(title = "RelationshipMappingSource"))]
 /// The source configuration for a relationship mapping.
 pub enum RelationshipMappingSource {
-    #[schemars(title = "SourceValue")]
+    #[opendd(json_schema(title = "SourceValue"))]
     Value(ValueExpression),
-    #[schemars(title = "SourceField")]
+    #[opendd(json_schema(title = "SourceField"))]
     FieldPath(Vec<FieldAccess>),
 }
 
 /// An argument target for a relationship mapping.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "ArgumentMappingTarget")]
+#[opendd(json_schema(title = "ArgumentMappingTarget"))]
 pub struct ArgumentMappingTarget {
     pub argument_name: ArgumentName,
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-#[schemars(title = "RelationshipMappingTarget")]
+#[opendd(externally_tagged, json_schema(title = "RelationshipMappingTarget"))]
 /// The target configuration for a relationship mapping.
 pub enum RelationshipMappingTarget {
-    #[schemars(title = "TargetArgument")]
+    #[opendd(json_schema(title = "TargetArgument"))]
     Argument(ArgumentMappingTarget),
-    #[schemars(title = "TargetModelField")]
+    #[opendd(json_schema(title = "TargetModelField"))]
     ModelField(Vec<FieldAccess>),
 }
 

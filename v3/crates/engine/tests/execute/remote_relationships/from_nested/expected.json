@@ -7,7 +7,7 @@
             {
               "last_name": "Landin",
               "favourite_artist_id": 1,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "AC/DC",
                 "artist_id": 1
               }
@@ -19,7 +19,7 @@
             {
               "last_name": "Hughes",
               "favourite_artist_id": 2,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "Accept",
                 "artist_id": 2
               }
@@ -27,7 +27,7 @@
             {
               "last_name": "Claessen",
               "favourite_artist_id": 3,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "Aerosmith",
                 "artist_id": 3
               }
@@ -48,7 +48,7 @@
             {
               "last_name": "Landin",
               "favourite_artist_id": 1,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "AC/DC",
                 "artist_id": 1
               }
@@ -60,7 +60,7 @@
             {
               "last_name": "Hughes",
               "favourite_artist_id": 2,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "Accept",
                 "artist_id": 2
               }
@@ -68,7 +68,7 @@
             {
               "last_name": "Claessen",
               "favourite_artist_id": 3,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "Aerosmith",
                 "artist_id": 3
               }
@@ -89,7 +89,7 @@
             {
               "last_name": "Landin",
               "favourite_artist_id": 1,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "AC/DC",
                 "artist_id": 1
               }
@@ -101,7 +101,7 @@
             {
               "last_name": "Hughes",
               "favourite_artist_id": 2,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "Accept",
                 "artist_id": 2
               }
@@ -109,7 +109,7 @@
             {
               "last_name": "Claessen",
               "favourite_artist_id": 3,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "Aerosmith",
                 "artist_id": 3
               }
@@ -130,7 +130,7 @@
             {
               "last_name": "Landin",
               "favourite_artist_id": 1,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "AC/DC",
                 "artist_id": 1
               }
@@ -142,7 +142,7 @@
             {
               "last_name": "Hughes",
               "favourite_artist_id": 2,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "Accept",
                 "artist_id": 2
               }
@@ -150,7 +150,7 @@
             {
               "last_name": "Claessen",
               "favourite_artist_id": 3,
-              "favourite_artist": {
+              "my_favourite_artist": {
                 "name": "Aerosmith",
                 "artist_id": 3
               }

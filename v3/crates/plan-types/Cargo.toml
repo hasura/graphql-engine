@@ -8,14 +8,13 @@ license.workspace = true
 bench = false
 
 [dependencies]
-json-ext = { path = "../utils/json-ext" }
 open-dds = { path = "../open-dds" }
 metadata-resolve = { path = "../metadata-resolve" }
 
 derive_more = { workspace = true }
 indexmap = { workspace = true }
 nonempty = { workspace = true }
-schemars = { workspace = true } 
+schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 smol_str = { workspace = true }

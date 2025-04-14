@@ -155,7 +155,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "ArtistId",
@@ -164,7 +164,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "ArtistId",
@@ -256,7 +256,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "AlbumId",
@@ -265,7 +265,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "AlbumId",
@@ -409,6 +409,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -501,6 +502,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -610,6 +612,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -820,6 +823,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1018,7 +1022,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "ArtistId",
@@ -1027,7 +1031,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "ArtistId",
@@ -1171,6 +1175,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1280,6 +1285,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1490,6 +1496,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1729,6 +1736,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1821,6 +1829,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1988,7 +1997,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "AlbumId",
@@ -1997,7 +2006,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "AlbumId",
@@ -2141,6 +2150,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2250,6 +2260,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2342,6 +2353,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2509,7 +2521,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "AlbumId",
@@ -2518,7 +2530,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "AlbumId",
@@ -2662,6 +2674,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2771,6 +2784,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2863,6 +2877,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -3047,6 +3062,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -3250,6 +3266,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -3472,6 +3489,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -3695,6 +3713,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -3806,6 +3825,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -4028,6 +4048,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -4271,6 +4292,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -4660,6 +4682,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -4769,6 +4792,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -4837,6 +4861,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                9,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -4941,6 +4987,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -5044,6 +5091,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -5153,6 +5201,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -5371,6 +5420,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                 },
                                             ),
+                                            supports_relational_queries: None,
                                         },
                                     },
                                     source_type_mappings: {
@@ -5468,6 +5518,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             day_function: None,
                                                             nanosecond_function: None,
                                                             microsecond_function: None,
+                                                            millisecond_function: None,
                                                             second_function: None,
                                                             minute_function: None,
                                                             hour_function: None,
@@ -5577,6 +5628,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             day_function: None,
                                                             nanosecond_function: None,
                                                             microsecond_function: None,
+                                                            millisecond_function: None,
                                                             second_function: None,
                                                             minute_function: None,
                                                             hour_function: None,
@@ -5658,6 +5710,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             ),
                                                         },
                                                     ),
+                                                    supports_relational_queries: None,
                                                 },
                                             },
                                             collection: CollectionName(
@@ -5761,6 +5814,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     day_function: None,
                                                                     nanosecond_function: None,
                                                                     microsecond_function: None,
+                                                                    millisecond_function: None,
                                                                     second_function: None,
                                                                     minute_function: None,
                                                                     hour_function: None,
@@ -5853,6 +5907,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     day_function: None,
                                                                     nanosecond_function: None,
                                                                     microsecond_function: None,
+                                                                    millisecond_function: None,
                                                                     second_function: None,
                                                                     minute_function: None,
                                                                     hour_function: None,
@@ -5962,6 +6017,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     day_function: None,
                                                                     nanosecond_function: None,
                                                                     microsecond_function: None,
+                                                                    millisecond_function: None,
                                                                     second_function: None,
                                                                     minute_function: None,
                                                                     hour_function: None,
@@ -6019,7 +6075,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     },
                                     mappings: [
                                         RelationshipModelMapping {
-                                            source_field: FieldAccess {
+                                            source_field: RelationshipFieldAccess {
                                                 field_name: FieldName(
                                                     Identifier(
                                                         "ArtistId",
@@ -6028,7 +6084,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             target: ModelField(
                                                 RelationshipModelMappingFieldTarget {
-                                                    target_field: FieldAccess {
+                                                    target_field: RelationshipFieldAccess {
                                                         field_name: FieldName(
                                                             Identifier(
                                                                 "ArtistId",
@@ -6050,6 +6106,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ],
                                 },
+                                column_path: [],
                                 predicate: BinaryFieldComparison {
                                     field: FieldName(
                                         Identifier(
@@ -6069,9 +6126,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ndc_column: DataConnectorColumnName(
                                         "Title",
                                     ),
-                                    operator: DataConnectorOperatorName(
-                                        "_eq",
-                                    ),
+                                    operator: ResolvedOperator {
+                                        data_connector_operator_name: DataConnectorOperatorName(
+                                            "_eq",
+                                        ),
+                                        comparison_operator: Equals,
+                                    },
+                                    column_path: [],
                                     argument_type: QualifiedTypeReference {
                                         underlying_type: Named(
                                             Inbuilt(
@@ -6680,6 +6741,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                11,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -6801,6 +6884,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -6904,6 +6988,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -6996,6 +7081,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -7105,6 +7191,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -7969,6 +8056,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                13,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -8090,6 +8199,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -8193,6 +8303,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -8302,6 +8413,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -8394,6 +8506,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -9237,6 +9350,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                15,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -9341,6 +9476,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -9444,6 +9580,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -9536,6 +9673,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -10197,6 +10335,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                17,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -10250,6 +10410,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        17,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     source: Some(
@@ -10318,6 +10506,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -10421,6 +10610,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -10530,6 +10720,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -11189,6 +11380,28 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                67,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -11310,6 +11523,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -11413,6 +11627,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -11522,6 +11737,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -11614,6 +11830,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -11814,6 +12031,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     ),
                                                 },
                                             ),
+                                            supports_relational_queries: None,
                                         },
                                     },
                                     source_type_mappings: {
@@ -11911,6 +12129,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             day_function: None,
                                                             nanosecond_function: None,
                                                             microsecond_function: None,
+                                                            millisecond_function: None,
                                                             second_function: None,
                                                             minute_function: None,
                                                             hour_function: None,
@@ -12020,6 +12239,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             day_function: None,
                                                             nanosecond_function: None,
                                                             microsecond_function: None,
+                                                            millisecond_function: None,
                                                             second_function: None,
                                                             minute_function: None,
                                                             hour_function: None,
@@ -12112,6 +12332,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             day_function: None,
                                                             nanosecond_function: None,
                                                             microsecond_function: None,
+                                                            millisecond_function: None,
                                                             second_function: None,
                                                             minute_function: None,
                                                             hour_function: None,
@@ -12193,6 +12414,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                             ),
                                                         },
                                                     ),
+                                                    supports_relational_queries: None,
                                                 },
                                             },
                                             collection: CollectionName(
@@ -12296,6 +12518,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     day_function: None,
                                                                     nanosecond_function: None,
                                                                     microsecond_function: None,
+                                                                    millisecond_function: None,
                                                                     second_function: None,
                                                                     minute_function: None,
                                                                     hour_function: None,
@@ -12388,6 +12611,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     day_function: None,
                                                                     nanosecond_function: None,
                                                                     microsecond_function: None,
+                                                                    millisecond_function: None,
                                                                     second_function: None,
                                                                     minute_function: None,
                                                                     hour_function: None,
@@ -12497,6 +12721,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                                     day_function: None,
                                                                     nanosecond_function: None,
                                                                     microsecond_function: None,
+                                                                    millisecond_function: None,
                                                                     second_function: None,
                                                                     minute_function: None,
                                                                     hour_function: None,
@@ -12554,7 +12779,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     },
                                     mappings: [
                                         RelationshipModelMapping {
-                                            source_field: FieldAccess {
+                                            source_field: RelationshipFieldAccess {
                                                 field_name: FieldName(
                                                     Identifier(
                                                         "AlbumId",
@@ -12563,7 +12788,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             },
                                             target: ModelField(
                                                 RelationshipModelMappingFieldTarget {
-                                                    target_field: FieldAccess {
+                                                    target_field: RelationshipFieldAccess {
                                                         field_name: FieldName(
                                                             Identifier(
                                                                 "AlbumId",
@@ -12585,6 +12810,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ],
                                 },
+                                column_path: [],
                                 predicate: BinaryFieldComparison {
                                     field: FieldName(
                                         Identifier(
@@ -12604,9 +12830,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                     ndc_column: DataConnectorColumnName(
                                         "Title",
                                     ),
-                                    operator: DataConnectorOperatorName(
-                                        "_ilike",
-                                    ),
+                                    operator: ResolvedOperator {
+                                        data_connector_operator_name: DataConnectorOperatorName(
+                                            "_ilike",
+                                        ),
+                                        comparison_operator: Custom(
+                                            OperatorName(
+                                                "_ilike",
+                                            ),
+                                        ),
+                                    },
+                                    column_path: [],
                                     argument_type: QualifiedTypeReference {
                                         underlying_type: Named(
                                             Inbuilt(
@@ -13092,6 +13326,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        20,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -13108,6 +13370,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        20,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        1,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -13124,6 +13414,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        20,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        2,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: Some(
@@ -13201,6 +13519,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             source: Procedure(
@@ -13304,6 +13623,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -13396,6 +13716,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -13505,6 +13826,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -13613,6 +13935,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -13769,6 +14092,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        21,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -13785,6 +14136,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        21,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        1,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: Some(
@@ -13862,6 +14241,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             source: Procedure(
@@ -13965,6 +14345,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -14074,6 +14455,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -14182,6 +14564,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -14326,6 +14709,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "The identifier of a playlist",
                             ),
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        25,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -14344,6 +14755,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "The identifier of a track",
                             ),
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        25,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        1,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -14371,6 +14810,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "Delete permission predicate over the 'PlaylistTrack' collection",
                             ),
                             argument_kind: NDCExpression,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        25,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        2,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: Some(
@@ -14448,6 +14915,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             source: Procedure(
@@ -14551,6 +15019,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -14643,6 +15112,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -14751,6 +15221,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -14890,9 +15361,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         ndc_column: DataConnectorColumnName(
                                             "TrackId",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(
@@ -14980,6 +15455,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        50,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -15007,6 +15510,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "Insert permission predicate over the 'Artist' collection",
                             ),
                             argument_kind: NDCExpression,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        50,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        1,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: Some(
@@ -15084,6 +15615,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             source: Procedure(
@@ -15187,6 +15719,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -15296,6 +15829,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -15404,6 +15938,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -15515,6 +16050,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -15623,6 +16159,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -15750,9 +16287,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         ndc_column: DataConnectorColumnName(
                                             "Name",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(
@@ -15828,6 +16369,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "The identifier of an artist",
                             ),
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        61,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -15855,6 +16424,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "Update permission post-condition predicate over the 'Artist' collection",
                             ),
                             argument_kind: NDCExpression,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        61,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        1,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -15882,6 +16479,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "Update permission pre-condition predicate over the 'Artist' collection",
                             ),
                             argument_kind: NDCExpression,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        61,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        2,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                         ArgumentName(
                             Identifier(
@@ -15907,6 +16532,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        61,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        3,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
                         },
                     },
                     graphql_api: Some(
@@ -15984,6 +16637,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             source: Procedure(
@@ -16087,6 +16741,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -16196,6 +16851,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -16304,6 +16960,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -16431,6 +17088,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -16539,6 +17197,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -16748,9 +17407,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         ndc_column: DataConnectorColumnName(
                                             "Name",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(
@@ -16808,9 +17471,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         ndc_column: DataConnectorColumnName(
                                             "Name",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(
@@ -21668,6 +22335,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                 "user",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

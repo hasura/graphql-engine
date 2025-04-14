@@ -1,7 +1,6 @@
 use super::error::{
     DataConnectorError, DataConnectorIssue, NamedDataConnectorError, NamedDataConnectorIssue,
 };
-use crate::configuration::UnstableFeatures;
 use crate::helpers::http::{
     HeaderError, SerializableHeaderMap, SerializableHeaderName, SerializableUrl,
 };
@@ -65,7 +64,6 @@ impl<'a> DataConnectorContext<'a> {
     pub fn new(
         metadata_accessor: &MetadataAccessor,
         data_connector: &'a data_connector::DataConnectorLinkV1,
-        unstable_features: &UnstableFeatures,
     ) -> Result<(Self, Vec<DataConnectorIssue>), DataConnectorError> {
         let (resolved_schema, capabilities, issues) = match &data_connector.schema {
             VersionedSchemaAndCapabilities::V01(schema_and_capabilities) => {
@@ -94,12 +92,6 @@ impl<'a> DataConnectorContext<'a> {
                 (schema, capabilities, issues)
             }
         };
-
-        if !unstable_features.enable_ndc_v02_support
-            && capabilities.supported_ndc_version == NdcVersion::V02
-        {
-            return Err(DataConnectorError::NdcV02DataConnectorNotSupported);
-        }
 
         let argument_presets = data_connector
             .argument_presets
@@ -490,6 +482,11 @@ pub struct DataConnectorCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_relationships: Option<DataConnectorRelationshipCapabilities>,
+
+    /// Whether or not relational queries are supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_relational_queries: Option<DataConnectorRelationalQueryCapabilities>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -550,6 +547,9 @@ pub struct DataConnectorNestedRelationshipCapabilities {
     pub supports_nested_in_ordering: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorRelationalQueryCapabilities {}
+
 fn mk_ndc_01_capabilities(
     capabilities: &ndc_models_v01::Capabilities,
 ) -> DataConnectorCapabilities {
@@ -590,6 +590,7 @@ fn mk_ndc_01_capabilities(
                 }),
             }
         }),
+        supports_relational_queries: None,
     }
 }
 
@@ -644,24 +645,27 @@ fn mk_ndc_02_capabilities(
                 supports_nested_relationships: rel.nested.as_ref().map(|n| {
                     DataConnectorNestedRelationshipCapabilities {
                         supports_nested_array_selection: n.array.is_some(),
-                        supports_nested_in_filtering: true,
-                        supports_nested_in_ordering: true,
+                        supports_nested_in_filtering: n.filtering.is_some(),
+                        supports_nested_in_ordering: n.ordering.is_some(),
                     }
                 }),
             }
         }),
+        supports_relational_queries: capabilities
+            .relational_query
+            .as_ref()
+            .map(|_| DataConnectorRelationalQueryCapabilities {}),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use open_dds::{accessor::MetadataAccessor, data_connector::DataConnectorLinkV1, Metadata};
+    use open_dds::{Metadata, accessor::MetadataAccessor, data_connector::DataConnectorLinkV1};
     use strum::IntoEnumIterator;
 
     use crate::{
-        configuration::UnstableFeatures,
         data_connectors::{
-            error::DataConnectorIssue, types::NdcVersion, DataConnectorCapabilities,
+            DataConnectorCapabilities, error::DataConnectorIssue, types::NdcVersion,
         },
         stages::data_connectors::types::DataConnectorContext,
     };
@@ -717,20 +721,14 @@ mod tests {
             supports_aggregates: None,
             supports_query_variables: false,
             supports_relationships: None,
+            supports_relational_queries: None,
         };
 
         // With explicit capabilities specified, we should use them
-        let unstable_features = UnstableFeatures {
-            enable_ndc_v02_support: true,
-            ..Default::default()
-        };
         let metadata_accessor = MetadataAccessor::new(Metadata::WithoutNamespaces(vec![]));
-        let (context, issues) = DataConnectorContext::new(
-            &metadata_accessor,
-            &data_connector_with_capabilities,
-            &unstable_features,
-        )
-        .unwrap();
+        let (context, issues) =
+            DataConnectorContext::new(&metadata_accessor, &data_connector_with_capabilities)
+                .unwrap();
         assert_eq!(context.capabilities, data_connector_capabilities);
         assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
     }
@@ -768,20 +766,14 @@ mod tests {
             supports_aggregates: None,
             supports_query_variables: false,
             supports_relationships: None,
+            supports_relational_queries: None,
         };
 
         // With explicit capabilities specified, we should use them
-        let unstable_features = UnstableFeatures {
-            enable_ndc_v02_support: true,
-            ..Default::default()
-        };
         let metadata_accessor = MetadataAccessor::new(Metadata::WithoutNamespaces(vec![]));
-        let (context, issues) = DataConnectorContext::new(
-            &metadata_accessor,
-            &data_connector_with_capabilities,
-            &unstable_features,
-        )
-        .unwrap();
+        let (context, issues) =
+            DataConnectorContext::new(&metadata_accessor, &data_connector_with_capabilities)
+                .unwrap();
         assert_eq!(context.capabilities, data_connector_capabilities);
         assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
     }
@@ -824,23 +816,35 @@ mod tests {
             for (version, assertion) in test_cases {
                 let result = validate_ndc_version(ndc_version, version);
                 match assertion {
-                    AssertNdcVersionShould::Validate => {
-                        match result {
-                            Ok(issues) => {
-                                assert!(issues.is_empty(), "When testing ndc version {ndc_version:?}, the version '{version}' validated but had issues: {issues:#?}");
-                            },
-                            Err(error) => panic!("When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"),
+                    AssertNdcVersionShould::Validate => match result {
+                        Ok(issues) => {
+                            assert!(
+                                issues.is_empty(),
+                                "When testing ndc version {ndc_version:?}, the version '{version}' validated but had issues: {issues:#?}"
+                            );
                         }
+                        Err(error) => panic!(
+                            "When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"
+                        ),
                     },
-                    AssertNdcVersionShould::HaveIssue => {
-                        match result {
-                            Ok(issues) => {
-                                assert!(issues.iter().any(|i| matches!(i, DataConnectorIssue::InvalidNdcV01Version { .. })), "When testing ndc version {ndc_version:?}, the version '{version}' validated but did not have the InvalidNdcV1Version issue. Issues: {issues:#?}");
-                            },
-                            Err(error) => panic!("When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"),
+                    AssertNdcVersionShould::HaveIssue => match result {
+                        Ok(issues) => {
+                            assert!(
+                                issues.iter().any(|i| matches!(
+                                    i,
+                                    DataConnectorIssue::InvalidNdcV01Version { .. }
+                                )),
+                                "When testing ndc version {ndc_version:?}, the version '{version}' validated but did not have the InvalidNdcV1Version issue. Issues: {issues:#?}"
+                            );
                         }
+                        Err(error) => panic!(
+                            "When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"
+                        ),
                     },
-                    AssertNdcVersionShould::FailToValidate => assert!(result.is_err(), "When testing ndc version {ndc_version:?}, the version '{version}' validated when it shouldn't have: {result:#?}"),
+                    AssertNdcVersionShould::FailToValidate => assert!(
+                        result.is_err(),
+                        "When testing ndc version {ndc_version:?}, the version '{version}' validated when it shouldn't have: {result:#?}"
+                    ),
                 }
             }
         }

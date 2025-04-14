@@ -2,7 +2,7 @@ use crate::error::{FieldError, FieldInternalError, FilterPredicateError};
 use indexmap::{IndexMap, IndexSet};
 use plan_types::{
     Argument, Field, FieldsSelection, NestedArray, NestedField, NestedObject, OrderByElement,
-    OrderByTarget, QueryExecutionPlan, QueryNodeNew, RemotePredicateKey, ResolvedFilterExpression,
+    OrderByTarget, QueryExecutionPlan, QueryNode, RemotePredicateKey, ResolvedFilterExpression,
 };
 use std::collections::BTreeMap;
 
@@ -46,10 +46,10 @@ fn replace_predicates_in_argument(
 }
 
 fn replace_predicates_in_query_node(
-    query_node: QueryNodeNew,
+    query_node: QueryNode,
     predicates: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
-) -> Result<QueryNodeNew, FilterPredicateError> {
-    Ok(QueryNodeNew {
+) -> Result<QueryNode, FilterPredicateError> {
+    Ok(QueryNode {
         aggregates: query_node.aggregates,
         fields: query_node
             .fields

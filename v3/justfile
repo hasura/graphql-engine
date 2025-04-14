@@ -36,7 +36,7 @@ run-local-with-shell:
       cargo run --bin dev-auth-webhook | ts "dev-auth-webhook:" &
     RUST_LOG=DEBUG cargo run --bin ddn-engine-local-dev -- \
     --otlp-endpoint http://localhost:4317 \
-    --authn-config-path static/auth/auth_config.json \
+    --authn-config-path static/auth/auth_config_v3.json \
     --metadata-path static/metadata.json \
     --expose-internal-errors | ts "engine:          " &
     wait
@@ -81,7 +81,7 @@ watch: start-docker-test-deps
      -x 'clippy --no-deps' \
      -x 'run --bin ddn-engine-local-dev -- \
       --otlp-endpoint http://localhost:4317 \
-      --authn-config-path static/auth/auth_config.json \
+      --authn-config-path static/auth/auth_config_v3.json \
       --metadata-path static/metadata.json \
       --expose-internal-errors'
 
@@ -179,8 +179,7 @@ reorder-json-in-test-metadata: && fix-format
 run METADATA_PATH="static/metadata.json": start-docker-test-deps
     RUST_LOG=DEBUG cargo run --bin ddn-engine-local-dev -- \
     --otlp-endpoint http://localhost:4317 \
-    --authn-config-path static/auth/auth_config.json \
+    --authn-config-path static/auth/auth_config_v3.json \
     --metadata-path {{ METADATA_PATH }} \
     --expose-internal-errors \
-    --export-traces-stdout \
-    --unstable-feature enable-open-dd-pipeline-for-graphql
+    --export-traces-stdout 

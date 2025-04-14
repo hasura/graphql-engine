@@ -17,6 +17,7 @@ axum-ext = { path = "../utils/axum-ext" }
 
 anyhow = { workspace = true }
 axum = { workspace = true }
+datafusion = { workspace = true }
 env_logger = { workspace = true }
 indexmap = { workspace = true }
 iso8601 = { workspace = true }
@@ -28,6 +29,7 @@ serde = { workspace = true }
 sha2 = { workspace = true }
 tokio = { workspace = true }
 uuid = { workspace = true }
+serde_arrow = { workspace = true }
 
 [lints]
 workspace = true

@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/conflict_between_count_and_aggregation_function/metadata.json
 ---
-the name used by query.aggregate.countFieldName from the GraphqlConfig conflicts with the aggregation function name _count in the aggregate expression Int4_aggregate_exp (in subgraph default)
+Error: the name used by query.aggregate.countFieldName from the GraphqlConfig conflicts with the aggregation function name _count in the aggregate expression Int4_aggregate_exp (in subgraph default)

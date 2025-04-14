@@ -1,0 +1,7 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/commands/incompatible_types_in_argument_mapping/metadata.json
+---
+Error: An issue occurred while mapping arguments in the command procedure_with_args (in subgraph default) to the procedure procedure_with_args in the data connector myconnector (in subgraph default): the type of argument 'argA' is not compatible with the type of the data connector argument 'arg1': Type 'Boolean!' is not compatible with NDC type 'String!' - Inbuilt type 'Boolean' is not compatible with the data connector's type representation 'String'
+Error: An issue occurred while mapping arguments in the command procedure_with_args (in subgraph default) to the procedure procedure_with_args in the data connector myconnector (in subgraph default): the type of argument 'argB' is not compatible with the type of the data connector argument 'arg2': Type '[Int]!' is not compatible with NDC type 'Int!' - Type mismatch

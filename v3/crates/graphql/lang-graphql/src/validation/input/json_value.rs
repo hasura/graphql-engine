@@ -145,7 +145,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
                 return Err(Error::IncorrectFormat {
                     expected_type: "ARRAY",
                     actual_type: json_kind(self),
-                })
+                });
             }
             Some(array) => {
                 for value in array {
@@ -173,7 +173,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
                 return Err(Error::IncorrectFormat {
                     expected_type: "OBJECT",
                     actual_type: json_kind(self),
-                })
+                });
             }
             Some(object) => {
                 for (key, value) in object {

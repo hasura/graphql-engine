@@ -26,7 +26,7 @@ services:
       - "${PWD}/cockroach-data:/cockroach/cockroach-data"
 
   graphql-engine:
-    image: hasura/graphql-engine:v2.43.0
+    image: hasura/graphql-engine:v2.46.0
     ports:
       - "8080:8080"
     depends_on:

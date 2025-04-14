@@ -1,0 +1,12 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/models/duplicate_argument/metadata.json
+---
+Error: the following argument in model with_arguments (in subgraph default) is defined more than once: duplicate_argument
+    ╭─[ <unknown>:19:25 ]
+    │
+ 19 │                 "name": "duplicate_argument",
+    │                         ──────────┬─────────  
+    │                                   ╰─────────── Model 'with_arguments' has a duplicate argument definition for 'duplicate_argument'
+────╯

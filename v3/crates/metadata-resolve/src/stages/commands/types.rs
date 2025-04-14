@@ -6,8 +6,8 @@ use crate::helpers::types::DuplicateRootFieldError;
 use crate::stages::{data_connectors, object_types};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{
-    deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
-    QualifiedTypeReference,
+    ArgumentInfo, Qualified, QualifiedTypeReference, deserialize_qualified_btreemap,
+    serialize_qualified_btreemap,
 };
 
 use indexmap::IndexMap;
@@ -67,14 +67,18 @@ pub struct Command {
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandsIssue {
-    #[error("An issue occurred while mapping arguments in the command {command_name:} to the function {function_name:} in the data connector {data_connector_name:}: {issue:}")]
+    #[error(
+        "An issue occurred while mapping arguments in the command {command_name:} to the function {function_name:} in the data connector {data_connector_name:}: {issue:}"
+    )]
     FunctionArgumentMappingIssue {
         data_connector_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,
         function_name: FunctionName,
         issue: ArgumentMappingIssue,
     },
-    #[error("An issue occurred while mapping arguments in the command {command_name:} to the procedure {procedure_name:} in the data connector {data_connector_name:}: {issue:}")]
+    #[error(
+        "An issue occurred while mapping arguments in the command {command_name:} to the procedure {procedure_name:} in the data connector {data_connector_name:}: {issue:}"
+    )]
     ProcedureArgumentMappingIssue {
         data_connector_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,
@@ -102,7 +106,10 @@ impl ShouldBeAnError for CommandsIssue {
             CommandsIssue::InvalidCommandOutputType { .. } => {
                 flags.contains(open_dds::flags::Flag::RequireValidCommandOutputType)
             }
-            _ => false,
+            CommandsIssue::FunctionArgumentMappingIssue { issue, .. }
+            | CommandsIssue::ProcedureArgumentMappingIssue { issue, .. } => {
+                issue.should_be_an_error(flags)
+            }
         }
     }
 }

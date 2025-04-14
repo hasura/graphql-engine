@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/field_duplicated/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the field 'title' is defined more than once in the comparable fields
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': the field 'title' is defined more than once in the comparable fields

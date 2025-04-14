@@ -4,7 +4,7 @@ use crate::schema::{
     array_schema, bool_schema, enum_schema, float_schema, int_schema, json_schema, object_schema,
     string_schema,
 };
-use metadata_resolve::{unwrap_custom_type_name, Qualified};
+use metadata_resolve::{Qualified, unwrap_custom_type_name};
 use oas3::spec::{ObjectOrReference, ObjectSchema};
 use open_dds::relationships::RelationshipType;
 use open_dds::types::CustomTypeName;
@@ -59,7 +59,7 @@ pub fn object_schema_for_object_type(object_type: &ObjectType) -> ObjectSchema {
         fields.insert(name.to_string(), type_schema(ty));
     }
     let required = vec![]; // these are used as output types for the moment so everything is
-                           // nullable
+    // nullable
     object_schema(fields, required)
 }
 

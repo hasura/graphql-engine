@@ -1,8 +1,8 @@
 use super::error::ObjectTypesError;
+use crate::NdcVersion;
 use crate::helpers::type_validation::TypeCompatibilityIssue;
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{QualifiedTypeName, QualifiedTypeReference};
-use crate::NdcVersion;
 use indexmap::IndexMap;
 use open_dds::aggregates::{
     DataConnectorAggregationFunctionName, DataConnectorExtractionFunctionName,
@@ -414,6 +414,7 @@ pub struct ExtractionFunctions {
     pub day_function: Option<DataConnectorExtractionFunctionName>,
     pub nanosecond_function: Option<DataConnectorExtractionFunctionName>,
     pub microsecond_function: Option<DataConnectorExtractionFunctionName>,
+    pub millisecond_function: Option<DataConnectorExtractionFunctionName>,
     pub second_function: Option<DataConnectorExtractionFunctionName>,
     pub minute_function: Option<DataConnectorExtractionFunctionName>,
     pub hour_function: Option<DataConnectorExtractionFunctionName>,
@@ -437,25 +438,33 @@ pub enum TypeMapping {
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, thiserror::Error)]
 pub enum ObjectTypesIssue {
-    #[error("Multiple {operator_name} operators found for type {scalar_type} in data connector {data_connector_name}")]
+    #[error(
+        "Multiple {operator_name} operators found for type {scalar_type} in data connector {data_connector_name}"
+    )]
     DuplicateOperatorsDefined {
         scalar_type: ndc_models::ScalarTypeName,
         operator_name: String,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("Multiple {function_name} aggregate functions found for type {scalar_type} in data connector {data_connector_name}")]
+    #[error(
+        "Multiple {function_name} aggregate functions found for type {scalar_type} in data connector {data_connector_name}"
+    )]
     DuplicateAggregateFunctionsDefined {
         scalar_type: ndc_models::ScalarTypeName,
         function_name: String,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("Multiple {function_name} extraction functions found for type {scalar_type} in data connector {data_connector_name}")]
+    #[error(
+        "Multiple {function_name} extraction functions found for type {scalar_type} in data connector {data_connector_name}"
+    )]
     DuplicateExtractionFunctionsDefined {
         scalar_type: ndc_models::ScalarTypeName,
         function_name: String,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("the field {field_name:} in {type_name:} should have the type {expected:} for data connector {data_connector:} but the field has type {provided:}")]
+    #[error(
+        "the field {field_name:} in {type_name:} should have the type {expected:} for data connector {data_connector:} but the field has type {provided:}"
+    )]
     FieldTypeMismatch {
         field_name: FieldName,
         type_name: Qualified<CustomTypeName>,
@@ -463,18 +472,24 @@ pub enum ObjectTypesIssue {
         expected: QualifiedTypeName,
         provided: QualifiedTypeName,
     },
-    #[error("Field type {field_type} could not be found in field {field_name} for object type {object_type_name}")]
+    #[error(
+        "Field type {field_type} could not be found in field {field_name} for object type {object_type_name}"
+    )]
     FieldTypeNotFound {
         field_type: Qualified<CustomTypeName>,
         object_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
-    #[error("Recursive reference detected for object type '{type_name}' through non-null field path: {field_path}")]
+    #[error(
+        "Recursive reference detected for object type '{type_name}' through non-null field path: {field_path}"
+    )]
     RecursiveObjectType {
         type_name: Qualified<CustomTypeName>,
         field_path: String,
     },
-    #[error("The field '{field_name}' in object type '{type_name}' cannot be mapped to data connector '{data_connector}' field '{data_connector_object}.{data_connector_column}' because: {issue}")]
+    #[error(
+        "The field '{field_name}' in object type '{type_name}' cannot be mapped to data connector '{data_connector}' field '{data_connector_object}.{data_connector_column}' because: {issue}"
+    )]
     FieldTypeNdcMappingIssue {
         field_name: FieldName,
         type_name: Qualified<CustomTypeName>,

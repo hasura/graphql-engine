@@ -76,6 +76,12 @@ impl JSONPath {
         JSONPath(new_path)
     }
 
+    pub fn parent(self) -> Self {
+        let mut new_path = self.0;
+        new_path.pop();
+        JSONPath(new_path)
+    }
+
     pub fn from_serde_path(path: &serde_path_to_error::Path) -> Self {
         JSONPath(
             path.iter()
@@ -93,5 +99,14 @@ impl JSONPath {
                 })
                 .collect(),
         )
+    }
+
+    /// Determines if the path contains a specified subpath somewhere inside it.
+    /// For example: "$.a.b.c.d" contains "b.c"
+    pub fn contains_subpath(&self, subpath: &[JSONPathElement]) -> bool {
+        self.0
+            .as_slice()
+            .windows(subpath.len())
+            .any(|window| window == subpath)
     }
 }

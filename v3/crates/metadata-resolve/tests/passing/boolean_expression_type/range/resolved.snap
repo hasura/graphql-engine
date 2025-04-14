@@ -174,6 +174,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -273,6 +274,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -498,6 +500,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -597,6 +600,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -689,6 +693,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -748,6 +753,19 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Index(
+                                7,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -869,6 +887,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -979,6 +998,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1078,6 +1098,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1170,6 +1191,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1443,7 +1465,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                     },
                                                 ),
                                             ),
-                                            nullable: true,
+                                            nullable: false,
                                         },
                                     },
                                     operator_mapping: {
@@ -1457,7 +1479,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 ),
                                             ),
                                         }: OperatorMapping(
-                                            {},
+                                            {
+                                                OperatorName(
+                                                    "range",
+                                                ): DataConnectorOperatorName(
+                                                    "range",
+                                                ),
+                                            },
                                         ),
                                     },
                                     logical_operators: Exclude,
@@ -1720,7 +1748,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 },
                                             ),
                                         ),
-                                        nullable: true,
+                                        nullable: false,
                                     },
                                 },
                                 operator_mapping: {
@@ -1734,7 +1762,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "range",
+                                            ): DataConnectorOperatorName(
+                                                "range",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Exclude,
@@ -1870,7 +1904,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     },
                                 ),
                             ),
-                            nullable: true,
+                            nullable: false,
                         },
                     },
                     data_connector_operator_mappings: {
@@ -1892,7 +1926,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             data_connector_scalar_type: DataConnectorScalarType(
                                 "integer",
                             ),
-                            operator_mapping: {},
+                            operator_mapping: {
+                                OperatorName(
+                                    "range",
+                                ): DataConnectorOperatorName(
+                                    "range",
+                                ),
+                            },
                         },
                     },
                     graphql_name: Some(
@@ -2134,6 +2174,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 "admin",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

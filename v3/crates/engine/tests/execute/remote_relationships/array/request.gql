@@ -1,7 +1,8 @@
 query MyQuery {
   AuthorByID(author_id: 2) {
     author_id
-    Articles {
+    # test aliases with relationships too (ENG-1712):
+    my_articles: Articles(where: {}) {
       title
     }
   }

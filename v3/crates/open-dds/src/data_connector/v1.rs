@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{permissions::ValueExpression, types::DataConnectorArgumentName, EnvironmentValue};
+use crate::{EnvironmentValue, permissions::ValueExpression, types::DataConnectorArgumentName};
 
 use super::{DataConnectorColumnName, DataConnectorName, VersionedSchemaAndCapabilities};
 

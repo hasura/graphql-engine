@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/disallow_multiple_nested_array_agg/metadata.json
 ---
-the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'doubleNestedInt' of type [[Int4]] (in subgraph default), however arrays of arrays are not supported for aggregation
+Error: the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'doubleNestedInt' of type [[Int4]] (in subgraph default), however arrays of arrays are not supported for aggregation

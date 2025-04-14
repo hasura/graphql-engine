@@ -354,7 +354,7 @@ impl<'a> EnumVariant<'a> {
                     variant,
                     "variants must have exactly one unnamed field",
                 )
-                .into())
+                .into());
             }
         };
         let hidden = variant_opts.hidden == Some(true);

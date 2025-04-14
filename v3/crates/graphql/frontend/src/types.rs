@@ -1,5 +1,5 @@
-use crate::execute::ExecuteQueryResult;
 use crate::RequestError;
+use crate::execute::ExecuteQueryResult;
 use engine_types::ExposeInternalErrors;
 use lang_graphql as gql;
 use lang_graphql::http::Response;

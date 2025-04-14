@@ -30,6 +30,7 @@ use model_permissions::ModelPermissionsOutput;
 use open_dds::flags;
 pub use types::Metadata;
 
+use crate::flags::RuntimeFlags;
 use crate::helpers::types::TrackGraphQLRootFields;
 use crate::types::configuration::Configuration;
 use crate::types::error::{ContextualError, Error, SeparatedBy, ShouldBeAnError, WithContext};
@@ -40,10 +41,8 @@ pub fn resolve(
     metadata: open_dds::Metadata,
     configuration: &Configuration,
 ) -> Result<(Metadata, Vec<Warning>), WithContext<Error>> {
-    resolve_internal(metadata, configuration).map_err(|error| match error.create_error_context() {
-        Some(context) => WithContext::Contextualised { error, context },
-        None => WithContext::Raw(error),
-    })
+    resolve_internal(metadata, configuration)
+        .map_err(super::types::error::ContextualError::add_context_if_exists)
 }
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
@@ -71,7 +70,7 @@ fn resolve_internal(
     let data_connectors::DataConnectorsOutput {
         data_connectors,
         issues,
-    } = data_connectors::resolve(&metadata_accessor, configuration)?;
+    } = data_connectors::resolve(&metadata_accessor).map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -79,7 +78,8 @@ fn resolve_internal(
     let scalar_types::ScalarTypesOutput {
         scalar_types,
         issues,
-    } = scalar_types::resolve(&metadata_accessor, &mut graphql_types)?;
+    } = scalar_types::resolve(&metadata_accessor, &mut graphql_types)
+        .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -89,7 +89,8 @@ fn resolve_internal(
         &data_connectors,
         &scalar_types,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     // Validate object types defined in metadata
     let object_types::ObjectTypesOutput {
@@ -103,7 +104,8 @@ fn resolve_internal(
         &data_connector_scalars,
         &scalar_types,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -119,17 +121,21 @@ fn resolve_internal(
         &scalar_types,
         &graphql_config,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let (object_types_with_permissions, type_permission_issues) =
-        type_permissions::resolve(&metadata_accessor, object_types)?;
+        type_permissions::resolve(&metadata_accessor, object_types)
+            .map_err(flatten_multiple_errors)?;
+
     all_issues.extend(type_permission_issues.into_iter().map(Warning::from));
 
     // collect raw relationships information
-    let relationships = relationships::resolve(&metadata_accessor, &object_types_with_permissions)?;
+    let relationships = relationships::resolve(&metadata_accessor, &object_types_with_permissions)
+        .map_err(flatten_multiple_errors)?;
 
     // Check aggregate expressions
     let aggregates::AggregateExpressionsOutput {
@@ -143,7 +149,8 @@ fn resolve_internal(
         &scalar_types,
         &graphql_config,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -161,7 +168,8 @@ fn resolve_internal(
         &scalar_types,
         &graphql_config,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -180,7 +188,8 @@ fn resolve_internal(
         &object_types_with_permissions,
         &relationships,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -193,7 +202,8 @@ fn resolve_internal(
         &relationships,
         &scalar_types,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -213,18 +223,21 @@ fn resolve_internal(
         &scalar_types,
         &boolean_expression_types,
         &aggregate_expressions,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
     let commands::CommandsOutput { commands, issues } = commands::resolve(
         &metadata_accessor,
         &data_connectors,
+        &data_connector_scalars,
         &object_types_with_permissions,
         &mut track_root_fields,
         &scalar_types,
         &boolean_expression_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -244,7 +257,8 @@ fn resolve_internal(
         &commands,
         &aggregate_expressions,
         &graphql_config,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -257,7 +271,8 @@ fn resolve_internal(
         &scalar_types,
         &boolean_expression_types,
         &metadata_accessor.flags,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -277,7 +292,8 @@ fn resolve_internal(
         &scalar_types,
         &mut order_by_expressions,
         &mut graphql_types,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(issues);
 
@@ -329,6 +345,8 @@ fn resolve_internal(
         &boolean_expression_types,
     ));
 
+    let runtime_flags = RuntimeFlags::from_open_dds_flags(&metadata_accessor.flags);
+
     let all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_issues)?;
 
     Ok((
@@ -343,9 +361,27 @@ fn resolve_internal(
             graphql_config: graphql_config.global,
             roles,
             plugin_configs,
+            runtime_flags,
         },
         all_warnings,
     ))
+}
+
+// if a step returns multiple errors, add context and combine them
+fn flatten_multiple_errors<E: Into<Error>>(errors: Vec<E>) -> Error {
+    if errors.len() == 1 {
+        errors.into_iter().next().unwrap().into()
+    } else {
+        Error::MultipleErrors {
+            errors: SeparatedBy {
+                lines_of: errors
+                    .into_iter()
+                    .map(derive_more::Into::into)
+                    .map(ContextualError::add_context_if_exists)
+                    .collect(),
+            },
+        }
+    }
 }
 
 fn warnings_as_errors_by_compatibility(
@@ -359,11 +395,17 @@ fn warnings_as_errors_by_compatibility(
     if warnings_that_are_errors.is_empty() {
         Ok(remaining_warnings)
     } else {
-        Err(Error::CompatibilityError {
-            warnings_as_errors: SeparatedBy {
-                lines_of: warnings_that_are_errors,
-                separator: "\n".to_string(),
-            },
+        let mut errors = vec![];
+        for warning in warnings_that_are_errors {
+            errors.push(
+                (Error::CompatibilityError {
+                    warning_as_error: warning,
+                })
+                .add_context_if_exists(),
+            );
+        }
+        Err(Error::MultipleErrors {
+            errors: SeparatedBy { lines_of: errors },
         })
     }
 }

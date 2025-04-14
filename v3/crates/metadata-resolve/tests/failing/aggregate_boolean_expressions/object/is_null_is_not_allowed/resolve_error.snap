@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/object/is_null_is_not_allowed/metadata.json
 ---
-error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': boolean expressions with aggregate operands do not support isNull comparisons
+Error: error in boolean expression type 'Album_aggregate_bool_exp (in subgraph default)': boolean expressions with aggregate operands do not support isNull comparisons

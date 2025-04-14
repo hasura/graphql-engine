@@ -10,7 +10,9 @@ use indexmap::IndexMap;
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     // TODO: uses 'Debug' trait
-    #[error("expected argument '{argument_name}' not found on field: {field_call_name}, arguments found: {arguments:?}")]
+    #[error(
+        "expected argument '{argument_name}' not found on field: {field_call_name}, arguments found: {arguments:?}"
+    )]
     ArgumentNotFound {
         field_call_name: ast::Name,
         argument_name: ast::Name,
@@ -198,7 +200,9 @@ impl<'s, S: SchemaContext> Value<'s, S> {
     }
 
     pub fn is_null(&self) -> bool {
-        matches!(self, Value::SimpleValue(SimpleValue::Null))
+        // Check if the value is null.
+        matches!(self, Value::SimpleValue(SimpleValue::Null)) // Simple value comes from inbuilt scalars
+            || matches!(self, Value::Json(serde_json::Value::Null)) // JSON value comes from custom scalars
     }
 
     pub fn as_enum(&self) -> Result<&EnumValue<'s, S>> {
@@ -208,6 +212,17 @@ impl<'s, S: SchemaContext> Value<'s, S> {
                 expected_kind: "ENUM",
                 found: self.as_json(),
             }),
+        }
+    }
+
+    pub fn as_nullable<'a, T, E>(
+        &'a self,
+        f: impl FnOnce(&'a Value<'s, S>) -> core::result::Result<T, E>,
+    ) -> core::result::Result<Option<T>, E> {
+        if self.is_null() {
+            Ok(None)
+        } else {
+            f(self).map(Some)
         }
     }
 }
