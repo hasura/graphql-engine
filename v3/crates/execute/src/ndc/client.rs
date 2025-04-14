@@ -16,8 +16,8 @@ use super::{
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(
-        "request to connector failed with status code {}: {0}",
-        .0.status().map_or_else(|| "N/A".to_string(), |s| s.to_string())
+        "request to connector failed with status code {status_code}: {0}",
+        status_code = .0.status().map_or_else(|| "N/A".to_string(), |s| s.to_string()) 
     )]
     Reqwest(#[from] reqwest::Error),
 

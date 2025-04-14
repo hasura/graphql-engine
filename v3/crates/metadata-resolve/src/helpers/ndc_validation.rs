@@ -85,7 +85,7 @@ pub enum NDCValidationError {
         column_type: String,
     },
     #[error(
-        "internal error: data connector does not define the scalar type {r#type}, used by field {field_name} in model {model_name}"
+        "internal error: data connector does not define the scalar type {type}, used by field {field_name} in model {model_name}"
     )]
     TypeCapabilityNotDefined {
         model_name: ModelName,

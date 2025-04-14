@@ -149,7 +149,7 @@ smol_str = "0.1"
 strum = "0.26"
 strum_macros = "0.26"
 syn = "2"
-thiserror = "1"
+thiserror = "2"
 tokio = { version = "1", features = ["macros", "parking_lot", "rt-multi-thread", "signal", "time"] }
 tokio-test = "0.4"
 tokio-tungstenite = "0.24.0"
