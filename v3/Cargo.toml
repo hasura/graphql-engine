@@ -139,7 +139,7 @@ rmp-serde = "1"
 semver = "1.0"
 schemars = { version = "0.8", features = ["preserve_order", "smol_str", "url"] }
 serde = { version = "1", features = ["derive", "rc"] }
-serde_arrow = { version = "0.13.1", features = ["arrow-54"] }
+serde_arrow = { version = "0.13.3", features = ["arrow-54"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_path_to_error = "0.1"
 serde_with = { version = "3", features = ["indexmap_2"] }
