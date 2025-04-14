@@ -383,7 +383,7 @@
                         "description": "The institution's evaluation result",
                         "type": {
                           "type": "named",
-                          "name": "Boolean"
+                          "name": "Bool"
                         }
                       },
                       "institution": {
@@ -2593,7 +2593,7 @@
                         "description": "The institution's evaluation result",
                         "type": {
                           "type": "named",
-                          "name": "Boolean"
+                          "name": "Bool"
                         }
                       },
                       "institution": {
