@@ -114,8 +114,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      jaeger:
-        condition: service_started
 
   postgres_connector:
     image: ghcr.io/hasura/ndc-postgres:dev-benoit-eng-362-update-ndc-postgres-to-ndc_models-020
@@ -134,8 +132,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      jaeger:
-        condition: service_started
 
   custom_connector:
     build:

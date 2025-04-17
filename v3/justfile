@@ -175,9 +175,25 @@ reorder-json-in-test-metadata: && fix-format
       fi
     done
 
+# start docker deps for running engine (rather than running tests) 
+start-docker-run-deps:
+    # start connectors and wait for health
+    docker compose up --wait postgres postgres_connector_ndc_v01 custom_connector 
+
+# run the engine with settings for testing SQL frontend 
+run-for-sql METADATA_PATH="static/metadata.json": start-docker-run-deps 
+    RUST_LOG=DEBUG cargo run --bin ddn-engine-local-dev -- \
+    --otlp-endpoint http://localhost:4317 \
+    --introspection-metadata {{ METADATA_PATH }} \
+    --authn-config-path static/auth/noauth_config_v3.json \
+    --metadata-path {{ METADATA_PATH }} \
+    --enable-sql-interface \
+    --expose-internal-errors \
+    --export-traces-stdout 
+
 # run the engine using schema from tests
 run METADATA_PATH="static/metadata.json": start-docker-test-deps
-    RUST_LOG=DEBUG cargo run --bin ddn-engine-local-dev -- \
+    RUST_LOG=DEBUG cargo run --bin engine -- \
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path static/auth/auth_config_v3.json \
     --metadata-path {{ METADATA_PATH }} \
