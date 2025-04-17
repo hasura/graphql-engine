@@ -883,16 +883,20 @@ fn lookup_relationship_in_boolean_expression<'a>(
             },
         )?;
 
-    // lookup the boolean expression type for this comparable
-    // relationship and fetch it from metadata
-    let relationship_boolean_expression = boolean_expression_types
-        .objects
-        .get(&comparable_relationship.boolean_expression_type)
-        .ok_or_else(|| TypePredicateError::BooleanExpressionNotFound {
-            boolean_expression_name: comparable_relationship.boolean_expression_type.clone(),
-        })?;
+    if let Some(boolean_expression_type) = &comparable_relationship.boolean_expression_type {
+        // lookup the boolean expression type for this comparable
+        // relationship and fetch it from metadata
+        let relationship_boolean_expression = boolean_expression_types
+            .objects
+            .get(boolean_expression_type)
+            .ok_or_else(|| TypePredicateError::BooleanExpressionNotFound {
+                boolean_expression_name: boolean_expression_type.clone(),
+            })?;
 
-    Ok(Some(relationship_boolean_expression))
+        Ok(Some(relationship_boolean_expression))
+    } else {
+        Ok(None)
+    }
 }
 
 // this is only used for the older `ObjectBooleanExpressionType` where we

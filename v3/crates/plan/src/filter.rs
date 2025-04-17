@@ -188,133 +188,136 @@ fn to_filter_expression_internal<'metadata>(
                 .relationship_fields
                 .get(&field_name)
             {
-                let target_boolean_expression_type = metadata
-                    .boolean_expression_types
-                    .objects
-                    .get(&relationship_field.boolean_expression_type)
-                    .ok_or_else(|| {
-                        PlanError::Permission(
-                            PermissionError::ObjectBooleanExpressionTypeNotFound {
-                                boolean_expression_type_name: relationship_field
-                                    .boolean_expression_type
-                                    .clone(),
-                            },
-                        )
-                    })?;
+                if let Some(target_boolean_expression_type_name) =
+                    &relationship_field.boolean_expression_type
+                {
+                    let target_boolean_expression_type = metadata
+                        .boolean_expression_types
+                        .objects
+                        .get(target_boolean_expression_type_name)
+                        .ok_or_else(|| {
+                            PlanError::Permission(
+                                PermissionError::ObjectBooleanExpressionTypeNotFound {
+                                    boolean_expression_type_name:
+                                        target_boolean_expression_type_name.clone(),
+                                },
+                            )
+                        })?;
 
-                let target_model_object_type = crate::metadata_accessor::get_output_object_type(
-                    metadata,
-                    &target_boolean_expression_type.object_type,
-                    &session.role,
-                )?;
-
-                // look up relationship on the source model
-                let relationship = source_object_type
-                    .relationship_fields
-                    .get(&relationship_field.relationship_name)
-                    .ok_or_else(|| PermissionError::RelationshipNotFound {
-                        object_type_name: target_boolean_expression_type.object_type.clone(),
-                        relationship_name: relationship_field.relationship_name.clone(),
-                    })?;
-
-                match &relationship.target {
-                    metadata_resolve::RelationshipTarget::Command(_) => {
-                        todo!("command target not supported")
-                    }
-                    metadata_resolve::RelationshipTarget::Model(model_target) => {
-                        let target_model_source = crate::metadata_accessor::get_model(
+                    let target_model_object_type =
+                        crate::metadata_accessor::get_output_object_type(
                             metadata,
-                            &model_target.model_name,
+                            &target_boolean_expression_type.object_type,
                             &session.role,
                         )?;
 
-                        // build expression for any model permissions for the target model
-                        let model_expression = model_permission_filter_to_expression(
-                            session,
-                            &target_model_source,
-                            &metadata.object_types,
-                            usage_counts,
-                        )?;
+                    // look up relationship on the source model
+                    let relationship = source_object_type
+                        .relationship_fields
+                        .get(&relationship_field.relationship_name)
+                        .ok_or_else(|| PermissionError::RelationshipNotFound {
+                            object_type_name: target_boolean_expression_type.object_type.clone(),
+                            relationship_name: relationship_field.relationship_name.clone(),
+                        })?;
 
-                        // resolve predicate inside the relationship
-                        let inner = to_filter_expression_internal(
-                            metadata,
-                            session,
-                            &target_model_source.source.type_mappings,
-                            &target_model_object_type,
-                            Some(target_boolean_expression_type),
-                            predicate,
-                            &target_model_source.source.data_connector,
-                            Nesting::Relationship,
-                            usage_counts,
-                        )?;
+                    match &relationship.target {
+                        metadata_resolve::RelationshipTarget::Command(_) => {
+                            todo!("command target not supported")
+                        }
+                        metadata_resolve::RelationshipTarget::Model(model_target) => {
+                            let target_model_source = crate::metadata_accessor::get_model(
+                                metadata,
+                                &model_target.model_name,
+                                &session.role,
+                            )?;
 
-                        // include any predicates from model permissions
-                        let predicate = match model_expression
-                            .and_then(Expression::remove_always_true_expression)
-                        {
-                            Some(model_expression) => {
-                                Expression::mk_and([model_expression, inner].to_vec())
-                            }
-                            None => inner,
-                        };
+                            // build expression for any model permissions for the target model
+                            let model_expression = model_permission_filter_to_expression(
+                                session,
+                                &target_model_source,
+                                &metadata.object_types,
+                                usage_counts,
+                            )?;
 
-                        // work out path of any nesting before the relationship
-                        let column_path = match operand {
-                            Some(open_dds::query::Operand::Field(object_field_operand)) => {
-                                let ResolvedColumn {
-                                    column_name,
-                                    field_path,
-                                    field_mapping: _,
-                                } = to_resolved_column(
-                                    &session.role,
-                                    metadata,
-                                    type_mappings,
-                                    model_object_type,
-                                    object_field_operand,
-                                )?;
-                                Ok(field_path.into_iter().chain([column_name]).collect())
-                            }
-                            Some(
-                                open_dds::query::Operand::RelationshipAggregate(_)
-                                | open_dds::query::Operand::Relationship(_),
-                            ) => Err(PlanError::Internal(
-                                "Operand in a relationship must be of type Field".into(),
-                            )),
-                            None => Ok(vec![]),
-                        }?;
+                            // resolve predicate inside the relationship
+                            let inner = to_filter_expression_internal(
+                                metadata,
+                                session,
+                                &target_model_source.source.type_mappings,
+                                &target_model_object_type,
+                                Some(target_boolean_expression_type),
+                                predicate,
+                                &target_model_source.source.data_connector,
+                                Nesting::Relationship,
+                                usage_counts,
+                            )?;
 
-                        Ok(crate::build_relationship_comparison_expression(
-                            type_mappings,
-                            column_path,
-                            data_connector,
-                            &relationship.relationship_name,
-                            &model_target.relationship_type,
-                            &source_boolean_expression_type.object_type,
-                            &model_target.model_name,
-                            target_model_source.source,
-                            relationship.target_capabilities.as_ref().ok_or_else(|| {
-                                PermissionError::InternalMissingRelationshipCapabilities {
-                                    relationship_name: relationship.relationship_name.clone(),
-                                    object_type_name: target_boolean_expression_type
-                                        .object_type
-                                        .clone(),
+                            // include any predicates from model permissions
+                            let predicate = match model_expression
+                                .and_then(Expression::remove_always_true_expression)
+                            {
+                                Some(model_expression) => {
+                                    Expression::mk_and([model_expression, inner].to_vec())
                                 }
-                            })?,
-                            &model_target.target_typename,
-                            &model_target.mappings,
-                            predicate,
-                        )?)
+                                None => inner,
+                            };
+
+                            // work out path of any nesting before the relationship
+                            let column_path = match operand {
+                                Some(open_dds::query::Operand::Field(object_field_operand)) => {
+                                    let ResolvedColumn {
+                                        column_name,
+                                        field_path,
+                                        field_mapping: _,
+                                    } = to_resolved_column(
+                                        &session.role,
+                                        metadata,
+                                        type_mappings,
+                                        model_object_type,
+                                        object_field_operand,
+                                    )?;
+                                    Ok(field_path.into_iter().chain([column_name]).collect())
+                                }
+                                Some(
+                                    open_dds::query::Operand::RelationshipAggregate(_)
+                                    | open_dds::query::Operand::Relationship(_),
+                                ) => Err(PlanError::Internal(
+                                    "Operand in a relationship must be of type Field".into(),
+                                )),
+                                None => Ok(vec![]),
+                            }?;
+
+                            return Ok(crate::build_relationship_comparison_expression(
+                                type_mappings,
+                                column_path,
+                                data_connector,
+                                &relationship.relationship_name,
+                                &model_target.relationship_type,
+                                &source_boolean_expression_type.object_type,
+                                &model_target.model_name,
+                                target_model_source.source,
+                                relationship.target_capabilities.as_ref().ok_or_else(|| {
+                                    PermissionError::InternalMissingRelationshipCapabilities {
+                                        relationship_name: relationship.relationship_name.clone(),
+                                        object_type_name: target_boolean_expression_type
+                                            .object_type
+                                            .clone(),
+                                    }
+                                })?,
+                                &model_target.target_typename,
+                                &model_target.mappings,
+                                predicate,
+                            )?);
+                        }
                     }
                 }
-            } else {
-                Err(PlanError::Permission(
-                    PermissionError::RelationshipNotFoundInBooleanExpressionType {
-                        relationship_name: relationship_name.clone(),
-                        boolean_expression_type_name: boolean_expression_type.name.clone(),
-                    },
-                ))
             }
+            Err(PlanError::Permission(
+                PermissionError::RelationshipNotFoundInBooleanExpressionType {
+                    relationship_name: relationship_name.clone(),
+                    boolean_expression_type_name: boolean_expression_type.name.clone(),
+                },
+            ))
         }
         BooleanExpression::IsNull(_) => Err(PlanError::Internal(format!(
             "unsupported boolean expression: {expr:?}"

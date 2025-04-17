@@ -54,6 +54,7 @@ pub enum Flag {
     DisallowDuplicateModelPermissionsRoles,
     ValidateScalarBooleanExpressionOperators,
     ValidateNonNullGraphqlVariables,
+    DisallowComparableRelationshipTargetWithNoBooleanExpressionType,
 }
 
 impl Flag {
@@ -149,6 +150,9 @@ impl Flag {
                 "validate_scalar_boolean_expression_operators"
             }
             Flag::ValidateNonNullGraphqlVariables => "validate_non_null_graphql_variables",
+            Flag::DisallowComparableRelationshipTargetWithNoBooleanExpressionType => {
+                "disallow_comparable_relationship_target_with_no_boolean_expression_type"
+            }
         }
     }
 }

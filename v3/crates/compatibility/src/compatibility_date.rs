@@ -112,6 +112,7 @@ pub const fn new_compatibility_date(year: i32, month: u32, day: u32) -> Compatib
 }
 
 // Adding a flag? Don't forget to add it to the docs: https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/
+#[allow(clippy::match_same_arms)]
 pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> {
     match flag {
         // AllowPartialSupergraph is not triggered by compatibility date, instead it is set by the build settings (ie. using a /partial endpoint)
@@ -177,5 +178,9 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowDuplicateModelPermissionsRoles => Some(new_compatibility_date(2025, 3, 21)),
         Flag::ValidateScalarBooleanExpressionOperators => Some(new_compatibility_date(2025, 3, 26)),
         Flag::ValidateNonNullGraphqlVariables => Some(new_compatibility_date(2025, 4, 3)),
+        Flag::DisallowComparableRelationshipTargetWithNoBooleanExpressionType => None, // set on
+                                                                                       // next
+                                                                                       // release,
+                                                                                       // docs at https://github.com/hasura/ddn-docs/pull/985
     }
 }

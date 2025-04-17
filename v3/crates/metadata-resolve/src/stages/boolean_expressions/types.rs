@@ -8,6 +8,7 @@ use crate::{
     types::error::ContextualError,
 };
 use lang_graphql::ast::common as ast;
+use open_dds::models::ModelName;
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName},
     relationships::RelationshipName,
@@ -70,6 +71,13 @@ pub enum BooleanExpressionIssue {
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
+    #[error(
+        "the target model '{target_model_name}' of the relationship '{relationship_name}' does not have a boolean expression type defined"
+    )]
+    ComparableRelationshipToModelWithoutBooleanExpressionType {
+        target_model_name: Qualified<ModelName>,
+        relationship_name: RelationshipName,
+    },
     #[error("the boolean expression type with name {type_name} is defined more than once")]
     DuplicateBooleanExpressionType {
         type_name: Qualified<CustomTypeName>,
@@ -104,6 +112,11 @@ impl ShouldBeAnError for BooleanExpressionIssue {
             }
             BooleanExpressionIssue::DuplicateBooleanExpressionType { .. } => flags
                 .contains(open_dds::flags::Flag::DisallowDuplicateNamesAcrossTypesAndExpressions),
+            BooleanExpressionIssue::ComparableRelationshipToModelWithoutBooleanExpressionType {
+                ..
+            } => flags.contains(
+                open_dds::flags::Flag::DisallowComparableRelationshipTargetWithNoBooleanExpressionType,
+            ),
         }
     }
 }
@@ -290,7 +303,7 @@ pub struct BooleanExpressionComparableRelationship {
 
     /// The boolean expression type to use for comparison. This is optional for relationships to
     /// models, and defaults to the filterExpressionType of the model
-    pub boolean_expression_type: Qualified<CustomTypeName>,
+    pub boolean_expression_type: Option<Qualified<CustomTypeName>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

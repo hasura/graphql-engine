@@ -3827,6 +3827,10 @@
         "validate_non_null_graphql_variables": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_comparable_relationship_target_with_no_boolean_expression_type": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
