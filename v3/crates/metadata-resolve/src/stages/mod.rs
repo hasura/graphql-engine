@@ -308,7 +308,8 @@ fn resolve_internal(
         &boolean_expression_types,
         &models_with_graphql,
         &data_connector_scalars,
-    )?;
+    )
+    .map_err(flatten_multiple_errors)?;
 
     all_issues.extend(command_permission_issues.into_iter().map(Warning::from));
 
