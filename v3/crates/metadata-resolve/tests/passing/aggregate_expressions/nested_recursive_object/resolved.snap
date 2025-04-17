@@ -190,6 +190,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/nested_r
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -393,6 +394,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/nested_r
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -493,6 +495,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/nested_r
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -932,6 +935,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/nested_r
                 "admin",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

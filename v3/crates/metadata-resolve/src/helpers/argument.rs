@@ -1,14 +1,14 @@
-use super::ndc_validation::{unwrap_nullable_type, NDCValidationError};
+use super::ndc_validation::NDCValidationError;
 use crate::data_connectors::DataConnectorContext;
 use crate::helpers::ndc_validation;
 use crate::helpers::type_mappings;
 use crate::helpers::type_validation;
 use crate::helpers::typecheck::{
-    typecheck_qualified_type_reference, TypecheckError, TypecheckIssue,
+    TypecheckError, TypecheckIssue, typecheck_qualified_type_reference,
 };
 use crate::helpers::types::{
-    get_object_type_for_boolean_expression, get_type_representation, unwrap_custom_type_name,
-    TypeRepresentation,
+    TypeRepresentation, get_object_type_for_boolean_expression, get_type_representation,
+    unwrap_custom_type_name,
 };
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions,
@@ -23,7 +23,7 @@ use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
-use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
+use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier::SubgraphName;
 use open_dds::models::ModelName;
 use open_dds::types::DataConnectorArgumentName;
@@ -49,7 +49,9 @@ pub enum ArgumentMappingError {
     DuplicateNdcArgumentMapping {
         ndc_argument_name: DataConnectorArgumentName,
     },
-    #[error("the argument {argument_name} is mapped to the data connector argument {ndc_argument_name} which is already used as an argument preset in the DataConnectorLink")]
+    #[error(
+        "the argument {argument_name} is mapped to the data connector argument {ndc_argument_name} which is already used as an argument preset in the DataConnectorLink"
+    )]
     ArgumentAlreadyPresetInDataConnectorLink {
         argument_name: ArgumentName,
         ndc_argument_name: DataConnectorArgumentName,
@@ -81,7 +83,9 @@ pub enum ArgumentMappingIssue {
     UnmappedNdcArguments {
         ndc_argument_names: Vec<DataConnectorArgumentName>,
     },
-    #[error("the type of argument '{argument_name:}' is not compatible with the type of the data connector argument '{ndc_argument_name:}': {issue:}")]
+    #[error(
+        "the type of argument '{argument_name:}' is not compatible with the type of the data connector argument '{ndc_argument_name:}': {issue:}"
+    )]
     IncompatibleType {
         argument_name: ArgumentName,
         ndc_argument_name: DataConnectorArgumentName,
@@ -274,9 +278,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     argument_name: &open_dds::arguments::ArgumentName,
     value_expression: &open_dds::permissions::ValueExpressionOrPredicate,
     argument_type: &QualifiedTypeReference,
-    source_argument_type: Option<&ndc_models::Type>,
     data_connector_link: &data_connectors::DataConnectorLink,
-    subgraph: &SubgraphName,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -284,6 +286,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
+    data_connector_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -381,43 +384,6 @@ pub(crate) fn resolve_value_expression_for_argument(
             let object_type_representation =
                 get_object_type_for_boolean_expression(boolean_expression_type, object_types)?;
 
-            // get the data_connector_object_type from the NDC command argument type
-            // or explode
-            let data_connector_object_type = source_argument_type
-                .and_then(|argument_type| match unwrap_nullable_type(argument_type) {
-                    ndc_models::Type::Predicate { object_type_name } => {
-                        Some(DataConnectorObjectType::from(object_type_name.as_str()))
-                    }
-                    _ => None,
-                })
-                .ok_or_else(|| {
-                    Error::from(
-                        object_types::ObjectTypesError::DataConnectorTypeMappingValidationError {
-                            type_name: base_type.clone(),
-                            error:
-                                object_types::TypeMappingValidationError::PredicateTypeNotFound {
-                                    argument_name: argument_name.clone(),
-                                },
-                        },
-                    )
-                })?;
-
-            let data_connector_field_mappings = object_type_representation
-                .type_mappings
-                .get(&data_connector_link.name, &data_connector_object_type)
-                .map(|type_mapping| match type_mapping {
-                    object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
-                })
-                .ok_or_else(||Error::from(object_types::ObjectTypesError::DataConnectorTypeMappingValidationError {
-                    type_name: base_type.clone(),
-                    error:
-                        object_types::TypeMappingValidationError::DataConnectorTypeMappingNotFound {
-                            object_type_name: base_type.clone(),
-                            data_connector_name: data_connector_link.name.clone(),
-                            data_connector_object_type: data_connector_object_type.clone(),
-                        },
-                }))?;
-
             // Get available scalars defined for this data connector
             let specific_data_connector_scalars = data_connector_scalars
                 .get(&data_connector_link.name)
@@ -429,18 +395,17 @@ pub(crate) fn resolve_value_expression_for_argument(
             let resolved_model_predicate = model_permissions::resolve_model_predicate_with_type(
                 flags,
                 bool_exp,
+                vec![],
                 &boolean_expression_type.object_type,
                 object_type_representation,
                 Some(boolean_expression_type),
-                data_connector_field_mappings,
+                data_connector_type_mappings,
                 data_connector_link,
-                subgraph,
                 specific_data_connector_scalars,
                 object_types,
                 scalar_types,
                 boolean_expression_types,
                 models,
-                &object_type_representation.object_type.fields,
             )?;
 
             Ok((

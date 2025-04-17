@@ -1,6 +1,6 @@
 mod types;
 
-use crate::process_response::{process_mutation_response, process_response, ProcessedResponse};
+use crate::process_response::{ProcessedResponse, process_mutation_response, process_response};
 use engine_types::{HttpContext, ProjectId};
 use execute::FieldError;
 use execute::{resolve_ndc_mutation_execution, resolve_ndc_query_execution};
@@ -8,13 +8,13 @@ use gql::normalized_ast;
 use gql::schema::NamespacedGetter;
 use graphql_ir::MutationPlan;
 use graphql_ir::{ApolloFederationSelect, NodeQueryPlan, QueryPlan};
-use graphql_schema::GDSRoleNamespaceGetter;
 use graphql_schema::GDS;
+use graphql_schema::GDSRoleNamespaceGetter;
 use indexmap::IndexMap;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use plan_types::{NDCMutationExecution, NDCQueryExecution};
-use tracing_util::{set_attribute_on_active_span, AttributeVisibility};
+use tracing_util::{AttributeVisibility, set_attribute_on_active_span};
 pub use types::{ExecuteQueryResult, RootFieldResult};
 
 /// Given an entire plan for a query, produce a result. We do this by executing all the singular
@@ -128,7 +128,7 @@ async fn execute_query_field_plan(
                         }
 
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::from_processed_response(
-                            optional_query.as_ref().map_or(true, |(ndc_query,_selection_set)| {
+                            optional_query.as_ref().is_none_or( |(ndc_query,_selection_set)| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
                             resolve_optional_ndc_select(http_context, optional_query, project_id)

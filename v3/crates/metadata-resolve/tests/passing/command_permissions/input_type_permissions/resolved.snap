@@ -272,6 +272,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -397,6 +398,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -519,6 +521,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -789,6 +792,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -911,6 +915,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1280,6 +1285,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1405,6 +1411,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1571,6 +1578,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1835,6 +1843,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2087,6 +2096,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2209,6 +2219,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2545,6 +2556,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             source: Procedure(
@@ -2681,6 +2693,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -2806,6 +2819,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -2928,6 +2942,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3069,6 +3084,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3191,6 +3207,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3332,6 +3349,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3457,6 +3475,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3623,6 +3642,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3764,6 +3784,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3896,6 +3917,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -4018,6 +4040,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -4126,9 +4149,13 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                         ndc_column: DataConnectorColumnName(
                                             "artist_id",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Custom(
@@ -4443,7 +4470,43 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_gt",
+                                            ): DataConnectorOperatorName(
+                                                "_gt",
+                                            ),
+                                            OperatorName(
+                                                "_gte",
+                                            ): DataConnectorOperatorName(
+                                                "_gte",
+                                            ),
+                                            OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
+                                                "_lt",
+                                            ): DataConnectorOperatorName(
+                                                "_lt",
+                                            ),
+                                            OperatorName(
+                                                "_lte",
+                                            ): DataConnectorOperatorName(
+                                                "_lte",
+                                            ),
+                                            OperatorName(
+                                                "_neq",
+                                            ): DataConnectorOperatorName(
+                                                "_neq",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Include {
@@ -4631,7 +4694,43 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_gt",
+                                            ): DataConnectorOperatorName(
+                                                "_gt",
+                                            ),
+                                            OperatorName(
+                                                "_gte",
+                                            ): DataConnectorOperatorName(
+                                                "_gte",
+                                            ),
+                                            OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
+                                                "_lt",
+                                            ): DataConnectorOperatorName(
+                                                "_lt",
+                                            ),
+                                            OperatorName(
+                                                "_lte",
+                                            ): DataConnectorOperatorName(
+                                                "_lte",
+                                            ),
+                                            OperatorName(
+                                                "_neq",
+                                            ): DataConnectorOperatorName(
+                                                "_neq",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Include {
@@ -5009,7 +5108,93 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                             ),
                                         ),
                                     }: OperatorMapping(
-                                        {},
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_gt",
+                                            ): DataConnectorOperatorName(
+                                                "_gt",
+                                            ),
+                                            OperatorName(
+                                                "_gte",
+                                            ): DataConnectorOperatorName(
+                                                "_gte",
+                                            ),
+                                            OperatorName(
+                                                "_ilike",
+                                            ): DataConnectorOperatorName(
+                                                "_ilike",
+                                            ),
+                                            OperatorName(
+                                                "_in",
+                                            ): DataConnectorOperatorName(
+                                                "_in",
+                                            ),
+                                            OperatorName(
+                                                "_iregex",
+                                            ): DataConnectorOperatorName(
+                                                "_iregex",
+                                            ),
+                                            OperatorName(
+                                                "_like",
+                                            ): DataConnectorOperatorName(
+                                                "_like",
+                                            ),
+                                            OperatorName(
+                                                "_lt",
+                                            ): DataConnectorOperatorName(
+                                                "_lt",
+                                            ),
+                                            OperatorName(
+                                                "_lte",
+                                            ): DataConnectorOperatorName(
+                                                "_lte",
+                                            ),
+                                            OperatorName(
+                                                "_neq",
+                                            ): DataConnectorOperatorName(
+                                                "_neq",
+                                            ),
+                                            OperatorName(
+                                                "_nilike",
+                                            ): DataConnectorOperatorName(
+                                                "_nilike",
+                                            ),
+                                            OperatorName(
+                                                "_niregex",
+                                            ): DataConnectorOperatorName(
+                                                "_niregex",
+                                            ),
+                                            OperatorName(
+                                                "_nlike",
+                                            ): DataConnectorOperatorName(
+                                                "_nlike",
+                                            ),
+                                            OperatorName(
+                                                "_nregex",
+                                            ): DataConnectorOperatorName(
+                                                "_nregex",
+                                            ),
+                                            OperatorName(
+                                                "_regex",
+                                            ): DataConnectorOperatorName(
+                                                "_regex",
+                                            ),
+                                            OperatorName(
+                                                "starts_with",
+                                            ): DataConnectorOperatorName(
+                                                "starts_with",
+                                            ),
+                                            OperatorName(
+                                                "ts_match_tt",
+                                            ): DataConnectorOperatorName(
+                                                "ts_match_tt",
+                                            ),
+                                        },
                                     ),
                                 },
                                 logical_operators: Include {
@@ -5220,7 +5405,43 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                             data_connector_scalar_type: DataConnectorScalarType(
                                 "int4",
                             ),
-                            operator_mapping: {},
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                                OperatorName(
+                                    "_gt",
+                                ): DataConnectorOperatorName(
+                                    "_gt",
+                                ),
+                                OperatorName(
+                                    "_gte",
+                                ): DataConnectorOperatorName(
+                                    "_gte",
+                                ),
+                                OperatorName(
+                                    "_in",
+                                ): DataConnectorOperatorName(
+                                    "_in",
+                                ),
+                                OperatorName(
+                                    "_lt",
+                                ): DataConnectorOperatorName(
+                                    "_lt",
+                                ),
+                                OperatorName(
+                                    "_lte",
+                                ): DataConnectorOperatorName(
+                                    "_lte",
+                                ),
+                                OperatorName(
+                                    "_neq",
+                                ): DataConnectorOperatorName(
+                                    "_neq",
+                                ),
+                            },
                         },
                     },
                     graphql_name: Some(
@@ -5626,7 +5847,93 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                             data_connector_scalar_type: DataConnectorScalarType(
                                 "varchar",
                             ),
-                            operator_mapping: {},
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                                OperatorName(
+                                    "_gt",
+                                ): DataConnectorOperatorName(
+                                    "_gt",
+                                ),
+                                OperatorName(
+                                    "_gte",
+                                ): DataConnectorOperatorName(
+                                    "_gte",
+                                ),
+                                OperatorName(
+                                    "_ilike",
+                                ): DataConnectorOperatorName(
+                                    "_ilike",
+                                ),
+                                OperatorName(
+                                    "_in",
+                                ): DataConnectorOperatorName(
+                                    "_in",
+                                ),
+                                OperatorName(
+                                    "_iregex",
+                                ): DataConnectorOperatorName(
+                                    "_iregex",
+                                ),
+                                OperatorName(
+                                    "_like",
+                                ): DataConnectorOperatorName(
+                                    "_like",
+                                ),
+                                OperatorName(
+                                    "_lt",
+                                ): DataConnectorOperatorName(
+                                    "_lt",
+                                ),
+                                OperatorName(
+                                    "_lte",
+                                ): DataConnectorOperatorName(
+                                    "_lte",
+                                ),
+                                OperatorName(
+                                    "_neq",
+                                ): DataConnectorOperatorName(
+                                    "_neq",
+                                ),
+                                OperatorName(
+                                    "_nilike",
+                                ): DataConnectorOperatorName(
+                                    "_nilike",
+                                ),
+                                OperatorName(
+                                    "_niregex",
+                                ): DataConnectorOperatorName(
+                                    "_niregex",
+                                ),
+                                OperatorName(
+                                    "_nlike",
+                                ): DataConnectorOperatorName(
+                                    "_nlike",
+                                ),
+                                OperatorName(
+                                    "_nregex",
+                                ): DataConnectorOperatorName(
+                                    "_nregex",
+                                ),
+                                OperatorName(
+                                    "_regex",
+                                ): DataConnectorOperatorName(
+                                    "_regex",
+                                ),
+                                OperatorName(
+                                    "starts_with",
+                                ): DataConnectorOperatorName(
+                                    "starts_with",
+                                ),
+                                OperatorName(
+                                    "ts_match_tt",
+                                ): DataConnectorOperatorName(
+                                    "ts_match_tt",
+                                ),
+                            },
                         },
                     },
                     graphql_name: Some(
@@ -5710,6 +6017,9 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                 "admin",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

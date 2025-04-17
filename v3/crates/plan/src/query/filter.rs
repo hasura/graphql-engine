@@ -219,7 +219,7 @@ fn build_ndc_query_fields(
 pub fn build_relationship_comparison_expression<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     column_path: Vec<DataConnectorColumnName>,
-    data_connector_link: &'s DataConnectorLink,
+    source_data_connector_link: &'s DataConnectorLink,
     relationship_name: &'s RelationshipName,
     relationship_type: &'s RelationshipType,
     source_type: &'s Qualified<CustomTypeName>,
@@ -232,7 +232,7 @@ pub fn build_relationship_comparison_expression<'s>(
 ) -> Result<Expression<'s>, RelationshipError> {
     // Determine whether the relationship is local or remote
     match metadata_resolve::get_comparable_relationship_execution_strategy(
-        &data_connector_link.name,
+        &source_data_connector_link.name,
         &target_model_source.data_connector.name,
         target_capabilities.supports_relationships.as_ref(),
     ) {
@@ -243,7 +243,7 @@ pub fn build_relationship_comparison_expression<'s>(
                 relationship_name,
                 relationship_type,
                 source_type,
-                source_data_connector: data_connector_link,
+                source_data_connector: source_data_connector_link,
                 source_type_mappings: type_mappings,
                 target_model_name,
                 target_source: target_model_source,

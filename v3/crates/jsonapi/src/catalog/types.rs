@@ -4,8 +4,8 @@ use crate::types::{RoleWarning, Warning};
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use metadata_resolve::{
-    deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
-    QualifiedTypeReference, ResolvedObjectBooleanExpressionType,
+    Qualified, QualifiedTypeReference, ResolvedObjectBooleanExpressionType,
+    deserialize_qualified_btreemap, serialize_qualified_btreemap,
 };
 use open_dds::{
     data_connector::DataConnectorName,

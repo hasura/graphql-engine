@@ -5,9 +5,9 @@ use lang_graphql::schema as gql_schema;
 use open_dds::commands::GraphQlRootFieldKind;
 use std::collections::BTreeMap;
 
+use crate::GDS;
 use crate::commands;
 use crate::query_root::node_field::relay_node_field;
-use crate::GDS;
 
 use self::node_field::RelayNodeFieldOutput;
 

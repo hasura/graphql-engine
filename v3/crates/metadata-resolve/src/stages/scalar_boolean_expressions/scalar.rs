@@ -18,6 +18,7 @@ use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier::SubgraphName;
 use open_dds::{
     boolean_expression::{BooleanExpressionScalarOperand, BooleanExpressionTypeV1},
+    data_connector::DataConnectorOperatorName,
     types::CustomTypeName,
 };
 use std::collections::BTreeMap;
@@ -83,6 +84,23 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     for data_connector_operator_mapping in
         &scalar_boolean_expression_operand.data_connector_operator_mapping
     {
+        // make a copy now so that we can add in the inferred operator mappings (ie, any that
+        // are not explicitly defined in mappings we assume are mapped to the same name)
+        let mut data_connector_operator_mapping = data_connector_operator_mapping.clone();
+
+        // add all implicitly defined mappings
+        for comparison_operator in &scalar_boolean_expression_operand.comparison_operators {
+            if !data_connector_operator_mapping
+                .operator_mapping
+                .contains_key(&comparison_operator.name)
+            {
+                data_connector_operator_mapping.operator_mapping.insert(
+                    comparison_operator.name.clone(),
+                    DataConnectorOperatorName::new(comparison_operator.name.as_str().into()),
+                );
+            }
+        }
+
         let scalar_type_name = &data_connector_operator_mapping.data_connector_scalar_type;
 
         // scope the data connector to the current subgraph
@@ -133,13 +151,13 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
             &qualified_data_connector_name,
             connector_scalars,
             data_connector_scalar_type,
-            data_connector_operator_mapping,
+            &data_connector_operator_mapping,
             &comparison_operators,
         ));
 
         data_connector_operator_mappings.insert(
             qualified_data_connector_name,
-            data_connector_operator_mapping.clone(),
+            data_connector_operator_mapping,
         );
     }
 

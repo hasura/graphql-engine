@@ -43,15 +43,24 @@ Hasura attaches query tags (_unless disabled_) to the generated SQL statement it
 SELECT name FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field_name=child, operation_name=GetChild */
 ```
 
+:::warning Query tags are not compatible with all services
+
+As an example,
+[Google Cloud SQL](https://cloud.google.com/sql/docs/postgres/using-query-insights#adding-tags-to-sql-queries) drops all
+keys not in their prescribed list.
+
+:::
+
 ## Formats of Query Tags
 
-The format of the Query Tags describes how the <em>(Key,Value)</em> pairs are constructed. Currently we support two
+The format of the Query Tags describes how the <em>(Key,Value)</em> pairs are constructed. Currently we support three
 formats of Query Tags:
 
 1.  Standard (`standard`)
-2.  SQLCommenter (`sqlcommenter`)
+2.  Standard, but prepended to the query (`standard_prepended`)
+3.  SQLCommenter (`sqlcommenter`)
 
-### Standard
+### Standard (and `standard_prepended`)
 
 This format makes a collection of <em>key=value</em> pairs and separates each pair by a comma `,` . **This is the
 default format for Query Tags**
@@ -61,6 +70,9 @@ For eg:
 ```sql
 SELECT name FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field_name=child, parameterized_query_hash=b2a71ce23928ca7f0021f9060e5d590e9f9bb00f, operation_name=GetChild */
 ```
+
+`standard_prepended` is the same as `standard` shown above, but the comment will be added _before_ the query, rather
+than at the end
 
 ### SQLCommenter
 

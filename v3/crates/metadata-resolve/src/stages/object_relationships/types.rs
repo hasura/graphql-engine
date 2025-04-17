@@ -153,7 +153,9 @@ pub enum FieldNestedness {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ObjectRelationshipsIssue {
-    #[error("The data connector {data_connector_name} does not support relationships or variables, so it cannot be used for relationship {relationship_name} on type {type_name}")]
+    #[error(
+        "The data connector {data_connector_name} does not support relationships or variables, so it cannot be used for relationship {relationship_name} on type {type_name}"
+    )]
     LocalRelationshipDataConnectorDoesNotSupportRelationshipsOrVariables {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,

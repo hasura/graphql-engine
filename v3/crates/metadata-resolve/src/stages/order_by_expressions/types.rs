@@ -108,12 +108,16 @@ pub enum OrderByExpressionIssue {
     DuplicateOrderByExpression {
         order_by_expression: Qualified<OrderByExpressionIdentifier>,
     },
-    #[error("Cannot order by array relationship {relationship_name} in order by expression {order_by_expression}")]
+    #[error(
+        "Cannot order by array relationship {relationship_name} in order by expression {order_by_expression}"
+    )]
     CannotOrderByAnArrayRelationship {
         order_by_expression: Qualified<OrderByExpressionIdentifier>,
         relationship_name: RelationshipName,
     },
-    #[error("The orderable field \"{field_name}\" has field arguments and cannot be used in order by expressions.")]
+    #[error(
+        "The orderable field \"{field_name}\" has field arguments and cannot be used in order by expressions."
+    )]
     OrderByFieldWithFieldArguments { field_name: FieldName },
 }
 

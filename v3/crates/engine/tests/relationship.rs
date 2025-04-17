@@ -294,14 +294,17 @@ fn test_remote_mutually_recursive_relationships_to_command_across_namespace() ->
         BTreeMap::from([
             (
                 NdcVersion::V01,
-                vec!["execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v01.json"],
+                vec![
+                    "execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v01.json",
+                ],
             ),
             (
                 NdcVersion::V02,
-                vec!["execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v02.json"],
+                vec![
+                    "execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v02.json",
+                ],
             ),
         ]),
-
     )
 }
 

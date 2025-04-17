@@ -5,9 +5,9 @@ use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
 use metadata_resolve::{
-    unwrap_custom_type_name, ArgumentInfo, CommandWithPermissions, FieldMapping, Metadata,
-    ModelWithPermissions, ObjectTypeWithRelationships, Qualified, QualifiedBaseType,
-    QualifiedTypeName, QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate,
+    ArgumentInfo, CommandWithPermissions, FieldMapping, Metadata, ModelWithPermissions,
+    ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeName,
+    QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate, unwrap_custom_type_name,
 };
 use open_dds::{
     arguments::ArgumentName,
@@ -361,7 +361,9 @@ pub enum ArgumentPresetExecutionError {
     GotArray {
         expected_type: QualifiedTypeReference,
     },
-    #[error("could not convert the provided header value to string as it contains non-visible ASCII characters")]
+    #[error(
+        "could not convert the provided header value to string as it contains non-visible ASCII characters"
+    )]
     IllegalCharactersInHeaderValue,
     #[error("Model source not found for model '{model_name}'")]
     ModelSourceNotFound { model_name: Qualified<ModelName> },
@@ -386,7 +388,9 @@ pub enum ArgumentPresetExecutionError {
     TypeMappingNotFound {
         object_type_name: Qualified<CustomTypeName>,
     },
-    #[error("no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'")]
+    #[error(
+        "no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'"
+    )]
     FieldMappingNotFound {
         object_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
@@ -398,7 +402,9 @@ pub enum ArgumentPresetExecutionError {
         object_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
-    #[error("no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'")]
+    #[error(
+        "no data connector field mapping found for field '{field_name}' of object type '{object_type_name}'"
+    )]
     DataConnectorFieldMappingNotFound {
         object_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
@@ -575,7 +581,6 @@ pub fn get_unresolved_arguments<'s>(
                     metadata,
                     session,
                     type_mappings,
-                    &boolean_expression_type.object_type,
                     &argument_object_type,
                     Some(boolean_expression_type),
                     bool_exp,

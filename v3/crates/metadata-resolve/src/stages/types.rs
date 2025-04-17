@@ -10,6 +10,7 @@ use open_dds::{
     types::CustomTypeName,
 };
 
+use crate::flags::RuntimeFlags;
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{
@@ -41,4 +42,5 @@ pub struct Metadata {
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
     pub plugin_configs: LifecyclePluginConfigs,
     pub roles: BTreeSet<Role>,
+    pub runtime_flags: RuntimeFlags,
 }

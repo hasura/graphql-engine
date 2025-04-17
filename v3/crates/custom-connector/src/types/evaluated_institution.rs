@@ -21,7 +21,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 ndc_models::ObjectField {
                     description: Some("The institution's evaluation result".into()),
                     r#type: ndc_models::Type::Named {
-                        name: "Boolean".into(),
+                        name: "Bool".into(),
                     },
                     arguments: BTreeMap::new(),
                 },

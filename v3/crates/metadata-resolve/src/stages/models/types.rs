@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::QualifiedTypeReference;
 use crate::data_connectors::ArgumentPresetValue;
 use crate::helpers::argument::ArgumentMappingIssue;
 use crate::helpers::types::NdcColumnForComparison;
@@ -7,9 +8,8 @@ use crate::stages::order_by_expressions::OrderByExpressionIdentifier;
 use crate::stages::{data_connectors, object_types, order_by_expressions};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{
-    deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
+    ArgumentInfo, Qualified, deserialize_qualified_btreemap, serialize_qualified_btreemap,
 };
-use crate::QualifiedTypeReference;
 
 use indexmap::IndexMap;
 use open_dds::commands::CommandName;
@@ -91,46 +91,60 @@ pub struct NDCFieldSourceMapping {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelsIssue {
-    #[error("An issue occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {issue:}")]
+    #[error(
+        "An issue occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {issue:}"
+    )]
     FunctionArgumentMappingIssue {
         data_connector_name: Qualified<DataConnectorName>,
         model_name: Qualified<ModelName>,
         collection_name: CollectionName,
         issue: ArgumentMappingIssue,
     },
-    #[error("The orderable field '{field_name}' in model '{model_name}' is not a scalar field (type: {field_type}) and therefore cannot be used for ordering. Upgrade to version 2 Models and use OrderByExpressions to order by nested fields")]
+    #[error(
+        "The orderable field '{field_name}' in model '{model_name}' is not a scalar field (type: {field_type}) and therefore cannot be used for ordering. Upgrade to version 2 Models and use OrderByExpressions to order by nested fields"
+    )]
     ModelV1OrderableFieldIsNotAScalarField {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
-    #[error("The orderable field '{field_name}' in model '{model_name}' is an array type (type: {field_type}) and therefore cannot be used for ordering")]
+    #[error(
+        "The orderable field '{field_name}' in model '{model_name}' is an array type (type: {field_type}) and therefore cannot be used for ordering"
+    )]
     ModelV1OrderableFieldIsAnArrayType {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
-    #[error("The order by expression '{order_by_expression_identifier}' used in model '{model_name}' contains a nested field '{nested_field_name}', however the data connector '{data_connector_name}' used in the model does not support ordering by nested fields")]
+    #[error(
+        "The order by expression '{order_by_expression_identifier}' used in model '{model_name}' contains a nested field '{nested_field_name}', however the data connector '{data_connector_name}' used in the model does not support ordering by nested fields"
+    )]
     OrderByExpressionContainsUnsupportedNestedField {
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         model_name: Qualified<ModelName>,
         nested_field_name: FieldName,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("Issue in order by expression '{order_by_expression_identifier}' used by model '{model_name}': {error}")]
+    #[error(
+        "Issue in order by expression '{order_by_expression_identifier}' used by model '{model_name}': {error}"
+    )]
     OrderableRelationshipError {
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         model_name: Qualified<ModelName>,
         error: order_by_expressions::OrderableRelationshipError,
     },
-    #[error("The target model '{target_model_name}' of the orderable relationship '{relationship_name}' in order by expression '{order_by_expression_identifier}' used in model '{model_name}' must have a source")]
+    #[error(
+        "The target model '{target_model_name}' of the orderable relationship '{relationship_name}' in order by expression '{order_by_expression_identifier}' used in model '{model_name}' must have a source"
+    )]
     OrderableRelationshipTargetModelMustHaveASource {
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         model_name: Qualified<ModelName>,
         relationship_name: open_dds::relationships::RelationshipName,
         target_model_name: Qualified<ModelName>,
     },
-    #[error("The target command '{target_command_name}' of the orderable relationship '{relationship_name}' in order by expression '{order_by_expression_identifier}' used in model '{model_name}' must have a source")]
+    #[error(
+        "The target command '{target_command_name}' of the orderable relationship '{relationship_name}' in order by expression '{order_by_expression_identifier}' used in model '{model_name}' must have a source"
+    )]
     OrderableRelationshipTargetCommandMustHaveASource {
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         model_name: Qualified<ModelName>,

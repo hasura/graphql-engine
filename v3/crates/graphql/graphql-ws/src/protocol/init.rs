@@ -1,7 +1,7 @@
 use axum::http;
 use engine_types::HttpContext;
-use hasura_authn::{authenticate, AuthError, ResolvedAuthConfig};
-use hasura_authn_core::{authorize_identity, Session, SessionError};
+use hasura_authn::{AuthError, ResolvedAuthConfig, authenticate};
+use hasura_authn_core::{Session, SessionError, authorize_identity};
 use std::collections::HashMap;
 
 use super::types::{ConnectionInitState, InitPayload, ServerMessage};

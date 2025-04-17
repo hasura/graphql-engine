@@ -489,6 +489,7 @@ fn analyze_model_predicate_internal(
         ModelPredicate::Relationship {
             relationship_info,
             predicate,
+            ..
         } => {
             relationships.push(PredicateRelationshipUsage {
                 name: relationship_info.relationship_name.clone(),

@@ -8,8 +8,8 @@ use lang_graphql::{
     schema as gql_schema,
 };
 use metadata_resolve::{
-    mk_name, AggregateExpression, DataConnectorAggregationFunctionInfo,
-    ObjectTypeWithRelationships, Qualified, QualifiedTypeName,
+    AggregateExpression, DataConnectorAggregationFunctionInfo, ObjectTypeWithRelationships,
+    Qualified, QualifiedTypeName, mk_name,
 };
 use open_dds::{
     aggregates::{AggregateExpressionName, AggregationFunctionName},
@@ -17,9 +17,8 @@ use open_dds::{
 };
 
 use crate::{
-    mk_deprecation_status,
-    types::{output_type, TypeId},
-    Annotation, Error, NamespaceAnnotation, GDS,
+    Annotation, Error, GDS, NamespaceAnnotation, mk_deprecation_status,
+    types::{TypeId, output_type},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]

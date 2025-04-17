@@ -1,9 +1,9 @@
 #![allow(clippy::cast_precision_loss)]
 
 use human_bytes::human_bytes;
-use lang_graphql::schema::{sdl, Schema};
+use lang_graphql::schema::{Schema, sdl};
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 
 fn generate_schema(type_count: usize) -> String {
     let mut schema_str = String::new();

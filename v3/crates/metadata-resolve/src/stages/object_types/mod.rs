@@ -29,7 +29,7 @@ use crate::stages::{
     apollo, data_connector_scalar_types, data_connectors, graphql_config, scalar_types,
 };
 
-use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference, Qualified};
+use crate::types::subgraph::{Qualified, mk_qualified_type_name, mk_qualified_type_reference};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -916,6 +916,19 @@ fn make_extraction_functions(
                     issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
                         scalar_type: scalar_type_name.clone(),
                         function_name: "microsecond".to_string(),
+                        data_connector_name: data_connector_name.clone(),
+                    });
+                }
+            }
+            ndc_models::ExtractionFunctionDefinition::Millisecond { result_type: _ } => {
+                if extraction_functions.millisecond_function.is_none() {
+                    extraction_functions.millisecond_function = Some(
+                        DataConnectorExtractionFunctionName::new(function_name.inner().clone()),
+                    );
+                } else {
+                    issues.push(ObjectTypesIssue::DuplicateAggregateFunctionsDefined {
+                        scalar_type: scalar_type_name.clone(),
+                        function_name: "millisecond".to_string(),
                         data_connector_name: data_connector_name.clone(),
                     });
                 }

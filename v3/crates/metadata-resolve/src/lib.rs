@@ -16,23 +16,25 @@ pub use helpers::http;
 pub use helpers::ndc_validation::NDCValidationError;
 pub use helpers::to_fancy_errors;
 pub use helpers::types::{
-    get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
-    NdcColumnForComparison, TypeRepresentation,
+    NdcColumnForComparison, TypeRepresentation, get_type_representation, mk_name,
+    object_type_exists, unwrap_custom_type_name,
 };
 pub use stages::aggregates::{
     AggregatableFieldInfo, AggregateExpression, AggregateExpressionGraphqlConfig, AggregateOperand,
     AggregationFunctionInfo, DataConnectorAggregationFunctionInfo,
 };
 pub use stages::boolean_expressions::{
-    get_comparable_relationship_execution_strategy, BooleanExpressionComparableRelationship,
-    BooleanExpressionError, BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig,
-    ComparableRelationshipExecutionStrategy, ComparisonExpressionInfo, IncludeLogicalOperators,
-    ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo, ObjectComparisonKind,
-    OperatorMapping, ResolvedObjectBooleanExpressionType, ScalarBooleanExpressionGraphqlConfig,
-    ScalarComparisonKind,
+    BooleanExpressionComparableRelationship, BooleanExpressionError,
+    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig,
+    BooleanExpressionTypeIdentifier, ComparableRelationshipExecutionStrategy,
+    ComparisonExpressionInfo, IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, OperatorMapping,
+    ResolvedObjectBooleanExpressionType, ScalarBooleanExpressionGraphqlConfig,
+    ScalarComparisonKind, get_comparable_relationship_execution_strategy,
 };
 pub use stages::data_connectors::{
-    ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset, NdcVersion,
+    ArgumentPresetValue, DataConnectorLink, DataConnectorRelationalQueryCapabilities,
+    HttpHeadersPreset, NdcVersion,
 };
 pub use stages::graphql_config::{GlobalGraphqlConfig, MultipleOrderByInputObjectFields};
 pub use stages::model_permissions::{
@@ -41,24 +43,26 @@ pub use stages::model_permissions::{
 };
 pub use stages::models::{Model, ModelSource, ModelsError};
 pub use stages::models_graphql::{
-    ModelOrderByExpression, SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition,
-    SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition, UniqueIdentifierField,
+    ModelGraphqlError, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
+    UniqueIdentifierField,
 };
 pub use stages::object_relationships::{
-    field_selection_relationship_execution_category, AggregateRelationship,
-    CommandRelationshipTarget, FieldNestedness, ModelRelationshipTarget,
+    AggregateRelationship, CommandRelationshipTarget, FieldNestedness, ModelRelationshipTarget,
     ObjectTypeWithRelationships, RelationshipCapabilities, RelationshipCommandMapping,
     RelationshipExecutionCategory, RelationshipField, RelationshipModelMapping,
     RelationshipModelMappingFieldTarget, RelationshipModelMappingTarget, RelationshipTarget,
+    field_selection_relationship_execution_category,
 };
 pub use stages::object_types::{
     AggregateFunctions, ComparisonOperators, ExtractionFunctions, FieldArgumentInfo, FieldMapping,
     ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::order_by_expressions::{
-    validate_orderable_relationship, ObjectOrderByExpression, OrderByExpressionGraphqlConfig,
-    OrderByExpressionIdentifier, OrderByExpressions, OrderableField, OrderableFieldNestedness,
-    OrderableObjectField, OrderableRelationship, OrderableRelationshipError, OrderableScalarField,
+    ObjectOrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
+    OrderByExpressions, OrderableField, OrderableFieldNestedness, OrderableObjectField,
+    OrderableRelationship, OrderableRelationshipError, OrderableScalarField,
+    validate_orderable_relationship,
 };
 pub use stages::plugins::LifecyclePluginConfigs;
 pub use stages::scalar_boolean_expressions::{
@@ -66,19 +70,20 @@ pub use stages::scalar_boolean_expressions::{
 };
 pub use stages::scalar_type_representations::ScalarTypeRepresentation;
 pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};
+pub use stages::{Metadata, resolve};
 pub use stages::{
     command_permissions::CommandWithPermissions,
     commands::{Command, CommandSource},
     data_connectors,
 };
-pub use stages::{resolve, Metadata};
 pub use types::configuration;
 pub use types::error::{Error, WithContext};
+pub use types::flags;
 pub use types::permission::{ValueExpression, ValueExpressionOrPredicate};
 pub use types::subgraph::{
-    deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
-    serialize_non_string_key_btreemap, serialize_qualified_btreemap, ArgumentInfo, ArgumentKind,
-    Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
-    UnTaggedQualifiedTypeName,
+    ArgumentInfo, ArgumentKind, Qualified, QualifiedBaseType, QualifiedTypeName,
+    QualifiedTypeReference, UnTaggedQualifiedTypeName, deserialize_non_string_key_btreemap,
+    deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
+    serialize_qualified_btreemap,
 };
 pub use types::warning::Warning;

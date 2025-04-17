@@ -99,7 +99,7 @@ pub fn get_type_representation<'a, ObjectType, ScalarType>(
     object_types: &'a BTreeMap<Qualified<CustomTypeName>, ObjectType>,
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, ScalarType>,
     boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
-) -> Result<TypeRepresentation<'a, ObjectType, ScalarType>, Error> {
+) -> Result<TypeRepresentation<'a, ObjectType, ScalarType>, Qualified<CustomTypeName>> {
     object_types
         .get(custom_type_name)
         .map(|object_type_representation| TypeRepresentation::Object(object_type_representation))
@@ -130,9 +130,9 @@ pub fn get_type_representation<'a, ObjectType, ScalarType>(
                     TypeRepresentation::BooleanExpressionScalar(boolean_expression_type)
                 })
         })
-        .ok_or_else(|| Error::UnknownType {
-            data_type: custom_type_name.clone(),
-        })
+        .ok_or_else(||
+             custom_type_name.clone()
+        )
 }
 
 pub(crate) fn get_object_type_for_boolean_expression<'a>(

@@ -250,6 +250,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             source: Procedure(
@@ -374,6 +375,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

@@ -1,6 +1,6 @@
-use open_dds::traits::gen_root_schema_for;
 use open_dds::Metadata;
-use schemars::gen::SchemaGenerator;
+use open_dds::traits::gen_root_schema_for;
+use schemars::r#gen::SchemaGenerator;
 
 fn main() {
     let schema = gen_root_schema_for::<Metadata>(&mut SchemaGenerator::default());

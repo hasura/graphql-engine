@@ -1,14 +1,13 @@
 use crate::stages::data_connector_scalar_types;
 
 use crate::types::subgraph::{
-    mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
+    Qualified, QualifiedBaseType, QualifiedTypeReference, mk_qualified_type_name,
 };
 
 use ndc_models;
 
 use super::error::ScalarBooleanExpressionTypeError;
 use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
-use open_dds::identifier::SubgraphName;
 
 // helper function to resolve ndc types to dds type based on scalar type representations
 // this should only be used when we know the underlying type must be a scalar and not an object
@@ -16,7 +15,6 @@ pub fn resolve_ndc_type(
     data_connector: &Qualified<DataConnectorName>,
     source_type: &ndc_models::Type,
     scalars: &data_connector_scalar_types::DataConnectorScalars,
-    subgraph: &SubgraphName,
 ) -> Result<QualifiedTypeReference, ScalarBooleanExpressionTypeError> {
     match source_type {
         ndc_models::Type::Named { name } => {
@@ -37,13 +35,14 @@ pub fn resolve_ndc_type(
                 )
                 .map(|ty| QualifiedTypeReference {
                     underlying_type: QualifiedBaseType::Named(mk_qualified_type_name(
-                        &ty, subgraph,
+                        &ty,
+                        &data_connector.subgraph,
                     )),
                     nullable: false,
                 })
         }
         ndc_models::Type::Nullable { underlying_type } => {
-            resolve_ndc_type(data_connector, underlying_type, scalars, subgraph).map(|ty| {
+            resolve_ndc_type(data_connector, underlying_type, scalars).map(|ty| {
                 QualifiedTypeReference {
                     underlying_type: ty.underlying_type,
                     nullable: true,
@@ -51,7 +50,7 @@ pub fn resolve_ndc_type(
             })
         }
         ndc_models::Type::Array { element_type } => {
-            resolve_ndc_type(data_connector, element_type, scalars, subgraph).map(|ty| {
+            resolve_ndc_type(data_connector, element_type, scalars).map(|ty| {
                 QualifiedTypeReference {
                     underlying_type: QualifiedBaseType::List(Box::new(ty)),
                     nullable: false,

@@ -1,15 +1,13 @@
 use axum::extract::ws;
 use axum::http::HeaderMap;
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
-use graphql_ir::GraphqlRequestPipeline;
 use hasura_authn::ResolvedAuthConfig;
-use metadata_resolve::LifecyclePluginConfigs;
 use serde::Serialize;
 use smol_str::SmolStr;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc::Sender, RwLock};
+use tokio::sync::{RwLock, mpsc::Sender};
 
 use crate::metrics::WebSocketMetrics;
 use crate::poller;
@@ -21,12 +19,10 @@ pub struct Context<M> {
     pub connection_expiry: ConnectionExpiry,
     pub http_context: HttpContext,
     pub expose_internal_errors: ExposeInternalErrors,
-    pub request_pipeline: GraphqlRequestPipeline,
     pub project_id: Option<ProjectId>,
     pub schema: Arc<lang_graphql::schema::Schema<graphql_schema::GDS>>,
     pub metadata: Arc<metadata_resolve::Metadata>,
     pub auth_config: Arc<ResolvedAuthConfig>,
-    pub plugin_configs: Arc<LifecyclePluginConfigs>,
     pub metrics: M,
     pub handshake_headers: Arc<HeaderMap>,
 }

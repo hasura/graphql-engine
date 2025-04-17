@@ -151,7 +151,9 @@ impl AuthConfigV1 {
 /// These are things that don't break the build, but may do so in future
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum Warning {
-    #[error("AuthConfig v1 is deprecated. `allowRoleEmulationBy` has been removed. Please consider upgrading to AuthConfig v3.")]
+    #[error(
+        "AuthConfig v1 is deprecated. `allowRoleEmulationBy` has been removed. Please consider upgrading to AuthConfig v3."
+    )]
     PleaseUpgradeV1ToV3,
     #[error("AuthConfig v2 is deprecated. Please consider upgrading to AuthConfig v3.")]
     PleaseUpgradeV2ToV3,
@@ -201,7 +203,7 @@ impl<T: Display> Display for SeparatedBy<T> {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ResolvedAuthConfig {
     pub auth_config: AuthConfig,
     pub auth_config_flags: AuthConfigFlags,
@@ -444,7 +446,7 @@ pub async fn authenticate(
 mod tests {
     use goldenfile::Mint;
     use open_dds::{
-        test_utils::{validate_root_json_schema, JsonSchemaValidationConfig},
+        test_utils::{JsonSchemaValidationConfig, validate_root_json_schema},
         traits::gen_root_schema_for,
     };
     use pretty_assertions::assert_eq;
@@ -455,7 +457,7 @@ mod tests {
         let mut mint = Mint::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
         let mut expected = mint.new_goldenfile("tests/auth_config.jsonschema").unwrap();
         let schema = gen_root_schema_for::<super::AuthConfig>(
-            &mut schemars::gen::SchemaGenerator::default(),
+            &mut schemars::r#gen::SchemaGenerator::default(),
         );
         write!(
             expected,
@@ -496,7 +498,9 @@ mod tests {
     /// Runs various checks on the generated JSONSchema to ensure it follows certain conventions.
     fn test_validate_auth_config_json_schema() {
         validate_root_json_schema(
-            gen_root_schema_for::<super::AuthConfig>(&mut schemars::gen::SchemaGenerator::default()),
+            gen_root_schema_for::<super::AuthConfig>(
+                &mut schemars::r#gen::SchemaGenerator::default(),
+            ),
             &JsonSchemaValidationConfig {
                 schemas_with_arbitrary_additional_properties_allowed: vec!["JWTClaimsMap"],
             },

@@ -4,10 +4,10 @@ use lang_graphql::{ast::common as ast, schema as gql_schema};
 use metadata_resolve::Qualified;
 
 use crate::{
+    Annotation, Error, GDS, ModelInputAnnotation,
     model_filter::get_where_expression_input_field,
     model_order_by::get_order_by_expression_input_field,
     types::{self, TypeId},
-    Annotation, Error, ModelInputAnnotation, GDS,
 };
 
 pub fn add_filter_input_argument_field(

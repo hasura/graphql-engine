@@ -14,7 +14,7 @@ use open_dds::plugins::{
 };
 use serde_json::json;
 use tracing_util::{
-    set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Traceable, TraceableError,
+    ErrorVisibility, SpanVisibility, Traceable, TraceableError, set_attribute_on_active_span,
 };
 
 #[derive(Debug, thiserror::Error)]

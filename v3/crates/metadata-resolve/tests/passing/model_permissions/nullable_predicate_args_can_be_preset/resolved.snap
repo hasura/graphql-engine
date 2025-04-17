@@ -185,6 +185,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -250,6 +251,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -315,6 +317,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -601,6 +604,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -677,6 +681,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -742,6 +747,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -807,6 +813,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -968,9 +975,13 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                                         ndc_column: DataConnectorColumnName(
                                             "AlbumId",
                                         ),
-                                        operator: DataConnectorOperatorName(
-                                            "eq",
-                                        ),
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
+                                        column_path: [],
                                         argument_type: QualifiedTypeReference {
                                             underlying_type: Named(
                                                 Inbuilt(
@@ -1880,6 +1891,9 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                 "user",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

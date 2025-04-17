@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
 
-use axum::{http::StatusCode, Json};
+use axum::{Json, http::StatusCode};
 use ndc_models;
 
 use crate::{
     arguments::{check_all_arguments_used, parse_object_argument},
-    query::{eval_nested_field, Result},
+    query::{Result, eval_nested_field},
     state::AppState,
 };
 

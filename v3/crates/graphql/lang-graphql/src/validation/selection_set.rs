@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use super::collect;
 use super::error::*;
 use super::input;
+use super::variables;
 use crate::ast::common as ast;
 use crate::ast::executable;
 use crate::ast::spanning;
@@ -22,7 +23,7 @@ pub fn normalize_selection_set<
     namespaced_getter: &NSGet,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
-    variables: &input::value::Variables<'q, 's, S>,
+    variables: &variables::Variables<'q, 's, S>,
 
     selection_type: &collect::SelectableType<'s, S>,
     selection_set: &'q executable::SelectionSet,
@@ -46,7 +47,7 @@ fn normalize_selection_sets<'q, 's, S: schema::SchemaContext, NSGet: schema::Nam
     namespaced_getter: &NSGet,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
-    variables: &input::value::Variables<'q, 's, S>,
+    variables: &variables::Variables<'q, 's, S>,
 
     selection_type: &collect::SelectableType<'s, S>,
     // TODO, use a struct for this but with lifetime elision, is the current form more readable?
@@ -146,7 +147,7 @@ fn merge_fields<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGette
     namespaced_getter: &NSGet,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
-    variables: &input::value::Variables<'q, 's, S>,
+    variables: &variables::Variables<'q, 's, S>,
     type_name: &ast::TypeName,
     alias: &ast::Alias,
     alias_type: &ast::Type,
@@ -261,7 +262,7 @@ where
 fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
     schema: &'s schema::Schema<S>,
-    variables: &input::value::Variables<'q, 's, S>,
+    variables: &variables::Variables<'q, 's, S>,
     type_name: &ast::TypeName,
     field_name: &ast::Name,
     arguments_schema: &'s BTreeMap<ast::Name, schema::Namespaced<S, schema::InputField<S>>>,

@@ -3,7 +3,7 @@ use lang_graphql::parser::Parser;
 use lang_graphql::schema::sdl;
 use lang_graphql::validation;
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::collections::BTreeMap;
 use std::fs;
 use std::str::FromStr;
@@ -25,15 +25,26 @@ pub fn bench_validation(c: &mut Criterion) {
             query: parsed_query,
             variables: BTreeMap::new(),
         };
-        validation::normalize_request(&sdl::SDLNamespacedGetter(), &fake_schema, &request).unwrap();
+        validation::normalize_request(
+            &sdl::SDLNamespacedGetter(),
+            &fake_schema,
+            &request,
+            validation::NonNullGraphqlVariablesValidation::Validate,
+        )
+        .unwrap();
         // parse with our parser
         group.bench_with_input(
             BenchmarkId::new("hasura", query_name),
             &(request, fake_schema),
             |b, (request, schema)| {
                 b.iter(|| {
-                    validation::normalize_request(&sdl::SDLNamespacedGetter(), schema, request)
-                        .unwrap()
+                    validation::normalize_request(
+                        &sdl::SDLNamespacedGetter(),
+                        schema,
+                        request,
+                        validation::NonNullGraphqlVariablesValidation::Validate,
+                    )
+                    .unwrap()
                 });
             },
         );

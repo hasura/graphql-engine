@@ -64,6 +64,9 @@ services:
   auth_hook:
     build:
       dockerfile: dev-auth-webhook.Dockerfile
+    # this tag will only be found on images built in CI,
+    # otherwise we build from Dockerfile
+    image: build.internal/dev-auth-webhook-x86_64-linux:ci
     environment:
       OTLP_ENDPOINT: "http://jaeger:4317"
       RUST_LOG: debug
@@ -111,8 +114,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      jaeger:
-        condition: service_started
 
   postgres_connector:
     image: ghcr.io/hasura/ndc-postgres:dev-benoit-eng-362-update-ndc-postgres-to-ndc_models-020
@@ -131,12 +132,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      jaeger:
-        condition: service_started
 
   custom_connector:
     build:
       dockerfile: custom-connector.Dockerfile
+    # this tag will only be found on images built in CI
+    # otherwise we build from Dockerfile
+    image: build.internal/custom-connector-x86_64-linux:ci
     ports:
       - "8102:8102"
     environment:
@@ -152,6 +154,9 @@ services:
   custom_connector_no_relationships:
     build:
       dockerfile: custom-connector.Dockerfile
+    # this tag will only be found on images built in CI
+    # otherwise we build from Dockerfile
+    image: build.internal/custom-connector-x86_64-linux:ci
     ports:
       - "8103:8102"
     environment:

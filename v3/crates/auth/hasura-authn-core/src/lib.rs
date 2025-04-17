@@ -1,5 +1,5 @@
-use axum::middleware::Next;
 use axum::Extension;
+use axum::middleware::Next;
 use axum::{
     extract::State,
     http::StatusCode,
@@ -23,7 +23,7 @@ use std::{
 // Session variable and role are defined as part of OpenDD
 pub use open_dds::{
     permissions::Role,
-    session_variables::{SessionVariableName, SessionVariableReference, SESSION_VARIABLE_ROLE},
+    session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName, SessionVariableReference},
 };
 
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, derive_more::Display)]

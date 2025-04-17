@@ -1,10 +1,10 @@
 use core::time::Duration;
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use criterion::{BenchmarkId, Criterion, SamplingMode, criterion_group, criterion_main};
 use engine_types::{ExposeInternalErrors, HttpContext};
 use graphql_frontend::{
     execute_mutation_plan, execute_query_internal, execute_query_plan, generate_ir,
 };
-use graphql_ir::{generate_request_plan, GraphqlRequestPipeline, RequestPlan};
+use graphql_ir::{RequestPlan, generate_request_plan};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;
@@ -58,6 +58,15 @@ pub fn bench_execute(
         &metadata_resolve::configuration::Configuration::default(),
     )
     .unwrap();
+
+    let validate_non_null_graphql_variables = if resolved_metadata
+        .runtime_flags
+        .contains(metadata_resolve::flags::ResolvedRuntimeFlag::ValidateNonNullGraphqlVariables)
+    {
+        gql::validation::NonNullGraphqlVariablesValidation::Validate
+    } else {
+        gql::validation::NonNullGraphqlVariablesValidation::DoNotValidate
+    };
 
     let gds = GDS {
         metadata: Arc::new(resolved_metadata.clone()),
@@ -127,6 +136,7 @@ pub fn bench_execute(
                     },
                     schema,
                     request,
+                    validate_non_null_graphql_variables,
                 )
                 .unwrap();
             });
@@ -139,6 +149,7 @@ pub fn bench_execute(
         },
         &schema,
         &request,
+        validate_non_null_graphql_variables,
     )
     .unwrap();
 
@@ -149,7 +160,6 @@ pub fn bench_execute(
         |b, (runtime, schema)| {
             b.to_async(*runtime).iter(|| async {
                 generate_ir(
-                    GraphqlRequestPipeline::OpenDd,
                     schema,
                     &gds.metadata,
                     &session,
@@ -162,7 +172,6 @@ pub fn bench_execute(
     );
 
     let ir = generate_ir(
-        GraphqlRequestPipeline::OpenDd,
         &schema,
         &gds.metadata,
         &session,
@@ -223,7 +232,6 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 execute_query_internal(
-                    GraphqlRequestPipeline::OpenDd,
                     ExposeInternalErrors::Expose,
                     &http_context,
                     schema,

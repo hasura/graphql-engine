@@ -194,6 +194,9 @@ input_file: crates/metadata-resolve/tests/passing/object_types/with_boolean_expr
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

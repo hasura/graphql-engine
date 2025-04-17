@@ -12,7 +12,7 @@ use open_dds::relationships::{
 use open_dds::types::{CustomTypeName, FieldName, TypeName};
 mod error;
 use crate::stages::data_connectors;
-use crate::{mk_name, Qualified, QualifiedBaseType, QualifiedTypeName};
+use crate::{Qualified, QualifiedBaseType, QualifiedTypeName, mk_name};
 
 use crate::types::subgraph::mk_qualified_type_name;
 pub use error::{NamedOrderByExpressionError, OrderByExpressionError, OrderableRelationshipError};

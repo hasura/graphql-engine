@@ -4,20 +4,18 @@ use crate::error;
 use crate::filter;
 use graphql_schema::GDS;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
-use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
 use metadata_resolve::{
-    ArgumentKind, DataConnectorLink, ObjectTypeWithRelationships, Qualified, QualifiedBaseType,
-    QualifiedTypeName, QualifiedTypeReference, TypeMapping,
+    ArgumentKind, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
+    TypeMapping,
 };
 use open_dds::{
     arguments::ArgumentName,
     identifier::Identifier,
-    types::{CustomTypeName, DataConnectorArgumentName, InbuiltType},
+    types::{CustomTypeName, InbuiltType},
 };
-use plan::UnresolvedArgument;
 use plan_types::UsagesCounts;
 
 /// The "args" input field.
@@ -117,64 +115,6 @@ pub fn build_argument_as_value<'s>(
     let argument_name = ArgumentName::new(Identifier::new(argument.name.as_str()).unwrap());
 
     Ok((argument_name, mapped_argument_value))
-}
-
-// fetch input values from annotations and turn them into either JSON or an Expression
-pub fn build_ndc_argument_as_value<'a, 's>(
-    command_field: &'a Name,
-    argument: &'a InputField<'s, GDS>,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
-    data_connector_link: &'s DataConnectorLink,
-    session_variables: &SessionVariables,
-    usage_counts: &mut UsagesCounts,
-) -> Result<(DataConnectorArgumentName, UnresolvedArgument<'s>), error::Error> {
-    let (argument_type, argument_kind, ndc_argument) = match argument.info.generic {
-        Annotation::Input(InputAnnotation::CommandArgument {
-            argument_name: _,
-            argument_type,
-            argument_kind,
-            ndc_func_proc_argument,
-        }) => Ok((argument_type, argument_kind, ndc_func_proc_argument)),
-        Annotation::Input(InputAnnotation::Model(ModelInputAnnotation::ModelArgument {
-            argument_name: _,
-            argument_type,
-            argument_kind,
-            ndc_table_argument,
-        })) => Ok((argument_type, argument_kind, ndc_table_argument)),
-
-        annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
-            annotation: annotation.clone(),
-        }),
-    }?;
-
-    let ndc_argument =
-        ndc_argument
-            .clone()
-            .ok_or_else(|| error::InternalDeveloperError::NoArgumentSource {
-                field_name: command_field.clone(),
-                argument_name: argument.name.clone(),
-            })?;
-
-    // simple values are serialized to JSON, predicates
-    // are converted into NDC expressions (via our internal Expression type)
-    let mapped_argument_value = match argument_kind {
-        ArgumentKind::Other => {
-            map_argument_value_to_ndc_type(argument_type, &argument.value, type_mappings)
-                .map(|value| UnresolvedArgument::Literal { value })?
-        }
-
-        ArgumentKind::NDCExpression => filter::resolve_filter_expression(
-            argument.value.as_object()?,
-            data_connector_link,
-            type_mappings,
-            object_types,
-            session_variables,
-            usage_counts,
-        )
-        .map(|predicate| UnresolvedArgument::BooleanExpression { predicate })?,
-    };
-    Ok((ndc_argument, mapped_argument_value))
 }
 
 pub(crate) fn map_argument_value_to_ndc_type(

@@ -5,6 +5,7 @@ query MyQuery {
       Country
       CountryId
     }
-    EvaluatedLocation
+    # test aliases with relationships too (ENG-1712), for the command case:
+    the_eval_loc: EvaluatedLocation
   }
 }

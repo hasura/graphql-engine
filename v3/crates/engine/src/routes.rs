@@ -4,10 +4,10 @@ mod jsonapi;
 pub use jsonapi::create_json_api_router;
 
 use axum::{
+    Router,
     extract::DefaultBodyLimit,
     response::Html,
     routing::{get, post},
-    Router,
 };
 use base64::engine::Engine;
 use std::hash;
@@ -17,9 +17,9 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 use crate::{
-    authentication_middleware, build_cors_layer, explain_request_tracing_middleware,
-    graphql_request_tracing_middleware, middleware::pre_route_request_tracing_middleware,
-    plugins_middleware, EngineState, StartupError,
+    EngineState, StartupError, authentication_middleware, build_cors_layer,
+    explain_request_tracing_middleware, graphql_request_tracing_middleware,
+    middleware::pre_route_request_tracing_middleware, plugins_middleware,
 };
 
 use super::types::RequestType;
@@ -155,7 +155,7 @@ async fn pre_route_handler(
         method,
         uri,
         headers,
-        &state.plugin_configs.pre_route_plugins,
+        &state.resolved_metadata.plugin_configs.pre_route_plugins,
         &state.http_context.client,
         raw_query,
         request,

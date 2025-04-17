@@ -14,8 +14,16 @@ import Data.Text qualified as T
 import Hasura.Prelude
 
 data QueryTagsFormat
-  = Standard
-  | SQLCommenter
+  = -- | Default 'Query Tags' format in the Hasura GraphQL Engine
+    -- Creates simple 'key=value' pairs of query tags. No sorting, No URL encoding.
+    -- If the format of query tags is not mentioned in the metadata then, query-tags
+    -- are formatted using hte below format
+    Standard
+  | -- | query-tags format as defined in the Spec <https://google.github.io/sqlcommenter/spec/#sql-commenter>
+    SQLCommenter
+  | -- | Standard Prepended format - identical to standard format, but with the comment prepended
+    -- to the SQL query instead of appended.
+    StandardPrepended
   deriving (Show, Eq, Generic)
 
 instance Hashable QueryTagsFormat
@@ -26,15 +34,17 @@ instance ToJSON QueryTagsFormat where
   toJSON = \case
     Standard -> "standard"
     SQLCommenter -> "sqlcommenter"
+    StandardPrepended -> "standard_prepended"
 
 instance FromJSON QueryTagsFormat where
   parseJSON = withText "QueryTagsFormat"
     $ \t -> case T.toLower t of
       "standard" -> pure Standard
       "sqlcommenter" -> pure SQLCommenter
+      "standard_prepended" -> pure StandardPrepended
       _ -> fail errMsg
     where
-      errMsg = "Not a valid query tags format value. Use either standard or sqlcommenter"
+      errMsg = "Not a valid query tags format value. Use either standard, sqlcommenter, or standard_prepended"
 
 -- TODO: Replace JSON instances with versions derived from this codec. We'll
 -- need to support case-insenitivity on input to make that change without
@@ -45,7 +55,8 @@ instance HasCodec QueryTagsFormat where
       $ stringConstCodec
       $ NonEmpty.fromList
       $ [ (Standard, "standard"),
-          (SQLCommenter, "sqlcommenter")
+          (SQLCommenter, "sqlcommenter"),
+          (StandardPrepended, "standard_prepended")
         ]
 
 -- | QueryTagsConfig is the configuration created by the users to control query tags

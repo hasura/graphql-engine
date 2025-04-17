@@ -113,6 +113,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -434,6 +435,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -506,6 +508,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -837,6 +840,9 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

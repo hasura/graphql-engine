@@ -42,6 +42,16 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     arguments: BTreeMap::new(),
                 },
             ),
+            (
+                "continent_id".into(),
+                ndc_models::ObjectField {
+                    description: Some("The country's continent's primary key".into()),
+                    r#type: ndc_models::Type::Nullable {
+                        underlying_type: Box::new(ndc_models::Type::Named { name: "Int".into() }),
+                    },
+                    arguments: BTreeMap::new(),
+                },
+            ),
         ]),
         foreign_keys: BTreeMap::new(),
     }

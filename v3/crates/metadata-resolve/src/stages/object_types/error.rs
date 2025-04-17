@@ -4,8 +4,8 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 
-use crate::types::subgraph::Qualified;
 use crate::NDCValidationError;
+use crate::types::subgraph::Qualified;
 use crate::{
     stages::{apollo, graphql_config},
     types::error::ContextualError,
@@ -17,7 +17,9 @@ pub enum ObjectTypesError {
     ObjectTypeNotFound {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("the following argument for field {field_name:} in type {type_name:} is defined more than once: {argument_name:}")]
+    #[error(
+        "the following argument for field {field_name:} in type {type_name:} is defined more than once: {argument_name:}"
+    )]
     DuplicateArgumentDefinition {
         field_name: FieldName,
         argument_name: ArgumentName,
@@ -31,7 +33,9 @@ pub enum ObjectTypesError {
         error: TypeMappingValidationError,
     },
 
-    #[error("Multiple mappings have been defined from object {data_connector_object_type:} of data connector {data_connector:}")]
+    #[error(
+        "Multiple mappings have been defined from object {data_connector_object_type:} of data connector {data_connector:}"
+    )]
     DuplicateDataConnectorObjectTypeMapping {
         data_connector: Qualified<DataConnectorName>,
         data_connector_object_type: String,
@@ -41,7 +45,9 @@ pub enum ObjectTypesError {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
-    #[error("A field named `id` cannot be present in the object type {type_name} when global_id fields are non-empty.")]
+    #[error(
+        "A field named `id` cannot be present in the object type {type_name} when global_id fields are non-empty."
+    )]
     IdFieldConflictingGlobalId {
         type_name: Qualified<CustomTypeName>,
     },
@@ -64,7 +70,9 @@ impl ContextualError for ObjectTypesError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypeMappingValidationError {
-    #[error("data connector {data_connector:} referenced in type mappings of type {type_name:} is not found")]
+    #[error(
+        "data connector {data_connector:} referenced in type mappings of type {type_name:} is not found"
+    )]
     UnknownDataConnector {
         data_connector: Qualified<DataConnectorName>,
         type_name: Qualified<CustomTypeName>,
@@ -101,7 +109,9 @@ pub enum TypeMappingValidationError {
         field_name: FieldName,
         unknown_field_type_name: Qualified<CustomTypeName>,
     },
-    #[error("could not find mappings for {object_type_name:} to the {data_connector_object_type:} on data connector {data_connector_name:}")]
+    #[error(
+        "could not find mappings for {object_type_name:} to the {data_connector_object_type:} on data connector {data_connector_name:}"
+    )]
     DataConnectorTypeMappingNotFound {
         object_type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,

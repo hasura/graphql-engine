@@ -14,9 +14,9 @@ pub use types::{
 
 use crate::types::subgraph::Qualified;
 
+use crate::ValueExpression;
 use crate::helpers::typecheck;
 use crate::stages::object_types;
-use crate::ValueExpression;
 
 /// resolve type permissions
 pub fn resolve(
@@ -113,7 +113,7 @@ fn resolve_type_permission(
                 TypeOutputPermissionError::UnknownTypeInOutputPermissionsDefinition {
                     type_name: qualified_type_name,
                 },
-            ))
+            ));
         }
         Some(object_type) => {
             let type_output_permissions =

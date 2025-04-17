@@ -132,6 +132,7 @@
                     image-name = "build.internal/${binaryName}-${targetSystem}";
                     extraConfig = dockerConfig.${binaryName} or { };
                     extraContents = dockerExtraContents.${binaryName} or [ ];
+                    tag = "ci";
                   }
               else null;
           })
@@ -156,7 +157,6 @@
               runtimeInputs = with pkgs; [ coreutils skopeo ];
               text = builtins.readFile ./.github/scripts/deploy-single-arch.sh;
             };
-
           };
 
         # build an app per binary

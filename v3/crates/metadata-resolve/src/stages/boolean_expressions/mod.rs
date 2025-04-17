@@ -15,11 +15,11 @@ use open_dds::{
 };
 
 use super::aggregate_boolean_expressions;
+use crate::Qualified;
 use crate::stages::{
     data_connector_scalar_types, data_connectors, graphql_config, relationships,
     scalar_boolean_expressions, type_permissions,
 };
-use crate::Qualified;
 pub use types::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
     BooleanExpressionGraphqlFieldConfig, BooleanExpressionIssue, BooleanExpressionTypeIdentifier,

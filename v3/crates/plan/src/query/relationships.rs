@@ -623,13 +623,17 @@ fn make_hasura_phantom_field(ndc_column_name: &DataConnectorColumnName) -> Strin
 
 #[derive(Debug, thiserror::Error)]
 pub enum RelationshipFieldMappingError {
-    #[error("Type mapping not found for the type name {type_name:} while executing the relationship {relationship_name:}")]
+    #[error(
+        "Type mapping not found for the type name {type_name:} while executing the relationship {relationship_name:}"
+    )]
     TypeMappingNotFoundForRelationship {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
 
-    #[error("Field mapping not found for the field {field_name:} of type {type_name:} while executing the relationship {relationship_name:}")]
+    #[error(
+        "Field mapping not found for the field {field_name:} of type {type_name:} while executing the relationship {relationship_name:}"
+    )]
     FieldMappingNotFoundForRelationship {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,

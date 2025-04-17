@@ -279,7 +279,7 @@ fn parse_single_line_string(bytes: &[u8]) -> Result<(String, Consumed, usize), (
                             return Err((
                                 Error::UnknownEscapeSequence(format!("\\{b}")),
                                 Consumed::no_line_break(chars),
-                            ))
+                            ));
                         }
                     }
                 } else {

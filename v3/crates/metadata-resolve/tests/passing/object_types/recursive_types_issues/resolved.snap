@@ -804,6 +804,9 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ObjectTypesIssue(

@@ -270,6 +270,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -388,6 +389,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -511,6 +513,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -728,6 +731,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -857,6 +861,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -975,6 +980,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1098,6 +1104,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1239,9 +1246,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                 ndc_column: DataConnectorColumnName(
                                     "author_id",
                                 ),
-                                operator: DataConnectorOperatorName(
-                                    "_eq",
-                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "_eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
                                 argument_type: QualifiedTypeReference {
                                     underlying_type: Named(
                                         Inbuilt(
@@ -2163,6 +2174,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                 "user2",
             ),
         },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

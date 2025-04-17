@@ -6,18 +6,16 @@ use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
-use open_dds::{models, types::CustomTypeName};
+use open_dds::models;
 
 use super::error;
 use super::query_root::{select_aggregate, select_many, select_one};
 use super::root_field;
-use crate::GraphqlRequestPipeline;
-use graphql_schema::RootFieldKind;
 use graphql_schema::GDS;
+use graphql_schema::RootFieldKind;
 use graphql_schema::{Annotation, NamespaceAnnotation, OutputAnnotation, RootFieldAnnotation};
 
 pub fn generate_ir<'n, 's>(
-    request_pipeline: GraphqlRequestPipeline,
     session: &Session,
     metadata: &'s metadata_resolve::Metadata,
     request_headers: &reqwest::header::HeaderMap,
@@ -35,7 +33,6 @@ pub fn generate_ir<'n, 's>(
                 annotation @ Annotation::Output(OutputAnnotation::RootField(root_field)) => {
                     match root_field {
                         RootFieldAnnotation::ModelSubscription {
-                            data_type,
                             kind,
                             name: model_name,
                             polling_interval_ms,
@@ -46,13 +43,10 @@ pub fn generate_ir<'n, 's>(
                                 }
                             })?;
                             let ir = generate_model_rootfield_ir(
-                                request_pipeline,
                                 &type_name,
                                 model,
                                 &metadata.models,
-                                &metadata.commands,
                                 &metadata.object_types,
-                                data_type,
                                 kind,
                                 field,
                                 field_call,
@@ -83,22 +77,16 @@ pub fn generate_ir<'n, 's>(
 
 #[allow(clippy::too_many_arguments)]
 fn generate_model_rootfield_ir<'n, 's>(
-    request_pipeline: GraphqlRequestPipeline,
     type_name: &ast::TypeName,
     model: &'s metadata_resolve::ModelWithPermissions,
     models: &'s IndexMap<
         metadata_resolve::Qualified<open_dds::models::ModelName>,
         metadata_resolve::ModelWithPermissions,
     >,
-    commands: &'s IndexMap<
-        metadata_resolve::Qualified<open_dds::commands::CommandName>,
-        metadata_resolve::CommandWithPermissions,
-    >,
     object_types: &'s BTreeMap<
         metadata_resolve::Qualified<open_dds::types::CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
-    data_type: &metadata_resolve::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,
@@ -129,14 +117,10 @@ fn generate_model_rootfield_ir<'n, 's>(
         RootFieldKind::SelectOne => root_field::SubscriptionRootField::ModelSelectOne {
             selection_set: &field.selection_set,
             ir: select_one::select_one_generate_ir(
-                request_pipeline,
                 field,
                 field_call,
-                data_type,
-                model,
                 source,
                 models,
-                commands,
                 object_types,
                 session,
                 request_headers,
@@ -147,14 +131,10 @@ fn generate_model_rootfield_ir<'n, 's>(
         RootFieldKind::SelectMany => root_field::SubscriptionRootField::ModelSelectMany {
             selection_set: &field.selection_set,
             ir: select_many::select_many_generate_ir(
-                request_pipeline,
                 field,
                 field_call,
-                data_type,
-                model,
                 source,
                 models,
-                commands,
                 object_types,
                 session,
                 request_headers,
@@ -165,16 +145,7 @@ fn generate_model_rootfield_ir<'n, 's>(
         RootFieldKind::SelectAggregate => root_field::SubscriptionRootField::ModelSelectAggregate {
             selection_set: &field.selection_set,
             ir: select_aggregate::select_aggregate_generate_ir(
-                request_pipeline,
-                field,
-                field_call,
-                data_type,
-                model,
-                source,
-                object_types,
-                session,
-                request_headers,
-                model_name,
+                field, field_call, source, model_name,
             )?,
             polling_interval_ms: *polling_interval_ms,
         },

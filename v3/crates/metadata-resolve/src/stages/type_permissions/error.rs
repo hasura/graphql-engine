@@ -6,7 +6,9 @@ use crate::types::subgraph::Qualified;
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypeOutputPermissionError {
-    #[error("unsupported type in output type permissions definition: {type_name:}; only object types are supported")]
+    #[error(
+        "unsupported type in output type permissions definition: {type_name:}; only object types are supported"
+    )]
     UnsupportedTypeInOutputPermissions { type_name: CustomTypeName },
     #[error("multiple output type permissions have been defined for type: {type_name:}")]
     DuplicateOutputTypePermissions { type_name: CustomTypeName },
@@ -35,7 +37,9 @@ impl From<TypeOutputPermissionError> for TypePermissionError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypeInputPermissionError {
-    #[error("unsupported type in input type permissions definition: {type_name:}; only object types are supported")]
+    #[error(
+        "unsupported type in input type permissions definition: {type_name:}; only object types are supported"
+    )]
     UnsupportedTypeInInputPermissions { type_name: CustomTypeName },
     #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
     UnknownFieldInInputPermissionsDefinition {
@@ -91,7 +95,9 @@ impl From<TypePermissionError> for Error {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypePermissionIssue {
-    #[error("Type error in field preset of {field_name:}, for input type permissions definition of type {type_name:}: {typecheck_issue:}")]
+    #[error(
+        "Type error in field preset of {field_name:}, for input type permissions definition of type {type_name:}: {typecheck_issue:}"
+    )]
     FieldPresetTypecheckIssue {
         field_name: FieldName,
         type_name: CustomTypeName,

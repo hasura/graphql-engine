@@ -16,8 +16,8 @@ use super::{
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(
-        "request to connector failed with status code {}: {0}",
-        .0.status().map_or_else(|| "N/A".to_string(), |s| s.to_string())
+        "request to connector failed with status code {status_code}: {0}",
+        status_code = .0.status().map_or_else(|| "N/A".to_string(), |s| s.to_string()) 
     )]
     Reqwest(#[from] reqwest::Error),
 
@@ -50,7 +50,7 @@ impl tracing_util::TraceableError for Error {
 }
 
 #[derive(Debug, Clone, Error)]
-#[error("connector returned status code {status} with message: {}", error_response.message())]
+#[error("connector returned status code {status} with message: {}, details: {}", error_response.message(), error_response.details())]
 pub struct ConnectorError {
     pub status: reqwest::StatusCode,
     pub error_response: NdcErrorResponse,
@@ -305,16 +305,11 @@ pub async fn query_post(
         .await
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct QueryRelRequest {
-    pub rel: plan_pushdown_types::Rel,
-}
-
 /// POST on undocumented /query/rel endpoint
-pub async fn query_rel_post(
+pub async fn query_relational_post(
     configuration: Configuration<'_>,
-    request: &QueryRelRequest,
-) -> Result<Vec<serde_json::Value>, Error> {
+    request: &ndc_models::RelationalQuery,
+) -> Result<ndc_models::RelationalQueryResponse, Error> {
     let tracer = tracing_util::global_tracer();
 
     tracer
@@ -324,18 +319,18 @@ pub async fn query_rel_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let url = append_path(configuration.base_path, &["query", "rel"])?;
+                    let url = append_path(configuration.base_path, &["query", "relational"])?;
                     let response_size_limit = configuration.response_size_limit;
 
                     let request = construct_request(
                         configuration,
-                        NdcVersion::V01,
+                        NdcVersion::V02,
                         reqwest::Method::POST,
                         url,
                         |r| r.json(request),
                     );
                     let response =
-                        execute_request(request, response_size_limit, NdcErrorResponse::V01)
+                        execute_request(request, response_size_limit, NdcErrorResponse::V02)
                             .await?;
                     Ok(response)
                 })

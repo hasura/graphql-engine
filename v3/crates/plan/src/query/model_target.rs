@@ -73,7 +73,6 @@ pub fn model_target_to_ndc_query(
                 metadata,
                 session,
                 &model_source.type_mappings,
-                &model.model.data_type,
                 model_object_type,
                 model.filter_expression_type.as_ref(),
                 expr,

@@ -2,9 +2,9 @@
 //!
 //! A 'command' executes a function/procedure and returns back the result of the execution.
 
-use crate::permissions;
-use crate::types::{self, output_type::get_output_type, Annotation};
 use crate::GDS;
+use crate::permissions;
+use crate::types::{self, Annotation, output_type::get_output_type};
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use lang_graphql::schema::InputField;
@@ -123,7 +123,7 @@ pub(crate) fn function_command_field(
                 DataConnectorCommand::Procedure(_) => {
                     return Err(crate::Error::IncorrectCommandBacking {
                         command_name: command.command.name.clone(),
-                    })
+                    });
                 }
             };
             Some(function_name)
@@ -170,7 +170,7 @@ pub(crate) fn procedure_command_field(
                 DataConnectorCommand::Function(_) => {
                     return Err(crate::Error::IncorrectCommandBacking {
                         command_name: command.command.name.clone(),
-                    })
+                    });
                 }
             };
             Some(procedure_name)

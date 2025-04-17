@@ -1,6 +1,6 @@
 use indexmap::IndexSet;
 use schemars::JsonSchema;
-use serde::{de::Error, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error};
 use serde_json::Value as JsonValue;
 
 use crate::{
@@ -373,8 +373,8 @@ impl traits::OpenDd for NullableModelPredicate {
         }
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        <Self as schemars::JsonSchema>::json_schema(gen)
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        <Self as schemars::JsonSchema>::json_schema(generator)
     }
 
     fn _schema_name() -> String {
@@ -517,6 +517,19 @@ pub struct RelationshipPredicate {
     pub predicate: Option<Box<ModelPredicate>>,
 }
 
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "NestedFieldPredicate"))]
+/// Nested field predicate filters objects of a source model based on a predicate on the nested
+/// field.
+pub struct NestedFieldPredicate {
+    /// The name of the field in the object type of the model to follow.
+    pub field_name: Spanned<FieldName>,
+    /// The predicate to apply on the related objects.
+    pub predicate: Box<ModelPredicate>,
+}
+
 // Predicates that use NDC operators pushed down to NDC. `ValueExpressions` are
 // evaluated on the server.
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
@@ -537,6 +550,8 @@ pub enum ModelPredicate {
     FieldComparison(FieldComparisonPredicate),
     FieldIsNull(FieldIsNullPredicate),
     // TODO: Remote relationships are disallowed for now
+    /// Filters objects based on the nested field of a model.
+    NestedField(NestedFieldPredicate),
     /// Filters objects based on the relationship of a model.
     Relationship(RelationshipPredicate),
     #[opendd(json_schema(title = "And"))]
@@ -712,8 +727,8 @@ impl traits::OpenDd for ValueExpression {
             error: e.into_inner(),
         })
     }
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut s = ValueExpressionImpl::json_schema(gen);
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut s = ValueExpressionImpl::json_schema(generator);
         if let schemars::schema::Schema::Object(o) = &mut s {
             if let Some(m) = &mut o.metadata {
                 m.id = Some("https://hasura.io/jsonschemas/metadata/ValueExpression".into());
@@ -752,8 +767,8 @@ impl traits::OpenDd for ValueExpressionOrPredicate {
             }),
         }
     }
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut s = ValueExpressionOrPredicateImpl::json_schema(gen);
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut s = ValueExpressionOrPredicateImpl::json_schema(generator);
         if let schemars::schema::Schema::Object(o) = &mut s {
             if let Some(m) = &mut o.metadata {
                 m.id = Some(

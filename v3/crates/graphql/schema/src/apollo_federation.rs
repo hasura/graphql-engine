@@ -8,9 +8,9 @@ use std::collections::BTreeMap;
 
 use super::{
     permissions,
-    types::{self, output_type::get_object_type_representation, Annotation},
+    types::{self, Annotation, output_type::get_object_type_representation},
 };
-use crate::{mk_typename, GDS};
+use crate::{GDS, mk_typename};
 use lang_graphql::ast::common as ast;
 
 use super::types::output_type::get_custom_output_type;

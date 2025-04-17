@@ -3,11 +3,11 @@ use std::borrow::Cow;
 use crate::EngineState;
 use crate::VERSION;
 use axum::{
+    Extension,
     extract::{ConnectInfo, State},
     http::{HeaderMap, Request},
     middleware::Next,
     response::IntoResponse,
-    Extension,
 };
 use axum_core::body::Body;
 use engine_types::WithMiddlewareErrorConverter;
@@ -143,34 +143,37 @@ pub async fn plugins_middleware(
     let raw_request = bytes.clone();
 
     // Check if the pre_parse_plugins_config is empty
-    let response =
-        match nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_parse_plugins) {
-            None => {
-                // If empty, do nothing and pass the request to the next middleware
-                let recreated_request = Request::from_parts(parts, axum::body::Body::from(bytes));
-                Ok::<_, axum::response::ErrorResponse>(next.run(recreated_request).await)
-            }
-            Some(pre_parse_plugins) => {
-                let response = pre_parse_plugins_handler(
-                    client_address,
-                    &pre_parse_plugins,
-                    &engine_state.http_context.client,
-                    session.clone(),
-                    &bytes,
-                    headers_map.clone(),
-                )
-                .await
-                .map_err(|err| state.handle_error(err.into_middleware_error()))?;
+    let response = match nonempty::NonEmpty::from_slice(
+        &engine_state
+            .resolved_metadata
+            .plugin_configs
+            .pre_parse_plugins,
+    ) {
+        None => {
+            // If empty, do nothing and pass the request to the next middleware
+            let recreated_request = Request::from_parts(parts, axum::body::Body::from(bytes));
+            Ok::<_, axum::response::ErrorResponse>(next.run(recreated_request).await)
+        }
+        Some(pre_parse_plugins) => {
+            let response = pre_parse_plugins_handler(
+                client_address,
+                &pre_parse_plugins,
+                &engine_state.http_context.client,
+                session.clone(),
+                &bytes,
+                headers_map.clone(),
+            )
+            .await
+            .map_err(|err| state.handle_error(err.into_middleware_error()))?;
 
-                if let Some(response) = response {
-                    Ok(response)
-                } else {
-                    let recreated_request =
-                        Request::from_parts(parts, axum::body::Body::from(bytes));
-                    Ok(next.run(recreated_request).await)
-                }
+            if let Some(response) = response {
+                Ok(response)
+            } else {
+                let recreated_request = Request::from_parts(parts, axum::body::Body::from(bytes));
+                Ok(next.run(recreated_request).await)
             }
-        }?;
+        }
+    }?;
 
     let (parts, body) = response.into_parts();
     let response_bytes = body
@@ -181,9 +184,12 @@ pub async fn plugins_middleware(
         })?
         .to_bytes();
 
-    if let Some(pre_response_plugins) =
-        nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_response_plugins)
-    {
+    if let Some(pre_response_plugins) = nonempty::NonEmpty::from_slice(
+        &engine_state
+            .resolved_metadata
+            .plugin_configs
+            .pre_response_plugins,
+    ) {
         pre_response_plugins_handler(
             client_address,
             &pre_response_plugins,

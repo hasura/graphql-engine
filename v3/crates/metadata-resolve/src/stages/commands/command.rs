@@ -1,7 +1,7 @@
 use crate::helpers::argument::get_argument_kind;
-use crate::helpers::types::{get_type_representation, mk_name, TrackGraphQLRootFields};
+use crate::helpers::types::{TrackGraphQLRootFields, get_type_representation, mk_name};
 use crate::stages::{boolean_expressions, scalar_types, type_permissions};
-use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
+use crate::types::subgraph::{ArgumentInfo, Qualified, mk_qualified_type_reference};
 use indexmap::IndexMap;
 use open_dds::identifier::SubgraphName;
 

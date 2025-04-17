@@ -71,7 +71,6 @@ pub fn resolve(
                 boolean_expression_types,
                 models,
                 data_connector_scalars,
-                subgraph,
                 &mut issues,
             )?;
         } else {

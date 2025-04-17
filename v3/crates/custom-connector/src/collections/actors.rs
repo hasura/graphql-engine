@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use axum::{http::StatusCode, Json};
+use axum::{Json, http::StatusCode};
 use ndc_models;
 
 use crate::{
@@ -72,8 +72,8 @@ pub(crate) fn filter_actors_by_name<'a>(
         })
         .filter_map(move |result| match result {
             Ok((actor_first_name, actor_last_name, actor)) => {
-                if filter_first_name.map_or(true, |first_name| first_name == actor_first_name)
-                    && filter_last_name.map_or(true, |last_name| last_name == actor_last_name)
+                if filter_first_name.is_none_or(|first_name| first_name == actor_first_name)
+                    && filter_last_name.is_none_or(|last_name| last_name == actor_last_name)
                 {
                     Some(Ok(actor))
                 } else {

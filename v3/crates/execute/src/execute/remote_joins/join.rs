@@ -71,7 +71,7 @@ fn join_command_response(
     rhs_response: &HashMap<RemoteJoinVariableSet, ndc_models::RowSet>,
 ) -> Result<(), error::FieldError> {
     match &mut row_field_value.0 {
-        json::Value::Array(ref mut arr) => {
+        json::Value::Array(arr) => {
             for command_row in arr.iter_mut() {
                 let new_val = command_row.clone();
                 let mut command_row_parsed: IndexMap<

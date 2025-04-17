@@ -6,7 +6,7 @@ use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::identifier::SubgraphName;
 use open_dds::types::DataConnectorArgumentName;
 
-use crate::helpers::argument::{get_argument_mappings, ArgumentMappingResults};
+use crate::helpers::argument::{ArgumentMappingResults, get_argument_mappings};
 use crate::helpers::ndc_validation;
 
 use super::helpers;

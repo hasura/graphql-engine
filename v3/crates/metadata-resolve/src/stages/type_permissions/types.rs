@@ -6,7 +6,7 @@ use open_dds::{
 };
 
 use crate::Qualified;
-use crate::{stages::object_types, ValueExpression};
+use crate::{ValueExpression, stages::object_types};
 use open_dds::types::{CustomTypeName, FieldName};
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;

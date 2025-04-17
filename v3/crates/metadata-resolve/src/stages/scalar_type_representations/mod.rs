@@ -1,5 +1,5 @@
-use crate::stages::{data_connector_scalar_types, scalar_types};
 use crate::Qualified;
+use crate::stages::{data_connector_scalar_types, scalar_types};
 use open_dds::{data_connector::DataConnectorName, types::CustomTypeName};
 use std::collections::BTreeMap;
 mod types;

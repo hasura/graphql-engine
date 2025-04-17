@@ -4,7 +4,7 @@ use lang_graphql::ast::common::{self as ast, TypeName};
 use lang_graphql::schema as gql_schema;
 use std::collections::BTreeMap;
 
-use crate::{commands, GDS};
+use crate::{GDS, commands};
 
 /// Generates schema for the query root type
 pub fn mutation_root_schema(

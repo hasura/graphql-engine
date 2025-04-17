@@ -11,38 +11,15 @@ use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
 use indexmap::IndexMap;
-use ndc_models;
-use open_dds::identifier::SubgraphName;
 use open_dds::permissions::NullableModelPredicate;
+use open_dds::permissions::{ModelPermissionsV1, Role};
 use open_dds::spanned::Spanned;
-use open_dds::{
-    arguments::ArgumentName,
-    permissions::{ModelPermissionsV1, Role},
-};
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::{BTreeMap, BTreeSet};
-
-// get the ndc_models::Type for an argument if it is available
-pub fn get_model_source_argument<'a>(
-    argument_name: &'a ArgumentName,
-    model: &'a models::Model,
-) -> Option<&'a ndc_models::Type> {
-    model
-        .source
-        .as_ref()
-        .and_then(|source| {
-            source
-                .argument_mappings
-                .get(argument_name)
-                .map(|connector_argument_name| source.source_arguments.get(connector_argument_name))
-        })
-        .flatten()
-}
 
 pub fn resolve_all_model_select_permissions(
     flags: &open_dds::flags::OpenDdFlags,
     model: &models::Model,
-    subgraph: &SubgraphName,
     model_permissions: &ModelPermissionsV1,
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_scalars: &BTreeMap<
@@ -75,7 +52,6 @@ pub fn resolve_all_model_select_permissions(
                 &model_permission.role,
                 flags,
                 model,
-                subgraph,
                 boolean_expression,
                 data_connector_scalars,
                 object_types,
@@ -96,7 +72,6 @@ fn resolve_model_select_permissions(
     role: &Spanned<open_dds::permissions::Role>,
     flags: &open_dds::flags::OpenDdFlags,
     model: &crate::Model,
-    subgraph: &SubgraphName,
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -114,10 +89,8 @@ fn resolve_model_select_permissions(
                 flags,
                 model_predicate,
                 model,
-                subgraph,
                 boolean_expression,
                 data_connector_scalars,
-                &model.type_fields,
                 object_types,
                 scalar_types,
                 boolean_expression_types,
@@ -147,8 +120,6 @@ fn resolve_model_select_permissions(
             }
             .into());
         }
-
-        let source_argument_type = get_model_source_argument(&argument_preset.argument, model);
 
         let model_source = model
             .source
@@ -197,13 +168,12 @@ fn resolve_model_select_permissions(
             &argument_preset.argument,
             &argument_preset.value,
             &argument.argument_type,
-            source_argument_type,
             &model_source.data_connector,
-            subgraph,
             object_types,
             scalar_types,
             boolean_expression_types,
             models,
+            &model_source.type_mappings,
             data_connector_scalars,
             error_mapper,
         )?;

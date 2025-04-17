@@ -103,6 +103,7 @@ pub enum Dimension {
 pub enum ExtractionFunction {
     Nanosecond,
     Microsecond,
+    Millisecond,
     Second,
     Minute,
     Hour,
@@ -121,6 +122,7 @@ impl core::fmt::Display for ExtractionFunction {
         match self {
             ExtractionFunction::Nanosecond => write!(f, "NANOSECOND"),
             ExtractionFunction::Microsecond => write!(f, "MICROSECOND"),
+            ExtractionFunction::Millisecond => write!(f, "MILLISECOND"),
             ExtractionFunction::Second => write!(f, "SECOND"),
             ExtractionFunction::Minute => write!(f, "MINUTE"),
             ExtractionFunction::Hour => write!(f, "HOUR"),

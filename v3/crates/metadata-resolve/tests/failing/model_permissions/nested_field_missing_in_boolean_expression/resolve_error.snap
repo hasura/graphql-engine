@@ -1,0 +1,16 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/model_permissions/nested_field_missing_in_boolean_expression/metadata.json
+---
+Error: Error in model permission for model 'institutions (in subgraph default)' for role 'admin': in select filter permissions: field 'location' could not be found in boolean expression type for object type 'institution (in subgraph default)'
+    ╭─[ <unknown>:18:36 ]
+    │
+ 14 │                 "role": "admin",
+    │                         ───┬───  
+    │                            ╰───── Error in model permission for the role 'admin' on the model 'institutions'
+    │ 
+ 18 │                       "fieldName": "location",
+    │                                    ─────┬────  
+    │                                         ╰────── This field could not be found in the boolean expression for type 'institution (in subgraph default)'
+────╯

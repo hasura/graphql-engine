@@ -23,16 +23,22 @@ pub fn resolve(
 
 #[derive(Debug, thiserror::Error)]
 pub enum RelayError {
-    #[error("'globalIdFields' for type {object_type:} found, but no model found with 'globalIdSource: true' for type {object_type:}")]
+    #[error(
+        "'globalIdFields' for type {object_type:} found, but no model found with 'globalIdSource: true' for type {object_type:}"
+    )]
     GlobalIdSourceNotDefined {
         object_type: Qualified<CustomTypeName>,
     },
-    #[error("Model {model_name:} is marked as a global ID source but there are no global id fields present in the related object type {type_name:}")]
+    #[error(
+        "Model {model_name:} is marked as a global ID source but there are no global id fields present in the related object type {type_name:}"
+    )]
     NoGlobalFieldsPresentInGlobalIdSource {
         type_name: Qualified<CustomTypeName>,
         model_name: ModelName,
     },
-    #[error("Found multiple models  {model_1:}, {model_2:} that implement the same object type {object_type:} to be global ID sources.")]
+    #[error(
+        "Found multiple models  {model_1:}, {model_2:} that implement the same object type {object_type:} to be global ID sources."
+    )]
     DuplicateModelGlobalIdSource {
         model_1: Qualified<ModelName>,
         model_2: Qualified<ModelName>,

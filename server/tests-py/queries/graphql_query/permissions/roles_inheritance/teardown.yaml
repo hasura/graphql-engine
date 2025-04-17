@@ -1,0 +1,19 @@
+type: bulk
+args:
+  - type: drop_inherited_role
+    args:
+      role_name: nested_role
+
+  - type: drop_inherited_role
+    args:
+      role_name: base_role
+
+  - type: pg_untrack_table
+    args:
+      table: users
+      cascade: true
+
+  - type: pg_untrack_table
+    args:
+      table: dummy_table
+      cascade: true

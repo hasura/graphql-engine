@@ -2924,6 +2924,19 @@
           "additionalProperties": false
         },
         {
+          "description": "Filters objects based on the nested field of a model.",
+          "type": "object",
+          "required": [
+            "nestedField"
+          ],
+          "properties": {
+            "nestedField": {
+              "$ref": "#/definitions/NestedFieldPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
           "description": "Filters objects based on the relationship of a model.",
           "type": "object",
           "required": [
@@ -3348,6 +3361,35 @@
           "items": {
             "$ref": "#/definitions/OpenDdSubgraphObject"
           }
+        }
+      },
+      "additionalProperties": false
+    },
+    "NestedFieldPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/NestedFieldPredicate",
+      "title": "NestedFieldPredicate",
+      "description": "Nested field predicate filters objects of a source model based on a predicate on the nested field.",
+      "type": "object",
+      "required": [
+        "fieldName",
+        "predicate"
+      ],
+      "properties": {
+        "fieldName": {
+          "description": "The name of the field in the object type of the model to follow.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
+        },
+        "predicate": {
+          "description": "The predicate to apply on the related objects.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ModelPredicate"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -3779,6 +3821,10 @@
           "type": "boolean"
         },
         "validate_scalar_boolean_expression_operators": {
+          "default": false,
+          "type": "boolean"
+        },
+        "validate_non_null_graphql_variables": {
           "default": false,
           "type": "boolean"
         }
@@ -6590,10 +6636,10 @@
               ]
             },
             "schema": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0/ndc-models/tests/json_schema/schema_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.1-rc.0/ndc-models/tests/json_schema/schema_response.jsonschema"
             },
             "capabilities": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0/ndc-models/tests/json_schema/capabilities_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.1-rc.0/ndc-models/tests/json_schema/capabilities_response.jsonschema"
             }
           },
           "additionalProperties": false

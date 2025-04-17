@@ -2,15 +2,13 @@ use axum::http::HeaderMap;
 use axum::{extract::State, response::IntoResponse, routing::get};
 use engine_types::{ExposeInternalErrors, HttpContext};
 use futures_util::{SinkExt, StreamExt};
-use graphql_ir::GraphqlRequestPipeline;
 use graphql_ws::Context;
 use graphql_ws::GRAPHQL_WS_PROTOCOL;
 use std::{net, path::PathBuf, sync::Arc};
 use tokio::{net::TcpStream, task::JoinHandle};
 use tokio_tungstenite::{
-    connect_async,
+    MaybeTlsStream, WebSocketStream, connect_async,
     tungstenite::{self, client::IntoClientRequest},
-    MaybeTlsStream, WebSocketStream,
 };
 
 #[allow(dead_code)]
@@ -99,21 +97,14 @@ async fn start_websocket_server_inner(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let plugin_configs = metadata_resolve::LifecyclePluginConfigs {
-        pre_parse_plugins: Vec::new(),
-        pre_response_plugins: Vec::new(),
-        pre_route_plugins: Vec::new(),
-    };
     let context = Context {
         connection_expiry: expiry,
         http_context,
         metadata: resolved_metadata.into(),
-        request_pipeline: GraphqlRequestPipeline::Old,
         expose_internal_errors: ExposeInternalErrors::Expose,
         project_id: None,
         schema: Arc::new(schema),
         auth_config: Arc::new(auth_config),
-        plugin_configs: Arc::new(plugin_configs),
         metrics: graphql_ws::NoOpWebSocketMetrics,
         handshake_headers: Arc::new(HeaderMap::new()), // Will be populated in "ws_handler"
     };

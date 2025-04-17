@@ -84,7 +84,7 @@ pub fn parse_number(bytes: &[u8]) -> Result<(NumberToken, usize), Error> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_number, Error, NumberToken};
+    use super::{Error, NumberToken, parse_number};
 
     #[test]
     fn test_float() {

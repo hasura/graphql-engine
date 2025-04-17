@@ -1,0 +1,13 @@
+query MyQuery {
+  InstitutionMany {
+    name
+    location {
+      country_id
+      country_object {
+        country_id
+        name
+        area_km2
+      }
+    }
+  }
+}

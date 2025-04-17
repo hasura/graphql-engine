@@ -1,11 +1,11 @@
 use super::{
+    CommandPlan,
     relationships::{
+        CommandRemoteRelationshipParts, ModelRemoteRelationshipParts,
         calculate_remote_relationship_fields_for_command_target,
         calculate_remote_relationship_fields_for_model_target,
         process_command_relationship_definition, process_model_relationship_definition,
-        CommandRemoteRelationshipParts, ModelRemoteRelationshipParts,
     },
-    CommandPlan,
 };
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::types::{PlanError, RelationshipError};
@@ -510,7 +510,7 @@ fn from_model_relationship(
             };
 
             remote_join_executions.locations.insert(
-                relationship_name.as_str().to_owned(),
+                ndc_field_alias.to_string(),
                 Location {
                     join_node: JoinNode::Remote(remote_join),
                     rest: sub_join_locations,
@@ -738,7 +738,7 @@ fn from_command_relationship(
             };
 
             remote_join_executions.locations.insert(
-                relationship_name.as_str().to_owned(),
+                ndc_field_alias.to_string(),
                 Location {
                     join_node: JoinNode::Remote(rj_info),
                     rest: new_remote_join_executions,

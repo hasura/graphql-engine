@@ -9,7 +9,7 @@ use std::sync::Arc;
 use axum::http::HeaderMap;
 
 use lang_graphql::ast::common as ast;
-use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
+use tracing_util::{AttributeVisibility, SpanVisibility, set_attribute_on_active_span};
 
 use crate::error;
 use engine_types::{HttpContext, ProjectId};

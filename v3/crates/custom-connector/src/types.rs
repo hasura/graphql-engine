@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 
 pub mod actor;
 pub mod city;
+pub mod continent;
 pub mod country;
 pub mod evaluated_institution;
 pub mod genre;
@@ -207,6 +208,7 @@ pub(crate) fn object_types() -> BTreeMap<ndc_models::ObjectTypeName, ndc_models:
         ("actor".into(), actor::definition()),
         ("city".into(), city::definition()),
         ("country".into(), country::definition()),
+        ("continent".into(), continent::definition()),
         (
             "evaluated_institution".into(),
             evaluated_institution::definition(),

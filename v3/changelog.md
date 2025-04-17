@@ -2,11 +2,56 @@
 
 ## [Unreleased]
 
+### Fixed
+
 ### Added
 
 ### Changed
 
+## [v2025.04.14]
+
 ### Fixed
+
+- Fixed a bug in which using a graphql alias in a query involving a remote
+  relationship would result in a runtime error
+
+## [v2025.04.02]
+
+### Added
+
+- Add data connector error details to trace error messages. This will help
+  debugging data connector errors.
+- Add a flag `validate_non_null_graphql_variables` to enable runtime validations
+  for non-nullable GraphQL variables.
+- Improved metadata JSON deserialization errors by adding more contextual
+  information.
+
+### Changed
+
+- Model permissions can now reference nested object fields. For instance, to
+  select all institutions where the country of their location is "UK":
+
+```yaml
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: institutions
+  permissions:
+    - role: admin
+      select:
+        filter:
+          nestedField:
+            fieldName: location
+            predicate:
+              nestedField:
+                fieldName: country
+                predicate:
+                  fieldComparison:
+                    field: name
+                    operator: _eq
+                    value:
+                      literal: UK
+```
 
 ## [v2025.03.25]
 
@@ -1532,7 +1577,9 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.03.25...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.04.14...HEAD
+[v2025.04.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.14
+[v2025.04.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.02
 [v2025.03.25]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.25
 [v2025.03.20]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.20
 [v2025.03.17]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.17

@@ -2,7 +2,7 @@ mod json_ext;
 
 use indexmap::IndexMap;
 pub use json_ext::ValueExt;
-use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned, ser::SerializeMap};
 use serde_json as json;
 use std::{collections::HashMap, hash::Hash};
 

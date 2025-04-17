@@ -9,8 +9,8 @@ use lang_graphql::{ast::common as ast, schema as gql_schema};
 use crate::aggregates::get_aggregate_select_output_type;
 use crate::types::{self, Annotation};
 use crate::{
-    mk_deprecation_status, model_arguments, model_filter_input, permissions, Error,
-    RootFieldAnnotation, RootFieldKind, GDS,
+    Error, GDS, RootFieldAnnotation, RootFieldKind, mk_deprecation_status, model_arguments,
+    model_filter_input, permissions,
 };
 use metadata_resolve;
 
@@ -55,7 +55,6 @@ pub(crate) fn select_aggregate_field(
             select_aggregate.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 RootFieldAnnotation::Model {
-                    data_type: model.model.data_type.clone(),
                     kind: RootFieldKind::SelectAggregate,
                     name: model.model.name.clone(),
                 },

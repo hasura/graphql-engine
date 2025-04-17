@@ -11,15 +11,18 @@ mod collect;
 mod error;
 pub mod input;
 pub mod selection_set;
+mod variables;
 
 pub use error::*;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
+pub use variables::NonNullGraphqlVariablesValidation;
 
 pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
     schema: &'s schema::Schema<S>,
     request: &http::Request,
+    validate_non_null_graphql_variables: NonNullGraphqlVariablesValidation,
 ) -> Result<normalized::Operation<'s, S>> {
     let mut fragments = HashMap::new();
     let mut operations = HashMap::new();
@@ -34,7 +37,7 @@ pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::Namespaced
                         Some(operation_name) => {
                             return Err(Error::DuplicateOperationDefinitions {
                                 operation_name: operation_name.item.clone(),
-                            })
+                            });
                         }
                         None => return Err(Error::AnonymousOperationMustBeUnique),
                     }
@@ -72,6 +75,7 @@ pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::Namespaced
             &fragments,
             operation,
             &request.variables,
+            &validate_non_null_graphql_variables,
         )
     } else if let Some(operation_name) = operation_name {
         Err(Error::OperationNotFound {
@@ -84,6 +88,7 @@ pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::Namespaced
             &fragments,
             operations.values().next().unwrap(),
             &request.variables,
+            &validate_non_null_graphql_variables,
         )
     } else {
         Err(Error::AnonymousOperationNotFound)
@@ -145,36 +150,15 @@ pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::Name
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
     operation: &'q executable::OperationDefinition,
     variable_values: &'q VariableValues,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<normalized::Operation<'s, S>> {
-    let mut variables = HashMap::new();
-    if let Some(variable_definitions) = &operation.variable_definitions {
-        for definition in &variable_definitions.item {
-            let definition = &definition.item;
-            let variable_name = &definition.name.item;
-            let variable_base_type = definition.var_type.item.underlying_type();
-            let type_info = schema
-                .get_type(variable_base_type)
-                .ok_or_else(|| Error::UnknownType(variable_base_type.clone()))?
-                .as_input_type()
-                .ok_or_else(|| Error::NotInputType {
-                    variable_name: variable_name.clone(),
-                    type_name: variable_base_type.clone(),
-                })?;
-            if variables
-                .insert(variable_name, (definition, type_info))
-                .is_some()
-            {
-                return Err(Error::DuplicateVariableDeclarations {
-                    variable_name: variable_name.clone(),
-                });
-            }
-        }
-    }
-    let variables_context = input::value::Variables {
-        definitions: &variables,
-        values: variable_values,
-    };
-
+    // Build variables context
+    let variables = variables::Variables::new(
+        operation,
+        variable_values,
+        schema,
+        validate_non_null_graphql_variables,
+    )?;
     let selection_set_type_name = match operation.ty {
         ast::OperationType::Query => &schema.query_type,
         ast::OperationType::Mutation => schema
@@ -199,7 +183,7 @@ pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::Name
         namespaced_getter,
         schema,
         fragments,
-        &variables_context,
+        &variables,
         &selection_set_type_info,
         &operation.selection_set.item,
     )?;

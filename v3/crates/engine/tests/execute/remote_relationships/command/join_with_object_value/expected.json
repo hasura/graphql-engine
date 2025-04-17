@@ -8,7 +8,7 @@
             "Country": "UK",
             "CountryId": 1
           },
-          "EvaluatedLocation": true
+          "the_eval_loc": true
         },
         {
           "Id": 2,
@@ -16,12 +16,12 @@
             "Country": "Sweden",
             "CountryId": 2
           },
-          "EvaluatedLocation": false
+          "the_eval_loc": false
         },
         {
           "Id": 3,
           "Location": null,
-          "EvaluatedLocation": false
+          "the_eval_loc": false
         }
       ]
     }
@@ -35,7 +35,7 @@
             "Country": "UK",
             "CountryId": 1
           },
-          "EvaluatedLocation": false
+          "the_eval_loc": false
         },
         {
           "Id": 2,
@@ -43,12 +43,12 @@
             "Country": "Sweden",
             "CountryId": 2
           },
-          "EvaluatedLocation": true
+          "the_eval_loc": true
         },
         {
           "Id": 3,
           "Location": null,
-          "EvaluatedLocation": false
+          "the_eval_loc": false
         }
       ]
     }

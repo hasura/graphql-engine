@@ -51,8 +51,8 @@ impl<T: OpenDd> OpenDd for Spanned<T> {
         })
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        T::json_schema(gen)
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        T::json_schema(generator)
     }
 
     fn _schema_name() -> String {

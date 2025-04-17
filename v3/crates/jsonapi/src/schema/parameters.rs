@@ -145,7 +145,10 @@ fn build_fields_parameter(
         allow_reserved: None,
         content: None,
         deprecated: None,
-        description: Some(format!("Optional list of fields from {} type to include in response. If no fields are provided, all fields are returned", type_name.name)),
+        description: Some(format!(
+            "Optional list of fields from {} type to include in response. If no fields are provided, all fields are returned",
+            type_name.name
+        )),
         example: Some(example.into()),
         explode: None,
         examples: BTreeMap::new(),
@@ -190,7 +193,10 @@ pub fn ordering_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec
         allow_reserved: None,
         content: None,
         deprecated: None,
-        description: Some(format!("Optional list of fields from {} to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",model.name.name)),
+        description: Some(format!(
+            "Optional list of fields from {} to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+            model.name.name
+        )),
         example: Some(example.into()),
         explode: None,
         examples: BTreeMap::new(),

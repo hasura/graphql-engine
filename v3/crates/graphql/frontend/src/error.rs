@@ -18,7 +18,7 @@ pub enum RequestError {
     IRConversionError(#[from] graphql_ir::Error),
 
     #[error("{0}")]
-    GraphQlPlanError(#[from] graphql_ir::PlanError),
+    GraphQlPlanError(#[from] graphql_ir::GraphqlIrPlanError),
 
     #[error("explain error: {0}")]
     ExplainError(String),

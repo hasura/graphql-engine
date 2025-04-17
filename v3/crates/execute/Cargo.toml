@@ -14,7 +14,6 @@ lang-graphql = { path = "../graphql/lang-graphql" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 plan-types = { path = "../plan-types" }
-plan-pushdown-types = { path = "../plan-pushdown-types" }
 tracing-util = { path = "../utils/tracing-util" }
 
 async-recursion = { workspace = true }

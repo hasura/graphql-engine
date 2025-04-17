@@ -2,13 +2,13 @@ use derive_more::derive::Display;
 use open_dds::{flags, types::CustomTypeName};
 
 use crate::{
-    stages::{
-        aggregate_boolean_expressions, aggregates, boolean_expressions, command_permissions,
-        commands, data_connectors, model_permissions, models, models_graphql, object_relationships,
-        object_types, order_by_expressions, scalar_boolean_expressions, scalar_types,
-        type_permissions,
-    },
     Qualified,
+    stages::{
+        aggregate_boolean_expressions, aggregates, arguments, boolean_expressions,
+        command_permissions, commands, data_connectors, model_permissions, models, models_graphql,
+        object_relationships, object_types, order_by_expressions, scalar_boolean_expressions,
+        scalar_types, type_permissions,
+    },
 };
 
 use super::error::{ContextualError, ShouldBeAnError};
@@ -53,6 +53,8 @@ pub enum Warning {
     ConflictingNameAcrossTypes(ConflictingNameAcrossTypes),
     #[error("{0}")]
     ObjectRelationshipsIssue(#[from] object_relationships::ObjectRelationshipsIssue),
+    #[error("{0}")]
+    ArgumentIssue(#[from] arguments::ArgumentIssue),
 }
 
 impl ShouldBeAnError for Warning {
@@ -80,6 +82,7 @@ impl ContextualError for Warning {
     fn create_error_context(&self) -> Option<error_context::Context> {
         match self {
             Warning::ModelPermissionIssue(issue) => issue.create_error_context(),
+            Warning::BooleanExpressionIssue(issue) => issue.create_error_context(),
             _ => None,
         }
     }

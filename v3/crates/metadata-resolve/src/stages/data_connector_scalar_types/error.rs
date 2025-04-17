@@ -15,7 +15,9 @@ impl ContextualError for DataConnectorScalarTypesError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum DataConnectorScalarTypesError {
-    #[error("multiple type representations defined for scalar {scalar_type:} from data connector {data_connector:}")]
+    #[error(
+        "multiple type representations defined for scalar {scalar_type:} from data connector {data_connector:}"
+    )]
     DuplicateDataConnectorScalarRepresentation {
         data_connector: Qualified<DataConnectorName>,
         scalar_type: DataConnectorScalarType,

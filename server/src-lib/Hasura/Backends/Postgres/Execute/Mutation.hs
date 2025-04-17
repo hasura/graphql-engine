@@ -287,7 +287,7 @@ executeMutationOutputQuery userInfo qt allCols preCalAffRows cte mutOutput strfy
       queryTx = do
         selectWith <- mkMutationOutputExp userInfo qt allCols preCalAffRows cte mutOutput strfyNum tCase
         let query = toQuery selectWith
-            queryWithQueryTags = query {PG.getQueryText = (PG.getQueryText query) <> (_unQueryTagsComment queryTags)}
+            queryWithQueryTags = query {PG.getQueryText = addQueryTagsComment (PG.getQueryText query) queryTags}
         -- See Note [Prepared statements in Mutations]
         liftTx (PG.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
 
