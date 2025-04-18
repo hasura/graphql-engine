@@ -37,14 +37,13 @@ On the Hasura Cloud dashboard, create a new project:
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Create New Database`:
+On the Hasura Console, navigate to `Data -> Postgres`:
 
 Click on `Connect Neon Database` to create and connect a new Postgres database to your Hasura Project.
 
 <Thumbnail src="/img/cloud-dbs/neon/connect_neon_database.png" alt="Connect Neon database" width="700px" />
 
-On the next step, you'll be prompted to Login/Sign up for Neon. We recommend `Continue with Hasura` for a seamless
-experience.
+On the next step, you'll be prompted to Login/Sign up for Neon. We recommend `Hasura` for a seamless experience.
 
 <Thumbnail src="/img/cloud-dbs/neon/neon_authentication.png" alt="Neon Authentication" width="700px" />
 
@@ -84,36 +83,26 @@ pg_dump -h <host> -U <username> <dbname> | psql <neon-connection-string>
 ```
 
 For more info, follow
-[Neon's detailed guide for importing a database](https://neon.tech/docs/how-to-guides/import-an-existing-database/).
+[Neon's detailed guide for importing a database](https://neon.tech/docs/import/migrate-from-postgres/).
 
 :::info Note
 
 If you're migrating from Heroku, check out Neon's platform-specific
-[migration guide](https://neon.tech/docs/how-to-guides/hasura-heroku-migration/).
+[migration guide](https://neon.tech/docs/import/migrate-from-heroku/).
 
 :::
 
 ## Neon Free Tier
 
-With Neon's Free Tier, you can create one free project with the following limits:
+With Neon's Free Tier, you can create up to 10 projects with the following limits:
 
-- 10 [branches](https://neon.tech/branching/)
-- 3 GB of storage per branch
-- Up to 3 compute endpoints with 1 vCPU and 4 GBs of RAM
-- A point-in-time restore window of 7 days of reasonable usage
+- 10 [Branches](https://neon.tech/branching/) per project
+- 0.5 GB-month total storage across all projects
+- 190 [Compute hours](https://neon.tech/docs/introduction/usage-metrics#compute-faqs) per month
+- Instant [Point-in-Time Restore](https://neon.tech/blog/announcing-point-in-time-restore) up to 24 hours in the past 
 
 For more info, check out Neon's
-[Technical Preview Free Tier](https://neon.tech/docs/reference/technical-preview-free-tier/).
-
-:::info Note
-
-If you've already reached the Neon free-tier project limit, please head to your
-[Neon console](https://console.neon.tech/) and delete an unused project to be able to create and connect a new one from
-the Hasura Console.
-
-<Thumbnail src="/img/cloud-dbs/neon/free_tier_exceeded_neon.png" alt="Neon Free Tier Warning" width="700px" />
-
-:::
+[Free Plan allowances](https://neon.tech/docs/introduction/plans#free-plan-allowances).
 
 :::info Note
 
