@@ -6,6 +6,8 @@
 
 ### Added
 
+- Enable SQL pushdown for fields with object type
+
 ### Changed
 
 ## [v2025.04.14]
