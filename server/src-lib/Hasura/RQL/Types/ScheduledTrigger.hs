@@ -65,7 +65,12 @@ import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform, RequestTra
 import PostgreSQL.Binary.Decoding qualified as PD
 import Refined (NonNegative, Refined, refineTH)
 import System.Cron.Types
-
+import Hasura.Backends.Postgres.SQL.DML 
+  ( OrderByItem(..)
+  , OrderType(..)
+  , NullsOrder(..)
+  , SQLExp(SEUnsafe)
+  )
 type CronEventId = EventId
 
 type OneOffScheduledEventId = EventId
@@ -474,7 +479,8 @@ data GetScheduledEvents = GetScheduledEvents
   { _gseScheduledEvent :: ScheduledEvent,
     _gsePagination :: ScheduledEventPagination,
     _gseStatus :: [ScheduledEventStatus],
-    _gseGetRowsCount :: RowsCountOption
+    _gseGetRowsCount :: RowsCountOption,
+    _gseOrderBy :: [OrderByItem]
   }
   deriving (Show, Eq)
 
@@ -487,6 +493,22 @@ instance ToJSON GetScheduledEvents where
            "get_rows_count" .= _gseGetRowsCount
          ]
 
+instance FromJSON OrderByItem where
+  parseJSON = withObject "OrderByItem" $ \o -> do
+    colText  <- o .: "column"
+    ordText  <- o .:? "type"
+    nullsTxt <- o .:? "nulls"
+    let ord = case fmap T.toLower ordText of
+                Just "asc"  -> Just OTAsc
+                Just "desc" -> Just OTDesc
+                _           -> Nothing
+        nulls = case fmap T.toLower nullsTxt of
+                  Just "first" -> Just NullsFirst
+                  Just "last"  -> Just NullsLast
+                  _            -> Nothing
+        expr = SEUnsafe colText
+    pure $ OrderByItem expr ord nulls
+
 instance FromJSON GetScheduledEvents where
   parseJSON = withObject "GetScheduledEvents" $ \o ->
     GetScheduledEvents
@@ -498,6 +520,8 @@ instance FromJSON GetScheduledEvents where
       <*> o
       .:? "get_rows_count"
       .!= DontIncludeRowsCount
+      <*> o 
+      .:? "order_by" .!= []
 
 data WithOptionalTotalCount a = WithOptionalTotalCount
   { _wtcCount :: Maybe Int,

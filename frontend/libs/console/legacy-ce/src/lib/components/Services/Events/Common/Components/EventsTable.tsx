@@ -58,18 +58,20 @@ const EventsTable: React.FC<Props> = props => {
   const sortedColumns = columns.sort(ordinalColSort);
   let shouldSortColumn = true;
   const sortByColumn = (col: string) => {
-    // Remove all the existing order_bys
     const existingColSort = filterState.sorts.find(s => s.column === col);
-    if (existingColSort && existingColSort.type === 'asc') {
-      runQuery({
-        sorts: [makeOrderBy(col, 'desc')],
-      });
-    } else {
-      runQuery({
-        sorts: [makeOrderBy(col, 'asc')],
-      });
-    }
-  };
+    const newSort = existingColSort && existingColSort.type === 'asc'
+    ? makeOrderBy(col, 'desc')
+    : makeOrderBy(col, 'asc');
+
+    console.log('Sorting column:', col);
+    console.log('New sort order:', newSort);
+
+    runQuery({
+      sorts: [newSort],
+    });
+
+    console.log('Sort applied!');
+  }
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
       setCurrentPage(page);

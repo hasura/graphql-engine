@@ -33,6 +33,7 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Types
 import Hasura.Tracing.Monad (TraceT)
 import Network.HTTP.Types qualified as HTTP
+import Hasura.Backends.Postgres.SQL.DML (OrderByItem)
 
 data SchemaSyncEventProcessResult = SchemaSyncEventProcessResult
   { _sseprShouldReload :: !Bool,
@@ -142,7 +143,12 @@ class (Monad m) => MonadMetadataStorage m where
   clearFutureCronEvents :: ClearCronEvents -> m (Either QErr ())
 
   -- Console API requirements
-  getOneOffScheduledEvents :: ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (Either QErr (WithOptionalTotalCount [OneOffScheduledEvent]))
+  getOneOffScheduledEvents ::
+    ScheduledEventPagination ->
+    [ScheduledEventStatus] ->
+    RowsCountOption ->
+    [OrderByItem] ->  -- NEW: extra parameter for sorting
+    m (Either QErr (WithOptionalTotalCount [OneOffScheduledEvent]))
   getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (Either QErr (WithOptionalTotalCount [CronEvent]))
   getScheduledEventInvocations :: GetScheduledEventInvocations -> m (Either QErr (WithOptionalTotalCount [ScheduledEventInvocation]))
   deleteScheduledEvent :: ScheduledEventId -> ScheduledEventType -> m (Either QErr ())
@@ -185,7 +191,8 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   unlockScheduledEvents a b = lift $ unlockScheduledEvents a b
   unlockAllLockedScheduledEvents = lift $ unlockAllLockedScheduledEvents
   clearFutureCronEvents = lift . clearFutureCronEvents
-  getOneOffScheduledEvents a b c = lift $ getOneOffScheduledEvents a b c
+  -- Updated getOneOffScheduledEvents with four arguments.
+  getOneOffScheduledEvents a b c d = lift $ getOneOffScheduledEvents a b c d
   getCronEvents a b c d = lift $ getCronEvents a b c d
   getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
@@ -236,12 +243,15 @@ fetchScheduledEventInvocations = getScheduledEventInvocations
 fetchScheduledEvents :: (MonadMetadataStorage m) => GetScheduledEvents -> m (Either QErr Value)
 fetchScheduledEvents GetScheduledEvents {..} = do
   let totalCountToJSON WithOptionalTotalCount {..} =
-        object
-          $ ("events" .= _wtcData)
+        object $ ("events" .= _wtcData)
           : (maybe mempty (\count -> ["count" .= count]) _wtcCount)
   case _gseScheduledEvent of
-    SEOneOff -> (fmap . fmap) totalCountToJSON $ getOneOffScheduledEvents _gsePagination _gseStatus _gseGetRowsCount
-    SECron name -> (fmap . fmap) totalCountToJSON $ getCronEvents name _gsePagination _gseStatus _gseGetRowsCount
+    SEOneOff ->
+      (fmap . fmap) totalCountToJSON $
+        getOneOffScheduledEvents _gsePagination _gseStatus _gseGetRowsCount _gseOrderBy
+    SECron name ->
+      (fmap . fmap) totalCountToJSON $
+        getCronEvents name _gsePagination _gseStatus _gseGetRowsCount
 
 -- | Drop a cron/oneoff scheduled event
 dropEvent :: (MonadMetadataStorage m) => ScheduledEventId -> ScheduledEventType -> m (Either QErr ())
