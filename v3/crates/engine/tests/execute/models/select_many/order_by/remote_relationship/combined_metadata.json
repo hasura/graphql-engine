@@ -1802,21 +1802,32 @@
                     "project": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -1838,6 +1849,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -1849,7 +1861,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -1860,19 +1879,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -1882,21 +1905,32 @@
                     },
                     "filter": {
                       "conditional": {
-                        "case": {}
+                        "case": {},
+                        "nullif": {}
                       },
                       "comparison": {
-                        "like": {},
-                        "ilike": {},
                         "between": {},
                         "contains": {},
+                        "greater_than_eq": {},
+                        "greater_than": {},
+                        "ilike": {},
+                        "in_list": {},
+                        "is_false": {},
                         "is_nan": {},
-                        "is_zero": {}
+                        "is_null": {},
+                        "is_true": {},
+                        "is_zero": {},
+                        "less_than_eq": {},
+                        "less_than": {},
+                        "like": {}
                       },
                       "scalar": {
                         "abs": {},
+                        "and": {},
                         "btrim": {},
                         "ceil": {},
                         "character_length": {},
+                        "coalesce": {},
                         "concat": {},
                         "cos": {},
                         "current_date": {},
@@ -1918,6 +1952,7 @@
                           "nanosecond": {}
                         },
                         "date_trunc": {},
+                        "divide": {},
                         "exp": {},
                         "floor": {},
                         "greatest": {},
@@ -1929,7 +1964,14 @@
                         "log2": {},
                         "lpad": {},
                         "ltrim": {},
+                        "minus": {},
+                        "modulo": {},
+                        "multiply": {},
+                        "negate": {},
+                        "not": {},
                         "nvl": {},
+                        "or": {},
+                        "plus": {},
                         "power": {},
                         "random": {},
                         "replace": {},
@@ -1940,19 +1982,23 @@
                         "rtrim": {},
                         "sqrt": {},
                         "str_pos": {},
-                        "substr": {},
                         "substr_index": {},
+                        "substr": {},
                         "tan": {},
                         "to_date": {},
-                        "to_timestamp": {},
-                        "trunc": {},
                         "to_lower": {},
-                        "to_upper": {}
+                        "to_timestamp": {},
+                        "to_upper": {},
+                        "trunc": {}
                       },
                       "aggregate": {
+                        "avg": {},
                         "count": {
                           "distinct": {}
-                        }
+                        },
+                        "max": {},
+                        "min": {},
+                        "sum": {}
                       },
                       "window": {
                         "row_number": {},
@@ -1962,21 +2008,32 @@
                     "sort": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -1998,6 +2055,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -2009,7 +2067,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -2020,19 +2085,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -2043,21 +2112,32 @@
                     "join": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -2079,6 +2159,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -2090,7 +2171,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -2101,19 +2189,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -2130,21 +2222,32 @@
                     "aggregate": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -2166,6 +2269,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -2177,7 +2281,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -2188,19 +2299,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -2212,21 +2327,32 @@
                     "window": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -2248,6 +2374,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -2259,7 +2386,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -2270,19 +2404,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -4094,21 +4232,32 @@
                     "project": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -4130,6 +4279,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -4141,7 +4291,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -4152,19 +4309,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -4174,21 +4335,32 @@
                     },
                     "filter": {
                       "conditional": {
-                        "case": {}
+                        "case": {},
+                        "nullif": {}
                       },
                       "comparison": {
-                        "like": {},
-                        "ilike": {},
                         "between": {},
                         "contains": {},
+                        "greater_than_eq": {},
+                        "greater_than": {},
+                        "ilike": {},
+                        "in_list": {},
+                        "is_false": {},
                         "is_nan": {},
-                        "is_zero": {}
+                        "is_null": {},
+                        "is_true": {},
+                        "is_zero": {},
+                        "less_than_eq": {},
+                        "less_than": {},
+                        "like": {}
                       },
                       "scalar": {
                         "abs": {},
+                        "and": {},
                         "btrim": {},
                         "ceil": {},
                         "character_length": {},
+                        "coalesce": {},
                         "concat": {},
                         "cos": {},
                         "current_date": {},
@@ -4210,6 +4382,7 @@
                           "nanosecond": {}
                         },
                         "date_trunc": {},
+                        "divide": {},
                         "exp": {},
                         "floor": {},
                         "greatest": {},
@@ -4221,7 +4394,14 @@
                         "log2": {},
                         "lpad": {},
                         "ltrim": {},
+                        "minus": {},
+                        "modulo": {},
+                        "multiply": {},
+                        "negate": {},
+                        "not": {},
                         "nvl": {},
+                        "or": {},
+                        "plus": {},
                         "power": {},
                         "random": {},
                         "replace": {},
@@ -4232,19 +4412,23 @@
                         "rtrim": {},
                         "sqrt": {},
                         "str_pos": {},
-                        "substr": {},
                         "substr_index": {},
+                        "substr": {},
                         "tan": {},
                         "to_date": {},
-                        "to_timestamp": {},
-                        "trunc": {},
                         "to_lower": {},
-                        "to_upper": {}
+                        "to_timestamp": {},
+                        "to_upper": {},
+                        "trunc": {}
                       },
                       "aggregate": {
+                        "avg": {},
                         "count": {
                           "distinct": {}
-                        }
+                        },
+                        "max": {},
+                        "min": {},
+                        "sum": {}
                       },
                       "window": {
                         "row_number": {},
@@ -4254,21 +4438,32 @@
                     "sort": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -4290,6 +4485,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -4301,7 +4497,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -4312,19 +4515,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -4335,21 +4542,32 @@
                     "join": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -4371,6 +4589,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -4382,7 +4601,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -4393,19 +4619,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -4422,21 +4652,32 @@
                     "aggregate": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -4458,6 +4699,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -4469,7 +4711,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -4480,19 +4729,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},
@@ -4504,21 +4757,32 @@
                     "window": {
                       "expression": {
                         "conditional": {
-                          "case": {}
+                          "case": {},
+                          "nullif": {}
                         },
                         "comparison": {
-                          "like": {},
-                          "ilike": {},
                           "between": {},
                           "contains": {},
+                          "greater_than_eq": {},
+                          "greater_than": {},
+                          "ilike": {},
+                          "in_list": {},
+                          "is_false": {},
                           "is_nan": {},
-                          "is_zero": {}
+                          "is_null": {},
+                          "is_true": {},
+                          "is_zero": {},
+                          "less_than_eq": {},
+                          "less_than": {},
+                          "like": {}
                         },
                         "scalar": {
                           "abs": {},
+                          "and": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
+                          "coalesce": {},
                           "concat": {},
                           "cos": {},
                           "current_date": {},
@@ -4540,6 +4804,7 @@
                             "nanosecond": {}
                           },
                           "date_trunc": {},
+                          "divide": {},
                           "exp": {},
                           "floor": {},
                           "greatest": {},
@@ -4551,7 +4816,14 @@
                           "log2": {},
                           "lpad": {},
                           "ltrim": {},
+                          "minus": {},
+                          "modulo": {},
+                          "multiply": {},
+                          "negate": {},
+                          "not": {},
                           "nvl": {},
+                          "or": {},
+                          "plus": {},
                           "power": {},
                           "random": {},
                           "replace": {},
@@ -4562,19 +4834,23 @@
                           "rtrim": {},
                           "sqrt": {},
                           "str_pos": {},
-                          "substr": {},
                           "substr_index": {},
+                          "substr": {},
                           "tan": {},
                           "to_date": {},
-                          "to_timestamp": {},
-                          "trunc": {},
                           "to_lower": {},
-                          "to_upper": {}
+                          "to_timestamp": {},
+                          "to_upper": {},
+                          "trunc": {}
                         },
                         "aggregate": {
+                          "avg": {},
                           "count": {
                             "distinct": {}
-                          }
+                          },
+                          "max": {},
+                          "min": {},
+                          "sum": {}
                         },
                         "window": {
                           "row_number": {},

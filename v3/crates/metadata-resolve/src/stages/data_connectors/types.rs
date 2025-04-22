@@ -641,6 +641,10 @@ pub struct DataConnectorRelationalConditionalExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_case: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_nullif: bool,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -669,6 +673,38 @@ pub struct DataConnectorRelationalComparisonExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_is_zero: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_greater_than_eq: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_greater_than: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_in_list: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_is_false: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_is_null: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_is_true: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_less_than: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_less_than_eq: bool,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -837,6 +873,46 @@ pub struct DataConnectorRelationalScalarExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_to_upper: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_and: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_coalesce: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_divide: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_minus: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_modulo: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_multiply: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_negate: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_not: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_or: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_plus: bool,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -929,6 +1005,22 @@ pub struct DataConnectorRelationalAggregateExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_var: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_avg: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_sum: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_min: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_max: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -1124,6 +1216,7 @@ fn mk_relational_expression_capabilities(
         DataConnectorRelationalExpressionCapabilities {
             supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
                 supports_case: capabilities.conditional.case.is_some(),
+                supports_nullif: capabilities.conditional.nullif.is_some(),
             },
             supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
                 supports_like: capabilities.comparison.like.is_some(),
@@ -1132,6 +1225,14 @@ fn mk_relational_expression_capabilities(
                 supports_contains: capabilities.comparison.contains.is_some(),
                 supports_is_nan: capabilities.comparison.is_nan.is_some(),
                 supports_is_zero: capabilities.comparison.is_zero.is_some(),
+                supports_greater_than_eq: capabilities.comparison.greater_than_eq.is_some(),
+                supports_greater_than: capabilities.comparison.greater_than.is_some(),
+                supports_in_list: capabilities.comparison.in_list.is_some(),
+                supports_is_false: capabilities.comparison.is_false.is_some(),
+                supports_is_null: capabilities.comparison.is_null.is_some(),
+                supports_is_true: capabilities.comparison.is_true.is_some(),
+                supports_less_than: capabilities.comparison.less_than.is_some(),
+                supports_less_than_eq: capabilities.comparison.less_than.is_some(),
             },
             supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
                 supports_abs: capabilities.scalar.abs.is_some(),
@@ -1191,6 +1292,16 @@ fn mk_relational_expression_capabilities(
                 supports_trunc: capabilities.scalar.trunc.is_some(),
                 supports_to_lower: capabilities.scalar.to_lower.is_some(),
                 supports_to_upper: capabilities.scalar.to_upper.is_some(),
+                supports_and: capabilities.scalar.and.is_some(),
+                supports_coalesce: capabilities.scalar.coalesce.is_some(),
+                supports_divide: capabilities.scalar.divide.is_some(),
+                supports_minus: capabilities.scalar.minus.is_some(),
+                supports_modulo: capabilities.scalar.modulo.is_some(),
+                supports_multiply: capabilities.scalar.multiply.is_some(),
+                supports_negate: capabilities.scalar.negate.is_some(),
+                supports_not: capabilities.scalar.not.is_some(),
+                supports_or: capabilities.scalar.or.is_some(),
+                supports_plus: capabilities.scalar.plus.is_some(),
             },
             supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
                 supports_bool_and: capabilities.aggregate.bool_and.is_some(),
@@ -1205,6 +1316,10 @@ fn mk_relational_expression_capabilities(
                 supports_median: capabilities.aggregate.median.is_some(),
                 supports_string_agg: capabilities.aggregate.string_agg.is_some(),
                 supports_var: capabilities.aggregate.var.is_some(),
+                supports_avg: capabilities.aggregate.avg.is_some(),
+                supports_sum: capabilities.aggregate.sum.is_some(),
+                supports_min: capabilities.aggregate.min.is_some(),
+                supports_max: capabilities.aggregate.max.is_some(),
             },
             supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                 supports_row_number: capabilities.window.row_number.is_some(),
