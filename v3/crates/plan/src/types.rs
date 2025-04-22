@@ -29,8 +29,6 @@ pub enum PlanError {
     InternalError(InternalError),
     #[error("{0}")]
     Internal(String), // equivalent to DataFusionError::Internal
-    #[error("{0}")]
-    External(Box<dyn std::error::Error + Send + Sync>), //equivalent to DataFusionError::External
 }
 
 impl TraceableError for PlanError {
@@ -44,7 +42,6 @@ impl TraceableError for PlanError {
             Self::BooleanExpression(boolean_expression_error) => {
                 boolean_expression_error.visibility()
             }
-            Self::External(_) => ErrorVisibility::User,
             Self::Internal(_) => ErrorVisibility::Internal,
         }
     }

@@ -78,7 +78,6 @@ impl RequestError {
             | RequestError::PlanError(
                 plan::PlanError::Internal(_)
                 | plan::PlanError::InternalError(_)
-                | plan::PlanError::External(_)
                 | plan::PlanError::Relationship(_)
                 | plan::PlanError::OrderBy(_)
                 | plan::PlanError::BooleanExpression(_)
