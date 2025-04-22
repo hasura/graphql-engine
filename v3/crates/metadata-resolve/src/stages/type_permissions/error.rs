@@ -41,7 +41,7 @@ pub enum TypeInputPermissionError {
         "unsupported type in input type permissions definition: {type_name:}; only object types are supported"
     )]
     UnsupportedTypeInInputPermissions { type_name: CustomTypeName },
-    #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
+    #[error("unknown field '{field_name:}' used in input permissions of type '{type_name:}'")]
     UnknownFieldInInputPermissionsDefinition {
         field_name: FieldName,
         type_name: CustomTypeName,
