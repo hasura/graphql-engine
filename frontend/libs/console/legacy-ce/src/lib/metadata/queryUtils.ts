@@ -813,8 +813,7 @@ export const getEventInvocations = (
   type: SupportedEvents,
   limit: number,
   offset: number,
-  triggerName?: string,// is required for cron
-  sorts?: any      
+  triggerName?: string // is required for cron
 ) => {
   const query = {
     type: 'get_scheduled_event_invocations',

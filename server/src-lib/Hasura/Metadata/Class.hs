@@ -186,7 +186,6 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   unlockScheduledEvents a b = lift $ unlockScheduledEvents a b
   unlockAllLockedScheduledEvents = lift $ unlockAllLockedScheduledEvents
   clearFutureCronEvents = lift . clearFutureCronEvents
-  -- Updated getOneOffScheduledEvents with four arguments.
   getOneOffScheduledEvents a b c d = lift $ getOneOffScheduledEvents a b c d
   getCronEvents a b c d e = lift $ getCronEvents a b c d e
   getScheduledEventInvocations a = lift $ getScheduledEventInvocations a

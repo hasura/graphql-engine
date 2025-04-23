@@ -76,8 +76,7 @@ export const useFilterQuery = (
           'one_off',
           limitValue ?? 10,
           offsetValue ?? 0,
-          undefined,
-          sortsValue
+          undefined
         );
       }
     } else if (triggerType === 'cron') {
@@ -95,8 +94,7 @@ export const useFilterQuery = (
           'cron',
           limitValue ?? 10,
           offsetValue ?? 0,
-          triggerName,
-          sortsValue
+          triggerName
         );
       }
     } else if (triggerType === 'data') {

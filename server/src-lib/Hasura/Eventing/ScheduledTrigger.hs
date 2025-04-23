@@ -1047,13 +1047,13 @@ getOneOffScheduledEventsTx ::
   ScheduledEventPagination ->
   [ScheduledEventStatus] ->
   RowsCountOption ->
-  [S.OrderByItem] ->  -- extra parameter for custom ordering
+  [S.OrderByItem] ->
   PG.TxE QErr (WithOptionalTotalCount [OneOffScheduledEvent])
 getOneOffScheduledEventsTx pagination statuses getRowsCount orderByList = do
   let table = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_events"
       statusFilter = mkScheduledEventStatusFilter statuses
       orderByExp = if null orderByList
-                     then scheduledTimeOrderBy   -- default ordering
+                     then scheduledTimeOrderBy
                      else S.OrderByExp (NE.fromList orderByList)
       select =
         S.mkSelect
@@ -1078,7 +1078,7 @@ getCronEventsTx triggerName pagination status getRowsCount orderByList = do
         S.BECompare S.SEQ (S.SEIdentifier $ Identifier "trigger_name") (S.SELit $ triggerNameToTxt triggerName)
       statusFilter = mkScheduledEventStatusFilter status
       orderByExp = if null orderByList
-                     then scheduledTimeOrderBy   -- default ordering
+                     then scheduledTimeOrderBy
                      else S.OrderByExp (NE.fromList orderByList)
       select =
         S.mkSelect

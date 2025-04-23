@@ -60,17 +60,12 @@ const EventsTable: React.FC<Props> = props => {
   const sortByColumn = (col: string) => {
     const existingColSort = filterState.sorts.find(s => s.column === col);
     const newSort = existingColSort && existingColSort.type === 'asc'
-    ? makeOrderBy(col, 'desc')
-    : makeOrderBy(col, 'asc');
-
-    console.log('Sorting column:', col);
-    console.log('New sort order:', newSort);
+                    ? makeOrderBy(col, 'desc')
+                    : makeOrderBy(col, 'asc');
 
     runQuery({
       sorts: [newSort],
     });
-
-    console.log('Sort applied!');
   }
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
