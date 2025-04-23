@@ -178,9 +178,8 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowDuplicateModelPermissionsRoles => Some(new_compatibility_date(2025, 3, 21)),
         Flag::ValidateScalarBooleanExpressionOperators => Some(new_compatibility_date(2025, 3, 26)),
         Flag::ValidateNonNullGraphqlVariables => Some(new_compatibility_date(2025, 4, 3)),
-        Flag::DisallowComparableRelationshipTargetWithNoBooleanExpressionType => None, // set on
-                                                                                       // next
-                                                                                       // release,
-                                                                                       // docs at https://github.com/hasura/ddn-docs/pull/985
+        Flag::DisallowComparableRelationshipTargetWithNoBooleanExpressionType => {
+            Some(new_compatibility_date(2025, 4, 24))
+        }
     }
 }

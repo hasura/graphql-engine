@@ -1,14 +1,11 @@
 # Changelog
 
-## [Unreleased]
-
-### Fixed
+## [v2025.04.23]
 
 ### Added
 
-- Enable SQL pushdown for fields with object type
-
-### Changed
+- Clearer error messages when defining a comparable relationship to a model that
+  has no filter expression defined
 
 ## [v2025.04.14]
 
@@ -1579,7 +1576,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.04.14...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.04.23...HEAD
+[v2025.04.23]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.23
 [v2025.04.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.14
 [v2025.04.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.02
 [v2025.03.25]: https://github.com/hasura/v3-engine/releases/tag/v2025.03.25
