@@ -1071,17 +1071,21 @@ getCronEventsTx ::
   ScheduledEventPagination ->
   [ScheduledEventStatus] ->
   RowsCountOption ->
+  [S.OrderByItem] ->
   PG.TxE QErr (WithOptionalTotalCount [CronEvent])
-getCronEventsTx triggerName pagination status getRowsCount = do
+getCronEventsTx triggerName pagination status getRowsCount orderByList = do
   let triggerNameFilter =
         S.BECompare S.SEQ (S.SEIdentifier $ Identifier "trigger_name") (S.SELit $ triggerNameToTxt triggerName)
       statusFilter = mkScheduledEventStatusFilter status
+      orderByExp = if null orderByList
+                     then scheduledTimeOrderBy   -- default ordering
+                     else S.OrderByExp (NE.fromList orderByList)
       select =
         S.mkSelect
           { S.selExtr = [S.selectStar],
             S.selFrom = Just $ S.mkSimpleFromExp cronEventsTable,
             S.selWhere = Just $ S.WhereFrag $ S.BEBin S.AndOp triggerNameFilter statusFilter,
-            S.selOrderBy = Just scheduledTimeOrderBy
+            S.selOrderBy = Just orderByExp
           }
       sql = PG.fromBuilder $ toSQL $ mkPaginationSelectExp select pagination getRowsCount
   executeWithOptionalTotalCount sql getRowsCount

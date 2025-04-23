@@ -87,14 +87,16 @@ export const useFilterQuery = (
           limitValue ?? 10,
           offsetValue ?? 0,
           triggerOp,
-          triggerName
+          triggerName,
+          sortsValue
         );
       } else {
         query = getEventInvocations(
           'cron',
           limitValue ?? 10,
           offsetValue ?? 0,
-          triggerName
+          triggerName,
+          sortsValue
         );
       }
     } else if (triggerType === 'data') {

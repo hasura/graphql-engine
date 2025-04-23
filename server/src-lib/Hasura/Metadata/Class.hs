@@ -143,13 +143,8 @@ class (Monad m) => MonadMetadataStorage m where
   clearFutureCronEvents :: ClearCronEvents -> m (Either QErr ())
 
   -- Console API requirements
-  getOneOffScheduledEvents ::
-    ScheduledEventPagination ->
-    [ScheduledEventStatus] ->
-    RowsCountOption ->
-    [OrderByItem] ->  -- NEW: extra parameter for sorting
-    m (Either QErr (WithOptionalTotalCount [OneOffScheduledEvent]))
-  getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (Either QErr (WithOptionalTotalCount [CronEvent]))
+  getOneOffScheduledEvents :: ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> [OrderByItem] -> m (Either QErr (WithOptionalTotalCount [OneOffScheduledEvent]))
+  getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> [OrderByItem] ->m (Either QErr (WithOptionalTotalCount [CronEvent]))
   getScheduledEventInvocations :: GetScheduledEventInvocations -> m (Either QErr (WithOptionalTotalCount [ScheduledEventInvocation]))
   deleteScheduledEvent :: ScheduledEventId -> ScheduledEventType -> m (Either QErr ())
 
@@ -193,7 +188,7 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   clearFutureCronEvents = lift . clearFutureCronEvents
   -- Updated getOneOffScheduledEvents with four arguments.
   getOneOffScheduledEvents a b c d = lift $ getOneOffScheduledEvents a b c d
-  getCronEvents a b c d = lift $ getCronEvents a b c d
+  getCronEvents a b c d e = lift $ getCronEvents a b c d e
   getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
@@ -251,7 +246,7 @@ fetchScheduledEvents GetScheduledEvents {..} = do
         getOneOffScheduledEvents _gsePagination _gseStatus _gseGetRowsCount _gseOrderBy
     SECron name ->
       (fmap . fmap) totalCountToJSON $
-        getCronEvents name _gsePagination _gseStatus _gseGetRowsCount
+        getCronEvents name _gsePagination _gseStatus _gseGetRowsCount _gseOrderBy
 
 -- | Drop a cron/oneoff scheduled event
 dropEvent :: (MonadMetadataStorage m) => ScheduledEventId -> ScheduledEventType -> m (Either QErr ())
