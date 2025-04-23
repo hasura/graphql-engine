@@ -277,6 +277,12 @@ fn validate_data_connector_with_comparable_relationship(
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
 ) -> Result<(), boolean_expressions::BooleanExpressionError> {
+    // if there isn't actually a boolean expression type here then
+    // we don't need to validate anything
+    if comparable_relationship.boolean_expression_type.is_none() {
+        return Ok(());
+    }
+
     let underlying_object = object_types
         .get(&object_boolean_expression_type.object_type)
         .ok_or_else(|| {

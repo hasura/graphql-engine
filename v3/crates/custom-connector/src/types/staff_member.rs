@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use datafusion::arrow::datatypes::Field;
 use ndc_models;
 
 use crate::arguments::argument_string;
@@ -61,4 +62,21 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
         ]),
         foreign_keys: BTreeMap::new(),
     }
+}
+
+pub(crate) fn arrow_type() -> datafusion::arrow::datatypes::DataType {
+    datafusion::arrow::datatypes::DataType::Struct(datafusion::arrow::datatypes::Fields::from(
+        vec![
+            Field::new(
+                "first_name",
+                datafusion::arrow::datatypes::DataType::Utf8,
+                true,
+            ),
+            Field::new(
+                "last_name",
+                datafusion::arrow::datatypes::DataType::Utf8,
+                true,
+            ),
+        ],
+    ))
 }

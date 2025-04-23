@@ -209,7 +209,20 @@ pub fn resolve_comparable_relationships(
 
                                 match raw_models.get(&target_model_name) {
                                     Some(raw_model) => {
-                                        Ok(raw_model.filter_expression_type().as_ref())
+                                        if let Some(filter_expression_type) =
+                                            raw_model.filter_expression_type()
+                                        {
+                                            Ok(Some(filter_expression_type))
+                                        } else {
+                                            // raise a warning that this comparable
+                                            // relationship will be ignored
+                                            issues.push(BooleanExpressionIssue::ComparableRelationshipToModelWithoutBooleanExpressionType {
+                                                target_model_name: target_model_name.clone(),
+                                                relationship_name: relationship.name.clone(),
+                                            });
+
+                                            Ok(None)
+                                        }
                                     }
                                     None => Err(BooleanExpressionError::TargetModelNotFound {
                                         relationship_name: comparable_relationship
@@ -261,7 +274,7 @@ pub fn resolve_comparable_relationships(
                         FieldName::new(comparable_relationship.relationship_name.inner().clone()),
                         BooleanExpressionComparableRelationship {
                             relationship_name: comparable_relationship.relationship_name.clone(),
-                            boolean_expression_type: target_boolean_expression_type,
+                            boolean_expression_type: Some(target_boolean_expression_type),
                         },
                     ) {
                         issues.push(
@@ -271,6 +284,15 @@ pub fn resolve_comparable_relationships(
                             },
                         );
                     }
+                } else {
+                    // push a broken one so we know it's defined, it just doesn't work
+                    resolved_comparable_relationships.insert(
+                        FieldName::new(comparable_relationship.relationship_name.inner().clone()),
+                        BooleanExpressionComparableRelationship {
+                            relationship_name: comparable_relationship.relationship_name.clone(),
+                            boolean_expression_type: None,
+                        },
+                    );
                 }
             }
 

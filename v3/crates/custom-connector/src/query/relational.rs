@@ -3,7 +3,7 @@ use crate::state::AppState;
 use axum::{Json, http::StatusCode};
 use core::unimplemented;
 use datafusion::{
-    arrow::datatypes::{Field, SchemaBuilder, SchemaRef},
+    arrow::datatypes::{DataType, Field, SchemaBuilder, SchemaRef},
     common::{DFSchema, ToDFSchema},
     datasource::{DefaultTableSource, MemTable, TableProvider},
     error::DataFusionError,
@@ -13,11 +13,11 @@ use datafusion::{
     functions_window::{expr_fn::row_number, ntile},
     logical_expr::{ExprSchemable, Literal as _, SubqueryAlias},
     prelude::{
-        ExprFunctionExt, SessionConfig, SessionContext, abs, btrim, ceil, character_length,
-        coalesce, concat, cos, current_date, current_time, date_part, date_trunc, exp, floor,
-        greatest, isnan, iszero, least, left, ln, log, log2, log10, lower, lpad, ltrim, now,
-        nullif, nvl, power, random, replace, reverse, right, round, rpad, rtrim, sqrt, strpos,
-        substr_index, tan, to_date, to_timestamp, trunc, upper,
+        ExprFunctionExt, SessionConfig, SessionContext, abs, array_element, btrim, ceil,
+        character_length, coalesce, concat, cos, current_date, current_time, date_part, date_trunc,
+        exp, floor, get_field, greatest, isnan, iszero, least, left, ln, log, log2, log10, lower,
+        lpad, ltrim, now, nullif, nvl, power, random, replace, reverse, right, round, rpad, rtrim,
+        sqrt, strpos, substr_index, tan, to_date, to_timestamp, trunc, upper,
     },
     scalar::ScalarValue,
     sql::TableReference,
@@ -84,7 +84,7 @@ pub async fn execute_relational_query(
 
     for batch in results {
         let schema = batch.schema();
-        let new_rows = from_record_batch::<Vec<BTreeMap<String, serde_json::Value>>>(&batch)
+        let new_rows = from_record_batch::<Vec<serde_json::Map<String, serde_json::Value>>>(&batch)
             .map_err(|err| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -95,15 +95,71 @@ pub async fn execute_relational_query(
                 )
             })?;
         for new_row in new_rows {
-            let mut row = vec![];
-            for field in schema.fields() {
-                row.push(new_row.get(field.name()).unwrap().clone());
-            }
+            let row = convert_fields_object_to_row_vec(schema.fields(), &new_row)?;
             rows.push(row);
         }
     }
 
     Ok(rows)
+}
+
+fn convert_fields_object_to_row_vec(
+    fields: &datafusion::arrow::datatypes::Fields,
+    row: &serde_json::Map<String, serde_json::Value>,
+) -> Result<Vec<serde_json::Value>> {
+    let mut row_vec = vec![];
+    for field in fields {
+        let value = row.get(field.name()).unwrap();
+        let vectorified_row = vectorify_row(value.clone(), field.data_type())?;
+        row_vec.push(vectorified_row);
+    }
+    Ok(row_vec)
+}
+
+fn vectorify_row(
+    value: serde_json::Value,
+    data_type: &datafusion::arrow::datatypes::DataType,
+) -> Result<serde_json::Value> {
+    match value {
+        serde_json::Value::Null
+        | serde_json::Value::Bool(_)
+        | serde_json::Value::Number(_)
+        | serde_json::Value::String(_) => Ok(value),
+        serde_json::Value::Array(arr) => match data_type {
+            datafusion::arrow::datatypes::DataType::List(field_ref) => {
+                let mut list_vals = Vec::new();
+                for val in arr {
+                    let validate_val = vectorify_row(val, field_ref.data_type())?;
+                    list_vals.push(validate_val);
+                }
+                Ok(serde_json::Value::Array(list_vals))
+            }
+            _ => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ndc_models::ErrorResponse {
+                    message:
+                        "schema mismatch: got array data type, but expected non-array arrow type"
+                            .to_string(),
+                    details: serde_json::Value::Null,
+                }),
+            )),
+        },
+        serde_json::Value::Object(obj) => match data_type {
+            datafusion::arrow::datatypes::DataType::Struct(fields) => {
+                let struct_row_vec = convert_fields_object_to_row_vec(fields, &obj)?;
+                Ok(serde_json::Value::Array(struct_row_vec))
+            }
+            _ => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ndc_models::ErrorResponse {
+                    message:
+                        "schema mismatch: got object data type, but expected non-struct arrow type"
+                            .to_string(),
+                    details: serde_json::Value::Null,
+                }),
+            )),
+        },
+    }
 }
 
 fn convert_relation_to_logical_plan(
@@ -423,6 +479,47 @@ fn get_table_provider(
                 ),
             ]),
         ),
+        "institutions" => (
+            crate::collections::institutions::rows(&BTreeMap::new(), state)
+                .map_err(|e| DataFusionError::Internal(e.1.0.message))?
+                .iter()
+                .map(|row| {
+                    BTreeMap::from_iter([
+                        (
+                            "id".into(),
+                            row.get(&ndc_models::FieldName::from("id"))
+                                .expect("'id' field missing")
+                                .clone(),
+                        ),
+                        (
+                            "name".into(),
+                            row.get(&ndc_models::FieldName::from("name"))
+                                .expect("'name' field missing")
+                                .clone(),
+                        ),
+                        (
+                            "location".into(),
+                            row.get(&ndc_models::FieldName::from("location"))
+                                .expect("'location' field missing")
+                                .clone(),
+                        ),
+                        (
+                            "staff".into(),
+                            row.get(&ndc_models::FieldName::from("staff"))
+                                .expect("'staff' field missing")
+                                .clone(),
+                        ),
+                        (
+                            "departments".into(),
+                            row.get(&ndc_models::FieldName::from("departments"))
+                                .expect("'departments' field missing")
+                                .clone(),
+                        ),
+                    ])
+                })
+                .collect(),
+            crate::types::institution::definition().fields,
+        ),
         _ => unimplemented!(),
     };
     let mut schema_builder = SchemaBuilder::new();
@@ -458,9 +555,24 @@ fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataT
         ndc_models::Type::Named { name } if name.as_str() == "Date" => {
             (datafusion::arrow::datatypes::DataType::Utf8, false)
         }
+        ndc_models::Type::Named { name } if name.as_str() == "location" => {
+            (crate::types::location::arrow_type(), true)
+        }
+        ndc_models::Type::Named { name } if name.as_str() == "staff_member" => {
+            (crate::types::staff_member::arrow_type(), true)
+        }
         ndc_models::Type::Nullable { underlying_type } => {
             let (dt, _) = to_df_datatype(underlying_type);
             (dt, true)
+        }
+        ndc_models::Type::Array { element_type } => {
+            let (dt, _) = to_df_datatype(element_type);
+            (
+                datafusion::arrow::datatypes::DataType::List(Arc::new(Field::new(
+                    "item", dt, true,
+                ))),
+                true,
+            )
         }
         _ => unimplemented!(),
     }
@@ -754,6 +866,23 @@ fn convert_expression_to_logical_expr(
         RelationalExpression::Floor { expr } => {
             Ok(floor(convert_expression_to_logical_expr(expr, schema)?))
         }
+        RelationalExpression::ArrayElement { column, index } => Ok(array_element(
+            convert_expression_to_logical_expr(column, schema)?,
+            datafusion::logical_expr::Expr::Cast(datafusion::logical_expr::Cast {
+                data_type: DataType::Int64,
+                expr: Box::new(datafusion::logical_expr::Expr::Literal(
+                    convert_literal_to_logical_expr(&RelationalLiteral::UInt64 {
+                        value: *index as u64,
+                    }),
+                )),
+            }),
+        )),
+        RelationalExpression::GetField { column, field } => Ok(get_field(
+            convert_expression_to_logical_expr(column, schema)?,
+            convert_literal_to_logical_expr(&RelationalLiteral::String {
+                value: field.to_string(),
+            }),
+        )),
         RelationalExpression::Greatest { exprs } => Ok(greatest(
             exprs
                 .iter()

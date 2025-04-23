@@ -1,0 +1,13 @@
+{
+  "version": "v3",
+  "definition": {
+    "mode": {
+      "noAuth": {
+        "role": "admin",
+        "sessionVariables": {
+          "x-hasura-user-id": "100"
+        }
+      }
+    }
+  }
+}

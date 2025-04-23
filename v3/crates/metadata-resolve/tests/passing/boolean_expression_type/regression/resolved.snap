@@ -6561,16 +6561,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             "Albums",
                                         ),
                                     ),
-                                    boolean_expression_type: Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "Album_Where_Exp",
+                                    boolean_expression_type: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
                                             ),
-                                        ),
-                                    },
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Album_Where_Exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                         },
@@ -7855,16 +7857,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             "Artist",
                                         ),
                                     ),
-                                    boolean_expression_type: Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "Artist_Where_Exp",
+                                    boolean_expression_type: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
                                             ),
-                                        ),
-                                    },
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Artist_Where_Exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
                                 },
                                 FieldName(
                                     Identifier(
@@ -7876,16 +7880,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             "Tracks",
                                         ),
                                     ),
-                                    boolean_expression_type: Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "Track_Where_Exp",
+                                    boolean_expression_type: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
                                             ),
-                                        ),
-                                    },
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Track_Where_Exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                         },
@@ -9170,16 +9176,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             "Album",
                                         ),
                                     ),
-                                    boolean_expression_type: Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "Album_Where_Exp",
+                                    boolean_expression_type: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
                                             ),
-                                        ),
-                                    },
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Album_Where_Exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                         },
@@ -13137,16 +13145,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                             "Album",
                                         ),
                                     ),
-                                    boolean_expression_type: Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "Album_Where_Exp",
+                                    boolean_expression_type: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
                                             ),
-                                        ),
-                                    },
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Album_Where_Exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                         },
@@ -18049,16 +18059,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         "Artist",
                                     ),
                                 ),
-                                boolean_expression_type: Qualified {
-                                    subgraph: SubgraphName(
-                                        "default",
-                                    ),
-                                    name: CustomTypeName(
-                                        Identifier(
-                                            "Artist_Where_Exp",
+                                boolean_expression_type: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
                                         ),
-                                    ),
-                                },
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Artist_Where_Exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
                             },
                             FieldName(
                                 Identifier(
@@ -18070,16 +18082,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         "Tracks",
                                     ),
                                 ),
-                                boolean_expression_type: Qualified {
-                                    subgraph: SubgraphName(
-                                        "default",
-                                    ),
-                                    name: CustomTypeName(
-                                        Identifier(
-                                            "Track_Where_Exp",
+                                boolean_expression_type: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
                                         ),
-                                    ),
-                                },
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Track_Where_Exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
                             },
                         },
                     },
@@ -18519,16 +18533,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         "Albums",
                                     ),
                                 ),
-                                boolean_expression_type: Qualified {
-                                    subgraph: SubgraphName(
-                                        "default",
-                                    ),
-                                    name: CustomTypeName(
-                                        Identifier(
-                                            "Album_Where_Exp",
+                                boolean_expression_type: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
                                         ),
-                                    ),
-                                },
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Album_Where_Exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
                             },
                         },
                     },
@@ -18968,16 +18984,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         "Albums",
                                     ),
                                 ),
-                                boolean_expression_type: Qualified {
-                                    subgraph: SubgraphName(
-                                        "default",
-                                    ),
-                                    name: CustomTypeName(
-                                        Identifier(
-                                            "Album_Where_Exp",
+                                boolean_expression_type: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
                                         ),
-                                    ),
-                                },
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Album_Where_Exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
                             },
                         },
                     },
@@ -19979,16 +19997,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         "Album",
                                     ),
                                 ),
-                                boolean_expression_type: Qualified {
-                                    subgraph: SubgraphName(
-                                        "default",
-                                    ),
-                                    name: CustomTypeName(
-                                        Identifier(
-                                            "Album_Where_Exp",
+                                boolean_expression_type: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
                                         ),
-                                    ),
-                                },
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Album_Where_Exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
                             },
                         },
                     },
@@ -20560,16 +20580,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         "Album",
                                     ),
                                 ),
-                                boolean_expression_type: Qualified {
-                                    subgraph: SubgraphName(
-                                        "default",
-                                    ),
-                                    name: CustomTypeName(
-                                        Identifier(
-                                            "Album_Where_Exp",
+                                boolean_expression_type: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
                                         ),
-                                    ),
-                                },
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Album_Where_Exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
                             },
                         },
                     },

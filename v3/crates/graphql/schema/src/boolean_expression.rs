@@ -332,61 +332,62 @@ fn build_new_comparable_relationships_schema(
                 }
             })?;
 
-            let target_boolean_expression_type_name =
-                &comparable_relationship.boolean_expression_type;
+            if let Some(target_boolean_expression_type_name) =
+                &comparable_relationship.boolean_expression_type
+            {
+                let target_boolean_expression_graphql_type = {
+                    let target_boolean_expression_graphql_type = match gds
+                        .metadata
+                        .boolean_expression_types
+                        .objects
+                        .get(target_boolean_expression_type_name)
+                    {
+                        Some(bool_exp) => {
+                            Ok(bool_exp.graphql.as_ref().map(|graphql| &graphql.type_name))
+                        }
+                        None => Err(Error::InternalBooleanExpressionNotFound {
+                            type_name: target_boolean_expression_type_name.clone(),
+                        }),
+                    }?;
 
-            let target_boolean_expression_graphql_type = {
-                let target_boolean_expression_graphql_type = match gds
-                    .metadata
-                    .boolean_expression_types
-                    .objects
-                    .get(target_boolean_expression_type_name)
-                {
-                    Some(bool_exp) => {
-                        Ok(bool_exp.graphql.as_ref().map(|graphql| &graphql.type_name))
+                    // if we find a type, make sure it's added to the schema
+                    if let Some(type_name) = target_boolean_expression_graphql_type {
+                        let _registered_type_name =
+                            builder.register_type(TypeId::InputObjectBooleanExpressionType {
+                                graphql_type_name: type_name.clone(),
+                                gds_type_name: target_boolean_expression_type_name.clone(),
+                            });
                     }
-                    None => Err(Error::InternalBooleanExpressionNotFound {
-                        type_name: target_boolean_expression_type_name.clone(),
-                    }),
-                }?;
+                    // return type name
+                    target_boolean_expression_graphql_type
+                };
 
-                // if we find a type, make sure it's added to the schema
-                if let Some(type_name) = target_boolean_expression_graphql_type {
-                    let _registered_type_name =
-                        builder.register_type(TypeId::InputObjectBooleanExpressionType {
-                            graphql_type_name: type_name.clone(),
-                            gds_type_name: target_boolean_expression_type_name.clone(),
-                        });
-                }
-                // return type name
-                target_boolean_expression_graphql_type
-            };
+                // lookup type underlying target model
+                let target_object_type_representation =
+                    get_object_type_representation(gds, &target_model.model.data_type)?;
 
-            // lookup type underlying target model
-            let target_object_type_representation =
-                get_object_type_representation(gds, &target_model.model.data_type)?;
-
-            // if our target model has a boolean expression type to use, and a source,
-            if let (Some(target_boolean_expression_graphql_type), Some(target_source)) = (
-                target_boolean_expression_graphql_type,
-                &target_model.model.source,
-            ) {
-                // create a new input field
-                let (name, schema) = build_model_relationship_schema(
-                    object_type_representation,
-                    target_object_type_representation,
+                // if our target model has a boolean expression type to use, and a source,
+                if let (Some(target_boolean_expression_graphql_type), Some(target_source)) = (
                     target_boolean_expression_graphql_type,
-                    target_model,
-                    target_source,
-                    relationship,
-                    relationship_type,
-                    mappings,
-                    relationship.deprecated.as_ref(),
-                    gds,
-                    builder,
-                )?;
+                    &target_model.model.source,
+                ) {
+                    // create a new input field
+                    let (name, schema) = build_model_relationship_schema(
+                        object_type_representation,
+                        target_object_type_representation,
+                        target_boolean_expression_graphql_type,
+                        target_model,
+                        target_source,
+                        relationship,
+                        relationship_type,
+                        mappings,
+                        relationship.deprecated.as_ref(),
+                        gds,
+                        builder,
+                    )?;
 
-                input_fields.insert(name, schema);
+                    input_fields.insert(name, schema);
+                }
             }
         }
     }

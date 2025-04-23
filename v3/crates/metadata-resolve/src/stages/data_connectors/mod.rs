@@ -11,7 +11,16 @@ pub use types::{
     ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig,
     DataConnectorAggregateCapabilities, DataConnectorCapabilities, DataConnectorContext,
     DataConnectorLink, DataConnectorNestedRelationshipCapabilities,
-    DataConnectorRelationalQueryCapabilities, DataConnectorRelationshipCapabilities,
+    DataConnectorRelationalAggregateCapabilities,
+    DataConnectorRelationalAggregateExpressionCapabilities,
+    DataConnectorRelationalAggregateFunctionCapabilities,
+    DataConnectorRelationalComparisonExpressionCapabilities,
+    DataConnectorRelationalConditionalExpressionCapabilities,
+    DataConnectorRelationalExpressionCapabilities, DataConnectorRelationalJoinCapabilities,
+    DataConnectorRelationalJoinTypeCapabilities, DataConnectorRelationalProjectionCapabilities,
+    DataConnectorRelationalQueryCapabilities, DataConnectorRelationalScalarExpressionCapabilities,
+    DataConnectorRelationalSortCapabilities, DataConnectorRelationalWindowCapabilities,
+    DataConnectorRelationalWindowExpressionCapabilities, DataConnectorRelationshipCapabilities,
     DataConnectorSchema, DataConnectors, DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
 };
 

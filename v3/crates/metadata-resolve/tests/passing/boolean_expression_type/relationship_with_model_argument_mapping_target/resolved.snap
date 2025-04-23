@@ -1675,16 +1675,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                                             "Artist",
                                         ),
                                     ),
-                                    boolean_expression_type: Qualified {
-                                        subgraph: SubgraphName(
-                                            "default",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "Artist_bool_exp",
+                                    boolean_expression_type: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
                                             ),
-                                        ),
-                                    },
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Artist_bool_exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                         },
@@ -2623,16 +2625,18 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                                         "Artist",
                                     ),
                                 ),
-                                boolean_expression_type: Qualified {
-                                    subgraph: SubgraphName(
-                                        "default",
-                                    ),
-                                    name: CustomTypeName(
-                                        Identifier(
-                                            "Artist_bool_exp",
+                                boolean_expression_type: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
                                         ),
-                                    ),
-                                },
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Artist_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
                             },
                         },
                     },
