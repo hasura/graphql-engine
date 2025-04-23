@@ -1,0 +1,794 @@
+{
+  "version": "v3",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "elastic",
+                    "dataConnectorScalarType": "text",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "elastic",
+                    "dataConnectorScalarType": "integer",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "int_bool_exp_with_range",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "range",
+                    "argumentType": "int_range"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "elastic",
+                    "dataConnectorScalarType": "integer",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_Comparison_Exp_With_Range"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "int_range",
+            "fields": [
+              {
+                "name": "start",
+                "type": "Float!"
+              },
+              {
+                "name": "end",
+                "type": "Float!"
+              }
+            ],
+            "graphql": {
+              "typeName": "IntRange"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "elastic",
+                "dataConnectorObjectType": "range",
+                "fieldMapping": {
+                  "start": {
+                    "column": {
+                      "name": "gte"
+                    }
+                  },
+                  "end": {
+                    "column": {
+                      "name": "lte"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "movie_bool_exp",
+            "operand": {
+              "object": {
+                "type": "movie",
+                "comparableFields": [
+                  {
+                    "fieldName": "id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "title",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "rating",
+                    "booleanExpressionType": "int_bool_exp_with_range"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "InstitutionBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "movie",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "rating",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Movie"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "elastic",
+                "dataConnectorObjectType": "movie",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "movie",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["id", "title", "rating"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "movies",
+            "arguments": [],
+            "objectType": "movie",
+            "filterExpressionType": "movie_bool_exp",
+            "source": {
+              "dataConnectorName": "elastic",
+              "collection": "movies",
+              "argumentMapping": {}
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "MovieMany"
+              }
+            },
+            "orderableFields": [
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "rating",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "movies",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "elastic",
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:8101"
+              }
+            },
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "collections": [
+                  {
+                    "arguments": {},
+                    "foreign_keys": {},
+                    "name": "movies",
+                    "type": "movie",
+                    "uniqueness_constraints": {
+                      "movie_by_id": {
+                        "unique_columns": ["_id"]
+                      }
+                    }
+                  }
+                ],
+                "functions": [],
+                "object_types": {
+                  "movie": {
+                    "fields": {
+                      "_id": {
+                        "type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      },
+                      "title": {
+                        "type": {
+                          "name": "text",
+                          "type": "named"
+                        }
+                      },
+                      "rating": {
+                        "type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "range": {
+                    "fields": {
+                      "boost": {
+                        "description": "(Optional, float) Floating point number used to decrease or increase the relevance scores of a query. Defaults to 1.0.",
+                        "type": {
+                          "name": "float",
+                          "type": "named"
+                        }
+                      },
+                      "gt": {
+                        "description": "(Optional) Greater than.",
+                        "type": {
+                          "name": "double",
+                          "type": "named"
+                        }
+                      },
+                      "gte": {
+                        "description": "(Optional) Greater than or equal.",
+                        "type": {
+                          "name": "double",
+                          "type": "named"
+                        }
+                      },
+                      "lt": {
+                        "description": "(Optional) Less than.",
+                        "type": {
+                          "name": "double",
+                          "type": "named"
+                        }
+                      },
+                      "lte": {
+                        "description": "(Optional) Less than or equal.",
+                        "type": {
+                          "name": "double",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  }
+                },
+                "procedures": [],
+                "scalar_types": {
+                  "_id": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "match": {
+                        "argument_type": {
+                          "name": "_id",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "match_phrase": {
+                        "argument_type": {
+                          "name": "_id",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "range": {
+                        "argument_type": {
+                          "name": "range",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "term": {
+                        "type": "equal"
+                      },
+                      "terms": {
+                        "argument_type": {
+                          "element_type": {
+                            "name": "_id",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "representation": {
+                      "type": "string"
+                    }
+                  },
+                  "double": {
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "name": "double",
+                          "type": "named"
+                        }
+                      },
+                      "cardinality": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "name": "double",
+                          "type": "named"
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "name": "double",
+                          "type": "named"
+                        }
+                      },
+                      "stats": {
+                        "result_type": {
+                          "name": "stats",
+                          "type": "named"
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "name": "double",
+                          "type": "named"
+                        }
+                      },
+                      "value_count": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "match": {
+                        "argument_type": {
+                          "name": "double",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "match_phrase": {
+                        "argument_type": {
+                          "name": "double",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "range": {
+                        "argument_type": {
+                          "name": "range",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "term": {
+                        "argument_type": {
+                          "name": "double",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "terms": {
+                        "argument_type": {
+                          "element_type": {
+                            "name": "double",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "representation": {
+                      "type": "number"
+                    }
+                  },
+                  "float": {
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "name": "float",
+                          "type": "named"
+                        }
+                      },
+                      "cardinality": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "name": "float",
+                          "type": "named"
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "name": "float",
+                          "type": "named"
+                        }
+                      },
+                      "stats": {
+                        "result_type": {
+                          "name": "stats",
+                          "type": "named"
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "name": "float",
+                          "type": "named"
+                        }
+                      },
+                      "value_count": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "match": {
+                        "argument_type": {
+                          "name": "float",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "match_phrase": {
+                        "argument_type": {
+                          "name": "float",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "range": {
+                        "argument_type": {
+                          "name": "range",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "term": {
+                        "argument_type": {
+                          "name": "float",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "terms": {
+                        "argument_type": {
+                          "element_type": {
+                            "name": "float",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "representation": {
+                      "type": "number"
+                    }
+                  },
+                  "integer": {
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      },
+                      "cardinality": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      },
+                      "stats": {
+                        "result_type": {
+                          "name": "stats",
+                          "type": "named"
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      },
+                      "value_count": {
+                        "result_type": {
+                          "name": "integer",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "match": {
+                        "argument_type": {
+                          "name": "integer",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "match_phrase": {
+                        "argument_type": {
+                          "name": "integer",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "range": {
+                        "argument_type": {
+                          "name": "range",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "term": {
+                        "argument_type": {
+                          "name": "integer",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "terms": {
+                        "argument_type": {
+                          "element_type": {
+                            "name": "integer",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "representation": {
+                      "type": "integer"
+                    }
+                  },
+                  "text": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "match": {
+                        "argument_type": {
+                          "name": "text",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "match_bool_prefix": {
+                        "argument_type": {
+                          "name": "text",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "match_phrase": {
+                        "argument_type": {
+                          "name": "text",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "match_phrase_prefix": {
+                        "argument_type": {
+                          "name": "text",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "prefix": {
+                        "argument_type": {
+                          "name": "text",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "range": {
+                        "argument_type": {
+                          "name": "range",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "regexp": {
+                        "argument_type": {
+                          "name": "text",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "term": {
+                        "argument_type": {
+                          "name": "text",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "terms": {
+                        "argument_type": {
+                          "element_type": {
+                            "name": "text",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        },
+                        "type": "custom"
+                      },
+                      "wildcard": {
+                        "argument_type": {
+                          "name": "text",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "representation": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "capabilities": {
+                "capabilities": {
+                  "query": {
+                    "explain": {},
+                    "aggregates": {},
+                    "variables": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    }
+                  },
+                  "mutation": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                },
+                "version": "0.1.3"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "validate_scalar_boolean_expression_operators": true
+  }
+}

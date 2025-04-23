@@ -58,6 +58,9 @@ input_file: crates/metadata-resolve/tests/passing/data_connector_link/invalid_nd
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         DataConnectorIssue(

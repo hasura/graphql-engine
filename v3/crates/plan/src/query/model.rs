@@ -1,25 +1,26 @@
 use super::{field_selection, model_target};
 
-use crate::column::to_resolved_column;
 use crate::types::PlanError;
-use crate::ResolvedColumn;
+use crate::{OutputObjectTypeView, column::to_resolved_column};
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
-use open_dds::aggregates::{
-    AggregateExpressionName, AggregationFunctionName, DataConnectorAggregationFunctionName,
+use open_dds::{
+    aggregates::{
+        AggregateExpressionName, AggregationFunctionName, DataConnectorAggregationFunctionName,
+    },
+    models::ModelName,
 };
-use open_dds::identifier::SubgraphName;
 use std::collections::BTreeMap;
 
 use hasura_authn_core::Session;
 use metadata_resolve::{FieldMapping, Metadata, NdcVersion, Qualified};
 use open_dds::query::{
     Aggregate, AggregationFunction, ExtractionFunction, ModelDimensions, ModelSelection,
-    ModelTarget, Name, Operand,
+    ModelTarget, Name, ObjectFieldOperand, Operand,
 };
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, Grouping, JoinLocations,
-    NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNodeNew,
+    NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode,
     UniqueNumber,
 };
 
@@ -74,7 +75,6 @@ pub fn from_model_group_by(
                     &session.role,
                     metadata,
                     &model_source.type_mappings,
-                    &model.model.data_type,
                     &model_object_type,
                     operand,
                 )?;
@@ -115,6 +115,13 @@ pub fn from_model_group_by(
                             extraction_functions.microsecond_function.ok_or_else(|| {
                                 PlanError::Internal(
                                     "microsecond extraction function not found".to_string(),
+                                )
+                            })
+                        }
+                        ExtractionFunction::Millisecond => {
+                            extraction_functions.millisecond_function.ok_or_else(|| {
+                                PlanError::Internal(
+                                    "millisecond extraction function not found".to_string(),
                                 )
                             })
                         }
@@ -197,32 +204,17 @@ pub fn from_model_group_by(
     let mut aggregates = IndexMap::new();
 
     for (field_alias, aggregate) in selection {
-        let resolved_column = match aggregate.operand.as_ref() {
-            None => Ok(None),
-            Some(Operand::Field(operand)) => {
-                let column = to_resolved_column(
-                    &session.role,
-                    metadata,
-                    &model_source.type_mappings,
-                    &model.model.data_type,
-                    &model_object_type,
-                    operand,
-                )?;
-                Ok(Some(column))
-            }
-            Some(_) => Err(PlanError::Internal("unsupported aggregate operand".into())),
-        }?;
-
         let ndc_aggregate = to_ndc_aggregate(
             metadata,
-            model_target,
+            session,
+            &model.model.name,
+            &model_object_type,
             model_source,
+            model.model.aggregate_expression.as_ref(),
             aggregate,
-            resolved_column,
             field_alias,
             ndc_version,
         )?;
-
         aggregates.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_aggregate);
     }
 
@@ -258,7 +250,7 @@ pub fn from_model_group_by(
         .map_err(|_| PlanError::Internal("offset out of range".into()))?;
 
     let query_execution_plan = QueryExecutionPlan {
-        query_node: QueryNodeNew {
+        query_node: QueryNode {
             fields: None,
             aggregates: None,
             limit: query.limit,
@@ -291,6 +283,7 @@ pub fn from_model_aggregate_selection(
     selection: &IndexMap<Name, Aggregate>,
     metadata: &Metadata,
     session: &Session,
+    relationship_aggregate_expression: Option<&Qualified<AggregateExpressionName>>,
     request_headers: &reqwest::header::HeaderMap,
     unique_number: &mut UniqueNumber,
 ) -> Result<QueryExecutionTree, PlanError> {
@@ -323,29 +316,20 @@ pub fn from_model_aggregate_selection(
 
     let mut fields = IndexMap::new();
 
-    for (field_alias, aggregate) in selection {
-        let resolved_column = match aggregate.operand.as_ref() {
-            None => Ok(None),
-            Some(Operand::Field(operand)) => {
-                let column = to_resolved_column(
-                    &session.role,
-                    metadata,
-                    &model_source.type_mappings,
-                    &model.model.data_type,
-                    &model_object_type,
-                    operand,
-                )?;
-                Ok(Some(column))
-            }
-            Some(_) => Err(PlanError::Internal("unsupported aggregate operand".into())),
-        }?;
+    // Use relationship aggregate expression if provided, otherwise use the model's
+    // aggregate expression.
+    let aggregate_expression_name =
+        relationship_aggregate_expression.or(model.model.aggregate_expression.as_ref());
 
+    for (field_alias, aggregate) in selection {
         let ndc_aggregate = to_ndc_aggregate(
             metadata,
-            model_target,
+            session,
+            &model.model.name,
+            &model_object_type,
             model_source,
+            aggregate_expression_name,
             aggregate,
-            resolved_column,
             field_alias,
             ndc_version,
         )?;
@@ -381,7 +365,7 @@ pub fn from_model_aggregate_selection(
     };
 
     let query_execution_plan = QueryExecutionPlan {
-        query_node: QueryNodeNew {
+        query_node: QueryNode {
             fields: None,
             aggregates: query_aggregate_fields,
             limit: query.limit,
@@ -404,15 +388,43 @@ pub fn from_model_aggregate_selection(
     })
 }
 
+/// Only field operands are supported for aggregation
+fn extract_field_operand_for_aggregation(
+    operand: &Operand,
+) -> Result<ObjectFieldOperand, PlanError> {
+    match operand {
+        Operand::Field(operand) => Ok(operand.clone()),
+        Operand::Relationship(_) | Operand::RelationshipAggregate(_) => {
+            Err(PlanError::Internal("unsupported aggregate operand".into()))
+        }
+    }
+}
+
 fn to_ndc_aggregate(
     metadata: &Metadata,
-    model_target: &ModelTarget,
+    session: &Session,
+    model_name: &Qualified<ModelName>,
+    model_object_type: &OutputObjectTypeView,
     model_source: &metadata_resolve::ModelSource,
+    aggregate_expression: Option<&Qualified<AggregateExpressionName>>,
     aggregate: &Aggregate,
-    resolved_column: Option<ResolvedColumn>,
     field_alias: &Name,
     ndc_version: NdcVersion,
 ) -> Result<AggregateFieldSelection, PlanError> {
+    let resolved_column = aggregate
+        .operand
+        .as_ref()
+        .map(|operand| {
+            let field_operand = extract_field_operand_for_aggregation(operand)?;
+            to_resolved_column(
+                &session.role,
+                metadata,
+                &model_source.type_mappings,
+                model_object_type,
+                &field_operand,
+            )
+        })
+        .transpose()?;
     let column_path = match resolved_column.clone() {
         None => vec![],
         Some(column) => [vec![column.column_name], column.field_path].concat(),
@@ -500,14 +512,18 @@ fn to_ndc_aggregate(
         }
         AggregationFunction::Custom {
             name: aggregation_function_name,
-            expression: aggregate_expression,
         } => {
+            let aggregate_expression_name = aggregate_expression.ok_or_else( || {
+                PlanError::Internal(format!(
+                    "Custom aggregation function '{aggregation_function_name}' requires an aggregate expression defined on the model {model_name}",
+                ))
+            })?;
             let ndc_aggregation_function_name = get_ndc_aggregation_function(
                 metadata,
-                &model_target.subgraph,
                 &model_source.data_connector,
                 aggregation_function_name,
-                aggregate_expression,
+                aggregate_expression_name,
+                aggregate.operand.as_ref(),
             )?;
             let Some(column_path) = NonEmpty::from_vec(column_path) else {
                 Err(PlanError::Internal(
@@ -523,35 +539,68 @@ fn to_ndc_aggregate(
     }
 }
 
+// Traverse the operand tree to find the NDC aggregation function name
+// from the aggregate expression mappings.
 fn get_ndc_aggregation_function(
     metadata: &Metadata,
-    subgraph: &SubgraphName,
     data_connector: &metadata_resolve::DataConnectorLink,
     aggregate_function: &AggregationFunctionName,
-    aggregate_expression: &AggregateExpressionName,
+    aggregate_expression_name: &Qualified<AggregateExpressionName>,
+    operand: Option<&Operand>,
 ) -> Result<DataConnectorAggregationFunctionName, PlanError> {
-    let aggregate_expression_name = Qualified::new(subgraph.clone(), aggregate_expression.clone());
-    let ndc_aggregation_function_info = metadata
+    // Fetch the aggregate expression
+    let aggregate_expression = metadata
         .aggregate_expressions
-        .get(&aggregate_expression_name)
+        .get(aggregate_expression_name)
         .ok_or_else(|| {
             PlanError::Internal(format!(
-                "aggregate expression {aggregate_expression} not found in metadata"
-            ))
-        })?
-        .operand.aggregation_functions.iter().find(|info| info.name == *aggregate_function).ok_or_else(|| {
-            PlanError::Internal(format!(
-                "aggregation function {aggregate_function} not found in aggregate expression {aggregate_expression}"
-            ))
-        })?
-        .data_connector_functions.iter().find(|info| {
-            info.data_connector_name == data_connector.name
-        } ).ok_or_else(|| {
-            PlanError::Internal(format!(
-                "aggregation function {aggregate_function} is missing a data connector mapping for {}", data_connector.name
+                "aggregate expression {aggregate_expression_name} not found in metadata"
             ))
         })?;
-    Ok(ndc_aggregation_function_info.function_name.clone())
+    match operand {
+        None => {
+            // No operand found. This is a leaf scalar expression. Find the NDC aggregate function name from the aggregate expression definition.
+            let ndc_aggregation_function_info = aggregate_expression.operand.aggregation_functions.iter().find(|info| info.name == *aggregate_function).ok_or_else(|| {
+                    PlanError::Internal(format!(
+                        "aggregation function {aggregate_function} not found in aggregate expression {aggregate_expression_name}"
+                    ))
+                })?
+                .data_connector_functions.iter().find(|info| {
+                    info.data_connector_name == data_connector.name
+                } ).ok_or_else(|| {
+                    PlanError::Internal(format!(
+                        "aggregation function {aggregate_function} is missing a data connector mapping for {}", data_connector.name
+                    ))
+                })?;
+            Ok(ndc_aggregation_function_info.function_name.clone())
+        }
+        Some(operand) => {
+            // Extract the field operand
+            let ObjectFieldOperand { target, nested } =
+                extract_field_operand_for_aggregation(operand)?;
+            // Get the field's referenced aggregate expression
+            let field_aggregate_expression_name = &aggregate_expression
+                .operand
+                .aggregatable_fields
+                .iter()
+                .find(|field| field.field_name == target.field_name)
+                .ok_or_else(|| {
+                    PlanError::Internal(format!(
+                        "field {} not found in aggregate expression {aggregate_expression_name}",
+                        &target.field_name
+                    ))
+                })?
+                .aggregate_expression;
+            // Recursively resolve the NDC aggregation function name
+            get_ndc_aggregation_function(
+                metadata,
+                data_connector,
+                aggregate_function,
+                field_aggregate_expression_name,
+                nested.as_ref().map(std::convert::AsRef::as_ref), // &Box<T> -> &T in this closure
+            )
+        }
+    }
 }
 
 pub fn from_model_selection(
@@ -592,7 +641,6 @@ pub fn from_model_selection(
         metadata,
         session,
         request_headers,
-        &model.model.data_type,
         &model_object_type,
         &model_source.type_mappings,
         &model_source.data_connector,
@@ -633,7 +681,7 @@ pub fn from_model_selection(
     };
 
     let query_execution_plan = QueryExecutionPlan {
-        query_node: QueryNodeNew {
+        query_node: QueryNode {
             fields: query_fields,
             aggregates: None,
             limit: query.limit,

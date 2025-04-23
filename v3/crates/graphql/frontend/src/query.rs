@@ -3,20 +3,18 @@ use indexmap::IndexMap;
 
 use super::types::GraphQLResponse;
 use crate::execute::{
-    execute_mutation_plan, execute_query_plan, ExecuteQueryResult, RootFieldResult,
+    ExecuteQueryResult, RootFieldResult, execute_mutation_plan, execute_query_plan,
 };
 use engine_types::{ExposeInternalErrors, HttpContext, ProjectId};
-use graphql_ir::GraphqlRequestPipeline;
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use std::sync::Arc;
-use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
+use tracing_util::{AttributeVisibility, SpanVisibility, set_attribute_on_active_span};
 
 pub async fn execute_query(
-    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
@@ -27,7 +25,6 @@ pub async fn execute_query(
     project_id: Option<&ProjectId>,
 ) -> (Option<ast::OperationType>, GraphQLResponse) {
     execute_query_internal(
-        request_pipeline,
         expose_internal_errors,
         http_context,
         schema,
@@ -51,7 +48,6 @@ pub async fn execute_query(
 
 /// Executes a GraphQL query using new pipeline
 pub async fn execute_query_internal(
-    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
@@ -75,12 +71,16 @@ pub async fn execute_query_internal(
                     let query = steps::parse_query(&raw_request.query)?;
 
                     // normalize the parsed GQL query
-                    let normalized_request =
-                        steps::normalize_request(schema, session, query, &raw_request)?;
+                    let normalized_request = steps::normalize_request(
+                        schema,
+                        session,
+                        query,
+                        &raw_request,
+                        &metadata.runtime_flags,
+                    )?;
 
                     // generate IR
                     let ir = steps::build_ir(
-                        request_pipeline,
                         schema,
                         metadata,
                         session,
@@ -148,6 +148,7 @@ pub async fn execute_query_internal(
                             })
                         })
                         .await;
+
                     Ok((normalized_request.ty, response))
                 })
             },

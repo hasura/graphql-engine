@@ -1,10 +1,12 @@
 use std::fmt::Display;
 use std::{collections::BTreeMap, fmt::Write};
 
+use jsonpath::JSONPath;
 use open_dds::identifier::SubgraphName;
+use open_dds::spanned::Spanned;
 use open_dds::types::{BaseType, CustomTypeName, InbuiltType, TypeName, TypeReference};
 use schemars::JsonSchema;
-use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned, ser::SerializeMap};
 use serde_json;
 
 #[derive(
@@ -46,6 +48,18 @@ impl<T: Display> Qualified<T> {
     ) -> Result<String, std::fmt::Error> {
         write!(f, "{}", self.name)?;
         Ok(format!(" (in subgraph {})", self.subgraph))
+    }
+}
+
+impl<T: Display> Qualified<Spanned<T>> {
+    pub fn transpose_spanned(self) -> Spanned<Qualified<T>> {
+        Spanned {
+            path: self.name.path,
+            value: Qualified {
+                subgraph: self.subgraph,
+                name: self.name.value,
+            },
+        }
     }
 }
 
@@ -99,6 +113,13 @@ impl QualifiedTypeReference {
             QualifiedBaseType::Named(_) => false,
         }
     }
+
+    pub fn get_subgraph(&self) -> Option<&SubgraphName> {
+        match self.get_underlying_type_name() {
+            QualifiedTypeName::Inbuilt(_inbuilt_type) => None,
+            QualifiedTypeName::Custom(qualified) => Some(&qualified.subgraph),
+        }
+    }
 }
 
 // should this argument be converted into an NDC expression
@@ -113,6 +134,7 @@ pub struct ArgumentInfo {
     pub argument_type: QualifiedTypeReference,
     pub description: Option<String>,
     pub argument_kind: ArgumentKind,
+    pub path: JSONPath,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, JsonSchema)]

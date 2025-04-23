@@ -322,7 +322,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "invoiceId",
@@ -331,7 +331,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "invoiceId",
@@ -527,6 +527,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -651,6 +652,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -775,6 +777,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -899,6 +902,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1023,6 +1027,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1148,6 +1153,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1240,6 +1246,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1365,6 +1372,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1481,6 +1489,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1795,6 +1804,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -1920,6 +1930,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2045,6 +2056,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2170,6 +2182,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2286,6 +2299,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -2477,6 +2491,28 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -2802,6 +2838,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -2937,6 +2974,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3061,6 +3099,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3185,6 +3224,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3309,6 +3349,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3433,6 +3474,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3558,6 +3600,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3650,6 +3693,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3775,6 +3819,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -3891,6 +3936,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -4226,6 +4272,28 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                1,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -4447,6 +4515,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -4583,6 +4652,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -4708,6 +4778,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -4833,6 +4904,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -4958,6 +5030,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -5074,6 +5147,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -6148,6 +6222,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

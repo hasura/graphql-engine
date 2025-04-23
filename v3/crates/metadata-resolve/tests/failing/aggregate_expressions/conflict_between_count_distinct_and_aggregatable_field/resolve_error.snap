@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/conflict_between_count_distinct_and_aggregatable_field/metadata.json
 ---
-the name used by query.aggregate.countDistinctFieldName from the GraphqlConfig conflicts with the aggregatable field name _count_distinct in the aggregate expression Invoice_aggregate_exp (in subgraph default)
+Error: the name used by query.aggregate.countDistinctFieldName from the GraphqlConfig conflicts with the aggregatable field name _count_distinct in the aggregate expression Invoice_aggregate_exp (in subgraph default)

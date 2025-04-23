@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/disallow_count_distinct_on_models/metadata.json
 ---
-the aggregate expression Invoice_aggregate_exp (in subgraph default) is used with the model Invoice (in subgraph default) which has the countDistinct aggregation enabled, but countDistinct is not valid when aggregating a model as every object is already logically distinct
+Error: the aggregate expression Invoice_aggregate_exp (in subgraph default) is used with the model Invoice (in subgraph default) which has the countDistinct aggregation enabled, but countDistinct is not valid when aggregating a model as every object is already logically distinct

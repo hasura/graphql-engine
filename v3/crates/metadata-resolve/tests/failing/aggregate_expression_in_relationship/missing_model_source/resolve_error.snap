@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expression_in_relationship/missing_model_source/metadata.json
 ---
-The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: a source must be defined for model InvoiceLine (in subgraph default) in order to use aggregate expressions
+Error: The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: a source must be defined for model InvoiceLine (in subgraph default) in order to use aggregate expressions

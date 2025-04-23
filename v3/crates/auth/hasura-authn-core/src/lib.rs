@@ -1,12 +1,11 @@
-use axum::middleware::Next;
-use axum::response::IntoResponse;
 use axum::Extension;
+use axum::middleware::Next;
 use axum::{
+    extract::State,
     http::StatusCode,
     http::{HeaderMap, Request},
 };
 use axum_core::body::Body;
-use lang_graphql::http::Response;
 use schemars::JsonSchema;
 use std::collections::BTreeMap;
 use std::{
@@ -24,7 +23,7 @@ use std::{
 // Session variable and role are defined as part of OpenDD
 pub use open_dds::{
     permissions::Role,
-    session_variables::{SessionVariableName, SessionVariableReference, SESSION_VARIABLE_ROLE},
+    session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName, SessionVariableReference},
 };
 
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, derive_more::Display)]
@@ -208,8 +207,8 @@ pub enum SessionError {
     InvalidHeaderValue { header_name: String, error: String },
 }
 
-impl IntoResponse for SessionError {
-    fn into_response(self) -> axum::response::Response {
+impl SessionError {
+    pub fn into_middleware_error(self) -> engine_types::MiddlewareError {
         let code = match self {
             SessionError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             SessionError::InternalRoleNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -219,18 +218,24 @@ impl IntoResponse for SessionError {
             SessionError::Unauthorized(_) | SessionError::InvalidHeaderValue { .. } => false,
             SessionError::InternalRoleNotFound(_) => true,
         };
-        Response::error_message_with_status(code, self.to_string(), is_internal).into_response()
+        engine_types::MiddlewareError {
+            status: code,
+            message: self.to_string(),
+            is_internal,
+        }
     }
 }
 
 // Using the x-hasura-* headers of the request and the identity set by the authn system,
 // this layer resolves a 'session' which is then used by the execution engine
 pub async fn resolve_session(
+    State(state): State<engine_types::WithMiddlewareErrorConverter<()>>,
     Extension(identity): Extension<Identity>,
     mut request: Request<Body>,
     next: Next,
 ) -> axum::response::Result<axum::response::Response> {
-    let session = authorize_identity(&identity, request.headers())?;
+    let session = authorize_identity(&identity, request.headers())
+        .map_err(|session_err| state.handle_error(session_err.into_middleware_error()))?;
     request.extensions_mut().insert(session);
     let response = next.run(request).await;
     Ok(response)

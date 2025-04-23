@@ -1,18 +1,24 @@
 use super::error::{
-    FieldNameSource, ScalarBooleanExpressionTypeError, ScalarBooleanExpressionTypeIssue,
+    FieldNameSource, ScalarBooleanExpressionOperatorIssue, ScalarBooleanExpressionTypeError,
+    ScalarBooleanExpressionTypeIssue, StringOperatorReason,
 };
 use super::types::{
     IsNullOperator, IsNullOperatorGraphqlConfig, LogicalOperators, LogicalOperatorsGraphqlConfig,
     ResolvedScalarBooleanExpressionType,
 };
+use crate::helpers::type_validation;
 use crate::helpers::types::{mk_name, unwrap_qualified_type_name};
-use crate::stages::{data_connectors, graphql_config, object_types, scalar_types};
+use crate::stages::{
+    data_connector_scalar_types, data_connectors, graphql_config, object_types, scalar_types,
+};
 use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
-use crate::{Qualified, QualifiedTypeName, QualifiedTypeReference};
+use crate::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
+use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier::SubgraphName;
 use open_dds::{
     boolean_expression::{BooleanExpressionScalarOperand, BooleanExpressionTypeV1},
+    data_connector::DataConnectorOperatorName,
     types::CustomTypeName,
 };
 use std::collections::BTreeMap;
@@ -24,6 +30,10 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     boolean_expression: &BooleanExpressionTypeV1,
     subgraph: &SubgraphName,
     data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars<'_>,
+    >,
     object_types: &object_types::ObjectTypesWithTypeMappings,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -31,54 +41,9 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<ScalarBooleanExpressionTypeIssue>,
 ) -> Result<ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionTypeError> {
-    let mut data_connector_operator_mappings = BTreeMap::new();
-
-    // this scalar boolean expression type can be mapped to one or more data connectors
-    for data_connector_operator_mapping in
-        &scalar_boolean_expression_operand.data_connector_operator_mapping
-    {
-        let scalar_type_name = &data_connector_operator_mapping.data_connector_scalar_type;
-
-        // scope the data connector to the current subgraph
-        let qualified_data_connector_name = Qualified::new(
-            subgraph.clone(),
-            data_connector_operator_mapping.data_connector_name.clone(),
-        );
-
-        // lookup the data connector we are referring to
-        let data_connector_context = data_connectors
-            .0
-            .get(&qualified_data_connector_name)
-            .ok_or_else(|| {
-                ScalarBooleanExpressionTypeError::ScalarTypeFromUnknownDataConnector {
-                    scalar_type: scalar_type_name.clone(),
-                    data_connector: qualified_data_connector_name.clone(),
-                }
-            })?;
-
-        // check that this scalar type actually exists for this data connector
-        let _data_connector_scalar_type = data_connector_context
-            .schema
-            .scalar_types
-            .get(
-                data_connector_operator_mapping
-                    .data_connector_scalar_type
-                    .as_str(),
-            )
-            .ok_or_else(
-                || ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
-                    scalar_type: scalar_type_name.clone(),
-                    data_connector: qualified_data_connector_name.clone(),
-                },
-            )?;
-
-        data_connector_operator_mappings.insert(
-            qualified_data_connector_name,
-            data_connector_operator_mapping.clone(),
-        );
-    }
-
-    let mut resolved_comparison_operators = BTreeMap::new();
+    let qualified_scalar_type =
+        mk_qualified_type_name(&scalar_boolean_expression_operand.r#type, subgraph);
+    let mut comparison_operators = BTreeMap::new();
 
     for comparison_operator in &scalar_boolean_expression_operand.comparison_operators {
         let qualified_argument_type =
@@ -101,8 +66,8 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
                 }
             }
         }?;
-        if let Some(_duplicate_operator) = resolved_comparison_operators
-            .insert(comparison_operator.name.clone(), qualified_argument_type)
+        if let Some(_duplicate_operator) =
+            comparison_operators.insert(comparison_operator.name.clone(), qualified_argument_type)
         {
             issues.push(
                 ScalarBooleanExpressionTypeIssue::DuplicateComparableOperatorFound {
@@ -111,6 +76,89 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
                 },
             );
         };
+    }
+
+    let mut data_connector_operator_mappings = BTreeMap::new();
+
+    // this scalar boolean expression type can be mapped to one or more data connectors
+    for data_connector_operator_mapping in
+        &scalar_boolean_expression_operand.data_connector_operator_mapping
+    {
+        // make a copy now so that we can add in the inferred operator mappings (ie, any that
+        // are not explicitly defined in mappings we assume are mapped to the same name)
+        let mut data_connector_operator_mapping = data_connector_operator_mapping.clone();
+
+        // add all implicitly defined mappings
+        for comparison_operator in &scalar_boolean_expression_operand.comparison_operators {
+            if !data_connector_operator_mapping
+                .operator_mapping
+                .contains_key(&comparison_operator.name)
+            {
+                data_connector_operator_mapping.operator_mapping.insert(
+                    comparison_operator.name.clone(),
+                    DataConnectorOperatorName::new(comparison_operator.name.as_str().into()),
+                );
+            }
+        }
+
+        let scalar_type_name = &data_connector_operator_mapping.data_connector_scalar_type;
+
+        // scope the data connector to the current subgraph
+        let qualified_data_connector_name = Qualified::new(
+            subgraph.clone(),
+            data_connector_operator_mapping.data_connector_name.clone(),
+        );
+
+        // lookup the data connector we are referring to
+        let data_connector_context = data_connectors
+            .0
+            .get(&qualified_data_connector_name)
+            .ok_or_else(|| {
+                ScalarBooleanExpressionTypeError::ScalarTypeFromUnknownDataConnector {
+                    scalar_type: scalar_type_name.clone(),
+                    data_connector: qualified_data_connector_name.clone(),
+                }
+            })?;
+
+        let connector_scalars = data_connector_scalars
+            .get(&qualified_data_connector_name)
+            .ok_or_else(|| {
+                ScalarBooleanExpressionTypeError::DataConnectorScalarRepresentationsNotFound {
+                    data_connector: qualified_data_connector_name.clone(),
+                }
+            })?;
+
+        // check that this scalar type actually exists for this data connector
+        let data_connector_scalar_type = data_connector_context
+            .schema
+            .scalar_types
+            .get(
+                data_connector_operator_mapping
+                    .data_connector_scalar_type
+                    .as_str(),
+            )
+            .ok_or_else(
+                || ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
+                    scalar_type: scalar_type_name.clone(),
+                    data_connector: qualified_data_connector_name.clone(),
+                },
+            )?;
+
+        // validate the comparison operators against the data connector operator mapping
+        issues.extend(validate_comparison_operators_mapping(
+            boolean_expression_type_name,
+            &qualified_scalar_type,
+            &qualified_data_connector_name,
+            connector_scalars,
+            data_connector_scalar_type,
+            &data_connector_operator_mapping,
+            &comparison_operators,
+        ));
+
+        data_connector_operator_mappings.insert(
+            qualified_data_connector_name,
+            data_connector_operator_mapping,
+        );
     }
 
     let graphql_name = boolean_expression
@@ -151,7 +199,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     );
 
     check_graphql_field_name_conflicts(
-        &resolved_comparison_operators,
+        &comparison_operators,
         &logical_operators,
         &is_null_operator,
         boolean_expression_type_name,
@@ -159,7 +207,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     );
 
     Ok(ResolvedScalarBooleanExpressionType {
-        comparison_operators: resolved_comparison_operators,
+        comparison_operators,
         operand_type: mk_qualified_type_name(&scalar_boolean_expression_operand.r#type, subgraph),
         data_connector_operator_mappings,
         graphql_name,
@@ -296,6 +344,216 @@ fn check_graphql_field_name_conflicts(
                 name_source_1: conflicting_name_source,
                 name_source_2: name_source,
             });
+        }
+    }
+}
+
+fn validate_comparison_operators_mapping(
+    boolean_expression_type_name: &Qualified<CustomTypeName>,
+    qualified_scalar_type: &QualifiedTypeName,
+    data_connector_name: &Qualified<DataConnectorName>,
+    data_connector_scalars: &data_connector_scalar_types::DataConnectorScalars,
+    data_connector_scalar_type: &ndc_models::ScalarType,
+    data_connector_operator_mapping: &open_dds::boolean_expression::DataConnectorOperatorMapping,
+    comparison_operators: &BTreeMap<open_dds::types::OperatorName, QualifiedTypeReference>,
+) -> Vec<ScalarBooleanExpressionTypeIssue> {
+    // Initialise the issues
+    let mut issues = Vec::new();
+    // Collect the issues as we traverse the comparison operators
+    for (operator_name, argument_type) in comparison_operators {
+        let mapped_ndc_operator_name_smol_str = data_connector_operator_mapping
+            .operator_mapping
+            .get(operator_name)
+            .map_or_else(
+                || operator_name.inner().clone(), // If no mapping is provided, use the OpenDD operator name as the mapped name
+                |name| name.inner().clone(),
+            );
+        let mapped_ndc_operator_name =
+            ndc_models::ComparisonOperatorName::new(mapped_ndc_operator_name_smol_str);
+        let Some(comparison_operator_definition) = data_connector_scalar_type
+            .comparison_operators
+            .get(&mapped_ndc_operator_name)
+        else {
+            // push issue
+            issues.push(ScalarBooleanExpressionTypeIssue::OperatorIssue(
+                ScalarBooleanExpressionOperatorIssue::MappedOperatorNotFound {
+                    type_name: boolean_expression_type_name.clone(),
+                    operator_name: operator_name.clone(),
+                    mapped_operator_name: mapped_ndc_operator_name,
+                    data_connector_name: data_connector_name.clone(),
+                },
+            ));
+            // Can't proceed further, so skip to the next operator
+            continue;
+        };
+        match comparison_operator_definition {
+            ndc_models::ComparisonOperatorDefinition::Custom {
+                argument_type: ndc_argument_type,
+            } => {
+                if let Some(issue) = type_validation::validate_type_compatibility(
+                    data_connector_scalars,
+                    argument_type,
+                    ndc_argument_type,
+                ) {
+                    // push issue
+                    issues.push(ScalarBooleanExpressionTypeIssue::OperatorIssue(
+                        ScalarBooleanExpressionOperatorIssue::ArgumentTypeMismatch {
+                            type_name: boolean_expression_type_name.clone(),
+                            operator_name: operator_name.clone(),
+                            issue,
+                        },
+                    ));
+                }
+            }
+            ndc_models::ComparisonOperatorDefinition::In => {
+                // Check if argument type is an array wrapper on the scalar type
+                let QualifiedTypeReference {
+                    underlying_type: QualifiedBaseType::List(inner_type),
+                    nullable: _,
+                } = argument_type
+                else {
+                    // push issue
+                    issues.push(ScalarBooleanExpressionTypeIssue::OperatorIssue(
+                        ScalarBooleanExpressionOperatorIssue::ArgumentTypeShouldBeList {
+                            type_name: boolean_expression_type_name.clone(),
+                            operator_name: operator_name.clone(),
+                            argument_type: argument_type.clone(),
+                        },
+                    ));
+                    // Can't proceed further, so skip to the next operator
+                    continue;
+                };
+                // Check that the inner type is the same as the scalar type
+                check_type_matching_scalar(
+                    boolean_expression_type_name,
+                    operator_name,
+                    inner_type,
+                    qualified_scalar_type,
+                    &mut issues,
+                );
+            }
+            ndc_models::ComparisonOperatorDefinition::Equal
+            | ndc_models::ComparisonOperatorDefinition::LessThan
+            | ndc_models::ComparisonOperatorDefinition::LessThanOrEqual
+            | ndc_models::ComparisonOperatorDefinition::GreaterThan
+            | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual => {
+                // Check that the argument type is the same as the scalar type
+                check_type_matching_scalar(
+                    boolean_expression_type_name,
+                    operator_name,
+                    argument_type,
+                    qualified_scalar_type,
+                    &mut issues,
+                );
+            }
+            ndc_models::ComparisonOperatorDefinition::Contains
+            | ndc_models::ComparisonOperatorDefinition::ContainsInsensitive
+            | ndc_models::ComparisonOperatorDefinition::StartsWith
+            | ndc_models::ComparisonOperatorDefinition::StartsWithInsensitive
+            | ndc_models::ComparisonOperatorDefinition::EndsWith
+            | ndc_models::ComparisonOperatorDefinition::EndsWithInsensitive => {
+                // As per the ndc-spec, only ndc scalars with a string representation can use these operators
+                // Check if scalar type has a string representation
+                if !check_if_scalar_is_string(qualified_scalar_type, data_connector_scalars) {
+                    let reason = StringOperatorReason::ScalarTypeNotString {
+                        scalar_type: qualified_scalar_type.clone(),
+                    };
+                    issues.push(ScalarBooleanExpressionTypeIssue::OperatorIssue(
+                        ScalarBooleanExpressionOperatorIssue::OnlyApplicableOnStringScalar {
+                            type_name: boolean_expression_type_name.clone(),
+                            operator_name: operator_name.clone(),
+                            reason,
+                        },
+                    ));
+                }
+                // NOTE: Here, argument type need not be the same as the scalar type. It can be any scalar with a string representation.
+                // Check if argument type is a string
+                match &argument_type.underlying_type {
+                    QualifiedBaseType::Named(qualified_argument_type) => {
+                        if !check_if_scalar_is_string(
+                            qualified_argument_type,
+                            data_connector_scalars,
+                        ) {
+                            let reason = StringOperatorReason::ArgumentTypeNotString {
+                                argument_type: qualified_argument_type.clone(),
+                            };
+                            // push issue with reason
+                            issues.push(
+                                ScalarBooleanExpressionTypeIssue::OperatorIssue(
+                                    ScalarBooleanExpressionOperatorIssue::OnlyApplicableOnStringScalar {
+                                        type_name: boolean_expression_type_name.clone(),
+                                        operator_name: operator_name.clone(),
+                                        reason,
+                                    },
+                                ),
+                            );
+                        }
+                    }
+                    QualifiedBaseType::List(_) => {
+                        let reason = StringOperatorReason::ArgumentTypeShouldNotBeList {
+                            argument_type: argument_type.clone(),
+                        };
+                        // push issue with reason
+                        issues.push(ScalarBooleanExpressionTypeIssue::OperatorIssue(
+                            ScalarBooleanExpressionOperatorIssue::OnlyApplicableOnStringScalar {
+                                type_name: boolean_expression_type_name.clone(),
+                                operator_name: operator_name.clone(),
+                                reason,
+                            },
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    // Return the issues
+    issues
+}
+
+fn check_type_matching_scalar(
+    boolean_expression_type_name: &Qualified<CustomTypeName>,
+    operator_name: &open_dds::types::OperatorName,
+    argument_type: &QualifiedTypeReference,
+    qualified_scalar_type: &QualifiedTypeName,
+    issues: &mut Vec<ScalarBooleanExpressionTypeIssue>,
+) {
+    match &argument_type.underlying_type {
+        QualifiedBaseType::Named(inner_type_name) if inner_type_name == qualified_scalar_type => {
+            // Expected condition
+        }
+        _ => {
+            issues.push(ScalarBooleanExpressionTypeIssue::OperatorIssue(
+                ScalarBooleanExpressionOperatorIssue::ArgumentTypeShouldMatchScalar {
+                    type_name: boolean_expression_type_name.clone(),
+                    operator_name: operator_name.clone(),
+                    argument_type: argument_type.clone(),
+                    scalar_type: qualified_scalar_type.clone(),
+                },
+            ));
+        }
+    }
+}
+
+fn check_if_scalar_is_string(
+    scalar_type: &QualifiedTypeName,
+    data_connector_scalars: &data_connector_scalar_types::DataConnectorScalars,
+) -> bool {
+    match scalar_type {
+        QualifiedTypeName::Inbuilt(inbuilt_type) => {
+            // Check if the inbuilt type is a string
+            inbuilt_type == &open_dds::types::InbuiltType::String
+        }
+        QualifiedTypeName::Custom(custom_type_name) => {
+            if let Some(scalar_type_representation) = data_connector_scalars
+                .by_custom_type_name
+                .get(custom_type_name)
+            {
+                // Check if the scalar type representation is a string
+                scalar_type_representation == &ndc_models::TypeRepresentation::String
+            } else {
+                // If not a scalar type, then it can't be a string
+                false
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/scalars_not_defined_for_data_connector/metadata.json
 ---
-field author_id is missing a mapping for data connector postgres_db (in subgraph __unknown_namespace) in boolean expression author_bool_exp (in subgraph __unknown_namespace)
+Error: field author_id is missing a mapping for data connector postgres_db (in subgraph __unknown_namespace) in boolean expression author_bool_exp (in subgraph __unknown_namespace)

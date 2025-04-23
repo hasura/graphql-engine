@@ -1,0 +1,19 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "dogs",
+            "objectType": "dogs_object",
+            "orderableFields": []
+          }
+        }
+      ]
+    }
+  ]
+}

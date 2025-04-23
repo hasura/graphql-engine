@@ -1,12 +1,14 @@
 use crate::helpers::typecheck::{self, TypecheckIssue};
-use crate::types::error::{Error, ShouldBeAnError};
+use crate::types::error::{ContextualError, Error, ShouldBeAnError};
 use open_dds::types::{CustomTypeName, FieldName};
 
 use crate::types::subgraph::Qualified;
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypeOutputPermissionError {
-    #[error("unsupported type in output type permissions definition: {type_name:}; only object types are supported")]
+    #[error(
+        "unsupported type in output type permissions definition: {type_name:}; only object types are supported"
+    )]
     UnsupportedTypeInOutputPermissions { type_name: CustomTypeName },
     #[error("multiple output type permissions have been defined for type: {type_name:}")]
     DuplicateOutputTypePermissions { type_name: CustomTypeName },
@@ -21,6 +23,12 @@ pub enum TypeOutputPermissionError {
     },
 }
 
+impl ContextualError for TypeOutputPermissionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
+}
+
 impl From<TypeOutputPermissionError> for TypePermissionError {
     fn from(val: TypeOutputPermissionError) -> Self {
         TypePermissionError::TypeOutputPermissionError(val)
@@ -29,9 +37,11 @@ impl From<TypeOutputPermissionError> for TypePermissionError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypeInputPermissionError {
-    #[error("unsupported type in input type permissions definition: {type_name:}; only object types are supported")]
+    #[error(
+        "unsupported type in input type permissions definition: {type_name:}; only object types are supported"
+    )]
     UnsupportedTypeInInputPermissions { type_name: CustomTypeName },
-    #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
+    #[error("unknown field '{field_name:}' used in input permissions of type '{type_name:}'")]
     UnknownFieldInInputPermissionsDefinition {
         field_name: FieldName,
         type_name: CustomTypeName,
@@ -48,6 +58,12 @@ pub enum TypeInputPermissionError {
     },
 }
 
+impl ContextualError for TypeInputPermissionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
+}
+
 impl From<TypeInputPermissionError> for TypePermissionError {
     fn from(val: TypeInputPermissionError) -> Self {
         TypePermissionError::TypeInputPermissionError(val)
@@ -62,6 +78,15 @@ pub enum TypePermissionError {
     TypeInputPermissionError(TypeInputPermissionError),
 }
 
+impl ContextualError for TypePermissionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        match self {
+            Self::TypeOutputPermissionError(error) => error.create_error_context(),
+            Self::TypeInputPermissionError(error) => error.create_error_context(),
+        }
+    }
+}
+
 impl From<TypePermissionError> for Error {
     fn from(val: TypePermissionError) -> Self {
         Error::TypePermissionError(val)
@@ -70,7 +95,9 @@ impl From<TypePermissionError> for Error {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TypePermissionIssue {
-    #[error("Type error in field preset of {field_name:}, for input type permissions definition of type {type_name:}: {typecheck_issue:}")]
+    #[error(
+        "Type error in field preset of {field_name:}, for input type permissions definition of type {type_name:}: {typecheck_issue:}"
+    )]
     FieldPresetTypecheckIssue {
         field_name: FieldName,
         type_name: CustomTypeName,

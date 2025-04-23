@@ -3,13 +3,14 @@ use std::net;
 use std::sync::Arc;
 
 use axum::{
+    Json, Router,
     extract::State,
     http::StatusCode,
     routing::{get, post},
-    Json, Router,
 };
 
 use custom_connector::state::AppState;
+use ndc_models::{RelationalQuery, RelationalQueryResponse};
 
 type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
@@ -24,6 +25,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/capabilities", get(get_capabilities))
         .route("/schema", get(get_schema))
         .route("/query", post(post_query))
+        .route("/query/relational", post(post_query_relational))
         .route("/mutation", post(post_mutation))
         .route("/explain", post(post_explain))
         .with_state(app_state);
@@ -81,4 +83,13 @@ async fn post_explain(
             details: serde_json::Value::Null,
         }),
     ))
+}
+
+async fn post_query_relational(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<RelationalQuery>,
+) -> Result<Json<RelationalQueryResponse>> {
+    custom_connector::query::relational::execute_relational_query(state.borrow(), &request)
+        .await
+        .map(|rows| Json(RelationalQueryResponse { rows }))
 }

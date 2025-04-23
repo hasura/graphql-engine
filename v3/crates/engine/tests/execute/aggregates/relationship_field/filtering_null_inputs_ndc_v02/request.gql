@@ -1,0 +1,29 @@
+query {
+  Customer(
+    where: { CustomerId: { _in: [48, 17, 21] } }
+    order_by: { CustomerId: Asc }
+  ) {
+    CustomerId
+    Invoices_aggregate(
+      filter_input: { where: null, order_by: null, offset: null, limit: null }
+    ) {
+      InvoiceDate {
+        _min
+        _max
+        _count_distinct
+      }
+      InvoiceId {
+        min: _min
+        max: _max
+        count: _count
+      }
+      Total {
+        _min
+        _max
+        _sum
+        _stddev
+      }
+      count_all: _count
+    }
+  }
+}

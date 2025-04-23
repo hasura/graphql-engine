@@ -3,12 +3,12 @@ use indexmap::IndexMap;
 use open_dds::commands::CommandName;
 use serde::{Deserialize, Serialize};
 
+use crate::Qualified;
 use crate::helpers::typecheck;
 use crate::stages::commands;
 use crate::types::error::ShouldBeAnError;
 use crate::types::permission::ValueExpressionOrPredicate;
 use crate::types::subgraph::QualifiedTypeReference;
-use crate::Qualified;
 use open_dds::arguments::ArgumentName;
 
 use std::collections::BTreeMap;
@@ -28,7 +28,9 @@ pub struct CommandPermission {
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandPermissionIssue {
-    #[error("Type error in preset argument {argument_name:} for role {role:} in command {command_name:}: {typecheck_issue:}")]
+    #[error(
+        "Type error in preset argument {argument_name:} for role {role:} in command {command_name:}: {typecheck_issue:}"
+    )]
     CommandArgumentPresetTypecheckIssue {
         role: Role,
         command_name: Qualified<CommandName>,

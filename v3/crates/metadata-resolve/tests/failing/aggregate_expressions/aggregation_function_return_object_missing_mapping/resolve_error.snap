@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/aggregation_function_return_object_missing_mapping/metadata.json
 ---
-the aggregate expression Int4_aggregate_exp (in subgraph default) specifies an aggregation function '_minmax' which is mapped to the data connector 'mypg (in subgraph default)' but the Open DD return type MinMax (in subgraph default) is not compatible with the data connector's return type. Reason: There is no type mapping defined from the Open DD return object type to the data connector's object type 'MinMax'
+Error: the aggregate expression Int4_aggregate_exp (in subgraph default) specifies an aggregation function '_minmax' which is mapped to the data connector 'mypg (in subgraph default)' but the Open DD return type MinMax (in subgraph default) is not compatible with the data connector's return type. Reason: There is no type mapping defined from the Open DD return object type to the data connector's object type 'MinMax'

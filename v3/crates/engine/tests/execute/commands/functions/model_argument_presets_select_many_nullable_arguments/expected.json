@@ -52,14 +52,14 @@
     },
     "errors": [
       {
-        "message": "internal error: ndc_unexpected: ndc_client error: connector error: connector returned status code 400 Bad Request with message: missing argument movie_id",
+        "message": "internal error: ndc_unexpected: ndc_client error: connector error: connector returned status code 400 Bad Request with message: missing argument movie_id, details: null",
         "path": ["ActorsByMovieMany"],
         "extensions": {
           "details": null
         }
       },
       {
-        "message": "internal error: ndc_unexpected: ndc_client error: connector error: connector returned status code 400 Bad Request with message: missing argument movie_id",
+        "message": "internal error: ndc_unexpected: ndc_client error: connector error: connector returned status code 400 Bad Request with message: missing argument movie_id, details: null",
         "path": ["noargs"],
         "extensions": {
           "details": null

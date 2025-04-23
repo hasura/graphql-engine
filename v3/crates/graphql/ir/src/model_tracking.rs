@@ -1,8 +1,8 @@
 //! Track the models that were used in query.
 
 use super::{
-    root_field::{self},
     IR,
+    root_field::{self},
 };
 use plan::extend_usage_count;
 use plan_types::UsagesCounts;

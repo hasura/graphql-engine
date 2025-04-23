@@ -10,7 +10,7 @@ use crate::helpers::check_for_duplicates;
 use crate::helpers::types::unwrap_qualified_type_name;
 use crate::stages::{data_connector_scalar_types, graphql_config, scalar_types, type_permissions};
 use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
-use crate::{mk_name, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
+use crate::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, mk_name};
 
 mod types;
 pub use types::*;
@@ -28,10 +28,11 @@ pub fn resolve(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
-) -> Result<AggregateExpressionsOutput, AggregateExpressionError> {
+) -> Result<AggregateExpressionsOutput, Vec<AggregateExpressionError>> {
     let mut resolved_aggregate_expressions =
         BTreeMap::<Qualified<AggregateExpressionName>, AggregateExpression>::new();
     let mut issues = vec![];
+    let mut results = vec![];
 
     for open_dds::accessor::QualifiedObject {
         path: _,
@@ -39,40 +40,74 @@ pub fn resolve(
         object: aggregate_expression,
     } in &metadata_accessor.aggregate_expressions
     {
-        let aggregate_expression_name =
-            Qualified::new(subgraph.clone(), aggregate_expression.name.clone());
-
-        // Have we seen this aggregate expression name before?
-        // Check this before checking anything else, so we can fail fast
-        if resolved_aggregate_expressions.contains_key(&aggregate_expression_name) {
-            return Err(
-                AggregateExpressionError::DuplicateAggregateExpressionDefinition {
-                    name: aggregate_expression_name,
-                },
-            );
-        }
-
-        let resolved_aggregate_expression = resolve_aggregate_expression(
+        results.push(process_aggregate_expression(
             metadata_accessor,
             data_connectors,
             data_connector_scalars,
             object_types,
             scalar_types,
             graphql_config,
-            &aggregate_expression_name,
-            aggregate_expression,
             graphql_types,
+            subgraph,
+            aggregate_expression,
+            &mut resolved_aggregate_expressions,
             &mut issues,
-        )?;
-
-        resolved_aggregate_expressions
-            .insert(aggregate_expression_name, resolved_aggregate_expression);
+        ));
     }
 
-    Ok(AggregateExpressionsOutput {
+    partition_eithers::collect_any_errors(results).map(|_| AggregateExpressionsOutput {
         aggregate_expressions: resolved_aggregate_expressions,
         issues,
     })
+}
+
+fn process_aggregate_expression(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    graphql_config: &graphql_config::GraphqlConfig,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
+    subgraph: &SubgraphName,
+    aggregate_expression: &open_dds::aggregates::AggregateExpressionV1,
+    resolved_aggregate_expressions: &mut BTreeMap<
+        Qualified<AggregateExpressionName>,
+        AggregateExpression,
+    >,
+    issues: &mut Vec<AggregateExpressionIssue>,
+) -> Result<(), AggregateExpressionError> {
+    let aggregate_expression_name =
+        Qualified::new(subgraph.clone(), aggregate_expression.name.clone());
+
+    // Have we seen this aggregate expression name before?
+    // Check this before checking anything else, so we can fail fast
+    if resolved_aggregate_expressions.contains_key(&aggregate_expression_name) {
+        return Err(
+            AggregateExpressionError::DuplicateAggregateExpressionDefinition {
+                name: aggregate_expression_name,
+            },
+        );
+    }
+
+    let resolved_aggregate_expression = resolve_aggregate_expression(
+        metadata_accessor,
+        data_connectors,
+        data_connector_scalars,
+        object_types,
+        scalar_types,
+        graphql_config,
+        &aggregate_expression_name,
+        aggregate_expression,
+        graphql_types,
+        issues,
+    )?;
+
+    resolved_aggregate_expressions.insert(aggregate_expression_name, resolved_aggregate_expression);
+    Ok(())
 }
 
 fn resolve_aggregate_expression(
@@ -581,7 +616,9 @@ fn unwrap_aggregation_function_return_type<'a>(
             if return_type.nullable {
                 Ok(underlying_type.as_ref())
             } else {
-                Err(mk_error("The data connector's return type is nullable, but the Open DD return type is not"))
+                Err(mk_error(
+                    "The data connector's return type is nullable, but the Open DD return type is not",
+                ))
             }
         }
         other => Ok(other),
@@ -592,9 +629,15 @@ fn unwrap_aggregation_function_return_type<'a>(
         QualifiedBaseType::Named(named_type) => {
             match ndc_nullable_unwrapped {
                 ndc_models::Type::Named { name } => Ok((named_type, name)),
-                ndc_models::Type::Nullable { .. } => Err(mk_error("The data connector's return type is doubly-nullable")), // This shouldn't happen, would be an invalid NDC type
-                ndc_models::Type::Array { .. } => Err(mk_error("The data connector's return type is an array, but the Open DD return type is not")),
-                ndc_models::Type::Predicate { .. } => Err(mk_error("The data connector's return type is a predicate type, which is unsupported in aggregation return types")),
+                ndc_models::Type::Nullable { .. } => Err(mk_error(
+                    "The data connector's return type is doubly-nullable",
+                )), // This shouldn't happen, would be an invalid NDC type
+                ndc_models::Type::Array { .. } => Err(mk_error(
+                    "The data connector's return type is an array, but the Open DD return type is not",
+                )),
+                ndc_models::Type::Predicate { .. } => Err(mk_error(
+                    "The data connector's return type is a predicate type, which is unsupported in aggregation return types",
+                )),
             }
         }
         // Ensure if the Open DD type is a list, the NDC type is an array, and then recur to unwrap and check the element type
@@ -755,7 +798,7 @@ fn resolve_aggregate_count(
                         aggregate_expression_name: aggregate_expression_name.clone(),
                         count_type,
                         return_type: QualifiedTypeName::Inbuilt(*inbuilt),
-                    })
+                    });
                 }
 
                 // We can't really validate custom types as they don't have a representation until they're

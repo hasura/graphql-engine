@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/scalar_bool_exp_on_object_field/metadata.json
 ---
-The field location has type location (in subgraph default) but the field's boolean expression type string_bool_exp (in subgraph default) has type String
+Error: The field location has type location (in subgraph default) but the field's boolean expression type string_bool_exp (in subgraph default) has type String

@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/order_by_expressions/unknown_field/metadata.json
 ---
-Error in order by expression MyOrderByExpression (in subgraph default): unknown field foo in orderable fields
+Error: Error in order by expression MyOrderByExpression (in subgraph default): unknown field foo in orderable fields

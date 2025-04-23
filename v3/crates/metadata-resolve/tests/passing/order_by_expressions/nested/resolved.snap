@@ -110,7 +110,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                 },
                                 mappings: [
                                     RelationshipModelMapping {
-                                        source_field: FieldAccess {
+                                        source_field: RelationshipFieldAccess {
                                             field_name: FieldName(
                                                 Identifier(
                                                     "row_type_id",
@@ -119,7 +119,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                         },
                                         target: ModelField(
                                             RelationshipModelMappingFieldTarget {
-                                                target_field: FieldAccess {
+                                                target_field: RelationshipFieldAccess {
                                                     field_name: FieldName(
                                                         Identifier(
                                                             "id",
@@ -232,6 +232,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -299,6 +300,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -454,6 +456,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -541,6 +544,28 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                5,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -675,6 +700,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -747,6 +773,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -814,6 +841,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -895,6 +923,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -1279,6 +1308,9 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

@@ -1,7 +1,7 @@
 use crate::helpers::argument::get_argument_kind;
-use crate::helpers::types::{get_type_representation, mk_name, TrackGraphQLRootFields};
+use crate::helpers::types::{TrackGraphQLRootFields, get_type_representation, mk_name};
 use crate::stages::{boolean_expressions, scalar_types, type_permissions};
-use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
+use crate::types::subgraph::{ArgumentInfo, Qualified, mk_qualified_type_reference};
 use indexmap::IndexMap;
 use open_dds::identifier::SubgraphName;
 
@@ -57,7 +57,7 @@ pub fn resolve_command(
                 get_argument_kind(&argument.argument_type, subgraph, boolean_expression_types);
             if arguments
                 .insert(
-                    argument.name.clone(),
+                    argument.name.value.clone(),
                     ArgumentInfo {
                         argument_type: mk_qualified_type_reference(
                             &argument.argument_type,
@@ -65,6 +65,7 @@ pub fn resolve_command(
                         ),
                         argument_kind,
                         description: argument.description.clone(),
+                        path: argument.name.path.clone(),
                     },
                 )
                 .is_some()

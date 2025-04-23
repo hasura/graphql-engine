@@ -1,8 +1,8 @@
-{"id":0,"name":"Peter","movie_id":2,"favourite_author_id":1}
-{"id":1,"name":"Leonardo DiCaprio","movie_id":1,"favourite_author_id":1}
-{"id":2,"name":"Kate Winslet","movie_id":1,"favourite_author_id":2}
-{"id":3,"name":"Irfan Khan","movie_id":2,"favourite_author_id":1}
-{"id":4,"name":"Al Pacino","movie_id":3,"favourite_author_id":2}
-{"id":5,"name":"Robert De Niro","movie_id":3,"favourite_author_id":1}
-{"id":6,"name":"Morgan Freeman","movie_id":4,"favourite_author_id":2}
-{"id":7,"name":"Ben Kingsley","movie_id":5,"favourite_author_id":1}
+{"id":0,"name":"Peter","movie_id":2,"favourite_author_id":1,"favourite_big_integer":"123456789012345678901234","favourite_int_64":"42","country_id":1}
+{"id":1,"name":"Leonardo DiCaprio","movie_id":1,"favourite_author_id":1,"favourite_big_integer":"234","favourite_int_64":"123456789","country_id":2}
+{"id":2,"name":"Kate Winslet","movie_id":1,"favourite_author_id":2,"favourite_big_integer":"12345678901234567890123","favourite_int_64":"123456789","country_id":3}
+{"id":3,"name":"Irfan Khan","movie_id":2,"favourite_author_id":1,"favourite_big_integer":"1234567890123456789012","favourite_int_64":"123456789","country_id":4}
+{"id":4,"name":"Al Pacino","movie_id":3,"favourite_author_id":2,"favourite_big_integer":"123456789012345678901","favourite_int_64":"123456789","country_id":1}
+{"id":5,"name":"Robert De Niro","movie_id":3,"favourite_author_id":1,"favourite_big_integer":"12345678901234567890","favourite_int_64":"123456789", "country_id": 2}
+{"id":6,"name":"Morgan Freeman","movie_id":4,"favourite_author_id":2,"favourite_big_integer":"1234567890123456789","favourite_int_64":"123456789","country_id":3}
+{"id":7,"name":"Ben Kingsley","movie_id":5,"favourite_author_id":1,"favourite_big_integer":"123456789012345678","favourite_int_64":"123456789", "country_id": 4 }

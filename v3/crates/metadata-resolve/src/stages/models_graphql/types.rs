@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::stages::{boolean_expressions, models};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
-use crate::{helpers::types::NdcColumnForComparison, OrderByExpressionIdentifier};
+use crate::{OrderByExpressionIdentifier, helpers::types::NdcColumnForComparison};
 
 #[derive(Debug)]
 pub struct ModelsWithGraphqlOutput {
@@ -134,7 +134,9 @@ pub struct ModelGraphQlApi {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelGraphqlIssue {
-    #[error("the model {model_name} has defined a selectAggregate graphql API, but it will not appear in the GraphQL API unless query.aggregate.filterInputFieldName is also configured in GraphqlConfig")]
+    #[error(
+        "the model {model_name} has defined a selectAggregate graphql API, but it will not appear in the GraphQL API unless query.aggregate.filterInputFieldName is also configured in GraphqlConfig"
+    )]
     MissingAggregateFilterInputFieldNameInGraphqlConfig { model_name: Qualified<ModelName> },
 
     #[error("the model {model_name} has a duplicate root field in the GraphQL schema: {error:}")]
@@ -143,9 +145,13 @@ pub enum ModelGraphqlIssue {
         error: DuplicateRootFieldError,
     },
 
-    #[error("model arguments graphql input configuration has been specified for model {model_name:} that does not have arguments")]
+    #[error(
+        "model arguments graphql input configuration has been specified for model {model_name:} that does not have arguments"
+    )]
     UnnecessaryModelArgumentsGraphQlInputConfiguration { model_name: Qualified<ModelName> },
-    #[error("an unnecessary filter input type name graphql configuration has been specified for model {model_name:} that does not use aggregates")]
+    #[error(
+        "an unnecessary filter input type name graphql configuration has been specified for model {model_name:} that does not use aggregates"
+    )]
     UnnecessaryFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
 }
 

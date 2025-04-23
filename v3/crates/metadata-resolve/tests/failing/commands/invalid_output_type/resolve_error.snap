@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/commands/invalid_output_type/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-Command 'testCommand (in subgraph default)' has an invalid output type 'NonExistentType'
+Error: Command 'testCommand (in subgraph default)' has an invalid output type 'NonExistentType'

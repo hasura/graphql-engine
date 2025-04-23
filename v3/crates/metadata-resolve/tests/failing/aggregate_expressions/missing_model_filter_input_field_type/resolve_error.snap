@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_model_filter_input_field_type/metadata.json
 ---
-filter input type name graphql configuration must be specified for model Invoice (in subgraph default) because aggregates are used with it
+Error: filter input type name graphql configuration must be specified for model Invoice (in subgraph default) because aggregates are used with it

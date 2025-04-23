@@ -1,7 +1,6 @@
 -- | Add metadata tags as comments to SQL queries.
 module Data.SqlCommenter
-  ( sqlCommenterGoogle,
-    sqlCommenterStandard,
+  ( sqlCommenter,
     Attribute,
   )
 where
@@ -10,36 +9,26 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (commaSeparated)
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.QueryTags.Types
 import Network.URI.Encode qualified as URI
 
--- | query-tags format as defined in the Spec <https://google.github.io/sqlcommenter/spec/#sql-commenter>
-sqlCommenterGoogle :: QueryTagsAttributes -> QueryTagsComment
-sqlCommenterGoogle qtAttributes
+-- | Construct a 'QueryTagsComment'.
+sqlCommenter :: QueryTagsFormat -> QueryTagsAttributes -> QueryTagsComment
+sqlCommenter fmt qAttributes
   | null attributes = emptyQueryTagsComment
-  | otherwise = QueryTagsComment $ createSQLComment $ generateCommentTags (NE.fromList attributes)
+  | fmt == SQLCommenter = createSQLComment $ generateGoogleCommentTags (NE.fromList attributes)
+  | otherwise = createSQLComment $ generateStandardCommentTags (NE.fromList attributes)
   where
-    createSQLComment comment = " /* " <> comment <> " */"
-    attributes = _unQueryTagsAttributes qtAttributes
-
--- | Default 'Query Tags' format in the Hasura GraphQL Engine
--- Creates simple 'key=value' pairs of query tags. No sorting, No URL encoding.
--- If the format of query tags is not mentioned in the metadata then, query-tags
--- are formatted using hte below format
-sqlCommenterStandard :: QueryTagsAttributes -> QueryTagsComment
-sqlCommenterStandard qtAttributes
-  | null attributes = emptyQueryTagsComment
-  | otherwise = QueryTagsComment $ createSQLComment $ generateComment (NE.fromList attributes)
-  where
-    generateComment attr = commaSeparated [k <> "=" <> v | (k, v) <- NE.toList attr]
-    createSQLComment comment = " /* " <> comment <> " */"
-    attributes = _unQueryTagsAttributes qtAttributes
+    attributes = _unQueryTagsAttributes qAttributes
+    createSQLComment comment = mkQueryTagsComment ("/* " <> comment <> " */") fmt
+    generateStandardCommentTags attr = commaSeparated [k <> "=" <> v | (k, v) <- NE.toList attr]
 
 -- | Top-level algorithm to generate the string comment from list of
 -- 'Attribute's
 -- Spec <https://google.github.io/sqlcommenter/spec/#sql-commenter>
 -- See Note [Ambiguous SQLCommenterGoogle Specification]
-generateCommentTags :: NE.NonEmpty Attribute -> Text
-generateCommentTags attributes =
+generateGoogleCommentTags :: NE.NonEmpty Attribute -> Text
+generateGoogleCommentTags attributes =
   let -- 1. URL encode the key,value pairs. What the spec calls serialization.
       -- https://google.github.io/sqlcommenter/spec/#key-serialization-algorithm
       -- https://google.github.io/sqlcommenter/spec/#value-serialization-algorithm

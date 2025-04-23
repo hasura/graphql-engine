@@ -1,10 +1,10 @@
 //! Compare metadata-exclusive equality on schemas.
 
+use schemars::Map;
 use schemars::schema::{
     ArrayValidation, Metadata, ObjectValidation, Schema, SchemaObject, SingleOrVec,
     SubschemaValidation,
 };
-use schemars::Map;
 
 /// An equality comparison of two schemas that doesn't check the metadata's title or description.
 /// See `metadatas`.

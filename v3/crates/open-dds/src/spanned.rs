@@ -2,6 +2,7 @@ use crate::traits::{OpenDd, OpenDdDeserializeError};
 use core::ops::Deref;
 use serde::{Serialize, Serializer};
 use std::fmt::Display;
+use std::hash::{Hash, Hasher};
 
 /// Wrapper that combines an item with its parsed JSONPath
 /// for use in error reporting
@@ -21,6 +22,12 @@ impl<T> Deref for Spanned<T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
         &self.value
+    }
+}
+
+impl<T: Hash> Hash for Spanned<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
     }
 }
 
@@ -44,16 +51,16 @@ impl<T: OpenDd> OpenDd for Spanned<T> {
         })
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        T::json_schema(gen)
+    fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
+        T::json_schema(generator)
     }
 
     fn _schema_name() -> String {
-        "Spanned".to_string()
+        T::_schema_name()
     }
 
     fn _schema_is_referenceable() -> bool {
-        false
+        T::_schema_is_referenceable()
     }
 }
 

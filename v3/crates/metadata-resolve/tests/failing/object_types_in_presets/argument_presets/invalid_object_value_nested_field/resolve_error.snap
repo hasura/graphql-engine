@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/argument_presets/invalid_object_value_nested_field/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-Type error in preset argument objects for role admin in command InsertAlbum (in subgraph default): Expected an object value of type RecordLabel (in subgraph default) but got value "Record Label 1"
+Error: Type error in preset argument objects for role admin in command InsertAlbum (in subgraph default): Expected an object value of type RecordLabel (in subgraph default) but got value "Record Label 1"

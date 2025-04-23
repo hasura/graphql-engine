@@ -4,8 +4,8 @@ use open_dds::types::CustomTypeName;
 
 use metadata_resolve::Qualified;
 
-use crate::types;
 use crate::GDS;
+use crate::types;
 
 pub fn get_where_expression_input_field(
     builder: &mut gql_schema::Builder<GDS>,

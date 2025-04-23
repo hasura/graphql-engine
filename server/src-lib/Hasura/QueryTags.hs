@@ -7,7 +7,10 @@ module Hasura.QueryTags
     QueryMetadata (QueryMetadata),
     QueryTags (QTLiveQuery, QTMutation, QTQuery),
     QueryTagsAttributes (_unQueryTagsAttributes),
-    QueryTagsComment (..),
+    QueryTagsComment, -- kept abstract; use addQueryTagsComment
+    addQueryTagsComment,
+    addQueryTagsCommentGeneral,
+    mkQueryTagsComment,
     emptyQueryTagsComment,
     encodeQueryTags,
     MonadQueryTags (..),
@@ -45,8 +48,31 @@ data QueryTags
   | QTLiveQuery !LivequeryMetadata
   deriving (Show)
 
--- | query-tags as SQL comment which is appended to the prepared SQL statement
-newtype QueryTagsComment = QueryTagsComment {_unQueryTagsComment :: Text} deriving (Show, Eq)
+-- | query-tags as SQL comment which is added to the prepared SQL statement
+-- (prepended or appended), using 'addQueryTagsComment'
+data QueryTagsComment
+  = QueryTagsComment
+      { _unQueryTagsComment :: Text,
+        _queryTagsFormat :: QueryTagsFormat
+      }
+  | -- required since we don't have configuration context in some places where we need to inject this
+    EmptyQueryTagsComment
+  deriving (Show, Eq)
+
+-- | prepend/append the tag comment text to the SQL query text
+addQueryTagsComment :: Text -> QueryTagsComment -> Text
+addQueryTagsComment = addQueryTagsCommentGeneral (<>) id
+
+-- | A more general 'addQueryTagsComment', sadly...
+addQueryTagsCommentGeneral :: (a -> a -> a) -> (Text -> a) -> a -> QueryTagsComment -> a
+addQueryTagsCommentGeneral conct fromText sqlQuery = \case
+  QueryTagsComment {_queryTagsFormat = StandardPrepended, ..} -> fromText (_unQueryTagsComment <> " ") `conct` sqlQuery
+  QueryTagsComment {..} -> sqlQuery `conct` fromText (" " <> _unQueryTagsComment)
+  EmptyQueryTagsComment -> sqlQuery
+
+-- ideally @data QueryTagsComment@ would move into SqlCommenter.hs or something
+mkQueryTagsComment :: Text -> QueryTagsFormat -> QueryTagsComment
+mkQueryTagsComment = QueryTagsComment
 
 type Attribute = (Text, Text)
 
@@ -56,7 +82,7 @@ emptyQueryTagsAttributes :: QueryTagsAttributes
 emptyQueryTagsAttributes = QueryTagsAttributes mempty
 
 emptyQueryTagsComment :: QueryTagsComment
-emptyQueryTagsComment = QueryTagsComment mempty
+emptyQueryTagsComment = EmptyQueryTagsComment
 
 data QueryMetadata = QueryMetadata
   { qmRequestId :: Maybe RequestId,

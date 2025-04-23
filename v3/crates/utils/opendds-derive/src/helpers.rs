@@ -82,11 +82,7 @@ fn get_doc(attrs: &[syn::Attribute]) -> Option<String> {
 }
 
 fn none_if_empty(s: String) -> Option<String> {
-    if s.is_empty() {
-        None
-    } else {
-        Some(s)
-    }
+    if s.is_empty() { None } else { Some(s) }
 }
 
 pub fn apply_schema_metadata(

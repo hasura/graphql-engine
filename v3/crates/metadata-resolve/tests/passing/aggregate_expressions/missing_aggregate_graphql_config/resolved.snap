@@ -561,6 +561,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ObjectTypesIssue(

@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/order_by_expressions/disallow_relationships_without_connector_capability/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-Issue in order by expression 'MyOrderByExpression (in subgraph default)' used by model 'mymodel (in subgraph default)': The orderable relationship 'SecondRowTypeRelationship' defined for 'RowType (in subgraph default)' is not supported in ordering because the data connector 'myconnector (in subgraph default)' does not support relationships
+Error: Issue in order by expression 'MyOrderByExpression (in subgraph default)' used by model 'mymodel (in subgraph default)': The orderable relationship 'SecondRowTypeRelationship' defined for 'RowType (in subgraph default)' is not supported in ordering because the data connector 'myconnector (in subgraph default)' does not support relationships

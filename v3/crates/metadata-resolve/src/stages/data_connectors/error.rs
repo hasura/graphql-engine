@@ -1,8 +1,14 @@
 use crate::helpers::ndc_validation::NDCValidationError;
-use crate::types::error::ShouldBeAnError;
+use crate::types::error::{ContextualError, ShouldBeAnError};
 use crate::types::subgraph::Qualified;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::flags;
+
+impl ContextualError for NamedDataConnectorError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 #[error("The data connector {data_connector_name} has an error: {error}")]
@@ -13,8 +19,6 @@ pub struct NamedDataConnectorError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum DataConnectorError {
-    #[error("The data connector uses ndc-spec v0.2.* and is not yet supported")]
-    NdcV02DataConnectorNotSupported,
     #[error("the data connector is defined more than once")]
     DuplicateDataConnectorDefinition,
     #[error("The url for the data connector is invalid: {error}")]
@@ -32,7 +36,9 @@ pub enum DataConnectorError {
         version: String,
         error: semver::Error,
     },
-    #[error("The version specified in the capabilities (\"{version}\") is not compatible with the schema version specified. The version requirement is {requirement}")]
+    #[error(
+        "The version specified in the capabilities (\"{version}\") is not compatible with the schema version specified. The version requirement is {requirement}"
+    )]
     IncompatibleNdcVersion {
         version: String,
         requirement: semver::VersionReq,

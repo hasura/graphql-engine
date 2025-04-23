@@ -113,6 +113,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                                 day_function: None,
                                                 nanosecond_function: None,
                                                 microsecond_function: None,
+                                                millisecond_function: None,
                                                 second_function: None,
                                                 minute_function: None,
                                                 hour_function: None,
@@ -181,6 +182,28 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                             ),
                         ),
                     },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                3,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -289,6 +312,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                             ),
                                         },
                                     ),
+                                    supports_relational_queries: None,
                                 },
                             },
                             collection: CollectionName(
@@ -361,6 +385,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                                     day_function: None,
                                                     nanosecond_function: None,
                                                     microsecond_function: None,
+                                                    millisecond_function: None,
                                                     second_function: None,
                                                     minute_function: None,
                                                     hour_function: None,
@@ -637,6 +662,9 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [],
 )

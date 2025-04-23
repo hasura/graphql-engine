@@ -3,7 +3,8 @@ query MyQuery {
     staff {
       last_name
       favourite_artist_id
-      favourite_artist {
+      # test aliases with relationships too (ENG-1712):
+      my_favourite_artist: favourite_artist {
         name
         artist_id
       }

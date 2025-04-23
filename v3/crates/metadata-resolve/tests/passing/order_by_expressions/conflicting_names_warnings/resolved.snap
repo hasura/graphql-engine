@@ -89,6 +89,9 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/conflicti
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         OrderByExpressionIssue(

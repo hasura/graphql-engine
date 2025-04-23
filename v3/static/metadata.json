@@ -11411,15 +11411,15 @@
             "fields": [
               {
                 "name": "article_id",
-                "type": "Int!"
+                "type": "int4!"
               },
               {
                 "name": "title",
-                "type": "String!"
+                "type": "String"
               },
               {
                 "name": "author_id",
-                "type": "CustomInt!"
+                "type": "int4"
               }
             ],
             "globalIdFields": ["article_id"],
@@ -11462,11 +11462,11 @@
                 "comparableFields": [
                   {
                     "fieldName": "author_id",
-                    "booleanExpressionType": "CustomInt_bool_exp"
+                    "booleanExpressionType": "int4_bool_exp"
                   },
                   {
                     "fieldName": "article_id",
-                    "booleanExpressionType": "Int_bool_exp"
+                    "booleanExpressionType": "int4_bool_exp"
                   },
                   {
                     "fieldName": "title",
@@ -11528,16 +11528,16 @@
             "fields": [
               {
                 "name": "author_id",
-                "type": "CustomInt!",
+                "type": "int4!",
                 "description": "author_id description"
               },
               {
                 "name": "first_name",
-                "type": "String!"
+                "type": "String"
               },
               {
                 "name": "last_name",
-                "type": "String!"
+                "type": "String"
               }
             ],
             "globalIdFields": ["author_id"],
@@ -11580,7 +11580,7 @@
                 "comparableFields": [
                   {
                     "fieldName": "author_id",
-                    "booleanExpressionType": "CustomInt_bool_exp"
+                    "booleanExpressionType": "int4_bool_exp"
                   },
                   {
                     "fieldName": "first_name",
@@ -14368,15 +14368,15 @@
             "fields": [
               {
                 "name": "id",
-                "type": "Int!"
+                "type": "int4!"
               },
               {
                 "name": "first_name",
-                "type": "String!"
+                "type": "String"
               },
               {
                 "name": "last_name",
-                "type": "String!"
+                "type": "String"
               }
             ],
             "graphql": {
@@ -16205,6 +16205,7 @@
     "disallow_duplicate_names_in_boolean_expressions": true,
     "disallow_multiple_input_object_fields_in_graphql_order_by": true,
     "require_nested_support_for_order_by_expressions": true,
-    "disallow_model_v1_ordering_non_scalar_fields": true
+    "disallow_model_v1_ordering_non_scalar_fields": true,
+    "disallow_invalid_headers_in_auth_config": true
   }
 }

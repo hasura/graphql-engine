@@ -8049,7 +8049,8 @@
             "QueryTagsFormat": {
                 "enum": [
                     "standard",
-                    "sqlcommenter"
+                    "sqlcommenter",
+                    "standard_prepended"
                 ],
                 "type": "string"
             },

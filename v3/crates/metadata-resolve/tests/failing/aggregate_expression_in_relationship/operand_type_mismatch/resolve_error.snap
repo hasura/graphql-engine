@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expression_in_relationship/operand_type_mismatch/metadata.json
 ---
-The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: the aggregate expression Invoice_aggregate_exp (in subgraph default) is used with the model InvoiceLine (in subgraph default) but its operand type Invoice (in subgraph default) does not match the model's type InvoiceLine (in subgraph default)
+Error: The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: the aggregate expression Invoice_aggregate_exp (in subgraph default) is used with the model InvoiceLine (in subgraph default) but its operand type Invoice (in subgraph default) does not match the model's type InvoiceLine (in subgraph default)

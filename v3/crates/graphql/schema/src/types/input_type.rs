@@ -1,9 +1,9 @@
 use metadata_resolve::{
-    self, get_type_representation, mk_name, Qualified, QualifiedBaseType, QualifiedTypeName,
-    QualifiedTypeReference, TypeRepresentation,
+    self, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
+    TypeRepresentation, get_type_representation, mk_name,
 };
 
-use crate::{types, NamespaceAnnotation, Role, GDS};
+use crate::{GDS, NamespaceAnnotation, Role, types};
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::types::CustomTypeName;

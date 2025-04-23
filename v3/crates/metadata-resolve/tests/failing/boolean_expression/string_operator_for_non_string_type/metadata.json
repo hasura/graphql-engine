@@ -1,0 +1,389 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "RowType",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "test",
+                "type": "Foo!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "myconnector",
+                "dataConnectorObjectType": "row_type",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "test": {
+                    "column": {
+                      "name": "test"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  },
+                  {
+                    "name": "_contains",
+                    "argumentType": "String!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "myconnector",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Foo",
+            "fields": [
+              {
+                "name": "foo",
+                "type": "String!"
+              },
+              {
+                "name": "row_type_id",
+                "type": "Int"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "myconnector",
+                "dataConnectorObjectType": "foo",
+                "fieldMapping": {
+                  "foo": {
+                    "column": {
+                      "name": "foo"
+                    }
+                  },
+                  "row_type_id": {
+                    "column": {
+                      "name": "row_type_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "MyOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "RowType",
+                "orderableFields": [
+                  {
+                    "fieldName": "test",
+                    "orderByExpression": "FooOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "mycollection_order_by"
+            },
+            "description": "Order by expression for mycollection RowType"
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "FooOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "Foo",
+                "orderableFields": [
+                  {
+                    "fieldName": "foo",
+                    "orderByExpression": "StringOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": [
+                  {
+                    "relationshipName": "row_type",
+                    "orderByExpression": "MyOrderByExpression"
+                  }
+                ]
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "foo_order_by"
+            },
+            "description": "Order by expression for Foo"
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "mymodel",
+            "objectType": "RowType",
+            "arguments": [],
+            "source": {
+              "dataConnectorName": "myconnector",
+              "collection": "mycollection",
+              "argumentMapping": {}
+            },
+            "orderByExpression": "MyOrderByExpression",
+            "graphql": {
+              "selectMany": {
+                "queryRootField": "mycollection"
+              },
+              "selectUniques": []
+            }
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "row_type",
+            "sourceType": "Foo",
+            "target": {
+              "model": {
+                "name": "mymodel",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "row_type_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "myconnector",
+            "url": {
+              "readWriteUrls": {
+                "read": {
+                  "value": "http://local-dev.hasura.me:8080"
+                },
+                "write": {
+                  "value": "http://local-dev.hasura.me:8080"
+                }
+              }
+            },
+            "argumentPresets": [],
+            "headers": {},
+            "schema": {
+              "version": "v0.2",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_contains": {
+                        "type": "contains"
+                      }
+                    }
+                  },
+                  "String": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  }
+                },
+                "object_types": {
+                  "row_type": {
+                    "fields": {
+                      "id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "test": {
+                        "type": {
+                          "type": "named",
+                          "name": "foo"
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  "foo": {
+                    "fields": {
+                      "foo": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "row_type_id": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "foreign_keys": {}
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "mycollection",
+                    "arguments": {},
+                    "type": "row_type",
+                    "uniqueness_constraints": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "version": "0.2.0",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {},
+                    "nested_fields": {
+                      "order_by": {}
+                    }
+                  },
+                  "mutation": {
+                    "transactional": {},
+                    "explain": {}
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {},
+                    "nested": {
+                      "array": {},
+                      "filtering": {},
+                      "ordering": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "myconnector_String_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "myconnector_Int_comparisonexp"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "require_nested_support_for_order_by_expressions": true,
+    "validate_scalar_boolean_expression_operators": true
+  }
+}

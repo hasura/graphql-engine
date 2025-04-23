@@ -1,7 +1,6 @@
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 
-use open_dds::identifier::SubgraphName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 
 use crate::stages::{
@@ -10,7 +9,6 @@ use crate::stages::{
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
-use open_dds::arguments::ArgumentName;
 
 use crate::helpers::argument::resolve_value_expression_for_argument;
 
@@ -18,23 +16,6 @@ use open_dds::permissions::CommandPermissionsV1;
 
 use super::types::{CommandPermission, CommandPermissionIssue};
 use std::collections::BTreeMap;
-
-// get the ndc_models::Type for an argument if it is available
-fn get_command_source_argument<'a>(
-    argument_name: &'a ArgumentName,
-    command: &'a commands::Command,
-) -> Option<&'a ndc_models::Type> {
-    command
-        .source
-        .as_ref()
-        .and_then(|source| {
-            source
-                .argument_mappings
-                .get(argument_name)
-                .map(|connector_argument_name| source.source_arguments.get(connector_argument_name))
-        })
-        .flatten()
-}
 
 pub fn resolve_command_permissions(
     flags: &open_dds::flags::OpenDdFlags,
@@ -51,7 +32,6 @@ pub fn resolve_command_permissions(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
     >,
-    subgraph: &SubgraphName,
     issues: &mut Vec<CommandPermissionIssue>,
 ) -> Result<BTreeMap<Role, CommandPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
@@ -59,15 +39,12 @@ pub fn resolve_command_permissions(
         let mut argument_presets = BTreeMap::new();
 
         for argument_preset in &command_permission.argument_presets {
-            if argument_presets.contains_key(&argument_preset.argument) {
+            if argument_presets.contains_key(&argument_preset.argument.value) {
                 return Err(Error::DuplicateCommandArgumentPreset {
                     command_name: command.name.clone(),
-                    argument_name: argument_preset.argument.clone(),
+                    argument_name: argument_preset.argument.value.clone(),
                 });
             }
-
-            let source_argument_type =
-                get_command_source_argument(&argument_preset.argument, command);
 
             let command_source = command.source.as_ref().ok_or_else(|| {
                 commands::CommandsError::CommandSourceRequiredForPredicate {
@@ -75,12 +52,12 @@ pub fn resolve_command_permissions(
                 }
             })?;
 
-            match command.arguments.get(&argument_preset.argument) {
+            match command.arguments.get(&argument_preset.argument.value) {
                 Some(argument) => {
                     let error_mapper = |type_error| Error::CommandArgumentPresetTypeError {
                         role: command_permission.role.clone(),
                         command_name: command.name.clone(),
-                        argument_name: argument_preset.argument.clone(),
+                        argument_name: argument_preset.argument.value.clone(),
                         type_error,
                     };
                     let (value_expression, new_issues) = resolve_value_expression_for_argument(
@@ -89,13 +66,12 @@ pub fn resolve_command_permissions(
                         &argument_preset.argument,
                         &argument_preset.value,
                         &argument.argument_type,
-                        source_argument_type,
                         &command_source.data_connector,
-                        subgraph,
                         object_types,
                         scalar_types,
                         boolean_expression_types,
                         models,
+                        &command_source.type_mappings,
                         data_connector_scalars,
                         error_mapper,
                     )?;
@@ -106,14 +82,14 @@ pub fn resolve_command_permissions(
                             CommandPermissionIssue::CommandArgumentPresetTypecheckIssue {
                                 role: command_permission.role.clone(),
                                 command_name: command.name.clone(),
-                                argument_name: argument_preset.argument.clone(),
+                                argument_name: argument_preset.argument.value.clone(),
                                 typecheck_issue: issue,
                             },
                         );
                     }
 
                     argument_presets.insert(
-                        argument_preset.argument.clone(),
+                        argument_preset.argument.value.clone(),
                         (argument.argument_type.clone(), value_expression),
                     );
                 }
@@ -121,7 +97,7 @@ pub fn resolve_command_permissions(
                     return Err(Error::from(
                         commands::CommandsError::CommandArgumentPresetMismatch {
                             command_name: command.name.clone(),
-                            argument_name: argument_preset.argument.clone(),
+                            argument_name: argument_preset.argument.value.clone(),
                         },
                     ));
                 }

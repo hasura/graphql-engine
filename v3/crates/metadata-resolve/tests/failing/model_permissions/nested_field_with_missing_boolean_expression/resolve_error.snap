@@ -1,0 +1,16 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/model_permissions/nested_field_with_missing_boolean_expression/metadata.json
+---
+Error: Error in model permission for model 'institutions (in subgraph default)' for role 'admin': in select filter permissions: no boolean expression found for type 'institution (in subgraph default)' This is required when filtering a nested field. Please ensure the model you are filtering has a filterExpressionType defined.
+    ╭─[ <unknown>:18:36 ]
+    │
+ 14 │                 "role": "admin",
+    │                         ───┬───  
+    │                            ╰───── Error in model permission for the role 'admin' on the model 'institutions'
+    │ 
+ 18 │                       "fieldName": "location",
+    │                                    ─────┬────  
+    │                                         ╰────── Cannot filter a nested field without a boolean expression type. Please ensure the model you are filtering has a filterExpressionType defined.
+────╯

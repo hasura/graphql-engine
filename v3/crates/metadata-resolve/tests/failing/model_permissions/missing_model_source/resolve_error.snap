@@ -1,0 +1,14 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/model_permissions/missing_model_source/metadata.json
+---
+Error: Error in model permission for model 'Albums (in subgraph subgraphs)' for role 'user': model source is required for model 'Albums (in subgraph subgraphs)' to resolve predicate
+    ╭─[ <unknown>:7:9 ]
+    │
+  7 │ ╭─▶         {
+    ┆ ┆   
+ 46 │ ├─▶         },
+    │ │                
+    │ ╰──────────────── No source is defined for this model
+────╯

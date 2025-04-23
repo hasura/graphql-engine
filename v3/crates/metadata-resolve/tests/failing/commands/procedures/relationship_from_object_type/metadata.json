@@ -1,0 +1,239 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "MyObject",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "MyObject"
+            }
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "MyObject",
+            "name": "procedureResult",
+            "target": {
+              "command": {
+                "name": "procedure_with_args"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "id"
+                    }
+                  ]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "argB"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "procedure_with_args",
+            "arguments": [
+              {
+                "name": "argA",
+                "type": "String!"
+              },
+              {
+                "name": "argB",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "String",
+            "source": {
+              "dataConnectorName": "myconnector",
+              "dataConnectorCommand": {
+                "procedure": "procedure_with_args"
+              },
+              "argumentMapping": {
+                "argA": "arg1",
+                "argB": "arg2"
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "myconnector",
+            "url": {
+              "readWriteUrls": {
+                "read": {
+                  "value": "http://local-dev.hasura.me:8080"
+                },
+                "write": {
+                  "value": "http://local-dev.hasura.me:8080"
+                }
+              }
+            },
+            "argumentPresets": [
+              {
+                "argument": "headers",
+                "value": {
+                  "httpHeaders": {
+                    "forward": ["x-myheader"],
+                    "additional": {
+                      "x-whatever": {
+                        "literal": "wow"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  },
+                  "String": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  },
+                  "Headers": {
+                    "representation": {
+                      "type": "json"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  }
+                },
+                "object_types": {},
+                "collections": [],
+                "functions": [],
+                "procedures": [
+                  {
+                    "name": "procedure_with_args",
+                    "arguments": {
+                      "headers": {
+                        "type": {
+                          "type": "named",
+                          "name": "Headers"
+                        }
+                      },
+                      "arg1": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "arg2": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "String"
+                    }
+                  }
+                ]
+              },
+              "capabilities": {
+                "version": "0.1.0",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {}
+                  },
+                  "mutation": {
+                    "transactional": {},
+                    "explain": {}
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "String",
+            "representation": "String"
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int"
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "Headers",
+            "representation": "Headers"
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Headers",
+            "description": "Headers map",
+            "graphql": {
+              "typeName": "Headers"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "disallow_procedure_command_relationships": true
+  }
+}

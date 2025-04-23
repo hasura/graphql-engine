@@ -1,4 +1,4 @@
-use crate::stages::graphql_config;
+use crate::{stages::graphql_config, types::error::ContextualError};
 use open_dds::{
     aggregates::{
         AggregateExpressionName, AggregationFunctionName, DataConnectorAggregationFunctionName,
@@ -87,7 +87,9 @@ pub struct AggregateExpressionGraphqlConfig {
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq, Clone)]
 pub enum AggregateExpressionIssue {
-    #[error("the aggregate expression {name} defines a graphql section but it will not appear in the GraphQL API unless {config_name} is also configured in the GraphqlConfig")]
+    #[error(
+        "the aggregate expression {name} defines a graphql section but it will not appear in the GraphQL API unless {config_name} is also configured in the GraphqlConfig"
+    )]
     ConfigMissingFromGraphQlConfig {
         name: Qualified<AggregateExpressionName>,
         config_name: String,
@@ -101,61 +103,79 @@ pub enum AggregateExpressionError {
         name: Qualified<AggregateExpressionName>,
     },
 
-    #[error("the name used by {config_name} from the GraphqlConfig conflicts with the aggregatable field name {aggregatable_field_name} in the aggregate expression {name}")]
+    #[error(
+        "the name used by {config_name} from the GraphqlConfig conflicts with the aggregatable field name {aggregatable_field_name} in the aggregate expression {name}"
+    )]
     AggregatableFieldNameConflict {
         name: Qualified<AggregateExpressionName>,
         config_name: String,
         aggregatable_field_name: FieldName,
     },
 
-    #[error("the name used by {config_name} from the GraphqlConfig conflicts with the aggregation function name {function_name} in the aggregate expression {name}")]
+    #[error(
+        "the name used by {config_name} from the GraphqlConfig conflicts with the aggregation function name {function_name} in the aggregate expression {name}"
+    )]
     AggregationFunctionNameConflict {
         name: Qualified<AggregateExpressionName>,
         config_name: String,
         function_name: AggregationFunctionName,
     },
 
-    #[error("the aggregate expression {name} specifies an operand object type that cannot be found: {type_name}")]
+    #[error(
+        "the aggregate expression {name} specifies an operand object type that cannot be found: {type_name}"
+    )]
     AggregateOperandObjectTypeNotFound {
         name: Qualified<AggregateExpressionName>,
         type_name: Qualified<CustomTypeName>,
     },
 
-    #[error("the aggregate expression {name} has duplicate definitions of the aggregatable field '{field_name}'")]
+    #[error(
+        "the aggregate expression {name} has duplicate definitions of the aggregatable field '{field_name}'"
+    )]
     AggregateOperandObjectFieldDuplicated {
         name: Qualified<AggregateExpressionName>,
         field_name: FieldName,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' that does not exist on its operand type {operand_type}")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregatable field '{field_name}' that does not exist on its operand type {operand_type}"
+    )]
     AggregateOperandObjectFieldNotFound {
         name: Qualified<AggregateExpressionName>,
         operand_type: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' (from the operand type {operand_type}) that has field arguments. Fields with arguments cannot be aggregated")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregatable field '{field_name}' (from the operand type {operand_type}) that has field arguments. Fields with arguments cannot be aggregated"
+    )]
     AggregateOperandObjectFieldHasArguments {
         name: Qualified<AggregateExpressionName>,
         operand_type: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' that references an aggregate expression that cannot be found: {field_aggregate_expression}")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregatable field '{field_name}' that references an aggregate expression that cannot be found: {field_aggregate_expression}"
+    )]
     AggregateOperandObjectFieldAggregateExpressionNotFound {
         name: Qualified<AggregateExpressionName>,
         field_name: FieldName,
         field_aggregate_expression: Qualified<AggregateExpressionName>,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' of type {field_type}, however arrays of arrays are not supported for aggregation")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregatable field '{field_name}' of type {field_type}, however arrays of arrays are not supported for aggregation"
+    )]
     MultipleNestedArrayAggregationNotSupported {
         name: Qualified<AggregateExpressionName>,
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' of type {field_type}, however the aggregation expression used to aggregate that field ({field_aggregate_exp_name}) is for aggregating a different type: {field_aggregate_exp_operand_type}")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregatable field '{field_name}' of type {field_type}, however the aggregation expression used to aggregate that field ({field_aggregate_exp_name}) is for aggregating a different type: {field_aggregate_exp_operand_type}"
+    )]
     AggregateOperandObjectFieldTypeMismatch {
         name: Qualified<AggregateExpressionName>,
         operand_type: Qualified<CustomTypeName>,
@@ -165,45 +185,59 @@ pub enum AggregateExpressionError {
         field_aggregate_exp_operand_type: QualifiedTypeName,
     },
 
-    #[error("the aggregate expression {name} specifies an operand scalar type that cannot be found: {type_name}")]
+    #[error(
+        "the aggregate expression {name} specifies an operand scalar type that cannot be found: {type_name}"
+    )]
     AggregateOperandScalarTypeNotFound {
         name: Qualified<AggregateExpressionName>,
         type_name: Qualified<CustomTypeName>,
     },
 
-    #[error("the aggregate expression {name} has duplicate definitions of the aggregation function '{function_name}'")]
+    #[error(
+        "the aggregate expression {name} has duplicate definitions of the aggregation function '{function_name}'"
+    )]
     AggregateOperandFunctionDuplicated {
         name: Qualified<AggregateExpressionName>,
         function_name: AggregationFunctionName,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregation function '{function_name}' that uses an unknown type for its return type: {type_name}")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregation function '{function_name}' that uses an unknown type for its return type: {type_name}"
+    )]
     AggregateOperandFunctionUnknownReturnType {
         name: Qualified<AggregateExpressionName>,
         function_name: AggregationFunctionName,
         type_name: CustomTypeName,
     },
 
-    #[error("the aggregate expression {name} defines an aggregation function mapping to an unknown data connector: {data_connector_name}")]
+    #[error(
+        "the aggregate expression {name} defines an aggregation function mapping to an unknown data connector: {data_connector_name}"
+    )]
     AggregateOperandDataConnectorMissing {
         name: Qualified<AggregateExpressionName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
 
-    #[error("the aggregate expression {name} defines an aggregation function mapping to a data connector that does not support aggregates: {data_connector_name}")]
+    #[error(
+        "the aggregate expression {name} defines an aggregation function mapping to a data connector that does not support aggregates: {data_connector_name}"
+    )]
     AggregateOperandDataConnectorNotSupported {
         name: Qualified<AggregateExpressionName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregation function '{function_name}' but there is no mapping defined to an aggregation function in the data connector '{data_connector_name}'")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregation function '{function_name}' but there is no mapping defined to an aggregation function in the data connector '{data_connector_name}'"
+    )]
     AggregateOperandDataConnectorFunctionMappingMissing {
         name: Qualified<AggregateExpressionName>,
         function_name: AggregationFunctionName,
         data_connector_name: Qualified<DataConnectorName>,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregation function '{function_name}' but the mapping to the data connector '{data_connector_name}' specifies a data connector scalar type that does not exist: {scalar_type}")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregation function '{function_name}' but the mapping to the data connector '{data_connector_name}' specifies a data connector scalar type that does not exist: {scalar_type}"
+    )]
     AggregateOperandDataConnectorFunctionUnknownScalarType {
         name: Qualified<AggregateExpressionName>,
         function_name: AggregationFunctionName,
@@ -211,7 +245,9 @@ pub enum AggregateExpressionError {
         scalar_type: DataConnectorScalarType,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregation function '{function_name}' which is mapped to the data connector '{data_connector_name}', however the mapped data connector aggregate function cannot be found: {data_connector_aggregate_function_name}")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregation function '{function_name}' which is mapped to the data connector '{data_connector_name}', however the mapped data connector aggregate function cannot be found: {data_connector_aggregate_function_name}"
+    )]
     AggregateOperandDataConnectorFunctionNotFound {
         name: Qualified<AggregateExpressionName>,
         function_name: AggregationFunctionName,
@@ -219,7 +255,9 @@ pub enum AggregateExpressionError {
         data_connector_aggregate_function_name: DataConnectorAggregationFunctionName,
     },
 
-    #[error("the aggregate expression {name} specifies an aggregation function '{function_name}' which is mapped to the data connector '{data_connector_name}' but the Open DD return type {return_type} is not compatible with the data connector's return type. Reason: {reason}")]
+    #[error(
+        "the aggregate expression {name} specifies an aggregation function '{function_name}' which is mapped to the data connector '{data_connector_name}' but the Open DD return type {return_type} is not compatible with the data connector's return type. Reason: {reason}"
+    )]
     AggregateOperandDataConnectorFunctionReturnTypeIncompatible {
         name: Qualified<AggregateExpressionName>,
         function_name: AggregationFunctionName,
@@ -228,7 +266,9 @@ pub enum AggregateExpressionError {
         reason: String,
     },
 
-    #[error("the data connector {data_connector_name} does not support aggregates over nested object fields, such as the field {field_name} used in aggregate expression {name}")]
+    #[error(
+        "the data connector {data_connector_name} does not support aggregates over nested object fields, such as the field {field_name} used in aggregate expression {name}"
+    )]
     NestedObjectAggregatesNotSupportedByDataConnector {
         name: Qualified<AggregateExpressionName>,
         data_connector_name: Qualified<DataConnectorName>,
@@ -248,12 +288,20 @@ pub enum AggregateExpressionError {
         return_type: QualifiedTypeName,
     },
 
-    #[error("the return type used on the {count_type} aggregate ({return_type}) must be an integer type")]
+    #[error(
+        "the return type used on the {count_type} aggregate ({return_type}) must be an integer type"
+    )]
     InvalidCountReturnType {
         aggregate_expression_name: Qualified<AggregateExpressionName>,
         count_type: CountAggregateType,
         return_type: QualifiedTypeName,
     },
+}
+
+impl ContextualError for AggregateExpressionError {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]

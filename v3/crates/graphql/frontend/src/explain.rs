@@ -8,10 +8,7 @@ use std::sync::Arc;
 use async_recursion::async_recursion;
 use engine_types::{ExposeInternalErrors, HttpContext};
 use execute::ndc::client as ndc_client;
-use graphql_ir::{
-    ApolloFederationSelect, GraphqlRequestPipeline, MutationPlan, NodeQueryPlan, QueryPlan,
-    RequestPlan,
-};
+use graphql_ir::{ApolloFederationSelect, MutationPlan, NodeQueryPlan, QueryPlan, RequestPlan};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -26,7 +23,6 @@ use plan_types::{
 use tracing_util::{AttributeVisibility, SpanVisibility};
 
 pub async fn execute_explain(
-    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
@@ -36,7 +32,6 @@ pub async fn execute_explain(
     request: RawRequest,
 ) -> (Option<ast::OperationType>, types::ExplainResponse) {
     explain_query_internal(
-        request_pipeline,
         expose_internal_errors,
         http_context,
         schema,
@@ -59,7 +54,6 @@ pub async fn execute_explain(
 
 /// Explains (query plan) a GraphQL query
 async fn explain_query_internal(
-    request_pipeline: GraphqlRequestPipeline,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
@@ -90,12 +84,16 @@ async fn explain_query_internal(
                     let query = steps::parse_query(&raw_request.query)?;
 
                     // normalize the parsed GQL query
-                    let normalized_request =
-                        steps::normalize_request(schema, session, query, &raw_request)?;
+                    let normalized_request = steps::normalize_request(
+                        schema,
+                        session,
+                        query,
+                        &raw_request,
+                        &metadata.runtime_flags,
+                    )?;
 
                     // generate IR
                     let ir = steps::build_ir(
-                        request_pipeline,
                         schema,
                         metadata,
                         session,

@@ -8,7 +8,7 @@ use crate::error::{FieldError, FieldInternalError};
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, Argument, Field, MutationArgument,
     MutationExecutionPlan, NestedArray, NestedField, NestedObject, OrderByDirection,
-    OrderByElement, OrderByTarget, QueryExecutionPlan, QueryNodeNew, Relationship,
+    OrderByElement, OrderByTarget, QueryExecutionPlan, QueryNode, Relationship,
     RelationshipArgument, ResolvedFilterExpression, VariableName,
 };
 
@@ -84,7 +84,7 @@ fn make_variables(
     })
 }
 
-fn make_query(query_node: QueryNodeNew) -> Result<ndc_models_v01::Query, FieldError> {
+fn make_query(query_node: QueryNode) -> Result<ndc_models_v01::Query, FieldError> {
     // Group by is not supported in 0.1.x
     if query_node.group_by.is_some() {
         return Err(FieldError::InternalError(

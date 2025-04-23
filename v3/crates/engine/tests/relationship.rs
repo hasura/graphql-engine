@@ -113,6 +113,43 @@ fn test_relationships_array_with_arguments_with_graphql_config() -> anyhow::Resu
 }
 
 #[test]
+fn test_local_relationships_model_to_model_array_with_arguments_null_inputs() -> anyhow::Result<()>
+{
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/array/arguments_null_inputs",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
+#[test]
+fn test_relationships_array_with_arguments_null_inputs_with_graphql_config() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/array/arguments_null_inputs/with_graphql_config",
+        &["execute/relationships/common_metadata/graphql_config.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
+#[test]
 fn test_local_relationships_command_to_model() -> anyhow::Result<()> {
     common::test_execution_expectation_for_multiple_ndc_versions(
         "execute/relationships/command_to_model",
@@ -257,14 +294,17 @@ fn test_remote_mutually_recursive_relationships_to_command_across_namespace() ->
         BTreeMap::from([
             (
                 NdcVersion::V01,
-                vec!["execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v01.json"],
+                vec![
+                    "execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v01.json",
+                ],
             ),
             (
                 NdcVersion::V02,
-                vec!["execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v02.json"],
+                vec![
+                    "execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v02.json",
+                ],
             ),
         ]),
-
     )
 }
 
@@ -393,6 +433,18 @@ fn test_remote_mutually_recursive_relationships_model_to_command() -> anyhow::Re
         test_path_string,
         &[
             "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
+            "execute/common_metadata/custom_connector_v02_schema.json",
+        ],
+    )
+}
+
+#[test]
+fn test_remote_relationships_command_join_with_object_value() -> anyhow::Result<()> {
+    let test_path_string = "execute/remote_relationships/command/join_with_object_value";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            "execute/common_metadata/custom_connector_v02_no_relationships_schema.json",
             "execute/common_metadata/custom_connector_v02_schema.json",
         ],
     )

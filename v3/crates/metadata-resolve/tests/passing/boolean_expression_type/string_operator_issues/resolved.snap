@@ -1,0 +1,1482 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string_operator_issues/metadata.json
+---
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Foo",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "foo",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "row_type_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {
+                    RelationshipName(
+                        Identifier(
+                            "row_type",
+                        ),
+                    ): RelationshipField {
+                        field_name: Name(
+                            "row_type",
+                        ),
+                        relationship_name: RelationshipName(
+                            Identifier(
+                                "row_type",
+                            ),
+                        ),
+                        source: Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "Foo",
+                                ),
+                            ),
+                        },
+                        target: Model(
+                            ModelRelationshipTarget {
+                                model_name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: ModelName(
+                                        Identifier(
+                                            "mymodel",
+                                        ),
+                                    ),
+                                },
+                                relationship_type: Object,
+                                target_typename: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "RowType",
+                                        ),
+                                    ),
+                                },
+                                mappings: [
+                                    RelationshipModelMapping {
+                                        source_field: RelationshipFieldAccess {
+                                            field_name: FieldName(
+                                                Identifier(
+                                                    "row_type_id",
+                                                ),
+                                            ),
+                                        },
+                                        target: ModelField(
+                                            RelationshipModelMappingFieldTarget {
+                                                target_field: RelationshipFieldAccess {
+                                                    field_name: FieldName(
+                                                        Identifier(
+                                                            "id",
+                                                        ),
+                                                    ),
+                                                },
+                                                target_ndc_column: Some(
+                                                    NdcColumnForComparison {
+                                                        column: DataConnectorColumnName(
+                                                            "id",
+                                                        ),
+                                                        equal_operator: DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    },
+                                                ),
+                                            },
+                                        ),
+                                    },
+                                ],
+                                relationship_aggregate: None,
+                            },
+                        ),
+                        target_capabilities: Some(
+                            RelationshipCapabilities {
+                                foreach: (),
+                                supports_relationships: Some(
+                                    DataConnectorRelationshipCapabilities {
+                                        supports_relation_comparisons: true,
+                                        supports_nested_relationships: Some(
+                                            DataConnectorNestedRelationshipCapabilities {
+                                                supports_nested_array_selection: true,
+                                                supports_nested_in_filtering: true,
+                                                supports_nested_in_ordering: true,
+                                            },
+                                        ),
+                                    },
+                                ),
+                            },
+                        ),
+                        description: None,
+                        deprecated: None,
+                    },
+                },
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "foo",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "foo",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "foo",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "foo",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "String",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: None,
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        extraction_functions: Some(
+                                            ExtractionFunctions {
+                                                year_function: None,
+                                                month_function: None,
+                                                day_function: None,
+                                                nanosecond_function: None,
+                                                microsecond_function: None,
+                                                millisecond_function: None,
+                                                second_function: None,
+                                                minute_function: None,
+                                                hour_function: None,
+                                                week_function: None,
+                                                quarter_function: None,
+                                                day_of_week_function: None,
+                                                day_of_year_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "row_type_id",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "row_type_id",
+                                        ),
+                                        column_type: Nullable {
+                                            underlying_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ),
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_contains",
+                                                    ),
+                                                ),
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        extraction_functions: Some(
+                                            ExtractionFunctions {
+                                                year_function: None,
+                                                month_function: None,
+                                                day_function: None,
+                                                nanosecond_function: None,
+                                                microsecond_function: None,
+                                                millisecond_function: None,
+                                                second_function: None,
+                                                minute_function: None,
+                                                hour_function: None,
+                                                week_function: None,
+                                                quarter_function: None,
+                                                day_of_week_function: None,
+                                                day_of_year_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "RowType",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "test",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Foo",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "row_type",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "row_type",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "id",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "id",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "Int",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ),
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_contains",
+                                                    ),
+                                                ),
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: None,
+                                                max_function: None,
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        extraction_functions: Some(
+                                            ExtractionFunctions {
+                                                year_function: None,
+                                                month_function: None,
+                                                day_function: None,
+                                                nanosecond_function: None,
+                                                microsecond_function: None,
+                                                millisecond_function: None,
+                                                second_function: None,
+                                                minute_function: None,
+                                                hour_function: None,
+                                                week_function: None,
+                                                quarter_function: None,
+                                                day_of_week_function: None,
+                                                day_of_year_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "test",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "test",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "foo",
+                                            ),
+                                        },
+                                        column_type_representation: None,
+                                        comparison_operators: None,
+                                        aggregate_functions: None,
+                                        extraction_functions: None,
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        scalar_types: {},
+        models: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: ModelName(
+                    Identifier(
+                        "mymodel",
+                    ),
+                ),
+            }: ModelWithPermissions {
+                model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                6,
+                            ),
+                        ],
+                    ),
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: ModelName(
+                            Identifier(
+                                "mymodel",
+                            ),
+                        ),
+                    },
+                    data_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "RowType",
+                            ),
+                        ),
+                    },
+                    data_type_path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                6,
+                            ),
+                            Key(
+                                "definition",
+                            ),
+                            Key(
+                                "objectType",
+                            ),
+                        ],
+                    ),
+                    type_fields: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "test",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Foo",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    arguments: {},
+                    source: Some(
+                        ModelSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "myconnector",
+                                        ),
+                                    ),
+                                },
+                                url: ReadWriteUrls(
+                                    ResolvedReadWriteUrls {
+                                        read: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                        write: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                    },
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V02,
+                                    supports_explaining_queries: true,
+                                    supports_explaining_mutations: true,
+                                    supports_nested_object_filtering: false,
+                                    supports_nested_object_ordering: true,
+                                    supports_nested_object_array_filtering: false,
+                                    supports_nested_scalar_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                            aggregate_count_scalar_type: None,
+                                            supports_grouping: None,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: true,
+                                                    supports_nested_in_ordering: true,
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                    supports_relational_queries: None,
+                                },
+                            },
+                            collection: CollectionName(
+                                "mycollection",
+                            ),
+                            collection_type: DataConnectorObjectType(
+                                "row_type",
+                            ),
+                            type_mappings: {
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Foo",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "foo",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "foo",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "foo",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "String",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: None,
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            extraction_functions: Some(
+                                                ExtractionFunctions {
+                                                    year_function: None,
+                                                    month_function: None,
+                                                    day_function: None,
+                                                    nanosecond_function: None,
+                                                    microsecond_function: None,
+                                                    millisecond_function: None,
+                                                    second_function: None,
+                                                    minute_function: None,
+                                                    hour_function: None,
+                                                    week_function: None,
+                                                    quarter_function: None,
+                                                    day_of_week_function: None,
+                                                    day_of_year_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "row_type_id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "row_type_id",
+                                            ),
+                                            column_type: Nullable {
+                                                underlying_type: Named {
+                                                    name: TypeName(
+                                                        "Int",
+                                                    ),
+                                                },
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_contains",
+                                                        ),
+                                                    ),
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            extraction_functions: Some(
+                                                ExtractionFunctions {
+                                                    year_function: None,
+                                                    month_function: None,
+                                                    day_function: None,
+                                                    nanosecond_function: None,
+                                                    microsecond_function: None,
+                                                    millisecond_function: None,
+                                                    second_function: None,
+                                                    minute_function: None,
+                                                    hour_function: None,
+                                                    week_function: None,
+                                                    quarter_function: None,
+                                                    day_of_week_function: None,
+                                                    day_of_year_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "RowType",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "row_type",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "id",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_contains",
+                                                        ),
+                                                    ),
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: None,
+                                                    max_function: None,
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            extraction_functions: Some(
+                                                ExtractionFunctions {
+                                                    year_function: None,
+                                                    month_function: None,
+                                                    day_function: None,
+                                                    nanosecond_function: None,
+                                                    microsecond_function: None,
+                                                    millisecond_function: None,
+                                                    second_function: None,
+                                                    minute_function: None,
+                                                    hour_function: None,
+                                                    week_function: None,
+                                                    quarter_function: None,
+                                                    day_of_week_function: None,
+                                                    day_of_year_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "test",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "test",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "foo",
+                                                ),
+                                            },
+                                            column_type_representation: None,
+                                            comparison_operators: None,
+                                            aggregate_functions: None,
+                                            extraction_functions: None,
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                            },
+                            argument_mappings: {},
+                            data_connector_link_argument_presets: {},
+                            source_arguments: {},
+                        },
+                    ),
+                    global_id_source: None,
+                    apollo_federation_key_source: None,
+                    aggregate_expression: None,
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: Some(
+                            ModelGraphQlDefinitionV2 {
+                                select_uniques: [],
+                                select_many: Some(
+                                    SelectManyGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "mycollection",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ),
+                                arguments_input_type: None,
+                                apollo_federation: None,
+                                filter_input_type_name: None,
+                                aggregate: None,
+                            },
+                        ),
+                        description: None,
+                        order_by: ModelV2(
+                            Some(
+                                OrderByExpressionName(
+                                    Identifier(
+                                        "MyOrderByExpression",
+                                    ),
+                                ),
+                            ),
+                        ),
+                    },
+                },
+                select_permissions: {},
+                filter_expression_type: None,
+                graphql_api: ModelGraphQlApi {
+                    arguments_input_config: None,
+                    select_uniques: [],
+                    select_many: Some(
+                        SelectManyGraphQlDefinition {
+                            query_root_field: Name(
+                                "mycollection",
+                            ),
+                            description: None,
+                            deprecated: None,
+                            subscription: None,
+                        },
+                    ),
+                    select_aggregate: None,
+                    order_by_expression: Some(
+                        ModelOrderByExpression {
+                            data_connector_name: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: DataConnectorName(
+                                    Identifier(
+                                        "myconnector",
+                                    ),
+                                ),
+                            },
+                            order_by_type_name: TypeName(
+                                Name(
+                                    "mycollection_order_by",
+                                ),
+                            ),
+                            order_by_field_name: Name(
+                                "order_by",
+                            ),
+                            order_by_expression_identifier: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: FromOrderByExpression(
+                                    OrderByExpressionName(
+                                        Identifier(
+                                            "MyOrderByExpression",
+                                        ),
+                                    ),
+                                ),
+                            },
+                        },
+                    ),
+                    limit_field: Some(
+                        LimitFieldGraphqlConfig {
+                            field_name: Name(
+                                "limit",
+                            ),
+                        },
+                    ),
+                    offset_field: Some(
+                        OffsetFieldGraphqlConfig {
+                            field_name: Name(
+                                "offset",
+                            ),
+                        },
+                    ),
+                    filter_input_type_name: None,
+                },
+            },
+        },
+        commands: {},
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {},
+            scalars: {
+                FromBooleanExpressionType(
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Int_bool_exp",
+                            ),
+                        ),
+                    },
+                ): ResolvedScalarBooleanExpressionType {
+                    operand_type: Inbuilt(
+                        Int,
+                    ),
+                    comparison_operators: {
+                        OperatorName(
+                            "_contains",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: false,
+                        },
+                        OperatorName(
+                            "_eq",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: false,
+                        },
+                    },
+                    data_connector_operator_mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                        }: DataConnectorOperatorMapping {
+                            data_connector_name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                            data_connector_scalar_type: DataConnectorScalarType(
+                                "Int",
+                            ),
+                            operator_mapping: {
+                                OperatorName(
+                                    "_contains",
+                                ): DataConnectorOperatorName(
+                                    "_contains",
+                                ),
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                            },
+                        },
+                    },
+                    graphql_name: Some(
+                        GraphQlTypeName(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                    logical_operators: Exclude,
+                    is_null_operator: Include {
+                        graphql: Some(
+                            IsNullOperatorGraphqlConfig {
+                                is_null_operator_name: Name(
+                                    "_is_null",
+                                ),
+                            },
+                        ),
+                    },
+                },
+            },
+            object_aggregates: {},
+            scalar_aggregates: {},
+        },
+        order_by_expressions: OrderByExpressions {
+            objects: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromOrderByExpression(
+                        OrderByExpressionName(
+                            Identifier(
+                                "FooOrderByExpression",
+                            ),
+                        ),
+                    ),
+                }: ObjectOrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromOrderByExpression(
+                            OrderByExpressionName(
+                                Identifier(
+                                    "FooOrderByExpression",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Foo",
+                            ),
+                        ),
+                    },
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "foo",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromOrderByExpression(
+                                        OrderByExpressionName(
+                                            Identifier(
+                                                "StringOrderByExpression",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                    },
+                    orderable_relationships: {
+                        RelationshipName(
+                            Identifier(
+                                "row_type",
+                            ),
+                        ): OrderableRelationship {
+                            order_by_expression: Some(
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: OrderByExpressionName(
+                                        Identifier(
+                                            "MyOrderByExpression",
+                                        ),
+                                    ),
+                                },
+                            ),
+                        },
+                    },
+                    graphql: Some(
+                        OrderByExpressionGraphqlConfig {
+                            expression_type_name: TypeName(
+                                Name(
+                                    "foo_order_by",
+                                ),
+                            ),
+                        },
+                    ),
+                    description: Some(
+                        "Order by expression for Foo",
+                    ),
+                },
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromOrderByExpression(
+                        OrderByExpressionName(
+                            Identifier(
+                                "MyOrderByExpression",
+                            ),
+                        ),
+                    ),
+                }: ObjectOrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromOrderByExpression(
+                            OrderByExpressionName(
+                                Identifier(
+                                    "MyOrderByExpression",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "RowType",
+                            ),
+                        ),
+                    },
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "test",
+                            ),
+                        ): Object(
+                            OrderableObjectField {
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromOrderByExpression(
+                                        OrderByExpressionName(
+                                            Identifier(
+                                                "FooOrderByExpression",
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                    },
+                    orderable_relationships: {},
+                    graphql: Some(
+                        OrderByExpressionGraphqlConfig {
+                            expression_type_name: TypeName(
+                                Name(
+                                    "mycollection_order_by",
+                                ),
+                            ),
+                        },
+                    ),
+                    description: Some(
+                        "Order by expression for mycollection RowType",
+                    ),
+                },
+            },
+            scalars: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromOrderByExpression(
+                        OrderByExpressionName(
+                            Identifier(
+                                "StringOrderByExpression",
+                            ),
+                        ),
+                    ),
+                }: ScalarOrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromOrderByExpression(
+                            OrderByExpressionName(
+                                Identifier(
+                                    "StringOrderByExpression",
+                                ),
+                            ),
+                        ),
+                    },
+                    enable_order_by_directions: EnableAll(
+                        true,
+                    ),
+                    graphql: None,
+                    description: None,
+                },
+            },
+        },
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "order_by",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
+        },
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
+    },
+    [
+        ScalarBooleanExpressionIssue(
+            OperatorIssue(
+                OnlyApplicableOnStringScalar {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Int_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "_contains",
+                    ),
+                    reason: ScalarTypeNotString {
+                        scalar_type: Inbuilt(
+                            Int,
+                        ),
+                    },
+                },
+            ),
+        ),
+        ScalarBooleanExpressionIssue(
+            OperatorIssue(
+                OnlyApplicableOnStringScalar {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Int_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "_contains",
+                    ),
+                    reason: ArgumentTypeNotString {
+                        argument_type: Inbuilt(
+                            Int,
+                        ),
+                    },
+                },
+            ),
+        ),
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "Int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+    ],
+)

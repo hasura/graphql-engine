@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/boolean_expression/scalar_comparison_operator_duplicated/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-the comparable operator '_eq' is defined more than once in the boolean expression type 'string_bool_exp (in subgraph default)'
+Error: the comparable operator '_eq' is defined more than once in the boolean expression type 'string_bool_exp (in subgraph default)'

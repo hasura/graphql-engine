@@ -74,9 +74,6 @@ import Hasura.GraphQL.Parser.Variable qualified as G
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
-  ( QueryTagsComment (..),
-    emptyQueryTagsComment,
-  )
 import Hasura.RQL.IR
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.ModelInformation
@@ -156,7 +153,7 @@ pgDBQueryPlan userInfo sourceName sourceConfig qrf reqHeaders operationName trac
   rootFieldPlan <- irToRootFieldPlan userInfo planVals preparedQuery
   modelNames <- irToModelInfoGen sourceName ModelSourceTypePostgres preparedQuery
   let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeQuery)
-  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags rootFieldPlan queryTagsComment
+  let preparedSQLWithQueryTags = addQueryTagsToPreparedSql rootFieldPlan queryTagsComment
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags traceQueryStatus
   pure $ (DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL (fmap withNoStatistics action) resolvedConnectionTemplate, modelInfo)
 
@@ -403,7 +400,7 @@ convertFunction sourceName modelSourceType userInfo traceQueryStatus jsonAggSele
           JASSingleObject -> QDBSingleRow
   rootFieldPlan <- irToRootFieldPlan userInfo planVals $ queryResultFn preparedQuery
   modelNames <- irToModelInfoGen sourceName modelSourceType $ queryResultFn preparedQuery
-  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags rootFieldPlan queryTags
+  let preparedSQLWithQueryTags = addQueryTagsToPreparedSql rootFieldPlan queryTags
   pure
     ( fst (mkCurPlanTx userInfo preparedSQLWithQueryTags traceQueryStatus), -- forget (Maybe PreparedSql)
       modelNames
@@ -497,7 +494,7 @@ pgDBLiveQuerySubscriptionPlan removeEmptySubscriptionResponses userInfo sourceNa
   subscriptionQueryTagsComment <- ask
   multiplexedQuery <- PGL.mkMultiplexedQuery removeEmptySubscriptionResponses userInfo $ InsOrdHashMap.mapKeys _rfaAlias preparedAST
   let multiplexedQueryWithQueryTags =
-        multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
+        multiplexedQuery {PGL.unMultiplexedQuery = addQueryTagsToSql (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
@@ -558,7 +555,7 @@ pgDBStreamingSubscriptionPlan userInfo sourceName sourceConfig (rootFieldAlias, 
   subscriptionQueryTagsComment <- ask
   multiplexedQuery <- PGL.mkStreamingMultiplexedQuery userInfo (G._rfaAlias rootFieldAlias, preparedAST)
   let multiplexedQueryWithQueryTags =
-        multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
+        multiplexedQuery {PGL.unMultiplexedQuery = addQueryTagsToSql (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
   modelNames <- irToModelInfoGen sourceName ModelSourceTypePostgres preparedAST
@@ -675,16 +672,12 @@ irToRootFieldPlan userInfo prepped = \case
       pure $ PreparedSql query prepped
 
 -- Append Query Tags to the Prepared SQL
-appendPreparedSQLWithQueryTags :: PreparedSql -> QueryTagsComment -> PreparedSql
-appendPreparedSQLWithQueryTags preparedSQL queryTags =
-  preparedSQL {_psQuery = appendSQLWithQueryTags query queryTags}
-  where
-    query = _psQuery preparedSQL
+addQueryTagsToPreparedSql :: PreparedSql -> QueryTagsComment -> PreparedSql
+addQueryTagsToPreparedSql preparedSQL queryTags =
+  preparedSQL {_psQuery = addQueryTagsToSql (_psQuery preparedSQL) queryTags}
 
-appendSQLWithQueryTags :: PG.Query -> QueryTagsComment -> PG.Query
-appendSQLWithQueryTags query queryTags = query {PG.getQueryText = queryText <> _unQueryTagsComment queryTags}
-  where
-    queryText = PG.getQueryText query
+addQueryTagsToSql :: PG.Query -> QueryTagsComment -> PG.Query
+addQueryTagsToSql query queryTags = query {PG.getQueryText = addQueryTagsComment (PG.getQueryText query) queryTags}
 
 --------------------------------------------------------------------------------
 -- Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)

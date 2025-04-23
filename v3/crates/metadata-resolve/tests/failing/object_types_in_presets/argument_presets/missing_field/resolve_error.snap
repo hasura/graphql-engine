@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/argument_presets/missing_field/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-Type error in preset argument objects for role admin in command InsertAlbum (in subgraph default): Typecheck failed for field title in object type InsertAlbumObject (in subgraph default): Expected a non-null value but received null
+Error: Type error in preset argument objects for role admin in command InsertAlbum (in subgraph default): Typecheck failed for field title in object type InsertAlbumObject (in subgraph default): Expected a non-null value but received null

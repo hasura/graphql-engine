@@ -11,7 +11,7 @@ use hasura_authn_core::Session;
 use lang_graphql::{ast::common as ast, http::RawRequest};
 use open_dds::plugins::LifecyclePreParsePluginHook;
 use tracing_util::{
-    set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Traceable, TraceableError,
+    ErrorVisibility, SpanVisibility, Traceable, TraceableError, set_attribute_on_active_span,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -29,20 +29,31 @@ pub enum Error {
 }
 
 impl Error {
-    pub fn into_graphql_error(self) -> lang_graphql::http::GraphQLError {
-        let is_internal = match &self {
+    pub fn is_internal(&self) -> bool {
+        match self {
             Error::ErrorWhileMakingHTTPRequestToTheHook(_, _) | Error::UnexpectedStatusCode(_) => {
                 false
             }
             Error::BuildRequestError(_, _)
             | Error::ReqwestError(_)
             | Error::PluginRequestParseError(_) => true,
-        };
+        }
+    }
+
+    pub fn into_graphql_error(self) -> lang_graphql::http::GraphQLError {
         lang_graphql::http::GraphQLError {
             message: self.to_string(),
             path: None,
             extensions: None,
-            is_internal,
+            is_internal: self.is_internal(),
+        }
+    }
+
+    pub fn into_middleware_error(self) -> engine_types::MiddlewareError {
+        engine_types::MiddlewareError {
+            status: StatusCode::INTERNAL_SERVER_ERROR,
+            message: self.to_string(),
+            is_internal: self.is_internal(),
         }
     }
 }
@@ -50,16 +61,6 @@ impl Error {
 impl TraceableError for Error {
     fn visibility(&self) -> ErrorVisibility {
         ErrorVisibility::Internal
-    }
-}
-
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
-        lang_graphql::http::Response::error_with_status(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            self.into_graphql_error(),
-        )
-        .into_response()
     }
 }
 
@@ -284,7 +285,7 @@ pub async fn pre_parse_plugins_handler(
     session: Session,
     raw_request_bytes: &axum::body::Bytes,
     headers_map: HeaderMap,
-) -> axum::response::Result<Option<axum::response::Response>> {
+) -> Result<Option<axum::response::Response>, Error> {
     let tracer = tracing_util::global_tracer();
     let mut response = None;
     let raw_request = serde_json::from_slice::<RawRequest>(raw_request_bytes)

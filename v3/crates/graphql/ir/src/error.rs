@@ -64,7 +64,9 @@ pub enum Error {
     #[error("field '{field_name:} not found in entity representation")]
     FieldNotFoundInEntityRepresentation { field_name: FieldName },
 
-    #[error("order_by expects a list of input objects with exactly one key-value pair per input object. Please split the input object with multiple key-value pairs into a list of single key-value pair objects.")]
+    #[error(
+        "order_by expects a list of input objects with exactly one key-value pair per input object. Please split the input object with multiple key-value pairs into a list of single key-value pair objects."
+    )]
     OrderByObjectShouldExactlyHaveOneKeyValuePair,
 
     #[error("missing non-nullable argument {argument_name:} for field {field_name:}")]
@@ -81,13 +83,17 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
     },
 
-    #[error("internal error: type mapping or field mapping not found for type {type_name:} and field {field_name:}")]
+    #[error(
+        "internal error: type mapping or field mapping not found for type {type_name:} and field {field_name:}"
+    )]
     InternalMappingNotFound {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
     },
 
-    #[error("internal error: missing target model source for the relationship {relationship_name:} on type {type_name:}")]
+    #[error(
+        "internal error: missing target model source for the relationship {relationship_name:} on type {type_name:}"
+    )]
     InternalMissingTargetModelSourceForRelationship {
         relationship_name: RelationshipName,
         type_name: Qualified<CustomTypeName>,
@@ -191,29 +197,48 @@ pub enum InternalDeveloperError {
         field_name: FieldName,
     },
 
+    #[error("Object type '{type_name}' not found")]
+    ObjectTypeNotFound {
+        type_name: Qualified<CustomTypeName>,
+    },
+
+    #[error("The field '{field_name}' was not found on object type '{object_type_name}'")]
+    ObjectTypeFieldNotFound {
+        field_name: FieldName,
+        object_type_name: Qualified<CustomTypeName>,
+    },
+
     #[error("{0}")]
     RelationshipFieldMappingError(#[from] plan::RelationshipFieldMappingError),
 
-    #[error("Argument mapping not found for the argument {argument_name:} while executing the relationship {relationship_name:}")]
+    #[error(
+        "Argument mapping not found for the argument {argument_name:} while executing the relationship {relationship_name:}"
+    )]
     ArgumentMappingNotFoundForRelationship {
         relationship_name: RelationshipName,
         argument_name: ArgumentName,
     },
 
-    #[error("The aggregation function {aggregation_function} operating over the {aggregate_operand_type} type is missing a data connector mapping for {data_connector_name}")]
+    #[error(
+        "The aggregation function {aggregation_function} operating over the {aggregate_operand_type} type is missing a data connector mapping for {data_connector_name}"
+    )]
     DataConnectorAggregationFunctionNotFound {
         aggregate_operand_type: QualifiedTypeName,
         aggregation_function: AggregationFunctionName,
         data_connector_name: Qualified<DataConnectorName>,
     },
 
-    #[error("A field ({field_name}) with an AggregatableField annotation was found on a scalar-typed ({aggregate_operand_type}) operand's selection set")]
+    #[error(
+        "A field ({field_name}) with an AggregatableField annotation was found on a scalar-typed ({aggregate_operand_type}) operand's selection set"
+    )]
     AggregatableFieldFoundOnScalarTypedOperand {
         field_name: FieldName,
         aggregate_operand_type: QualifiedTypeName,
     },
 
-    #[error("The aggregation function {aggregation_function} was used on the model object type and not on a model field. Aggregation functions operate on columns, not rows")]
+    #[error(
+        "The aggregation function {aggregation_function} was used on the model object type and not on a model field. Aggregation functions operate on columns, not rows"
+    )]
     ColumnAggregationFunctionUsedOnModelObjectType {
         aggregate_operand_type: QualifiedTypeName,
         aggregation_function: AggregationFunctionName,
@@ -257,7 +282,9 @@ pub enum InternalEngineError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum OperatorMappingError {
-    #[error("could not find operator mapping for column {column_name:} in data connector {data_connector_name}")]
+    #[error(
+        "could not find operator mapping for column {column_name:} in data connector {data_connector_name}"
+    )]
     MissingEntryForDataConnector {
         column_name: DataConnectorColumnName,
         data_connector_name: Qualified<DataConnectorName>,

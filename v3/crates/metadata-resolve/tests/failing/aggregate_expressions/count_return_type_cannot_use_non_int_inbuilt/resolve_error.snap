@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/count_return_type_cannot_use_non_int_inbuilt/metadata.json
 ---
-the return type used on the count aggregate (String) must be an integer type
+Error: the return type used on the count aggregate (String) must be an integer type

@@ -59,7 +59,16 @@ fn test_failing_metadata() {
                                     panic!("{}: Unexpected success when resolving {path:?}.", directory.display());
                                 }
                                 Err(msg) => {
-                                    insta::assert_snapshot!("resolve_error", msg);
+                                    let config = ariadne::Config::new().with_color(false);
+
+                                    let reports =  metadata_resolve::to_fancy_errors(metadata_json_text.as_str(),&msg,config);
+                                            // write an ariadne error to a String
+                                            let mut buf = Vec::new();
+                                            for report in reports {
+                                                let () = report.write(ariadne::Source::from(&metadata_json_text),&mut buf).unwrap();
+                                            }
+                                            let string = String::from_utf8(buf).unwrap();
+                                            insta::assert_snapshot!("resolve_error",string);
                                 }
                             }
                         }
@@ -81,7 +90,6 @@ fn read_test_configuration(
     directory: &Path,
 ) -> Result<configuration::Configuration, Box<dyn std::error::Error>> {
     let unstable_features = configuration::UnstableFeatures {
-        enable_ndc_v02_support: false,
         enable_aggregation_predicates: true,
     };
 

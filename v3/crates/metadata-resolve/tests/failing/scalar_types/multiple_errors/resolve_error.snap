@@ -1,0 +1,7 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/scalar_types/multiple_errors/metadata.json
+---
+Error: Scalar type String conflicts with existing inbuilt type
+Error: Scalar type Int conflicts with existing inbuilt type

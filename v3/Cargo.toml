@@ -2,7 +2,7 @@
 resolver = "2"
 
 package.version = "3.0.0"
-package.edition = "2021"
+package.edition = "2024"
 package.license = "Apache-2.0"
 
 members = [
@@ -64,11 +64,12 @@ used_underscore_binding = "allow"
 private_intra_doc_links = "allow"
 
 [workspace.dependencies]
-ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.2.0-rc.3" } # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
+ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", rev = "v0.2.1-rc.2", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 ndc-models-v01 = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.6" } # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 
 anyhow = "1"
 apollo-parser = "0.7"
+ariadne = { version = "0.5", features = ["auto-color"] }
 async-graphql-parser = "7"
 async-recursion = "1"
 async-trait = "0.1"
@@ -86,7 +87,7 @@ convert_case = "0.6"
 cookie = "0.18"
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 darling = "0.20"
-datafusion = { version = "41", features = ["serde"] }
+datafusion = { version = "45", features = ["serde"] }
 derive_more = { version = "1.0", features = ["full"] }
 diffy = "0.4"
 env_logger = "0.11"
@@ -101,12 +102,15 @@ human_bytes = "0.4"
 indexmap = { version = "2", features = ["serde"] }
 insta = { version = "1", features = ["glob", "json"] }
 iso8601 = "0.6.2"
-itertools = "0.13.0"
+itertools = "0.14.0"
 json_value_merge = "2"
 jsonapi_library = { package = "jsonapi", git = "https://github.com/hasura/jsonapi-rust.git", rev = "9b5a3a08414e559c7285b539acd4d4fc7b31f3b5" }
 jsonptr = "0.4"
-jsonwebkey = { version = "0.3", features = ["generate", "jsonwebtoken","pkcs-convert"] }
-jsonwebtoken = "8"
+# We're using a fork of this library that updates the deps to use more recent versions
+# (in particular jsonwebtoken from v8->v9 to fix a vulnerability in its dependency on ring: https://rustsec.org/advisories/RUSTSEC-2025-0009)
+# (the branch uses the code from https://github.com/nhynes/jwk-rs/pull/13)
+jsonwebkey = { features = ["generate", "jsonwebtoken","pkcs-convert"], git = "https://github.com/hasura/jwk-rs.git", branch = "update-deps" }
+jsonwebtoken = "9"
 lazy_static = "1.5.0"
 lexical-core = "1"
 mimalloc = "0.1"
@@ -122,11 +126,12 @@ opentelemetry-semantic-conventions = "0.16"
 opentelemetry-stdout = { version = "0.5", default-features = false, features = ["trace"] }
 opentelemetry-zipkin = "0.22"
 opentelemetry_sdk = { version = "0.24", features = ["rt-tokio"] }
+partition_eithers = "0.1.0"
 postcard = { version = "1", features = ["use-std"] }
 pretty_assertions = "1"
 proc-macro2 = "1"
 quote = "1"
-rand = "0.8"
+rand = "0.9"
 ref-cast = "1"
 regex = "1"
 reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
@@ -134,15 +139,17 @@ rmp-serde = "1"
 semver = "1.0"
 schemars = { version = "0.8", features = ["preserve_order", "smol_str", "url"] }
 serde = { version = "1", features = ["derive", "rc"] }
+serde_arrow = { version = "0.13.3", features = ["arrow-54"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_path_to_error = "0.1"
 serde_with = { version = "3", features = ["indexmap_2"] }
 sha2 = "0.10"
+similar-asserts = "1.7"
 smol_str = "0.1"
 strum = "0.26"
 strum_macros = "0.26"
 syn = "2"
-thiserror = "1"
+thiserror = "2"
 tokio = { version = "1", features = ["macros", "parking_lot", "rt-multi-thread", "signal", "time"] }
 tokio-test = "0.4"
 tokio-tungstenite = "0.24.0"

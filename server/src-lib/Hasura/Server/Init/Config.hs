@@ -50,6 +50,7 @@ module Hasura.Server.Init.Config
     isTelemetryEnabled,
     WsReadCookieStatus (..),
     isWsReadCookieEnabled,
+    Preserve401ErrorsStatus (..),
     Port,
     _getPort,
     mkPort,
@@ -337,7 +338,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoRemoteSchemaResponsePriority :: Maybe Server.Types.RemoteSchemaResponsePriority,
     rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence,
     rsoTraceQueryStatus :: Maybe Server.Types.TraceQueryStatus,
-    rsoDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation
+    rsoDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation,
+    rsoPreserve401Errors :: Preserve401ErrorsStatus
   }
 
 deriving stock instance (Show (Logging.EngineLogType impl)) => Show (ServeOptionsRaw impl)
@@ -590,6 +592,19 @@ instance ToJSON WSConnectionInitTimeout where
 
 --------------------------------------------------------------------------------
 
+-- | Status code preservation mode for 401 errors. See this draft spec:
+-- https://graphql.github.io/graphql-over-http/draft/#sel-FAHLFABABD3lV
+data Preserve401ErrorsStatus
+  = -- | Map all errors (including 401) to status 200 (default)
+    MapEverythingTo200
+  | -- | Preserve 401 status codes from webhooks/JWT auth
+    Preserve401Errors
+  deriving stock (Show, Eq, Generic)
+
+instance NFData Preserve401ErrorsStatus
+
+instance Hashable Preserve401ErrorsStatus
+
 -- | The final Serve Command options accummulated from the Arg Parser
 -- and the Environment, fully processed and ready to apply when
 -- running the server.
@@ -651,7 +666,8 @@ data ServeOptions impl = ServeOptions
     soRemoteSchemaResponsePriority :: Server.Types.RemoteSchemaResponsePriority,
     soHeaderPrecedence :: Server.Types.HeaderPrecedence,
     soTraceQueryStatus :: Server.Types.TraceQueryStatus,
-    soDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation
+    soDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation,
+    soPreserve401Errors :: Preserve401ErrorsStatus
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

@@ -1,23 +1,22 @@
 use std::sync::Arc;
 
-use open_dds::aggregates::AggregateExpressionName;
-use open_dds::models::{ModelGraphQlDefinitionV2, ModelName};
-use open_dds::relationships::{ModelRelationshipTarget, RelationshipTarget};
-
+use super::error::ModelGraphqlError;
 use super::types::{
     LimitFieldGraphqlConfig, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig, ModelGraphqlIssue,
     ModelOrderByExpression, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
     SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
-use crate::helpers::types::{mk_name, TrackGraphQLRootFields};
+use crate::Warning;
+use crate::helpers::types::{TrackGraphQLRootFields, mk_name};
 use crate::stages::order_by_expressions::{OrderByExpressionIdentifier, OrderByExpressions};
 use crate::stages::{graphql_config, models, object_types};
-use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
-use crate::Warning;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
+use open_dds::aggregates::AggregateExpressionName;
+use open_dds::models::{ModelGraphQlDefinitionV2, ModelName};
+use open_dds::relationships::{ModelRelationshipTarget, RelationshipTarget};
 
 use std::collections::BTreeMap;
 
@@ -33,7 +32,7 @@ pub(crate) fn resolve_model_graphql_api(
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
     issues: &mut Vec<Warning>,
-) -> Result<ModelGraphQlApi, Error> {
+) -> Result<ModelGraphQlApi, ModelGraphqlError> {
     let model_name = &model.name;
     let mut graphql_api = ModelGraphQlApi::default();
 
@@ -43,7 +42,7 @@ pub(crate) fn resolve_model_graphql_api(
             let field_type = &model
                 .type_fields
                 .get(field_name)
-                .ok_or_else(|| Error::UnknownFieldInUniqueIdentifier {
+                .ok_or_else(|| ModelGraphqlError::UnknownFieldInUniqueIdentifier {
                     model_name: model_name.clone(),
                     field_name: field_name.clone(),
                 })?
@@ -71,7 +70,7 @@ pub(crate) fn resolve_model_graphql_api(
                 .insert(field_name.clone(), unique_identifier_field)
                 .is_some()
             {
-                return Err(Error::DuplicateFieldInUniqueIdentifier {
+                return Err(ModelGraphqlError::DuplicateFieldInUniqueIdentifier {
                     model_name: model_name.clone(),
                     field_name: field_name.clone(),
                 });
@@ -114,7 +113,7 @@ pub(crate) fn resolve_model_graphql_api(
         .source
         .as_ref()
         .map(
-            |model_source: &Arc<models::ModelSource>| -> Result<Option<ModelOrderByExpression>, Error> {
+            |model_source: &Arc<models::ModelSource>| -> Result<Option<ModelOrderByExpression>, ModelGraphqlError> {
                 let order_by_expression = order_by_expression_identifier.map(|n|
                     order_by_expressions.objects.get(n)
                     .ok_or_else(|| models::ModelsError::UnknownOrderByExpressionIdentifier {
@@ -150,10 +149,9 @@ pub(crate) fn resolve_model_graphql_api(
                         }
 
                         match &graphql_config.query.order_by_field_name {
-                            None => Err(Error::GraphqlConfigError {
-                                graphql_config_error:
-                                    graphql_config::GraphqlConfigError::MissingOrderByInputFieldInGraphqlConfig,
-                            }),
+                            None => Err(
+                                    graphql_config::GraphqlConfigError::MissingOrderByInputFieldInGraphqlConfig.into(),
+                            ),
                             Some(order_by_field_name) => Ok(ModelOrderByExpression {
                                 data_connector_name: model_source.data_connector.name.clone(),
                                 order_by_type_name: graphql.expression_type_name,
@@ -233,9 +231,11 @@ pub(crate) fn resolve_model_graphql_api(
     else if graphql_api.filter_input_type_name.is_none()
         && aggregates_are_used_with_this_model_type
     {
-        return Err(Error::MissingFilterInputTypeNameGraphqlConfiguration {
-            model_name: model_name.clone(),
-        });
+        return Err(
+            ModelGraphqlError::MissingFilterInputTypeNameGraphqlConfiguration {
+                model_name: model_name.clone(),
+            },
+        );
     }
 
     // record select_aggregate root field
@@ -327,10 +327,10 @@ pub(crate) fn resolve_model_graphql_api(
                 .query
                 .arguments_field_name
                 .as_ref()
-                .ok_or_else(|| Error::GraphqlConfigError {
-                    graphql_config_error:
-                        graphql_config::GraphqlConfigError::MissingArgumentsInputFieldInGraphqlConfig,
+                .ok_or_else(|| {
+                    ModelGraphqlError::from(graphql_config::GraphqlConfigError::MissingArgumentsInputFieldInGraphqlConfig)
                 })?;
+
             graphql_api.arguments_input_config = Some(ModelGraphqlApiArgumentsConfig {
                 field_name: argument_input_field_name.clone(),
                 type_name,
@@ -373,7 +373,7 @@ fn resolve_subscription_graphql_api(
     model_name: &Qualified<ModelName>,
     track_root_fields: &mut TrackGraphQLRootFields,
     issues: &mut Vec<Warning>,
-) -> Result<SubscriptionGraphQlDefinition, Error> {
+) -> Result<SubscriptionGraphQlDefinition, ModelGraphqlError> {
     let open_dds::models::SubscriptionGraphQlDefinition {
         root_field,
         description,

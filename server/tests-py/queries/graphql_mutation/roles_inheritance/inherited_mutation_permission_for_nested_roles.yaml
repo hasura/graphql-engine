@@ -2,6 +2,8 @@
   url: /v1/graphql
   headers:
     X-Hasura-Role: author_editor_publisher
+    X-Hasura-Editor-Id: '1'
+    X-Hasura-Author-Id: '1'
   query:
     query: |
       mutation {

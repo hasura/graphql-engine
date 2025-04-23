@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/order_by_expressions/unknown_orderable_type/metadata.json
 ---
-Error in order by expression MyOrderByExpression (in subgraph default): The data type Foo (in subgraph default) has not been defined
+Error: Error in order by expression MyOrderByExpression (in subgraph default): The data type Foo (in subgraph default) has not been defined

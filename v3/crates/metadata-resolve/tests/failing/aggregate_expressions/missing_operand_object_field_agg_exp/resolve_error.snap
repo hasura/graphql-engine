@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_operand_object_field_agg_exp/metadata.json
 ---
-the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'invoiceId' that references an aggregate expression that cannot be found: Int4_aggregate_exp (in subgraph default)
+Error: the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'invoiceId' that references an aggregate expression that cannot be found: Int4_aggregate_exp (in subgraph default)

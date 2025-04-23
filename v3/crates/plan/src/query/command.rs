@@ -12,14 +12,13 @@ use open_dds::query::CommandSelection;
 use open_dds::{
     commands::DataConnectorCommand,
     data_connector::{CollectionName, DataConnectorColumnName},
-    types::CustomTypeName,
 };
 use plan_types::{
     Argument, Field, JoinLocations, MutationArgument, MutationExecutionPlan, MutationExecutionTree,
     NdcFieldAlias, NdcRelationshipName, NestedArray, NestedField, NestedObject,
-    PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNodeNew, Relationship,
+    PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode, Relationship,
 };
-use plan_types::{UniqueNumber, FUNCTION_IR_VALUE_COLUMN_NAME};
+use plan_types::{FUNCTION_IR_VALUE_COLUMN_NAME, UniqueNumber};
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
@@ -105,7 +104,6 @@ fn from_command_output_type(
         ),
         OutputShape::Object {
             object: output_object_type,
-            object_name: output_object_type_name,
         } => {
             let command_selection_set = match &command_selection.selection {
                 Some(selection_set) => selection_set,
@@ -115,7 +113,6 @@ fn from_command_output_type(
                 metadata,
                 session,
                 request_headers,
-                output_object_type_name,
                 output_object_type,
                 &command_source.type_mappings,
                 &command_source.data_connector,
@@ -218,7 +215,7 @@ pub(crate) fn from_command_selection(
                 remote_predicates,
                 remote_join_executions,
                 query_execution_plan: QueryExecutionPlan {
-                    query_node: QueryNodeNew {
+                    query_node: QueryNode {
                         fields: Some(plan_types::FieldsSelection {
                             fields: wrap_scalar_select(wrap_selection_in_response_config(
                                 command_source,
@@ -321,7 +318,6 @@ fn wrap_selection_in_response_config(
 
 enum OutputShape<'metadata> {
     Object {
-        object_name: Qualified<CustomTypeName>,
         object: OutputObjectTypeView<'metadata>,
     },
     Array {
@@ -392,7 +388,6 @@ fn return_type_shape<'metadata>(
                     role,
                 )
                 .map(|output_object_type| OutputShape::Object {
-                    object_name: custom_type.clone(),
                     object: output_object_type.clone(),
                 })?),
             }

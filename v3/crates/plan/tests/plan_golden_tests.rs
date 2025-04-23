@@ -86,7 +86,6 @@ fn test_environment_setup() -> metadata_resolve::Metadata {
 
     let configuration = configuration::Configuration {
         unstable_features: configuration::UnstableFeatures {
-            enable_ndc_v02_support: false,
             enable_aggregation_predicates: true,
         },
     };

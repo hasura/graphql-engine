@@ -15,8 +15,10 @@ macro_rules! impl_OpenDd_default_for {
                 })
             }
 
-            fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-                <Self as ::schemars::JsonSchema>::json_schema(gen)
+            fn json_schema(
+                generator: &mut schemars::r#gen::SchemaGenerator,
+            ) -> schemars::schema::Schema {
+                <Self as ::schemars::JsonSchema>::json_schema(generator)
             }
 
             fn _schema_name() -> String {
@@ -56,13 +58,13 @@ macro_rules! seq_impl {
                 }
             }
 
-            fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> Schema {
+            fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> Schema {
                 SchemaObject {
                     instance_type: Some(InstanceType::Array.into()),
                     array: Some(Box::new(ArrayValidation {
                         // None omits `unique_items` key in the serialized schema
                         unique_items: if $is_unique { Some(true) } else { None },
-                        items: Some(gen_subschema_for::<T>(gen).into()),
+                        items: Some(gen_subschema_for::<T>(generator).into()),
                         ..Default::default()
                     })),
                     ..Default::default()
@@ -109,8 +111,8 @@ macro_rules! map_impl {
                 }
             }
 
-            fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> Schema {
-                let subschema = gen_subschema_for::<V>(gen);
+            fn json_schema(generator: &mut schemars::r#gen::SchemaGenerator) -> Schema {
+                let subschema = gen_subschema_for::<V>(generator);
                 SchemaObject {
                     instance_type: Some(InstanceType::Object.into()),
                     object: Some(Box::new(ObjectValidation {
@@ -142,8 +144,10 @@ macro_rules! impl_JsonSchema_with_OpenDd_for {
                 <$ty as open_dds::traits::OpenDd>::_schema_name()
             }
 
-            fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-                <$ty as open_dds::traits::OpenDd>::json_schema(gen)
+            fn json_schema(
+                generator: &mut schemars::r#gen::SchemaGenerator,
+            ) -> schemars::schema::Schema {
+                <$ty as open_dds::traits::OpenDd>::json_schema(generator)
             }
         }
     };

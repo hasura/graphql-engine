@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/commands/procedures/relationship_from_object_type/metadata.json
+---
+Error: Procedure based commands are not supported in relationships. Relationship 'procedureResult' on type 'MyObject (in subgraph default)' targets command 'procedure_with_args (in subgraph default)' which is backed by procedure 'procedure_with_args'

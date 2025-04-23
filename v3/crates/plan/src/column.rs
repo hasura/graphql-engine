@@ -22,16 +22,20 @@ pub fn to_resolved_column(
     role: &Role,
     metadata: &metadata_resolve::Metadata,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    type_name: &Qualified<CustomTypeName>,
     model_object_type: &OutputObjectTypeView,
     operand: &open_dds::query::ObjectFieldOperand,
 ) -> Result<ResolvedColumn, PlanError> {
     let TypeMapping::Object {
         ndc_object_type_name: _,
         field_mappings,
-    } = type_mappings.get(type_name).ok_or_else(|| {
-        PlanError::Internal(format!("can't find mapping object for type: {type_name}"))
-    })?;
+    } = type_mappings
+        .get(model_object_type.object_type_name)
+        .ok_or_else(|| {
+            PlanError::Internal(format!(
+                "can't find mapping object for type: {}",
+                model_object_type.object_type_name
+            ))
+        })?;
 
     // Walk down the tree of the ObjectFieldOperand, and maintain several pieces
     // of state as we go:
@@ -42,7 +46,7 @@ pub fn to_resolved_column(
         .ok_or_else(|| {
             PlanError::Internal(format!(
                 "can't find field {} in mapping for type: {}",
-                operand.target.field_name, type_name
+                operand.target.field_name, model_object_type.object_type_name
             ))
         })?;
 
@@ -96,7 +100,8 @@ pub fn to_resolved_column(
                     current_type
                 else {
                     return Err(PlanError::Internal(format!(
-                        "field access on non-named type: {type_name:?}"
+                        "field access on non-named type: {:?}",
+                        model_object_type.object_type_name
                     )));
                 };
 
@@ -114,13 +119,17 @@ pub fn to_resolved_column(
                     ndc_object_type_name: _,
                     field_mappings,
                 } = type_mappings.get(&object_type_name).ok_or_else(|| {
-                    PlanError::Internal(format!("can't find mapping object for type: {type_name}"))
+                    PlanError::Internal(format!(
+                        "can't find mapping object for type: {}",
+                        model_object_type.object_type_name
+                    ))
                 })?;
 
                 // Get the latest field mapping
                 field_mapping = field_mappings.get(field_name).ok_or_else(|| {
                     PlanError::Internal(format!(
-                        "can't find field {field_name} in mapping for type: {type_name}"
+                        "can't find field {field_name} in mapping for type: {}",
+                        model_object_type.object_type_name
                     ))
                 })?;
 

@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_aggregation_function_data_connector_operand_type/metadata.json
 ---
-the aggregate expression Int4_aggregate_exp (in subgraph default) specifies an aggregation function '_sum' but the mapping to the data connector 'mypg (in subgraph default)' specifies a data connector scalar type that does not exist: schmint
+Error: the aggregate expression Int4_aggregate_exp (in subgraph default) specifies an aggregation function '_sum' but the mapping to the data connector 'mypg (in subgraph default)' specifies a data connector scalar type that does not exist: schmint

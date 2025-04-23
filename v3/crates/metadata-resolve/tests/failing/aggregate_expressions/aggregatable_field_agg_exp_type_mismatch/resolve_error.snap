@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/aggregatable_field_agg_exp_type_mismatch/metadata.json
 ---
-the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'invoiceId' of type Int4! (in subgraph default), however the aggregation expression used to aggregate that field (Int8_aggregate_exp (in subgraph default)) is for aggregating a different type: Int8 (in subgraph default)
+Error: the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'invoiceId' of type Int4! (in subgraph default), however the aggregation expression used to aggregate that field (Int8_aggregate_exp (in subgraph default)) is for aggregating a different type: Int8 (in subgraph default)

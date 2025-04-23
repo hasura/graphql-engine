@@ -1,5 +1,5 @@
 use crate::Warning;
-use crate::{mk_name, QualifiedTypeName};
+use crate::{QualifiedTypeName, mk_name};
 use lang_graphql::ast::common as ast;
 use open_dds::commands::CommandName;
 use open_dds::types::CustomTypeName;
@@ -10,7 +10,7 @@ use crate::stages::{
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 
-use open_dds::{models::ModelName, types::GraphQlTypeName};
+use open_dds::{models::ModelName, spanned::Spanned, types::GraphQlTypeName};
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -42,7 +42,10 @@ pub fn resolve_order_by_expression(
                 object_types.get(&model.data_type).ok_or_else(|| {
                     models::ModelsError::UnknownModelDataType {
                         model_name: model.name.clone(),
-                        data_type: model.data_type.clone(),
+                        data_type: Spanned {
+                            value: model.data_type.clone(),
+                            path: model.data_type_path.clone(),
+                        },
                     }
                 })?;
 

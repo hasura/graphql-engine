@@ -1,0 +1,56 @@
+[
+  {
+    "data": {
+      "Institutions": [
+        {
+          "Id": 1,
+          "Location": {
+            "Country": "UK",
+            "CountryId": 1
+          },
+          "the_eval_loc": true
+        },
+        {
+          "Id": 2,
+          "Location": {
+            "Country": "Sweden",
+            "CountryId": 2
+          },
+          "the_eval_loc": false
+        },
+        {
+          "Id": 3,
+          "Location": null,
+          "the_eval_loc": false
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Institutions": [
+        {
+          "Id": 1,
+          "Location": {
+            "Country": "UK",
+            "CountryId": 1
+          },
+          "the_eval_loc": false
+        },
+        {
+          "Id": 2,
+          "Location": {
+            "Country": "Sweden",
+            "CountryId": 2
+          },
+          "the_eval_loc": true
+        },
+        {
+          "Id": 3,
+          "Location": null,
+          "the_eval_loc": false
+        }
+      ]
+    }
+  }
+]

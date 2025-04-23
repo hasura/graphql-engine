@@ -184,7 +184,7 @@ fn typecheck_custom_type(
 mod tests {
     use std::collections::BTreeMap;
 
-    use super::{subgraph, typecheck_qualified_type_reference, TypecheckError};
+    use super::{TypecheckError, subgraph, typecheck_qualified_type_reference};
     use crate::stages::object_types;
     use indexmap::IndexMap;
     use open_dds::{
@@ -472,7 +472,9 @@ mod tests {
             .unwrap();
         assert_eq!(
             issues.into_iter().next().unwrap().to_string(),
-            format!("Typecheck failed for field age in object type Person (in subgraph default): Expected a value of type Int but got value \"thirty\"")
+            format!(
+                "Typecheck failed for field age in object type Person (in subgraph default): Expected a value of type Int but got value \"thirty\""
+            )
         );
 
         // Test invalid object (missing required field)
@@ -485,7 +487,9 @@ mod tests {
             .unwrap();
         assert_eq!(
             issues.into_iter().next().unwrap().to_string(),
-            format!("Typecheck failed for field age in object type Person (in subgraph default): Expected a non-null value but received null")
+            format!(
+                "Typecheck failed for field age in object type Person (in subgraph default): Expected a non-null value but received null"
+            )
         );
 
         // Test non-object value
@@ -496,7 +500,9 @@ mod tests {
             .unwrap();
         assert_eq!(
             issues.into_iter().next().unwrap().to_string(),
-            format!("Expected an object value of type Person (in subgraph default) but got value \"not an object\"")
+            format!(
+                "Expected an object value of type Person (in subgraph default) but got value \"not an object\""
+            )
         );
     }
 }

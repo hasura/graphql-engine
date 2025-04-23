@@ -57,30 +57,46 @@ pub enum RequestError {
 }
 
 impl RequestError {
-    pub fn to_error_response(&self) -> serde_json::Value {
-        match self {
-            RequestError::ParseError(err) => serde_json::json!({"error": err}),
-            RequestError::BadRequest(err) => serde_json::json!({"error": err}),
-            RequestError::NotFound => {
-                serde_json::json!({"error": "invalid route or path"})
-            }
+    pub fn into_http_error(
+        self,
+        expose_internal_errors: engine_types::ExposeInternalErrors,
+    ) -> JsonApiHttpError {
+        let (status_code, message) = match self {
+            RequestError::BadRequest(err) => (axum::http::StatusCode::BAD_REQUEST, err),
+            RequestError::ParseError(err) => (axum::http::StatusCode::BAD_REQUEST, err.to_string()),
+            RequestError::NotFound => (
+                axum::http::StatusCode::NOT_FOUND,
+                "invalid route or path".to_string(),
+            ),
+            RequestError::PlanError(plan::PlanError::Permission(_err)) => (
+                axum::http::StatusCode::FORBIDDEN,
+                "Access forbidden".to_string(), // need to decide how much
+                                                // we tell the user, for
+                                                // now default to nothing
+            ),
             RequestError::InternalError(InternalError::EmptyQuerySet)
             | RequestError::PlanError(
                 plan::PlanError::Internal(_)
                 | plan::PlanError::InternalError(_)
-                | plan::PlanError::ArgumentPresetExecutionError(_)
                 | plan::PlanError::Relationship(_)
                 | plan::PlanError::OrderBy(_)
-                | plan::PlanError::External(_),
-            ) => {
-                serde_json::json!({"error": "Internal error" })
-            }
-            RequestError::PlanError(plan::PlanError::Permission(_msg)) => {
-                serde_json::json!({"error": "Access forbidden" })
-            }
-            RequestError::ExecuteError(field_error) => {
-                serde_json::json!({"error": field_error.to_string() })
-            }
+                | plan::PlanError::BooleanExpression(_)
+                | plan::PlanError::ArgumentPresetExecutionError(_),
+            ) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal error".to_string(),
+            ),
+            RequestError::ExecuteError(field_error) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                // Fetch the error message from the error response
+                field_error
+                    .to_error_response(expose_internal_errors)
+                    .message,
+            ),
+        };
+        JsonApiHttpError {
+            status: status_code,
+            error: message,
         }
     }
 }
@@ -93,6 +109,48 @@ pub enum InternalError {
 impl TraceableError for RequestError {
     fn visibility(&self) -> ErrorVisibility {
         ErrorVisibility::User
+    }
+}
+
+/// JSON:API error over HTTP. Readily convertible to an HTTP response
+/// using `axum::response::IntoResponse`'s `.into_response()`.
+pub struct JsonApiHttpError {
+    pub status: axum::http::StatusCode,
+    pub error: String,
+}
+
+impl JsonApiHttpError {
+    // Converts the error into a JSON:API error document
+    pub fn into_document_error(self) -> jsonapi_library::api::DocumentError {
+        let jsonapi_error = jsonapi_library::api::JsonApiError {
+            // The spec mandates the compulsory inclusion of status code
+            // Ref: https://jsonapi.org/format/#error-objects
+            status: Some(self.status.as_u16().to_string()),
+            detail: Some(self.error),
+            ..Default::default()
+        };
+        jsonapi_library::api::DocumentError {
+            errors: vec![jsonapi_error],
+            ..Default::default()
+        }
+    }
+
+    pub fn from_middleware_error(error: engine_types::MiddlewareError) -> Self {
+        let message = if error.is_internal {
+            "Internal error".to_string()
+        } else {
+            error.message
+        };
+        Self {
+            status: error.status,
+            error: message,
+        }
+    }
+}
+
+impl axum::response::IntoResponse for JsonApiHttpError {
+    fn into_response(self) -> axum::response::Response {
+        (self.status, axum::Json(self.into_document_error())).into_response()
     }
 }
 

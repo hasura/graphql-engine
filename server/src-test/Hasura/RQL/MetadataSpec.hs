@@ -196,7 +196,7 @@ spec_RQLMetadataV1_examples = describe "RQLMetadataV1" do
 -- > args:
 -- >   source_name: # Name of the source | Required
 -- >   disabled: # Optional Field | Type: Bool | Values: true or false
--- >   format: # Optional Field  | Values: standard or sqlcommenter
+-- >   format: # Optional Field  | Values: standard, standard_prepended or sqlcommenter
 -- >   omit_request_id: # Optional Field | Type: Bool | Values: true or false
 spec_query_tags_examples :: Spec
 spec_query_tags_examples =
@@ -204,7 +204,7 @@ spec_query_tags_examples =
     for_
       [ (disabled, format, omit_request_id)
         | disabled <- Nothing : map Just (enumerate @Bool),
-          format <- Nothing : map Just ["standard", "sqlcommenter"],
+          format <- Nothing : map Just ["standard", "standard_prepended", "sqlcommenter"],
           omit_request_id <- Nothing : map Just (enumerate @Bool)
       ]
       \(mdisabled, mformat, momit_request_id) ->

@@ -1,0 +1,565 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when_relationship_is_defined/metadata.json
+---
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "MyObject",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "MyObject",
+                            ),
+                        ),
+                    ),
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {
+                    RelationshipName(
+                        Identifier(
+                            "procedureResult",
+                        ),
+                    ): RelationshipField {
+                        field_name: Name(
+                            "procedureResult",
+                        ),
+                        relationship_name: RelationshipName(
+                            Identifier(
+                                "procedureResult",
+                            ),
+                        ),
+                        source: Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: CustomTypeName(
+                                Identifier(
+                                    "MyObject",
+                                ),
+                            ),
+                        },
+                        target: Command(
+                            CommandRelationshipTarget {
+                                command_name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CommandName(
+                                        Identifier(
+                                            "procedure_with_args",
+                                        ),
+                                    ),
+                                },
+                                target_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            String,
+                                        ),
+                                    ),
+                                    nullable: true,
+                                },
+                                mappings: [
+                                    RelationshipCommandMapping {
+                                        source_field: RelationshipFieldAccess {
+                                            field_name: FieldName(
+                                                Identifier(
+                                                    "id",
+                                                ),
+                                            ),
+                                        },
+                                        argument_name: ArgumentName(
+                                            Identifier(
+                                                "argB",
+                                            ),
+                                        ),
+                                    },
+                                ],
+                            },
+                        ),
+                        target_capabilities: Some(
+                            RelationshipCapabilities {
+                                foreach: (),
+                                supports_relationships: Some(
+                                    DataConnectorRelationshipCapabilities {
+                                        supports_relation_comparisons: true,
+                                        supports_nested_relationships: Some(
+                                            DataConnectorNestedRelationshipCapabilities {
+                                                supports_nested_array_selection: true,
+                                                supports_nested_in_filtering: false,
+                                                supports_nested_in_ordering: false,
+                                            },
+                                        ),
+                                    },
+                                ),
+                            },
+                        ),
+                        description: None,
+                        deprecated: None,
+                    },
+                },
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {},
+                },
+            },
+        },
+        scalar_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Headers",
+                    ),
+                ),
+            }: ScalarTypeRepresentation {
+                graphql_type_name: Some(
+                    TypeName(
+                        Name(
+                            "Headers",
+                        ),
+                    ),
+                ),
+                description: Some(
+                    "Headers map",
+                ),
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "myconnector",
+                            ),
+                        ),
+                    }: JSON,
+                },
+            },
+        },
+        models: {},
+        commands: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CommandName(
+                    Identifier(
+                        "procedure_with_args",
+                    ),
+                ),
+            }: CommandWithPermissions {
+                command: Command {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CommandName(
+                            Identifier(
+                                "procedure_with_args",
+                            ),
+                        ),
+                    },
+                    output_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Inbuilt(
+                                String,
+                            ),
+                        ),
+                        nullable: true,
+                    },
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "argA",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        2,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
+                        },
+                        ArgumentName(
+                            Identifier(
+                                "argB",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                            path: JSONPath(
+                                [
+                                    Key(
+                                        "subgraphs",
+                                    ),
+                                    Index(
+                                        0,
+                                    ),
+                                    Key(
+                                        "objects",
+                                    ),
+                                    Index(
+                                        2,
+                                    ),
+                                    Key(
+                                        "definition",
+                                    ),
+                                    Key(
+                                        "arguments",
+                                    ),
+                                    Index(
+                                        1,
+                                    ),
+                                    Key(
+                                        "name",
+                                    ),
+                                ],
+                            ),
+                        },
+                    },
+                    graphql_api: None,
+                    source: Some(
+                        CommandSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "myconnector",
+                                        ),
+                                    ),
+                                },
+                                url: ReadWriteUrls(
+                                    ResolvedReadWriteUrls {
+                                        read: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                        write: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                    },
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V01,
+                                    supports_explaining_queries: true,
+                                    supports_explaining_mutations: true,
+                                    supports_nested_object_filtering: false,
+                                    supports_nested_object_ordering: false,
+                                    supports_nested_object_array_filtering: false,
+                                    supports_nested_scalar_array_filtering: false,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: false,
+                                            aggregate_count_scalar_type: None,
+                                            supports_grouping: None,
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: false,
+                                                    supports_nested_in_ordering: false,
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                    supports_relational_queries: None,
+                                },
+                            },
+                            source: Procedure(
+                                ProcedureName(
+                                    "procedure_with_args",
+                                ),
+                            ),
+                            ndc_type_opendd_type_same: true,
+                            type_mappings: {},
+                            argument_mappings: {
+                                ArgumentName(
+                                    Identifier(
+                                        "argA",
+                                    ),
+                                ): DataConnectorArgumentName(
+                                    "arg1",
+                                ),
+                                ArgumentName(
+                                    Identifier(
+                                        "argB",
+                                    ),
+                                ): DataConnectorArgumentName(
+                                    "arg2",
+                                ),
+                            },
+                            data_connector_link_argument_presets: {
+                                DataConnectorArgumentName(
+                                    "headers",
+                                ): ArgumentPresetValue {
+                                    http_headers: HttpHeadersPreset {
+                                        forward: [
+                                            SerializableHeaderName(
+                                                "x-myheader",
+                                            ),
+                                        ],
+                                        additional: {
+                                            SerializableHeaderName(
+                                                "x-whatever",
+                                            ): Literal(
+                                                String("wow"),
+                                            ),
+                                        },
+                                    },
+                                },
+                            },
+                            source_arguments: {
+                                DataConnectorArgumentName(
+                                    "arg1",
+                                ): Named {
+                                    name: TypeName(
+                                        "String",
+                                    ),
+                                },
+                                DataConnectorArgumentName(
+                                    "arg2",
+                                ): Named {
+                                    name: TypeName(
+                                        "Int",
+                                    ),
+                                },
+                                DataConnectorArgumentName(
+                                    "headers",
+                                ): Named {
+                                    name: TypeName(
+                                        "Headers",
+                                    ),
+                                },
+                            },
+                        },
+                    ),
+                    description: None,
+                },
+                permissions: {},
+            },
+        },
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {},
+            scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
+        },
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+            scalars: {},
+        },
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "order_by",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
+        },
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
+    },
+    [
+        ObjectRelationshipsIssue(
+            ProcedureCommandRelationshipsNotSupported {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "MyObject",
+                        ),
+                    ),
+                },
+                relationship_name: RelationshipName(
+                    Identifier(
+                        "procedureResult",
+                    ),
+                ),
+                command_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CommandName(
+                        Identifier(
+                            "procedure_with_args",
+                        ),
+                    ),
+                },
+                procedure_name: ProcedureName(
+                    "procedure_with_args",
+                ),
+            },
+        ),
+    ],
+)

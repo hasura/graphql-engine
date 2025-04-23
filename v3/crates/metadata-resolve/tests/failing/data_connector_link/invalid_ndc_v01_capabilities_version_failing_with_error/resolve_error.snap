@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/data_connector_link/invalid_ndc_v01_capabilities_version_failing_with_error/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-The data connector myconnector (in subgraph default) has an issue: The version specified in the capabilities ("^0.1.0") is an invalid version: unexpected character '^' while parsing major version number. Consider upgrading the data connector to the latest version to fix this.
+Error: The data connector myconnector (in subgraph default) has an issue: The version specified in the capabilities ("^0.1.0") is an invalid version: unexpected character '^' while parsing major version number. Consider upgrading the data connector to the latest version to fix this.

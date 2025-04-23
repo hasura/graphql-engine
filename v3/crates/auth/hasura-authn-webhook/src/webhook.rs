@@ -4,22 +4,21 @@ use std::sync::OnceLock;
 use std::time::Duration;
 
 use auth_base::{Identity, Role, RoleAuthorization, SessionVariableName, SessionVariableValue};
-use axum::{
-    http::{HeaderMap, HeaderName, StatusCode},
-    response::IntoResponse,
-};
-use reqwest::{header::ToStrError, Url};
-use serde::{de::Error as SerdeDeError, Deserialize, Deserializer, Serialize, Serializer};
+use axum::http::{HeaderMap, HeaderName, StatusCode};
+use reqwest::{Url, header::ToStrError};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error as SerdeDeError};
 
 use hasura_authn_core as auth_base;
-use open_dds::{session_variables, EnvironmentValue};
+use open_dds::{EnvironmentValue, session_variables};
 use schemars::JsonSchema;
 use serde_json::Value;
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Error in converting the header value corresponding to the {header_name} to a String - {error}")]
+    #[error(
+        "Error in converting the header value corresponding to the {header_name} to a String - {error}"
+    )]
     ErrorInConvertingHeaderValueToString {
         header_name: HeaderName,
         error: ToStrError,
@@ -41,7 +40,9 @@ impl TraceableError for Error {
 pub enum InternalError {
     #[error("Error while making the authentication HTTP request to the webhook - {0}")]
     ErrorWhileMakingHTTPRequestToTheAuthHook(reqwest::Error),
-    #[error("The authentication hook has returned the status {0}. Only 200 and 401 response status are recognized.")]
+    #[error(
+        "The authentication hook has returned the status {0}. Only 200 and 401 response status are recognized."
+    )]
     AuthHookUnexpectedStatus(reqwest::StatusCode),
     #[error("Reqwest error: {0}")]
     ReqwestError(reqwest::Error),
@@ -68,22 +69,19 @@ impl Error {
             Error::Internal(_e) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
-}
 
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
+    pub fn into_middleware_error(self) -> engine_types::MiddlewareError {
         let is_internal = match &self {
             Error::ErrorInConvertingHeaderValueToString { .. } | Error::AuthenticationFailed => {
                 false
             }
             Error::Internal(_e) => true,
         };
-        lang_graphql::http::Response::error_message_with_status(
-            self.to_status_code(),
-            self.to_string(),
+        engine_types::MiddlewareError {
+            status: self.to_status_code(),
+            message: self.to_string(),
             is_internal,
-        )
-        .into_response()
+        }
     }
 }
 
@@ -242,7 +240,7 @@ impl AuthHookConfigV3GET {
 /// The configuration for the headers to be sent to the GET auth hook.
 pub struct AuthHookConfigV3GETHeaders {
     #[serde(default)]
-    headers: Option<AuthHookConfigV3Headers>,
+    pub headers: Option<AuthHookConfigV3Headers>,
 }
 
 impl AuthHookConfigV3GETHeaders {
@@ -313,10 +311,10 @@ impl AuthHookConfigV3POST {
 pub struct AuthHookConfigV3POSTHeaders {
     #[serde(default)]
     /// The configuration for the headers to be sent to the POST auth hook.
-    headers: Option<AuthHookConfigV3Headers>,
+    pub headers: Option<AuthHookConfigV3Headers>,
     #[serde(default)]
     /// The configuration for the body to be sent to the POST auth hook.
-    body: Option<AuthHookConfigV3Body>,
+    pub body: Option<AuthHookConfigV3Body>,
 }
 
 impl AuthHookConfigV3POSTHeaders {
@@ -429,7 +427,7 @@ impl schemars::JsonSchema for All {
         "All".to_string()
     }
 
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
         schemars::schema::Schema::Object(schemars::schema::SchemaObject {
             metadata: Some(Box::new(schemars::schema::Metadata {
                 title: Some(Self::schema_name()),
@@ -753,18 +751,27 @@ fn get_filtered_headers(
             }
         }
         AllOrList::List(list) => {
-            for (header_name, header_value) in client_headers {
-                if list.contains(&header_name.to_string()) {
-                    auth_hook_headers.insert(header_name, header_value.clone());
+            for header_name in list {
+                // We have already validated the forward header names in the auth config (see `validate_header_config`)
+                if let Ok(header_name) = HeaderName::from_str(header_name.as_str()) {
+                    // If the header is present in the client headers, we forward it to the auth hook. We
+                    // will ignore the header if it is not present in the client headers.
+                    if let Some(header_value) = client_headers.get(&header_name) {
+                        auth_hook_headers.insert(header_name, header_value.clone());
+                    }
                 }
             }
         }
     }
     for (header_name, header_value) in &auth_hook_headers_config.additional {
-        auth_hook_headers.insert(
-            HeaderName::from_str(header_name.as_str()).unwrap(),
-            header_value.parse().unwrap(),
-        );
+        // We have already validated the additional headers in the auth config (see `validate_header_config`)
+        // So we can safely ignore the errors here.
+        if let (Ok(header_name), Ok(header_value)) = (
+            HeaderName::from_str(header_name.as_str()),
+            header_value.parse(),
+        ) {
+            auth_hook_headers.insert(header_name, header_value);
+        }
     }
     auth_hook_headers
 }
@@ -832,7 +839,7 @@ mod tests {
     use super::*;
     use auth_base::Role;
     use mockito;
-    use rand::{thread_rng, Rng};
+    use rand::{Rng, rng};
     use reqwest::header::CONTENT_TYPE;
     use serde_json::json;
 
@@ -1235,14 +1242,14 @@ mod tests {
 
         let url = server.url();
 
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         // Generate a random HTTP status code
-        let mut http_status_code: usize = rng.gen_range(100..600);
+        let mut http_status_code: usize = rng.random_range(100..600);
 
         // Make sure that it's not either 200/401.
         while http_status_code == 200 || http_status_code == 401 {
-            http_status_code = rng.gen_range(100..600);
+            http_status_code = rng.random_range(100..600);
         }
 
         // Create a mock
@@ -1328,5 +1335,96 @@ mod tests {
             result.is_err(),
             "Deserialization should have failed: {result:#?}"
         );
+    }
+
+    #[test]
+    fn test_get_filtered_headers_forward_all() {
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("x-custom-header", "custom-value".parse().unwrap());
+        client_headers.insert("authorization", "Bearer token".parse().unwrap());
+        client_headers.insert("user-agent", "test-agent".parse().unwrap()); // This is in common headers
+
+        let config = AuthHookConfigV3Headers {
+            forward: AllOrList::All(All(())),
+            additional: HashMap::new(),
+        };
+
+        // Test with ignore_common_headers = true
+        let filtered_headers = get_filtered_headers(&config, &client_headers, true);
+        assert!(filtered_headers.contains_key("x-custom-header"));
+        assert!(filtered_headers.contains_key("authorization"));
+        assert!(!filtered_headers.contains_key("user-agent")); // Should be filtered out
+
+        // Test with ignore_common_headers = false
+        let filtered_headers = get_filtered_headers(&config, &client_headers, false);
+        assert!(filtered_headers.contains_key("x-custom-header"));
+        assert!(filtered_headers.contains_key("authorization"));
+        assert!(filtered_headers.contains_key("user-agent")); // Should be included
+    }
+
+    #[test]
+    fn test_get_filtered_headers_forward_list() {
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("x-custom-header", "custom-value".parse().unwrap());
+        client_headers.insert("authorization", "Bearer token".parse().unwrap());
+        client_headers.insert("not-in-list", "value".parse().unwrap());
+
+        let forward_list = vec!["x-custom-header".to_string(), "authorization".to_string()];
+
+        let config = AuthHookConfigV3Headers {
+            forward: AllOrList::List(forward_list),
+            additional: HashMap::new(),
+        };
+
+        let filtered_headers = get_filtered_headers(&config, &client_headers, true);
+        assert!(filtered_headers.contains_key("x-custom-header"));
+        assert!(filtered_headers.contains_key("authorization"));
+        assert!(!filtered_headers.contains_key("not-in-list"));
+    }
+
+    #[test]
+    fn test_get_filtered_headers_with_additional() {
+        let mut client_headers = HeaderMap::new();
+        client_headers.insert("x-custom-header", "custom-value".parse().unwrap());
+
+        let mut additional_headers = HashMap::new();
+        additional_headers.insert("x-additional".to_string(), "additional-value".to_string());
+        additional_headers.insert("x-api-key".to_string(), "1234".to_string());
+
+        let config = AuthHookConfigV3Headers {
+            forward: AllOrList::All(All(())),
+            additional: additional_headers,
+        };
+
+        let filtered_headers = get_filtered_headers(&config, &client_headers, true);
+        assert!(filtered_headers.contains_key("x-custom-header"));
+        assert!(filtered_headers.contains_key("x-additional"));
+        assert!(filtered_headers.contains_key("x-api-key"));
+        assert_eq!(
+            filtered_headers.get("x-additional").unwrap(),
+            "additional-value"
+        );
+        assert_eq!(filtered_headers.get("x-api-key").unwrap(), "1234");
+    }
+
+    #[test]
+    fn test_get_filtered_headers_invalid_headers() {
+        let client_headers = HeaderMap::new();
+
+        let forward_list = vec!["invalid header name with spaces".to_string()]; // Invalid header name
+
+        let mut additional_headers = HashMap::new();
+        additional_headers.insert("invalid header".to_string(), "value".to_string()); // Invalid header name
+        additional_headers.insert("valid-header".to_string(), "invalid value\n".to_string()); // Invalid header value
+
+        let config = AuthHookConfigV3Headers {
+            forward: AllOrList::List(forward_list),
+            additional: additional_headers,
+        };
+
+        let filtered_headers = get_filtered_headers(&config, &client_headers, true);
+        assert!(!filtered_headers.contains_key("invalid header name with spaces"));
+        assert!(!filtered_headers.contains_key("invalid header"));
+        assert!(!filtered_headers.contains_key("valid-header"));
     }
 }

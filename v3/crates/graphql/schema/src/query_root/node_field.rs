@@ -7,15 +7,14 @@ use std::collections::{BTreeMap, HashMap};
 use crate::permissions::get_node_field_namespace_permissions;
 use crate::types::RelayInputAnnotation;
 use crate::types::{
-    self,
+    self, Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
     input_type::get_input_type,
     output_type::{
-        get_custom_output_type, get_object_type_representation, node_interface_type,
-        ID_TYPE_REFERENCE,
+        ID_TYPE_REFERENCE, get_custom_output_type, get_object_type_representation,
+        node_interface_type,
     },
-    Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
 };
-use crate::{Role, GDS};
+use crate::{GDS, Role};
 use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::Qualified;

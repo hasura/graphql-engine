@@ -95,9 +95,9 @@ where
     match types.get_mut(&query_root_name.0) {
         Some(TypeInfo::Object(object)) => object.fields.extend(introspection_root_fields),
         _ => {
-            return Err(Error::Internal(
+            Err(Error::Internal(
                 "failed to add introspection root fields".to_string(),
-            ))?
+            ))?;
         }
     }
 

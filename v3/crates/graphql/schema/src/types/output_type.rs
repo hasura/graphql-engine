@@ -18,11 +18,11 @@ use crate::commands::generate_command_argument;
 use crate::field_arguments::generate_field_argument;
 use crate::query_root::select_aggregate;
 use crate::query_root::select_many::generate_select_many_arguments;
+use crate::{GDS, Role};
 use crate::{aggregates, mk_deprecation_status, permissions};
-use crate::{Role, GDS};
 use metadata_resolve::{self, mk_name};
-use metadata_resolve::{get_type_representation, TypeRepresentation};
 use metadata_resolve::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
+use metadata_resolve::{TypeRepresentation, get_type_representation};
 
 use crate::Error;
 

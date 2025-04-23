@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/scalar_operator_argument_type_mismatch/metadata.json
+---
+Error: the argument type for the operator 'range' in the boolean expression 'int_bool_exp_with_range (in subgraph default)' is not compatible with the mapped operator's argument type defined in the data connector: Type 'int_range (in subgraph default)' is not compatible with NDC type 'range!' - Expected a nullable type

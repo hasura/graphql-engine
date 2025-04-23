@@ -1,0 +1,36 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "with_arguments",
+            "objectType": "object",
+            "arguments": [
+              {
+                "name": "duplicate_argument",
+                "type": "String!"
+              },
+              {
+                "name": "duplicate_argument",
+                "type": "Int!"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "object",
+            "fields": []
+          }
+        }
+      ]
+    }
+  ]
+}

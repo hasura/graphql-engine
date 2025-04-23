@@ -207,6 +207,9 @@
                 "_eq": {
                   "type": "equal"
                 },
+                "_in": {
+                  "type": "in"
+                },
                 "_like": {
                   "argument_type": {
                     "type": "named",
@@ -222,6 +225,9 @@
               "comparison_operators": {
                 "_eq": {
                   "type": "equal"
+                },
+                "_in": {
+                  "type": "in"
                 },
                 "_gt": {
                   "argument_type": {
@@ -328,6 +334,9 @@
                 "_eq": {
                   "type": "equal"
                 },
+                "_in": {
+                  "type": "in"
+                },
                 "_like": {
                   "argument_type": {
                     "type": "named",
@@ -343,6 +352,9 @@
               "comparison_operators": {
                 "_eq": {
                   "type": "equal"
+                },
+                "_in": {
+                  "type": "in"
                 },
                 "_gt": {
                   "argument_type": {

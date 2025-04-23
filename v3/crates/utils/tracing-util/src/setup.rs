@@ -1,11 +1,11 @@
 use opentelemetry::baggage::BaggageExt;
 use opentelemetry::propagation::TextMapPropagator;
 use opentelemetry::trace::Span; // 'Span'-the-trait, c.f. to 'Span'-the-struct. Used for its
-                                // 'set_attribute' method.
+// 'set_attribute' method.
 use opentelemetry::propagation::composite::TextMapCompositePropagator;
-use opentelemetry::{global, trace::TraceError, KeyValue};
+use opentelemetry::{KeyValue, global, trace::TraceError};
 pub use opentelemetry_contrib::trace::propagator::trace_context_response::TraceContextResponsePropagator;
-use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
+use opentelemetry_otlp::{OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT, WithExportConfig};
 use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
 use opentelemetry_sdk::trace::{SpanProcessor, TracerProvider};
 use opentelemetry_semantic_conventions as semcov;

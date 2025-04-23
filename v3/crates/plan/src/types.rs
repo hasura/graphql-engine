@@ -2,10 +2,11 @@ use crate::error::InternalError;
 use crate::query::{ArgumentPresetExecutionError, RelationshipFieldMappingError};
 use hasura_authn_core::Role;
 use metadata_resolve::Qualified;
+use open_dds::data_connector::DataConnectorOperatorName;
 use open_dds::{
     arguments::ArgumentName,
     commands::CommandName,
-    data_connector::DataConnectorColumnName,
+    data_connector::{DataConnectorColumnName, DataConnectorName},
     models::ModelName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
@@ -21,13 +22,13 @@ pub enum PlanError {
     #[error("{0}")]
     OrderBy(#[from] OrderByError),
     #[error("{0}")]
+    BooleanExpression(#[from] BooleanExpressionError),
+    #[error("{0}")]
     ArgumentPresetExecutionError(#[from] ArgumentPresetExecutionError),
     #[error("{0}")]
     InternalError(InternalError),
     #[error("{0}")]
     Internal(String), // equivalent to DataFusionError::Internal
-    #[error("{0}")]
-    External(Box<dyn std::error::Error + Send + Sync>), //equivalent to DataFusionError::External
 }
 
 impl TraceableError for PlanError {
@@ -38,7 +39,9 @@ impl TraceableError for PlanError {
             Self::Permission(permission_error) => permission_error.visibility(),
             Self::Relationship(relationship_error) => relationship_error.visibility(),
             Self::OrderBy(order_by_error) => order_by_error.visibility(),
-            Self::External(_) => ErrorVisibility::User,
+            Self::BooleanExpression(boolean_expression_error) => {
+                boolean_expression_error.visibility()
+            }
             Self::Internal(_) => ErrorVisibility::Internal,
         }
     }
@@ -75,7 +78,9 @@ pub enum PermissionError {
         object_type_name: Qualified<CustomTypeName>,
         role: Role,
     },
-    #[error("role {role:} does not have permission to select from field {field_name:} in type {object_type_name:}")]
+    #[error(
+        "role {role:} does not have permission to select from field {field_name:} in type {object_type_name:}"
+    )]
     ObjectFieldNotFound {
         object_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
@@ -90,17 +95,23 @@ pub enum PermissionError {
         object_type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
-    #[error("Internal error: Relationship capabilities are missing for {relationship_name} on type {object_type_name}")]
+    #[error(
+        "Internal error: Relationship capabilities are missing for {relationship_name} on type {object_type_name}"
+    )]
     InternalMissingRelationshipCapabilities {
         object_type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
-    #[error("Field {field_name} not found in object boolean expression type {boolean_expression_type_name}")]
+    #[error(
+        "Field {field_name} not found in object boolean expression type {boolean_expression_type_name}"
+    )]
     FieldNotFoundInBooleanExpressionType {
         field_name: FieldName,
         boolean_expression_type_name: Qualified<CustomTypeName>,
     },
-    #[error("Relationship {relationship_name} not found in object boolean expression type {boolean_expression_type_name}")]
+    #[error(
+        "Relationship {relationship_name} not found in object boolean expression type {boolean_expression_type_name}"
+    )]
     RelationshipNotFoundInBooleanExpressionType {
         relationship_name: RelationshipName,
         boolean_expression_type_name: Qualified<CustomTypeName>,
@@ -133,43 +144,64 @@ impl TraceableError for PermissionError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum RelationshipError {
-    #[error("Mapping for source column {source_column} already exists in the relationship {relationship_name}")]
+    #[error(
+        "Mapping for source column {source_column} already exists in the relationship {relationship_name}"
+    )]
     MappingExistsInRelationship {
         source_column: FieldName,
         relationship_name: RelationshipName,
     },
-    #[error("Mapping for argument {argument_name} already exists in the relationship {relationship_name}")]
+    #[error(
+        "Mapping for argument {argument_name} already exists in the relationship {relationship_name}"
+    )]
     ArgumentMappingExistsInRelationship {
         argument_name: ArgumentName,
         relationship_name: RelationshipName,
     },
-    #[error("Missing argument mapping to model {model_name} data connector source for argument {argument_name} used in relationship {relationship_name} on type {source_type}")]
+    #[error(
+        "Missing argument mapping to model {model_name} data connector source for argument {argument_name} used in relationship {relationship_name} on type {source_type}"
+    )]
     MissingArgumentMappingInModelRelationship {
         source_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
         model_name: Qualified<ModelName>,
         argument_name: ArgumentName,
     },
-    #[error("Missing argument mapping to command {command_name} data connector source for argument {argument_name} used in relationship {relationship_name} on type {source_type}")]
+    #[error(
+        "Missing argument mapping to command {command_name} data connector source for argument {argument_name} used in relationship {relationship_name} on type {source_type}"
+    )]
     MissingArgumentMappingInCommandRelationship {
         source_type: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
     },
-    #[error("Missing NDC column name in relationship {relationship_name} in the mapping between source field {source_field} and target field {target_field}")]
+    #[error(
+        "Missing source field '{source_field}' in the mapping in relationship '{relationship_name}'"
+    )]
+    MissingSourceField {
+        relationship_name: RelationshipName,
+        source_field: FieldName,
+    },
+    #[error(
+        "Missing NDC column name in relationship {relationship_name} in the mapping between source field {source_field} and target field {target_field}"
+    )]
     MissingTargetColumn {
         relationship_name: RelationshipName,
         source_field: FieldName,
         target_field: FieldName,
     },
-    #[error("Cannot use relationship '{relationship_name}' in filter predicate. NDC column {source_column} (used by source field '{source_field}') needs to implement an EQUAL comparison operator")]
+    #[error(
+        "Cannot use relationship '{relationship_name}' in filter predicate. NDC column {source_column} (used by source field '{source_field}') needs to implement an EQUAL comparison operator"
+    )]
     SourceColumnMissingEqualComparisonOperator {
         relationship_name: RelationshipName,
         source_field: FieldName,
         source_column: DataConnectorColumnName,
     },
-    #[error("Remote predicates are not supported for relationships with an argument mapping target. Relationship {relationship_name} on type {source_type} has source field {source_field} mapped to target argument {target_argument}")]
+    #[error(
+        "Remote predicates are not supported for relationships with an argument mapping target. Relationship {relationship_name} on type {source_type} has source field {source_field} mapped to target argument {target_argument}"
+    )]
     RemotePredicatesNotSupportedWithArgumentMappingTarget {
         relationship_name: RelationshipName,
         source_type: Qualified<CustomTypeName>,
@@ -221,6 +253,26 @@ impl TraceableError for OrderByError {
             | Self::NestedOrderByNotSupported(_)
             | Self::RemoteRelationshipNotSupported(_) => ErrorVisibility::User,
             Self::Internal(_) | Self::FieldMappingNotFound { .. } => ErrorVisibility::Internal,
+        }
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum BooleanExpressionError {
+    #[error(
+        "Comparison operator {comparison_operator} not defined for data connector {data_connector_name} in scalar boolean expression type {boolean_expression_type_name}"
+    )]
+    ComparisonOperatorNotFound {
+        comparison_operator: DataConnectorOperatorName,
+        boolean_expression_type_name: metadata_resolve::BooleanExpressionTypeIdentifier,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+}
+
+impl TraceableError for BooleanExpressionError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::ComparisonOperatorNotFound { .. } => ErrorVisibility::User,
         }
     }
 }

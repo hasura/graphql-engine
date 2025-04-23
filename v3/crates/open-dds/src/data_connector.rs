@@ -77,27 +77,27 @@ impl DataConnectorLink {
 }
 
 fn ndc_capabilities_response_v01_schema_reference(
-    _gen: &mut schemars::gen::SchemaGenerator,
+    _gen: &mut schemars::r#gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
     schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.6/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
 }
 
 fn ndc_schema_response_v01_schema_reference(
-    _gen: &mut schemars::gen::SchemaGenerator,
+    _gen: &mut schemars::r#gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
     schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.6/ndc-models/tests/json_schema/schema_response.jsonschema".into())
 }
 
 fn ndc_capabilities_response_v02_schema_reference(
-    _gen: &mut schemars::gen::SchemaGenerator,
+    _gen: &mut schemars::r#gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0-rc.3/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.1-rc.2/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
 }
 
 fn ndc_schema_response_v02_schema_reference(
-    _gen: &mut schemars::gen::SchemaGenerator,
+    _gen: &mut schemars::r#gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0-rc.3/ndc-models/tests/json_schema/schema_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.1-rc.2/ndc-models/tests/json_schema/schema_response.jsonschema".into())
 }
 
 /// Versioned schema and capabilities for a data connector.
@@ -113,7 +113,7 @@ pub enum VersionedSchemaAndCapabilities {
     #[opendd(rename = "v0.1")]
     V01(SchemaAndCapabilitiesV01),
     #[serde(rename = "v0.2")]
-    #[opendd(rename = "v0.2", hidden)]
+    #[opendd(rename = "v0.2")]
     V02(SchemaAndCapabilitiesV02),
 }
 

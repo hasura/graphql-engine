@@ -322,18 +322,24 @@ pub enum Error {
         field_name: ast::Name,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("field name for relationship {relationship_name} of type {type_name} conflicts with the existing field {field_name}")]
+    #[error(
+        "field name for relationship {relationship_name} of type {type_name} conflicts with the existing field {field_name}"
+    )]
     RelationshipFieldNameConflict {
         relationship_name: RelationshipName,
         field_name: ast::Name,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("the aggregation function {field_name} conflicts with the aggregatable field {field_name} in the aggregate expression {aggregate_expression} is named {field_name}. Either rename the aggregation function or the field")]
+    #[error(
+        "the aggregation function {field_name} conflicts with the aggregatable field {field_name} in the aggregate expression {aggregate_expression} is named {field_name}. Either rename the aggregation function or the field"
+    )]
     AggregationFunctionFieldNameConflict {
         aggregate_expression: Qualified<AggregateExpressionName>,
         field_name: ast::Name,
     },
-    #[error("internal error: duplicate aggregatable field {field_name} in the aggregate expression {aggregate_expression} is named {field_name}")]
+    #[error(
+        "internal error: duplicate aggregatable field {field_name} in the aggregate expression {aggregate_expression} is named {field_name}"
+    )]
     InternalDuplicateAggregatableField {
         aggregate_expression: Qualified<AggregateExpressionName>,
         field_name: ast::Name,
@@ -348,7 +354,9 @@ pub enum Error {
     InternalErrorDuplicateEntitySourceFound { type_name: ast::TypeName },
     #[error("internal error while building schema, model not found: {model_name}")]
     InternalModelNotFound { model_name: Qualified<ModelName> },
-    #[error("internal error while building schema, order by expression not found: {order_by_expression_identifier}")]
+    #[error(
+        "internal error while building schema, order by expression not found: {order_by_expression_identifier}"
+    )]
     InternalOrderByExpressionNotFound {
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
     },
@@ -372,11 +380,15 @@ pub enum Error {
     InternalCommandNotFound {
         command_name: Qualified<CommandName>,
     },
-    #[error("internal error while building schema, aggregate expression not found: {aggregate_expression}")]
+    #[error(
+        "internal error while building schema, aggregate expression not found: {aggregate_expression}"
+    )]
     InternalAggregateExpressionNotFound {
         aggregate_expression: Qualified<AggregateExpressionName>,
     },
-    #[error("Cannot generate select_many API for model {model_name} since order_by_expression isn't defined")]
+    #[error(
+        "Cannot generate select_many API for model {model_name} since order_by_expression isn't defined"
+    )]
     NoOrderByExpression { model_name: Qualified<ModelName> },
     #[error("No graphql type name has been defined for scalar type: {type_name}")]
     NoGraphQlTypeNameForScalar {
@@ -386,7 +398,9 @@ pub enum Error {
     NoGraphQlOutputTypeNameForObject {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("No graphql select type name has been defined for aggregate expression: {aggregate_expression}")]
+    #[error(
+        "No graphql select type name has been defined for aggregate expression: {aggregate_expression}"
+    )]
     NoGraphQlSelectTypeNameForAggregateExpression {
         aggregate_expression: Qualified<AggregateExpressionName>,
     },
@@ -404,7 +418,9 @@ pub enum Error {
         "Cannot generate the filter input type for model {model_name} since filterInputTypeName isn't defined in the graphql config"
     )]
     NoFilterInputTypeNameConfigNameForModel { model_name: Qualified<ModelName> },
-    #[error("Internal error: Relationship capabilities are missing for {relationship} on type {type_name}")]
+    #[error(
+        "Internal error: Relationship capabilities are missing for {relationship} on type {type_name}"
+    )]
     InternalMissingRelationshipCapabilities {
         type_name: Qualified<CustomTypeName>,
         relationship: RelationshipName,
@@ -413,17 +429,25 @@ pub enum Error {
     ExpectedTypeToBeObject {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("internal error: Cannot generate select_many API for model {model_name} since the order_by_input GraphqlConfig is not defined")]
+    #[error(
+        "internal error: Cannot generate select_many API for model {model_name} since the order_by_input GraphqlConfig is not defined"
+    )]
     InternalNoOrderByGraphqlConfig { model_name: Qualified<ModelName> },
-    #[error("internal error: Cannot generate order_by enum type for type {type_name} since the order_by_input GraphqlConfig is not defined")]
+    #[error(
+        "internal error: Cannot generate order_by enum type for type {type_name} since the order_by_input GraphqlConfig is not defined"
+    )]
     InternalNoOrderByGraphqlConfigOrderByEnumType { type_name: ast::TypeName },
-    #[error("internal error: Cannot generate schema for order by expression {order_by_expression_identifier} since the order_by_input GraphqlConfig is not defined")]
+    #[error(
+        "internal error: Cannot generate schema for order by expression {order_by_expression_identifier} since the order_by_input GraphqlConfig is not defined"
+    )]
     InternalNoOrderByGraphqlConfigOrderByExpression {
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
     },
     #[error("duplicate field name {field_name} generated while building query root")]
     DuplicateFieldInQueryRoot { field_name: ast::Name },
-    #[error("Cannot have a function based command backed by a procedure or vice versa. Found for command {command_name:}")]
+    #[error(
+        "Cannot have a function based command backed by a procedure or vice versa. Found for command {command_name:}"
+    )]
     IncorrectCommandBacking {
         command_name: Qualified<CommandName>,
     },
@@ -434,7 +458,9 @@ pub enum Error {
     InternalTypeMappingNotFound {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("internal error: type mapping or field mapping not found for type {type_name:} and field {field_name:}")]
+    #[error(
+        "internal error: type mapping or field mapping not found for type {type_name:} and field {field_name:}"
+    )]
     InternalMappingNotFound {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,

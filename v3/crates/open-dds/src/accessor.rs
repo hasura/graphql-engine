@@ -3,9 +3,9 @@ use std::collections::HashSet;
 
 use crate::identifier::SubgraphName;
 use crate::{
-    aggregates, boolean_expression, commands, data_connector, flags, graphql_config, models,
-    order_by_expression, permissions, plugins, relationships, types, Metadata, MetadataWithVersion,
-    OpenDdSubgraphObject, OpenDdSupergraphObject,
+    Metadata, MetadataWithVersion, OpenDdSubgraphObject, OpenDdSupergraphObject, aggregates,
+    boolean_expression, commands, data_connector, flags, graphql_config, models,
+    order_by_expression, permissions, plugins, relationships, types,
 };
 
 const GLOBALS_SUBGRAPH: SubgraphName = SubgraphName::new_inline_static("__globals");

@@ -10,7 +10,6 @@ bench = false
 [dependencies]
 engine-types = { path = "../engine-types" }
 graphql-schema = { path = "../graphql/schema" }
-json-ext = { path = "../utils/json-ext" }
 lang-graphql = { path = "../graphql/lang-graphql" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }

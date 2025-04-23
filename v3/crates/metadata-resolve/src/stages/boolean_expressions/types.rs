@@ -1,10 +1,14 @@
-use crate::stages::{
-    aggregate_boolean_expressions,
-    scalar_boolean_expressions::{self, LogicalOperators, LogicalOperatorsGraphqlConfig},
-};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
+use crate::{
+    stages::{
+        aggregate_boolean_expressions,
+        scalar_boolean_expressions::{self, LogicalOperators, LogicalOperatorsGraphqlConfig},
+    },
+    types::error::ContextualError,
+};
 use lang_graphql::ast::common as ast;
+use open_dds::models::ModelName;
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName},
     relationships::RelationshipName,
@@ -18,47 +22,72 @@ use std::fmt::Display;
 
 #[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
 pub enum BooleanExpressionIssue {
-    #[error("The data connector '{data_connector_name}' does not support filtering by nested object arrays. The comparable field '{field_name}' within {boolean_expression_type_name}' is of an object array type: {field_type}")]
+    #[error(
+        "The data connector '{data_connector_name}' does not support filtering by nested object arrays. The comparable field '{field_name}' within {boolean_expression_type_name}' is of an object array type: {field_type}"
+    )]
     DataConnectorDoesNotSupportNestedObjectArrayFiltering {
         data_connector_name: Qualified<DataConnectorName>,
         boolean_expression_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
-    #[error("The data connector '{data_connector_name}' does not support filtering by nested scalar arrays. The comparable field '{field_name}' within '{boolean_expression_type_name}' is of a scalar array type: {field_type}")]
+    #[error(
+        "The data connector '{data_connector_name}' does not support filtering by nested scalar arrays. The comparable field '{field_name}' within '{boolean_expression_type_name}' is of a scalar array type: {field_type}"
+    )]
     DataConnectorDoesNotSupportNestedScalarArrayFiltering {
         data_connector_name: Qualified<DataConnectorName>,
         boolean_expression_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
-    #[error("the comparable field '{name}' is defined more than once in the boolean expression type '{type_name}'")]
+    #[error(
+        "the comparable field '{name}' is defined more than once in the boolean expression type '{type_name}'"
+    )]
     DuplicateComparableFieldFound {
         type_name: Qualified<CustomTypeName>,
         name: FieldName,
     },
-    #[error("the comparable relationship '{name}' is defined more than once in the boolean expression type '{type_name}'")]
+    #[error(
+        "the comparable relationship '{name}' is defined more than once in the boolean expression type '{type_name}'"
+    )]
     DuplicateComparableRelationshipFound {
         type_name: Qualified<CustomTypeName>,
         name: RelationshipName,
     },
-    #[error("the boolean expression '{type_name}' has a GraphQL field name conflict between the '{name}' {name_source_1} and the '{name}' {name_source_2}. One of these will need to be renamed.")]
+    #[error(
+        "the boolean expression '{type_name}' has a GraphQL field name conflict between the '{name}' {name_source_1} and the '{name}' {name_source_2}. One of these will need to be renamed."
+    )]
     GraphqlFieldNameConflict {
         type_name: Qualified<CustomTypeName>,
         name: String,
         name_source_1: FieldNameSource,
         name_source_2: FieldNameSource,
     },
-    #[error("the type of the comparable field '{field_name}' on the boolean expresssion '{boolean_expression_type_name}' is a multidimensional array type: {field_type}. Multidimensional arrays are not supported in boolean expressions")]
+    #[error(
+        "the type of the comparable field '{field_name}' on the boolean expresssion '{boolean_expression_type_name}' is a multidimensional array type: {field_type}. Multidimensional arrays are not supported in boolean expressions"
+    )]
     MultidimensionalArrayComparableFieldNotSupported {
         boolean_expression_type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         field_type: QualifiedTypeReference,
     },
+    #[error(
+        "the target model '{target_model_name}' of the relationship '{relationship_name}' does not have a boolean expression type defined"
+    )]
+    ComparableRelationshipToModelWithoutBooleanExpressionType {
+        target_model_name: Qualified<ModelName>,
+        relationship_name: RelationshipName,
+    },
     #[error("the boolean expression type with name {type_name} is defined more than once")]
     DuplicateBooleanExpressionType {
         type_name: Qualified<CustomTypeName>,
     },
+}
+
+impl ContextualError for BooleanExpressionIssue {
+    fn create_error_context(&self) -> Option<error_context::Context> {
+        None
+    }
 }
 
 impl ShouldBeAnError for BooleanExpressionIssue {
@@ -83,6 +112,11 @@ impl ShouldBeAnError for BooleanExpressionIssue {
             }
             BooleanExpressionIssue::DuplicateBooleanExpressionType { .. } => flags
                 .contains(open_dds::flags::Flag::DisallowDuplicateNamesAcrossTypesAndExpressions),
+            BooleanExpressionIssue::ComparableRelationshipToModelWithoutBooleanExpressionType {
+                ..
+            } => flags.contains(
+                open_dds::flags::Flag::DisallowComparableRelationshipTargetWithNoBooleanExpressionType,
+            ),
         }
     }
 }
@@ -269,7 +303,7 @@ pub struct BooleanExpressionComparableRelationship {
 
     /// The boolean expression type to use for comparison. This is optional for relationships to
     /// models, and defaults to the filterExpressionType of the model
-    pub boolean_expression_type: Qualified<CustomTypeName>,
+    pub boolean_expression_type: Option<Qualified<CustomTypeName>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

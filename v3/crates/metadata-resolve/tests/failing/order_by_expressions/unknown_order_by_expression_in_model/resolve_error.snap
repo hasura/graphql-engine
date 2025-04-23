@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/order_by_expressions/unknown_order_by_expression_in_model/metadata.json
 ---
-Unknown order by expression MyOrderByExpression (in subgraph default) in in model mymodel (in subgraph default)
+Error: Unknown order by expression MyOrderByExpression (in subgraph default) in in model mymodel (in subgraph default)

@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/scalar/count_distinct_bool_exp_type_mismatch/metadata.json
 ---
-error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': type mismatch between the 'count distinct' aggregate (return type: 'Int') and the specified boolean expression type 'String_bool_exp (in subgraph default)' (operand type: 'String')
+Error: error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': type mismatch between the 'count distinct' aggregate (return type: 'Int') and the specified boolean expression type 'String_bool_exp (in subgraph default)' (operand type: 'String')

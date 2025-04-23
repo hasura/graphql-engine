@@ -3,8 +3,8 @@ use crate::types::ObjectTypeWarning;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use metadata_resolve::{
-    unwrap_custom_type_name, ObjectTypeWithRelationships, Qualified, QualifiedBaseType,
-    QualifiedTypeName, QualifiedTypeReference, ScalarTypeRepresentation,
+    ObjectTypeWithRelationships, Qualified, QualifiedBaseType, QualifiedTypeName,
+    QualifiedTypeReference, ScalarTypeRepresentation, unwrap_custom_type_name,
 };
 use open_dds::types::{CustomTypeName, InbuiltType};
 use std::collections::BTreeMap;

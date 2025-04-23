@@ -1,6 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_aggregation_function_mappings_to_model_data_connector/metadata.json
 ---
-the aggregate expression Int4_aggregate_exp (in subgraph default) is used with the model Invoice (in subgraph default) but for the data connector mypg (in subgraph default) and scalar type int4, mappings are not provided for all aggregation functions in the aggregate expression
+Error: the aggregate expression Int4_aggregate_exp (in subgraph default) is used with the model Invoice (in subgraph default) but for the data connector mypg (in subgraph default) and scalar type int4, mappings are not provided for all aggregation functions in the aggregate expression

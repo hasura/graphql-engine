@@ -118,13 +118,49 @@
               {
                 "role": "admin",
                 "select": {
-                  "filter": null
+                  "filter": {
+                    "nestedField": {
+                      "fieldName": "location",
+                      "predicate": {
+                        "relationship": {
+                          "name": "country_object",
+                          "predicate": {
+                            "fieldComparison": {
+                              "field": "area_km2",
+                              "operator": "_eq",
+                              "value": {
+                                "literal": 244376
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               },
               {
                 "role": "user",
                 "select": {
-                  "filter": null
+                  "filter": {
+                    "nestedField": {
+                      "fieldName": "location",
+                      "predicate": {
+                        "relationship": {
+                          "name": "country_object",
+                          "predicate": {
+                            "fieldComparison": {
+                              "field": "area_km2",
+                              "operator": "_eq",
+                              "value": {
+                                "literal": 244376
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             ]

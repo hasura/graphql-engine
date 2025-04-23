@@ -4,7 +4,7 @@
 /// For examples of metadata files, see the 'tests/' folder in this crate.
 use std::{
     collections::BTreeSet,
-    io::{stdin, Read},
+    io::{Read, stdin},
     process::exit,
 };
 
@@ -19,7 +19,9 @@ pub fn main() {
     h.read_to_string(&mut metadata_string).unwrap();
 
     if metadata_string.is_empty() {
-        println!("Usage: Provide a metadata json file via stdin and get the corresponding sdl schema and introspection query results on stdout.");
+        println!(
+            "Usage: Provide a metadata json file via stdin and get the corresponding sdl schema and introspection query results on stdout."
+        );
         exit(-1);
     }
 

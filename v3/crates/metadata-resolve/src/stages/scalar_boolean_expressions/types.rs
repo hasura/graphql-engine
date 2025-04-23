@@ -1,7 +1,7 @@
 use crate::stages::boolean_expressions;
 use crate::{
-    types::subgraph::{Qualified, QualifiedTypeReference},
     QualifiedTypeName,
+    types::subgraph::{Qualified, QualifiedTypeReference},
 };
 use open_dds::types::{GraphQlTypeName, OperatorName};
 use serde::{Deserialize, Serialize};

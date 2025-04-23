@@ -1,11 +1,11 @@
 use crate::types::error::TypePredicateError;
 
+use crate::QualifiedTypeReference;
 use crate::stages::{
     boolean_expressions, data_connectors, models, object_relationships, object_types,
     scalar_boolean_expressions,
 };
 use crate::types::subgraph::Qualified;
-use crate::QualifiedTypeReference;
 use indexmap::IndexMap;
 use open_dds::{
     models::ModelName,
@@ -277,6 +277,12 @@ fn validate_data_connector_with_comparable_relationship(
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
 ) -> Result<(), boolean_expressions::BooleanExpressionError> {
+    // if there isn't actually a boolean expression type here then
+    // we don't need to validate anything
+    if comparable_relationship.boolean_expression_type.is_none() {
+        return Ok(());
+    }
+
     let underlying_object = object_types
         .get(&object_boolean_expression_type.object_type)
         .ok_or_else(|| {
@@ -289,8 +295,9 @@ fn validate_data_connector_with_comparable_relationship(
     let relationship = underlying_object
         .relationship_fields
         .get(&comparable_relationship.relationship_name)
-        .ok_or_else(|| TypePredicateError::UnknownRelationshipInTypePredicate {
+        .ok_or_else(|| boolean_expressions::BooleanExpressionError::UnknownRelationshipInObjectBooleanExpressionType {
             relationship_name: comparable_relationship.relationship_name.clone(),
+            object_boolean_expression_type: object_boolean_expression_type.name.clone(),
             type_name: object_boolean_expression_type.object_type.clone(),
         })?;
 

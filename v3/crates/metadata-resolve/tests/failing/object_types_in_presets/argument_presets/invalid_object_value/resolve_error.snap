@@ -1,8 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
+expression: string
 input_file: crates/metadata-resolve/tests/failing/object_types_in_presets/argument_presets/invalid_object_value/metadata.json
 ---
-The following issues were raised but disallowed by compatibility configuration:
-
-Type error in preset argument objects for role admin in command InsertAlbum (in subgraph default): Expected an object value of type InsertAlbumObject (in subgraph default) but got value "Invalid object value"
+Error: Type error in preset argument objects for role admin in command InsertAlbum (in subgraph default): Expected an object value of type InsertAlbumObject (in subgraph default) but got value "Invalid object value"

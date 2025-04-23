@@ -3,9 +3,8 @@
 //! A 'select_aggregate' operation fetches a set of aggregates over rows of a model
 
 use graphql_schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
-use graphql_schema::{InputAnnotation, GDS};
+use graphql_schema::{GDS, InputAnnotation};
 /// Generates the IR for a 'select_aggregate' operation
-use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
@@ -15,28 +14,20 @@ use open_dds;
 use plan::count_model;
 use plan_types::UsagesCounts;
 use serde::Serialize;
-use std::collections::BTreeMap;
 
 use crate::arguments;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
 use crate::order_by;
-use crate::GraphqlRequestPipeline;
-
-#[derive(Debug, Serialize)]
-pub enum ModelSelectAggregateSelection<'s> {
-    Ir(model_selection::ModelSelection<'s>),
-    OpenDd(open_dds::query::ModelAggregateSelection),
-}
 
 /// IR for the 'select_many' operation on a model
 #[derive(Debug, Serialize)]
-pub struct ModelSelectAggregate<'n, 's> {
+pub struct ModelSelectAggregate<'n> {
     // The name of the field as published in the schema
     pub field_name: ast::Name,
 
-    pub model_selection: ModelSelectAggregateSelection<'s>,
+    pub model_selection: open_dds::query::ModelAggregateSelection,
 
     // The Graphql output type of the operation
     pub(crate) type_container: &'n ast::TypeContainer<ast::TypeName>,
@@ -48,62 +39,30 @@ pub struct ModelSelectAggregate<'n, 's> {
 
 /// Generates the IR for a 'select_aggregate' operation
 pub(crate) fn select_aggregate_generate_ir<'n, 's>(
-    request_pipeline: GraphqlRequestPipeline,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
-    data_type: &Qualified<open_dds::types::CustomTypeName>,
-    model: &'s metadata_resolve::ModelWithPermissions,
     model_source: &'s metadata_resolve::ModelSource,
-    object_types: &'s BTreeMap<
-        Qualified<open_dds::types::CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
-    session: &Session,
-    request_headers: &reqwest::header::HeaderMap,
     model_name: &'s Qualified<open_dds::models::ModelName>,
-) -> Result<ModelSelectAggregate<'n, 's>, error::Error> {
+) -> Result<ModelSelectAggregate<'n>, error::Error> {
     let mut usage_counts = UsagesCounts::new();
-    let model_selection = match request_pipeline {
-        GraphqlRequestPipeline::Old => {
-            ModelSelectAggregateSelection::Ir(
-                model_selection::generate_aggregate_model_selection_ir(
-                    field,
-                    field_call,
-                    data_type,
-                    model,
-                    model_source,
-                    model_name,
-                    object_types,
-                    session,
-                    request_headers,
-                    // Get all the models/commands that were used as relationships
-                    &mut usage_counts,
-                )?,
-            )
-        }
-        GraphqlRequestPipeline::OpenDd => {
-            let AggregateQuery {
-                limit,
-                offset,
-                where_clause,
-                model_arguments,
-                order_by,
-            } = aggregate_query(field_call, model_name, model_source, &mut usage_counts)?;
+    let AggregateQuery {
+        limit,
+        offset,
+        where_clause,
+        model_arguments,
+        order_by,
+    } = aggregate_query(field_call, model_name, model_source, &mut usage_counts)?;
 
-            ModelSelectAggregateSelection::OpenDd(
-                model_selection::model_aggregate_selection_open_dd_ir(
-                    &field.selection_set,
-                    model_name,
-                    model_arguments,
-                    where_clause,
-                    order_by,
-                    limit,
-                    offset,
-                    &mut usage_counts,
-                )?,
-            )
-        }
-    };
+    let model_selection = model_selection::model_aggregate_selection_open_dd_ir(
+        &field.selection_set,
+        model_name,
+        model_arguments,
+        where_clause,
+        order_by,
+        limit,
+        offset,
+        &mut usage_counts,
+    )?;
 
     Ok(ModelSelectAggregate {
         field_name: field_call.name.clone(),
@@ -161,10 +120,11 @@ pub fn aggregate_query(
                                 }
                                 .into());
                             }
-                            limit =
-                                Some(filter_input_field_arg.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
+                            // Limit is optional
+                            limit = filter_input_field_arg
+                                .value
+                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
 
                         // Offset argument
@@ -177,17 +137,21 @@ pub fn aggregate_query(
                                 }
                                 .into());
                             }
-                            offset =
-                                Some(filter_input_field_arg.value.as_int_u32().map_err(
-                                    error::Error::map_unexpected_value_to_external_error,
-                                )?);
+                            // Offset is optional
+                            offset = filter_input_field_arg
+                                .value
+                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
 
                         // Order By argument
                         Annotation::Input(InputAnnotation::Model(
                             ModelInputAnnotation::ModelOrderByExpression,
                         )) => {
-                            order_by_input = Some(&filter_input_field_arg.value);
+                            // order by argument is optional
+                            if !filter_input_field_arg.value.is_null() {
+                                order_by_input = Some(&filter_input_field_arg.value);
+                            }
                         }
 
                         // Where argument
@@ -200,14 +164,17 @@ pub fn aggregate_query(
                                 }
                                 .into());
                             }
-                            where_input = Some(filter_input_field_arg.value.as_object()?);
+                            // where argument is optional
+                            if !filter_input_field_arg.value.is_null() {
+                                where_input = Some(filter_input_field_arg.value.as_object()?);
+                            }
                         }
 
                         _ => {
                             return Err(error::InternalEngineError::UnexpectedAnnotation {
                                 annotation: filter_input_field_arg.info.generic.clone(),
                             }
-                            .into())
+                            .into());
                         }
                     }
                 }
@@ -217,7 +184,7 @@ pub fn aggregate_query(
                 return Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: field_call_argument.info.generic.clone(),
                 }
-                .into())
+                .into());
             }
         }
     }

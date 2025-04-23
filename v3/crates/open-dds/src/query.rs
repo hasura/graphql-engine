@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::arguments::ArgumentName;
 use crate::{
-    aggregates::{AggregateExpressionName, AggregationFunctionName, ExtractionFunctionName},
+    aggregates::{AggregationFunctionName, ExtractionFunctionName},
     commands::CommandName,
     identifier::{Identifier, SubgraphName},
     models::{ModelName, OrderByDirection},
@@ -103,6 +103,7 @@ pub enum Dimension {
 pub enum ExtractionFunction {
     Nanosecond,
     Microsecond,
+    Millisecond,
     Second,
     Minute,
     Hour,
@@ -121,6 +122,7 @@ impl core::fmt::Display for ExtractionFunction {
         match self {
             ExtractionFunction::Nanosecond => write!(f, "NANOSECOND"),
             ExtractionFunction::Microsecond => write!(f, "MICROSECOND"),
+            ExtractionFunction::Millisecond => write!(f, "MILLISECOND"),
             ExtractionFunction::Second => write!(f, "SECOND"),
             ExtractionFunction::Minute => write!(f, "MINUTE"),
             ExtractionFunction::Hour => write!(f, "HOUR"),
@@ -445,10 +447,7 @@ pub enum AggregationFunction {
     Average,
     Count {},
     CountDistinct {},
-    Custom {
-        name: AggregationFunctionName,
-        expression: AggregateExpressionName,
-    },
+    Custom { name: AggregationFunctionName },
 }
 
 /// An aggregate metric computed over a set of values in whose context this is used.

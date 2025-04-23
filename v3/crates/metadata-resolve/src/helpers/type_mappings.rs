@@ -1,13 +1,11 @@
 use crate::stages::{object_types, scalar_types, type_permissions};
 
 use crate::data_connectors::CommandsResponseConfig;
-use crate::helpers::ndc_validation::{get_underlying_named_type, NDCValidationError};
+use crate::helpers::ndc_validation::{NDCValidationError, get_underlying_named_type};
 use crate::helpers::types::{object_type_exists, unwrap_custom_type_name};
 use crate::types::subgraph::Qualified;
-
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::types::{CustomTypeName, FieldName};
-
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
@@ -18,19 +16,25 @@ pub struct TypeMappingToCollect<'a> {
 
 #[derive(thiserror::Error, Debug)]
 pub enum TypeMappingCollectionError {
-    #[error("No mapping defined for type {type_name:} to object {ndc_type_name:} of data connector {data_connector:}")]
+    #[error(
+        "No mapping defined for type {type_name:} to object {ndc_type_name:} of data connector {data_connector:}"
+    )]
     MappingNotDefined {
         type_name: Qualified<CustomTypeName>,
         data_connector: Qualified<DataConnectorName>,
         ndc_type_name: DataConnectorObjectType,
     },
-    #[error("No support for using the same type {type_name:} against multiple data connector objects {ndc_type_1:} and {ndc_type_2:}")]
+    #[error(
+        "No support for using the same type {type_name:} against multiple data connector objects {ndc_type_1:} and {ndc_type_2:}"
+    )]
     MappingToMultipleDataConnectorObjectType {
         type_name: Qualified<CustomTypeName>,
         ndc_type_1: DataConnectorObjectType,
         ndc_type_2: DataConnectorObjectType,
     },
-    #[error("Missing mapping for field {field_name:} when mapping type {type_name:} to object {ndc_type_name:} of data connector {data_connector:}")]
+    #[error(
+        "Missing mapping for field {field_name:} when mapping type {type_name:} to object {ndc_type_name:} of data connector {data_connector:}"
+    )]
     MissingFieldMapping {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,

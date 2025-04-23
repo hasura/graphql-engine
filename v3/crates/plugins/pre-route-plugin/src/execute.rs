@@ -14,7 +14,7 @@ use open_dds::plugins::{
 };
 use serde_json::json;
 use tracing_util::{
-    set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Traceable, TraceableError,
+    ErrorVisibility, SpanVisibility, Traceable, TraceableError, set_attribute_on_active_span,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -37,6 +37,10 @@ pub enum Error {
     InvalidHeaderValue(String),
     #[error("Not found")]
     NotFound,
+    // Only used in the pre-route plugin handler function. Defined to ensure consistent
+    // response formatting in IntoResponse impl.
+    #[error("Cannot load pre-route plugins: {0}")]
+    CannotLoadPlugins(String),
 }
 
 impl TraceableError for Error {
@@ -49,7 +53,9 @@ impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
         let mut response_builder = axum::response::Response::builder();
         let status = match self {
-            Error::UnexpectedStatusCode(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::UnexpectedStatusCode(_) | Error::CannotLoadPlugins(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
             Error::NotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::BAD_REQUEST,
         };

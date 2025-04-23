@@ -9,14 +9,14 @@ use crate::permissions::get_entities_field_namespace_permissions;
 use metadata_resolve;
 use metadata_resolve::Qualified;
 
+use crate::types::EntityFieldTypeNameMapping;
 use crate::types::output_type::{
     apollo_federation_entities_type, apollo_federation_service_type, get_custom_output_type,
     get_object_type_representation, representations_type_reference,
 };
-use crate::types::EntityFieldTypeNameMapping;
 use crate::{
-    types::{self, Annotation},
     GDS,
+    types::{self, Annotation},
 };
 use json_ext::HashMapWithJsonKey;
 

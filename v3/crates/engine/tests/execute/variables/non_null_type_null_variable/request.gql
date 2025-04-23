@@ -1,0 +1,6 @@
+query ($id: Int!) {
+  AuthorMany(where: { author_id: { _eq: $id } }) {
+    author_id
+    first_name
+  }
+}

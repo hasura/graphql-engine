@@ -311,6 +311,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
             pre_route_plugins: [],
         },
         roles: {},
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
     },
     [
         ScalarBooleanExpressionIssue(

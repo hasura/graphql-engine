@@ -12,10 +12,10 @@ use open_dds::relationships::{
 use open_dds::types::{CustomTypeName, FieldName, TypeName};
 mod error;
 use crate::stages::data_connectors;
-use crate::{mk_name, Error, Qualified, QualifiedBaseType, QualifiedTypeName};
+use crate::{Qualified, QualifiedBaseType, QualifiedTypeName, mk_name};
 
 use crate::types::subgraph::mk_qualified_type_name;
-pub use error::{OrderByExpressionError, OrderableRelationshipError};
+pub use error::{NamedOrderByExpressionError, OrderByExpressionError, OrderableRelationshipError};
 
 mod types;
 pub use types::*;
@@ -30,12 +30,13 @@ pub fn resolve(
     relationships: &relationships::Relationships,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql_types: &mut graphql_config::GraphqlTypeNames,
-) -> Result<OrderByExpressionsOutput, Error> {
+) -> Result<OrderByExpressionsOutput, Vec<NamedOrderByExpressionError>> {
     let mut resolved_order_by_expressions = OrderByExpressions {
         objects: BTreeMap::new(),
         scalars: BTreeMap::new(),
     };
     let mut issues = Vec::new();
+    let mut results = Vec::new();
 
     // static list of order by expressions and their types so we can resolve without
     // being careful about dependencies between order by expressions
@@ -60,81 +61,105 @@ pub fn resolve(
         object: order_by_expression,
     } in &metadata_accessor.order_by_expressions
     {
-        match &order_by_expression.operand {
-            OrderByExpressionOperand::Scalar(scalar_operand) => {
-                let resolved_scalar_order_by_expression = resolve_scalar_order_by_expression(
-                    subgraph,
-                    &order_by_expression.name,
-                    scalar_operand,
-                    order_by_expression.graphql.as_ref(),
-                    order_by_expression.description.as_ref(),
-                    graphql_types,
-                )
-                .map_err(|error| Error::OrderByExpressionError {
-                    order_by_expression_name: Qualified::new(
-                        subgraph.clone(),
-                        order_by_expression.name.clone(),
-                    ),
-                    error,
-                })?;
-
-                if let Some(existing_order_by_expression) =
-                    resolved_order_by_expressions.scalars.insert(
-                        Qualified::new(
-                            subgraph.clone(),
-                            OrderByExpressionIdentifier::FromOrderByExpression(
-                                order_by_expression.name.clone(),
-                            ),
-                        ),
-                        resolved_scalar_order_by_expression,
-                    )
-                {
-                    issues.push(OrderByExpressionIssue::DuplicateOrderByExpression {
-                        order_by_expression: existing_order_by_expression.identifier,
-                    });
-                };
-            }
-            OrderByExpressionOperand::Object(object_operand) => {
-                let (resolved_order_by_expression, new_issues) =
-                    resolve_object_order_by_expression(
-                        subgraph,
-                        object_types,
-                        scalar_types,
-                        &order_by_expression_names_and_types,
-                        &order_by_expression.name,
-                        object_operand,
-                        order_by_expression.graphql.as_ref(),
-                        order_by_expression.description.as_ref(),
-                        relationships,
-                        graphql_types,
-                    )
-                    .map_err(|error| Error::OrderByExpressionError {
-                        order_by_expression_name: Qualified::new(
-                            subgraph.clone(),
-                            order_by_expression.name.clone(),
-                        ),
-                        error,
-                    })?;
-
-                issues.extend(new_issues);
-                if let Some(existing_order_by_expression) =
-                    resolved_order_by_expressions.objects.insert(
-                        resolved_order_by_expression.identifier.clone(),
-                        resolved_order_by_expression,
-                    )
-                {
-                    issues.push(OrderByExpressionIssue::DuplicateOrderByExpression {
-                        order_by_expression: existing_order_by_expression.identifier,
-                    });
-                };
-            }
-        }
+        results.push(resolve_order_by_expression(
+            subgraph,
+            order_by_expression,
+            &order_by_expression_names_and_types,
+            object_types,
+            scalar_types,
+            relationships,
+            &mut resolved_order_by_expressions,
+            &mut issues,
+            graphql_types,
+        ));
     }
 
-    Ok(OrderByExpressionsOutput {
+    partition_eithers::collect_any_errors(results).map(|_| OrderByExpressionsOutput {
         order_by_expressions: resolved_order_by_expressions,
         issues,
     })
+}
+
+fn resolve_order_by_expression(
+    subgraph: &SubgraphName,
+    order_by_expression: &open_dds::order_by_expression::OrderByExpressionV1,
+    order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, TypeName>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    relationships: &relationships::Relationships,
+    resolved_order_by_expressions: &mut OrderByExpressions,
+    issues: &mut Vec<OrderByExpressionIssue>,
+    graphql_types: &mut graphql_config::GraphqlTypeNames,
+) -> Result<(), NamedOrderByExpressionError> {
+    match &order_by_expression.operand {
+        OrderByExpressionOperand::Scalar(scalar_operand) => {
+            let resolved_scalar_order_by_expression = resolve_scalar_order_by_expression(
+                subgraph,
+                &order_by_expression.name,
+                scalar_operand,
+                order_by_expression.graphql.as_ref(),
+                order_by_expression.description.as_ref(),
+                graphql_types,
+            )
+            .map_err(|error| NamedOrderByExpressionError {
+                order_by_expression_name: Qualified::new(
+                    subgraph.clone(),
+                    order_by_expression.name.clone(),
+                ),
+                error,
+            })?;
+
+            if let Some(existing_order_by_expression) =
+                resolved_order_by_expressions.scalars.insert(
+                    Qualified::new(
+                        subgraph.clone(),
+                        OrderByExpressionIdentifier::FromOrderByExpression(
+                            order_by_expression.name.clone(),
+                        ),
+                    ),
+                    resolved_scalar_order_by_expression,
+                )
+            {
+                issues.push(OrderByExpressionIssue::DuplicateOrderByExpression {
+                    order_by_expression: existing_order_by_expression.identifier,
+                });
+            };
+        }
+        OrderByExpressionOperand::Object(object_operand) => {
+            let (resolved_order_by_expression, new_issues) = resolve_object_order_by_expression(
+                subgraph,
+                object_types,
+                scalar_types,
+                order_by_expression_names_and_types,
+                &order_by_expression.name,
+                object_operand,
+                order_by_expression.graphql.as_ref(),
+                order_by_expression.description.as_ref(),
+                relationships,
+                graphql_types,
+            )
+            .map_err(|error| NamedOrderByExpressionError {
+                order_by_expression_name: Qualified::new(
+                    subgraph.clone(),
+                    order_by_expression.name.clone(),
+                ),
+                error,
+            })?;
+
+            issues.extend(new_issues);
+            if let Some(existing_order_by_expression) =
+                resolved_order_by_expressions.objects.insert(
+                    resolved_order_by_expression.identifier.clone(),
+                    resolved_order_by_expression,
+                )
+            {
+                issues.push(OrderByExpressionIssue::DuplicateOrderByExpression {
+                    order_by_expression: existing_order_by_expression.identifier,
+                });
+            };
+        }
+    }
+    Ok(())
 }
 
 // these don't do much, and we just copy the result into the object order by expressions

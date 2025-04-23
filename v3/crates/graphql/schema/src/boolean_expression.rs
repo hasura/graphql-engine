@@ -15,19 +15,18 @@ use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{ObjectFieldKind, TypeId};
 use metadata_resolve::{
-    mk_name, BooleanExpressionComparableRelationship, ComparisonExpressionInfo,
-    GlobalGraphqlConfig, IncludeLogicalOperators, ModelWithPermissions,
-    ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo, ObjectComparisonKind,
-    ObjectTypeWithRelationships, OperatorMapping, Qualified, QualifiedTypeReference,
-    RelationshipCapabilities, RelationshipField, RelationshipModelMapping,
-    ResolvedObjectBooleanExpressionType, ScalarBooleanExpressionGraphqlConfig,
-    ScalarComparisonKind,
+    BooleanExpressionComparableRelationship, ComparisonExpressionInfo, GlobalGraphqlConfig,
+    IncludeLogicalOperators, ModelWithPermissions, ObjectBooleanExpressionGraphqlConfig,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, ObjectTypeWithRelationships,
+    OperatorMapping, Qualified, QualifiedTypeReference, RelationshipCapabilities,
+    RelationshipField, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
+    ScalarBooleanExpressionGraphqlConfig, ScalarComparisonKind, mk_name,
 };
 
+use crate::GDS;
 use crate::mk_deprecation_status;
 use crate::permissions;
 use crate::types;
-use crate::GDS;
 
 use crate::Error;
 
@@ -333,61 +332,62 @@ fn build_new_comparable_relationships_schema(
                 }
             })?;
 
-            let target_boolean_expression_type_name =
-                &comparable_relationship.boolean_expression_type;
+            if let Some(target_boolean_expression_type_name) =
+                &comparable_relationship.boolean_expression_type
+            {
+                let target_boolean_expression_graphql_type = {
+                    let target_boolean_expression_graphql_type = match gds
+                        .metadata
+                        .boolean_expression_types
+                        .objects
+                        .get(target_boolean_expression_type_name)
+                    {
+                        Some(bool_exp) => {
+                            Ok(bool_exp.graphql.as_ref().map(|graphql| &graphql.type_name))
+                        }
+                        None => Err(Error::InternalBooleanExpressionNotFound {
+                            type_name: target_boolean_expression_type_name.clone(),
+                        }),
+                    }?;
 
-            let target_boolean_expression_graphql_type = {
-                let target_boolean_expression_graphql_type = match gds
-                    .metadata
-                    .boolean_expression_types
-                    .objects
-                    .get(target_boolean_expression_type_name)
-                {
-                    Some(bool_exp) => {
-                        Ok(bool_exp.graphql.as_ref().map(|graphql| &graphql.type_name))
+                    // if we find a type, make sure it's added to the schema
+                    if let Some(type_name) = target_boolean_expression_graphql_type {
+                        let _registered_type_name =
+                            builder.register_type(TypeId::InputObjectBooleanExpressionType {
+                                graphql_type_name: type_name.clone(),
+                                gds_type_name: target_boolean_expression_type_name.clone(),
+                            });
                     }
-                    None => Err(Error::InternalBooleanExpressionNotFound {
-                        type_name: target_boolean_expression_type_name.clone(),
-                    }),
-                }?;
+                    // return type name
+                    target_boolean_expression_graphql_type
+                };
 
-                // if we find a type, make sure it's added to the schema
-                if let Some(type_name) = target_boolean_expression_graphql_type {
-                    let _registered_type_name =
-                        builder.register_type(TypeId::InputObjectBooleanExpressionType {
-                            graphql_type_name: type_name.clone(),
-                            gds_type_name: target_boolean_expression_type_name.clone(),
-                        });
-                }
-                // return type name
-                target_boolean_expression_graphql_type
-            };
+                // lookup type underlying target model
+                let target_object_type_representation =
+                    get_object_type_representation(gds, &target_model.model.data_type)?;
 
-            // lookup type underlying target model
-            let target_object_type_representation =
-                get_object_type_representation(gds, &target_model.model.data_type)?;
-
-            // if our target model has a boolean expression type to use, and a source,
-            if let (Some(target_boolean_expression_graphql_type), Some(target_source)) = (
-                target_boolean_expression_graphql_type,
-                &target_model.model.source,
-            ) {
-                // create a new input field
-                let (name, schema) = build_model_relationship_schema(
-                    object_type_representation,
-                    target_object_type_representation,
+                // if our target model has a boolean expression type to use, and a source,
+                if let (Some(target_boolean_expression_graphql_type), Some(target_source)) = (
                     target_boolean_expression_graphql_type,
-                    target_model,
-                    target_source,
-                    relationship,
-                    relationship_type,
-                    mappings,
-                    relationship.deprecated.as_ref(),
-                    gds,
-                    builder,
-                )?;
+                    &target_model.model.source,
+                ) {
+                    // create a new input field
+                    let (name, schema) = build_model_relationship_schema(
+                        object_type_representation,
+                        target_object_type_representation,
+                        target_boolean_expression_graphql_type,
+                        target_model,
+                        target_source,
+                        relationship,
+                        relationship_type,
+                        mappings,
+                        relationship.deprecated.as_ref(),
+                        gds,
+                        builder,
+                    )?;
 
-                input_fields.insert(name, schema);
+                    input_fields.insert(name, schema);
+                }
             }
         }
     }
@@ -417,6 +417,7 @@ fn build_model_relationship_schema(
     // the target_model is backed by a source
     let target_model_source =
         metadata_resolve::ModelTargetSource::from_model_source(target_source, relationship)
+            .map_err(metadata_resolve::Error::from)
             .map_err(metadata_resolve::WithContext::from)?;
 
     let annotation = FilterRelationshipAnnotation {

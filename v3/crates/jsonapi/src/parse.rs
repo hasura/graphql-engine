@@ -17,7 +17,7 @@ mod filter;
 mod include;
 use super::helpers::get_object_type;
 use crate::catalog::{Model, ObjectType, RelationshipTarget, Type};
-use metadata_resolve::{unwrap_custom_type_name, Qualified};
+use metadata_resolve::{Qualified, unwrap_custom_type_name};
 use std::collections::BTreeMap;
 
 #[derive(Debug, derive_more::Display, Serialize, Deserialize)]
