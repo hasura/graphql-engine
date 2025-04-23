@@ -3,7 +3,7 @@ use crate::state::AppState;
 use axum::{Json, http::StatusCode};
 use core::unimplemented;
 use datafusion::{
-    arrow::datatypes::{Field, SchemaBuilder, SchemaRef},
+    arrow::datatypes::{DataType, Field, SchemaBuilder, SchemaRef},
     common::{DFSchema, ToDFSchema},
     datasource::{DefaultTableSource, MemTable, TableProvider},
     error::DataFusionError,
@@ -13,11 +13,11 @@ use datafusion::{
     functions_window::{expr_fn::row_number, ntile},
     logical_expr::{ExprSchemable, Literal as _, SubqueryAlias},
     prelude::{
-        ExprFunctionExt, SessionConfig, SessionContext, abs, btrim, ceil, character_length,
-        coalesce, concat, cos, current_date, current_time, date_part, date_trunc, exp, floor,
-        greatest, isnan, iszero, least, left, ln, log, log2, log10, lower, lpad, ltrim, now,
-        nullif, nvl, power, random, replace, reverse, right, round, rpad, rtrim, sqrt, strpos,
-        substr_index, tan, to_date, to_timestamp, trunc, upper,
+        ExprFunctionExt, SessionConfig, SessionContext, abs, array_element, btrim, ceil,
+        character_length, coalesce, concat, cos, current_date, current_time, date_part, date_trunc,
+        exp, floor, get_field, greatest, isnan, iszero, least, left, ln, log, log2, log10, lower,
+        lpad, ltrim, now, nullif, nvl, power, random, replace, reverse, right, round, rpad, rtrim,
+        sqrt, strpos, substr_index, tan, to_date, to_timestamp, trunc, upper,
     },
     scalar::ScalarValue,
     sql::TableReference,
@@ -866,6 +866,23 @@ fn convert_expression_to_logical_expr(
         RelationalExpression::Floor { expr } => {
             Ok(floor(convert_expression_to_logical_expr(expr, schema)?))
         }
+        RelationalExpression::ArrayElement { column, index } => Ok(array_element(
+            convert_expression_to_logical_expr(column, schema)?,
+            datafusion::logical_expr::Expr::Cast(datafusion::logical_expr::Cast {
+                data_type: DataType::Int64,
+                expr: Box::new(datafusion::logical_expr::Expr::Literal(
+                    convert_literal_to_logical_expr(&RelationalLiteral::UInt64 {
+                        value: *index as u64,
+                    }),
+                )),
+            }),
+        )),
+        RelationalExpression::GetField { column, field } => Ok(get_field(
+            convert_expression_to_logical_expr(column, schema)?,
+            convert_literal_to_logical_expr(&RelationalLiteral::String {
+                value: field.to_string(),
+            }),
+        )),
         RelationalExpression::Greatest { exprs } => Ok(greatest(
             exprs
                 .iter()

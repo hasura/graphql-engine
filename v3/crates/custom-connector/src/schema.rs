@@ -121,6 +121,7 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
         },
         scalar: ndc_models::RelationalScalarExpressionCapabilities {
             abs: Some(ndc_models::LeafCapability {}),
+            array_element: Some(ndc_models::LeafCapability {}),
             btrim: Some(ndc_models::LeafCapability {}),
             ceil: Some(ndc_models::LeafCapability {}),
             character_length: Some(ndc_models::LeafCapability {}),
@@ -148,6 +149,7 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
             date_trunc: Some(ndc_models::LeafCapability {}),
             exp: Some(ndc_models::LeafCapability {}),
             floor: Some(ndc_models::LeafCapability {}),
+            get_field: Some(ndc_models::LeafCapability {}),
             greatest: Some(ndc_models::LeafCapability {}),
             least: Some(ndc_models::LeafCapability {}),
             left: Some(ndc_models::LeafCapability {}),
