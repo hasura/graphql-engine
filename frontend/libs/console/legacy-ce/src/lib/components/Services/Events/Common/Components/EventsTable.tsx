@@ -4,7 +4,7 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { Button } from '../../../../../new-components/Button';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
@@ -42,6 +42,7 @@ interface Props extends FilterTableProps {
     onSuccess: () => void
   ) => void;
   triggerType?: SupportedEvents;
+  triggerOp?: 'pending' | 'processed' | 'invocation';
 }
 const EventsTable: React.FC<Props> = props => {
   const {
@@ -52,23 +53,27 @@ const EventsTable: React.FC<Props> = props => {
     identifier,
     onCancelEvent,
     triggerType,
+    triggerOp,
   } = props;
   const [, setCurrentPage] = React.useState(0);
   const [, setPageSize] = React.useState(filterState.limit ?? 10);
   const sortedColumns = columns.sort(ordinalColSort);
   let shouldSortColumn = true;
+
+  // For debugging - log the props to see what's being passed
+  React.useEffect(() => {
+    console.log('EventsTable props:', { triggerType, triggerOp });
+  }, [triggerType, triggerOp]);
   const sortByColumn = (col: string) => {
-    // Remove all the existing order_bys
     const existingColSort = filterState.sorts.find(s => s.column === col);
-    if (existingColSort && existingColSort.type === 'asc') {
-      runQuery({
-        sorts: [makeOrderBy(col, 'desc')],
-      });
-    } else {
-      runQuery({
-        sorts: [makeOrderBy(col, 'asc')],
-      });
-    }
+    const newSort =
+      existingColSort && existingColSort.type === 'asc'
+        ? makeOrderBy(col, 'desc')
+        : makeOrderBy(col, 'asc');
+
+    runQuery({
+      sorts: [newSort],
+    });
   };
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
@@ -119,20 +124,72 @@ const EventsTable: React.FC<Props> = props => {
   const gridHeadings = [expanderActions];
   sortedColumns.forEach(column => {
     if (column !== 'actions') {
-      gridHeadings.push({
-        Header: column,
-        accessor: column,
-      });
+      // Only add sort icons for one-off and cron triggers
+      // and not for event triggers (data)
+      if (triggerType && triggerType !== 'data') {
+        // For debugging - always show sort icons regardless of triggerOp
+        const existingSort = filterState.sorts.find(s => s.column === column);
+
+        // Create a header with the column name and sort icon
+        const headerContent = (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+            }}
+          >
+            <span>{column}</span>
+            {existingSort ? (
+              existingSort.type === 'asc' ? (
+                <FaSortUp style={{ marginLeft: '5px', fontSize: '16px' }} />
+              ) : (
+                <FaSortDown style={{ marginLeft: '5px', fontSize: '16px' }} />
+              )
+            ) : (
+              <FaSort
+                style={{ marginLeft: '5px', opacity: 0.5, fontSize: '16px' }}
+              />
+            )}
+          </div>
+        );
+
+        gridHeadings.push({
+          Header: headerContent,
+          accessor: column,
+          id: column, // Ensure we have an id for the column
+        });
+      } else {
+        // For event triggers or other cases, just use the column name
+        gridHeadings.push({
+          Header: column,
+          accessor: column,
+          id: column, // Ensure we have an id for the column
+        });
+      }
     }
   });
   const invocationColumns = ['http_status', 'id', 'created_at'];
   const invocationDataTriggerColumns = ['http_status', 'id', 'created_at'];
-  const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
+  const invocationGridHeadings: {
+    Header: string | React.ReactNode;
+    accessor: string;
+    id?: string;
+    width?: number;
+    expander?: boolean;
+    Expander?: React.FC<{
+      isExpanded: boolean;
+      viewIndex: number;
+    }>;
+  }[] = [expanderActions];
+
   const addToGridHeadings = (headAccArr: string[]) => {
     headAccArr.forEach(column => {
       invocationGridHeadings.push({
         Header: column,
         accessor: column,
+        id: column,
       });
     });
   };
@@ -161,25 +218,41 @@ const EventsTable: React.FC<Props> = props => {
     };
   });
   const getTheadThProps: ComponentPropsGetterC = (
-    finalState,
-    some,
+    _finalState,
+    _some,
     column
-  ) => ({
-    onClick: () => {
-      if (
-        column &&
-        column.Header &&
-        shouldSortColumn &&
-        column.Header !== 'Actions'
-      ) {
-        sortByColumn(column.Header as string);
-      }
-      shouldSortColumn = true;
-    },
-  });
+  ) => {
+    if (!column) {
+      return {};
+    }
+
+    // Get the column ID or Header text
+    const columnId =
+      column.id || (typeof column.Header === 'string' ? column.Header : '');
+
+    // Only enable sorting for one-off and cron triggers (not for event triggers)
+    if (triggerType && triggerType !== 'data') {
+      return {
+        onClick: () => {
+          if (
+            column.Header &&
+            shouldSortColumn &&
+            column.Header !== 'Actions'
+          ) {
+            sortByColumn(columnId);
+          }
+          shouldSortColumn = true;
+        },
+        style: { cursor: 'pointer' },
+      };
+    }
+
+    // For event triggers or other cases, don't add click handler
+    return {};
+  };
   const getResizerProps: ComponentPropsGetter0 = (
-    finalState,
-    none,
+    _finalState,
+    _none,
     column,
     ctx
   ) => ({

@@ -19,8 +19,9 @@ interface Props extends InjectedReduxProps {
   rows: any[];
   rowsFormatted: any[];
   headings: {
-    Header: string;
+    Header: string | React.ReactNode;
     accessor: string;
+    id?: string;
   }[];
   event: Event;
   makeAPICall?: boolean;
