@@ -15,8 +15,9 @@ export type FilterTableProps = {
 };
 
 export type GridHeadingProps = {
-  Header: string;
+  Header: string | React.ReactNode;
   accessor: string;
+  id?: string;
   width?: number;
   expander?: boolean;
   Expander?: React.FC<{

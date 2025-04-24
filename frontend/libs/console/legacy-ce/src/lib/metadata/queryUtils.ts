@@ -23,6 +23,7 @@ import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { isEmpty } from '../components/Common/utils/jsUtils';
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { getDataSourcePrefix } from './dataSource.utils';
+import { OrderBy } from '@hasura/dc-api-types';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -813,7 +814,8 @@ export const getEventInvocations = (
   type: SupportedEvents,
   limit: number,
   offset: number,
-  triggerName?: string // is required for cron
+  triggerName?: string, // is required for cron
+  sorts?: OrderBy[]
 ) => {
   const query = {
     type: 'get_scheduled_event_invocations',
@@ -837,6 +839,7 @@ export const getEventInvocations = (
       ...query.args,
       limit,
       offset,
+      ...(sorts && sorts.length > 0 ? { order_by: sorts } : {}),
       get_rows_count: false,
     },
   };
@@ -847,7 +850,8 @@ export const getScheduledEvents = (
   limit: number,
   offset: number,
   triggerOp: Exclude<TriggerOperation, 'invocation'>,
-  triggerName?: string // is required for cron triggers
+  triggerName?: string, // is required for cron triggers
+  sorts?: any
 ) => {
   const query = {
     type: 'get_scheduled_events',
@@ -886,6 +890,7 @@ export const getScheduledEvents = (
       limit,
       offset,
       get_rows_count: false,
+      ...(sorts && sorts.length > 0 ? { order_by: sorts } : {}),
     },
   };
 };

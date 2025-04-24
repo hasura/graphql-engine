@@ -843,8 +843,8 @@ instance MonadMetadataStorage AppM where
   unlockScheduledEvents a b = runInSeparateTx $ unlockScheduledEventsTx a b
   unlockAllLockedScheduledEvents = runInSeparateTx unlockAllLockedScheduledEventsTx
   clearFutureCronEvents = runInSeparateTx . dropFutureCronEventsTx
-  getOneOffScheduledEvents a b c = runInSeparateTx $ getOneOffScheduledEventsTx a b c
-  getCronEvents a b c d = runInSeparateTx $ getCronEventsTx a b c d
+  getOneOffScheduledEvents a b c d = runInSeparateTx $ getOneOffScheduledEventsTx a b c d
+  getCronEvents a b c d e = runInSeparateTx $ getCronEventsTx a b c d e
   getScheduledEventInvocations a = runInSeparateTx $ getScheduledEventInvocationsTx a
   deleteScheduledEvent a b = runInSeparateTx $ deleteScheduledEventTx a b
 
