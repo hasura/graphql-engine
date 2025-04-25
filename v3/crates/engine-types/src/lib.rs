@@ -52,3 +52,9 @@ impl<S> WithMiddlewareErrorConverter<S> {
         (self.middleware_error_converter)(error)
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub enum ErrorType {
+    User,
+    Internal,
+}
