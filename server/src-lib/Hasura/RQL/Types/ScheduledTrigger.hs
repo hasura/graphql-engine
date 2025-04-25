@@ -57,6 +57,7 @@ import Data.Time.Clock
 import Data.Time.Clock.Units
 import Data.Time.Format.ISO8601
 import Database.PG.Query qualified as PG
+import Hasura.Backends.Postgres.SQL.DML (OrderByItem (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (InputWebhook (..))
 import Hasura.RQL.Types.EventTrigger
@@ -474,7 +475,8 @@ data GetScheduledEvents = GetScheduledEvents
   { _gseScheduledEvent :: ScheduledEvent,
     _gsePagination :: ScheduledEventPagination,
     _gseStatus :: [ScheduledEventStatus],
-    _gseGetRowsCount :: RowsCountOption
+    _gseGetRowsCount :: RowsCountOption,
+    _gseOrderBy :: [OrderByItem]
   }
   deriving (Show, Eq)
 
@@ -498,6 +500,9 @@ instance FromJSON GetScheduledEvents where
       <*> o
       .:? "get_rows_count"
       .!= DontIncludeRowsCount
+      <*> o
+      .:? "order_by"
+      .!= []
 
 data WithOptionalTotalCount a = WithOptionalTotalCount
   { _wtcCount :: Maybe Int,
