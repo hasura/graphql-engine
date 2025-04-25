@@ -342,6 +342,7 @@ fetchAndUpdateJWKs contextAdvice logger httpManager url jwkRef = do
     -- As this 'fetchJwk' is going to happen always in background thread, we are
     -- not going to throw fatal error(s). If there is any error fetching JWK -
     -- don't do anything; this will get retried again in 1 second
+    -- (FIXME (Brandon): should above read "in 1 minute"? See updateSsoJwkCtxThread)
     -- TODO: we need to do a 'fetchJwk' check in 'setupAuthMode' and throw any
     -- fatal error(s) there
     Left _e -> pure ()

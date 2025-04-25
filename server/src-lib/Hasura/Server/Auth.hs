@@ -29,7 +29,9 @@ module Hasura.Server.Auth
   )
 where
 
+import Control.Monad.Catch (MonadMask)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Retry qualified as Retry
 import Crypto.Hash qualified as Crypto
 import Data.ByteArray qualified as BA
 import Data.ByteString (ByteString)
@@ -128,7 +130,8 @@ compareAuthMode authMode authMode' = do
 --
 -- This must only be run once, on launch.
 setupAuthMode ::
-  ( MonadError Text m,
+  ( MonadMask m,
+    MonadError Text m,
     MonadIO m,
     MonadBaseControl IO m
   ) =>
@@ -171,7 +174,7 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole logger httpMan
       " requires --admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) or "
         <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
 
-mkJwtCtx :: (MonadIO m, MonadBaseControl IO m, MonadError Text m) => JWTConfig -> Logger Hasura -> HTTP.Manager -> m JWTCtx
+mkJwtCtx :: (MonadMask m, MonadIO m, MonadBaseControl IO m, MonadError Text m) => JWTConfig -> Logger Hasura -> HTTP.Manager -> m JWTCtx
 mkJwtCtx JWTConfig {..} logger httpManager = do
   (jwkUri, jwkKeyConfig) <- case jcKeyOrUrl of
     Left jwk -> do
@@ -181,12 +184,20 @@ mkJwtCtx JWTConfig {..} logger httpManager = do
     -- which will be populated by the 'updateJWKCtx' poller thread
     Right uri -> do
       -- fetch JWK initially and throw error if it fails
-      void $ withJwkError $ fetchJwk logger httpManager uri
+      void $ withJwkError $ retrying $ fetchJwk logger httpManager uri
       jwkRef <- liftIO $ newIORef (JWKSet [], Nothing)
       return (Just uri, jwkRef)
   let jwtHeader = fromMaybe JHAuthorization jcHeader
   return $ JWTCtx jwkUri jwkKeyConfig jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
   where
+    -- JWK fetching is a significant source of tenant startup failures that are
+    -- (currently) not automatically retried since they appear to be user
+    -- config errors (see incident 173). So retry here to help mitigate.
+    retrying = Retry.recoverAll retryPolicy . const
+      where
+        -- 200ms initial, doubling each time = 6s maximum wait here
+        retryPolicy = Retry.exponentialBackoff 200000 <> Retry.limitRetries 5
+
     withJwkError a = do
       res <- runExceptT a
       onLeft res \case
