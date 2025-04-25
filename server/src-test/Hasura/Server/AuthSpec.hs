@@ -8,6 +8,7 @@ module Hasura.Server.AuthSpec (spec) where
 
 import Control.Concurrent.Extended (ForkableMonadIO)
 import Control.Lens hiding ((.=))
+import Control.Monad.Catch (MonadMask)
 import Crypto.JOSE.JWK qualified as Jose
 import Crypto.JWT qualified as JWT
 import Data.Aeson ((.=))
@@ -624,7 +625,8 @@ mkJSONPathE :: Text -> J.JSONPath
 mkJSONPathE = either (error . T.unpack) id . parseJSONPath
 
 setupAuthMode' ::
-  ( ForkableMonadIO m
+  ( ForkableMonadIO m,
+    MonadMask m
   ) =>
   Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
@@ -644,7 +646,8 @@ setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
       httpManager
 
 setupAuthMode'E ::
-  ( ForkableMonadIO m
+  ( ForkableMonadIO m,
+    MonadMask m
   ) =>
   Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
