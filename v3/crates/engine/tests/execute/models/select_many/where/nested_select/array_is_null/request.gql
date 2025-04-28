@@ -1,0 +1,34 @@
+query MyQuery {
+  where_do_staff_have_last_names: InstitutionMany(
+    where: { staff: { last_name: { _is_null: false } } }
+  ) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+
+  where_has_staff_with_a_pet_with_no_name: InstitutionMany(
+    where: { staff: { pets: { name: { _is_null: true } } } }
+  ) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+
+  institution_in_a_country_with_a_city_that_has_a_name: InstitutionMany(
+    where: { location: { country: { cities: { name: { _is_null: false } } } } }
+  ) {
+    id
+    location {
+      country {
+        cities {
+          name
+        }
+      }
+    }
+  }
+}

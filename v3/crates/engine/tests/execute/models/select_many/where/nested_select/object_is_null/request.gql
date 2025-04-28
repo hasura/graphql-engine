@@ -1,0 +1,79 @@
+query MyQuery {
+  match_a_null_city_name: InstitutionMany(
+    where: { location: { city: { _is_null: true } } }
+  ) {
+    id
+    location {
+      city
+      campuses
+    }
+    location_country: location {
+      country {
+        name
+      }
+    }
+    staff {
+      last_name
+      specialities
+    }
+    staff_first_name: staff {
+      first_name
+    }
+    departments
+  }
+
+  match_a_non_null_country_name: InstitutionMany(
+    where: { location: { country: { name: { _is_null: false } } } }
+  ) {
+    id
+    location {
+      city
+      campuses
+    }
+    location_country: location {
+      country {
+        name
+      }
+    }
+    staff {
+      last_name
+      specialities
+    }
+    staff_first_name: staff {
+      first_name
+    }
+    departments
+  }
+
+  match_both_is_null_and_is_not_null: InstitutionMany(
+    where: {
+      songs: {
+        primaryAnthemTrackId: { _is_null: true }
+        secondaryAnthemTrackId: { _is_null: false }
+      }
+    }
+  ) {
+    id
+    songs {
+      primaryAnthemTrackId
+      secondaryAnthemTrackId
+    }
+  }
+
+  match_is_null_or_is_not_null: InstitutionMany(
+    where: {
+      songs: {
+        _or: [
+          { primaryAnthemTrackId: { _is_null: true } }
+          { primaryAnthemTrackId: { _is_null: false } }
+        ]
+      }
+    }
+  ) {
+    id
+    songs {
+      primaryAnthemTrackId
+      secondaryAnthemTrackId
+    }
+  }
+}

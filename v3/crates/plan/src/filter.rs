@@ -114,36 +114,28 @@ fn to_filter_expression_internal<'metadata>(
             nesting,
             usage_counts,
         )?)),
-        BooleanExpression::IsNull(open_dds::query::Operand::Field(field)) => {
-            let ResolvedColumn {
-                column_name,
-                field_path,
-                ..
-            } = to_resolved_column(
-                &session.role,
-                metadata,
-                type_mappings,
-                model_object_type,
-                field,
-            )?;
-            Ok(Expression::LocalField(
-                plan_types::LocalFieldComparison::UnaryComparison {
-                    column: plan_types::ComparisonTarget::Column {
-                        name: column_name,
-                        field_path,
-                    },
-                    operator: metadata_resolve::UnaryComparisonOperator::IsNull,
-                },
-            ))
-        }
+
+        BooleanExpression::IsNull(operand) => to_comparison_expression(
+            operand,
+            Comparison::IsNull,
+            &[],
+            metadata,
+            session,
+            type_mappings,
+            model_object_type,
+            boolean_expression_type,
+            data_connector,
+            nesting,
+            usage_counts,
+        ),
+
         BooleanExpression::Comparison {
             operand,
             operator,
             argument,
         } => to_comparison_expression(
             operand,
-            operator,
-            argument,
+            Comparison::Binary { operator, argument },
             &[],
             metadata,
             session,
@@ -319,9 +311,6 @@ fn to_filter_expression_internal<'metadata>(
                 },
             ))
         }
-        BooleanExpression::IsNull(_) => Err(PlanError::Internal(format!(
-            "unsupported boolean expression: {expr:?}"
-        ))),
     }
 }
 
@@ -373,8 +362,7 @@ fn boolean_expression_type_for_path<'metadata>(
 
 fn to_comparison_expression<'metadata>(
     operand: &open_dds::query::Operand,
-    operator: &ComparisonOperator,
-    argument: &open_dds::query::Value,
+    comparison: Comparison<'_>,
     column_path: &[&'_ DataConnectorColumnName],
     metadata: &'metadata metadata_resolve::Metadata,
     session: &'_ Session,
@@ -390,8 +378,7 @@ fn to_comparison_expression<'metadata>(
     match operand {
         open_dds::query::Operand::Field(object_field_operand) => to_field_comparison_expression(
             object_field_operand,
-            operator,
-            argument,
+            comparison,
             column_path,
             metadata,
             session,
@@ -431,10 +418,17 @@ pub(crate) fn model_permission_filter_to_expression<'metadata>(
     }
 }
 
+enum Comparison<'a> {
+    Binary {
+        operator: &'a ComparisonOperator,
+        argument: &'a open_dds::query::Value,
+    },
+    IsNull,
+}
+
 fn to_field_comparison_expression<'metadata>(
     field: &open_dds::query::ObjectFieldOperand,
-    operator: &ComparisonOperator,
-    argument: &open_dds::query::Value,
+    comparison: Comparison<'_>,
     column_path: &[&'_ DataConnectorColumnName],
     metadata: &'metadata metadata_resolve::Metadata,
     session: &'_ Session,
@@ -501,8 +495,7 @@ fn to_field_comparison_expression<'metadata>(
                     new_column_path.push(&data_connector_column_name);
                     to_comparison_expression(
                         nested_field,
-                        operator,
-                        argument,
+                        comparison,
                         &new_column_path,
                         metadata,
                         session,
@@ -517,8 +510,7 @@ fn to_field_comparison_expression<'metadata>(
                 ObjectComparisonKind::ObjectArray => {
                     let inner = to_comparison_expression(
                         nested_field,
-                        operator,
-                        argument,
+                        comparison,
                         &[], // nesting "starts again" inside array
                         metadata,
                         session,
@@ -582,19 +574,29 @@ fn to_field_comparison_expression<'metadata>(
                 let (column, field_path) =
                     helpers::with_nesting_path(&data_connector_column_name, column_path);
 
-                let inner = to_scalar_comparison_field(
-                    metadata,
-                    session,
-                    type_mappings,
-                    source_object_type,
-                    boolean_expression_type,
-                    data_connector,
-                    &[],
-                    field,
-                    operator,
-                    argument,
-                    Nesting::Array,
-                )?;
+                let inner = match comparison {
+                    Comparison::Binary { operator, argument } => to_scalar_comparison_field(
+                        metadata,
+                        session,
+                        type_mappings,
+                        source_object_type,
+                        boolean_expression_type,
+                        data_connector,
+                        &[],
+                        field,
+                        operator,
+                        argument,
+                        Nesting::Array,
+                    )?,
+                    Comparison::IsNull => to_is_null_field(
+                        metadata,
+                        session,
+                        type_mappings,
+                        source_object_type,
+                        column_path,
+                        field,
+                    )?,
+                };
 
                 Ok(Expression::LocalNestedScalarArray {
                     field_path,
@@ -602,21 +604,76 @@ fn to_field_comparison_expression<'metadata>(
                     predicate: Box::new(inner),
                 })
             }
-            QualifiedBaseType::Named(_) => to_scalar_comparison_field(
-                metadata,
-                session,
-                type_mappings,
-                source_object_type,
-                boolean_expression_type,
-                data_connector,
-                column_path,
-                field,
-                operator,
-                argument,
-                nesting,
-            ),
+            QualifiedBaseType::Named(_) => match comparison {
+                Comparison::Binary { operator, argument } => to_scalar_comparison_field(
+                    metadata,
+                    session,
+                    type_mappings,
+                    source_object_type,
+                    boolean_expression_type,
+                    data_connector,
+                    column_path,
+                    field,
+                    operator,
+                    argument,
+                    nesting,
+                ),
+                Comparison::IsNull => to_is_null_field(
+                    metadata,
+                    session,
+                    type_mappings,
+                    source_object_type,
+                    column_path,
+                    field,
+                ),
+            },
         }
     }
+}
+
+fn to_is_null_field<'metadata>(
+    metadata: &'metadata metadata_resolve::Metadata,
+    session: &'_ Session,
+    type_mappings: &'metadata BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    source_object_type: &'_ OutputObjectTypeView,
+    column_path: &[&'_ DataConnectorColumnName],
+    object_field_operand: &'_ open_dds::query::ObjectFieldOperand,
+) -> Result<Expression<'metadata>, PlanError> {
+    let ResolvedColumn {
+        column_name: source_column,
+        field_path: more_column_path,
+        field_mapping: _,
+    } = to_resolved_column(
+        &session.role,
+        metadata,
+        type_mappings,
+        source_object_type,
+        object_field_operand,
+    )?;
+
+    // add field path to existing
+    let mut column_path: Vec<_> = column_path.iter().map(|a| (*a).clone()).collect();
+    column_path.extend(more_column_path);
+
+    // The column name is the root column
+    let column_name = column_path.first().map_or(&source_column, |v| v).clone();
+
+    // The field path is the nesting path inside the root column, if any
+    let column_path: Vec<_> = column_path
+        .into_iter()
+        .chain([source_column])
+        .skip(1)
+        .collect();
+
+    Ok(Expression::LocalField(
+        plan_types::LocalFieldComparison::UnaryComparison {
+            column: plan_types::ComparisonTarget::Column {
+                name: column_name,
+                field_path: column_path,
+            },
+            operator: metadata_resolve::UnaryComparisonOperator::IsNull,
+        },
+    ))
 }
 
 fn to_scalar_comparison_field<'metadata>(

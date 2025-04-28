@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed regression where `is_null` calls on nested array fields would throw an
+  error
+
 ## [v2025.04.23]
 
 ### Added
