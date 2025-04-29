@@ -1,0 +1,1088 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html"><span class="hs-identifier">Hasura.Server.SchemaUpdate</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#startSchemaSyncListenerThread"><span class="hs-identifier">startSchemaSyncListenerThread</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#startSchemaSyncProcessorThread"><span class="hs-identifier">startSchemaSyncProcessorThread</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html"><span class="hs-identifier">Control.Concurrent.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/immortal-0.2.2.1-83f0896f3c9fa80f58a39a835fbc28f3c476beede5c2f431960b94f99f3ea852/share/doc/html/src/Control.Immortal.html/Control.Immortal.html"><span class="hs-identifier">Control.Immortal</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Immortal</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-loops-0.4.3-f88e07e7c00c3a116db0050574f81916c5f345c329242ea49cb7634016e44d45/share/doc/html/src/Control.Monad.Loops.html/Control.Monad.Loops.html"><span class="hs-identifier">Control.Monad.Loops</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html"><span class="hs-identifier">Control.Monad.Trans.Control</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier">MonadBaseControl</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html"><span class="hs-identifier">Control.Monad.Trans.Managed</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier">ManagedT</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-casing-0.2.0.0-6aa343fdfe53e7487684824ec5d55e5727a17a4c029f82202add7e1ff9e5945f/share/doc/html/src/Data.Aeson.Casing.html/Data.Aeson.Casing.html"><span class="hs-identifier">Data.Aeson.Casing</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Strict.html/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.html/Data.HashSet.html"><span class="hs-identifier">Data.HashSet</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HS</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.html/Database.PG.Query.html"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.App.State.html"><span class="hs-identifier">Hasura.App.State</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.html"><span class="hs-identifier">Hasura.RQL.DDL.Schema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.html#runCacheRWT"><span class="hs-identifier">runCacheRWT</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html"><span class="hs-identifier">Hasura.RQL.DDL.Schema.Cache.Config</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Catalog.html"><span class="hs-identifier">Hasura.RQL.DDL.Schema.Catalog</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache.Build</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html"><span class="hs-identifier">Hasura.RQL.Types.Source</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.BackendMap.html"><span class="hs-identifier">Hasura.SQL.BackendMap</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BackendMap</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html"><span class="hs-identifier">Hasura.Server.AppStateRef</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier">AppStateRef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getAppContext"><span class="hs-identifier">getAppContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getRebuildableSchemaCacheWithVersion"><span class="hs-identifier">getRebuildableSchemaCacheWithVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#withSchemaCacheUpdate"><span class="hs-identifier">withSchemaCacheUpdate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html"><span class="hs-identifier">Hasura.Server.Logging</span></a></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Services.html"><span class="hs-identifier">Hasura.Services</span></a></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/refined-0.8.2-0dcf4cad4ded3c586f9b24c73216dddc25503a45bf2f48d52c9d10964a9a8deb/share/doc/html/src/Refined.html/Refined.html"><span class="hs-identifier">Refined</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/refined-0.8.2-0dcf4cad4ded3c586f9b24c73216dddc25503a45bf2f48d52c9d10964a9a8deb/share/doc/html/src/Refined.html/Refined.html#NonNegative"><span class="hs-identifier">NonNegative</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/refined-0.8.2-0dcf4cad4ded3c586f9b24c73216dddc25503a45bf2f48d52c9d10964a9a8deb/share/doc/html/src/Refined.Unsafe.Type.html/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier">Refined</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/refined-0.8.2-0dcf4cad4ded3c586f9b24c73216dddc25503a45bf2f48d52c9d10964a9a8deb/share/doc/html/src/Refined.html/Refined.html#unrefine"><span class="hs-identifier">unrefine</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="ThreadError"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ThreadError"><span class="hs-identifier hs-var">ThreadError</span></a></span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="TEPayloadParse"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#TEPayloadParse"><span class="hs-identifier hs-var">TEPayloadParse</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TEQueryError"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#TEQueryError"><span class="hs-identifier hs-var">TEQueryError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688046057"><span id="local-6989586621688046059"><span class="annot"><span class="annottext">(forall x. ThreadError -&gt; Rep ThreadError x)
+-&gt; (forall x. Rep ThreadError x -&gt; ThreadError)
+-&gt; Generic ThreadError
+forall x. Rep ThreadError x -&gt; ThreadError
+forall x. ThreadError -&gt; Rep ThreadError x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. ThreadError -&gt; Rep ThreadError x
+from :: forall x. ThreadError -&gt; Rep ThreadError x
+$cto :: forall x. Rep ThreadError x -&gt; ThreadError
+to :: forall x. Rep ThreadError x -&gt; ThreadError
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688046067"><span id="local-6989586621688046071"><span id="local-6989586621688046074"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ThreadError"><span class="hs-identifier hs-type">ThreadError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621688046162"><span class="annot"><span class="annottext">toJSON :: ThreadError -&gt; Value
+</span><a href="#local-6989586621688046162"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; ThreadError -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#defaultOptions"><span class="hs-identifier hs-var">defaultOptions</span></a></span><span>
+</span><span id="line-54"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#constructorTagModifier"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-casing-0.2.0.0-6aa343fdfe53e7487684824ec5d55e5727a17a4c029f82202add7e1ff9e5945f/share/doc/html/src/Data.Aeson.Casing.Internal.html/Data.Aeson.Casing.Internal.html#snakeCase"><span class="hs-identifier hs-type">snakeCase</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">.</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">drop</span></span><span> </span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>          </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#sumEncoding"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#TaggedObject"><span class="hs-identifier hs-type">TaggedObject</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;info&quot;</span></span><span>
+</span><span id="line-56"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621688046237"><span class="annot"><span class="annottext">toEncoding :: ThreadError -&gt; Encoding
+</span><a href="#local-6989586621688046237"><span class="hs-identifier hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; ThreadError -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">genericToEncoding</span></a></span><span>
+</span><span id="line-59"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#defaultOptions"><span class="hs-identifier hs-var">defaultOptions</span></a></span><span>
+</span><span id="line-60"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#constructorTagModifier"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-casing-0.2.0.0-6aa343fdfe53e7487684824ec5d55e5727a17a4c029f82202add7e1ff9e5945f/share/doc/html/src/Data.Aeson.Casing.Internal.html/Data.Aeson.Casing.Internal.html#snakeCase"><span class="hs-identifier hs-type">snakeCase</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">.</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">drop</span></span><span> </span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>          </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#sumEncoding"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#TaggedObject"><span class="hs-identifier hs-type">TaggedObject</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;info&quot;</span></span><span>
+</span><span id="line-62"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span id="local-6989586621688045771"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logThreadStarted"><span class="hs-identifier hs-type">logThreadStarted</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688045771"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#InstanceId"><span class="hs-identifier hs-type">InstanceId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/immortal-0.2.2.1-83f0896f3c9fa80f58a39a835fbc28f3c476beede5c2f431960b94f99f3ea852/share/doc/html/src/Control.Immortal.html/Control.Immortal.html#Thread"><span class="hs-identifier hs-type">Immortal.Thread</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="#local-6989586621688045771"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-71"></span><span id="logThreadStarted"><span class="annot"><span class="annottext">logThreadStarted :: forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Logger Hasura
+-&gt; InstanceId -&gt; SchemaSyncThreadType -&gt; Thread -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logThreadStarted"><span class="hs-identifier hs-var hs-var">logThreadStarted</span></a></span></span><span> </span><span id="local-6989586621688046270"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046270"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688046271"><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621688046271"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span id="local-6989586621688046272"><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046272"><span class="hs-identifier hs-var">threadType</span></a></span></span><span> </span><span id="local-6989586621688046273"><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621688046273"><span class="hs-identifier hs-var">thread</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688046274"><span class="annot"><span class="annottext">msg :: Text
+</span><a href="#local-6989586621688046274"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046272"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; thread started&quot;</span></span><span>
+</span><span id="line-73"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a Hasura, MonadIO m) =&gt;
+   a -&gt; m ()
+forall impl.
+Logger impl
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a impl, MonadIO m) =&gt;
+   a -&gt; m ()
+</span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046270"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">(StartupLog -&gt; m ()) -&gt; StartupLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Text -&gt; Value -&gt; StartupLog
+</span><a href="Hasura.Server.Logging.html#StartupLog"><span class="hs-identifier hs-var">StartupLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;schema-sync&quot;</span></span><span>
+</span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">(Value -&gt; StartupLog) -&gt; Value -&gt; StartupLog
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-76"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;instance_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InstanceId -&gt; Text
+</span><a href="Hasura.Server.Types.html#getInstanceId"><span class="hs-identifier hs-var">getInstanceId</span></a></span><span> </span><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621688046271"><span class="hs-identifier hs-var">instanceId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;thread_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; String -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ThreadId -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Thread -&gt; ThreadId
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/immortal-0.2.2.1-83f0896f3c9fa80f58a39a835fbc28f3c476beede5c2f431960b94f99f3ea852/share/doc/html/src/Control.Immortal.html/Control.Immortal.html#threadId"><span class="hs-identifier hs-var">Immortal.threadId</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621688046273"><span class="hs-identifier hs-var">thread</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688046274"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-79"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-comment">{- Note [Schema Cache Sync]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When multiple graphql-engine instances are serving on same metadata storage,
+each instance should have schema cache in sync with latest metadata. Somehow
+all instances should communicate each other when any request has modified metadata.
+
+We track the metadata schema version in postgres and poll for this
+value in a thread.  When the schema version has changed, the instance
+will update its local metadata schema and remove any invalidated schema cache data.
+
+The following steps take place when an API request made to update metadata:
+
+1. After handling the request we insert the new metadata schema json
+   into a postgres tablealong with a schema version.
+
+2. On start up, before initialising schema cache, an async thread is
+   invoked to continuously poll the Postgres notifications table for
+   the latest metadata schema version. The schema version is pushed to
+   a shared `TMVar`.
+
+3. Before starting API server, another async thread is invoked to
+   process events pushed by the listener thread via the `TMVar`. If
+   the instance's schema version is not current with the freshly
+   updated TMVar version then we update the local metadata.
+
+Why we need two threads if we can capture and reload schema cache in a single thread?
+
+If we want to implement schema sync in a single async thread we have to invoke the same
+after initialising schema cache. We may loose events that published after schema cache
+init and before invoking the thread. In such case, schema cache is not in sync with metadata.
+So we choose two threads in which one will start listening before schema cache init and the
+other after it.
+
+What happens if listen connection to Postgres is lost?
+
+Listener thread will keep trying to establish connection to Postgres for every one second.
+Once connection established, it pushes @'SSEListenStart' event with time. We aren't sure
+about any metadata modify requests made in meanwhile. So we reload schema cache unconditionally
+if listen started after schema cache init start time.
+
+-}</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span class="hs-comment">-- | An async thread which listen to Postgres notify to enable schema syncing</span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- See Note [Schema Cache Sync]</span><span>
+</span><span id="line-126"></span><span id="local-6989586621688045801"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#startSchemaSyncListenerThread"><span class="hs-identifier hs-type">startSchemaSyncListenerThread</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">C.ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045801"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-129"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Pool.html/Database.PG.Query.Pool.html#PGPool"><span class="hs-identifier hs-type">PG.PGPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-130"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#InstanceId"><span class="hs-identifier hs-type">InstanceId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/refined-0.8.2-0dcf4cad4ded3c586f9b24c73216dddc25503a45bf2f48d52c9d10964a9a8deb/share/doc/html/src/Refined.Unsafe.Type.html/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/refined-0.8.2-0dcf4cad4ded3c586f9b24c73216dddc25503a45bf2f48d52c9d10964a9a8deb/share/doc/html/src/Refined.html/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Data.Time.Clock.Units.html/Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-type">Milliseconds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-132"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STM.TMVar</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-133"></span><span>  </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045801"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/immortal-0.2.2.1-83f0896f3c9fa80f58a39a835fbc28f3c476beede5c2f431960b94f99f3ea852/share/doc/html/src/Control.Immortal.html/Control.Immortal.html#Thread"><span class="hs-identifier hs-type">Immortal.Thread</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-134"></span><span id="startSchemaSyncListenerThread"><span class="annot"><span class="annottext">startSchemaSyncListenerThread :: forall (m :: * -&gt; *).
+ForkableMonadIO m =&gt;
+Logger Hasura
+-&gt; PGPool
+-&gt; InstanceId
+-&gt; Refined NonNegative Milliseconds
+-&gt; TMVar MetadataResourceVersion
+-&gt; ManagedT m Thread
+</span><a href="Hasura.Server.SchemaUpdate.html#startSchemaSyncListenerThread"><span class="hs-identifier hs-var hs-var">startSchemaSyncListenerThread</span></a></span></span><span> </span><span id="local-6989586621688046295"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046295"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688046296"><span class="annot"><span class="annottext">PGPool
+</span><a href="#local-6989586621688046296"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span id="local-6989586621688046297"><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621688046297"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span id="local-6989586621688046298"><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
+</span><a href="#local-6989586621688046298"><span class="hs-identifier hs-var">interval</span></a></span></span><span> </span><span id="local-6989586621688046299"><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+</span><a href="#local-6989586621688046299"><span class="hs-identifier hs-var">metaVersionRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-comment">-- Start listener thread</span><span>
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621688046300"><span class="annot"><a href="#local-6989586621688046300"><span class="hs-identifier hs-var">listenerThread</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-137"></span><span>    </span><span class="annot"><span class="annottext">String -&gt; Logger Hasura -&gt; m Void -&gt; ManagedT m Thread
+forall (m :: * -&gt; *).
+ForkableMonadIO m =&gt;
+String -&gt; Logger Hasura -&gt; m Void -&gt; ManagedT m Thread
+</span><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-var">C.forkManagedT</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;SchemeUpdate.listener&quot;</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046295"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-138"></span><span>      </span><span class="annot"><span class="annottext">(m Void -&gt; ManagedT m Thread) -&gt; m Void -&gt; ManagedT m Thread
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; PGPool
+-&gt; TMVar MetadataResourceVersion
+-&gt; Milliseconds
+-&gt; m Void
+forall (m :: * -&gt; *) void.
+MonadIO m =&gt;
+Logger Hasura
+-&gt; PGPool
+-&gt; TMVar MetadataResourceVersion
+-&gt; Milliseconds
+-&gt; m void
+</span><a href="Hasura.Server.SchemaUpdate.html#listener"><span class="hs-identifier hs-var">listener</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046295"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">PGPool
+</span><a href="#local-6989586621688046296"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+</span><a href="#local-6989586621688046299"><span class="hs-identifier hs-var">metaVersionRef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Refined NonNegative Milliseconds -&gt; Milliseconds
+forall {k} (p :: k) x. Refined p x -&gt; x
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/refined-0.8.2-0dcf4cad4ded3c586f9b24c73216dddc25503a45bf2f48d52c9d10964a9a8deb/share/doc/html/src/Refined.html/Refined.html#unrefine"><span class="hs-identifier hs-var">unrefine</span></a></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
+</span><a href="#local-6989586621688046298"><span class="hs-identifier hs-var">interval</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logThreadStarted"><span class="hs-identifier hs-type">logThreadStarted</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046295"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046297"><span class="hs-identifier hs-type">instanceId</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#TTListener"><span class="hs-identifier hs-type">TTListener</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046300"><span class="hs-identifier hs-type">listenerThread</span></a></span><span>
+</span><span id="line-140"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="annot"><a href="#local-6989586621688046300"><span class="hs-identifier hs-type">listenerThread</span></a></span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- | An async thread which processes the schema sync events</span><span>
+</span><span id="line-143"></span><span class="hs-comment">-- See Note [Schema Cache Sync]</span><span>
+</span><span id="line-144"></span><span id="local-6989586621688045822"><span id="local-6989586621688045829"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#startSchemaSyncProcessorThread"><span class="hs-identifier hs-type">startSchemaSyncProcessorThread</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTraceContext"><span class="hs-identifier hs-type">Tracing.MonadTraceContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045822"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>    </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">C.ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045822"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier hs-type">HasAppEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045822"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-148"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#HasCacheStaticConfig"><span class="hs-identifier hs-type">HasCacheStaticConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045822"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-149"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045822"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-150"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045822"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-151"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045822"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-152"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-153"></span><span>  </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045829"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-154"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STM.TVar</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-155"></span><span>  </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045822"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/immortal-0.2.2.1-83f0896f3c9fa80f58a39a835fbc28f3c476beede5c2f431960b94f99f3ea852/share/doc/html/src/Control.Immortal.html/Control.Immortal.html#Thread"><span class="hs-identifier hs-type">Immortal.Thread</span></a></span></span></span><span>
+</span><span id="line-156"></span><span id="startSchemaSyncProcessorThread"><span class="annot"><span class="annottext">startSchemaSyncProcessorThread :: forall (m :: * -&gt; *) impl.
+(MonadTraceContext m, ForkableMonadIO m, HasAppEnv m,
+ HasCacheStaticConfig m, MonadMetadataStorage m,
+ MonadResolveSource m, ProvidesNetwork m) =&gt;
+AppStateRef impl -&gt; TVar Bool -&gt; ManagedT m Thread
+</span><a href="Hasura.Server.SchemaUpdate.html#startSchemaSyncProcessorThread"><span class="hs-identifier hs-var hs-var">startSchemaSyncProcessorThread</span></a></span></span><span> </span><span id="local-6989586621688046331"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688046331"><span class="hs-identifier hs-var">appStateRef</span></a></span></span><span> </span><span id="local-6989586621688046332"><span class="annot"><span class="annottext">TVar Bool
+</span><a href="#local-6989586621688046332"><span class="hs-identifier hs-var">logTVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.App.State.html#AppEnv"><span class="hs-identifier hs-type">AppEnv</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688046334"><span id="local-6989586621688046335"><span id="local-6989586621688046336"><span id="local-6989586621688046337"><span id="local-6989586621688046338"><span id="local-6989586621688046339"><span id="local-6989586621688046340"><span id="local-6989586621688046341"><span id="local-6989586621688046342"><span id="local-6989586621688046343"><span id="local-6989586621688046344"><span id="local-6989586621688046345"><span id="local-6989586621688046346"><span id="local-6989586621688046347"><span id="local-6989586621688046348"><span id="local-6989586621688046349"><span id="local-6989586621688046350"><span id="local-6989586621688046351"><span id="local-6989586621688046352"><span id="local-6989586621688046353"><span id="local-6989586621688046354"><span id="local-6989586621688046355"><span id="local-6989586621688046356"><span id="local-6989586621688046357"><span id="local-6989586621688046358"><span id="local-6989586621688046359"><span id="local-6989586621688046360"><span id="local-6989586621688046361"><span id="local-6989586621688046362"><span id="local-6989586621688046363"><span id="local-6989586621688046364"><span id="local-6989586621688046365"><span id="local-6989586621688046366"><span id="local-6989586621688046367"><span id="local-6989586621688046368"><span class="annot"><a href="#local-6989586621688046334"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m AppEnv -&gt; ManagedT m AppEnv
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ManagedT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m AppEnv
+forall (m :: * -&gt; *). HasAppEnv m =&gt; m AppEnv
+</span><a href="Hasura.App.State.html#askAppEnv"><span class="hs-identifier hs-var">askAppEnv</span></a></span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688046406"><span class="annot"><a href="#local-6989586621688046406"><span class="hs-identifier hs-var hs-var">logger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loggers -&gt; Logger Hasura
+</span><a href="Hasura.App.State.html#_lsLogger"><span class="hs-identifier hs-var">_lsLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Loggers
+</span><a href="#local-6989586621688046339"><span class="hs-identifier hs-var">appEnvLoggers</span></a></span><span>
+</span><span id="line-159"></span><span>  </span><span class="hs-comment">-- Start processor thread</span><span>
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621688046408"><span class="annot"><a href="#local-6989586621688046408"><span class="hs-identifier hs-var">processorThread</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-161"></span><span>    </span><span class="annot"><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-type">C.forkManagedT</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;SchemeUpdate.processor&quot;</span></span><span> </span><span class="annot"><a href="#local-6989586621688046406"><span class="hs-identifier hs-type">logger</span></a></span><span>
+</span><span id="line-162"></span><span>      </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#processor"><span class="hs-identifier hs-type">processor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046340"><span class="hs-identifier hs-type">appEnvMetadataVersionRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046331"><span class="hs-identifier hs-type">appStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046332"><span class="hs-identifier hs-type">logTVar</span></a></span><span>
+</span><span id="line-163"></span><span>  </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logThreadStarted"><span class="hs-identifier hs-type">logThreadStarted</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046406"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046341"><span class="hs-identifier hs-type">appEnvInstanceId</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#TTProcessor"><span class="hs-identifier hs-type">TTProcessor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046408"><span class="hs-identifier hs-type">processorThread</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="annot"><a href="#local-6989586621688046408"><span class="hs-identifier hs-type">processorThread</span></a></span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span class="hs-comment">-- TODO: This is also defined in multitenant, consider putting it in a library somewhere</span><span>
+</span><span id="line-167"></span><span id="local-6989586621688045870"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#forcePut"><span class="hs-identifier hs-type">forcePut</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM.TMVar</span></span><span> </span><span class="annot"><a href="#local-6989586621688045870"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688045870"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-168"></span><span id="forcePut"><span class="annot"><span class="annottext">forcePut :: forall a. TMVar a -&gt; a -&gt; IO ()
+</span><a href="Hasura.Server.SchemaUpdate.html#forcePut"><span class="hs-identifier hs-var hs-var">forcePut</span></a></span></span><span> </span><span id="local-6989586621688046414"><span class="annot"><span class="annottext">TMVar a
+</span><a href="#local-6989586621688046414"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621688046415"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688046415"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TMVar a -&gt; STM (Maybe a)
+forall a. TMVar a -&gt; STM (Maybe a)
+</span><span class="hs-identifier hs-var">STM.tryTakeTMVar</span></span><span> </span><span class="annot"><span class="annottext">TMVar a
+</span><a href="#local-6989586621688046414"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">STM (Maybe a) -&gt; STM () -&gt; STM ()
+forall a b. STM a -&gt; STM b -&gt; STM b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TMVar a -&gt; a -&gt; STM ()
+forall a. TMVar a -&gt; a -&gt; STM ()
+</span><span class="hs-identifier hs-var">STM.putTMVar</span></span><span> </span><span class="annot"><span class="annottext">TMVar a
+</span><a href="#local-6989586621688046414"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688046415"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#schemaVersionCheckHandler"><span class="hs-identifier hs-type">schemaVersionCheckHandler</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-171"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Pool.html/Database.PG.Query.Pool.html#PGPool"><span class="hs-identifier hs-type">PG.PGPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM.TMVar</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span id="schemaVersionCheckHandler"><span class="annot"><span class="annottext">schemaVersionCheckHandler :: PGPool -&gt; TMVar MetadataResourceVersion -&gt; IO (Either QErr ())
+</span><a href="Hasura.Server.SchemaUpdate.html#schemaVersionCheckHandler"><span class="hs-identifier hs-var hs-var">schemaVersionCheckHandler</span></a></span></span><span> </span><span id="local-6989586621688046420"><span class="annot"><span class="annottext">PGPool
+</span><a href="#local-6989586621688046420"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span id="local-6989586621688046421"><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+</span><a href="#local-6989586621688046421"><span class="hs-identifier hs-var">metaVersionRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-173"></span><span>  </span><span class="annot"><span class="annottext">ExceptT QErr IO MetadataResourceVersion
+-&gt; IO (Either QErr MetadataResourceVersion)
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span>
+</span><span id="line-174"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">PGPool
+-&gt; TxMode
+-&gt; TxET QErr IO MetadataResourceVersion
+-&gt; ExceptT QErr IO MetadataResourceVersion
+forall (m :: * -&gt; *) e a.
+(MonadIO m, MonadBaseControl IO m, FromPGTxErr e,
+ FromPGConnErr e) =&gt;
+PGPool -&gt; TxMode -&gt; TxET e m a -&gt; ExceptT e m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Pool.html/Database.PG.Query.Pool.html#runTx"><span class="hs-identifier hs-var">PG.runTx</span></a></span><span> </span><span class="annot"><span class="annottext">PGPool
+</span><a href="#local-6989586621688046420"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxIsolation
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html/Database.PG.Query.Transaction.html#RepeatableRead"><span class="hs-identifier hs-var">PG.RepeatableRead</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe TxAccess
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span>
+</span><span id="line-175"></span><span>        </span><span class="annot"><span class="annottext">(TxET QErr IO MetadataResourceVersion
+ -&gt; ExceptT QErr IO MetadataResourceVersion)
+-&gt; TxET QErr IO MetadataResourceVersion
+-&gt; ExceptT QErr IO MetadataResourceVersion
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TxET QErr IO MetadataResourceVersion
+</span><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataResourceVersionFromCatalog"><span class="hs-identifier hs-var">fetchMetadataResourceVersionFromCatalog</span></a></span><span>
+</span><span id="line-176"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-177"></span><span>    </span><span class="annot"><span class="annottext">IO (Either QErr MetadataResourceVersion)
+-&gt; (Either QErr MetadataResourceVersion -&gt; IO (Either QErr ()))
+-&gt; IO (Either QErr ())
+forall a b. IO a -&gt; (a -&gt; IO b) -&gt; IO b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-178"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621688046426"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046426"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; Either QErr ()
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(() -&gt; Either QErr ()) -&gt; IO () -&gt; IO (Either QErr ())
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">TMVar MetadataResourceVersion -&gt; MetadataResourceVersion -&gt; IO ()
+forall a. TMVar a -&gt; a -&gt; IO ()
+</span><a href="Hasura.Server.SchemaUpdate.html#forcePut"><span class="hs-identifier hs-var">forcePut</span></a></span><span> </span><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+</span><a href="#local-6989586621688046421"><span class="hs-identifier hs-var">metaVersionRef</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046426"><span class="hs-identifier hs-var">version</span></a></span><span>
+</span><span id="line-179"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621688046428"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046428"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either QErr () -&gt; IO (Either QErr ())
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either QErr () -&gt; IO (Either QErr ()))
+-&gt; Either QErr () -&gt; IO (Either QErr ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr ()
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046428"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span class="hs-keyword">data</span><span> </span><span id="ErrorState"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ErrorState"><span class="hs-identifier hs-var">ErrorState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ErrorState"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ErrorState"><span class="hs-identifier hs-var">ErrorState</span></a></span></span><span>
+</span><span id="line-182"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_esLastErrorSeen"><span class="annot"><span class="annottext">ErrorState -&gt; Maybe QErr
+</span><a href="Hasura.Server.SchemaUpdate.html#_esLastErrorSeen"><span class="hs-identifier hs-var hs-var">_esLastErrorSeen</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-183"></span><span>    </span><span id="_esLastMetadataVersion"><span class="annot"><span class="annottext">ErrorState -&gt; Maybe MetadataResourceVersion
+</span><a href="Hasura.Server.SchemaUpdate.html#_esLastMetadataVersion"><span class="hs-identifier hs-var hs-var">_esLastMetadataVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-185"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688046433"><span id="local-6989586621688046438"><span class="annot"><span class="annottext">ErrorState -&gt; ErrorState -&gt; Bool
+(ErrorState -&gt; ErrorState -&gt; Bool)
+-&gt; (ErrorState -&gt; ErrorState -&gt; Bool) -&gt; Eq ErrorState
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ErrorState -&gt; ErrorState -&gt; Bool
+== :: ErrorState -&gt; ErrorState -&gt; Bool
+$c/= :: ErrorState -&gt; ErrorState -&gt; Bool
+/= :: ErrorState -&gt; ErrorState -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span class="hs-comment">-- NOTE: The ErrorState type is to be used mainly for the `listener` method below.</span><span>
+</span><span id="line-188"></span><span class="hs-comment">--       This will help prevent logging the same error with the same MetadataResourceVersion</span><span>
+</span><span id="line-189"></span><span class="hs-comment">--       multiple times consecutively. When the `listener` is in ErrorState we don't log the</span><span>
+</span><span id="line-190"></span><span class="hs-comment">--       next error until the resource version has changed/updated.</span><span>
+</span><span id="line-191"></span><span>
+</span><span id="line-192"></span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#defaultErrorState"><span class="hs-identifier hs-type">defaultErrorState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ErrorState"><span class="hs-identifier hs-type">ErrorState</span></a></span><span>
+</span><span id="line-193"></span><span id="defaultErrorState"><span class="annot"><span class="annottext">defaultErrorState :: ErrorState
+</span><a href="Hasura.Server.SchemaUpdate.html#defaultErrorState"><span class="hs-identifier hs-var hs-var">defaultErrorState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe QErr -&gt; Maybe MetadataResourceVersion -&gt; ErrorState
+</span><a href="Hasura.Server.SchemaUpdate.html#ErrorState"><span class="hs-identifier hs-var">ErrorState</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErr
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResourceVersion
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-194"></span><span>
+</span><span id="line-195"></span><span class="annot"><span class="hs-comment">-- | NOTE: this can be updated to use lenses</span></span><span>
+</span><span id="line-196"></span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#updateErrorInState"><span class="hs-identifier hs-type">updateErrorInState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ErrorState"><span class="hs-identifier hs-type">ErrorState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ErrorState"><span class="hs-identifier hs-type">ErrorState</span></a></span><span>
+</span><span id="line-197"></span><span id="updateErrorInState"><span class="annot"><span class="annottext">updateErrorInState :: ErrorState -&gt; QErr -&gt; MetadataResourceVersion -&gt; ErrorState
+</span><a href="Hasura.Server.SchemaUpdate.html#updateErrorInState"><span class="hs-identifier hs-var hs-var">updateErrorInState</span></a></span></span><span> </span><span id="local-6989586621688046444"><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046444"><span class="hs-identifier hs-var">es</span></a></span></span><span> </span><span id="local-6989586621688046445"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046445"><span class="hs-identifier hs-var">qerr</span></a></span></span><span> </span><span id="local-6989586621688046446"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046446"><span class="hs-identifier hs-var">mrv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-198"></span><span>  </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046444"><span class="hs-identifier hs-var">es</span></a></span><span>
+</span><span id="line-199"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#_esLastErrorSeen"><span class="hs-identifier hs-var">_esLastErrorSeen</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="#local-6989586621688046445"><span class="hs-identifier hs-type">qerr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-200"></span><span>      </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#_esLastMetadataVersion"><span class="hs-identifier hs-var">_esLastMetadataVersion</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="#local-6989586621688046446"><span class="hs-identifier hs-type">mrv</span></a></span><span>
+</span><span id="line-201"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-202"></span><span>
+</span><span id="line-203"></span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#isInErrorState"><span class="hs-identifier hs-type">isInErrorState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ErrorState"><span class="hs-identifier hs-type">ErrorState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-204"></span><span id="isInErrorState"><span class="annot"><span class="annottext">isInErrorState :: ErrorState -&gt; Bool
+</span><a href="Hasura.Server.SchemaUpdate.html#isInErrorState"><span class="hs-identifier hs-var hs-var">isInErrorState</span></a></span></span><span> </span><span id="local-6989586621688046448"><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046448"><span class="hs-identifier hs-var">es</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-205"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe QErr -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe QErr -&gt; Bool)
+-&gt; (ErrorState -&gt; Maybe QErr) -&gt; ErrorState -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ErrorState -&gt; Maybe QErr
+</span><a href="Hasura.Server.SchemaUpdate.html#_esLastErrorSeen"><span class="hs-identifier hs-var">_esLastErrorSeen</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046448"><span class="hs-identifier hs-var">es</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe MetadataResourceVersion -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe MetadataResourceVersion -&gt; Bool)
+-&gt; (ErrorState -&gt; Maybe MetadataResourceVersion)
+-&gt; ErrorState
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ErrorState -&gt; Maybe MetadataResourceVersion
+</span><a href="Hasura.Server.SchemaUpdate.html#_esLastMetadataVersion"><span class="hs-identifier hs-var">_esLastMetadataVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046448"><span class="hs-identifier hs-var">es</span></a></span><span>
+</span><span id="line-206"></span><span>
+</span><span id="line-207"></span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#toLogError"><span class="hs-identifier hs-type">toLogError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#ErrorState"><span class="hs-identifier hs-type">ErrorState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-208"></span><span id="toLogError"><span class="annot"><span class="annottext">toLogError :: ErrorState -&gt; QErr -&gt; MetadataResourceVersion -&gt; Bool
+</span><a href="Hasura.Server.SchemaUpdate.html#toLogError"><span class="hs-identifier hs-var hs-var">toLogError</span></a></span></span><span> </span><span id="local-6989586621688046452"><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046452"><span class="hs-identifier hs-var">es</span></a></span></span><span> </span><span id="local-6989586621688046453"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046453"><span class="hs-identifier hs-var">qerr</span></a></span></span><span> </span><span id="local-6989586621688046454"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046454"><span class="hs-identifier hs-var">mrv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; Bool -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688046456"><span class="hs-identifier hs-var">isQErrLastSeen</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688046458"><span class="hs-identifier hs-var">isMetadataResourceVersionLastSeen</span></a></span><span>
+</span><span id="line-209"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-210"></span><span>    </span><span id="local-6989586621688046456"><span class="annot"><span class="annottext">isQErrLastSeen :: Bool
+</span><a href="#local-6989586621688046456"><span class="hs-identifier hs-var hs-var">isQErrLastSeen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ErrorState -&gt; Maybe QErr
+</span><a href="Hasura.Server.SchemaUpdate.html#_esLastErrorSeen"><span class="hs-identifier hs-var">_esLastErrorSeen</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046452"><span class="hs-identifier hs-var">es</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-211"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688046459"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046459"><span class="hs-identifier hs-var">lErrS</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046459"><span class="hs-identifier hs-var">lErrS</span></a></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; QErr -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046453"><span class="hs-identifier hs-var">qerr</span></a></span><span>
+</span><span id="line-212"></span><span>      </span><span class="annot"><span class="annottext">Maybe QErr
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-213"></span><span>
+</span><span id="line-214"></span><span>    </span><span id="local-6989586621688046458"><span class="annot"><span class="annottext">isMetadataResourceVersionLastSeen :: Bool
+</span><a href="#local-6989586621688046458"><span class="hs-identifier hs-var hs-var">isMetadataResourceVersionLastSeen</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ErrorState -&gt; Maybe MetadataResourceVersion
+</span><a href="Hasura.Server.SchemaUpdate.html#_esLastMetadataVersion"><span class="hs-identifier hs-var">_esLastMetadataVersion</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046452"><span class="hs-identifier hs-var">es</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-215"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688046460"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046460"><span class="hs-identifier hs-var">lMRV</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046460"><span class="hs-identifier hs-var">lMRV</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; MetadataResourceVersion -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046454"><span class="hs-identifier hs-var">mrv</span></a></span><span>
+</span><span id="line-216"></span><span>      </span><span class="annot"><span class="annottext">Maybe MetadataResourceVersion
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-217"></span><span>
+</span><span id="line-218"></span><span class="annot"><span class="hs-comment">-- | An IO action that listens to postgres for events and pushes them to a Queue, in a loop forever.</span></span><span>
+</span><span id="line-219"></span><span id="local-6989586621688045815"><span id="local-6989586621688045816"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#listener"><span class="hs-identifier hs-type">listener</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-220"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688045815"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-221"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-222"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Pool.html/Database.PG.Query.Pool.html#PGPool"><span class="hs-identifier hs-type">PG.PGPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-223"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STM.TMVar</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-224"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Data.Time.Clock.Units.html/Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-type">Milliseconds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-225"></span><span>  </span><span class="annot"><a href="#local-6989586621688045815"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045816"><span class="hs-identifier hs-type">void</span></a></span></span></span><span>
+</span><span id="line-226"></span><span id="listener"><span class="annot"><span class="annottext">listener :: forall (m :: * -&gt; *) void.
+MonadIO m =&gt;
+Logger Hasura
+-&gt; PGPool
+-&gt; TMVar MetadataResourceVersion
+-&gt; Milliseconds
+-&gt; m void
+</span><a href="Hasura.Server.SchemaUpdate.html#listener"><span class="hs-identifier hs-var hs-var">listener</span></a></span></span><span> </span><span id="local-6989586621688046498"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046498"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688046499"><span class="annot"><span class="annottext">PGPool
+</span><a href="#local-6989586621688046499"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span id="local-6989586621688046500"><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+</span><a href="#local-6989586621688046500"><span class="hs-identifier hs-var">metaVersionRef</span></a></span></span><span> </span><span id="local-6989586621688046501"><span class="annot"><span class="annottext">Milliseconds
+</span><a href="#local-6989586621688046501"><span class="hs-identifier hs-var">interval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ErrorState -&gt; m ErrorState) -&gt; ErrorState -&gt; m void
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m a) -&gt; a -&gt; m b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-loops-0.4.3-f88e07e7c00c3a116db0050574f81916c5f345c329242ea49cb7634016e44d45/share/doc/html/src/Control.Monad.Loops.html/Control.Monad.Loops.html#iterateM_"><span class="hs-identifier hs-var">L.iterateM_</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorState -&gt; m ErrorState
+</span><a href="#local-6989586621688046503"><span class="hs-identifier hs-var">listenerLoop</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="Hasura.Server.SchemaUpdate.html#defaultErrorState"><span class="hs-identifier hs-var">defaultErrorState</span></a></span><span>
+</span><span id="line-227"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-228"></span><span>    </span><span id="local-6989586621688046503"><span class="annot"><span class="annottext">listenerLoop :: ErrorState -&gt; m ErrorState
+</span><a href="#local-6989586621688046503"><span class="hs-identifier hs-var hs-var">listenerLoop</span></a></span></span><span> </span><span id="local-6989586621688046504"><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046504"><span class="hs-identifier hs-var">errorState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-229"></span><span>      </span><span id="local-6989586621688046505"><span class="annot"><a href="#local-6989586621688046505"><span class="hs-identifier hs-var">mrv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe MetadataResourceVersion)
+-&gt; m (Maybe MetadataResourceVersion)
+forall a. IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Maybe MetadataResourceVersion)
+ -&gt; m (Maybe MetadataResourceVersion))
+-&gt; IO (Maybe MetadataResourceVersion)
+-&gt; m (Maybe MetadataResourceVersion)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">STM (Maybe MetadataResourceVersion)
+-&gt; IO (Maybe MetadataResourceVersion)
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM (Maybe MetadataResourceVersion)
+ -&gt; IO (Maybe MetadataResourceVersion))
+-&gt; STM (Maybe MetadataResourceVersion)
+-&gt; IO (Maybe MetadataResourceVersion)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+-&gt; STM (Maybe MetadataResourceVersion)
+forall a. TMVar a -&gt; STM (Maybe a)
+</span><span class="hs-identifier hs-var">STM.tryTakeTMVar</span></span><span> </span><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+</span><a href="#local-6989586621688046500"><span class="hs-identifier hs-var">metaVersionRef</span></a></span><span>
+</span><span id="line-230"></span><span>      </span><span id="local-6989586621688046507"><span class="annot"><a href="#local-6989586621688046507"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="hs-identifier hs-type">liftIO</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#schemaVersionCheckHandler"><span class="hs-identifier hs-type">schemaVersionCheckHandler</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046499"><span class="hs-identifier hs-type">pool</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046500"><span class="hs-identifier hs-type">metaVersionRef</span></a></span><span>
+</span><span id="line-231"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688046508"><span class="annot"><a href="#local-6989586621688046508"><span class="hs-identifier hs-var hs-var">metadataVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+-&gt; Maybe MetadataResourceVersion -&gt; MetadataResourceVersion
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="Hasura.RQL.Types.SchemaCache.html#initialResourceVersion"><span class="hs-identifier hs-var">initialResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResourceVersion
+</span><a href="#local-6989586621688046505"><span class="hs-identifier hs-var">mrv</span></a></span><span>
+</span><span id="line-232"></span><span>      </span><span id="local-6989586621688046511"><span class="annot"><a href="#local-6989586621688046511"><span class="hs-identifier hs-var">nextErr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621688046507"><span class="hs-identifier hs-type">resp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-233"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621688046512"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046512"><span class="hs-identifier hs-var">respErr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-234"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorState -&gt; QErr -&gt; MetadataResourceVersion -&gt; Bool
+</span><a href="Hasura.Server.SchemaUpdate.html#toLogError"><span class="hs-identifier hs-var">toLogError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046504"><span class="hs-identifier hs-var">errorState</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046512"><span class="hs-identifier hs-var">respErr</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046508"><span class="hs-identifier hs-var">metadataVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-235"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-236"></span><span>              </span><span class="annot"><span class="annottext">Logger Hasura -&gt; SchemaSyncThreadType -&gt; ThreadError -&gt; m ()
+forall (m :: * -&gt; *) a.
+(MonadIO m, ToJSON a) =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; a -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logError"><span class="hs-identifier hs-var">logError</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046498"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="Hasura.Server.Logging.html#TTListener"><span class="hs-identifier hs-var">TTListener</span></a></span><span> </span><span class="annot"><span class="annottext">(ThreadError -&gt; m ()) -&gt; ThreadError -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; ThreadError
+</span><a href="Hasura.Server.SchemaUpdate.html#TEQueryError"><span class="hs-identifier hs-var">TEQueryError</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046512"><span class="hs-identifier hs-var">respErr</span></a></span><span>
+</span><span id="line-237"></span><span>              </span><span class="annot"><span class="annottext">Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var">logInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046498"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="Hasura.Server.Logging.html#TTListener"><span class="hs-identifier hs-var">TTListener</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; m ()) -&gt; Value -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;metadataResourceVersion&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046508"><span class="hs-identifier hs-var">metadataVersion</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-238"></span><span>              </span><span class="annot"><span class="annottext">ErrorState -&gt; m ErrorState
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ErrorState -&gt; m ErrorState) -&gt; ErrorState -&gt; m ErrorState
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ErrorState -&gt; QErr -&gt; MetadataResourceVersion -&gt; ErrorState
+</span><a href="Hasura.Server.SchemaUpdate.html#updateErrorInState"><span class="hs-identifier hs-var">updateErrorInState</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046504"><span class="hs-identifier hs-var">errorState</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688046512"><span class="hs-identifier hs-var">respErr</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046508"><span class="hs-identifier hs-var">metadataVersion</span></a></span><span>
+</span><span id="line-239"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-240"></span><span>              </span><span class="annot"><span class="annottext">ErrorState -&gt; m ErrorState
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046504"><span class="hs-identifier hs-var">errorState</span></a></span><span>
+</span><span id="line-241"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="annot"><span class="annottext">()
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-242"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorState -&gt; Bool
+</span><a href="Hasura.Server.SchemaUpdate.html#isInErrorState"><span class="hs-identifier hs-var">isInErrorState</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="#local-6989586621688046504"><span class="hs-identifier hs-var">errorState</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-243"></span><span>            </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var">logInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046498"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="Hasura.Server.Logging.html#TTListener"><span class="hs-identifier hs-var">TTListener</span></a></span><span>
+</span><span id="line-244"></span><span>            </span><span class="annot"><span class="annottext">(Value -&gt; m ()) -&gt; Value -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;SchemaSync Restored...&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-245"></span><span>          </span><span class="annot"><span class="annottext">ErrorState -&gt; m ErrorState
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ErrorState
+</span><a href="Hasura.Server.SchemaUpdate.html#defaultErrorState"><span class="hs-identifier hs-var">defaultErrorState</span></a></span><span>
+</span><span id="line-246"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">liftIO</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-type">C.sleep</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Data.Time.Clock.Units.html/Data.Time.Clock.Units.html#milliseconds"><span class="hs-identifier hs-var">milliseconds</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046501"><span class="hs-identifier hs-type">interval</span></a></span><span>
+</span><span id="line-247"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="annot"><a href="#local-6989586621688046511"><span class="hs-identifier hs-type">nextErr</span></a></span><span>
+</span><span id="line-248"></span><span>
+</span><span id="line-249"></span><span class="annot"><span class="hs-comment">-- | An IO action that processes events from Queue, in a loop forever.</span></span><span>
+</span><span id="line-250"></span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#processor"><span class="hs-identifier hs-type">processor</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-251"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688045867"><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688045869"><span class="annot"><a href="#local-6989586621688045869"><span class="hs-identifier hs-type">void</span></a></span></span><span> </span><span id="local-6989586621688045868"><span class="annot"><a href="#local-6989586621688045868"><span class="hs-identifier hs-type">impl</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-252"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTraceContext"><span class="hs-identifier hs-type">Tracing.MonadTraceContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-253"></span><span>    </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">C.ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-254"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier hs-type">HasAppEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-255"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#HasCacheStaticConfig"><span class="hs-identifier hs-type">HasCacheStaticConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-256"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-257"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-258"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-259"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-260"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STM.TMVar</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-261"></span><span>  </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045868"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-262"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STM.TVar</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-263"></span><span>  </span><span class="annot"><a href="#local-6989586621688045867"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045869"><span class="hs-identifier hs-type">void</span></a></span><span>
+</span><span id="line-264"></span><span id="processor"><span class="annot"><span class="annottext">processor :: forall (m :: * -&gt; *) void impl.
+(MonadTraceContext m, ForkableMonadIO m, HasAppEnv m,
+ HasCacheStaticConfig m, MonadMetadataStorage m,
+ MonadResolveSource m, ProvidesNetwork m) =&gt;
+TMVar MetadataResourceVersion
+-&gt; AppStateRef impl -&gt; TVar Bool -&gt; m void
+</span><a href="Hasura.Server.SchemaUpdate.html#processor"><span class="hs-identifier hs-var hs-var">processor</span></a></span></span><span>
+</span><span id="line-265"></span><span>  </span><span id="local-6989586621688046540"><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+</span><a href="#local-6989586621688046540"><span class="hs-identifier hs-var">metaVersionRef</span></a></span></span><span>
+</span><span id="line-266"></span><span>  </span><span id="local-6989586621688046541"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688046541"><span class="hs-identifier hs-var">appStateRef</span></a></span></span><span>
+</span><span id="line-267"></span><span>  </span><span id="local-6989586621688046542"><span class="annot"><span class="annottext">TVar Bool
+</span><a href="#local-6989586621688046542"><span class="hs-identifier hs-var">logTVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; m void
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">forever</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-268"></span><span>    </span><span id="local-6989586621688046544"><span class="annot"><a href="#local-6989586621688046544"><span class="hs-identifier hs-var">metaVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO MetadataResourceVersion -&gt; m MetadataResourceVersion
+forall a. IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO MetadataResourceVersion -&gt; m MetadataResourceVersion)
+-&gt; IO MetadataResourceVersion -&gt; m MetadataResourceVersion
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">STM MetadataResourceVersion -&gt; IO MetadataResourceVersion
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM MetadataResourceVersion -&gt; IO MetadataResourceVersion)
+-&gt; STM MetadataResourceVersion -&gt; IO MetadataResourceVersion
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TMVar MetadataResourceVersion -&gt; STM MetadataResourceVersion
+forall a. TMVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">STM.takeTMVar</span></span><span> </span><span class="annot"><span class="annottext">TMVar MetadataResourceVersion
+</span><a href="#local-6989586621688046540"><span class="hs-identifier hs-var">metaVersionRef</span></a></span><span>
+</span><span id="line-269"></span><span>    </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#refreshSchemaCache"><span class="hs-identifier hs-type">refreshSchemaCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046544"><span class="hs-identifier hs-type">metaVersion</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046541"><span class="hs-identifier hs-type">appStateRef</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#TTProcessor"><span class="hs-identifier hs-type">TTProcessor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046542"><span class="hs-identifier hs-type">logTVar</span></a></span><span>
+</span><span id="line-270"></span><span>
+</span><span id="line-271"></span><span id="local-6989586621688045920"><span id="local-6989586621688045921"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#refreshSchemaCache"><span class="hs-identifier hs-type">refreshSchemaCache</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-272"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTraceContext"><span class="hs-identifier hs-type">Tracing.MonadTraceContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-273"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-274"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/monad-control-1.0.3.1-127c0b1895a90d6faa345827c6b6be6447278996974a93c84184eef9ccf5fbbc/share/doc/html/src/Control.Monad.Trans.Control.html/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-275"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier hs-type">HasAppEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-276"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#HasCacheStaticConfig"><span class="hs-identifier hs-type">HasCacheStaticConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-277"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-278"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-279"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-280"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-281"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-282"></span><span>  </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045921"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-283"></span><span>  </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-284"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STM.TVar</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-285"></span><span>  </span><span class="annot"><a href="#local-6989586621688045920"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-286"></span><span id="refreshSchemaCache"><span class="annot"><span class="annottext">refreshSchemaCache :: forall (m :: * -&gt; *) impl.
+(MonadTraceContext m, MonadIO m, MonadBaseControl IO m,
+ HasAppEnv m, HasCacheStaticConfig m, MonadMetadataStorage m,
+ MonadResolveSource m, ProvidesNetwork m) =&gt;
+MetadataResourceVersion
+-&gt; AppStateRef impl -&gt; SchemaSyncThreadType -&gt; TVar Bool -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#refreshSchemaCache"><span class="hs-identifier hs-var hs-var">refreshSchemaCache</span></a></span></span><span>
+</span><span id="line-287"></span><span>  </span><span id="local-6989586621688046670"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046670"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span>
+</span><span id="line-288"></span><span>  </span><span id="local-6989586621688046671"><span class="annot"><span class="annottext">AppStateRef impl
+</span><a href="#local-6989586621688046671"><span class="hs-identifier hs-var">appStateRef</span></a></span></span><span>
+</span><span id="line-289"></span><span>  </span><span id="local-6989586621688046672"><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046672"><span class="hs-identifier hs-var">threadType</span></a></span></span><span>
+</span><span id="line-290"></span><span>  </span><span id="local-6989586621688046673"><span class="annot"><span class="annottext">TVar Bool
+</span><a href="#local-6989586621688046673"><span class="hs-identifier hs-var">logTVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-291"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#AppEnv"><span class="hs-identifier hs-type">AppEnv</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688046674"><span id="local-6989586621688046675"><span id="local-6989586621688046676"><span id="local-6989586621688046677"><span id="local-6989586621688046678"><span id="local-6989586621688046679"><span id="local-6989586621688046680"><span id="local-6989586621688046681"><span id="local-6989586621688046682"><span id="local-6989586621688046683"><span id="local-6989586621688046684"><span id="local-6989586621688046685"><span id="local-6989586621688046686"><span id="local-6989586621688046687"><span id="local-6989586621688046688"><span id="local-6989586621688046689"><span id="local-6989586621688046690"><span id="local-6989586621688046691"><span id="local-6989586621688046692"><span id="local-6989586621688046693"><span id="local-6989586621688046694"><span id="local-6989586621688046695"><span id="local-6989586621688046696"><span id="local-6989586621688046697"><span id="local-6989586621688046698"><span id="local-6989586621688046699"><span id="local-6989586621688046700"><span id="local-6989586621688046701"><span id="local-6989586621688046702"><span id="local-6989586621688046703"><span id="local-6989586621688046704"><span id="local-6989586621688046705"><span id="local-6989586621688046706"><span id="local-6989586621688046707"><span id="local-6989586621688046708"><span class="annot"><a href="Hasura.App.State.html#appEnvPersistedQueriesTtl"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m AppEnv
+forall (m :: * -&gt; *). HasAppEnv m =&gt; m AppEnv
+</span><a href="Hasura.App.State.html#askAppEnv"><span class="hs-identifier hs-var">askAppEnv</span></a></span><span>
+</span><span id="line-292"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688046709"><span class="annot"><a href="#local-6989586621688046709"><span class="hs-identifier hs-var hs-var">logger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loggers -&gt; Logger Hasura
+</span><a href="Hasura.App.State.html#_lsLogger"><span class="hs-identifier hs-var">_lsLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Loggers
+</span><a href="#local-6989586621688046679"><span class="hs-identifier hs-var">appEnvLoggers</span></a></span><span>
+</span><span id="line-293"></span><span>    </span><span id="local-6989586621688046710"><span class="annot"><a href="#local-6989586621688046710"><span class="hs-identifier hs-var">respErr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="hs-identifier hs-type">runExceptT</span></span><span>
+</span><span id="line-294"></span><span>      </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#withSchemaCacheUpdate"><span class="hs-identifier hs-type">withSchemaCacheUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046671"><span class="hs-identifier hs-type">appStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046709"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="#local-6989586621688046673"><span class="hs-identifier hs-type">logTVar</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-295"></span><span>      </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-296"></span><span>        </span><span id="local-6989586621688046711"><span class="annot"><a href="#local-6989586621688046711"><span class="hs-identifier hs-var">rebuildableCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="hs-identifier hs-type">liftIO</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getRebuildableSchemaCacheWithVersion"><span class="hs-identifier hs-type">getRebuildableSchemaCacheWithVersion</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046671"><span class="hs-identifier hs-type">appStateRef</span></a></span><span>
+</span><span id="line-297"></span><span>        </span><span id="local-6989586621688046712"><span class="annot"><a href="#local-6989586621688046712"><span class="hs-identifier hs-var">appContext</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="hs-identifier hs-type">liftIO</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#getAppContext"><span class="hs-identifier hs-type">getAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046671"><span class="hs-identifier hs-type">appStateRef</span></a></span><span>
+</span><span id="line-298"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688046713"><span class="annot"><a href="#local-6989586621688046713"><span class="hs-identifier hs-var hs-var">dynamicConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AppContext -&gt; CacheDynamicConfig
+</span><a href="Hasura.App.State.html#buildCacheDynamicConfig"><span class="hs-identifier hs-var">buildCacheDynamicConfig</span></a></span><span> </span><span class="annot"><span class="annottext">AppContext
+</span><a href="#local-6989586621688046712"><span class="hs-identifier hs-var">appContext</span></a></span><span>
+</span><span id="line-299"></span><span>        </span><span class="hs-comment">-- the instance which triggered the schema sync event would have stored</span><span>
+</span><span id="line-300"></span><span>        </span><span class="hs-comment">-- the source introspection, hence we can ignore it here</span><span>
+</span><span id="line-301"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621688046715"><span class="annot"><a href="#local-6989586621688046715"><span class="hs-identifier hs-var">msg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688046716"><span class="annot"><a href="#local-6989586621688046716"><span class="hs-identifier hs-var">cache</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688046717"><span class="annot"><a href="#local-6989586621688046717"><span class="hs-identifier hs-var">_sourcesIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688046718"><span class="annot"><a href="#local-6989586621688046718"><span class="hs-identifier hs-var">_schemaRegistryAction</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-302"></span><span>          </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.html#runCacheRWT"><span class="hs-identifier hs-type">runCacheRWT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046713"><span class="hs-identifier hs-type">dynamicConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046711"><span class="hs-identifier hs-type">rebuildableCache</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-303"></span><span>            </span><span id="local-6989586621688046719"><span class="annot"><a href="#local-6989586621688046719"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#askSchemaCache"><span class="hs-identifier hs-type">askSchemaCache</span></a></span><span>
+</span><span id="line-304"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688046721"><span class="annot"><a href="#local-6989586621688046721"><span class="hs-identifier hs-var hs-var">engineResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; MetadataResourceVersion
+</span><a href="Hasura.RQL.Types.SchemaCache.html#scMetadataResourceVersion"><span class="hs-identifier hs-var">scMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621688046719"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
+</span><span id="line-305"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688046721"><span class="hs-identifier hs-type">engineResourceVersion</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">==</span></span><span> </span><span class="annot"><a href="#local-6989586621688046670"><span class="hs-identifier hs-type">resourceVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-306"></span><span>              </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logInfoTracing"><span class="hs-identifier hs-type">logInfoTracing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046709"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046672"><span class="hs-identifier hs-type">threadType</span></a></span><span>
+</span><span id="line-307"></span><span>                </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-type">String</span></a></span><span>
+</span><span id="line-308"></span><span>                </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.unwords</span></span><span>
+</span><span id="line-309"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;Received metadata resource version:&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-310"></span><span>                    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-type">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046670"><span class="hs-identifier hs-type">resourceVersion</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&lt;&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;,&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-311"></span><span>                    </span><span class="annot"><span class="hs-string">&quot;different from the current engine resource version:&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-312"></span><span>                    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-type">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046721"><span class="hs-identifier hs-type">engineResourceVersion</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&lt;&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;.&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-313"></span><span>                    </span><span class="annot"><span class="hs-string">&quot;Trying to update the schema cache.&quot;</span></span><span>
+</span><span id="line-314"></span><span>                  </span><span class="hs-special">]</span><span>
+</span><span id="line-315"></span><span>
+</span><span id="line-316"></span><span>              </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataWithResourceVersion"><span class="hs-identifier hs-type">MetadataWithResourceVersion</span></a></span><span> </span><span id="local-6989586621688046729"><span class="annot"><a href="#local-6989586621688046729"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span id="local-6989586621688046730"><span class="annot"><a href="#local-6989586621688046730"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#liftEitherM"><span class="hs-identifier hs-type">liftEitherM</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html#fetchMetadata"><span class="hs-identifier hs-type">fetchMetadata</span></a></span><span>
+</span><span id="line-317"></span><span>
+</span><span id="line-318"></span><span>              </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logInfoTracing"><span class="hs-identifier hs-type">logInfoTracing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046709"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046672"><span class="hs-identifier hs-type">threadType</span></a></span><span>
+</span><span id="line-319"></span><span>                </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-type">String</span></a></span><span>
+</span><span id="line-320"></span><span>                </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.unwords</span></span><span>
+</span><span id="line-321"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;Fetched metadata with resource version:&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-322"></span><span>                    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-type">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046730"><span class="hs-identifier hs-type">latestResourceVersion</span></a></span><span>
+</span><span id="line-323"></span><span>                  </span><span class="hs-special">]</span><span>
+</span><span id="line-324"></span><span>
+</span><span id="line-325"></span><span>              </span><span id="local-6989586621688046733"><span class="annot"><a href="#local-6989586621688046733"><span class="hs-identifier hs-var">notifications</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#liftEitherM"><span class="hs-identifier hs-type">liftEitherM</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html#fetchMetadataNotifications"><span class="hs-identifier hs-type">fetchMetadataNotifications</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046721"><span class="hs-identifier hs-type">engineResourceVersion</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046681"><span class="hs-identifier hs-type">appEnvInstanceId</span></a></span><span>
+</span><span id="line-326"></span><span>
+</span><span id="line-327"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621688046733"><span class="hs-identifier hs-type">notifications</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-328"></span><span>                </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-329"></span><span>                  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; SchemaSyncThreadType -&gt; Value -&gt; CacheRWT (ExceptT QErr m) ()
+forall (m :: * -&gt; *).
+(MonadTraceContext m, MonadIO m) =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logInfoTracing"><span class="hs-identifier hs-var">logInfoTracing</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046709"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046672"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-330"></span><span>                    </span><span class="annot"><span class="annottext">(Value -&gt; CacheRWT (ExceptT QErr m) ())
+-&gt; Value -&gt; CacheRWT (ExceptT QErr m) ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span>
+</span><span id="line-331"></span><span>                    </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><span class="hs-identifier hs-var">T.unwords</span></span><span>
+</span><span id="line-332"></span><span>                      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Fetched metadata notifications and received no notifications. Not updating the schema cache.&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-333"></span><span>                        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Only setting resource version:&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-334"></span><span>                        </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
+</span><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-var">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046730"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-335"></span><span>                        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;in schema cache&quot;</span></span><span>
+</span><span id="line-336"></span><span>                      </span><span class="hs-special">]</span><span>
+</span><span id="line-337"></span><span>                  </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; CacheRWT (ExceptT QErr m) ()
+forall (m :: * -&gt; *). CacheRWM m =&gt; MetadataResourceVersion -&gt; m ()
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#setMetadataResourceVersionInSchemaCache"><span class="hs-identifier hs-var">setMetadataResourceVersionInSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046730"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span>
+</span><span id="line-338"></span><span>                </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-339"></span><span>                  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; SchemaSyncThreadType -&gt; Value -&gt; CacheRWT (ExceptT QErr m) ()
+forall (m :: * -&gt; *).
+(MonadTraceContext m, MonadIO m) =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logInfoTracing"><span class="hs-identifier hs-var">logInfoTracing</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046709"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046672"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-340"></span><span>                    </span><span class="annot"><span class="annottext">(Value -&gt; CacheRWT (ExceptT QErr m) ())
+-&gt; Value -&gt; CacheRWT (ExceptT QErr m) ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Fetched metadata notifications and received some notifications. Updating the schema cache.&quot;</span></span><span>
+</span><span id="line-341"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688046736"><span class="annot"><span class="annottext">cacheInvalidations :: CacheInvalidations
+</span><a href="#local-6989586621688046736"><span class="hs-identifier hs-var hs-var hs-var">cacheInvalidations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-342"></span><span>                        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">((MetadataResourceVersion, CacheInvalidations) -&gt; Bool)
+-&gt; [(MetadataResourceVersion, CacheInvalidations)] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; MetadataResourceVersion -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046721"><span class="hs-identifier hs-var">engineResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+-&gt; MetadataResourceVersion -&gt; MetadataResourceVersion
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(MetadataResourceVersion -&gt; Bool)
+-&gt; ((MetadataResourceVersion, CacheInvalidations)
+    -&gt; MetadataResourceVersion)
+-&gt; (MetadataResourceVersion, CacheInvalidations)
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(MetadataResourceVersion, CacheInvalidations)
+-&gt; MetadataResourceVersion
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
+</span><a href="#local-6989586621688046733"><span class="hs-identifier hs-var">notifications</span></a></span><span>
+</span><span id="line-343"></span><span>                          </span><span class="hs-keyword">then</span><span> </span><span class="hs-comment">-- If (engineResourceVersion + 1) is in the list of notifications then</span><span>
+</span><span id="line-344"></span><span>                          </span><span class="hs-comment">-- we know that we haven't missed any.</span><span>
+</span><span id="line-345"></span><span>                            </span><span class="annot"><span class="annottext">[CacheInvalidations] -&gt; CacheInvalidations
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="annot"><span class="annottext">([CacheInvalidations] -&gt; CacheInvalidations)
+-&gt; [CacheInvalidations] -&gt; CacheInvalidations
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(MetadataResourceVersion, CacheInvalidations) -&gt; CacheInvalidations
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">((MetadataResourceVersion, CacheInvalidations)
+ -&gt; CacheInvalidations)
+-&gt; [(MetadataResourceVersion, CacheInvalidations)]
+-&gt; [CacheInvalidations]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
+</span><a href="#local-6989586621688046733"><span class="hs-identifier hs-var">notifications</span></a></span><span>
+</span><span id="line-346"></span><span>                          </span><span class="hs-keyword">else</span><span> </span><span class="hs-comment">-- Otherwise we may have missed some notifications so we need to invalidate the</span><span>
+</span><span id="line-347"></span><span>                          </span><span class="hs-comment">-- whole cache.</span><span>
+</span><span id="line-348"></span><span>
+</span><span id="line-349"></span><span>                            </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheInvalidations"><span class="hs-identifier hs-type">CacheInvalidations</span></a></span><span>
+</span><span id="line-350"></span><span>                              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ciMetadata :: Bool
+</span><a href="#local-6989586621688046742"><span class="hs-identifier hs-var">ciMetadata</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span>
+</span><span id="line-351"></span><span>                                </span><span class="annot"><span class="annottext">ciRemoteSchemas :: HashSet RemoteSchemaName
+</span><a href="#local-6989586621688046743"><span class="hs-identifier hs-var">ciRemoteSchemas</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[RemoteSchemaName] -&gt; HashSet RemoteSchemaName
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.Internal.html/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">HS.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([RemoteSchemaName] -&gt; HashSet RemoteSchemaName)
+-&gt; [RemoteSchemaName] -&gt; HashSet RemoteSchemaName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; [RemoteSchemaName]
+</span><a href="Hasura.RQL.Types.SchemaCache.html#getAllRemoteSchemas"><span class="hs-identifier hs-var">getAllRemoteSchemas</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621688046719"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-352"></span><span>                                </span><span class="annot"><span class="annottext">ciSources :: HashSet SourceName
+</span><a href="#local-6989586621688046746"><span class="hs-identifier hs-var">ciSources</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[SourceName] -&gt; HashSet SourceName
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.Internal.html/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">HS.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([SourceName] -&gt; HashSet SourceName)
+-&gt; [SourceName] -&gt; HashSet SourceName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap SourceName BackendSourceInfo -&gt; [SourceName]
+forall k v. HashMap k v -&gt; [k]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Internal.html/Data.HashMap.Internal.html#keys"><span class="hs-identifier hs-var">HashMap.keys</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap SourceName BackendSourceInfo -&gt; [SourceName])
+-&gt; HashMap SourceName BackendSourceInfo -&gt; [SourceName]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; HashMap SourceName BackendSourceInfo
+</span><a href="Hasura.RQL.Types.SchemaCache.html#scSources"><span class="hs-identifier hs-var">scSources</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621688046719"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-353"></span><span>                                </span><span class="annot"><span class="annottext">ciDataConnectors :: HashSet DataConnectorName
+</span><a href="#local-6989586621688046749"><span class="hs-identifier hs-var">ciDataConnectors</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-354"></span><span>                                  </span><span class="annot"><span class="annottext">HashSet DataConnectorName
+-&gt; (BackendInfoWrapper 'DataConnector -&gt; HashSet DataConnectorName)
+-&gt; Maybe (BackendInfoWrapper 'DataConnector)
+-&gt; HashSet DataConnectorName
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">HashSet DataConnectorName
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[DataConnectorName] -&gt; HashSet DataConnectorName
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.Internal.html/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">HS.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([DataConnectorName] -&gt; HashSet DataConnectorName)
+-&gt; (BackendInfoWrapper 'DataConnector -&gt; [DataConnectorName])
+-&gt; BackendInfoWrapper 'DataConnector
+-&gt; HashSet DataConnectorName
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HashMap DataConnectorName DataConnectorInfo -&gt; [DataConnectorName]
+forall k v. HashMap k v -&gt; [k]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Internal.html/Data.HashMap.Internal.html#keys"><span class="hs-identifier hs-var">HashMap.keys</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap DataConnectorName DataConnectorInfo
+ -&gt; [DataConnectorName])
+-&gt; (BackendInfoWrapper 'DataConnector
+    -&gt; HashMap DataConnectorName DataConnectorInfo)
+-&gt; BackendInfoWrapper 'DataConnector
+-&gt; [DataConnectorName]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">BackendInfoWrapper 'DataConnector
+-&gt; HashMap DataConnectorName DataConnectorInfo
+BackendInfoWrapper 'DataConnector -&gt; BackendInfo 'DataConnector
+forall (b :: BackendType). BackendInfoWrapper b -&gt; BackendInfo b
+</span><a href="Hasura.RQL.Types.SchemaCache.html#unBackendInfoWrapper"><span class="hs-identifier hs-var">unBackendInfoWrapper</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-355"></span><span>                                    </span><span class="annot"><span class="annottext">(Maybe (BackendInfoWrapper 'DataConnector)
+ -&gt; HashSet DataConnectorName)
+-&gt; Maybe (BackendInfoWrapper 'DataConnector)
+-&gt; HashSet DataConnectorName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+HasTag b =&gt;
+BackendMap i -&gt; Maybe (i b)
+</span><a href="Hasura.SQL.BackendMap.html#lookup"><span class="hs-identifier hs-var">BackendMap.lookup</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
+</span><span id="line-356"></span><span>                                    </span><span class="annot"><span class="annottext">(BackendMap BackendInfoWrapper
+ -&gt; Maybe (BackendInfoWrapper 'DataConnector))
+-&gt; BackendMap BackendInfoWrapper
+-&gt; Maybe (BackendInfoWrapper 'DataConnector)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; BackendMap BackendInfoWrapper
+</span><a href="Hasura.RQL.Types.SchemaCache.html#scBackendCache"><span class="hs-identifier hs-var">scBackendCache</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621688046719"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
+</span><span id="line-357"></span><span>                              </span><span class="hs-special">}</span><span>
+</span><span id="line-358"></span><span>                  </span><span class="annot"><span class="annottext">BuildReason
+-&gt; CacheInvalidations
+-&gt; Metadata
+-&gt; Maybe MetadataResourceVersion
+-&gt; CacheRWT (ExceptT QErr m) ()
+forall (m :: * -&gt; *).
+CacheRWM m =&gt;
+BuildReason
+-&gt; CacheInvalidations
+-&gt; Metadata
+-&gt; Maybe MetadataResourceVersion
+-&gt; m ()
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheWithOptions"><span class="hs-identifier hs-var">buildSchemaCacheWithOptions</span></a></span><span> </span><span class="annot"><span class="annottext">BuildReason
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#CatalogSync"><span class="hs-identifier hs-var">CatalogSync</span></a></span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
+</span><a href="#local-6989586621688046736"><span class="hs-identifier hs-var">cacheInvalidations</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688046729"><span class="hs-identifier hs-var">metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Maybe MetadataResourceVersion
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046730"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-359"></span><span>                  </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; CacheRWT (ExceptT QErr m) ()
+forall (m :: * -&gt; *). CacheRWM m =&gt; MetadataResourceVersion -&gt; m ()
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#setMetadataResourceVersionInSchemaCache"><span class="hs-identifier hs-var">setMetadataResourceVersionInSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046730"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span>
+</span><span id="line-360"></span><span>                  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; SchemaSyncThreadType -&gt; Value -&gt; CacheRWT (ExceptT QErr m) ()
+forall (m :: * -&gt; *).
+(MonadTraceContext m, MonadIO m) =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logInfoTracing"><span class="hs-identifier hs-var">logInfoTracing</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046709"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046672"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-361"></span><span>                    </span><span class="annot"><span class="annottext">(Value -&gt; CacheRWT (ExceptT QErr m) ())
+-&gt; Value -&gt; CacheRWT (ExceptT QErr m) ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span>
+</span><span id="line-362"></span><span>                    </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Schema cache updated with resource version: &quot;</span></span><span>
+</span><span id="line-363"></span><span>                    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
+</span><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-var">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688046730"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span>
+</span><span id="line-364"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688046715"><span class="hs-identifier hs-type">msg</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688046716"><span class="hs-identifier hs-type">cache</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-365"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#onLeft"><span class="hs-identifier hs-type">onLeft</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046710"><span class="hs-identifier hs-type">respErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logErrorTracing"><span class="hs-identifier hs-type">logErrorTracing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046709"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046672"><span class="hs-identifier hs-type">threadType</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">.</span></span><span> </span><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#TEQueryError"><span class="hs-identifier hs-type">TEQueryError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-366"></span><span>
+</span><span id="line-367"></span><span id="local-6989586621688045910"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-type">logInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688045910"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688045910"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-368"></span><span id="logInfo"><span class="annot"><span class="annottext">logInfo :: forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var hs-var">logInfo</span></a></span></span><span> </span><span id="local-6989586621688046762"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046762"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688046763"><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046763"><span class="hs-identifier hs-var">threadType</span></a></span></span><span> </span><span id="local-6989586621688046764"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688046764"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-369"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a Hasura, MonadIO m) =&gt;
+   a -&gt; m ()
+forall impl.
+Logger impl
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a impl, MonadIO m) =&gt;
+   a -&gt; m ()
+</span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046762"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-370"></span><span>    </span><span class="annot"><span class="annottext">(SchemaSyncLog -&gt; m ()) -&gt; SchemaSyncLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; SchemaSyncThreadType -&gt; Value -&gt; SchemaSyncLog
+</span><a href="Hasura.Server.Logging.html#SchemaSyncLog"><span class="hs-identifier hs-var">SchemaSyncLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046763"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688046764"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-371"></span><span>
+</span><span id="line-372"></span><span id="local-6989586621688045981"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logInfoTracing"><span class="hs-identifier hs-type">logInfoTracing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTraceContext"><span class="hs-identifier hs-type">Tracing.MonadTraceContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045981"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688045981"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688045981"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-373"></span><span id="logInfoTracing"><span class="annot"><span class="annottext">logInfoTracing :: forall (m :: * -&gt; *).
+(MonadTraceContext m, MonadIO m) =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logInfoTracing"><span class="hs-identifier hs-var hs-var">logInfoTracing</span></a></span></span><span> </span><span id="local-6989586621688046771"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046771"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688046772"><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046772"><span class="hs-identifier hs-var">threadType</span></a></span></span><span> </span><span id="local-6989586621688046773"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688046773"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-374"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a Hasura, MonadTraceContext m, MonadIO m) =&gt;
+   a -&gt; m ()
+forall impl.
+Logger impl
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a impl, MonadTraceContext m, MonadIO m) =&gt;
+   a -&gt; m ()
+</span><a href="Hasura.Logging.html#unLoggerTracing"><span class="hs-identifier hs-var">unLoggerTracing</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046771"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-375"></span><span>    </span><span class="annot"><span class="annottext">(SchemaSyncLog -&gt; m ()) -&gt; SchemaSyncLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; SchemaSyncThreadType -&gt; Value -&gt; SchemaSyncLog
+</span><a href="Hasura.Server.Logging.html#SchemaSyncLog"><span class="hs-identifier hs-var">SchemaSyncLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046772"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688046773"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-376"></span><span>
+</span><span id="line-377"></span><span id="local-6989586621688045908"><span id="local-6989586621688045909"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logError"><span class="hs-identifier hs-type">logError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688045908"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688045909"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688045909"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688045908"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-378"></span><span id="logError"><span class="annot"><span class="annottext">logError :: forall (m :: * -&gt; *) a.
+(MonadIO m, ToJSON a) =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; a -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logError"><span class="hs-identifier hs-var hs-var">logError</span></a></span></span><span> </span><span id="local-6989586621688046785"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046785"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688046786"><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046786"><span class="hs-identifier hs-var">threadType</span></a></span></span><span> </span><span id="local-6989586621688046787"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688046787"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-379"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a Hasura, MonadIO m) =&gt;
+   a -&gt; m ()
+forall impl.
+Logger impl
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a impl, MonadIO m) =&gt;
+   a -&gt; m ()
+</span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046785"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-380"></span><span>    </span><span class="annot"><span class="annottext">(SchemaSyncLog -&gt; m ()) -&gt; SchemaSyncLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; SchemaSyncThreadType -&gt; Value -&gt; SchemaSyncLog
+</span><a href="Hasura.Server.Logging.html#SchemaSyncLog"><span class="hs-identifier hs-var">SchemaSyncLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046786"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-381"></span><span>    </span><span class="annot"><span class="annottext">(Value -&gt; SchemaSyncLog) -&gt; Value -&gt; SchemaSyncLog
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688046787"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-382"></span><span>
+</span><span id="line-383"></span><span id="local-6989586621688046017"><span id="local-6989586621688046018"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logErrorTracing"><span class="hs-identifier hs-type">logErrorTracing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTraceContext"><span class="hs-identifier hs-type">Tracing.MonadTraceContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046017"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688046017"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688046018"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688046018"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688046017"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-384"></span><span id="logErrorTracing"><span class="annot"><span class="annottext">logErrorTracing :: forall (m :: * -&gt; *) a.
+(MonadTraceContext m, MonadIO m, ToJSON a) =&gt;
+Logger Hasura -&gt; SchemaSyncThreadType -&gt; a -&gt; m ()
+</span><a href="Hasura.Server.SchemaUpdate.html#logErrorTracing"><span class="hs-identifier hs-var hs-var">logErrorTracing</span></a></span></span><span> </span><span id="local-6989586621688046801"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046801"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688046802"><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046802"><span class="hs-identifier hs-var">threadType</span></a></span></span><span> </span><span id="local-6989586621688046803"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688046803"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-385"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a Hasura, MonadTraceContext m, MonadIO m) =&gt;
+   a -&gt; m ()
+forall impl.
+Logger impl
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a impl, MonadTraceContext m, MonadIO m) =&gt;
+   a -&gt; m ()
+</span><a href="Hasura.Logging.html#unLoggerTracing"><span class="hs-identifier hs-var">unLoggerTracing</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688046801"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-386"></span><span>    </span><span class="annot"><span class="annottext">(SchemaSyncLog -&gt; m ()) -&gt; SchemaSyncLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; SchemaSyncThreadType -&gt; Value -&gt; SchemaSyncLog
+</span><a href="Hasura.Server.Logging.html#SchemaSyncLog"><span class="hs-identifier hs-var">SchemaSyncLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
+</span><a href="#local-6989586621688046802"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-387"></span><span>    </span><span class="annot"><span class="annottext">(Value -&gt; SchemaSyncLog) -&gt; Value -&gt; SchemaSyncLog
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688046803"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-388"></span></pre></body></html>
