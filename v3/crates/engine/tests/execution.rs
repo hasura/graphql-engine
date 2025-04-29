@@ -1454,6 +1454,24 @@ fn test_model_select_many_permission_filter_nested_select_object() -> anyhow::Re
 }
 
 #[test]
+fn test_model_select_many_permission_filter_nested_select_object_is_null() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/permission_filter/nested_select/object_is_null",
+        &["execute/models/select_many/permission_filter/nested_select/common-metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/postgres_connector_ndc_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/postgres_connector_ndc_v02_schema.json"],
+            ),
+        ]),
+    )
+}
+
+#[test]
 fn test_model_select_many_permission_filter_nested_relationships() -> anyhow::Result<()> {
     common::test_execution_expectation_for_multiple_ndc_versions(
         "execute/models/select_many/permission_filter/nested_relationships",
