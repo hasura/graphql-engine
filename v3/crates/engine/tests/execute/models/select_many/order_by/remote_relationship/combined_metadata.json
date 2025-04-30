@@ -1766,7 +1766,7 @@
                 }
               },
               "capabilities": {
-                "version": "0.2.0",
+                "version": "0.2.1",
                 "capabilities": {
                   "query": {
                     "aggregates": {
@@ -1824,6 +1824,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -1852,6 +1853,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -1927,6 +1929,7 @@
                       "scalar": {
                         "abs": {},
                         "and": {},
+                        "array_element": {},
                         "btrim": {},
                         "ceil": {},
                         "character_length": {},
@@ -1955,6 +1958,7 @@
                         "divide": {},
                         "exp": {},
                         "floor": {},
+                        "get_field": {},
                         "greatest": {},
                         "least": {},
                         "left": {},
@@ -2030,6 +2034,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2058,6 +2063,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -2134,6 +2140,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2162,6 +2169,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -2216,7 +2224,11 @@
                         "left": {},
                         "right": {},
                         "inner": {},
-                        "full": {}
+                        "full": {},
+                        "left_semi": {},
+                        "left_anti": {},
+                        "right_semi": {},
+                        "right_anti": {}
                       }
                     },
                     "aggregate": {
@@ -2244,6 +2256,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2272,6 +2285,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -2349,6 +2363,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2377,6 +2392,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -4196,7 +4212,7 @@
                 }
               },
               "capabilities": {
-                "version": "0.2.0",
+                "version": "0.2.1",
                 "capabilities": {
                   "query": {
                     "aggregates": {
@@ -4254,6 +4270,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4282,6 +4299,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -4357,6 +4375,7 @@
                       "scalar": {
                         "abs": {},
                         "and": {},
+                        "array_element": {},
                         "btrim": {},
                         "ceil": {},
                         "character_length": {},
@@ -4385,6 +4404,7 @@
                         "divide": {},
                         "exp": {},
                         "floor": {},
+                        "get_field": {},
                         "greatest": {},
                         "least": {},
                         "left": {},
@@ -4460,6 +4480,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4488,6 +4509,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -4564,6 +4586,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4592,6 +4615,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -4646,7 +4670,11 @@
                         "left": {},
                         "right": {},
                         "inner": {},
-                        "full": {}
+                        "full": {},
+                        "left_semi": {},
+                        "left_anti": {},
+                        "right_semi": {},
+                        "right_anti": {}
                       }
                     },
                     "aggregate": {
@@ -4674,6 +4702,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4702,6 +4731,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -4779,6 +4809,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -4807,6 +4838,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},

@@ -293,6 +293,10 @@ fn convert_relation_to_logical_plan(
                 JoinType::Right => datafusion::logical_expr::JoinType::Right,
                 JoinType::Inner => datafusion::logical_expr::JoinType::Inner,
                 JoinType::Full => datafusion::logical_expr::JoinType::Full,
+                JoinType::LeftAnti => datafusion::logical_expr::JoinType::LeftAnti,
+                JoinType::LeftSemi => datafusion::logical_expr::JoinType::LeftSemi,
+                JoinType::RightAnti => datafusion::logical_expr::JoinType::RightAnti,
+                JoinType::RightSemi => datafusion::logical_expr::JoinType::RightSemi,
             };
 
             let join_schema = datafusion::logical_expr::build_join_schema(

@@ -1250,7 +1250,7 @@ dependencies = [
  "indexmap 2.9.0",
  "iso8601",
  "itertools 0.14.0",
- "ndc-models 0.2.1",
+ "ndc-models 0.2.2",
  "regex",
  "serde",
  "serde_arrow",
@@ -2066,7 +2066,7 @@ dependencies = [
  "metadata-resolve",
  "mockito",
  "ndc-models 0.1.6",
- "ndc-models 0.2.1",
+ "ndc-models 0.2.2",
  "nonempty",
  "open-dds",
  "plan-types",
@@ -2370,7 +2370,7 @@ dependencies = [
  "lang-graphql",
  "metadata-resolve",
  "ndc-models 0.1.6",
- "ndc-models 0.2.1",
+ "ndc-models 0.2.2",
  "nonempty",
  "open-dds",
  "plan-types",
@@ -3268,7 +3268,7 @@ dependencies = [
  "jsonapi 0.7.0",
  "jsonpath",
  "metadata-resolve",
- "ndc-models 0.2.1",
+ "ndc-models 0.2.2",
  "oas3",
  "open-dds",
  "plan",
@@ -3577,7 +3577,7 @@ dependencies = [
  "jsonpath",
  "lang-graphql",
  "ndc-models 0.1.6",
- "ndc-models 0.2.1",
+ "ndc-models 0.2.2",
  "nonempty",
  "open-dds",
  "partition_eithers",
@@ -3706,8 +3706,8 @@ dependencies = [
 
 [[package]]
 name = "ndc-models"
-version = "0.2.1"
-source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.2.1#c50e190172ac4fed1ebff77fc2acf3fa629ad404"
+version = "0.2.2"
+source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.2.2#32ee48bd9ec62a09faaab38b0569121a12fd9f10"
 dependencies = [
  "indexmap 2.9.0",
  "ref-cast",
@@ -3926,7 +3926,7 @@ dependencies = [
  "jsonpath",
  "jsonschema-tidying",
  "ndc-models 0.1.6",
- "ndc-models 0.2.1",
+ "ndc-models 0.2.2",
  "opendds-derive",
  "pretty_assertions",
  "ref-cast",

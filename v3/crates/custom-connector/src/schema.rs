@@ -83,6 +83,10 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
                         right: Some(ndc_models::LeafCapability {}),
                         inner: Some(ndc_models::LeafCapability {}),
                         full: Some(ndc_models::LeafCapability {}),
+                        left_semi: Some(ndc_models::LeafCapability {}),
+                        left_anti: Some(ndc_models::LeafCapability {}),
+                        right_semi: Some(ndc_models::LeafCapability {}),
+                        right_anti: Some(ndc_models::LeafCapability {}),
                     },
                 }),
                 aggregate: Some(ndc_models::RelationalAggregateCapabilities {
