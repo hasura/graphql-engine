@@ -575,12 +575,13 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                   $ fromString
                   $ "A Websocket client may be misbehaving. This was raised while handling the connection: "
                   <> show e,
-            -- Anything not caught above will be re-raised:
+            -- Anything not caught above will be re-raised. Nonexhaustive list of things observed here:
+            --   - tryReceive: timeout (Connection timed out)
             Handler $ \(e :: SomeException) -> do
               writeLog
                 $ L.UnstructuredLog L.LevelError
                 $ fromString
-                $ "Unexpected exception raised in websocket. Please report this as a bug: "
+                $ "Exception raised in websocket: "
                 <> show e
               throwIO e
           ]
