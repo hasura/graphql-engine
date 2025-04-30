@@ -20,20 +20,42 @@ import Troubleshooting from '@site/static/icons/features/troubleshooting.svg';
 
 This section provides references that can help in troubleshooting errors when developing with Hasura.
 
+## Logs
+
+In order to find out about the origins of an error, it can be helpful to check the logs.
+
+:::info Metrics and distributed tracing in Hasura Cloud
+
+Hasura Cloud includes metrics and distributed tracing which makes troubleshooting faster. For more information, see
+[Metrics](/observability/overview.mdx) and [Tracing](/observability/cloud-monitoring/tracing.mdx) in Hasura Cloud.
+
+:::
+
+### Server logs
+
+For errors that come from the Hasura server, server logs will give you more insights. For details on how you can access
+these logs, as well as different log types, visit [this page](/deployment/logging.mdx).
+
+### Console logs
+
+Should there be any error coming from the Hasura Console UI, they will show up in the Browser dev tools.
+
+### Remote service logs
+
+Errors can come from a remote service, such as [Remote Schemas](/remote-schemas/overview.mdx),
+[Events](/event-triggers/overview.mdx) or [Actions](/actions/overview.mdx). In this case, check the errors of the
+respective remote service. For Actions, check out this [debugging page](/actions/debugging.mdx).
+
 ## GraphQL Errors
 
 Encountering errors while using GraphQL? Learn about typical issues like schema mismatches, query failures, and
 permission settings, along with their solutions, [visit the page](/resources/graphQLerrors/)
 
+
 ## Performance Issues
 
 Performance bottlenecks can hinder your application's efficiency. Explore strategies to identify and resolve slow
 queries, high memory usage, and latency problems, [visit the page](/observability/troubleshoot)
-
-## Integration Challenges/Processes with Third-Party Tools
-
-Integrating with third-party tools can be complex. This section outlines common challenges and best practices to ensure
-smooth interoperability, [visit the page](/observability/troubleshoot)
 
 ## Observability
 

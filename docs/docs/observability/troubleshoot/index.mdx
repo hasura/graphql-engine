@@ -18,9 +18,7 @@ sidebar_position: 1
 
 ## Overview
 
-Observability is essential for identifying and resolving issues in real time. This guide provides a detailed approach to
-troubleshooting observability-related challenges in Hasura deployments. The focus is on efficient monitoring, debugging,
-and utilizing tools such as metrics, logs, and traces to maintain healthy and performant systems.
+Observability is essential for identifying and resolving issues in real time. This guide provides a detailed approach to troubleshooting observability-related challenges in Hasura deployments. The focus is on efficient monitoring, debugging, and utilizing tools such as metrics, logs, and traces to maintain healthy and performant systems.
 
 ---
 
@@ -31,103 +29,76 @@ and utilizing tools such as metrics, logs, and traces to maintain healthy and pe
 - **Loki**: For log aggregation and querying.
 - **Tempo (or Jaeger)**: For tracing requests and analyzing performance bottlenecks.
 
-These tools work together to provide deep insights into your application, enabling quick detection and resolution of
-issues.
+These tools work together to provide deep insights into your application, enabling quick detection and resolution of issues.
 
 ---
 
-## Troubleshooting Traces
+## What is Observability?
 
-### Understanding Traces
+The ability to gauge a system's internal conditions by examining its outputs is known as **observability**. If the current state of a system can be inferred solely from its outputs—like logs, metrics, and traces—then the system is considered observable.
 
-To fully understand and utilize traces, refer to the following resources:
+Without observability, identifying system issues becomes reactive and time-consuming. Observability enables you to:
 
-- [Hasura OpenTelemetry Docs](/observability/opentelemetry/graphql-engine/#available-traces)
-- [Using OpenTelemetry Traces with Hasura](https://hasura.io/blog/using-opentelemetry-traces-observe-hasura-powered-applications)
+- Gain insights into the functionality and health of your systems.
+- Collect, store, and visualize data to monitor behaviors and trends.
+- Set up alerts for early detection of anomalies or failures.
+- Use distributed tracing to gain end-to-end visibility into real user requests.
+- Audit, debug, and analyze logs from all services and infrastructure at scale.
 
-Traces provide valuable insights into the flow of requests and performance bottlenecks. They typically list spans with
-details such as operation execution time, database queries, and the request lifecycle.
+### Three Pillars of Observability
 
-### Major Spans in Hasura
+The three foundational pillars of observability are:
 
-- `/v1/graphql`: Responsible for executing the GraphQL query.
-- **Resolve Query Execution Plan**: Includes parsing and planning of the GraphQL query.
+- **Logs**: Structured or unstructured messages produced by services that give insights into system behavior.
+- **Metrics**: Numerical data collected over time to measure system performance and usage.
+- **Traces**: Distributed data showing the journey of a single request through the system.
 
-### Common Tags in Traces
-
-- `db.query`: SQL queries performed on the database.
-- `db.system`: Database system name.
-- `enduser.role`: The role of the end user.
-- `graphql.operation.type`: The type of GraphQL operation.
-- `graphql.operation.name`: The name of the GraphQL operation.
-- `graphql.query`: The GraphQL query from the client.
-- `request_id`: The unique request identifier.
-- `service.name`: The name of the GraphQL service.
-- `source.kind`: The source of the database.
-- `status`: The query's status.
-
-### Filtering Traces
-
-You can filter traces using any of the above tags. Here are some examples:
-
-1. **Gather traces for admin role**:
-   ```bash
-   {resource.service.name="hasura" && span.enduser.role="admin"}
-   ```
-2. **Gather traces for a specific operation name**:
-   ```bash
-   {resource.service.name="hasura" && span.graphql.operation.name="test"}
-   ```
-3. **Gather traces for mutations**:
-   ```bash
-   {resource.service.name="hasura" && span.graphql.operation.type="mutation"}
-   ```
-4. **Filter traces with duration greater than 3 seconds**:
-   ```bash
-   {resource.service.name="hasura" && name="/v1/graphql" && duration > 3s}
-   ```
+These components don’t make a system observable by themselves—but when integrated and interpreted properly, they form a powerful framework for monitoring and debugging.
 
 ---
 
-## How to Use Traces Effectively
+## Logs
 
-Traces are invaluable for debugging, performance analysis, and understanding request flows. This section explains how to
-leverage traces, including their integration with Error TraceQL queries, alerts, and how to use `request_id` and
-`trace_id` for pinpointing issues.
+Logs offer granular visibility into what's happening inside your Hasura deployment. Depending on your Hasura Enterprise Edition deployment model (Docker, Kubernetes, etc.), logs can be exported and processed using appropriate logging drivers or agents.
 
-### Error TraceQL Queries
+We recommend forwarding container logs to Loki or your centralized logging system to:
 
-Error TraceQL queries allow you to filter and analyze traces based on specific error conditions in your GraphQL
-operations. With TraceQL, you can:
+- Search and filter logs by label (e.g., service, pod, severity).
+- Correlate logs with metrics and traces.
+- Retain logs for audit and compliance.
 
-- Identify failed operations and their causes.
-- Filter traces by operation name, error type, or error message.
-- Perform root cause analysis by following the flow of failed requests.
 
-### Request ID and Trace ID
+---
 
-Both `request_id` and `trace_id` are critical for tracking and debugging GraphQL operations. They provide a unique way
-to trace the request lifecycle across various services, helping you isolate issues.
+## Metrics
 
-### Visualizing Traces
+Metrics provide numerical insight into the health and performance of your Hasura services. Hasura exposes metrics that can be visualized through pre-built [Grafana dashboards](https://github.com/hasura/postsales/tree/main/Observability/self-hosted/docker-based/grafana).
 
-Traces provide a comprehensive view of GraphQL errors and performance. They help you:
+Key metrics include:
 
-- Visualize where the request failed (e.g., authorization, SQL execution).
-- Understand dependencies between nested GraphQL fields and operations.
-- Debug complex issues involving multiple layers (e.g., resolvers, remote schemas).
+- Query execution time
+- Cache hit/miss rates
+- Request throughput and error rates
 
-### SQL Query Insights
+These help monitor golden signals like latency, traffic, errors, and saturation.
 
-Traces reveal the exact SQL queries generated by Hasura, which is crucial for debugging database issues or optimizing
-performance. Traces help you:
+---
 
-- Identify slow database queries.
-- Track the execution time of queries at various stages.
-- Optimize query performance based on trace data.
+## Traces
 
-### Identifying Long-Running Database Processes
+Traces capture the full lifecycle of requests within Hasura, helping pinpoint where time is spent. Distributed tracing tools like Tempo or Jaeger can help you:
 
-Traces help identify long-running queries, which are critical for performance optimization. By pinpointing which parts
-of the request consumed the most time in the database, you can optimize slow-performing queries and improve overall
-system efficiency.
+- Track request flow across services
+- Identify performance bottlenecks
+- Visualize time spent in resolvers, remote joins, or database operations
+
+Instrument your services with OpenTelemetry to send trace data to a tracing backend, and visualize with Grafana.
+
+Once set up, trace graphs provide powerful context during debugging and performance analysis.
+
+---
+
+## Final Notes
+
+Setting up a robust observability stack is essential for ensuring reliable and performant Hasura deployments. Logs, metrics, and traces together give you the visibility needed to detect, investigate, and resolve issues faster.
+
