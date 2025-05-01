@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- Fixed a bug where scalar type lookups in remote relationships would fail due
+  to looking up in the source rather than target data connector
+
 ### Changed
 
 ### Added

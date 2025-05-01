@@ -12,7 +12,8 @@ use open_dds::{data_connector::DataConnectorName, models::ModelName, types::Cust
 use std::collections::BTreeMap;
 pub use types::{
     FilterPermission, ModelPermissionIssue, ModelPermissionsOutput, ModelPredicate,
-    ModelTargetSource, ModelWithPermissions, SelectPermission, UnaryComparisonOperator,
+    ModelTargetSource, ModelWithPermissions, PredicateRelationshipInfo, SelectPermission,
+    UnaryComparisonOperator,
 };
 mod model_permission;
 pub(crate) use predicate::resolve_model_predicate_with_type;

@@ -199,19 +199,28 @@ fn convert_data_connectors_contexts<'a>(
     data_connector_scalars
 }
 
+pub enum GetSimpleScalarFailureReason {
+    ScalarNotFound(ndc_models::TypeName),
+    IsArray,
+    IsPredicate,
+}
+
 // helper function to determine whether a ndc type is a simple scalar
 pub fn get_simple_scalar<'a>(
     t: ndc_models::Type,
     scalars: &'a DataConnectorScalars<'a>,
-) -> Option<&'a ScalarTypeWithRepresentationInfo<'a>> {
+) -> Result<&'a ScalarTypeWithRepresentationInfo<'a>, GetSimpleScalarFailureReason> {
     match t {
-        ndc_models::Type::Named { name } => scalars.by_ndc_type.get(name.as_str()),
+        ndc_models::Type::Named { name } => scalars
+            .by_ndc_type
+            .get(name.as_str())
+            .ok_or_else(|| GetSimpleScalarFailureReason::ScalarNotFound(name.clone())),
         ndc_models::Type::Nullable { underlying_type } => {
             get_simple_scalar(*underlying_type, scalars)
         }
-        ndc_models::Type::Array { element_type: _ }
-        | ndc_models::Type::Predicate {
+        ndc_models::Type::Array { element_type: _ } => Err(GetSimpleScalarFailureReason::IsArray),
+        ndc_models::Type::Predicate {
             object_type_name: _,
-        } => None,
+        } => Err(GetSimpleScalarFailureReason::IsPredicate),
     }
 }

@@ -150,7 +150,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 },
             )?;
 
-        if let Some(scalar_type_info) = data_connector_scalar_types::get_simple_scalar(
+        if let Ok(scalar_type_info) = data_connector_scalar_types::get_simple_scalar(
             field_mapping.column_type.clone(),
             scalar_types,
         ) {

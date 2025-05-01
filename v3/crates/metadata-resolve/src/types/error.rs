@@ -419,6 +419,16 @@ pub enum TypePredicateError {
         data_connector: Qualified<DataConnectorName>,
     },
     #[error(
+        "field '{field_name}' of type '{type_name}' used in a field comparison has the unknown NDC type '{ndc_type_name}' and therefore cannot be compared to a single value"
+    )]
+    UnsupportedFieldComparisonToUnknownType {
+        field_name: Spanned<FieldName>,
+        field_type: QualifiedTypeReference,
+        type_name: Qualified<CustomTypeName>,
+        ndc_type_name: ndc_models::TypeName,
+    },
+
+    #[error(
         "field '{field_name}' of type '{type_name}' used in a field comparison is an array type and therefore cannot be compared to a single value"
     )]
     UnsupportedFieldComparisonToArrayType {
@@ -426,6 +436,15 @@ pub enum TypePredicateError {
         field_type: QualifiedTypeReference,
         type_name: Qualified<CustomTypeName>,
     },
+    #[error(
+        "field '{field_name}' of type '{type_name}' used in a field comparison is a predicate type and therefore cannot be compared to a single value"
+    )]
+    UnsupportedFieldComparisonToPredicateType {
+        field_name: Spanned<FieldName>,
+        field_type: QualifiedTypeReference,
+        type_name: Qualified<CustomTypeName>,
+    },
+
     #[error("Invalid operator used in type '{type_name:}' predicate: '{operator_name:}'")]
     InvalidOperatorInTypePredicate {
         type_name: Qualified<CustomTypeName>,
@@ -571,6 +590,25 @@ impl ContextualError for TypePredicateError {
                     }
                 ))
             },
+            TypePredicateError::UnsupportedFieldComparisonToPredicateType { field_name, field_type, type_name } => {
+                Some(Context::from_step(
+                    error_context::Step {
+                        message: format!("The type of this field ({field_type}) is a predicate type and therefore it cannot be compared to a single value"),
+                        path: field_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                )) },
+
+            TypePredicateError::UnsupportedFieldComparisonToUnknownType { ndc_type_name, field_name, field_type, type_name } => {
+                Some(Context::from_step(
+                    error_context::Step {
+                        message: format!("The type of this field ({field_type}) is the unknown NDC type '{ndc_type_name}' and therefore it cannot be compared to a single value"),
+                        path: field_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                ))
+            },
+
             TypePredicateError::OperatorNotFoundForField { field_name, field_type, operator_name } => {
                 Some(Context::from_step(
                     error_context::Step {

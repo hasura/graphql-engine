@@ -52,18 +52,6 @@ pub fn resolve_model_predicate_with_model(
         }
     })?;
 
-    // get available scalars defined for this data connector
-    let scalars = data_connector_scalars
-        .get(&model_source.data_connector.name)
-        .ok_or_else(
-            || ModelPermissionError::SelectFilterPermissionTypePredicateError {
-                error: TypePredicateError::UnknownTypeDataConnector {
-                    type_name: model.data_type.clone(),
-                    data_connector: model_source.data_connector.name.clone(),
-                },
-            },
-        )?;
-
     // get the type that the expression is based on
     let object_type_representation =
         object_types
@@ -81,7 +69,7 @@ pub fn resolve_model_predicate_with_model(
         boolean_expression,
         &model_source.type_mappings,
         &model_source.data_connector,
-        scalars,
+        data_connector_scalars,
         object_types,
         scalar_types,
         boolean_expression_types,
@@ -99,7 +87,10 @@ pub(crate) fn resolve_model_predicate_with_type(
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     data_connector_link: &data_connectors::DataConnectorLink,
-    scalars: &data_connector_scalar_types::DataConnectorScalars,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -126,7 +117,7 @@ pub(crate) fn resolve_model_predicate_with_type(
             boolean_expression,
             data_connector_type_mappings,
             data_connector_link,
-            scalars,
+            data_connector_scalars,
             object_types,
         )?),
         open_dds::permissions::ModelPredicate::FieldIsNull(
@@ -156,7 +147,7 @@ pub(crate) fn resolve_model_predicate_with_type(
             boolean_expression,
             data_connector_type_mappings,
             data_connector_link,
-            scalars,
+            data_connector_scalars,
             scalar_types,
             models,
         ),
@@ -180,7 +171,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                     boolean_expression,
                     data_connector_type_mappings,
                     data_connector_link,
-                    scalars,
+                    data_connector_scalars,
                     scalar_types,
                     boolean_expression_types,
                 )
@@ -204,7 +195,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                 boolean_expression,
                 data_connector_type_mappings,
                 data_connector_link,
-                scalars,
+                data_connector_scalars,
                 object_types,
                 scalar_types,
                 boolean_expression_types,
@@ -224,7 +215,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                     boolean_expression,
                     data_connector_type_mappings,
                     data_connector_link,
-                    scalars,
+                    data_connector_scalars,
                     object_types,
                     scalar_types,
                     boolean_expression_types,
@@ -245,7 +236,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                     boolean_expression,
                     data_connector_type_mappings,
                     data_connector_link,
-                    scalars,
+                    data_connector_scalars,
                     object_types,
                     scalar_types,
                     boolean_expression_types,
@@ -272,7 +263,10 @@ fn resolve_nested_field(
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     data_connector_link: &data_connectors::DataConnectorLink,
-    scalars: &data_connector_scalar_types::DataConnectorScalars,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
 ) -> Result<ModelPredicate, TypePredicateError> {
@@ -361,7 +355,7 @@ fn resolve_nested_field(
         nested_boolean_expression_type,
         data_connector_type_mappings,
         data_connector_link,
-        scalars,
+        data_connector_scalars,
         object_types,
         scalar_types,
         boolean_expression_types,
@@ -384,7 +378,10 @@ fn resolve_relationship(
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     data_connector_link: &data_connectors::DataConnectorLink,
-    scalars: &data_connector_scalar_types::DataConnectorScalars,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<ModelPredicate, TypePredicateError> {
@@ -561,7 +558,7 @@ fn resolve_relationship(
         target_boolean_expression,
         &target_source.model.type_mappings,
         &target_source.model.data_connector,
-        scalars,
+        data_connector_scalars,
         object_types,
         scalar_types,
         boolean_expression_types,
@@ -676,7 +673,10 @@ fn resolve_field_comparison(
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     data_connector_link: &data_connectors::DataConnectorLink,
-    scalars: &data_connector_scalar_types::DataConnectorScalars,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -710,19 +710,45 @@ fn resolve_field_comparison(
             type_name: type_name.clone(),
         })?;
 
+    // get available scalars defined for this data connector
+    let scalars = data_connector_scalars
+        .get(&data_connector_link.name)
+        .ok_or_else(|| TypePredicateError::UnknownTypeDataConnector {
+            type_name: type_name.clone(),
+            data_connector: data_connector_link.name.clone(),
+        })?;
+
     // Determine ndc type of the field
     let field_ndc_type = &field_mapping.column_type;
 
     // Get scalar type info from the data connector
     let scalar_type_info =
-        data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)
-            .ok_or_else(
-                || TypePredicateError::UnsupportedFieldComparisonToArrayType {
+        data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars).map_err(
+            |reason| match reason {
+                data_connector_scalar_types::GetSimpleScalarFailureReason::IsArray => {
+                    TypePredicateError::UnsupportedFieldComparisonToArrayType {
+                        field_name: field.clone(),
+                        field_type: field_definition.field_type.clone(),
+                        type_name: type_name.clone(),
+                    }
+                }
+                data_connector_scalar_types::GetSimpleScalarFailureReason::IsPredicate => {
+                    TypePredicateError::UnsupportedFieldComparisonToPredicateType {
+                        field_name: field.clone(),
+                        field_type: field_definition.field_type.clone(),
+                        type_name: type_name.clone(),
+                    }
+                }
+                data_connector_scalar_types::GetSimpleScalarFailureReason::ScalarNotFound(
+                    ndc_type_name,
+                ) => TypePredicateError::UnsupportedFieldComparisonToUnknownType {
+                    type_name: type_name.clone(),
                     field_name: field.clone(),
                     field_type: field_definition.field_type.clone(),
-                    type_name: type_name.clone(),
+                    ndc_type_name,
                 },
-            )?;
+            },
+        )?;
 
     // for newer boolean expressions we already have the information we need
     let (data_connector_operator_name, argument_type) = match boolean_expression.and_then(|b| {

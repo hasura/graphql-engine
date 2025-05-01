@@ -15,7 +15,7 @@ use crate::stages::{
     models_graphql, object_relationships, object_types, scalar_types, type_permissions,
 };
 use crate::types::error::ShouldBeAnError;
-use crate::types::error::{Error, TypeError, TypePredicateError};
+use crate::types::error::{Error, TypeError};
 use crate::types::permission::ValueExpressionOrPredicate;
 use crate::types::subgraph::{ArgumentInfo, ArgumentKind, Qualified, QualifiedTypeReference};
 
@@ -384,14 +384,6 @@ pub(crate) fn resolve_value_expression_for_argument(
             let object_type_representation =
                 get_object_type_for_boolean_expression(boolean_expression_type, object_types)?;
 
-            // Get available scalars defined for this data connector
-            let specific_data_connector_scalars = data_connector_scalars
-                .get(&data_connector_link.name)
-                .ok_or_else(|| TypePredicateError::UnknownTypeDataConnector {
-                    type_name: base_type.clone(),
-                    data_connector: data_connector_link.name.clone(),
-                })?;
-
             let resolved_model_predicate = model_permissions::resolve_model_predicate_with_type(
                 flags,
                 bool_exp,
@@ -401,7 +393,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 Some(boolean_expression_type),
                 data_connector_type_mappings,
                 data_connector_link,
-                specific_data_connector_scalars,
+                data_connector_scalars,
                 object_types,
                 scalar_types,
                 boolean_expression_types,

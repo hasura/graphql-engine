@@ -38,8 +38,8 @@ pub use stages::data_connectors::{
 };
 pub use stages::graphql_config::{GlobalGraphqlConfig, MultipleOrderByInputObjectFields};
 pub use stages::model_permissions::{
-    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
-    UnaryComparisonOperator,
+    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
+    PredicateRelationshipInfo, SelectPermission, UnaryComparisonOperator,
 };
 pub use stages::models::{Model, ModelSource, ModelsError};
 pub use stages::models_graphql::{
