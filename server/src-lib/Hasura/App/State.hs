@@ -148,7 +148,8 @@ data AppEnv = AppEnv
     appEnvAsyncActionsFetchBatchSize :: Int,
     appEnvPersistedQueries :: PersistedQueriesState,
     appEnvPersistedQueriesTtl :: Int,
-    appEnvPreserve401Errors :: Preserve401ErrorsStatus
+    appEnvPreserve401Errors :: Preserve401ErrorsStatus,
+    appServerTimeout :: Refined NonNegative Int
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed

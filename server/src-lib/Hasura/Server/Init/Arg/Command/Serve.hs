@@ -75,6 +75,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     remoteSchemaResponsePriorityOption,
     configuredHeaderPrecedenceOption,
     traceQueryStatusOption,
+    serverTimeoutOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -177,6 +178,7 @@ serveCommandParser =
     <*> parseTraceQueryStatus
     <*> parseDisableNativeQueryValidation
     <*> parsePreserve401Errors
+    <*> parseServerTimeout
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1427,6 +1429,25 @@ preserve401ErrorsOption =
         "Preserve HTTP 401 status codes from webhook auth responses and JWT auth failures. (default: false)"
     }
 
+serverTimeoutOption :: Config.Option (Refined NonNegative Int)
+serverTimeoutOption =
+  Config.Option
+    { Config._default = $$(refineTH @NonNegative @Int 30),
+      Config._envVar = "HASURA_GRAPHQL_SERVER_TIMEOUT",
+      Config._helpMessage =
+        "Timeout for server requests in seconds (default: 30). Connections with slow progress may close, often after up to twice this time."
+    }
+
+parseServerTimeout :: Opt.Parser (Maybe (Refined NonNegative Int))
+parseServerTimeout =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "server-timeout"
+          <> Opt.metavar "<INTERVAL (seconds)>"
+          <> Opt.help (Config._helpMessage serverTimeoutOption)
+      )
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1534,6 +1555,7 @@ serveCmdFooter =
         Config.optionPP persistedQueriesOption,
         Config.optionPP persistedQueriesTtlOption,
         Config.optionPP configuredHeaderPrecedenceOption,
-        Config.optionPP preserve401ErrorsOption
+        Config.optionPP preserve401ErrorsOption,
+        Config.optionPP serverTimeoutOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

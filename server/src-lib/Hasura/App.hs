@@ -503,7 +503,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvAsyncActionsFetchBatchSize = soAsyncActionsFetchBatchSize,
           appEnvPersistedQueries = soPersistedQueries,
           appEnvPersistedQueriesTtl = soPersistedQueriesTtl,
-          appEnvPreserve401Errors = soPreserve401Errors
+          appEnvPreserve401Errors = soPreserve401Errors,
+          appServerTimeout = soServerTimeout
         }
     )
 
@@ -987,6 +988,7 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
           . Warp.setServerName ""
           . setForkIOWithMetrics
           . Warp.setMaxTotalHeaderLength appEnvMaxTotalHeaderLength
+          . Warp.setTimeout (unrefine appServerTimeout)
           $ Warp.defaultSettings
 
       setForkIOWithMetrics :: Warp.Settings -> Warp.Settings

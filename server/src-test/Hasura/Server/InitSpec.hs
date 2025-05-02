@@ -106,7 +106,8 @@ emptyServeOptionsRaw =
       rsoHeaderPrecedence = Nothing,
       rsoTraceQueryStatus = Nothing,
       rsoDisableNativeQueryValidation = NativeQuery.AlwaysValidateNativeQueries,
-      rsoPreserve401Errors = UUT.MapEverythingTo200
+      rsoPreserve401Errors = UUT.MapEverythingTo200,
+      rsoServerTimeout = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec
