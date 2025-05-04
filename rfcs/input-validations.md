@@ -179,7 +179,7 @@ validation.
 200 OK
 ```
 
-2. Unsucessful Response
+2. Unsuccessful Response
 
 The HTTP validation URL should return a optional JSON object with `400` status
 code to represent failed validation. The object should contain `message` field

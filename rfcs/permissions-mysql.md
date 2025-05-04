@@ -20,7 +20,7 @@ The role-based access control feature, often referred to simply as "Permissions"
 allows Hasura users to restrict what data is returned by queries and admitted by
 mutations. Several flavors of permissions exist:
 
-**_Column Permissions_** censor the columns that cliens in a given role have access
+**_Column Permissions_** censor the columns that clients in a given role have access
 to (either in Queries or Mutations), by means of an explicit list of columns
 exposed.
 
@@ -68,7 +68,7 @@ datasets they permit we do not necessarily end up with a rectangular dataset:
 ![Inherited roles diagram](permissions-mysql/Inherited%20roles%20permissions.png)
 
 Our data universe however only permits "rectangular" data. In order to
-accomodate the complexity resulting from _Inherited Roles_ we make columns that
+accommodate the complexity resulting from _Inherited Roles_ we make columns that
 are particular to a single parent role nullable. For example, in the diagram
 above we would return `null` for (`Row 5`, `Column B`) and (`Row 2`, `Column
 D`).
@@ -165,7 +165,7 @@ table actually targeted by the mutation.
 ## Future
 
 This document is a product of its time, brought into existence by the
-contemporary need to elaborate on how permissons work because the development
+contemporary need to elaborate on how permissions work because the development
 work on MySQL needs to incorporate them.
 
 An insight resulting from discussing this subject is that it would be more
@@ -178,7 +178,7 @@ we need to also talk about what they apply to. As such it makes for a more
 elegant exposition to talk about permissons as associated aspects of the subject
 they act on.
 
-It it therefore expected that this document be superseded by dedicated RFCs on
+It is therefore expected that this document be superseded by dedicated RFCs on
 the subjects of _Queries_, _Mutations_.
 
 ## Questions
