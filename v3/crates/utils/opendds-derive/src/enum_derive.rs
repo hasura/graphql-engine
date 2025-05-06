@@ -24,6 +24,7 @@ impl EnumTagType {
                 content: "definition".to_string(),
             },
             Tagged::External => EnumTagType::External,
+            Tagged::Internal { tag } => EnumTagType::Internal { tag: tag.clone() },
         }
     }
 

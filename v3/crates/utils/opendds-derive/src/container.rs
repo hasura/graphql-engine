@@ -81,8 +81,14 @@ struct EnumOpts {
     as_versioned_with_definition: Option<bool>,
     untagged_with_kind: Option<bool>,
     externally_tagged: Option<bool>,
+    internally_tagged: Option<InternallyTaggedOpts>,
     #[darling(default)]
     json_schema: JsonSchemaOpts,
+}
+
+#[derive(FromMeta)]
+struct InternallyTaggedOpts {
+    pub tag: String,
 }
 
 /// Variant JSON schema attributes
@@ -304,6 +310,8 @@ impl EnumImplStyle {
             Some(Self::UntaggedWithKind)
         } else if opts.externally_tagged.unwrap_or(false) {
             Some(Self::Tagged(Tagged::External))
+        } else if let Some(InternallyTaggedOpts { tag }) = &opts.internally_tagged {
+            Some(Self::Tagged(Tagged::Internal { tag: tag.clone() }))
         } else {
             None
         }
@@ -315,6 +323,7 @@ pub enum Tagged {
     VersionInternal,
     VersionWithDefinition,
     External,
+    Internal { tag: String },
 }
 
 pub struct EnumVariant<'a> {
@@ -339,9 +348,10 @@ impl<'a> EnumVariant<'a> {
                     // Preserve casing for kinded enums
                     Tagged::KindInternal => variant_name.to_string(),
                     // Use camel-casing for versioned enums and externally-tagged enums
-                    Tagged::VersionInternal | Tagged::VersionWithDefinition | Tagged::External => {
-                        variant_name.to_string().to_case(Case::Camel)
-                    }
+                    Tagged::VersionInternal
+                    | Tagged::VersionWithDefinition
+                    | Tagged::External
+                    | Tagged::Internal { .. } => variant_name.to_string().to_case(Case::Camel),
                 },
             }
         });

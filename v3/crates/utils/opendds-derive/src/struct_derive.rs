@@ -40,6 +40,28 @@ fn impl_deserialize_named_fields<'a>(
         .map(|field| field.renamed_field.to_string())
         .collect::<Vec<String>>();
     let named_fields_value = generate_named_fields_value(name, named_fields);
+    let unexpected_fields_error = if expected_fields.is_empty() {
+        quote! {
+            return Err(open_dds::traits::OpenDdDeserializeError {
+                error: serde::de::Error::custom(format!(
+                    "unexpected keys: {}; expecting empty object",
+                    __remaining_keys.join(", "),
+                )),
+                path: jsonpath::JSONPath::new(),
+            });
+        }
+    } else {
+        quote! {
+            return Err(open_dds::traits::OpenDdDeserializeError {
+                error: serde::de::Error::custom(format!(
+                    "unexpected keys: {}; expecting: {}",
+                    __remaining_keys.join(", "),
+                    [#(#expected_fields),*].join(", "),
+                )),
+                path: jsonpath::JSONPath::new(),
+            });
+        }
+    };
     quote! {
         let mut __object_map = match json {
             serde_json::Value::Object(map) => map,
@@ -57,14 +79,7 @@ fn impl_deserialize_named_fields<'a>(
         let __remaining_keys = __object_map.keys().cloned().collect::<Vec<_>>();
         // Check for unexpected keys
         if !__remaining_keys.is_empty() {
-            return Err(open_dds::traits::OpenDdDeserializeError {
-                error: serde::de::Error::custom(format!(
-                    "unexpected keys: {}; expecting: {}",
-                    __remaining_keys.join(", "),
-                    [#(#expected_fields),*].join(", "),
-                )),
-                path: jsonpath::JSONPath::new(),
-            });
+            #unexpected_fields_error
         }
         Ok(__value)
     }
