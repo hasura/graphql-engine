@@ -11,7 +11,7 @@ use datafusion::{
     functions::{string::contains, unicode::substr},
     functions_aggregate::{average, count, min_max, sum},
     functions_window::{expr_fn::row_number, ntile},
-    logical_expr::{ExprSchemable, Literal as _, SubqueryAlias},
+    logical_expr::{ExprSchemable, Literal as _, SubqueryAlias, expr::AggregateFunctionParams},
     prelude::{
         ExprFunctionExt, SessionConfig, SessionContext, abs, array_element, btrim, ceil,
         character_length, coalesce, concat, cos, current_date, current_time, date_part, date_trunc,
@@ -1073,11 +1073,13 @@ fn convert_expression_to_logical_expr(
             Ok(datafusion::prelude::Expr::AggregateFunction(
                 datafusion::logical_expr::expr::AggregateFunction {
                     func: average::avg_udaf(),
-                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                    distinct: false,
-                    filter: None,
-                    order_by: None,
-                    null_treatment: None,
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                        distinct: false,
+                        filter: None,
+                        order_by: None,
+                        null_treatment: None,
+                    },
                 },
             ))
         }
@@ -1087,11 +1089,13 @@ fn convert_expression_to_logical_expr(
             Ok(datafusion::prelude::Expr::AggregateFunction(
                 datafusion::logical_expr::expr::AggregateFunction {
                     func: count::count_udaf(),
-                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                    distinct: *distinct,
-                    filter: None,
-                    order_by: None,
-                    null_treatment: None,
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                        distinct: *distinct,
+                        filter: None,
+                        order_by: None,
+                        null_treatment: None,
+                    },
                 },
             ))
         }
@@ -1100,33 +1104,39 @@ fn convert_expression_to_logical_expr(
         RelationalExpression::Max { expr: _ } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: min_max::max_udaf(),
-                args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                distinct: false,
-                filter: None,
-                order_by: None,
-                null_treatment: None,
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
             },
         )),
         RelationalExpression::Median { expr: _ } => unimplemented!(),
         RelationalExpression::Min { expr: _ } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: min_max::min_udaf(),
-                args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                distinct: false,
-                filter: None,
-                order_by: None,
-                null_treatment: None,
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
             },
         )),
         RelationalExpression::StringAgg { expr: _ } => unimplemented!(),
         RelationalExpression::Sum { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: sum::sum_udaf(),
-                args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                distinct: false,
-                filter: None,
-                order_by: None,
-                null_treatment: None,
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
             },
         )),
         RelationalExpression::Var { expr: _ } => unimplemented!(),
