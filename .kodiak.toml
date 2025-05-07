@@ -139,3 +139,11 @@ always = false # default: false
 # (configured via `merge.automerge_label`). When disable, Kodiak will update any
 # PR. This option only applies when `update.always = true`.
 require_automerge_label = true # default: true
+
+[approve]
+# This bypasses approval. We expect this to be set automatically, with some checks
+# in place, but at the end of the day rely on developers not trying to abuse this.
+#
+# The motivator here is to speed along merging of mechanical release ceremony PRs
+# (we still want functional cherry-picks into release branches to have a review).
+auto_approve_labels = ["auto-approve !!CAREFUL!!"]
