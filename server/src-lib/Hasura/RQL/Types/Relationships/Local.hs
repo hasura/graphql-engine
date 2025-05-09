@@ -117,7 +117,8 @@ deriving instance (Backend b) => Show (RelManualNativeQueryConfig b)
 
 data RelManualCommon (b :: BackendType) = RelManualCommon
   { rmColumns :: RelMapping b,
-    rmInsertOrder :: Maybe InsertOrder
+    rmInsertOrder :: Maybe InsertOrder,
+    rmManualNullable :: Bool
   }
   deriving (Generic)
 
@@ -150,6 +151,10 @@ instance (Backend b) => AC.HasObjectCodec (RelManualCommon b) where
       AC..= rmColumns
         <*> optionalFieldOrIncludedNull' "insertion_order"
       AC..= rmInsertOrder
+        <*> AC.optionalFieldWithDefault "nullable" True nullableDoc
+      AC..= rmManualNullable
+    where
+      nullableDoc = "Is manual relationship nullable or not?"
 
 data RelUsing (b :: BackendType) a
   = RUFKeyOn a
@@ -439,7 +444,8 @@ data RelInfo (b :: BackendType) = RelInfo
     riMapping :: RelMapping b,
     riTarget :: RelTarget b,
     riIsManual :: Bool,
-    riInsertOrder :: InsertOrder
+    riInsertOrder :: InsertOrder,
+    riManualNullable :: Bool
   }
   deriving (Generic)
 
