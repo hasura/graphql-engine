@@ -131,6 +131,7 @@ modifyApolloFedParserFunc
                 IR._asnFrom = IR.FromTable tableName,
                 IR._asnPerm = tableSelPerm,
                 IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
+                IR._asnDirectives = Nothing,
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = tCase
               }
@@ -163,7 +164,7 @@ mkServiceField = serviceFieldParser
     sdlField = JO.String . generateSDL <$ P.selection_ Name._sdl (Just "SDL representation of schema") P.string
     serviceParser = P.nonNullableParser $ P.selectionSet Name.__Service Nothing [sdlField]
     serviceFieldParser =
-      P.subselection_ Name.__service Nothing serviceParser `bindField` \selSet -> do
+      P.subselection_ Name.__service Nothing serviceParser `bindField` \(selSet, _) -> do
         let partialValue = InsOrdHashMap.map (\ps -> handleTypename (\tName _ -> JO.toOrdered tName) ps) (InsOrdHashMap.mapKeys G.unName selSet)
         pure \schemaIntrospection -> RFRaw . JO.fromOrderedHashMap $ (partialValue ?? schemaIntrospection)
 
@@ -290,7 +291,7 @@ mkEntityUnionFieldParser apolloFedTableParsers =
 
       entityParser =
         subselection name description representationParser bodyParser
-          `bindField` \(parsedArgs, parsedBody) -> do
+          `bindField` \(parsedArgs, parsedBody, _) -> do
             rootFields <-
               for
                 parsedArgs
