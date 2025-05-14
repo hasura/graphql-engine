@@ -121,7 +121,7 @@ field:
 
 ```
 query {
-  autors {
+  authors {
     articles_aggregate {
 	  aggregate {
 	    count

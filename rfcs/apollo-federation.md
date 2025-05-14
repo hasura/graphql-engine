@@ -551,7 +551,7 @@ database, which might be something that can be optimised in further iterations.
 
 There are two main functions from the perspective of implementation:
 1. `generateSDL`: This function generates the SDL of a given schema. It uses
-the schema introspection inorder to build the SDL. The schema introspection is
+the schema introspection in order to build the SDL. The schema introspection is
 generated while building the parsers. The type definition of the function is:
     ```haskell
     generateSDL :: G.SchemaIntrospection -> Text
