@@ -2602,6 +2602,34 @@ fn test_model_select_many_remote_relationship_predicate_object_simple() -> anyho
 }
 
 // Tests using remote relationships in predicates
+// Object relationship, but `predicate` is omitted meaning `const True`, i.e. a semi-join (see
+// ENG-1747). This started as a fork of `..._object_simple` above.
+#[test]
+fn test_model_select_many_remote_relationship_predicate_object_empty_predicate()
+-> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/remote_relationship_predicates/object/empty_predicate",
+        &["execute/models/select_many/remote_relationship_predicates/common_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec![
+                    "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v01.json",
+                    "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
+                ],
+            ),
+            (
+                NdcVersion::V02,
+                vec![
+                    "execute/models/select_many/remote_relationship_predicates/pg_connector_ndc_v02.json",
+                    "execute/common_metadata/postgres_connector_ndc_v02_schema.json",
+                ],
+            ),
+        ]),
+    )
+}
+
+// Tests using remote relationships in predicates
 // Nested object relationship
 #[test]
 fn test_model_select_many_remote_relationship_predicate_object_nested() -> anyhow::Result<()> {

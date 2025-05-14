@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- Properly support missing or null `predicate` in relationship filters, to align
+  with
+  [the docs](https://hasura.io/docs/3.0/reference/metadata-reference/permissions/#modelpermissions-relationshippredicate).
+
 ### Changed
 
 ### Added

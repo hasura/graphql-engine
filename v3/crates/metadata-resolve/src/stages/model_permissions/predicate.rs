@@ -176,12 +176,9 @@ pub(crate) fn resolve_model_predicate_with_type(
                     boolean_expression_types,
                 )
             } else {
-                Err(
-                    TypePredicateError::NoPredicateDefinedForRelationshipPredicate {
-                        type_name: type_name.clone(),
-                        relationship_name: relationship_name.clone(),
-                    },
-                )
+                // a `predicate` of `null` in metadata means `const True` and is equivalent to...
+                Ok(ModelPredicate::And(vec![]))
+                // see: https://hasura.io/docs/3.0/reference/metadata-reference/permissions/#modelpermissions-relationshippredicate
             }
         }
 
