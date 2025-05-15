@@ -4,13 +4,17 @@
 
 ### Fixed
 
-- Properly support missing or null `predicate` in relationship filters, to align
-  with
-  [the docs](https://hasura.io/docs/3.0/reference/metadata-reference/permissions/#modelpermissions-relationshippredicate).
-
 ### Changed
 
 ### Added
+
+## [v2025.05.14]
+
+### Fixed
+
+- Properly support missing or null `predicate` in relationship filters, to align
+  with
+  [the docs](https://hasura.io/docs/3.0/reference/metadata-reference/permissions/#modelpermissions-relationshippredicate).
 
 ## [v2025.05.13]
 
@@ -1610,7 +1614,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.05.13...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.05.14...HEAD
+[v2025.05.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.14
 [v2025.05.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.13
 [v2025.04.30]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.30
 [v2025.04.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.28
