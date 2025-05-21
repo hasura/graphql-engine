@@ -490,13 +490,6 @@ pub enum TypePredicateError {
         source_type_name: Qualified<CustomTypeName>,
         target_model_name: Qualified<ModelName>,
     },
-    #[error(
-        "no relationship predicate is defined for relationship '{relationship_name:}' in type '{type_name:}'"
-    )]
-    NoPredicateDefinedForRelationshipPredicate {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: Spanned<RelationshipName>,
-    },
     #[error("{error:} in type {type_name:}")]
     TypeMappingCollectionError {
         type_name: Qualified<CustomTypeName>,
@@ -636,16 +629,6 @@ impl ContextualError for TypePredicateError {
                     }
                 ))
             }
-            TypePredicateError::NoPredicateDefinedForRelationshipPredicate { type_name, relationship_name } => {
-                Some(Context::from_step(
-                    error_context::Step {
-                        message: "This relationship is missing a predicate".to_owned(),
-                        path: relationship_name.path.clone(),
-                        subgraph: Some(type_name.subgraph.clone()),
-                    }
-                ))
-            }
-
             TypePredicateError::RelationshipAcrossSubgraphs {  relationship_name, source_data_connector, target_data_connector: _ } => {
                 Some(Context::from_step(
                     error_context::Step {

@@ -84,6 +84,7 @@ pub enum ModelPredicate {
         column_path: Vec<DataConnectorColumnName>,
         predicate: Box<ModelPredicate>,
     },
+    /// Note, `And(vec![])` means `const True`
     And(Vec<ModelPredicate>),
     Or(Vec<ModelPredicate>),
     Not(Box<ModelPredicate>),

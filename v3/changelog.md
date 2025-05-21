@@ -4,12 +4,24 @@
 
 ### Fixed
 
-- Fixed a bug where scalar type lookups in remote relationships would fail due
-  to looking up in the source rather than target data connector
-
 ### Changed
 
 ### Added
+
+## [v2025.05.14]
+
+### Fixed
+
+- Properly support missing or null `predicate` in relationship filters, to align
+  with
+  [the docs](https://hasura.io/docs/3.0/reference/metadata-reference/permissions/#modelpermissions-relationshippredicate).
+
+## [v2025.05.13]
+
+### Fixed
+
+- Fixed a bug where scalar type lookups in remote relationships would fail due
+  to looking up in the source rather than target data connector
 
 ## [v2025.04.30]
 
@@ -1602,7 +1614,9 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.04.30...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.05.14...HEAD
+[v2025.05.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.14
+[v2025.05.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.13
 [v2025.04.30]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.30
 [v2025.04.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.28
 [v2025.04.23]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.23
