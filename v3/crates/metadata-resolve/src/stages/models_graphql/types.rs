@@ -1,15 +1,18 @@
-use crate::{helpers::types::DuplicateRootFieldError, types::warning::Warning};
+use std::sync::Arc;
+
+use crate::{ArgumentInfo, helpers::types::DuplicateRootFieldError, types::warning::Warning};
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
 use open_dds::{
     aggregates::AggregateExpressionName,
     data_connector::{DataConnectorColumnName, DataConnectorName},
     models::ModelName,
-    types::{Deprecated, FieldName},
+    query::ArgumentName,
+    types::{CustomTypeName, Deprecated, FieldName},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::stages::{boolean_expressions, models};
+use crate::stages::{boolean_expressions, models, object_types};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use crate::{OrderByExpressionIdentifier, helpers::types::NdcColumnForComparison};
@@ -23,9 +26,24 @@ pub struct ModelsWithGraphqlOutput {
 /// A Model resolved with regards to it's data source
 #[derive(Debug)]
 pub(crate) struct ModelWithGraphql {
-    pub inner: models::Model,
+    pub inner: Model,
     pub filter_expression_type: Option<boolean_expressions::ResolvedObjectBooleanExpressionType>,
     pub graphql_api: ModelGraphQlApi,
+    pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
+    pub description: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Model {
+    pub path: jsonpath::JSONPath,
+    pub name: Qualified<ModelName>,
+    pub data_type: Qualified<CustomTypeName>,
+    pub type_fields: IndexMap<FieldName, object_types::FieldDefinition>,
+    pub global_id_fields: Vec<FieldName>,
+    pub source: Option<Arc<models::ModelSource>>, // wrapped in Arc because we include these in our `Plan`
+    pub global_id_source: Option<models::NDCFieldSourceMapping>,
+    pub apollo_federation_key_source: Option<models::NDCFieldSourceMapping>,
+    pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

@@ -65,7 +65,6 @@ pub fn build_model_argument_fields(
     crate::Error,
 > {
     model
-        .model
         .arguments
         .iter()
         .map(|(argument_name, argument_type)| {
@@ -147,7 +146,6 @@ pub fn add_model_arguments_field(
 ) -> Result<(), crate::Error> {
     // which arguments are actually available for the user to provide?
     let user_arguments: Vec<_> = model
-        .model
         .arguments
         .keys()
         .filter(|argument_name| {
@@ -159,14 +157,13 @@ pub fn add_model_arguments_field(
             }
             // is the argument nullable? if so we don't _need_ it to be provided
             model
-                .model
                 .arguments
                 .get(*argument_name)
                 .is_some_and(|argument| !argument.argument_type.nullable)
         })
         .collect();
 
-    if !model.model.arguments.is_empty() {
+    if !model.arguments.is_empty() {
         let include_empty_default = user_arguments.is_empty();
         let model_arguments_input =
             get_model_arguments_input_field(builder, model, include_empty_default)?;

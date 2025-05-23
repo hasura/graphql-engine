@@ -32,7 +32,7 @@ pub fn build_model(
 
     Ok(Model {
         name: model.model.name.clone(),
-        description: model.model.raw.description.clone(),
+        description: model.description.clone(),
         data_type: model.model.data_type.clone(),
         data_connector_name,
         filter_expression_type: model.filter_expression_type.clone(),

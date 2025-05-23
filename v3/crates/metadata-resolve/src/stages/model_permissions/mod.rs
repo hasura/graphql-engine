@@ -45,9 +45,11 @@ pub fn resolve(
                 model_name.clone(),
                 ModelWithPermissions {
                     model: model.inner.clone(),
+                    arguments: model.arguments.clone(),
                     filter_expression_type: model.filter_expression_type.clone(),
                     graphql_api: model.graphql_api.clone(),
                     select_permissions: BTreeMap::new(),
+                    description: model.description.clone(),
                 },
             )
         })
@@ -117,6 +119,7 @@ fn resolve_model_permissions(
         let select_permissions = model_permission::resolve_all_model_select_permissions(
             &metadata_accessor.flags,
             &model.model,
+            &model.arguments,
             permissions,
             boolean_expression,
             data_connector_scalars,

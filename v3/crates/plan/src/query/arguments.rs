@@ -64,7 +64,7 @@ pub fn process_argument_presets_for_model<'s>(
 
     process_argument_presets(
         arguments,
-        &model.model.arguments,
+        &model.arguments,
         &model_source.argument_mappings,
         argument_presets,
         object_types,

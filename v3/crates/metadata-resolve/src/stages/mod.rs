@@ -264,12 +264,13 @@ fn resolve_internal(
 
     // now we know about relationships, we can check our arguments (particularly, any
     // boolean expressions they use and whether their relationships are valid)
-    let issues = arguments::resolve(
+    let arguments::ArgumentsOutput { issues, arguments } = arguments::resolve(
         &commands,
         &models,
         &object_types_with_relationships,
         &scalar_types,
         &boolean_expression_types,
+        &data_connector_scalars,
         &metadata_accessor.flags,
     )
     .map_err(flatten_multiple_errors)?;
@@ -286,6 +287,7 @@ fn resolve_internal(
         &models,
         &commands,
         &object_types_with_relationships,
+        &arguments,
         &boolean_expression_types,
         &mut track_root_fields,
         &graphql_config,
@@ -305,6 +307,7 @@ fn resolve_internal(
         &commands,
         &object_types_with_relationships,
         &scalar_types,
+        &arguments,
         &boolean_expression_types,
         &models_with_graphql,
         &data_connector_scalars,

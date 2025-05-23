@@ -2,9 +2,10 @@ use super::predicate;
 use super::types::ModelPermissionIssue;
 use super::types::{FilterPermission, SelectPermission};
 use super::{ModelPermissionError, NamedModelPermissionError};
+use crate::ArgumentInfo;
 use crate::helpers::argument::resolve_value_expression_for_argument;
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, models, models_graphql, object_relationships,
+    boolean_expressions, data_connector_scalar_types, models_graphql, object_relationships,
     scalar_types,
 };
 use crate::types::error::Error;
@@ -13,13 +14,15 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use open_dds::permissions::NullableModelPredicate;
 use open_dds::permissions::{ModelPermissionsV1, Role};
+use open_dds::query::ArgumentName;
 use open_dds::spanned::Spanned;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub fn resolve_all_model_select_permissions(
     flags: &open_dds::flags::OpenDdFlags,
-    model: &models::Model,
+    model: &models_graphql::Model,
+    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
     model_permissions: &ModelPermissionsV1,
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_scalars: &BTreeMap<
@@ -52,6 +55,7 @@ pub fn resolve_all_model_select_permissions(
                 &model_permission.role,
                 flags,
                 model,
+                arguments,
                 boolean_expression,
                 data_connector_scalars,
                 object_types,
@@ -71,7 +75,8 @@ fn resolve_model_select_permissions(
     select_perms: &open_dds::permissions::SelectPermission,
     role: &Spanned<open_dds::permissions::Role>,
     flags: &open_dds::flags::OpenDdFlags,
-    model: &crate::Model,
+    model: &models_graphql::Model,
+    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -135,8 +140,7 @@ fn resolve_model_select_permissions(
                 },
             })?;
 
-        let argument = model
-            .arguments
+        let argument = arguments
             .get(&argument_preset.argument.value)
             .ok_or_else(|| NamedModelPermissionError {
                 model_name: model.name.clone(),

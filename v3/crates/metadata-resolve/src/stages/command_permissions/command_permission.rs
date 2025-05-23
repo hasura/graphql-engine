@@ -14,12 +14,12 @@ use crate::helpers::argument::resolve_value_expression_for_argument;
 
 use open_dds::permissions::CommandPermissionsV1;
 
-use super::types::{CommandPermission, CommandPermissionIssue};
+use super::types::{Command, CommandPermission, CommandPermissionIssue};
 use std::collections::BTreeMap;
 
 pub fn resolve_command_permissions(
     flags: &open_dds::flags::OpenDdFlags,
-    command: &commands::Command,
+    command: &Command,
     permissions: &CommandPermissionsV1,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,

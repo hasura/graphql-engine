@@ -41,7 +41,7 @@ pub fn model_target_to_ndc_query(
 
     let unresolved_arguments = get_unresolved_arguments(
         &model_target.arguments,
-        &model.model.arguments,
+        &model.arguments,
         &model_source.argument_mappings,
         metadata,
         session,

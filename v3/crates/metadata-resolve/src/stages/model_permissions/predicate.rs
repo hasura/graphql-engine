@@ -7,7 +7,7 @@ use crate::UnaryComparisonOperator;
 use crate::helpers::type_mappings;
 use crate::helpers::typecheck::typecheck_value_expression;
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, models, models_graphql,
+    boolean_expressions, data_connector_scalar_types, data_connectors, models_graphql,
     object_relationships, object_types, scalar_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::error::TypePredicateError;
@@ -29,7 +29,7 @@ use std::collections::BTreeMap;
 pub fn resolve_model_predicate_with_model(
     flags: &open_dds::flags::OpenDdFlags,
     model_predicate: &open_dds::permissions::ModelPredicate,
-    model: &models::Model,
+    model: &models_graphql::Model,
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,

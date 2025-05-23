@@ -408,34 +408,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/predicate_
                             },
                             description: None,
                             argument_kind: NDCExpression,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                     },
                     graphql_api: Some(

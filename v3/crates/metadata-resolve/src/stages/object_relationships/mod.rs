@@ -701,7 +701,7 @@ fn resolve_aggregate_relationship(
 
 fn resolve_model_relationship_fields(
     target_model: &open_dds::relationships::ModelRelationshipTarget,
-    models: &IndexMap<Qualified<ModelName>, crate::Model>,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
     relationship: &RelationshipV1,
