@@ -8,6 +8,9 @@
 
 ### Added
 
+- Add `Glossary` kind to OpenDD metadata, which can be used to define domain
+  terms and their definitions for documentation.
+
 ## [v2025.05.14]
 
 ### Fixed

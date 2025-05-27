@@ -305,6 +305,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
             propagate_boolean_expression_deprecation_status: true,
             multiple_order_by_input_object_fields: Allow,
         },
+        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],

@@ -1,0 +1,12 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/glossary/duplicate_role/metadata.json
+---
+Error: Duplicate glossary permission for role 'surfer' in glossary 'Surfing (in subgraph default)'
+    ╭─[ <unknown>:24:25 ]
+    │
+ 24 │                 "role": "surfer",
+    │                         ────┬───  
+    │                             ╰───── Duplicate glossary permission for role 'surfer' in glossary 'Surfing'
+────╯

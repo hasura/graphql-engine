@@ -5,9 +5,9 @@ use crate::{
     Qualified,
     stages::{
         aggregate_boolean_expressions, aggregates, arguments, boolean_expressions,
-        command_permissions, commands, data_connectors, model_permissions, models, models_graphql,
-        object_relationships, object_types, order_by_expressions, scalar_boolean_expressions,
-        scalar_types, type_permissions,
+        command_permissions, commands, data_connectors, glossaries, model_permissions, models,
+        models_graphql, object_relationships, object_types, order_by_expressions,
+        scalar_boolean_expressions, scalar_types, type_permissions,
     },
 };
 
@@ -55,6 +55,8 @@ pub enum Warning {
     ObjectRelationshipsIssue(#[from] object_relationships::ObjectRelationshipsIssue),
     #[error("{0}")]
     ArgumentIssue(#[from] arguments::ArgumentIssue),
+    #[error("{0}")]
+    GlossaryIssue(#[from] glossaries::GlossaryIssue),
 }
 
 impl ShouldBeAnError for Warning {
@@ -73,6 +75,7 @@ impl ShouldBeAnError for Warning {
             Warning::TypePermissionIssue(issue) => issue.should_be_an_error(flags),
             Warning::CommandPermissionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ObjectRelationshipsIssue(issue) => issue.should_be_an_error(flags),
+            Warning::GlossaryIssue(issue) => issue.should_be_an_error(flags),
             _ => false,
         }
     }
@@ -83,6 +86,7 @@ impl ContextualError for Warning {
         match self {
             Warning::ModelPermissionIssue(issue) => issue.create_error_context(),
             Warning::BooleanExpressionIssue(issue) => issue.create_error_context(),
+            Warning::GlossaryIssue(issue) => issue.create_error_context(),
             _ => None,
         }
     }

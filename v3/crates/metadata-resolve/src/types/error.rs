@@ -4,8 +4,8 @@ use crate::helpers::{
 };
 use crate::stages::{
     aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, arguments,
-    boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
-    model_permissions, models, models_graphql, object_relationships, object_types,
+    boolean_expressions, commands, data_connector_scalar_types, data_connectors, glossaries,
+    graphql_config, model_permissions, models, models_graphql, object_relationships, object_types,
     order_by_expressions, relationships, relay, scalar_boolean_expressions, scalar_types,
     type_permissions,
 };
@@ -273,6 +273,8 @@ pub enum Error {
     ArgumentError(#[from] arguments::NamedArgumentError),
     #[error("{0}")]
     ModelGraphqlError(#[from] models_graphql::ModelGraphqlError),
+    #[error("{0}")]
+    GlossaryError(#[from] glossaries::GlossaryError),
     #[error("{warning_as_error}")]
     CompatibilityError { warning_as_error: crate::Warning },
     #[error("{errors}")]
@@ -336,6 +338,7 @@ impl ContextualError for Error {
             Error::ArgumentError(error) => error.create_error_context(),
             Error::ModelGraphqlError(error) => error.create_error_context(),
             Error::GraphqlConfigError(error) => error.create_error_context(),
+            Error::GlossaryError(error) => error.create_error_context(),
             Error::CompatibilityError { warning_as_error } => {
                 warning_as_error.create_error_context()
             }
