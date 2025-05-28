@@ -390,7 +390,7 @@ fn validate_data_connector_with_comparable_relationship(
                                     });
                                 }
                                 object_relationships::RelationshipModelMappingTarget::ModelField(_) => {}
-                            };
+                            }
                         }
                     }
                     boolean_expressions::ComparableRelationshipExecutionStrategy::NDCPushdown => {}
@@ -405,7 +405,7 @@ fn validate_data_connector_with_comparable_relationship(
                 );
             }
         }
-    };
+    }
     Ok(())
 }
 
@@ -427,6 +427,6 @@ fn validate_data_connector_with_scalar_boolean_expression_type(
                 data_connector_name: data_connector.name.clone(),
             },
         );
-    };
+    }
     Ok(())
 }

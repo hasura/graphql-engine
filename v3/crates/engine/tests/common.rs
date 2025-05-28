@@ -796,7 +796,7 @@ async fn run_query_graphql_ws(
             graphql_ws::Message::Raw(_) => {
                 panic!("Expected a Complete message")
             }
-        };
+        }
     }
     response
 }

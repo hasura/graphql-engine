@@ -314,8 +314,8 @@ pub enum InputAnnotation {
 /// Each entity has two parts to it:
 ///
 /// 1. What schema it is supposed to generate?
-///      This is done while building the metadata. The entity is supposed to
-///      contain all the data it needs to be able to execute it successfully.
+///    This is done while building the metadata. The entity is supposed to
+///    contain all the data it needs to be able to execute it successfully.
 ///
 /// 2. When a request is executed, how the entity is supposed to be executed using the data it has?
 ///

@@ -53,7 +53,7 @@ where
                 return Ok(normalized::Value::SimpleValue(
                     normalized::SimpleValue::Null,
                 ));
-            };
+            }
             match type_info {
                 schema::InputType::Scalar(scalar) => normalize_scalar_value(
                     schema,

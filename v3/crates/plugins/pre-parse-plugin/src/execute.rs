@@ -205,16 +205,16 @@ fn build_request(
     };
     if config.config.request.session.is_some() {
         request_body.session = Some(session.clone());
-    };
+    }
     if config.config.request.raw_request.query.is_some() {
         request_body.raw_request.query = Some(raw_request.query.clone());
-    };
+    }
     if config.config.request.raw_request.variables.is_some() {
         request_body
             .raw_request
             .variables
             .clone_from(&raw_request.variables);
-    };
+    }
     request_builder = request_builder.json(&request_body);
     Ok(request_builder)
 }
@@ -330,7 +330,7 @@ pub async fn pre_parse_plugins_handler(
                     .into_response();
             response = Some(error_response);
         }
-    };
+    }
     Ok(response)
 }
 
@@ -379,7 +379,7 @@ pub async fn execute_pre_parse_plugins(
                                 "plugin.internal_error",
                                 error_value.to_string(),
                             );
-                        };
+                        }
                         if let Ok(PreExecutePluginResponse::ReturnError {
                             plugin_name: _,
                             error: ErrorResponse::UserError(error_value),

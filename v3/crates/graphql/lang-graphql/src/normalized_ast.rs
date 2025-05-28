@@ -320,9 +320,9 @@ impl<'s, S: SchemaContext> SelectionSet<'s, S> {
                         if x == &type_name.clone() {
                             field_calls.insert(xs.to_vec(), field_call.clone());
                             should_retain = true;
-                        };
+                        }
                     }
-                };
+                }
             }
 
             if should_retain {

@@ -95,7 +95,7 @@ fn process_glossary(
                     term_name: name.clone(),
                     other_glossary_name,
                 });
-            };
+            }
         }
     }
 

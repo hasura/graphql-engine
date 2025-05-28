@@ -281,7 +281,7 @@ fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error>
                             .and_then(|c| c.headers.as_ref())
                         {
                             warnings.extend(validate_header_config(headers_config));
-                        };
+                        }
                     }
                     webhook::AuthHookConfigV3::POST(config) => {
                         if let Some(headers_config) = config
@@ -290,7 +290,7 @@ fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error>
                             .and_then(|c| c.headers.as_ref())
                         {
                             warnings.extend(validate_header_config(headers_config));
-                        };
+                        }
                         if let Some(body_header_config) = config
                             .custom_headers_config
                             .as_ref()
@@ -298,7 +298,7 @@ fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error>
                             .and_then(|c| c.headers.as_ref())
                         {
                             warnings.extend(validate_header_config(body_header_config));
-                        };
+                        }
                     }
                 }
             }

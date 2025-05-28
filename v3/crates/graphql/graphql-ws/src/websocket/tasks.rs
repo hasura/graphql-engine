@@ -253,7 +253,7 @@ pub(crate) async fn manage_outgoing_messages<M: WebSocketMetrics + Sync>(
                                         // Return error
                                         Err(err)?;
                                     }
-                                };
+                                }
 
                                 // Stop the poller if the operation is complete or an error occurred
                                 if let Some(operation_id) = msg.is_complete_or_error() {

@@ -178,7 +178,7 @@ pub(crate) fn from_command_selection(
             "role {} does not have permission for command {}",
             session.role, qualified_command_name
         ))))?;
-    };
+    }
 
     // resolve arguments, adding in presets
     let unresolved_arguments = get_unresolved_arguments(

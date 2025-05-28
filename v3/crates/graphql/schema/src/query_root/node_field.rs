@@ -87,7 +87,7 @@ pub(crate) fn relay_node_field(
                 return Err(crate::Error::InternalErrorDuplicateGlobalIdSourceFound {
                     type_name: output_typename.type_name().clone(),
                 });
-            };
+            }
         }
     }
     let id_argument: gql_schema::InputField<GDS> = gql_schema::InputField::new(

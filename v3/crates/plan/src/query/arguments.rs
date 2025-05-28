@@ -189,7 +189,7 @@ fn process_argument_presets<'s>(
                 UnresolvedArgument::BooleanExpression { .. } => {
                     // We don't apply input field presets to boolean expression arguments
                 }
-            };
+            }
         }
     }
 

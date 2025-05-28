@@ -72,7 +72,7 @@ pub(crate) fn apollo_federation_field(
                 return Err(crate::Error::InternalErrorDuplicateEntitySourceFound {
                     type_name: output_typename.type_name().clone(),
                 });
-            };
+            }
         }
     }
     let mut apollo_federation_entities_field_permissions = HashMap::new();

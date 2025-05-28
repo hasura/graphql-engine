@@ -229,7 +229,7 @@ pub(crate) fn get_node_field_namespace_permissions(
                     permissions.insert(role.clone(), select_permission);
                 }
             }
-        };
+        }
     }
 
     permissions
@@ -266,7 +266,7 @@ pub(crate) fn get_entities_field_namespace_permissions(
                         permissions.insert(role.clone(), select_permission);
                     }
                 }
-            };
+            }
         }
     }
 

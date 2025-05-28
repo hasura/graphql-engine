@@ -411,7 +411,7 @@ fn build_orderable_relationships(
                                         ),
                                     ),
                                 );
-                    };
+                    }
                 }
             }
         }

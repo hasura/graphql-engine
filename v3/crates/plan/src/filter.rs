@@ -762,7 +762,7 @@ fn to_scalar_comparison_field<'metadata>(
                     &data_connector.name,
                     data_connector_operator_name,
                 )?;
-            };
+            }
 
             let eq_expr =
                 Expression::LocalField(plan_types::LocalFieldComparison::BinaryComparison {

@@ -259,7 +259,7 @@ async fn start_websocket_session<M: WebSocketMetrics>(
                                 .send(types::Message::internal_server_error())
                                 .await;
                         }
-                    };
+                    }
 
                     // Abort the expiry task
                     if let Some(task) = expiry_task {

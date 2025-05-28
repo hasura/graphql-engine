@@ -2,21 +2,22 @@
 
 use human_bytes::human_bytes;
 use lang_graphql::schema::{Schema, sdl};
+use std::fmt::Write;
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 
 fn generate_schema(type_count: usize) -> String {
     let mut schema_str = String::new();
     for type_i in 0..type_count {
-        schema_str.push_str(&format!("type SampleType{type_i} {{\n"));
+        let _ = writeln!(schema_str, "type SampleType{type_i} {{");
         for field_i in 0..20 {
-            schema_str.push_str(&format!("    sampleField{field_i}: String\n"));
+            let _ = writeln!(schema_str, "    sampleField{field_i}: String");
         }
         schema_str.push_str("}\n");
     }
     schema_str.push_str("type Query {\n");
     for type_i in 0..type_count {
-        schema_str.push_str(&format!("   rootField{type_i}: SampleType{type_i}"));
+        let _ = write!(schema_str, "   rootField{type_i}: SampleType{type_i}");
     }
     schema_str.push('}');
     schema_str

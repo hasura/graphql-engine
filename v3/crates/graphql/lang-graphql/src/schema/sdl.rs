@@ -59,7 +59,7 @@ impl SDL {
                         .is_some()
                     {
                         return Err(SDLError::DuplicateDefinitions(type_name));
-                    };
+                    }
                 }
                 sdl::TypeSystemDefinition::Directive(_) => {}
             }
