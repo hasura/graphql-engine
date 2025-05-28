@@ -38,13 +38,15 @@ pub fn resolve(
         ));
     }
 
+    // Return all accumulated errors or return mutable maps containing glossaries and issues
     partition_eithers::collect_any_errors(results).map(|_| GlossaryOutput { glossaries, issues })
 }
 
 fn process_glossary(
     glossary_name: Spanned<Qualified<GlossaryName>>,
     glossary: &open_dds::glossary::GlossaryV1,
-    glossaries: &mut BTreeMap<Qualified<GlossaryName>, Glossary>,
+    // This mutable map accumulates the glossaries
+    resolved_glossaries: &mut BTreeMap<Qualified<GlossaryName>, Glossary>,
     term_names_by_role: &mut BTreeMap<
         Role,
         BTreeMap<GlossaryTermName, Spanned<Qualified<GlossaryName>>>,
@@ -103,7 +105,7 @@ fn process_glossary(
         roles_with_access,
     };
 
-    if glossaries
+    if resolved_glossaries
         .insert(glossary_name.value.clone(), glossary)
         .is_some()
     {

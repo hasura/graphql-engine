@@ -24,15 +24,6 @@ pub enum GlossaryError {
         glossary_name: Spanned<Qualified<GlossaryName>>,
         role: Spanned<Role>,
     },
-    #[error(
-        "Duplicate glossary term name: Term '{term_name}' for role '{role}' in glossary '{glossary_name}' is already defined in glossary '{other_glossary_name}'"
-    )]
-    DuplicateTermInAnotherGlossary {
-        glossary_name: Spanned<Qualified<GlossaryName>>,
-        term_name: Spanned<GlossaryTermName>,
-        role: Spanned<Role>,
-        other_glossary_name: Spanned<Qualified<GlossaryName>>,
-    },
 }
 
 impl ContextualError for GlossaryError {
@@ -67,30 +58,6 @@ impl ContextualError for GlossaryError {
                 path: role.path.clone(),
                 subgraph: Some(glossary_name.value.subgraph.clone()),
             })),
-
-            Self::DuplicateTermInAnotherGlossary {
-                glossary_name,
-                term_name,
-                role,
-                other_glossary_name,
-            } => Some(
-                Context::from_step(Step {
-                    message: format!(
-                        "Term name '{}' for role '{}' defined in glossary '{}'",
-                        term_name.value, role.value, glossary_name.value.name,
-                    ),
-                    path: term_name.path.clone(),
-                    subgraph: Some(glossary_name.value.subgraph.clone()),
-                })
-                .append(Step {
-                    message: format!(
-                        "Term is also defined in glossary '{}'",
-                        other_glossary_name.value.name,
-                    ),
-                    path: other_glossary_name.path.clone(),
-                    subgraph: Some(other_glossary_name.value.subgraph.clone()),
-                }),
-            ),
         }
     }
 }
