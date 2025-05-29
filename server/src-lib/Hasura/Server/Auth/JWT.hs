@@ -89,6 +89,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Extended ((<<>), (<>>))
 import Data.Time.Clock (NominalDiffTime, UTCTime, addUTCTime, getCurrentTime)
+import Data.Vector qualified as V
 import GHC.AssertNF.CPP
 import Hasura.Authentication.Header (getRequestHeader)
 import Hasura.Authentication.Role (RoleName, mkRoleName)
@@ -428,8 +429,16 @@ parseJWKSetRobustly = eitherDecodeWith' canonicalizeJWKJson
 
 -- exported for testing
 canonicalizeJWKJson :: J.Value -> J.Value
-canonicalizeJWKJson = over (JL.key "keys" . JL._Array) (fmap canonicalizeTargets)
+canonicalizeJWKJson = over (JL.key "keys" . JL._Array) (fmap canonicalizeTargets . V.filter knownKeyType)
   where
+    -- Is this a JWK we know what to do with? Else filter it out; it's not for
+    -- us. Otherwise we'll get an error from jose. Incidentally filters out
+    -- some other weird or malformed data.
+    --
+    -- See: https://www.rfc-editor.org/rfc/rfc7517.html#section-4.2
+    knownKeyType :: J.Value -> Bool
+    knownKeyType v = v ^? JL.key "use" . JL._String `elem` [Just "enc", Just "sig"]
+
     canonicalizeTargets :: J.Value -> J.Value
     canonicalizeTargets = foldr (\k f -> over (JL.key k . JL._String) (stripLeadingZeros . canonicalizeBase64) . f) id targets
       where
