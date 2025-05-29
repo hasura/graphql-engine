@@ -13,9 +13,6 @@
   than omitting them. Note that may be a breaking change for some data
   connectors, particularly `ndc-postgres` before `v2.1.0`.
 
-- Add `Glossary` kind to OpenDD metadata, which can be used to define domain
-  terms and their definitions for documentation.
-
 ## [v2025.05.14]
 
 ### Fixed

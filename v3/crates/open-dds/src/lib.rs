@@ -125,6 +125,7 @@ pub enum OpenDdSubgraphObject {
     CommandPermissions(Spanned<permissions::CommandPermissions>),
 
     /// Glossary
+    #[opendd(hidden = true)]
     Glossary(Spanned<glossary::Glossary>),
 
     // Plugin
