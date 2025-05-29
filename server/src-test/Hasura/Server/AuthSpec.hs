@@ -42,6 +42,7 @@ spec = do
   setupAuthModeTests
   parseClaimsMapTests
   parseCognitoJwksTests
+  filterOutUnknownKeyTypesTests
 
 allowedRolesClaimText :: K.Key
 allowedRolesClaimText = fromSessionVariable allowedRolesClaim
@@ -694,3 +695,20 @@ parseCognitoJwksTests = describe "parseCognitoJwks" $ do
         case reparsedResult of
           Left err -> expectationFailure $ "Failed to reparse encoded JWKS: " ++ err
           Right reparsedJwkSet -> reparsedJwkSet `shouldBe` jwkSet
+
+-- https://github.com/hasura/graphql-engine/issues/10733#issuecomment-2912141757
+unknownUseJson, unknownUseJsonOnlyKnowns :: BL.ByteString
+unknownUseJson = "{\"keys\":[{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321693135832881917\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"saml_response_sig\",\"kty\":\"RSA\",\"kid\":\"321336135382996543\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321838209426266877\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"}]}"
+unknownUseJsonOnlyKnowns = "{\"keys\":[{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321693135832881917\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321838209426266877\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"}]}"
+
+filterOutUnknownKeyTypesTests :: Spec
+filterOutUnknownKeyTypesTests = describe "filterOutUnknownKeyTypes" $ do
+  it "should filter JWKs with unknown 'use' field value" $ do
+    let expected = case parseJWKSetRobustly unknownUseJsonOnlyKnowns of
+          Right (JWKSet s) -> s
+          _ -> error "bad parse in unknownUseJsonOnlyKnowns"
+    case parseJWKSetRobustly unknownUseJson of
+      Right (JWKSet s) -> do
+        length s `shouldBe` 2
+        s `shouldBe` expected
+      _ -> error "bad parse"
