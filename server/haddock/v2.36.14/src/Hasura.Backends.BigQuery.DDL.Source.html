@@ -1,0 +1,481 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DuplicateRecordFields #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html"><span class="hs-identifier">Hasura.Backends.BigQuery.DDL.Source</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSource"><span class="hs-identifier">resolveSource</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#postDropSourceHook"><span class="hs-identifier">postDropSourceHook</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier">resolveSourceConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTypeToScalarType"><span class="hs-identifier">restTypeToScalarType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html/Data.Environment.html"><span class="hs-identifier">Data.Environment</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.HashMap.Strict.Extended.html/Data.HashMap.Strict.Extended.html"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Int</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock.System</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html"><span class="hs-identifier">Hasura.Backends.BigQuery.Connection</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html"><span class="hs-identifier">Hasura.Backends.BigQuery.Meta</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html"><span class="hs-identifier">Hasura.Backends.BigQuery.Source</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html"><span class="hs-identifier">Hasura.Backends.BigQuery.Types</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html"><span class="hs-identifier">Hasura.Function.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionOverloads"><span class="hs-identifier">FunctionOverloads</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendConfig"><span class="hs-identifier">BackendConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html"><span class="hs-identifier">Hasura.RQL.Types.Source</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html"><span class="hs-identifier">Hasura.Table.Cache</span></a></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultGlobalSelectLimit"><span class="hs-identifier hs-type">defaultGlobalSelectLimit</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int.Int64</span></span><span>
+</span><span id="line-34"></span><span id="defaultGlobalSelectLimit"><span class="annot"><span class="annottext">defaultGlobalSelectLimit :: Int64
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultGlobalSelectLimit"><span class="hs-identifier hs-var hs-var">defaultGlobalSelectLimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int64
+</span><span class="hs-number">1000</span></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultRetryLimit"><span class="hs-identifier hs-type">defaultRetryLimit</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-37"></span><span id="defaultRetryLimit"><span class="annot"><span class="annottext">defaultRetryLimit :: Int
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultRetryLimit"><span class="hs-identifier hs-var hs-var">defaultRetryLimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">5</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultRetryBaseDelay"><span class="hs-identifier hs-type">defaultRetryBaseDelay</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Data.Time.Clock.Units.html/Data.Time.Clock.Units.html#Microseconds"><span class="hs-identifier hs-type">Microseconds</span></a></span><span>
+</span><span id="line-40"></span><span id="defaultRetryBaseDelay"><span class="annot"><span class="annottext">defaultRetryBaseDelay :: Microseconds
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultRetryBaseDelay"><span class="hs-identifier hs-var hs-var">defaultRetryBaseDelay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Microseconds
+</span><span class="hs-number">500000</span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span id="local-6989586621687823821"><span id="local-6989586621687823829"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-type">resolveSourceConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687823821"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendConfig"><span class="hs-identifier hs-type">BackendConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><a href="#local-6989586621687823829"><span class="hs-identifier hs-type">manager</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><a href="#local-6989586621687823821"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-51"></span><span id="resolveSourceConfig"><span class="annot"><span class="annottext">resolveSourceConfig :: forall (m :: * -&gt; *) manager.
+MonadIO m =&gt;
+SourceName
+-&gt; BigQueryConnSourceConfig
+-&gt; BackendSourceKind 'BigQuery
+-&gt; BackendConfig 'BigQuery
+-&gt; Environment
+-&gt; manager
+-&gt; m (Either QErr BigQuerySourceConfig)
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var hs-var">resolveSourceConfig</span></a></span></span><span> </span><span id="local-6989586621687824084"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687824084"><span class="hs-identifier hs-var">_name</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687824086"><span id="local-6989586621687824087"><span id="local-6989586621687824088"><span id="local-6989586621687824089"><span id="local-6989586621687824090"><span id="local-6989586621687824091"><span class="annot"><span class="annottext">Maybe ConfigurationInput
+ConfigurationInput
+ConfigurationInputs
+ConfigurationJSON ServiceAccount
+_cscServiceAccount :: ConfigurationJSON ServiceAccount
+_cscDatasets :: ConfigurationInputs
+_cscProjectId :: ConfigurationInput
+_cscGlobalSelectLimit :: Maybe ConfigurationInput
+_cscRetryBaseDelay :: Maybe ConfigurationInput
+_cscRetryLimit :: Maybe ConfigurationInput
+_cscRetryLimit :: BigQueryConnSourceConfig -&gt; Maybe ConfigurationInput
+_cscRetryBaseDelay :: BigQueryConnSourceConfig -&gt; Maybe ConfigurationInput
+_cscGlobalSelectLimit :: BigQueryConnSourceConfig -&gt; Maybe ConfigurationInput
+_cscProjectId :: BigQueryConnSourceConfig -&gt; ConfigurationInput
+_cscDatasets :: BigQueryConnSourceConfig -&gt; ConfigurationInputs
+_cscServiceAccount :: BigQueryConnSourceConfig -&gt; ConfigurationJSON ServiceAccount
+</span><a href="#local-6989586621687824086"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621687824098"><span class="annot"><span class="annottext">BackendSourceKind 'BigQuery
+</span><a href="#local-6989586621687824098"><span class="hs-identifier hs-var">_backendKind</span></a></span></span><span> </span><span id="local-6989586621687824099"><span class="annot"><span class="annottext">BackendConfig 'BigQuery
+</span><a href="#local-6989586621687824099"><span class="hs-identifier hs-var">_backendConfig</span></a></span></span><span> </span><span id="local-6989586621687824100"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687824100"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687824101"><span class="annot"><span class="annottext">manager
+</span><a href="#local-6989586621687824101"><span class="hs-identifier hs-var">_manager</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m BigQuerySourceConfig
+-&gt; m (Either QErr BigQuerySourceConfig)
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m BigQuerySourceConfig
+ -&gt; m (Either QErr BigQuerySourceConfig))
+-&gt; ExceptT QErr m BigQuerySourceConfig
+-&gt; m (Either QErr BigQuerySourceConfig)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621687824103"><span class="annot"><a href="#local-6989586621687824103"><span class="hs-identifier hs-var">eSA</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment
+-&gt; ConfigurationJSON ServiceAccount
+-&gt; ExceptT QErr m (Either String ServiceAccount)
+forall (m :: * -&gt; *) a.
+(QErrM m, FromJSON a) =&gt;
+Environment -&gt; ConfigurationJSON a -&gt; m (Either String a)
+</span><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationJson"><span class="hs-identifier hs-var">resolveConfigurationJson</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687824100"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON ServiceAccount
+</span><a href="#local-6989586621687824086"><span class="hs-identifier hs-var">_cscServiceAccount</span></a></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621687824103"><span class="hs-identifier hs-type">eSA</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687824105"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687824105"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; ExceptT QErr m BigQuerySourceConfig
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#Unexpected"><span class="hs-identifier hs-var">Unexpected</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ExceptT QErr m BigQuerySourceConfig)
+-&gt; Text -&gt; ExceptT QErr m BigQuerySourceConfig
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687824105"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687824109"><span class="annot"><span class="annottext">ServiceAccount
+</span><a href="#local-6989586621687824109"><span class="hs-identifier hs-var">serviceAccount</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-56"></span><span>      </span><span id="local-6989586621687824110"><span class="annot"><a href="#local-6989586621687824110"><span class="hs-identifier hs-var">projectId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; BigQueryProjectId
+</span><a href="Hasura.Backends.BigQuery.Source.html#BigQueryProjectId"><span class="hs-identifier hs-var">BigQueryProjectId</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; BigQueryProjectId)
+-&gt; ExceptT QErr m Text -&gt; ExceptT QErr m BigQueryProjectId
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Environment -&gt; ConfigurationInput -&gt; ExceptT QErr m Text
+forall (m :: * -&gt; *).
+QErrM m =&gt;
+Environment -&gt; ConfigurationInput -&gt; m Text
+</span><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInput"><span class="hs-identifier hs-var">resolveConfigurationInput</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687824100"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">ConfigurationInput
+</span><a href="#local-6989586621687824088"><span class="hs-identifier hs-var">_cscProjectId</span></a></span><span>
+</span><span id="line-57"></span><span>      </span><span id="local-6989586621687824114"><span class="annot"><a href="#local-6989586621687824114"><span class="hs-identifier hs-var">retryOptions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-58"></span><span>        </span><span id="local-6989586621687824115"><span class="annot"><a href="#local-6989586621687824115"><span class="hs-identifier hs-var">numRetries</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-59"></span><span>          </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInput"><span class="hs-identifier hs-type">resolveConfigurationInput</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824100"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">`mapM`</span></span><span> </span><span class="annot"><a href="#local-6989586621687824091"><span class="hs-identifier hs-type">_cscRetryLimit</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-60"></span><span>            </span><span class="annot"><span class="annottext">Maybe Text
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; ExceptT QErr m Int
+forall a. a -&gt; ExceptT QErr m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultRetryLimit"><span class="hs-identifier hs-var">defaultRetryLimit</span></a></span><span>
+</span><span id="line-61"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687824117"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824117"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ExceptT QErr m Int
+forall (m :: * -&gt; *) a.
+(MonadError QErr m, Num a, Ord a, FromJSON a, Read a) =&gt;
+Text -&gt; Text -&gt; m a
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#readNonNegative"><span class="hs-identifier hs-var">readNonNegative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824117"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;retry limit&quot;</span></span><span>
+</span><span id="line-62"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><a href="#local-6989586621687824115"><span class="hs-identifier hs-type">numRetries</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">==</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span>
+</span><span id="line-63"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Nothing</span></span><span>
+</span><span id="line-64"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-65"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687824119"><span class="annot"><a href="#local-6989586621687824119"><span class="hs-identifier hs-var hs-var">_retryNumRetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687824115"><span class="hs-identifier hs-var">numRetries</span></a></span><span>
+</span><span id="line-66"></span><span>            </span><span id="local-6989586621687824120"><span class="annot"><a href="#local-6989586621687824120"><span class="hs-identifier hs-var">_retryBaseDelay</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-67"></span><span>              </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInput"><span class="hs-identifier hs-type">resolveConfigurationInput</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824100"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">`mapM`</span></span><span> </span><span class="annot"><a href="#local-6989586621687824090"><span class="hs-identifier hs-type">_cscRetryBaseDelay</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-68"></span><span>                </span><span class="annot"><span class="annottext">Maybe Text
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Microseconds -&gt; ExceptT QErr m Microseconds
+forall a. a -&gt; ExceptT QErr m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Microseconds
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultRetryBaseDelay"><span class="hs-identifier hs-var">defaultRetryBaseDelay</span></a></span><span>
+</span><span id="line-69"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687824121"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824121"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Microseconds
+forall a. Num a =&gt; Integer -&gt; a
+</span><span class="hs-identifier hs-var">fromInteger</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Microseconds)
+-&gt; ExceptT QErr m Integer -&gt; ExceptT QErr m Microseconds
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ExceptT QErr m Integer
+forall (m :: * -&gt; *) a.
+(MonadError QErr m, Num a, Ord a, FromJSON a, Read a) =&gt;
+Text -&gt; Text -&gt; m a
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#readNonNegative"><span class="hs-identifier hs-var">readNonNegative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824121"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;retry base delay&quot;</span></span><span>
+</span><span id="line-70"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="#local-6989586621687824119"><span class="hs-glyph hs-type hs-type hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621687824125"><span class="annot"><a href="#local-6989586621687824125"><span class="hs-identifier hs-var">_scConnection</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#initConnection"><span class="hs-identifier hs-type">initConnection</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824109"><span class="hs-identifier hs-type">serviceAccount</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824110"><span class="hs-identifier hs-type">projectId</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824114"><span class="hs-identifier hs-type">retryOptions</span></a></span><span>
+</span><span id="line-72"></span><span>      </span><span id="local-6989586621687824127"><span class="annot"><a href="#local-6989586621687824127"><span class="hs-identifier hs-var">_scDatasets</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="hs-identifier hs-type">fmap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryDataset"><span class="hs-identifier hs-type">BigQueryDataset</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&lt;$&gt;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInputs"><span class="hs-identifier hs-type">resolveConfigurationInputs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824100"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824087"><span class="hs-identifier hs-type">_cscDatasets</span></a></span><span>
+</span><span id="line-73"></span><span>      </span><span id="local-6989586621687824130"><span class="annot"><a href="#local-6989586621687824130"><span class="hs-identifier hs-var">_scGlobalSelectLimit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-74"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInput"><span class="hs-identifier hs-type">resolveConfigurationInput</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824100"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">`mapM`</span></span><span> </span><span class="annot"><a href="#local-6989586621687824089"><span class="hs-identifier hs-type">_cscGlobalSelectLimit</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-75"></span><span>          </span><span class="annot"><span class="annottext">Maybe Text
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; ExceptT QErr m Int64
+forall a. a -&gt; ExceptT QErr m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#defaultGlobalSelectLimit"><span class="hs-identifier hs-var">defaultGlobalSelectLimit</span></a></span><span>
+</span><span id="line-76"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687824131"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824131"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ExceptT QErr m Int64
+forall (m :: * -&gt; *) a.
+(MonadError QErr m, Num a, Ord a, FromJSON a, Read a) =&gt;
+Text -&gt; Text -&gt; m a
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#readNonNegative"><span class="hs-identifier hs-var">readNonNegative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824131"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;global select limit&quot;</span></span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="#local-6989586621687824125"><span class="hs-glyph hs-type hs-type hs-type hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span id="local-6989586621687823881"><span id="local-6989586621687823882"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#readNonNegative"><span class="hs-identifier hs-type">readNonNegative</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687823881"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621687823882"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621687823882"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687823882"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Read</span></span><span> </span><span class="annot"><a href="#local-6989586621687823882"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687823881"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687823882"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-80"></span><span id="readNonNegative"><span class="annot"><span class="annottext">readNonNegative :: forall (m :: * -&gt; *) a.
+(MonadError QErr m, Num a, Ord a, FromJSON a, Read a) =&gt;
+Text -&gt; Text -&gt; m a
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#readNonNegative"><span class="hs-identifier hs-var hs-var">readNonNegative</span></a></span></span><span> </span><span id="local-6989586621687824162"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824162"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621687824163"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824163"><span class="hs-identifier hs-var">paramName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-comment">-- This works around the inconsistency between JSON and</span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-comment">-- environment variables. The config handling module should be</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-comment">-- reworked to handle non-text values better.</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe a
+forall a. Read a =&gt; String -&gt; Maybe a
+</span><span class="hs-identifier hs-var">readMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824162"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Maybe a -&gt; Maybe a
+forall a. Maybe a -&gt; Maybe a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe a
+forall a. FromJSON a =&gt; ByteString -&gt; Maybe a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Decoding.html/Data.Aeson.Decoding.html#decode"><span class="hs-identifier hs-var">J.decode</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StrictByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">L.fromStrict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; StrictByteString
+</span><span class="hs-identifier hs-var">T.encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824162"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m a
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#Unexpected"><span class="hs-identifier hs-var">Unexpected</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m a) -&gt; Text -&gt; m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Need a non-negative integer for &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824163"><span class="hs-identifier hs-var">paramName</span></a></span><span>
+</span><span id="line-86"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687824170"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687824170"><span class="hs-identifier hs-var">i'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687824170"><span class="hs-identifier hs-var">i'</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#Unexpected"><span class="hs-identifier hs-var">Unexpected</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m ()) -&gt; Text -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Need the integer for the &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824163"><span class="hs-identifier hs-var">paramName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; to be non-negative&quot;</span></span><span>
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">a -&gt; m a
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687824170"><span class="hs-identifier hs-var">i'</span></a></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span id="local-6989586621687823907"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSource"><span class="hs-identifier hs-type">resolveSource</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687823907"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><a href="#local-6989586621687823907"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#DBObjectsIntrospection"><span class="hs-identifier hs-type">DBObjectsIntrospection</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-94"></span><span id="resolveSource"><span class="annot"><span class="annottext">resolveSource :: forall (m :: * -&gt; *).
+MonadIO m =&gt;
+BigQuerySourceConfig
+-&gt; m (Either QErr (DBObjectsIntrospection 'BigQuery))
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSource"><span class="hs-identifier hs-var hs-var">resolveSource</span></a></span></span><span> </span><span id="local-6989586621687824235"><span class="annot"><span class="annottext">BigQuerySourceConfig
+</span><a href="#local-6989586621687824235"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><span class="annottext">ExceptT QErr m (DBObjectsIntrospection 'BigQuery)
+-&gt; m (Either QErr (DBObjectsIntrospection 'BigQuery))
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m (DBObjectsIntrospection 'BigQuery)
+ -&gt; m (Either QErr (DBObjectsIntrospection 'BigQuery)))
+-&gt; ExceptT QErr m (DBObjectsIntrospection 'BigQuery)
+-&gt; m (Either QErr (DBObjectsIntrospection 'BigQuery))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-96"></span><span>    </span><span id="local-6989586621687824236"><span class="annot"><a href="#local-6989586621687824236"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BigQuerySourceConfig
+-&gt; ExceptT QErr m (Either RestProblem [RestTable])
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+BigQuerySourceConfig -&gt; m (Either RestProblem [RestTable])
+</span><a href="Hasura.Backends.BigQuery.Meta.html#getTables"><span class="hs-identifier hs-var">getTables</span></a></span><span> </span><span class="annot"><span class="annottext">BigQuerySourceConfig
+</span><a href="#local-6989586621687824235"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621687824238"><span class="annot"><a href="#local-6989586621687824238"><span class="hs-identifier hs-var">routines</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#getRoutines"><span class="hs-identifier hs-type">getRoutines</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824235"><span class="hs-identifier hs-type">sourceConfig</span></a></span><span>
+</span><span id="line-98"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687824240"><span class="annot"><a href="#local-6989586621687824240"><span class="hs-identifier hs-var hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([RestTable] -&gt; [RestRoutine] -&gt; ([RestTable], [RestRoutine]))
+-&gt; Either RestProblem [RestTable]
+-&gt; Either
+     RestProblem ([RestRoutine] -&gt; ([RestTable], [RestRoutine]))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Either RestProblem [RestTable]
+</span><a href="#local-6989586621687824236"><span class="hs-identifier hs-var">tables</span></a></span><span> </span><span class="annot"><span class="annottext">Either RestProblem ([RestRoutine] -&gt; ([RestTable], [RestRoutine]))
+-&gt; Either RestProblem [RestRoutine]
+-&gt; Either RestProblem ([RestTable], [RestRoutine])
+forall a b.
+Either RestProblem (a -&gt; b)
+-&gt; Either RestProblem a -&gt; Either RestProblem b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Either RestProblem [RestRoutine]
+</span><a href="#local-6989586621687824238"><span class="hs-identifier hs-var">routines</span></a></span><span>
+</span><span id="line-99"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621687824240"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687824241"><span class="annot"><span class="annottext">RestProblem
+</span><a href="#local-6989586621687824241"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; ExceptT QErr m (DBObjectsIntrospection 'BigQuery)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html/Hasura.Base.Error.html#Unexpected"><span class="hs-identifier hs-var">Unexpected</span></a></span><span>
+</span><span id="line-102"></span><span>          </span><span class="annot"><span class="annottext">(Text -&gt; ExceptT QErr m (DBObjectsIntrospection 'BigQuery))
+-&gt; Text -&gt; ExceptT QErr m (DBObjectsIntrospection 'BigQuery)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;unexpected exception while connecting to database: &quot;</span></span><span>
+</span><span id="line-103"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RestProblem -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">RestProblem
+</span><a href="#local-6989586621687824241"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-104"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687824243"><span class="annot"><span class="annottext">[RestTable]
+</span><a href="#local-6989586621687824243"><span class="hs-identifier hs-var">restTables</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687824244"><span class="annot"><span class="annottext">[RestRoutine]
+</span><a href="#local-6989586621687824244"><span class="hs-identifier hs-var">restRoutines</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-105"></span><span>        </span><span id="local-6989586621687824245"><span class="annot"><a href="#local-6989586621687824245"><span class="hs-identifier hs-var">seconds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Int64 -&gt; ExceptT QErr m Int64
+forall a. IO a -&gt; ExceptT QErr m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO Int64 -&gt; ExceptT QErr m Int64)
+-&gt; IO Int64 -&gt; ExceptT QErr m Int64
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(SystemTime -&gt; Int64) -&gt; IO SystemTime -&gt; IO Int64
+forall a b. (a -&gt; b) -&gt; IO a -&gt; IO b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">SystemTime -&gt; Int64
+</span><span class="hs-identifier hs-var">systemSeconds</span></span><span> </span><span class="annot"><span class="annottext">IO SystemTime
+</span><span class="hs-identifier hs-var">getSystemTime</span></span><span>
+</span><span id="line-106"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687824249"><span class="annot"><a href="#local-6989586621687824249"><span class="hs-identifier hs-var hs-var">functions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty (RawFunctionInfo 'BigQuery) -&gt; FunctionOverloads 'BigQuery
+NonEmpty RestRoutine -&gt; FunctionOverloads 'BigQuery
+forall (b :: BackendType).
+NonEmpty (RawFunctionInfo b) -&gt; FunctionOverloads b
+</span><a href="Hasura.Function.Cache.html#FunctionOverloads"><span class="hs-identifier hs-var">FunctionOverloads</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmpty RestRoutine -&gt; FunctionOverloads 'BigQuery)
+-&gt; HashMap FunctionName (NonEmpty RestRoutine)
+-&gt; HashMap FunctionName (FunctionOverloads 'BigQuery)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(RestRoutine -&gt; FunctionName)
+-&gt; [RestRoutine] -&gt; HashMap FunctionName (NonEmpty RestRoutine)
+forall k (t :: * -&gt; *) v.
+(Hashable k, Foldable t) =&gt;
+(v -&gt; k) -&gt; t v -&gt; HashMap k (NonEmpty v)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.HashMap.Strict.Extended.html/Data.HashMap.Strict.Extended.html#groupOnNE"><span class="hs-identifier hs-var">HashMap.groupOnNE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RestRoutineReference -&gt; FunctionName
+</span><a href="Hasura.Backends.BigQuery.Meta.html#routineReferenceToFunctionName"><span class="hs-identifier hs-var">routineReferenceToFunctionName</span></a></span><span> </span><span class="annot"><span class="annottext">(RestRoutineReference -&gt; FunctionName)
+-&gt; (RestRoutine -&gt; RestRoutineReference)
+-&gt; RestRoutine
+-&gt; FunctionName
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RestRoutine -&gt; RestRoutineReference
+</span><a href="Hasura.Backends.BigQuery.Meta.html#routineReference"><span class="hs-identifier hs-var">routineReference</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[RestRoutine]
+</span><a href="#local-6989586621687824244"><span class="hs-identifier hs-var">restRoutines</span></a></span><span>
+</span><span id="line-107"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span>
+</span><span id="line-108"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#DBObjectsIntrospection"><span class="hs-identifier hs-type">DBObjectsIntrospection</span></a></span><span>
+</span><span id="line-109"></span><span>              </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#_rsTables"><span class="hs-identifier hs-var">_rsTables</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-110"></span><span>                  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashMap.Internal.Strict.html/Data.HashMap.Internal.Strict.html#fromList"><span class="hs-identifier hs-type">HashMap.fromList</span></a></span><span>
+</span><span id="line-111"></span><span>                    </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTableReferenceToTableName"><span class="hs-identifier hs-type">restTableReferenceToTableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824259"><span class="hs-identifier hs-type">tableReference</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-112"></span><span>                        </span><span class="annot"><a href="Hasura.Table.Cache.html#DBTableMetadata"><span class="hs-identifier hs-type">DBTableMetadata</span></a></span><span>
+</span><span id="line-113"></span><span>                          </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#_ptmiOid"><span class="hs-identifier hs-var">_ptmiOid</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-type">OID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">fromIntegral</span></span><span> </span><span class="annot"><a href="#local-6989586621687824245"><span class="hs-identifier hs-type">seconds</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">+</span></span><span> </span><span class="annot"><a href="#local-6989586621687824264"><span class="hs-identifier hs-type">index</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- TODO: The seconds are used for uniqueness. BigQuery doesn't support a &quot;stable&quot; ID for a table.</span><span>
+</span><span id="line-114"></span><span>                            </span><span class="annot"><a href="Hasura.Table.Cache.html#_ptmiColumns"><span class="hs-identifier hs-var">_ptmiColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-115"></span><span>                              </span><span class="hs-special">[</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span>
+</span><span id="line-116"></span><span>                                  </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#rciName"><span class="hs-identifier hs-var">rciName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824269"><span class="hs-identifier hs-type">name</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>                                    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#rciPosition"><span class="hs-identifier hs-var">rciPosition</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621687824271"><span class="hs-identifier hs-type">position</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>                                    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#rciType"><span class="hs-identifier hs-var">rciType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnTypeScalar"><span class="hs-identifier hs-type">RawColumnTypeScalar</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTypeToScalarType"><span class="hs-identifier hs-type">restTypeToScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687824274"><span class="hs-identifier hs-type">type'</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>                                    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#rciIsNullable"><span class="hs-identifier hs-var">rciIsNullable</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-120"></span><span>                                      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621687824276"><span class="hs-identifier hs-type">mode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-121"></span><span>                                        </span><span class="annot"><span class="annottext">Mode
+</span><a href="Hasura.Backends.BigQuery.Meta.html#Nullable"><span class="hs-identifier hs-var">Nullable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-122"></span><span>                                        </span><span class="annot"><span class="annottext">Mode
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>                                    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#rciDescription"><span class="hs-identifier hs-var">rciDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>                                    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#rciMutability"><span class="hs-identifier hs-var">rciMutability</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#_cmIsInsertable"><span class="hs-identifier hs-var">_cmIsInsertable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#_cmIsUpdatable"><span class="hs-identifier hs-var">_cmIsUpdatable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span class="hs-special">}</span><span>
+</span><span id="line-125"></span><span>                                  </span><span class="hs-special">}</span><span>
+</span><span id="line-126"></span><span>                                </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687824271"><span class="annot"><a href="#local-6989586621687824271"><span class="hs-identifier hs-var">position</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestFieldSchema"><span class="hs-identifier hs-type">RestFieldSchema</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687824269"><span class="annot"><a href="#local-6989586621687824269"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687824274"><span class="annot"><a href="#local-6989586621687824274"><span class="hs-identifier hs-var hs-var">type'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687824276"><span class="annot"><a href="#local-6989586621687824276"><span class="hs-identifier hs-var hs-var">mode</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-127"></span><span>                                    </span><span class="annot"><span class="hs-identifier hs-type">zip</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">..</span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621687824287"><span class="hs-identifier hs-type">fields</span></a></span><span> </span><span class="hs-comment">-- TODO: Same trouble as Oid above.</span><span>
+</span><span id="line-128"></span><span>                              </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>                            </span><span class="annot"><a href="Hasura.Table.Cache.html#_ptmiPrimaryKey"><span class="hs-identifier hs-var">_ptmiPrimaryKey</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-130"></span><span>                            </span><span class="annot"><a href="Hasura.Table.Cache.html#_ptmiUniqueConstraints"><span class="hs-identifier hs-var">_ptmiUniqueConstraints</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">mempty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>                            </span><span class="annot"><a href="Hasura.Table.Cache.html#_ptmiForeignKeys"><span class="hs-identifier hs-var">_ptmiForeignKeys</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">mempty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>                            </span><span class="annot"><a href="Hasura.Table.Cache.html#_ptmiViewInfo"><span class="hs-identifier hs-var">_ptmiViewInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">$</span></span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#ViewInfo"><span class="hs-identifier hs-type">ViewInfo</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">False</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">False</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">False</span></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>                            </span><span class="annot"><a href="Hasura.Table.Cache.html#_ptmiDescription"><span class="hs-identifier hs-var">_ptmiDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>                            </span><span class="annot"><a href="Hasura.Table.Cache.html#_ptmiExtraTableMetadata"><span class="hs-identifier hs-var">_ptmiExtraTableMetadata</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span>                          </span><span class="hs-special">}</span><span>
+</span><span id="line-136"></span><span>                      </span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span>                      </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687824264"><span class="annot"><a href="#local-6989586621687824264"><span class="hs-identifier hs-var">index</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestTable"><span class="hs-identifier hs-type">RestTable</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687824259"><span class="annot"><a href="#local-6989586621687824259"><span class="hs-identifier hs-var hs-var">tableReference</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687824297"><span class="annot"><a href="#local-6989586621687824297"><span class="hs-identifier hs-var hs-var">schema</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-138"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">zip</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621687824243"><span class="hs-identifier hs-type">restTables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-139"></span><span>                        </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestTableSchema"><span class="hs-identifier hs-type">RestTableSchema</span></a></span><span> </span><span id="local-6989586621687824287"><span class="annot"><a href="#local-6989586621687824287"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621687824297"><span class="hs-identifier hs-type">schema</span></a></span><span>
+</span><span id="line-140"></span><span>                    </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-141"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#_rsFunctions"><span class="hs-identifier hs-var">_rsFunctions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621687824249"><span class="hs-identifier hs-type">functions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#_rsScalars"><span class="hs-identifier hs-var">_rsScalars</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">mempty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#_rsLogicalModels"><span class="hs-identifier hs-var">_rsLogicalModels</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">mempty</span></span><span>
+</span><span id="line-144"></span><span>              </span><span class="hs-special">}</span><span>
+</span><span id="line-145"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTypeToScalarType"><span class="hs-identifier hs-type">restTypeToScalarType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestType"><span class="hs-identifier hs-type">RestType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span>
+</span><span id="line-148"></span><span id="restTypeToScalarType"><span class="annot"><span class="annottext">restTypeToScalarType :: RestType -&gt; ScalarType
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTypeToScalarType"><span class="hs-identifier hs-var hs-var">restTypeToScalarType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-150"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#STRING"><span class="hs-identifier hs-var">STRING</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#StringScalarType"><span class="hs-identifier hs-var">StringScalarType</span></a></span><span>
+</span><span id="line-151"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#BYTES"><span class="hs-identifier hs-var">BYTES</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#BytesScalarType"><span class="hs-identifier hs-var">BytesScalarType</span></a></span><span>
+</span><span id="line-152"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#INTEGER"><span class="hs-identifier hs-var">INTEGER</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#IntegerScalarType"><span class="hs-identifier hs-var">IntegerScalarType</span></a></span><span>
+</span><span id="line-153"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#FLOAT"><span class="hs-identifier hs-var">FLOAT</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#FloatScalarType"><span class="hs-identifier hs-var">FloatScalarType</span></a></span><span>
+</span><span id="line-154"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#BOOL"><span class="hs-identifier hs-var">BOOL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#BoolScalarType"><span class="hs-identifier hs-var">BoolScalarType</span></a></span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#TIMESTAMP"><span class="hs-identifier hs-var">TIMESTAMP</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#TimestampScalarType"><span class="hs-identifier hs-var">TimestampScalarType</span></a></span><span>
+</span><span id="line-156"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#DATE"><span class="hs-identifier hs-var">DATE</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#DateScalarType"><span class="hs-identifier hs-var">DateScalarType</span></a></span><span>
+</span><span id="line-157"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#TIME"><span class="hs-identifier hs-var">TIME</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#TimeScalarType"><span class="hs-identifier hs-var">TimeScalarType</span></a></span><span>
+</span><span id="line-158"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#DATETIME"><span class="hs-identifier hs-var">DATETIME</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#DatetimeScalarType"><span class="hs-identifier hs-var">DatetimeScalarType</span></a></span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#GEOGRAPHY"><span class="hs-identifier hs-var">GEOGRAPHY</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#GeographyScalarType"><span class="hs-identifier hs-var">GeographyScalarType</span></a></span><span>
+</span><span id="line-160"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#STRUCT"><span class="hs-identifier hs-var">STRUCT</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#StructScalarType"><span class="hs-identifier hs-var">StructScalarType</span></a></span><span>
+</span><span id="line-161"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#BIGDECIMAL"><span class="hs-identifier hs-var">BIGDECIMAL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#BigDecimalScalarType"><span class="hs-identifier hs-var">BigDecimalScalarType</span></a></span><span>
+</span><span id="line-162"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#DECIMAL"><span class="hs-identifier hs-var">DECIMAL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#DecimalScalarType"><span class="hs-identifier hs-var">DecimalScalarType</span></a></span><span>
+</span><span id="line-163"></span><span>    </span><span class="annot"><span class="annottext">RestType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#JSON"><span class="hs-identifier hs-var">JSON</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="Hasura.Backends.BigQuery.Types.html#JsonScalarType"><span class="hs-identifier hs-var">JsonScalarType</span></a></span><span>
+</span><span id="line-164"></span><span>
+</span><span id="line-165"></span><span class="hs-comment">-- Hierarchy: Project / Dataset / Table</span><span>
+</span><span id="line-166"></span><span class="hs-comment">-- see &lt;https://cloud.google.com/bigquery/docs/datasets-intro&gt;</span><span>
+</span><span id="line-167"></span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTableReferenceToTableName"><span class="hs-identifier hs-type">restTableReferenceToTableName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestTableReference"><span class="hs-identifier hs-type">RestTableReference</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span>
+</span><span id="line-168"></span><span id="restTableReferenceToTableName"><span class="annot"><span class="annottext">restTableReferenceToTableName :: RestTableReference -&gt; TableName
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTableReferenceToTableName"><span class="hs-identifier hs-var hs-var">restTableReferenceToTableName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestTableReference"><span class="hs-identifier hs-type">RestTableReference</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687824332"><span id="local-6989586621687824333"><span id="local-6989586621687824334"><span class="annot"><span class="annottext">Text
+datasetId :: Text
+projectId :: Text
+tableId :: Text
+tableId :: RestTableReference -&gt; Text
+projectId :: RestTableReference -&gt; Text
+datasetId :: RestTableReference -&gt; Text
+</span><a href="#local-6989586621687824332"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-169"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">tableName :: Text
+</span><a href="Hasura.Backends.BigQuery.Types.html#tableName"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824334"><span class="hs-identifier hs-var">tableId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">tableNameSchema :: Text
+</span><a href="Hasura.Backends.BigQuery.Types.html#tableNameSchema"><span class="hs-identifier hs-var">tableNameSchema</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687824332"><span class="hs-identifier hs-var">datasetId</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span class="hs-comment">-- We ignore project id and push that requirement up to the top to</span><span>
+</span><span id="line-172"></span><span class="hs-comment">-- the data source level.</span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span id="local-6989586621687823985"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-type">postDropSourceHook</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687823985"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-176"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-177"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#TableEventTriggers"><span class="hs-identifier hs-type">TableEventTriggers</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-178"></span><span>  </span><span class="annot"><a href="#local-6989586621687823985"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-179"></span><span id="postDropSourceHook"><span class="annot"><span class="annottext">postDropSourceHook :: forall (m :: * -&gt; *).
+MonadIO m =&gt;
+BigQuerySourceConfig -&gt; TableEventTriggers 'BigQuery -&gt; m ()
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="annot"><span class="annottext">BigQuerySourceConfig
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableEventTriggers 'BigQuery
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-180"></span><span>  </span><span class="hs-comment">-- On BigQuery we don't keep connections open.</span><span>
+</span><span id="line-181"></span><span>  </span><span class="annot"><span class="annottext">() -&gt; m ()
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-182"></span></pre></body></html>

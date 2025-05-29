@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.Authentication.Headers.html"><span class="hs-identifier">Hasura.Authentication.Headers</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Authentication.Headers.html#contentLengthHeader"><span class="hs-identifier">contentLengthHeader</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Authentication.Headers.html#gzipHeader"><span class="hs-identifier">gzipHeader</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Authentication.Headers.html#jsonHeader"><span class="hs-identifier">jsonHeader</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Authentication.Headers.html#requestIdHeader"><span class="hs-identifier">requestIdHeader</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Authentication.Headers.html#sqlHeader"><span class="hs-identifier">sqlHeader</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Authentication.Headers.html#sensitiveHeaders"><span class="hs-identifier">sensitiveHeaders</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Authentication.Headers.html#commonClientHeadersIgnored"><span class="hs-identifier">commonClientHeadersIgnored</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.html/Data.HashSet.html"><span class="hs-identifier">Data.HashSet</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashSet</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/http-types-0.12.3-48808bff700213a8ec5159613d94db74ab5738412a48ffcd3e274142637b29eb/share/doc/html/src/Network.HTTP.Types.html/Network.HTTP.Types.html"><span class="hs-identifier">Network.HTTP.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="annot"><a href="Hasura.Authentication.Headers.html#jsonHeader"><span class="hs-identifier hs-type">jsonHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/http-types-0.12.3-48808bff700213a8ec5159613d94db74ab5738412a48ffcd3e274142637b29eb/share/doc/html/src/Network.HTTP.Types.Header.html/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span>
+</span><span id="line-17"></span><span id="jsonHeader"><span class="annot"><span class="annottext">jsonHeader :: Header
+</span><a href="Hasura.Authentication.Headers.html#jsonHeader"><span class="hs-identifier hs-var hs-var">jsonHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;Content-Type&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;application/json; charset=utf-8&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="annot"><a href="Hasura.Authentication.Headers.html#sqlHeader"><span class="hs-identifier hs-type">sqlHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/http-types-0.12.3-48808bff700213a8ec5159613d94db74ab5738412a48ffcd3e274142637b29eb/share/doc/html/src/Network.HTTP.Types.Header.html/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span>
+</span><span id="line-20"></span><span id="sqlHeader"><span class="annot"><span class="annottext">sqlHeader :: Header
+</span><a href="Hasura.Authentication.Headers.html#sqlHeader"><span class="hs-identifier hs-var hs-var">sqlHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;Content-Type&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;application/sql; charset=utf-8&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="annot"><a href="Hasura.Authentication.Headers.html#gzipHeader"><span class="hs-identifier hs-type">gzipHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/http-types-0.12.3-48808bff700213a8ec5159613d94db74ab5738412a48ffcd3e274142637b29eb/share/doc/html/src/Network.HTTP.Types.Header.html/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span>
+</span><span id="line-23"></span><span id="gzipHeader"><span class="annot"><span class="annottext">gzipHeader :: Header
+</span><a href="Hasura.Authentication.Headers.html#gzipHeader"><span class="hs-identifier hs-var hs-var">gzipHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;Content-Encoding&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;gzip&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span id="local-6989586621687549275"><span class="annot"><a href="Hasura.Authentication.Headers.html#requestIdHeader"><span class="hs-identifier hs-type">requestIdHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621687549275"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687549275"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-26"></span><span id="requestIdHeader"><span class="annot"><span class="annottext">requestIdHeader :: forall a. IsString a =&gt; a
+</span><a href="Hasura.Authentication.Headers.html#requestIdHeader"><span class="hs-identifier hs-var hs-var">requestIdHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;x-request-id&quot;</span></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span id="local-6989586621687549313"><span class="annot"><a href="Hasura.Authentication.Headers.html#contentLengthHeader"><span class="hs-identifier hs-type">contentLengthHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621687549313"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687549313"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-29"></span><span id="contentLengthHeader"><span class="annot"><span class="annottext">contentLengthHeader :: forall a. IsString a =&gt; a
+</span><a href="Hasura.Authentication.Headers.html#contentLengthHeader"><span class="hs-identifier hs-var hs-var">contentLengthHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Content-Length&quot;</span></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="annot"><a href="Hasura.Authentication.Headers.html#sensitiveHeaders"><span class="hs-identifier hs-type">sensitiveHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.Internal.html/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/http-types-0.12.3-48808bff700213a8ec5159613d94db74ab5738412a48ffcd3e274142637b29eb/share/doc/html/src/Network.HTTP.Types.Header.html/Network.HTTP.Types.Header.html#HeaderName"><span class="hs-identifier hs-type">HTTP.HeaderName</span></a></span><span>
+</span><span id="line-32"></span><span id="sensitiveHeaders"><span class="annot"><span class="annottext">sensitiveHeaders :: HashSet HeaderName
+</span><a href="Hasura.Authentication.Headers.html#sensitiveHeaders"><span class="hs-identifier hs-var hs-var">sensitiveHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><span class="annottext">[HeaderName] -&gt; HashSet HeaderName
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/unordered-containers-0.2.20-6d56f9b3abc6011ddb6e237c415126423ab5ceb5c078221bba2ff80dbe921009/share/doc/html/src/Data.HashSet.Internal.html/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">HashSet.fromList</span></a></span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;Access-Token&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;Authorization&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;Cookie&quot;</span></span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- ignore the following request headers from the client</span><span>
+</span><span id="line-40"></span><span id="local-6989586621687549280"><span class="annot"><a href="Hasura.Authentication.Headers.html#commonClientHeadersIgnored"><span class="hs-identifier hs-type">commonClientHeadersIgnored</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621687549280"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621687549280"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-41"></span><span id="commonClientHeadersIgnored"><span class="annot"><span class="annottext">commonClientHeadersIgnored :: forall a. IsString a =&gt; [a]
+</span><a href="Hasura.Authentication.Headers.html#commonClientHeadersIgnored"><span class="hs-identifier hs-var hs-var">commonClientHeadersIgnored</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Content-Length&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Content-MD5&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;User-Agent&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Host&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Origin&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Referer&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Accept&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Accept-Encoding&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Accept-Language&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Accept-Datetime&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Cache-Control&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Connection&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;DNT&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Content-Type&quot;</span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-57"></span></pre></body></html>

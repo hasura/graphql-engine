@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.PingSource.html"><span class="hs-identifier">Hasura.Backends.Postgres.Instances.PingSource</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.PingSource.html#runCockroachDBPing"><span class="hs-identifier">runCockroachDBPing</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html/Data.Environment.html"><span class="hs-identifier">Data.Environment</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.html/Database.PG.Query.html"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Connect.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection.Connect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Connect.html#withPostgresDB"><span class="hs-identifier">withPostgresDB</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier">SourceName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#sourceNameToText"><span class="hs-identifier">sourceNameToText</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html"><span class="hs-identifier">Hasura.Server.Version</span></a></span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.PingSource.html#runCockroachDBPing"><span class="hs-identifier hs-type">runCockroachDBPing</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-19"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PG.PostgresConnConfiguration</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span id="runCockroachDBPing"><span class="annot"><span class="annottext">runCockroachDBPing :: Environment
+-&gt; (String -&gt; IO ())
+-&gt; SourceName
+-&gt; PostgresConnConfiguration
+-&gt; IO ()
+</span><a href="Hasura.Backends.Postgres.Instances.PingSource.html#runCockroachDBPing"><span class="hs-identifier hs-var hs-var">runCockroachDBPing</span></a></span></span><span> </span><span id="local-6989586621687771782"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687771782"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687771783"><span class="annot"><span class="annottext">String -&gt; IO ()
+</span><a href="#local-6989586621687771783"><span class="hs-identifier hs-var">pingLog</span></a></span></span><span> </span><span id="local-6989586621687771784"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687771784"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621687771785"><span class="annot"><span class="annottext">PostgresConnConfiguration
+</span><a href="#local-6989586621687771785"><span class="hs-identifier hs-var">sourceConnection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687771792"><span class="annot"><span class="annottext">versionMessage :: Text
+</span><a href="#local-6989586621687771792"><span class="hs-identifier hs-var hs-var hs-var">versionMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;hasura-graphql-engine-version=&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier hs-var">currentVersion</span></a></span><span>
+</span><span id="line-23"></span><span>      </span><span id="local-6989586621687771799"><span class="annot"><span class="annottext">query :: Query
+</span><a href="#local-6989586621687771799"><span class="hs-identifier hs-var hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Query
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html/Database.PG.Query.Transaction.html#fromText"><span class="hs-identifier hs-var">PG.fromText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;select 1 /* &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687771792"><span class="hs-identifier hs-var">versionMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; */&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621687771801"><span class="annot"><a href="#local-6989586621687771801"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment
+-&gt; SourceName
+-&gt; PostgresConnConfiguration
+-&gt; TxET QErr IO ()
+-&gt; IO (Either QErr ())
+forall a.
+Environment
+-&gt; SourceName
+-&gt; PostgresConnConfiguration
+-&gt; TxET QErr IO a
+-&gt; IO (Either QErr a)
+</span><a href="Hasura.Backends.Postgres.Connection.Connect.html#withPostgresDB"><span class="hs-identifier hs-var">withPostgresDB</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687771782"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687771784"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresConnConfiguration
+</span><a href="#local-6989586621687771785"><span class="hs-identifier hs-var">sourceConnection</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET QErr IO () -&gt; IO (Either QErr ()))
+-&gt; TxET QErr IO () -&gt; IO (Either QErr ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr) -&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO ()
+forall (m :: * -&gt; *) r e.
+(MonadIO m, ToPrepArgs r) =&gt;
+(PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m ()
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html/Database.PG.Query.Transaction.html#discardQE"><span class="hs-identifier hs-var">PG.discardQE</span></a></span><span> </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#dmlTxErrorHandler"><span class="hs-identifier hs-var">PG.dmlTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621687771799"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="#local-6989586621687771801"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-28"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; IO ()
+</span><a href="#local-6989586621687771783"><span class="hs-identifier hs-var">pingLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Ping for &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; Text
+</span><a href="Hasura.RQL.Types.Common.html#sourceNameToText"><span class="hs-identifier hs-var">sourceNameToText</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687771784"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; failed&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="annot"><span class="annottext">()
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-30"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; IO ()
+</span><a href="#local-6989586621687771783"><span class="hs-identifier hs-var">pingLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Ping for &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; Text
+</span><a href="Hasura.RQL.Types.Common.html#sourceNameToText"><span class="hs-identifier hs-var">sourceNameToText</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687771784"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; succeeded&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span></pre></body></html>
