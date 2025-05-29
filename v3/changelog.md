@@ -8,6 +8,10 @@
 
 ### Added
 
+## [v2025.05.29]
+
+### Added
+
 - When the `send_missing_arguments_to_ndc_as_nulls` flag is enabled, the engine
   will now send null values for missing arguments to the data connector rather
   than omitting them. Note that may be a breaking change for some data
@@ -1619,7 +1623,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.05.14...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.05.29...HEAD
+[v2025.05.29]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.29
 [v2025.05.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.14
 [v2025.05.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.13
 [v2025.04.30]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.30
