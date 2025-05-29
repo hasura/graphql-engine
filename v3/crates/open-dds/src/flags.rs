@@ -55,6 +55,7 @@ pub enum Flag {
     ValidateScalarBooleanExpressionOperators,
     ValidateNonNullGraphqlVariables,
     DisallowComparableRelationshipTargetWithNoBooleanExpressionType,
+    SendMissingArgumentsToNdcAsNulls,
 }
 
 impl Flag {
@@ -153,6 +154,7 @@ impl Flag {
             Flag::DisallowComparableRelationshipTargetWithNoBooleanExpressionType => {
                 "disallow_comparable_relationship_target_with_no_boolean_expression_type"
             }
+            Flag::SendMissingArgumentsToNdcAsNulls => "send_missing_arguments_to_ndc_as_nulls",
         }
     }
 }
