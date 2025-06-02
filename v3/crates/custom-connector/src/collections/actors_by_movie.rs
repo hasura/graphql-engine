@@ -47,14 +47,18 @@ pub(crate) fn rows(
     let movie_id_int = parse_i32_argument("movie_id", &mut arguments)?;
     check_all_arguments_used(&arguments)?;
 
+    Ok(rows_inner(movie_id_int, state))
+}
+
+pub fn rows_inner(movie_id: i32, state: &AppState) -> Vec<Row> {
     let mut actors_by_movie = vec![];
 
     for actor in state.actors.values() {
-        let actor_movie_id_int = get_actor_movie_id(actor)?;
-        if actor_movie_id_int == movie_id_int {
+        let actor_movie_id_int = get_actor_movie_id(actor).unwrap();
+        if actor_movie_id_int == movie_id {
             actors_by_movie.push(actor.clone());
         }
     }
 
-    Ok(actors_by_movie)
+    actors_by_movie
 }

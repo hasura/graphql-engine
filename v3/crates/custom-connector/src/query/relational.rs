@@ -170,8 +170,11 @@ fn convert_relation_to_logical_plan(
         Relation::From {
             collection,
             columns,
+            arguments,
         } => {
-            let table_provider: Arc<dyn TableProvider> = get_table_provider(collection, state)?;
+            let table_provider: Arc<dyn TableProvider> =
+                get_table_provider(collection, arguments, state)?;
+
             let table_schema: SchemaRef = table_provider.as_ref().schema();
 
             let projection = columns
@@ -183,6 +186,7 @@ fn convert_relation_to_logical_plan(
                         .map_err(|e| DataFusionError::ArrowError(e, None))
                 })
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
+
             let table_scan_plan = datafusion::logical_expr::LogicalPlan::TableScan(
                 datafusion::logical_expr::TableScan::try_new(
                     TableReference::bare(collection.as_str()),
@@ -358,6 +362,7 @@ fn convert_relation_to_logical_plan(
 // return types for tables, with columns / data we don't current support filtered out
 fn get_table_provider(
     collection_name: &ndc_models::CollectionName,
+    arguments: &BTreeMap<ndc_models::ArgumentName, RelationalLiteral>,
     state: &AppState,
 ) -> datafusion::error::Result<Arc<dyn TableProvider>> {
     let (rows, collection_fields) = match collection_name.as_str() {
@@ -366,6 +371,26 @@ fn get_table_provider(
                 .map_err(|e| DataFusionError::Internal(e.1.0.message))?,
             crate::types::actor::definition().fields,
         ),
+        "actors_by_movie" => {
+            let movie_id_int: i32 = arguments
+                .get("movie_id")
+                .and_then(|v| match v {
+                    RelationalLiteral::Int64 { value } => {
+                        Some(i32::try_from(*value).expect("movie_id out of range"))
+                    }
+                    _ => None,
+                })
+                .ok_or_else(|| {
+                    DataFusionError::Internal(
+                        "actors_by_movie requires a movie_id argument".to_string(),
+                    )
+                })?;
+
+            (
+                crate::collections::actors_by_movie::rows_inner(movie_id_int, state),
+                crate::types::actor::definition().fields,
+            )
+        }
         "countries" => (
             crate::collections::countries::rows(&BTreeMap::new(), state)
                 .map_err(|e| DataFusionError::Internal(e.1.0.message))?

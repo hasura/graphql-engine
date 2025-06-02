@@ -3864,7 +3864,7 @@ dependencies = [
 [[package]]
 name = "ndc-models"
 version = "0.2.2"
-source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.2.2#32ee48bd9ec62a09faaab38b0569121a12fd9f10"
+source = "git+https://github.com/hasura/ndc-spec.git?rev=e2e1935253488392c5631ef2008f580b15447315#e2e1935253488392c5631ef2008f580b15447315"
 dependencies = [
  "indexmap 2.9.0",
  "ref-cast",
@@ -6576,7 +6576,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4286ad90ddb45071efd1a66dfa43eb02dd0dfbae1545ad6cc3c51cf34d7e8ba3"
 dependencies = [
- "windows-result 0.3.2",
+ "windows-result 0.3.4",
  "windows-strings 0.3.1",
  "windows-targets 0.53.0",
 ]
@@ -6592,9 +6592,9 @@ dependencies = [
 
 [[package]]
 name = "windows-result"
-version = "0.3.2"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c64fd11a4fd95df68efcfee5f44a294fe71b8bc6a91993e2791938abcc712252"
+checksum = "56f42bd332cc6c8eac5af113fc0c1fd6a8fd2aa08a0119358686e5160d0586c6"
 dependencies = [
  "windows-link",
 ]

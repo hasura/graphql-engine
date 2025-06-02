@@ -64,7 +64,7 @@ used_underscore_binding = "allow"
 private_intra_doc_links = "allow"
 
 [workspace.dependencies]
-ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.2.2", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
+ndc-models = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", rev = "e2e1935253488392c5631ef2008f580b15447315", features = ["arc-relation"]} # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 ndc-models-v01 = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.6" } # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
 
 anyhow = "1"
