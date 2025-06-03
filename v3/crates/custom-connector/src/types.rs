@@ -200,6 +200,17 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                 extraction_functions: BTreeMap::new(),
             },
         ),
+        (
+            "YesNo".into(),
+            ndc_models::ScalarType {
+                representation: ndc_models::TypeRepresentation::Enum {
+                    one_of: vec!["yes".into(), "no".into()],
+                },
+                aggregate_functions: BTreeMap::new(),
+                comparison_operators: BTreeMap::new(),
+                extraction_functions: BTreeMap::new(),
+            },
+        ),
     ])
 }
 

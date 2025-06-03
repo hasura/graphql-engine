@@ -1,0 +1,72 @@
+{
+  "version": "v2",
+  "flags": {
+    "validate_non_null_graphql_variables": true
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "flip_yes_no",
+            "outputType": "YesNo",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "procedure": "flip_yes_no_procedure"
+              }
+            },
+            "arguments": [
+              {
+                "name": "yes_no",
+                "type": "YesNo!"
+              }
+            ],
+            "graphql": {
+              "rootFieldName": "FlipYesNo",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "flip_yes_no",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "YesNo",
+            "graphql": {
+              "typeName": "YesNo"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "YesNo",
+            "representation": "YesNo",
+            "graphql": {
+              "comparisonExpressionTypeName": "YesNo"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

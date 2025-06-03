@@ -4,6 +4,7 @@ use crate::ast::common as ast;
 use crate::ast::value as gql;
 use crate::normalized_ast as normalized;
 use crate::schema;
+use crate::validation::NonNullGraphqlVariablesValidation;
 use crate::validation::error::*;
 use crate::validation::variables;
 
@@ -22,11 +23,18 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<serde_json::Value> {
         match self {
             Self::Variable(variable) => {
                 let value = context
-                    .get(location_type, variable, schema, namespaced_getter)?
+                    .get(
+                        location_type,
+                        variable,
+                        schema,
+                        namespaced_getter,
+                        validate_non_null_graphql_variables,
+                    )?
                     .as_json();
                 Ok(value)
             }
@@ -35,8 +43,13 @@ where
                 let list = l
                     .iter()
                     .map(|i| {
-                        i.item
-                            .as_json(schema, namespaced_getter, context, location_type)
+                        i.item.as_json(
+                            schema,
+                            namespaced_getter,
+                            context,
+                            location_type,
+                            validate_non_null_graphql_variables,
+                        )
                     })
                     .collect::<Result<Vec<serde_json::Value>>>()?;
                 Ok(serde_json::Value::Array(list))
@@ -53,6 +66,7 @@ where
                                 namespaced_getter,
                                 context,
                                 location_type,
+                                validate_non_null_graphql_variables,
                             )?,
                         ))
                     })
@@ -68,6 +82,8 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
+
         f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
@@ -75,9 +91,13 @@ where
         NSGet: schema::NamespacedGetter<S>,
     {
         match self {
-            gql::Value::Variable(variable) => {
-                context.get(location_type, variable, schema, namespaced_getter)
-            }
+            gql::Value::Variable(variable) => context.get(
+                location_type,
+                variable,
+                schema,
+                namespaced_getter,
+                validate_non_null_graphql_variables,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::Enum(e)) => f(e),
             _ => Err(Error::IncorrectFormat {
                 expected_type: "ENUM",
@@ -92,11 +112,16 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => {
-                context.get(location_type, variable, schema, namespaced_getter)
-            }
+            gql::Value::Variable(variable) => context.get(
+                location_type,
+                variable,
+                schema,
+                namespaced_getter,
+                validate_non_null_graphql_variables,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::Integer(i)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Integer(*i)),
             ),
@@ -113,11 +138,16 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => {
-                context.get(location_type, variable, schema, namespaced_getter)
-            }
+            gql::Value::Variable(variable) => context.get(
+                location_type,
+                variable,
+                schema,
+                namespaced_getter,
+                validate_non_null_graphql_variables,
+            ),
             // Both integer and float input values are accepted for Float type.
             // Ref: https://spec.graphql.org/October2021/#sec-Float.Input-Coercion
             gql::Value::SimpleValue(simple_value) => simple_value
@@ -140,11 +170,16 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => {
-                context.get(location_type, variable, schema, namespaced_getter)
-            }
+            gql::Value::Variable(variable) => context.get(
+                location_type,
+                variable,
+                schema,
+                namespaced_getter,
+                validate_non_null_graphql_variables,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::Boolean(b)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Boolean(*b)),
             ),
@@ -161,11 +196,16 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => {
-                context.get(location_type, variable, schema, namespaced_getter)
-            }
+            gql::Value::Variable(variable) => context.get(
+                location_type,
+                variable,
+                schema,
+                namespaced_getter,
+                validate_non_null_graphql_variables,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::String(s)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::String(s.clone())),
             ),
@@ -182,11 +222,16 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => {
-                context.get(location_type, variable, schema, namespaced_getter)
-            }
+            gql::Value::Variable(variable) => context.get(
+                location_type,
+                variable,
+                schema,
+                namespaced_getter,
+                validate_non_null_graphql_variables,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::String(id)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Id(id.clone())),
             ),
@@ -203,6 +248,7 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
         mut f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
@@ -210,9 +256,13 @@ where
     {
         // TODO single element array coercion
         match self {
-            gql::Value::Variable(variable) => {
-                context.get(location_type, variable, schema, namespaced_getter)
-            }
+            gql::Value::Variable(variable) => context.get(
+                location_type,
+                variable,
+                schema,
+                namespaced_getter,
+                validate_non_null_graphql_variables,
+            ),
             gql::Value::List(array) => {
                 let mut accum = Vec::new();
                 for value in array {
@@ -233,15 +283,20 @@ where
         namespaced_getter: &NSGet,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
         f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
         F: Fn(normalized::Object<'s, S>, &ast::Name, &Self) -> Result<normalized::Object<'s, S>>,
     {
         match self {
-            gql::Value::Variable(variable) => {
-                context.get(location_type, variable, schema, namespaced_getter)
-            }
+            gql::Value::Variable(variable) => context.get(
+                location_type,
+                variable,
+                schema,
+                namespaced_getter,
+                validate_non_null_graphql_variables,
+            ),
             gql::Value::Object(object) => {
                 let mut accum = IndexMap::new();
                 for key_value in object {

@@ -7,6 +7,7 @@ mod arguments;
 mod commands;
 mod error;
 mod filter;
+mod flags;
 mod global_id;
 mod model_selection;
 mod model_tracking;

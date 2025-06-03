@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 use crate::ast::common::{self as ast, TypeContainer, TypeName};
 use crate::schema::{NodeInfo, SchemaContext};
+use crate::validation::NonNullGraphqlVariablesValidation;
 use indexmap::IndexMap;
 
 #[derive(Debug, thiserror::Error)]
@@ -199,10 +200,23 @@ impl<'s, S: SchemaContext> Value<'s, S> {
         }
     }
 
-    pub fn is_null(&self) -> bool {
-        // Check if the value is null.
-        matches!(self, Value::SimpleValue(SimpleValue::Null)) // Simple value comes from inbuilt scalars
+    pub fn is_null(
+        &self,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
+    ) -> bool {
+        match validate_non_null_graphql_variables {
+            // the new, correct, behaviour
+            NonNullGraphqlVariablesValidation::Validate => {
+                // Check if the value is null.
+                matches!(self, Value::SimpleValue(SimpleValue::Null)) // Simple value comes from inbuilt scalars
             || matches!(self, Value::Json(serde_json::Value::Null)) // JSON value comes from custom scalars
+            }
+            // the old, broken, behaviour that we need to support for backwards compatibility
+            NonNullGraphqlVariablesValidation::DoNotValidate => {
+                // Check if the value is null.
+                matches!(self, Value::SimpleValue(SimpleValue::Null)) // Simple value comes from inbuilt scalars
+            }
+        }
     }
 
     pub fn as_enum(&self) -> Result<&EnumValue<'s, S>> {
@@ -217,9 +231,10 @@ impl<'s, S: SchemaContext> Value<'s, S> {
 
     pub fn as_nullable<'a, T, E>(
         &'a self,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
         f: impl FnOnce(&'a Value<'s, S>) -> core::result::Result<T, E>,
     ) -> core::result::Result<Option<T>, E> {
-        if self.is_null() {
+        if self.is_null(validate_non_null_graphql_variables) {
             Ok(None)
         } else {
             f(self).map(Some)

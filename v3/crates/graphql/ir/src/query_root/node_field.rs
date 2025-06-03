@@ -10,6 +10,7 @@ use open_dds::types::CustomTypeName;
 use serde::Serialize;
 
 use crate::error;
+use crate::flags::GraphqlIrFlags;
 use crate::model_selection;
 use graphql_schema::GDS;
 use graphql_schema::{GlobalID, NamespaceAnnotation, NodeFieldTypeNameMapping};
@@ -85,6 +86,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
     >,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
 ) -> Result<Option<NodeSelect<'n, 's>>, error::Error> {
     let id_arg_value = field_call
         .expected_argument(&lang_graphql::mk_name!("id"))?
@@ -167,6 +169,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
                 None,   // offset
                 &session.variables,
                 request_headers,
+                flags,
                 // Get all the models/commands that were used as relationships
                 &mut usage_counts,
             )?;

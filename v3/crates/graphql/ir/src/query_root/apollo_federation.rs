@@ -9,6 +9,7 @@ use open_dds::types::FieldName;
 use serde::Serialize;
 
 use crate::error;
+use crate::flags::GraphqlIrFlags;
 use crate::model_selection;
 use graphql_schema::GDS;
 use graphql_schema::{EntityFieldTypeNameMapping, NamespaceAnnotation};
@@ -90,6 +91,7 @@ pub(crate) fn entities_ir<'n, 's>(
     >,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
 ) -> Result<Vec<EntitySelect<'n, 's>>, error::Error> {
     let representations = field_call
         .expected_argument(&lang_graphql::mk_name!("representations"))?
@@ -195,6 +197,7 @@ pub(crate) fn entities_ir<'n, 's>(
                 None,   // offset
                 &session.variables,
                 request_headers,
+                flags,
                 &mut usage_counts,
             )?;
 

@@ -1,0 +1,7 @@
+mutation MyMutation($yes_no: YesNo!) {
+  FlipYesNo(yes_no: $yes_no) {
+    returning {
+      __value
+    }
+  }
+}

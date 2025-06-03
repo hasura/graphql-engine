@@ -21,6 +21,7 @@ use std::sync::Arc;
 use super::arguments;
 use super::selection_set;
 use crate::error;
+use crate::flags::GraphqlIrFlags;
 use graphql_schema::GDS;
 use graphql_schema::TypeKind;
 use metadata_resolve::{ObjectTypeWithRelationships, Qualified, QualifiedTypeReference};
@@ -89,6 +90,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
     command_source: &'s CommandSource,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<CommandInfo, error::Error> {
     let mut command_arguments = IndexMap::new();
@@ -96,6 +98,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
         let (argument_name, argument_value) = arguments::build_argument_as_value(
             argument,
             &command_source.type_mappings,
+            flags,
             usage_counts,
         )?;
 
@@ -123,6 +126,7 @@ pub fn generate_command_info_open_dd<'n, 's>(
         field,
         session_variables,
         request_headers,
+        flags,
         &mut usage_counts,
     )?;
 
@@ -157,6 +161,7 @@ pub fn generate_function_based_command_open_dd<'n, 's>(
     command_source: &'s CommandSource,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FunctionBasedCommand<'s>, error::Error> {
     let command_info = generate_command_info_open_dd(
@@ -170,6 +175,7 @@ pub fn generate_function_based_command_open_dd<'n, 's>(
         command_source,
         session_variables,
         request_headers,
+        flags,
         usage_counts,
     )?;
 
@@ -196,6 +202,7 @@ pub fn generate_procedure_based_command_open_dd<'n, 's>(
     command_source: &'s CommandSource,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
 ) -> Result<ProcedureBasedCommand<'s>, error::Error> {
     let mut usage_counts = UsagesCounts::new();
 
@@ -210,6 +217,7 @@ pub fn generate_procedure_based_command_open_dd<'n, 's>(
         command_source,
         session_variables,
         request_headers,
+        flags,
         &mut usage_counts,
     )?;
 

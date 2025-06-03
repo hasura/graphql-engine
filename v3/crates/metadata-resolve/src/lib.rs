@@ -79,7 +79,7 @@ pub use stages::{
 };
 pub use types::configuration;
 pub use types::error::{Error, WithContext};
-pub use types::flags;
+pub use types::flags::{self, RuntimeFlags};
 pub use types::permission::{ValueExpression, ValueExpressionOrPredicate};
 pub use types::subgraph::{
     ArgumentKind, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,

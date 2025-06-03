@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- Fixed a bug when missing variables for enum type arguments to functions and
+  procedures did not obey the `validate_non_nullable_graphql_variables` feature
+  flags.
+
 ### Changed
 
 ### Added

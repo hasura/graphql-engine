@@ -216,6 +216,15 @@
                       }
                     },
                     "extraction_functions": {}
+                  },
+                  "YesNo": {
+                    "representation": {
+                      "type": "enum",
+                      "one_of": ["yes", "no"]
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {},
+                    "extraction_functions": {}
                   }
                 },
                 "object_types": {
@@ -1586,9 +1595,43 @@
                       "type": "named",
                       "name": "session_response"
                     }
+                  },
+                  {
+                    "name": "flip_yes_no_function",
+                    "description": "Flip a yes/no enum",
+                    "arguments": {
+                      "yes_no": {
+                        "description": "The yes/no enum to flip",
+                        "type": {
+                          "type": "named",
+                          "name": "YesNo"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "YesNo"
+                    }
                   }
                 ],
                 "procedures": [
+                  {
+                    "name": "flip_yes_no_procedure",
+                    "description": "Flip a yes/no enum",
+                    "arguments": {
+                      "yes_no": {
+                        "description": "The yes/no enum to flip",
+                        "type": {
+                          "type": "named",
+                          "name": "YesNo"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "YesNo"
+                    }
+                  },
                   {
                     "name": "upsert_actor",
                     "description": "Insert or update an actor",
@@ -1766,7 +1809,7 @@
                 }
               },
               "capabilities": {
-                "version": "0.2.1",
+                "version": "0.2.2",
                 "capabilities": {
                   "query": {
                     "aggregates": {
@@ -2662,6 +2705,15 @@
                       }
                     },
                     "extraction_functions": {}
+                  },
+                  "YesNo": {
+                    "representation": {
+                      "type": "enum",
+                      "one_of": ["yes", "no"]
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {},
+                    "extraction_functions": {}
                   }
                 },
                 "object_types": {
@@ -4032,9 +4084,43 @@
                       "type": "named",
                       "name": "session_response"
                     }
+                  },
+                  {
+                    "name": "flip_yes_no_function",
+                    "description": "Flip a yes/no enum",
+                    "arguments": {
+                      "yes_no": {
+                        "description": "The yes/no enum to flip",
+                        "type": {
+                          "type": "named",
+                          "name": "YesNo"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "YesNo"
+                    }
                   }
                 ],
                 "procedures": [
+                  {
+                    "name": "flip_yes_no_procedure",
+                    "description": "Flip a yes/no enum",
+                    "arguments": {
+                      "yes_no": {
+                        "description": "The yes/no enum to flip",
+                        "type": {
+                          "type": "named",
+                          "name": "YesNo"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "YesNo"
+                    }
+                  },
                   {
                     "name": "upsert_actor",
                     "description": "Insert or update an actor",
@@ -4212,7 +4298,7 @@
                 }
               },
               "capabilities": {
-                "version": "0.2.1",
+                "version": "0.2.2",
                 "capabilities": {
                   "query": {
                     "aggregates": {
