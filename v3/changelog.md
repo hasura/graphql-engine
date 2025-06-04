@@ -4,13 +4,17 @@
 
 ### Fixed
 
-- Fixed a bug when missing variables for enum type arguments to functions and
-  procedures did not obey the `validate_non_nullable_graphql_variables` feature
-  flags.
-
 ### Changed
 
 ### Added
+
+## [v2025.06.04]
+
+### Fixed
+
+- Fixed a bug when missing variables for enum type arguments to functions and
+  procedures did not obey the `validate_non_nullable_graphql_variables` feature
+  flags.
 
 ## [v2025.05.29]
 
@@ -1627,7 +1631,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.05.29...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.06.04...HEAD
+[v2025.06.04]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.04
 [v2025.05.29]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.29
 [v2025.05.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.14
 [v2025.05.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.13
