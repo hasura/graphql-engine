@@ -45,7 +45,20 @@ pub enum Error {
 
 impl tracing_util::TraceableError for Error {
     fn visibility(&self) -> tracing_util::ErrorVisibility {
-        tracing_util::ErrorVisibility::Internal
+        match self {
+            // Invalid connector errors with 5xx status codes are considered user errors
+            // (connector implementation issues, not engine issues)
+            Self::InvalidConnector(InvalidConnectorError { status, .. })
+                if status.is_server_error() =>
+            {
+                tracing_util::ErrorVisibility::User
+            }
+
+            // TODO some of these other cases seem like User errors also...
+
+            // All other errors are internal
+            _ => tracing_util::ErrorVisibility::Internal,
+        }
     }
 }
 
