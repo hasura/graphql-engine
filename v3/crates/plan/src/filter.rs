@@ -296,7 +296,6 @@ fn to_filter_expression_internal<'metadata>(
                                             .clone(),
                                     }
                                 })?,
-                                &model_target.target_typename,
                                 &model_target.mappings,
                                 predicate,
                             )?);

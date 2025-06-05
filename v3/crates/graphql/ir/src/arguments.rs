@@ -45,13 +45,11 @@ pub fn resolve_argument_opendd<'s>(
                 argument_name,
                 argument_type,
                 argument_kind,
-                ndc_func_proc_argument: _,
             }
             | InputAnnotation::Model(ModelInputAnnotation::ModelArgument {
                 argument_name,
                 argument_type,
                 argument_kind,
-                ndc_table_argument: _,
             }),
         ) => Ok((argument_name, argument_type, argument_kind)),
 

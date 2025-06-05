@@ -79,14 +79,6 @@ pub fn build_model_argument_fields(
                         argument_name: argument_name.clone(),
                         argument_type: argument_type.argument_type.clone(),
                         argument_kind: argument_type.argument_kind.clone(),
-                        ndc_table_argument: model
-                            .model
-                            .source
-                            .as_ref()
-                            .and_then(|model_source| {
-                                model_source.argument_mappings.get(argument_name)
-                            })
-                            .cloned(),
                     },
                 )),
                 input_type,

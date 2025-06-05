@@ -7,7 +7,6 @@ license.workspace = true
 [dependencies]
 graphql-schema = { path = "../../graphql/schema" }
 hasura-authn-core = { path = "../../auth/hasura-authn-core" }
-json-ext = { path = "../../utils/json-ext" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../../open-dds" }
 plan = { path = "../../plan" }

@@ -147,14 +147,11 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                 InputAnnotation::BooleanExpression(
                     BooleanExpressionAnnotation::BooleanExpressionRootField,
                 ) => {
-                    if let Some(_target_capabilities) = &relationship_annotation.target_capabilities
-                    {
-                        // where argument is optional
-                        where_input = argument.value.as_nullable(
-                            &flags.validate_non_null_graphql_variables,
-                            normalized_ast::Value::as_object,
-                        )?;
-                    }
+                    // where argument is optional
+                    where_input = argument.value.as_nullable(
+                        &flags.validate_non_null_graphql_variables,
+                        normalized_ast::Value::as_object,
+                    )?;
                 }
 
                 _ => {

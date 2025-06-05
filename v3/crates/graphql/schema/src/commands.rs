@@ -35,12 +35,6 @@ pub(crate) fn generate_command_argument(
             argument_name: argument_name.clone(),
             argument_type: argument_type.argument_type.clone(),
             argument_kind: argument_type.argument_kind.clone(),
-            ndc_func_proc_argument: command
-                .command
-                .source
-                .as_ref()
-                .and_then(|command_source| command_source.argument_mappings.get(argument_name))
-                .cloned(),
         }),
         input_type,
         None,

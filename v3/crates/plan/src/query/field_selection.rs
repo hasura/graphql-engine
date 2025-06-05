@@ -527,7 +527,6 @@ fn from_model_relationship(
                 target_model_name,
                 &target_source,
                 source_type_mappings,
-                source_data_connector,
                 model_relationship_target,
                 collect_relationships,
             )?;
@@ -827,7 +826,6 @@ fn record_local_model_relationship(
     target_model_name: &Qualified<ModelName>,
     target_source: &metadata_resolve::ModelTargetSource,
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    source_data_connector: &metadata_resolve::DataConnectorLink,
     model_relationship_target: &metadata_resolve::ModelRelationshipTarget,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
 ) -> Result<plan_types::NdcRelationshipName, PlanError> {
@@ -835,11 +833,9 @@ fn record_local_model_relationship(
         relationship_name,
         relationship_type: &model_relationship_target.relationship_type,
         source_type: object_type_name,
-        source_data_connector,
         source_type_mappings,
         target_model_name,
         target_source: &target_source.model,
-        target_type: &model_relationship_target.target_typename,
         mappings: &model_relationship_target.mappings,
     };
 
@@ -1021,11 +1017,9 @@ fn from_relationship_aggregate_selection(
                         relationship_name,
                         relationship_type: &model_relationship_target.relationship_type,
                         source_type: object_type.object_type_name,
-                        source_data_connector,
                         source_type_mappings,
                         target_model_name,
                         target_source: target_model_source,
-                        target_type: &model_relationship_target.target_typename,
                         mappings: &model_relationship_target.mappings,
                     };
 

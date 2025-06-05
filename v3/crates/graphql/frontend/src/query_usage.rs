@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use graphql_schema::GDS;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast::{self, Operation};
-use metadata_resolve::{FieldPresetInfo, FilterPermission, ModelPredicate};
+use metadata_resolve::{FilterPermission, ModelPredicate};
 use open_dds::arguments::ArgumentName;
 use open_dds::relationships::RelationshipType;
 use open_dds::types::Deprecated;
@@ -383,26 +383,18 @@ fn analyze_namespace_annotation(
             FieldPresetsUsage {
                 fields: presets_fields
                     .iter()
-                    .map(
-                        |(
-                            field_name,
-                            FieldPresetInfo {
-                                value: _,
-                                deprecated,
-                            },
-                        )| {
-                            let DeprecatedDetails {
-                                is_deprecated,
-                                reason,
-                            } = get_deprecated_details(deprecated.as_ref());
-                            FieldUsage {
-                                name: field_name.to_owned(),
-                                opendd_type: type_name.clone(),
-                                deprecated: is_deprecated,
-                                deprecated_reason: reason,
-                            }
-                        },
-                    )
+                    .map(|(field_name, deprecated)| {
+                        let DeprecatedDetails {
+                            is_deprecated,
+                            reason,
+                        } = get_deprecated_details(deprecated.as_ref());
+                        FieldUsage {
+                            name: field_name.to_owned(),
+                            opendd_type: type_name.clone(),
+                            deprecated: is_deprecated,
+                            deprecated_reason: reason,
+                        }
+                    })
                     .collect(),
             },
         ))),
