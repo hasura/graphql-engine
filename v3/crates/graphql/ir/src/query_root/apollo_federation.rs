@@ -7,7 +7,6 @@ use lang_graphql::{ast::common as ast, normalized_ast};
 use open_dds::identifier;
 use open_dds::types::CustomTypeName;
 use open_dds::types::FieldName;
-use serde::Serialize;
 
 use crate::error;
 use crate::flags::GraphqlIrFlags;
@@ -20,7 +19,7 @@ use metadata_resolve::mk_name;
 use plan_types::UsagesCounts;
 
 /// IR for the '_entities' operation for a model
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub struct EntitySelect<'n, 's> {
     // The name of the field as published in the schema
     pub field_name: &'n ast::Name,
