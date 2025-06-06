@@ -248,7 +248,7 @@ convSelectQ sqlGen table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr =
       tabPerm = TablePerm resolvedSelFltr mPermLimit
       tabArgs = SelectArgs wClause annOrdByM mQueryLimit (fromIntegral <$> mQueryOffset) Nothing
       strfyNum = stringifyNum sqlGen
-  pure $ AnnSelectG annFlds tabFrom tabPerm tabArgs strfyNum Nothing
+  pure $ AnnSelectG annFlds tabFrom tabPerm tabArgs Nothing strfyNum Nothing
   where
     mQueryOffset = sqOffset selQ
     mQueryLimit = sqLimit selQ
@@ -297,7 +297,7 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
       when misused $ throw400 UnexpectedPayload objRelMisuseMsg
       pure
         $ Left
-        $ AnnRelationSelectG (fromMaybe relName mAlias) colMapping Nullable
+        $ AnnRelationSelectG (fromMaybe relName mAlias) colMapping Nullable Nothing
         $ AnnObjectSelectG (_asnFields annSel) (FromTable relTableName)
         $ _tpFilter
         $ _asnPerm annSel
@@ -309,6 +309,7 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
           (fromMaybe relName mAlias)
           colMapping
           Nullable
+          Nothing
           annSel
   where
     pgWhenRelErr = "only relationships can be expanded"
