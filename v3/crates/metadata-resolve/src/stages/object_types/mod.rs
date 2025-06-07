@@ -303,7 +303,7 @@ pub fn resolve_object_type_representation(
             //   - If the object type has globalIdFields configured, add the object type to the
             //     global_id_enabled_types map.
             global_id_enabled_types.insert(qualified_type_name.clone(), Vec::new());
-        };
+        }
         for global_id_field in global_id_fields {
             if resolved_fields.contains_key(global_id_field) {
                 resolved_global_id_fields.push(global_id_field.clone());
@@ -767,7 +767,7 @@ pub(crate) fn get_comparison_operators(
                         operator_name.inner().clone(),
                     ));
             }
-        };
+        }
     }
     (comparison_operators, issues)
 }

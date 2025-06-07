@@ -381,7 +381,7 @@ pub fn filter_parameters(
                     pretty_typename(&boolean_expression_type.name),
                     oas3::spec::ObjectOrReference::Object(filter_schema.clone()),
                 );
-            };
+            }
 
             // Note: We are using the content field here because the filter is a JSON object. We cannot use schema here.
             let mut content = BTreeMap::new();

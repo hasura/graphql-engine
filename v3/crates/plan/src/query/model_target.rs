@@ -1,4 +1,6 @@
-use super::arguments::{get_unresolved_arguments, resolve_arguments};
+use super::arguments::{
+    add_missing_nullable_arguments, get_unresolved_arguments, resolve_arguments,
+};
 use super::process_argument_presets_for_model;
 use super::types::NDCQuery;
 use crate::filter::{resolve_model_permission_filter, to_filter_expression};
@@ -41,7 +43,7 @@ pub fn model_target_to_ndc_query(
 
     let unresolved_arguments = get_unresolved_arguments(
         &model_target.arguments,
-        &model.model.arguments,
+        &model.arguments,
         &model_source.argument_mappings,
         metadata,
         session,
@@ -58,6 +60,14 @@ pub fn model_target_to_ndc_query(
         session,
         request_headers,
         &mut usage_counts,
+    )?;
+
+    // add in any missing arguments as nulls
+    let unresolved_arguments = add_missing_nullable_arguments(
+        unresolved_arguments,
+        &model.arguments,
+        &model_source.argument_mappings,
+        &metadata.runtime_flags,
     )?;
 
     let resolved_arguments = resolve_arguments(

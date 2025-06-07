@@ -150,7 +150,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 },
             )?;
 
-        if let Some(scalar_type_info) = data_connector_scalar_types::get_simple_scalar(
+        if let Ok(scalar_type_info) = data_connector_scalar_types::get_simple_scalar(
             field_mapping.column_type.clone(),
             scalar_types,
         ) {
@@ -329,7 +329,7 @@ fn resolve_comparable_fields(
                 type_name: boolean_expression_type_name.clone(),
                 name: comparable_field.field_name.clone(),
             });
-        };
+        }
     }
 
     // doing this validation when there is no graphql configuration is a breaking change, so we
@@ -369,7 +369,7 @@ fn resolve_comparable_fields(
                                 .clone(),
                         },
                     );
-                };
+                }
             }
         }
     }

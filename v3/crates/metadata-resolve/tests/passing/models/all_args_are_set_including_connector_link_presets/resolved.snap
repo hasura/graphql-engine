@@ -216,28 +216,6 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                1,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -258,96 +236,6 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                         },
                     },
                     global_id_fields: [],
-                    arguments: {
-                        ArgumentName(
-                            Identifier(
-                                "argA",
-                            ),
-                        ): ArgumentInfo {
-                            argument_type: QualifiedTypeReference {
-                                underlying_type: Named(
-                                    Inbuilt(
-                                        String,
-                                    ),
-                                ),
-                                nullable: false,
-                            },
-                            description: None,
-                            argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
-                        },
-                        ArgumentName(
-                            Identifier(
-                                "argB",
-                            ),
-                        ): ArgumentInfo {
-                            argument_type: QualifiedTypeReference {
-                                underlying_type: Named(
-                                    Inbuilt(
-                                        Int,
-                                    ),
-                                ),
-                                nullable: false,
-                            },
-                            description: None,
-                            argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
-                        },
-                    },
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -588,51 +476,41 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: None,
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "collection_with_args",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: Some(
-                                    GraphQlTypeName(
-                                        "collection_with_args_input_args",
-                                    ),
-                                ),
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
+                },
+                arguments: {
+                    ArgumentName(
+                        Identifier(
+                            "argA",
                         ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: Some(
-                                GraphQlTypeName(
-                                    "collection_with_args_order_by",
+                    ): ArgumentInfo {
+                        argument_type: QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    String,
                                 ),
                             ),
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "test",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
+                            nullable: false,
                         },
+                        description: None,
+                        argument_kind: Other,
+                        type_representation: None,
+                    },
+                    ArgumentName(
+                        Identifier(
+                            "argB",
+                        ),
+                    ): ArgumentInfo {
+                        argument_type: QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: false,
+                        },
+                        description: None,
+                        argument_kind: Other,
+                        type_representation: None,
                     },
                 },
                 select_permissions: {},
@@ -712,6 +590,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
         },
         commands: {},
@@ -834,6 +713,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
             propagate_boolean_expression_deprecation_status: false,
             multiple_order_by_input_object_fields: Allow,
         },
+        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],

@@ -96,7 +96,7 @@ pub fn query_root_schema(
         return Err(crate::Error::DuplicateFieldInQueryRoot {
             field_name: relay_node_gql_field.name,
         });
-    };
+    }
 
     // apollo federation field
     if gds.metadata.graphql_config.enable_apollo_federation_fields {
@@ -119,7 +119,7 @@ pub fn query_root_schema(
             return Err(crate::Error::DuplicateFieldInQueryRoot {
                 field_name: apollo_federation_entities_field.name,
             });
-        };
+        }
 
         if fields
             .insert(
@@ -131,7 +131,7 @@ pub fn query_root_schema(
             return Err(crate::Error::DuplicateFieldInQueryRoot {
                 field_name: apollo_federation_service_field.name,
             });
-        };
+        }
     }
 
     Ok(gql_schema::Object::new(

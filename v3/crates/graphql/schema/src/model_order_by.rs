@@ -262,7 +262,6 @@ pub fn build_model_order_by_input_schema(
         gds,
         &mut fields,
         builder,
-        &order_by_expression.ordered_type,
         object_type_representation,
         &order_by_expression.orderable_relationships,
     )?;
@@ -278,7 +277,6 @@ fn build_orderable_relationships(
     gds: &GDS,
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    object_type_name: &Qualified<CustomTypeName>,
     object_type_representation: &ObjectTypeWithRelationships,
     orderable_relationships: &BTreeMap<RelationshipName, OrderableRelationship>,
 ) -> Result<(), Error> {
@@ -378,7 +376,6 @@ fn build_orderable_relationships(
                             target_type: target_typename.clone(),
                             relationship_type: relationship_type.clone(),
                             mappings: mappings.clone(),
-                            object_type_name: object_type_name.clone(),
                             deprecated: relationship.deprecated.clone(),
                             multiple_input_properties: gds
                                 .metadata
@@ -411,7 +408,7 @@ fn build_orderable_relationships(
                                         ),
                                     ),
                                 );
-                    };
+                    }
                 }
             }
         }

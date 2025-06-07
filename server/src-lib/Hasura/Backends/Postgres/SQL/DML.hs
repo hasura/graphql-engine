@@ -198,6 +198,14 @@ instance ToSQL OrderByItem where
   toSQL (OrderByItem expr ordering nullsOrder) =
     toSQL expr <~> toSQL ordering <~> toSQL nullsOrder
 
+instance J.FromJSON OrderByItem where
+  parseJSON = J.withObject "OrderByItem" $ \o -> do
+    colText <- o J..: "column"
+    orderByType <- o J..:? "type"
+    nulls <- o J..:? "nulls"
+    let expr = SEUnsafe colText
+    pure $ OrderByItem expr orderByType nulls
+
 -- | Order by ascending or descending
 data OrderType = OTAsc | OTDesc
   deriving (Show, Eq, Generic, Data)

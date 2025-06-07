@@ -76,7 +76,7 @@ fn get_doc(attrs: &[syn::Attribute]) -> Option<String> {
         while let Some(&"") = lines.first() {
             lines.remove(0);
         }
-    };
+    }
 
     none_if_empty(lines.join("\n"))
 }

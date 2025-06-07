@@ -376,7 +376,7 @@ async fn get_execution_steps(
         }
         ProcessResponseAs::Array { .. }
         | ProcessResponseAs::Object { .. }
-        | ProcessResponseAs::Aggregates { .. } => {
+        | ProcessResponseAs::Aggregates => {
             // A model execution node
             let data_connector_explain = fetch_explain_from_data_connector(
                 expose_internal_errors,
@@ -398,7 +398,7 @@ async fn get_execution_steps(
     {
         sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
-    };
+    }
     Ok(sequence_steps)
 }
 
@@ -564,16 +564,16 @@ async fn get_join_steps(
                     }
                 },
             )));
-        };
+        }
         if let Some(rest_join_steps) =
             get_join_steps(expose_internal_errors, location.rest, http_context).await?
         {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));
-        };
+        }
         if let Some(sequence_steps) = NonEmpty::from_vec(sequence_steps) {
             sequence_join_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
-        };
+        }
     }
     Ok(NonEmpty::from_vec(sequence_join_steps))
 }

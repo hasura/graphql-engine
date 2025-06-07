@@ -1,0 +1,83 @@
+[
+  {
+    "data": {
+      "where_do_staff_have_last_names": [
+        {
+          "id": 1,
+          "location": {
+            "city": "London",
+            "campuses": [
+              "Mile End",
+              "Whitechapel",
+              "Charterhouse Square",
+              "West Smithfield"
+            ]
+          }
+        },
+        {
+          "id": 2,
+          "location": {
+            "city": "Gothenburg",
+            "campuses": ["Johanneberg", "Lindholmen"]
+          }
+        },
+        {
+          "id": 3,
+          "location": {
+            "city": null,
+            "campuses": null
+          }
+        }
+      ],
+      "where_has_staff_with_a_pet_with_no_name": [],
+      "institution_in_a_country_with_a_city_that_has_a_name": [
+        {
+          "id": 1,
+          "location": {
+            "country": {
+              "cities": [
+                {
+                  "name": "London"
+                },
+                {
+                  "name": "Birmingham"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 2,
+          "location": {
+            "country": {
+              "cities": [
+                {
+                  "name": "Gothenburg"
+                },
+                {
+                  "name": "Stockholm"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 3,
+          "location": {
+            "country": {
+              "cities": null
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Query: InstitutionMany"
+      }
+    ]
+  }
+]

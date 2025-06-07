@@ -1,6 +1,0 @@
-query {
-  ArticleMany(limit: 1, offset: 1) {
-    id
-    title
-  }
-}

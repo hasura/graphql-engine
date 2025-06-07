@@ -15,6 +15,7 @@ use std::collections::BTreeMap;
 use crate::arguments;
 use crate::error;
 use crate::filter;
+use crate::flags::GraphqlIrFlags;
 use crate::model_selection;
 use crate::order_by::build_order_by_open_dd_ir;
 use graphql_schema::GDS;
@@ -56,6 +57,7 @@ pub fn select_many_generate_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     model_name: &'s Qualified<open_dds::models::ModelName>,
+    flags: &GraphqlIrFlags,
 ) -> Result<ModelSelectMany<'n>, error::Error> {
     let mut limit = None;
     let mut offset = None;
@@ -78,14 +80,20 @@ pub fn select_many_generate_ir<'n, 's>(
                     // Limit is optional
                     limit = argument
                         .value
-                        .as_nullable(normalized_ast::Value::as_int_u32)
+                        .as_nullable(
+                            &flags.validate_non_null_graphql_variables,
+                            normalized_ast::Value::as_int_u32,
+                        )
                         .map_err(error::Error::map_unexpected_value_to_external_error)?;
                 }
                 ModelInputAnnotation::ModelOffsetArgument => {
                     // Offset is optional
                     offset = argument
                         .value
-                        .as_nullable(normalized_ast::Value::as_int_u32)
+                        .as_nullable(
+                            &flags.validate_non_null_graphql_variables,
+                            normalized_ast::Value::as_int_u32,
+                        )
                         .map_err(error::Error::map_unexpected_value_to_external_error)?;
                 }
                 ModelInputAnnotation::ModelArgumentsExpression => match &argument.value {
@@ -98,7 +106,10 @@ pub fn select_many_generate_ir<'n, 's>(
                 },
                 ModelInputAnnotation::ModelOrderByExpression => {
                     // Assign the order_by_input only if it is not null
-                    if !argument.value.is_null() {
+                    if !argument
+                        .value
+                        .is_null(&flags.validate_non_null_graphql_variables)
+                    {
                         order_by_input = Some(&argument.value);
                     }
                 }
@@ -113,9 +124,10 @@ pub fn select_many_generate_ir<'n, 's>(
                 BooleanExpressionAnnotation::BooleanExpressionRootField,
             )) => {
                 // where argument is optional
-                where_input = argument
-                    .value
-                    .as_nullable(normalized_ast::Value::as_object)?;
+                where_input = argument.value.as_nullable(
+                    &flags.validate_non_null_graphql_variables,
+                    normalized_ast::Value::as_object,
+                )?;
             }
 
             annotation => {
@@ -139,6 +151,7 @@ pub fn select_many_generate_ir<'n, 's>(
             arguments::resolve_model_arguments_input_opendd(
                 arguments_input,
                 &model_source.type_mappings,
+                flags,
                 &mut usage_counts,
             )
         })
@@ -178,6 +191,7 @@ pub fn select_many_generate_ir<'n, 's>(
         offset,
         &session.variables,
         request_headers,
+        flags,
         // Get all the models/commands that were used as relationships
         &mut usage_counts,
     )?;

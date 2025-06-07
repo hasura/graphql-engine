@@ -37,6 +37,41 @@ pub enum UnresolvedArgument<'s> {
     },
 }
 
+pub fn add_missing_nullable_arguments<'s>(
+    mut unresolved_arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
+    argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
+    argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    runtime_flags: &metadata_resolve::flags::RuntimeFlags,
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
+    if runtime_flags
+        .contains(metadata_resolve::flags::ResolvedRuntimeFlag::SendMissingArgumentsToNdcAsNulls)
+    {
+        // if any arguments are missing, and nullable, add them in!
+        for (model_argument_name, model_argument_info) in argument_infos {
+            // get data connector argument name...
+            let data_connector_argument_name =
+                argument_mappings.get(model_argument_name).ok_or_else(|| {
+                    PlanError::Internal(format!(
+                        "No argument mapping for model argument {model_argument_name}",
+                    ))
+                })?;
+
+            if !unresolved_arguments.contains_key(data_connector_argument_name)
+                && model_argument_info.argument_type.nullable
+            {
+                // and add a null!
+                unresolved_arguments.insert(
+                    data_connector_argument_name.clone(),
+                    UnresolvedArgument::Literal {
+                        value: serde_json::Value::Null,
+                    },
+                );
+            }
+        }
+    }
+    Ok(unresolved_arguments)
+}
+
 pub fn process_argument_presets_for_model<'s>(
     arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     model: &'s ModelWithPermissions,
@@ -64,7 +99,7 @@ pub fn process_argument_presets_for_model<'s>(
 
     process_argument_presets(
         arguments,
-        &model.model.arguments,
+        &model.arguments,
         &model_source.argument_mappings,
         argument_presets,
         object_types,
@@ -189,7 +224,7 @@ fn process_argument_presets<'s>(
                 UnresolvedArgument::BooleanExpression { .. } => {
                     // We don't apply input field presets to boolean expression arguments
                 }
-            };
+            }
         }
     }
 

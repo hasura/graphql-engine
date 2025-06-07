@@ -4,16 +4,19 @@ mod types;
 use crate::helpers::boolean_expression::validate_data_connector_with_object_boolean_expression_type;
 use crate::helpers::types::{TypeRepresentation, get_type_representation, unwrap_custom_type_name};
 use crate::stages::{
-    boolean_expressions, commands, data_connectors, models, object_relationships, scalar_types,
+    boolean_expressions, commands, data_connector_scalar_types, data_connectors, models,
+    object_relationships, scalar_types,
 };
-use crate::types::subgraph::{ArgumentInfo, Qualified};
-pub use error::{ArgumentError, ArgumentSource, NamedArgumentError};
+use crate::types::subgraph;
+use crate::types::subgraph::Qualified;
+pub use error::{ArgumentError, NamedArgumentError};
 use indexmap::IndexMap;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::CommandName;
+use open_dds::data_connector::DataConnectorName;
 use open_dds::{models::ModelName, types::CustomTypeName};
 use std::sync::Arc;
-pub use types::ArgumentIssue;
+pub use types::{ArgumentInfo, ArgumentIssue, ArgumentSource, ArgumentsOutput};
 
 use std::collections::BTreeMap;
 
@@ -31,9 +34,15 @@ pub fn resolve(
     >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     flags: &open_dds::flags::OpenDdFlags,
-) -> Result<Vec<ArgumentIssue>, Vec<NamedArgumentError>> {
+) -> Result<ArgumentsOutput, Vec<NamedArgumentError>> {
     let mut results = vec![];
+    let mut arguments = BTreeMap::new();
+
     for command in commands.values() {
         let data_connector_link = command.source.as_ref().map(|source| &source.data_connector);
         let type_mapping = command.source.as_ref().map(|source| &source.type_mappings);
@@ -48,7 +57,9 @@ pub fn resolve(
             scalar_types,
             boolean_expression_types,
             models,
+            data_connector_scalars,
             flags,
+            &mut arguments,
         ));
     }
 
@@ -66,19 +77,24 @@ pub fn resolve(
             scalar_types,
             boolean_expression_types,
             models,
+            data_connector_scalars,
             flags,
+            &mut arguments,
         ));
     }
 
     // return all errors or all issues
-    partition_eithers::collect_any_errors(results).map(|issues_nested| issues_nested.concat())
+    partition_eithers::collect_any_errors(results).map(|issues_nested| ArgumentsOutput {
+        issues: issues_nested.concat(),
+        arguments,
+    })
 }
 
 // resolve arguments. if the source is available we check it against any boolean
 // expressions used
 pub fn validate_arguments_with_source(
     argument_source: &ArgumentSource,
-    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
+    arguments: &IndexMap<ArgumentName, subgraph::ArgumentInfo>,
     data_connector_link: Option<&Arc<data_connectors::DataConnectorLink>>,
     source_type_mapping: Option<&BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>>,
     object_types: &BTreeMap<
@@ -88,9 +104,16 @@ pub fn validate_arguments_with_source(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars,
+    >,
     flags: &open_dds::flags::OpenDdFlags,
+    all_resolved_arguments: &mut BTreeMap<ArgumentSource, IndexMap<ArgumentName, ArgumentInfo>>,
 ) -> Result<Vec<ArgumentIssue>, NamedArgumentError> {
     let mut issues = vec![];
+
+    let mut resolved_arguments = IndexMap::new();
 
     for (argument_name, argument_info) in arguments {
         // if our argument is a boolean expression type, we need to check it
@@ -149,7 +172,31 @@ pub fn validate_arguments_with_source(
                 }));
             }
         }
+
+        // fetch the NDC type representation for this type if applicable
+        let type_representation = data_connector_link
+            .and_then(|data_connector_link| data_connector_scalars.get(&data_connector_link.name))
+            .and_then(|data_connector_scalars| {
+                unwrap_custom_type_name(&argument_info.argument_type).and_then(|custom_type_name| {
+                    data_connector_scalars
+                        .by_custom_type_name
+                        .get(custom_type_name)
+                })
+            })
+            .cloned();
+
+        resolved_arguments.insert(
+            argument_name.clone(),
+            ArgumentInfo {
+                argument_type: argument_info.argument_type.clone(),
+                description: argument_info.description.clone(),
+                argument_kind: argument_info.argument_kind.clone(),
+                type_representation,
+            },
+        );
     }
+
+    all_resolved_arguments.insert(argument_source.clone(), resolved_arguments);
 
     Ok(issues)
 }

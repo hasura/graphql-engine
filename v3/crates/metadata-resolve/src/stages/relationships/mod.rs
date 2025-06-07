@@ -90,7 +90,7 @@ fn resolve_relationship<'s>(
             ),
         );
         relationships.insert(qualified_type_name, inner_map);
-    };
+    }
 
     Ok(())
 }

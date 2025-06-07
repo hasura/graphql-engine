@@ -74,7 +74,7 @@ pub fn generate_request_plan<'n, 's, 'ir>(
                             .or_default()
                             .insert(alias.clone(), plan);
                     }
-                };
+                }
             }
             Ok(RequestPlan::MutationPlan(mutation_plan))
         }

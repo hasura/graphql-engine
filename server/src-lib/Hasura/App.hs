@@ -503,7 +503,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvAsyncActionsFetchBatchSize = soAsyncActionsFetchBatchSize,
           appEnvPersistedQueries = soPersistedQueries,
           appEnvPersistedQueriesTtl = soPersistedQueriesTtl,
-          appEnvPreserve401Errors = soPreserve401Errors
+          appEnvPreserve401Errors = soPreserve401Errors,
+          appServerTimeout = soServerTimeout
         }
     )
 
@@ -843,8 +844,8 @@ instance MonadMetadataStorage AppM where
   unlockScheduledEvents a b = runInSeparateTx $ unlockScheduledEventsTx a b
   unlockAllLockedScheduledEvents = runInSeparateTx unlockAllLockedScheduledEventsTx
   clearFutureCronEvents = runInSeparateTx . dropFutureCronEventsTx
-  getOneOffScheduledEvents a b c = runInSeparateTx $ getOneOffScheduledEventsTx a b c
-  getCronEvents a b c d = runInSeparateTx $ getCronEventsTx a b c d
+  getOneOffScheduledEvents a b c d = runInSeparateTx $ getOneOffScheduledEventsTx a b c d
+  getCronEvents a b c d e = runInSeparateTx $ getCronEventsTx a b c d e
   getScheduledEventInvocations a = runInSeparateTx $ getScheduledEventInvocationsTx a
   deleteScheduledEvent a b = runInSeparateTx $ deleteScheduledEventTx a b
 
@@ -987,6 +988,7 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
           . Warp.setServerName ""
           . setForkIOWithMetrics
           . Warp.setMaxTotalHeaderLength appEnvMaxTotalHeaderLength
+          . Warp.setTimeout (unrefine appServerTimeout)
           $ Warp.defaultSettings
 
       setForkIOWithMetrics :: Warp.Settings -> Warp.Settings

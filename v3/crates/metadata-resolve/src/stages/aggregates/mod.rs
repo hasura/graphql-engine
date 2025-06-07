@@ -350,7 +350,7 @@ fn resolve_scalar_operand(
                 );
             }
         }
-    };
+    }
 
     let operand_scalar_type = mk_qualified_type_name(
         &scalar_operand.aggregated_type,

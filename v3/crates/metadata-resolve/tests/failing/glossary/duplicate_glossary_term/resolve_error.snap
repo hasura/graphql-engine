@@ -1,0 +1,12 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/glossary/duplicate_glossary_term/metadata.json
+---
+Error: Duplicate glossary term name 'Bailing' in glossary 'Surfing (in subgraph default)'
+    ╭─[ <unknown>:18:25 ]
+    │
+ 18 │                 "name": "Bailing",
+    │                         ────┬────  
+    │                             ╰────── Duplicate glossary term name 'Bailing' in glossary 'Surfing'
+────╯

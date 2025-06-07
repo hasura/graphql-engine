@@ -11,7 +11,7 @@ use datafusion::{
     functions::{string::contains, unicode::substr},
     functions_aggregate::{average, count, min_max, sum},
     functions_window::{expr_fn::row_number, ntile},
-    logical_expr::{ExprSchemable, Literal as _, SubqueryAlias},
+    logical_expr::{ExprSchemable, Literal as _, SubqueryAlias, expr::AggregateFunctionParams},
     prelude::{
         ExprFunctionExt, SessionConfig, SessionContext, abs, array_element, btrim, ceil,
         character_length, coalesce, concat, cos, current_date, current_time, date_part, date_trunc,
@@ -170,8 +170,11 @@ fn convert_relation_to_logical_plan(
         Relation::From {
             collection,
             columns,
+            arguments,
         } => {
-            let table_provider: Arc<dyn TableProvider> = get_table_provider(collection, state)?;
+            let table_provider: Arc<dyn TableProvider> =
+                get_table_provider(collection, arguments, state)?;
+
             let table_schema: SchemaRef = table_provider.as_ref().schema();
 
             let projection = columns
@@ -183,6 +186,7 @@ fn convert_relation_to_logical_plan(
                         .map_err(|e| DataFusionError::ArrowError(e, None))
                 })
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
+
             let table_scan_plan = datafusion::logical_expr::LogicalPlan::TableScan(
                 datafusion::logical_expr::TableScan::try_new(
                     TableReference::bare(collection.as_str()),
@@ -293,6 +297,10 @@ fn convert_relation_to_logical_plan(
                 JoinType::Right => datafusion::logical_expr::JoinType::Right,
                 JoinType::Inner => datafusion::logical_expr::JoinType::Inner,
                 JoinType::Full => datafusion::logical_expr::JoinType::Full,
+                JoinType::LeftAnti => datafusion::logical_expr::JoinType::LeftAnti,
+                JoinType::LeftSemi => datafusion::logical_expr::JoinType::LeftSemi,
+                JoinType::RightAnti => datafusion::logical_expr::JoinType::RightAnti,
+                JoinType::RightSemi => datafusion::logical_expr::JoinType::RightSemi,
             };
 
             let join_schema = datafusion::logical_expr::build_join_schema(
@@ -354,6 +362,7 @@ fn convert_relation_to_logical_plan(
 // return types for tables, with columns / data we don't current support filtered out
 fn get_table_provider(
     collection_name: &ndc_models::CollectionName,
+    arguments: &BTreeMap<ndc_models::ArgumentName, RelationalLiteral>,
     state: &AppState,
 ) -> datafusion::error::Result<Arc<dyn TableProvider>> {
     let (rows, collection_fields) = match collection_name.as_str() {
@@ -362,6 +371,26 @@ fn get_table_provider(
                 .map_err(|e| DataFusionError::Internal(e.1.0.message))?,
             crate::types::actor::definition().fields,
         ),
+        "actors_by_movie" => {
+            let movie_id_int: i32 = arguments
+                .get("movie_id")
+                .and_then(|v| match v {
+                    RelationalLiteral::Int64 { value } => {
+                        Some(i32::try_from(*value).expect("movie_id out of range"))
+                    }
+                    _ => None,
+                })
+                .ok_or_else(|| {
+                    DataFusionError::Internal(
+                        "actors_by_movie requires a movie_id argument".to_string(),
+                    )
+                })?;
+
+            (
+                crate::collections::actors_by_movie::rows_inner(movie_id_int, state),
+                crate::types::actor::definition().fields,
+            )
+        }
         "countries" => (
             crate::collections::countries::rows(&BTreeMap::new(), state)
                 .map_err(|e| DataFusionError::Internal(e.1.0.message))?
@@ -1069,11 +1098,13 @@ fn convert_expression_to_logical_expr(
             Ok(datafusion::prelude::Expr::AggregateFunction(
                 datafusion::logical_expr::expr::AggregateFunction {
                     func: average::avg_udaf(),
-                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                    distinct: false,
-                    filter: None,
-                    order_by: None,
-                    null_treatment: None,
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                        distinct: false,
+                        filter: None,
+                        order_by: None,
+                        null_treatment: None,
+                    },
                 },
             ))
         }
@@ -1083,11 +1114,13 @@ fn convert_expression_to_logical_expr(
             Ok(datafusion::prelude::Expr::AggregateFunction(
                 datafusion::logical_expr::expr::AggregateFunction {
                     func: count::count_udaf(),
-                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                    distinct: *distinct,
-                    filter: None,
-                    order_by: None,
-                    null_treatment: None,
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                        distinct: *distinct,
+                        filter: None,
+                        order_by: None,
+                        null_treatment: None,
+                    },
                 },
             ))
         }
@@ -1096,33 +1129,39 @@ fn convert_expression_to_logical_expr(
         RelationalExpression::Max { expr: _ } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: min_max::max_udaf(),
-                args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                distinct: false,
-                filter: None,
-                order_by: None,
-                null_treatment: None,
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
             },
         )),
         RelationalExpression::Median { expr: _ } => unimplemented!(),
         RelationalExpression::Min { expr: _ } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: min_max::min_udaf(),
-                args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                distinct: false,
-                filter: None,
-                order_by: None,
-                null_treatment: None,
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
             },
         )),
         RelationalExpression::StringAgg { expr: _ } => unimplemented!(),
         RelationalExpression::Sum { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: sum::sum_udaf(),
-                args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                distinct: false,
-                filter: None,
-                order_by: None,
-                null_treatment: None,
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
             },
         )),
         RelationalExpression::Var { expr: _ } => unimplemented!(),

@@ -14,10 +14,10 @@ use open_dds::{
     types::{CustomTypeName, Deprecated, FieldName},
 };
 
-use crate::types::error::ContextualError;
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
+use crate::{ArgumentInfo, types::error::ContextualError};
 use crate::{
     helpers::typecheck,
     stages::{
@@ -30,10 +30,12 @@ use error_context::{Context, Step};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
-    pub model: models::Model,
+    pub model: models_graphql::Model,
+    pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub select_permissions: BTreeMap<Role, SelectPermission>,
     pub filter_expression_type: Option<boolean_expressions::ResolvedObjectBooleanExpressionType>,
     pub graphql_api: models_graphql::ModelGraphQlApi,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -84,6 +86,7 @@ pub enum ModelPredicate {
         column_path: Vec<DataConnectorColumnName>,
         predicate: Box<ModelPredicate>,
     },
+    /// Note, `And(vec![])` means `const True`
     And(Vec<ModelPredicate>),
     Or(Vec<ModelPredicate>),
     Not(Box<ModelPredicate>),

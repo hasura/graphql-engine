@@ -822,28 +822,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                6,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -915,7 +893,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                         },
                     },
                     global_id_fields: [],
-                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -1275,60 +1252,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: Some(
-                            Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Album_bool_exp",
-                                    ),
-                                ),
-                            },
-                        ),
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [
-                                    SelectUniqueGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "AlbumByID",
-                                        ),
-                                        unique_identifier: [
-                                            FieldName(
-                                                Identifier(
-                                                    "AlbumId",
-                                                ),
-                                            ),
-                                        ],
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "Album",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: None,
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV2(
-                            None,
-                        ),
-                    },
                 },
+                arguments: {},
                 select_permissions: {
                     Role(
                         "user",
@@ -1760,6 +1685,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -1808,28 +1734,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                8,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -1867,52 +1771,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                         },
                     },
                     global_id_fields: [],
-                    arguments: {
-                        ArgumentName(
-                            Identifier(
-                                "tenantId",
-                            ),
-                        ): ArgumentInfo {
-                            argument_type: QualifiedTypeReference {
-                                underlying_type: Named(
-                                    Inbuilt(
-                                        Int,
-                                    ),
-                                ),
-                                nullable: false,
-                            },
-                            description: None,
-                            argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        8,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
-                        },
-                    },
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -2156,47 +2014,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: None,
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [
-                                    SelectUniqueGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "ArtistByID",
-                                        ),
-                                        unique_identifier: [
-                                            FieldName(
-                                                Identifier(
-                                                    "ArtistId",
-                                                ),
-                                            ),
-                                        ],
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "Artist",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
+                },
+                arguments: {
+                    ArgumentName(
+                        Identifier(
+                            "tenantId",
+                        ),
+                    ): ArgumentInfo {
+                        argument_type: QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
                                 ),
-                                arguments_input_type: None,
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
+                            ),
+                            nullable: false,
+                        },
                         description: None,
-                        order_by: ModelV2(
-                            None,
-                        ),
+                        argument_kind: Other,
+                        type_representation: None,
                     },
                 },
                 select_permissions: {
@@ -2275,6 +2110,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
         },
         commands: {},
@@ -3031,6 +2867,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/relati
             propagate_boolean_expression_deprecation_status: false,
             multiple_order_by_input_object_fields: Allow,
         },
+        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],

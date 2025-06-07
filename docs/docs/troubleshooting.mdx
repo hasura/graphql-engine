@@ -46,23 +46,21 @@ Errors can come from a remote service, such as [Remote Schemas](/remote-schemas/
 [Events](/event-triggers/overview.mdx) or [Actions](/actions/overview.mdx). In this case, check the errors of the
 respective remote service. For Actions, check out this [debugging page](/actions/debugging.mdx).
 
-## GitHub issues
+## GraphQL Errors
 
-It's possible that someone with the same problem has created a GitHub issue on the
-[Hasura repo](https://github.com/hasura/graphql-engine/issues). If you don't come across an issue with solution in your
-search, feel free to create a [new issue](https://github.com/hasura/graphql-engine/issues/new).
+Encountering errors while using GraphQL? Learn about typical issues like schema mismatches, query failures, and
+permission settings, along with their solutions, [visit the page](/resources/graphQLerrors/)
 
-## Hasura blog
 
-The [Hasura blog](https://hasura.io/blog/) contains a lot of useful resources including tutorials. You can use the
-search functionality to find what you're looking for.
+## Performance Issues
 
-:::info YouTube
+Performance bottlenecks can hinder your application's efficiency. Explore strategies to identify and resolve slow
+queries, high memory usage, and latency problems, [visit the page](/observability/troubleshoot)
 
-If you prefer to watch tutorials in the form of videos, check out the
-[Hasura Youtube channel](https://www.youtube.com/channel/UCZo1ciR8pZvdD3Wxp9aSNhQ).
+## Observability
 
-:::
+Observability is key to understanding system behavior. Learn about monitoring, logging, and tracing practices to gain
+insights into your application's health and performance, [visit the page](/observability/troubleshoot)
 
 ## Database docs
 
@@ -70,30 +68,25 @@ If you come across a database error, it will be helpful to check their logs:
 
 - [Postgres documentation](https://www.postgresql.org/docs/current/index.html).
 
-## Client-side
+## Couldnt find what you are looking for?
 
-### SSL certificate errors
+### GitHub issues
 
-SSL certificate errors occur when a web browser can't verify the SSL certificate installed on a site. For SSL errors
-such as:
+It's possible that someone with the same problem has created a GitHub issue on the
+[Hasura repo](https://github.com/hasura/graphql-engine/issues). If you don't come across an issue with solution in your
+search, feel free to create a [new issue](https://github.com/hasura/graphql-engine/issues/new).
 
-```
-ERROR:
-{
-code: EPROTO,
-errno: EPROTO,
-message:
-request to <graphql-api> failed, reason: write EPROTO <....> alert handshake failure:..<...>: SSL alert number 40
-}
-```
+### Get Support
 
-Follow the steps below to try and resolve the issue:
+Whether you have a pricing question, want a custom demo, need technical support, or simply have a suggestion, our team
+is ready to assist you, [Hasura Support](https://github.com/hasura/graphql-engine/issues/new).
 
-1. Allowlist the EPROTO error code (in client-side code).
-2. Allow the retry logic to be activated.
-3. Monitor the system for improvements or changes in the reconciliation process.
+### Hasura blog
 
-## Discord
+The [Hasura blog](https://hasura.io/blog/) contains a lot of useful resources including tutorials. You can use the
+search functionality to find what you're looking for.
+
+### Discord
 
 If you didn't find a solution in any of the above mentioned sections or if you prefer to troubleshoot with the
 community, feel free to join our [Discord server](https://hasura.io/discord). Other users might have come across the

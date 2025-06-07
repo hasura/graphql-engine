@@ -117,7 +117,6 @@ pub fn plan_expression<'a>(
             })
         }
         Expression::RelationshipRemoteComparison {
-            relationship: _,
             target_model_name,
             target_model_source,
             ndc_column_mapping,
@@ -226,7 +225,6 @@ pub fn build_relationship_comparison_expression<'s>(
     target_model_name: &'s Qualified<ModelName>,
     target_model_source: &'s metadata_resolve::ModelSource,
     target_capabilities: &'s RelationshipCapabilities,
-    target_type: &'s Qualified<CustomTypeName>,
     mappings: &'s Vec<metadata_resolve::RelationshipModelMapping>,
     relationship_predicate: Expression<'s>,
 ) -> Result<Expression<'s>, RelationshipError> {
@@ -243,11 +241,9 @@ pub fn build_relationship_comparison_expression<'s>(
                 relationship_name,
                 relationship_type,
                 source_type,
-                source_data_connector: source_data_connector_link,
                 source_type_mappings: type_mappings,
                 target_model_name,
                 target_source: target_model_source,
-                target_type,
                 mappings,
             };
 
@@ -325,7 +321,6 @@ pub fn build_relationship_comparison_expression<'s>(
             }
 
             Ok(Expression::RelationshipRemoteComparison {
-                relationship: relationship_name.clone(),
                 target_model_name,
                 target_model_source: target_model_source.clone().into(),
                 ndc_column_mapping,

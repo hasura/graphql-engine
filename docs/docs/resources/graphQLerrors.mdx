@@ -1,0 +1,211 @@
+---
+description: Resources around using Hasura and GraphQL
+title: GraphQL Errors
+sidebar_label: GraphQL Errors
+keywords:
+  - hasura
+  - docs
+  - guide
+  - tutorial
+  - resource
+sidebar_position: 5
+---
+
+import Resources from '@site/static/icons/features/resources.svg';
+
+# <Resources /> Resources
+
+## GraphQL Errors
+
+Error handling in GraphQL differs on both server and client-side tooling. When the response contains the `errors` object
+along with the `data` object, it could mean a partially correct response for the request. Digging into the `errors`
+object provides insights into what part of the query went wrong.
+
+The default errors JSON includes `message`, `locations`, and `path`. According to the working draft of the spec, it is
+also possible to send custom data in the `extensions` key.
+
+### Common GraphQL Errors
+
+### Server Problems / Network Errors
+
+Server-side errors occur when the GraphQL server cannot process the request due to configuration, network, or runtime
+issues. These errors are indicated by HTTP status codes other than `200`. Common examples include:
+
+- **Bad Request (400)**: This indicates invalid input. For example:
+  ```json
+  {
+    "errors": [
+      {
+        "message": "Syntax Error: Unexpected Name 'queryx'",
+        "locations": [{ "line": 1, "column": 1 }]
+      }
+    ]
+  }
+  ```
+- **Unauthorized (401)**: This occurs when authentication is missing or invalid.
+  ```json
+  {
+    "errors": [
+      {
+        "message": "Unauthorized access. Please log in."
+      }
+    ]
+  }
+  ```
+- **Gateway Errors (5xx)**: These indicate server-side failures such as timeouts or misconfigurations.
+  ```json
+  {
+    "errors": [
+      {
+        "message": "Internal Server Error. Please try again later."
+      }
+    ]
+  }
+  ```
+
+### Client-Side Problems - Validation Rules of GraphQL Query
+
+GraphQL performs validation of all queries before executing them. Validation errors typically arise due to:
+
+1. **Malformed Query**:
+
+   ```graphql
+   query {
+     user(id: 123 {
+       name
+     }
+   }
+   ```
+
+   - Error:
+     ```json
+     {
+       "errors": [
+         {
+           "message": "Syntax Error: Expected ')', found '{'",
+           "locations": [{ "line": 2, "column": 17 }]
+         }
+       ]
+     }
+     ```
+
+2. **Schema Logic Errors**: When a query references a non-existent field.
+
+   ```graphql
+   query {
+     user(id: 123) {
+       age
+     }
+   }
+   ```
+
+   - Error:
+     ```json
+     {
+       "errors": [
+         {
+           "message": "Cannot query field 'age' on type 'User'.",
+           "locations": [{ "line": 3, "column": 7 }]
+         }
+       ]
+     }
+     ```
+
+3. **Variables and Fragments Not Defined Properly**:
+   ```graphql
+   query GetUser($id: ID!) {
+     user(id: $userId) {
+       name
+     }
+   }
+   ```
+   - Error:
+     ```json
+     {
+       "errors": [
+         {
+           "message": "Variable '$userId' is not defined.",
+           "locations": [{ "line": 1, "column": 22 }]
+         }
+       ]
+     }
+     ```
+
+### Top-Level Errors
+
+Top-level errors appear in the `errors` object and provide details about issues encountered during execution. These
+include:
+
+- `message`: A brief description of the error.
+- `locations`: The location in the query where the error occurred.
+- `path`: The path to the field that caused the error.
+- Example:
+  ```json
+  {
+    "errors": [
+      {
+        "message": "Field 'email' not found on type 'User'.",
+        "locations": [{ "line": 3, "column": 9 }],
+        "path": ["user", "email"]
+      }
+    ]
+  }
+  ```
+
+### GraphQL Subscription Errors
+
+Subscription errors are encountered during real-time operations over WebSocket connections. Common issues include:
+
+1. **WebSocket Initialization Failure**:
+
+   - Error:
+     ```json
+     {
+       "errors": [
+         {
+           "message": "WebSocket connection failed: Invalid WebSocket URL."
+         }
+       ]
+     }
+     ```
+   - Solution: Ensure the URL starts with `ws://` or `wss://`.
+
+2. **Invalid HTTP Upgrade**:
+
+   - Error:
+     ```json
+     {
+       "errors": [
+         {
+           "message": "Invalid HTTP Upgrade for WebSocket connection."
+         }
+       ]
+     }
+     ```
+   - Solution: Check server configuration to properly handle WebSocket upgrades.
+
+3. **Missing Connection Parameters**:
+   - Example:
+     ```javascript
+     const wsLink = new WebSocketLink({
+       uri: 'wss://graphql.example.com/graphql',
+       options: {
+         reconnect: true,
+         connectionParams: {
+           headers: {
+             Authorization: `Bearer ${token}`,
+           },
+         },
+       },
+     });
+     ```
+   - Error:
+     ```json
+     {
+       "errors": [
+         {
+           "message": "Authorization headers missing in connectionParams."
+         }
+       ]
+     }
+     ```

@@ -2373,34 +2373,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                             },
                             description: None,
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        11,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -2428,34 +2401,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                 "Insert permission predicate over the 'album' collection",
                             ),
                             argument_kind: NDCExpression,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        11,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                     },
                     graphql_api: Some(
@@ -6007,6 +5953,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
             propagate_boolean_expression_deprecation_status: true,
             multiple_order_by_input_object_fields: Disallow,
         },
+        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],

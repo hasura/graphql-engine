@@ -28,7 +28,6 @@ pub struct ModelAggregateRelationshipAnnotation {
     pub source_type: Qualified<CustomTypeName>,
     pub relationship_name: RelationshipName,
     pub target_model_name: Qualified<ModelName>,
-    pub target_capabilities: Option<RelationshipCapabilities>,
     pub target_type: Qualified<CustomTypeName>,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
     pub deprecated: Option<Deprecated>,
@@ -51,7 +50,6 @@ pub struct OrderByRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub object_type_name: Qualified<CustomTypeName>,
     pub target_source: metadata_resolve::ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
@@ -75,13 +73,11 @@ pub struct CommandRelationshipAnnotation {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct CommandTargetSource {
     pub function_name: FunctionName,
-    pub capabilities: metadata_resolve::RelationshipCapabilities,
 }
 
 impl CommandTargetSource {
     pub fn new(
         command: &metadata_resolve::CommandWithPermissions,
-        relationship: &metadata_resolve::RelationshipField,
     ) -> Result<Option<Self>, crate::Error> {
         command
             .command
@@ -97,14 +93,6 @@ impl CommandTargetSource {
                             Err(crate::Error::RelationshipsToProcedureBasedCommandsAreNotSupported)?
                         }
                     },
-                    capabilities: relationship
-                        .target_capabilities
-                        .as_ref()
-                        .ok_or_else(|| crate::Error::InternalMissingRelationshipCapabilities {
-                            type_name: relationship.source.clone(),
-                            relationship: relationship.relationship_name.clone(),
-                        })?
-                        .clone(),
                 })
             })
             .transpose()

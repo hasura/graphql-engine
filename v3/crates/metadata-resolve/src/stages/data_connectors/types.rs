@@ -607,6 +607,22 @@ pub struct DataConnectorRelationalJoinTypeCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_full: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_left_semi: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_left_anti: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_right_semi: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_right_anti: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -1195,6 +1211,10 @@ fn mk_ndc_02_capabilities(
                             supports_right: c.join_types.right.is_some(),
                             supports_inner: c.join_types.inner.is_some(),
                             supports_full: c.join_types.full.is_some(),
+                            supports_left_semi: c.join_types.left_semi.is_some(),
+                            supports_left_anti: c.join_types.left_anti.is_some(),
+                            supports_right_semi: c.join_types.right_semi.is_some(),
+                            supports_right_anti: c.join_types.right_anti.is_some(),
                         },
                     }),
                 supports_aggregate: r.aggregate.as_ref().map(|c| {

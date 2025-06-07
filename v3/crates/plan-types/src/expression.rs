@@ -1,7 +1,6 @@
 use metadata_resolve::{Qualified, UnaryComparisonOperator};
 use open_dds::data_connector::{DataConnectorColumnName, DataConnectorOperatorName};
 use open_dds::models::ModelName;
-use open_dds::relationships::RelationshipName;
 use serde::Serialize;
 use std::sync::Arc;
 
@@ -54,7 +53,6 @@ pub enum Expression<'s> {
     /// 1. remote relationships
     /// 2. local relationships without the `relation_comparisons` NDC capability
     RelationshipRemoteComparison {
-        relationship: RelationshipName,
         target_model_name: &'s Qualified<ModelName>,
         target_model_source: Arc<metadata_resolve::ModelSource>,
         ndc_column_mapping: Vec<RelationshipColumnMapping>,

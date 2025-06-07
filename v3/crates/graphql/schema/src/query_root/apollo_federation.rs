@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
@@ -18,7 +18,6 @@ use crate::{
     GDS,
     types::{self, Annotation},
 };
-use json_ext::HashMapWithJsonKey;
 
 pub(crate) struct ApolloFederationFieldOutput {
     /// The _entities field.
@@ -34,10 +33,8 @@ pub(crate) fn apollo_federation_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
 ) -> Result<ApolloFederationFieldOutput, crate::Error> {
-    let mut roles_type_permissions: HashMap<
-        Role,
-        HashMap<Qualified<CustomTypeName>, metadata_resolve::FilterPermission>,
-    > = HashMap::new();
+    let mut roles_type_permissions: HashMap<Role, BTreeSet<Qualified<CustomTypeName>>> =
+        HashMap::new();
     let mut typename_mappings = HashMap::new();
     for model in gds.metadata.models.values() {
         if let Some(apollo_federation_key_source) = &model.model.apollo_federation_key_source {
@@ -49,10 +46,9 @@ pub(crate) fn apollo_federation_field(
             let entities_field_permissions =
                 get_entities_field_namespace_permissions(object_type_representation, model);
 
-            for (role, model_predicate) in &entities_field_permissions {
+            for role in &entities_field_permissions {
                 let role_type_permissions = roles_type_permissions.entry(role.clone()).or_default();
-                role_type_permissions
-                    .insert(model.model.data_type.clone(), model_predicate.clone());
+                role_type_permissions.insert(model.model.data_type.clone());
             }
 
             if typename_mappings
@@ -72,7 +68,7 @@ pub(crate) fn apollo_federation_field(
                 return Err(crate::Error::InternalErrorDuplicateEntitySourceFound {
                     type_name: output_typename.type_name().clone(),
                 });
-            };
+            }
         }
     }
     let mut apollo_federation_entities_field_permissions = HashMap::new();
@@ -80,7 +76,7 @@ pub(crate) fn apollo_federation_field(
         apollo_federation_entities_field_permissions.insert(
             role.clone(),
             Some(types::NamespaceAnnotation::EntityTypeMappings(
-                HashMapWithJsonKey(role_type_permission),
+                role_type_permission,
             )),
         );
     }

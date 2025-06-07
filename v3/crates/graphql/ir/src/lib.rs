@@ -1,12 +1,12 @@
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
-use serde::Serialize;
 
 mod aggregates;
 mod arguments;
 mod commands;
 mod error;
 mod filter;
+mod flags;
 mod global_id;
 mod model_selection;
 mod model_tracking;
@@ -40,7 +40,7 @@ pub use selection_set::{FieldSelection, NestedSelection, ResultSelectionSet};
 pub use subscription_root::generate_ir as generate_subscription_ir;
 
 /// The IR is the intermediate representation of the GraphQL operation.
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub enum IR<'n, 's> {
     Query(IndexMap<ast::Alias, root_field::QueryRootField<'n, 's>>),
     Mutation(IndexMap<ast::Alias, root_field::MutationRootField<'n, 's>>),

@@ -243,11 +243,9 @@ fn resolve_relationship_operand(
                 relationship_name,
                 relationship_type: &model_relationship_target.relationship_type,
                 source_type: type_name,
-                source_data_connector: data_connector,
                 source_type_mappings: type_mappings,
                 target_model_name,
                 target_source: target_model_source,
-                target_type: &model_relationship_target.target_typename,
                 mappings: &model_relationship_target.mappings,
             };
 

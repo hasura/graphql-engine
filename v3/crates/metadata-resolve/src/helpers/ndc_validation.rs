@@ -359,7 +359,7 @@ pub fn validate_ndc_command(
         return Err(NDCValidationError::NoSuchType(
             command_source_ndc_result_type_name.to_string(),
         ));
-    };
+    }
 
     // Check if the result_type of function/procedure actually has a scalar type or an object type.
     // If it is an object type, then validate the type mapping.
@@ -420,7 +420,7 @@ pub fn validate_ndc_command(
                         command_source_ndc_result_type_name.to_string(),
                     ))?,
                 },
-            };
+            }
         }
     }
     Ok(source_type_open_dd_type_same)

@@ -1,5 +1,8 @@
 {
   "version": "v2",
+  "flags": {
+    "validate_non_null_graphql_variables": true
+  },
   "subgraphs": [
     {
       "name": "default",

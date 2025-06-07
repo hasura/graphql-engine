@@ -45,6 +45,8 @@ module Hasura.Server.Auth.JWT
     fetchJwk,
     defaultClaimsFormat,
     defaultClaimsNamespace,
+    parseJWKSetRobustly,
+    canonicalizeJWKJson,
 
     -- * Exposed for testing
     processJwt_,
@@ -68,7 +70,9 @@ import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.Lens qualified as JL
 import Data.ByteArray.Encoding qualified as BAE
+import Data.ByteString qualified as B
 import Data.ByteString.Char8 qualified as BC
 import Data.ByteString.Internal qualified as B
 import Data.ByteString.Lazy qualified as BL
@@ -85,6 +89,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Extended ((<<>), (<>>))
 import Data.Time.Clock (NominalDiffTime, UTCTime, addUTCTime, getCurrentTime)
+import Data.Vector qualified as V
 import GHC.AssertNF.CPP
 import Hasura.Authentication.Header (getRequestHeader)
 import Hasura.Authentication.Role (RoleName, mkRoleName)
@@ -342,6 +347,7 @@ fetchAndUpdateJWKs contextAdvice logger httpManager url jwkRef = do
     -- As this 'fetchJwk' is going to happen always in background thread, we are
     -- not going to throw fatal error(s). If there is any error fetching JWK -
     -- don't do anything; this will get retried again in 1 second
+    -- (FIXME (Brandon): should above read "in 1 minute"? See updateSsoJwkCtxThread)
     -- TODO: we need to do a 'fetchJwk' check in 'setupAuthMode' and throw any
     -- fatal error(s) there
     Left _e -> pure ()
@@ -393,7 +399,7 @@ fetchJwk (Logger logger) manager url = do
     logAndThrow err
 
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
-  !jwkset <- onLeft (J.eitherDecode' respBody) (logAndThrow . parseErr)
+  !jwkset <- onLeft (parseJWKSetRobustly respBody) (logAndThrow . parseErr)
   return (jwkset, resp ^. Wreq.responseHeaders)
   where
     logAndThrow :: (MonadIO m, MonadError JwkFetchError m) => JwkFetchError -> m a
@@ -410,6 +416,54 @@ fetchJwk (Logger logger) manager url = do
     getHttpExceptionMsg = \case
       HTTP.HttpExceptionRequest _ reason -> show reason
       HTTP.InvalidUrlException _ reason -> show reason
+
+-- | AWS can't be bothered with the JWK spec in cognito so try to clean up
+-- base64 fields before it reaches the jose code. For now this is just a best
+-- effort workaround for RSA-type keys, tested against whatever the affected
+-- customer provided us.
+--
+-- Some context:
+-- https://github.com/frasertweedale/hs-jose/issues/133#event-17426906457
+parseJWKSetRobustly :: BL.ByteString -> Either String Jose.JWKSet
+parseJWKSetRobustly = eitherDecodeWith' canonicalizeJWKJson
+
+-- exported for testing
+canonicalizeJWKJson :: J.Value -> J.Value
+canonicalizeJWKJson = over (JL.key "keys" . JL._Array) (fmap canonicalizeTargets . V.filter knownKeyType)
+  where
+    -- Is this a JWK we know what to do with? Else filter it out; it's not for
+    -- us. Otherwise we'll get an error from jose. Incidentally filters out
+    -- some other weird or malformed data.
+    --
+    -- See: https://www.rfc-editor.org/rfc/rfc7517.html#section-4.2
+    knownKeyType :: J.Value -> Bool
+    knownKeyType v = v ^? JL.key "use" . JL._String `elem` [Just "enc", Just "sig"]
+
+    canonicalizeTargets :: J.Value -> J.Value
+    canonicalizeTargets = foldr (\k f -> over (JL.key k . JL._String) (stripLeadingZeros . canonicalizeBase64) . f) id targets
+      where
+        -- which top-level keys have dodgy base64? (RSA family only, at time of writing)
+        targets = ["e", "n"]
+        -- this is a little more robust than using BAE.convertFromBase BAE.Base64
+        -- even though we need to do a full conversion below sadly. e.g. maybe
+        -- next week AWS will decide to have Base64 URL except they add padding.
+        canonicalizeBase64 =
+          T.dropWhileEnd (== '=') . T.map \case
+            '+' -> '-'
+            '/' -> '_'
+            c -> c
+        -- This is also against spec where jose is very strict about the spec:
+        -- https://github.com/frasertweedale/hs-jose/issues/68
+        stripLeadingZeros t64 = case BAE.convertFromBase BAE.Base64URLUnpadded $ T.encodeUtf8 t64 of
+          Left _ -> t64 -- this means an error that will get caught in hs-jose
+          Right b -> T.decodeUtf8 $ BAE.convertToBase BAE.Base64URLUnpadded $ B.dropWhile (== 0) b
+
+-- | eitherDecode, but we can modify the 'Value' before converting it to the model type
+eitherDecodeWith' :: (J.FromJSON a) => (J.Value -> J.Value) -> BL.ByteString -> Either String a
+eitherDecodeWith' f bs =
+  J.eitherDecode' bs >>= \(v :: J.Value) -> case J.fromJSON (f v) of
+    J.Error err -> Left err
+    J.Success a -> Right a
 
 -- | First check for Cache-Control header, if not found, look for Expires header
 determineJwkExpiryLifetime ::

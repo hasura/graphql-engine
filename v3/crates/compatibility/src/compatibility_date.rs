@@ -181,5 +181,6 @@ pub fn get_compatibility_date_for_flag(flag: Flag) -> Option<CompatibilityDate> 
         Flag::DisallowComparableRelationshipTargetWithNoBooleanExpressionType => {
             Some(new_compatibility_date(2025, 4, 24))
         }
+        Flag::SendMissingArgumentsToNdcAsNulls => Some(new_compatibility_date(2025, 5, 30)),
     }
 }

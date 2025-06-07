@@ -1,0 +1,104 @@
+---
+sidebar_label: Troubleshooting Guide
+description: Best practices for OpenTelemetry of Hasura GraphQL Engine
+title: 'OpenTelemetry Best Practices'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - opentelemetry
+  - open telemetry
+  - traces
+  - metrics
+  - logs
+sidebar_position: 1
+---
+
+# Observability Troubleshooting Guide for Hasura Deployments
+
+## Overview
+
+Observability is essential for identifying and resolving issues in real time. This guide provides a detailed approach to troubleshooting observability-related challenges in Hasura deployments. The focus is on efficient monitoring, debugging, and utilizing tools such as metrics, logs, and traces to maintain healthy and performant systems.
+
+---
+
+## Key Features and Tools for Troubleshooting
+
+- **Prometheus**: For metrics collection and monitoring.
+- **Grafana**: For visualizing and analyzing metrics.
+- **Loki**: For log aggregation and querying.
+- **Tempo (or Jaeger)**: For tracing requests and analyzing performance bottlenecks.
+
+These tools work together to provide deep insights into your application, enabling quick detection and resolution of issues.
+
+---
+
+## What is Observability?
+
+The ability to gauge a system's internal conditions by examining its outputs is known as **observability**. If the current state of a system can be inferred solely from its outputs—like logs, metrics, and traces—then the system is considered observable.
+
+Without observability, identifying system issues becomes reactive and time-consuming. Observability enables you to:
+
+- Gain insights into the functionality and health of your systems.
+- Collect, store, and visualize data to monitor behaviors and trends.
+- Set up alerts for early detection of anomalies or failures.
+- Use distributed tracing to gain end-to-end visibility into real user requests.
+- Audit, debug, and analyze logs from all services and infrastructure at scale.
+
+### Three Pillars of Observability
+
+The three foundational pillars of observability are:
+
+- **Logs**: Structured or unstructured messages produced by services that give insights into system behavior.
+- **Metrics**: Numerical data collected over time to measure system performance and usage.
+- **Traces**: Distributed data showing the journey of a single request through the system.
+
+These components don’t make a system observable by themselves—but when integrated and interpreted properly, they form a powerful framework for monitoring and debugging.
+
+---
+
+## Logs
+
+Logs offer granular visibility into what's happening inside your Hasura deployment. Depending on your Hasura Enterprise Edition deployment model (Docker, Kubernetes, etc.), logs can be exported and processed using appropriate logging drivers or agents.
+
+We recommend forwarding container logs to Loki or your centralized logging system to:
+
+- Search and filter logs by label (e.g., service, pod, severity).
+- Correlate logs with metrics and traces.
+- Retain logs for audit and compliance.
+
+
+---
+
+## Metrics
+
+Metrics provide numerical insight into the health and performance of your Hasura services. Hasura exposes metrics that can be visualized through pre-built [Grafana dashboards](https://github.com/hasura/postsales/tree/main/Observability/self-hosted/docker-based/grafana).
+
+Key metrics include:
+
+- Query execution time
+- Cache hit/miss rates
+- Request throughput and error rates
+
+These help monitor golden signals like latency, traffic, errors, and saturation.
+
+---
+
+## Traces
+
+Traces capture the full lifecycle of requests within Hasura, helping pinpoint where time is spent. Distributed tracing tools like Tempo or Jaeger can help you:
+
+- Track request flow across services
+- Identify performance bottlenecks
+- Visualize time spent in resolvers, remote joins, or database operations
+
+Instrument your services with OpenTelemetry to send trace data to a tracing backend, and visualize with Grafana.
+
+Once set up, trace graphs provide powerful context during debugging and performance analysis.
+
+---
+
+## Final Notes
+
+Setting up a robust observability stack is essential for ensuring reliable and performant Hasura deployments. Logs, metrics, and traces together give you the visibility needed to detect, investigate, and resolve issues faster.
+

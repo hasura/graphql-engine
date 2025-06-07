@@ -552,28 +552,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                6,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -620,7 +598,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
                         },
                     },
                     global_id_fields: [],
-                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -982,39 +959,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: None,
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "mycollection",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: None,
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV2(
-                            Some(
-                                OrderByExpressionName(
-                                    Identifier(
-                                        "MyOrderByExpression",
-                                    ),
-                                ),
-                            ),
-                        ),
-                    },
                 },
+                arguments: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
@@ -1081,6 +1027,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
         },
         commands: {},
@@ -1405,6 +1352,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/string
             propagate_boolean_expression_deprecation_status: false,
             multiple_order_by_input_object_fields: Allow,
         },
+        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],

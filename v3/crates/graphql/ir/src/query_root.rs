@@ -11,6 +11,8 @@ use open_dds::{commands::CommandName, models};
 use plan_types::UsagesCounts;
 use std::collections::HashMap;
 
+use crate::flags::GraphqlIrFlags;
+
 use super::commands;
 use super::error;
 use super::root_field;
@@ -78,6 +80,7 @@ pub fn generate_ir<'n, 's>(
                                 session,
                                 request_headers,
                                 model_name,
+                                &GraphqlIrFlags::from_runtime_flags(&metadata.runtime_flags),
                             )?;
                             Ok(ir)
                         }
@@ -105,6 +108,7 @@ pub fn generate_ir<'n, 's>(
                                 &metadata.object_types,
                                 session,
                                 request_headers,
+                                &GraphqlIrFlags::from_runtime_flags(&metadata.runtime_flags),
                             )?;
                             Ok(ir)
                         }
@@ -117,6 +121,7 @@ pub fn generate_ir<'n, 's>(
                                 &metadata.object_types,
                                 session,
                                 request_headers,
+                                &GraphqlIrFlags::from_runtime_flags(&metadata.runtime_flags),
                             )?;
                             Ok(ir)
                         }
@@ -131,6 +136,7 @@ pub fn generate_ir<'n, 's>(
                                 &metadata.object_types,
                                 session,
                                 request_headers,
+                                &GraphqlIrFlags::from_runtime_flags(&metadata.runtime_flags),
                             )?;
                             Ok(ir)
                         }
@@ -206,6 +212,7 @@ pub fn generate_model_rootfield_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     model_name: &'s metadata_resolve::Qualified<models::ModelName>,
+    flags: &GraphqlIrFlags,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let source = model.model.source.as_deref().ok_or_else(|| {
         error::InternalDeveloperError::NoSourceDataConnector {
@@ -225,6 +232,7 @@ pub fn generate_model_rootfield_ir<'n, 's>(
                 session,
                 request_headers,
                 model_name,
+                flags,
             )?,
         },
         RootFieldKind::SelectMany => root_field::QueryRootField::ModelSelectMany {
@@ -238,12 +246,13 @@ pub fn generate_model_rootfield_ir<'n, 's>(
                 session,
                 request_headers,
                 model_name,
+                flags,
             )?,
         },
         RootFieldKind::SelectAggregate => root_field::QueryRootField::ModelSelectAggregate {
             selection_set: &field.selection_set,
             ir: select_aggregate::select_aggregate_generate_ir(
-                field, field_call, source, model_name,
+                field, field_call, source, model_name, flags,
             )?,
         },
     };
@@ -269,6 +278,7 @@ fn generate_command_rootfield_ir<'n, 's>(
     >,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let mut usage_counts = UsagesCounts::new();
     let source = command.command.source.as_deref().ok_or_else(|| {
@@ -299,6 +309,7 @@ fn generate_command_rootfield_ir<'n, 's>(
             source,
             &session.variables,
             request_headers,
+            flags,
             &mut usage_counts,
         )?,
     };
@@ -319,6 +330,7 @@ fn generate_nodefield_ir<'n, 's>(
     >,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let ir = root_field::QueryRootField::NodeSelect(node_field::relay_node_ir(
         field,
@@ -328,6 +340,7 @@ fn generate_nodefield_ir<'n, 's>(
         object_types,
         session,
         request_headers,
+        flags,
     )?);
     Ok(ir)
 }
@@ -346,6 +359,7 @@ fn generate_entities_ir<'n, 's>(
     >,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let ir = root_field::QueryRootField::ApolloFederation(
         root_field::ApolloFederationRootFields::EntitiesSelect(apollo_federation::entities_ir(
@@ -356,6 +370,7 @@ fn generate_entities_ir<'n, 's>(
             object_types,
             session,
             request_headers,
+            flags,
         )?),
     );
     Ok(ir)

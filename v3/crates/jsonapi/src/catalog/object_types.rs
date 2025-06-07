@@ -74,7 +74,7 @@ pub fn build_object_type(
                     });
                 }
             }
-        };
+        }
         if let Some(target) = target {
             type_relationships.insert(relationship_field.relationship_name.clone(), target);
         }

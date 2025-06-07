@@ -299,7 +299,7 @@ pub fn resolve_comparable_relationships(
             // If the relationship is to an unknown subgraph, skip it because we're in
             // allow unknown subgraphs mode
             relationships::Relationship::RelationshipToUnknownSubgraph => {}
-        };
+        }
     }
 
     Ok(resolved_comparable_relationships)
@@ -432,7 +432,7 @@ pub fn resolve_comparable_fields(
                 type_name: boolean_expression_type_name.clone(),
                 name: comparable_field.field_name.clone(),
             });
-        };
+        }
     }
 
     // doing this validation when there is no graphql configuration is a breaking change, so we
@@ -484,7 +484,7 @@ pub fn resolve_comparable_fields(
                                         .clone(),
                                 },
                             );
-                        };
+                        }
                     }
                 }
                 ComparableFieldKind::Object | ComparableFieldKind::ObjectArray => {
@@ -510,7 +510,6 @@ pub fn resolve_comparable_fields(
                     {
                         match &comparable_field_type_name {
                             BooleanExpressionTypeIdentifier::FromDataConnectorScalarRepresentation(_) => {
-                                continue;
                             }
                             BooleanExpressionTypeIdentifier::FromBooleanExpressionType(
                                 boolean_expression_type_name,

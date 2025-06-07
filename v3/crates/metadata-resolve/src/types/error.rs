@@ -4,8 +4,8 @@ use crate::helpers::{
 };
 use crate::stages::{
     aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, arguments,
-    boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
-    model_permissions, models, models_graphql, object_relationships, object_types,
+    boolean_expressions, commands, data_connector_scalar_types, data_connectors, glossaries,
+    graphql_config, model_permissions, models, models_graphql, object_relationships, object_types,
     order_by_expressions, relationships, relay, scalar_boolean_expressions, scalar_types,
     type_permissions,
 };
@@ -273,6 +273,8 @@ pub enum Error {
     ArgumentError(#[from] arguments::NamedArgumentError),
     #[error("{0}")]
     ModelGraphqlError(#[from] models_graphql::ModelGraphqlError),
+    #[error("{0}")]
+    GlossaryError(#[from] glossaries::GlossaryError),
     #[error("{warning_as_error}")]
     CompatibilityError { warning_as_error: crate::Warning },
     #[error("{errors}")]
@@ -336,6 +338,7 @@ impl ContextualError for Error {
             Error::ArgumentError(error) => error.create_error_context(),
             Error::ModelGraphqlError(error) => error.create_error_context(),
             Error::GraphqlConfigError(error) => error.create_error_context(),
+            Error::GlossaryError(error) => error.create_error_context(),
             Error::CompatibilityError { warning_as_error } => {
                 warning_as_error.create_error_context()
             }
@@ -419,6 +422,16 @@ pub enum TypePredicateError {
         data_connector: Qualified<DataConnectorName>,
     },
     #[error(
+        "field '{field_name}' of type '{type_name}' used in a field comparison has the unknown NDC type '{ndc_type_name}' and therefore cannot be compared to a single value"
+    )]
+    UnsupportedFieldComparisonToUnknownType {
+        field_name: Spanned<FieldName>,
+        field_type: QualifiedTypeReference,
+        type_name: Qualified<CustomTypeName>,
+        ndc_type_name: ndc_models::TypeName,
+    },
+
+    #[error(
         "field '{field_name}' of type '{type_name}' used in a field comparison is an array type and therefore cannot be compared to a single value"
     )]
     UnsupportedFieldComparisonToArrayType {
@@ -426,6 +439,15 @@ pub enum TypePredicateError {
         field_type: QualifiedTypeReference,
         type_name: Qualified<CustomTypeName>,
     },
+    #[error(
+        "field '{field_name}' of type '{type_name}' used in a field comparison is a predicate type and therefore cannot be compared to a single value"
+    )]
+    UnsupportedFieldComparisonToPredicateType {
+        field_name: Spanned<FieldName>,
+        field_type: QualifiedTypeReference,
+        type_name: Qualified<CustomTypeName>,
+    },
+
     #[error("Invalid operator used in type '{type_name:}' predicate: '{operator_name:}'")]
     InvalidOperatorInTypePredicate {
         type_name: Qualified<CustomTypeName>,
@@ -470,13 +492,6 @@ pub enum TypePredicateError {
     TargetSourceRequiredForRelationshipPredicate {
         source_type_name: Qualified<CustomTypeName>,
         target_model_name: Qualified<ModelName>,
-    },
-    #[error(
-        "no relationship predicate is defined for relationship '{relationship_name:}' in type '{type_name:}'"
-    )]
-    NoPredicateDefinedForRelationshipPredicate {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: Spanned<RelationshipName>,
     },
     #[error("{error:} in type {type_name:}")]
     TypeMappingCollectionError {
@@ -571,6 +586,25 @@ impl ContextualError for TypePredicateError {
                     }
                 ))
             },
+            TypePredicateError::UnsupportedFieldComparisonToPredicateType { field_name, field_type, type_name } => {
+                Some(Context::from_step(
+                    error_context::Step {
+                        message: format!("The type of this field ({field_type}) is a predicate type and therefore it cannot be compared to a single value"),
+                        path: field_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                )) },
+
+            TypePredicateError::UnsupportedFieldComparisonToUnknownType { ndc_type_name, field_name, field_type, type_name } => {
+                Some(Context::from_step(
+                    error_context::Step {
+                        message: format!("The type of this field ({field_type}) is the unknown NDC type '{ndc_type_name}' and therefore it cannot be compared to a single value"),
+                        path: field_name.path.clone(),
+                        subgraph: Some(type_name.subgraph.clone()),
+                    }
+                ))
+            },
+
             TypePredicateError::OperatorNotFoundForField { field_name, field_type, operator_name } => {
                 Some(Context::from_step(
                     error_context::Step {
@@ -598,16 +632,6 @@ impl ContextualError for TypePredicateError {
                     }
                 ))
             }
-            TypePredicateError::NoPredicateDefinedForRelationshipPredicate { type_name, relationship_name } => {
-                Some(Context::from_step(
-                    error_context::Step {
-                        message: "This relationship is missing a predicate".to_owned(),
-                        path: relationship_name.path.clone(),
-                        subgraph: Some(type_name.subgraph.clone()),
-                    }
-                ))
-            }
-
             TypePredicateError::RelationshipAcrossSubgraphs {  relationship_name, source_data_connector, target_data_connector: _ } => {
                 Some(Context::from_step(
                     error_context::Step {

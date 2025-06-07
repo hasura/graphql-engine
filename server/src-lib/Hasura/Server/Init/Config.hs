@@ -339,7 +339,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence,
     rsoTraceQueryStatus :: Maybe Server.Types.TraceQueryStatus,
     rsoDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation,
-    rsoPreserve401Errors :: Preserve401ErrorsStatus
+    rsoPreserve401Errors :: Preserve401ErrorsStatus,
+    rsoServerTimeout :: Maybe (Refined NonNegative Int)
   }
 
 deriving stock instance (Show (Logging.EngineLogType impl)) => Show (ServeOptionsRaw impl)
@@ -667,7 +668,8 @@ data ServeOptions impl = ServeOptions
     soHeaderPrecedence :: Server.Types.HeaderPrecedence,
     soTraceQueryStatus :: Server.Types.TraceQueryStatus,
     soDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation,
-    soPreserve401Errors :: Preserve401ErrorsStatus
+    soPreserve401Errors :: Preserve401ErrorsStatus,
+    soServerTimeout :: Refined NonNegative Int
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

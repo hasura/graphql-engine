@@ -8,13 +8,16 @@ module Hasura.Server.AuthSpec (spec) where
 
 import Control.Concurrent.Extended (ForkableMonadIO)
 import Control.Lens hiding ((.=))
+import Control.Monad.Catch (MonadMask)
 import Crypto.JOSE.JWK qualified as Jose
 import Crypto.JWT qualified as JWT
 import Data.Aeson ((.=))
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
+import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
+import Data.Either (isRight)
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Parser.JSONPath
@@ -38,6 +41,8 @@ spec = do
   getUserInfoWithExpTimeTests
   setupAuthModeTests
   parseClaimsMapTests
+  parseCognitoJwksTests
+  filterOutUnknownKeyTypesTests
 
 allowedRolesClaimText :: K.Key
 allowedRolesClaimText = fromSessionVariable allowedRolesClaim
@@ -624,7 +629,8 @@ mkJSONPathE :: Text -> J.JSONPath
 mkJSONPathE = either (error . T.unpack) id . parseJSONPath
 
 setupAuthMode' ::
-  ( ForkableMonadIO m
+  ( ForkableMonadIO m,
+    MonadMask m
   ) =>
   Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
@@ -644,7 +650,8 @@ setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
       httpManager
 
 setupAuthMode'E ::
-  ( ForkableMonadIO m
+  ( ForkableMonadIO m,
+    MonadMask m
   ) =>
   Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
@@ -658,3 +665,50 @@ setupAuthMode'E a b c d =
 mkClaimsSetWithUnregisteredClaims :: J.Object -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =
   JWT.emptyClaimsSet & JWT.unregisteredClaims .~ KM.toMapText unregisteredClaims
+
+-- | Sample cognito JWKS for testing, the first few from:
+-- https://cognito-identity.amazonaws.com/.well-known/jwks_uri
+cognitoJwksJson :: BL.ByteString
+cognitoJwksJson = "{\"keys\":[{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"ap-northeast-1-8\",\"alg\":\"RS512\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\"},{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"ap-northeast-1-7\",\"alg\":\"RS512\",\"n\":\"AKBuwnAJ/XUhykMo4UaEdnhtQiNHUdWnF/or3nmvvDXOCbLfNX6XMKa9GQiFAfzCTJAxHvArPt0v6R0sBtrYWw6ioBvV+pZrV1r1nYZ4ZxqZtV+Gc/CnjhNn/8JEzM8oZ1XchZ3/Mh3/bw2/Auyu/3FCn92pHAihTkMtJ55JDmM6AXybqEZBjTCKPzjkTf7A6kusUzCseShpkhCWtL2sJRLk5mmFoDISKeE8/HXNiUuYn0waWtM/qQLWfAjJaLJXhhMHE2cwGCDwIxAIp8uz7iA2BtFdt4aB6aDxS+shVn9nUUetvFGDj4Goyt1qqrwc/ZepAnvTLlFUatBM71FfFE0=\"},{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"ap-northeast-1-6\",\"alg\":\"RS512\",\"n\":\"AIkxdCCZssUqsUL+hL2n8/Eht3X98DENiGmF+xXPTlBaFzR8kTWxl6F03cwGsE6fuRh5Rb+qrcJCMKWi2tTMt6qGUyNraPCB0aVnn2gqEjMAYgZRkrHBikEwzD9KzZys183vzeoF12VYRft5IDGJeoouxnx0MO3D8q/VCuUacKNs+B9lvcaNYi+V68aw0ZMVUHuOZyb74A/+2JxeJnLeW17gxDF2RP+vp/4/h9zhtMzmPClHJF62bUA4TW14Z+rVtkELXdOTb655Aw3nlzeeSSN8aKlR9+z0qTwO/YWIbMbIbYXyEYfTG28IWIbkyLEpfpFulhK6JshcJ94rjgJb5Vk=\"},{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"ap-northeast-15\",\"alg\":\"RS512\",\"n\":\"AJw/MmbJh6myaqNmgQ7PTymwwVdVZq27L79cGGXcnlRvkqT3MFJXX10VSbhwXqz3YoVhtNf6C8LKxJSjsEcFDHEwHc5+7vkOi+iOmTX1D1dmehb1exz2D9RuH8VE6Bl6Y429Y3k+9Fgbe6WqtyPr9bIQt+mno0lXOkeyxKuNldqJkbuYdHSgPsUKfd+gdkGyQuB6DZ83i6u5EHKepk1yhjsMngt0+/a0ZODMAEkJz9dM9F61dSgLTLIyC6Kkn/Ok2yuTBryZ/eI8UGIhsqZWt/1Syrwf4kF0Uvjwyzx+iqG+fkce0LMAS4f1UuJOCFSAdbng6TYkcxQRe1RvTcUtxSk=\"}]}"
+
+parseCognitoJwksTests :: Spec
+parseCognitoJwksTests = describe "parseCognitoJwks" $ do
+  -- make sure canonicalizeJWKJson works as expected
+  it "internals should leave unexpectedly shaped json untouched" $ do
+    let inputs = ["[]", "{\"keys\":[]}", "{\"foo\":[1,2,3]}"]
+    for_ inputs $ \input -> do
+      case J.decode input of
+        Nothing -> error "fix test inputs"
+        Just inputV -> canonicalizeJWKJson inputV `shouldBe` inputV
+
+  it "should successfully parse Cognito JWKs" $ do
+    let result = parseJWKSetRobustly cognitoJwksJson
+    result `shouldSatisfy` isRight
+
+  it "should be idempotent when encoding and parsing again" $ do
+    case parseJWKSetRobustly cognitoJwksJson of
+      Left err -> expectationFailure $ "Failed to parse JWKS: " ++ err
+      Right jwkSet -> do
+        let encodedJwkSet = J.encode jwkSet
+        let reparsedResult = parseJWKSetRobustly encodedJwkSet
+
+        case reparsedResult of
+          Left err -> expectationFailure $ "Failed to reparse encoded JWKS: " ++ err
+          Right reparsedJwkSet -> reparsedJwkSet `shouldBe` jwkSet
+
+-- https://github.com/hasura/graphql-engine/issues/10733#issuecomment-2912141757
+unknownUseJson, unknownUseJsonOnlyKnowns :: BL.ByteString
+unknownUseJson = "{\"keys\":[{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321693135832881917\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"saml_response_sig\",\"kty\":\"RSA\",\"kid\":\"321336135382996543\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321838209426266877\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"}]}"
+unknownUseJsonOnlyKnowns = "{\"keys\":[{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321693135832881917\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321838209426266877\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"}]}"
+
+filterOutUnknownKeyTypesTests :: Spec
+filterOutUnknownKeyTypesTests = describe "filterOutUnknownKeyTypes" $ do
+  it "should filter JWKs with unknown 'use' field value" $ do
+    let expected = case parseJWKSetRobustly unknownUseJsonOnlyKnowns of
+          Right (JWKSet s) -> s
+          _ -> error "bad parse in unknownUseJsonOnlyKnowns"
+    case parseJWKSetRobustly unknownUseJson of
+      Right (JWKSet s) -> do
+        length s `shouldBe` 2
+        s `shouldBe` expected
+      _ -> error "bad parse"

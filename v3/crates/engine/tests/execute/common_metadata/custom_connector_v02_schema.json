@@ -216,6 +216,15 @@
                       }
                     },
                     "extraction_functions": {}
+                  },
+                  "YesNo": {
+                    "representation": {
+                      "type": "enum",
+                      "one_of": ["yes", "no"]
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {},
+                    "extraction_functions": {}
                   }
                 },
                 "object_types": {
@@ -1586,9 +1595,43 @@
                       "type": "named",
                       "name": "session_response"
                     }
+                  },
+                  {
+                    "name": "flip_yes_no_function",
+                    "description": "Flip a yes/no enum",
+                    "arguments": {
+                      "yes_no": {
+                        "description": "The yes/no enum to flip",
+                        "type": {
+                          "type": "named",
+                          "name": "YesNo"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "YesNo"
+                    }
                   }
                 ],
                 "procedures": [
+                  {
+                    "name": "flip_yes_no_procedure",
+                    "description": "Flip a yes/no enum",
+                    "arguments": {
+                      "yes_no": {
+                        "description": "The yes/no enum to flip",
+                        "type": {
+                          "type": "named",
+                          "name": "YesNo"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "YesNo"
+                    }
+                  },
                   {
                     "name": "upsert_actor",
                     "description": "Insert or update an actor",
@@ -1766,7 +1809,7 @@
                 }
               },
               "capabilities": {
-                "version": "0.2.0",
+                "version": "0.2.2",
                 "capabilities": {
                   "query": {
                     "aggregates": {
@@ -1824,6 +1867,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -1852,6 +1896,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -1927,6 +1972,7 @@
                       "scalar": {
                         "abs": {},
                         "and": {},
+                        "array_element": {},
                         "btrim": {},
                         "ceil": {},
                         "character_length": {},
@@ -1955,6 +2001,7 @@
                         "divide": {},
                         "exp": {},
                         "floor": {},
+                        "get_field": {},
                         "greatest": {},
                         "least": {},
                         "left": {},
@@ -2030,6 +2077,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2058,6 +2106,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -2134,6 +2183,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2162,6 +2212,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -2216,7 +2267,11 @@
                         "left": {},
                         "right": {},
                         "inner": {},
-                        "full": {}
+                        "full": {},
+                        "left_semi": {},
+                        "left_anti": {},
+                        "right_semi": {},
+                        "right_anti": {}
                       }
                     },
                     "aggregate": {
@@ -2244,6 +2299,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2272,6 +2328,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},
@@ -2349,6 +2406,7 @@
                         "scalar": {
                           "abs": {},
                           "and": {},
+                          "array_element": {},
                           "btrim": {},
                           "ceil": {},
                           "character_length": {},
@@ -2377,6 +2435,7 @@
                           "divide": {},
                           "exp": {},
                           "floor": {},
+                          "get_field": {},
                           "greatest": {},
                           "least": {},
                           "left": {},

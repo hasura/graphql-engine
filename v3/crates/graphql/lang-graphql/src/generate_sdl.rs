@@ -290,7 +290,7 @@ impl<S: SchemaContext> Schema<S> {
                         acc.push_str("\n\n");
                         acc.push_str(&type_sdl);
                     }
-                };
+                }
                 acc
             })
     }

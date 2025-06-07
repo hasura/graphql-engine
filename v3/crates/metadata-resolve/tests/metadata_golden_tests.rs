@@ -75,13 +75,13 @@ fn test_failing_metadata() {
                         Err(msg) => {
                             insta::assert_snapshot!("deserialize_error", msg);
                         }
-                    };
+                    }
                 }
 
                 Err(msg) => {
                     insta::assert_snapshot!("parse_error", msg);
                 }
-            };
+            }
         });
     });
 }

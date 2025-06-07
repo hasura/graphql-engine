@@ -1,6 +1,6 @@
 //! IR for the 'model_selection' type - selecting fields from a model
 use super::{filter, order_by, selection_set};
-use crate::error;
+use crate::{error, flags::GraphqlIrFlags};
 use graphql_schema::GDS;
 use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
@@ -73,6 +73,7 @@ pub fn model_selection_open_dd_ir(
     offset: Option<usize>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::ModelSelection, error::Error> {
     let selection = selection_set::generate_selection_set_open_dd_ir(
@@ -83,6 +84,7 @@ pub fn model_selection_open_dd_ir(
         object_types,
         session_variables,
         request_headers,
+        flags,
         usage_counts,
     )?;
 

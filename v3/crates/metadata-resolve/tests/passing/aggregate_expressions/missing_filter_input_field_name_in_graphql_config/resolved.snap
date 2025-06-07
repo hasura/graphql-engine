@@ -1559,28 +1559,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -1818,7 +1796,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                         },
                     },
                     global_id_fields: [],
-                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -3039,154 +3016,8 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                             ),
                         },
                     ),
-                    raw: ModelRaw {
-                        filter_expression_type: None,
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [
-                                    SelectUniqueGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "app_invoiceByInvoiceId",
-                                        ),
-                                        unique_identifier: [
-                                            FieldName(
-                                                Identifier(
-                                                    "invoiceId",
-                                                ),
-                                            ),
-                                        ],
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "app_invoice",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: None,
-                                apollo_federation: None,
-                                filter_input_type_name: Some(
-                                    GraphQlTypeName(
-                                        "Invoice_filter_input",
-                                    ),
-                                ),
-                                aggregate: Some(
-                                    ModelAggregateGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "app_invoice_aggregate",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: None,
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "billingAddress",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "billingCity",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "billingCountry",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "billingPostalCode",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "billingState",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "customerId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "invoiceDate",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "invoiceId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "total",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
-                        },
-                    },
                 },
+                arguments: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
@@ -3270,6 +3101,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                         ),
                     ),
                 },
+                description: None,
             },
         },
         commands: {},
@@ -3850,6 +3682,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
             propagate_boolean_expression_deprecation_status: false,
             multiple_order_by_input_object_fields: Allow,
         },
+        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],

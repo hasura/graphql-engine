@@ -3831,6 +3831,10 @@
         "disallow_comparable_relationship_target_with_no_boolean_expression_type": {
           "default": false,
           "type": "boolean"
+        },
+        "send_missing_arguments_to_ndc_as_nulls": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -6640,10 +6644,10 @@
               ]
             },
             "schema": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.1-rc.2/ndc-models/tests/json_schema/schema_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.2/ndc-models/tests/json_schema/schema_response.jsonschema"
             },
             "capabilities": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.1-rc.2/ndc-models/tests/json_schema/capabilities_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.2/ndc-models/tests/json_schema/capabilities_response.jsonschema"
             }
           },
           "additionalProperties": false

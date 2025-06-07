@@ -24,6 +24,7 @@ where
 
 import Control.Arrow.Extended
 import Control.Concurrent.STM qualified as STM
+import Control.Monad.Catch (MonadMask)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as E
 import Data.HashSet qualified as Set
@@ -147,7 +148,8 @@ data AppEnv = AppEnv
     appEnvAsyncActionsFetchBatchSize :: Int,
     appEnvPersistedQueries :: PersistedQueriesState,
     appEnvPersistedQueriesTtl :: Int,
-    appEnvPreserve401Errors :: Preserve401ErrorsStatus
+    appEnvPreserve401Errors :: Preserve401ErrorsStatus,
+    appServerTimeout :: Refined NonNegative Int
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed
@@ -264,6 +266,7 @@ buildAppContextRule ::
     Inc.ArrowCache m arr,
     MonadBaseControl IO m,
     MonadIO m,
+    MonadMask m,
     MonadError QErr m,
     MonadReader (L.Logger L.Hasura, HTTP.Manager) m
   ) =>

@@ -188,7 +188,7 @@ fn check_description(schema: &Schema, is_externally_tagged_enum_variant: bool) {
         // If it is an externally tagged enum variant, its description is validated in the parent schema
         // as part of the subschema validation.
         return;
-    };
+    }
     if is_top_level_metadata_object_variant(schema) {
         // Top-level metadata objects are handled specially in tooling, so okay to not have title for those.
         return;
@@ -245,7 +245,7 @@ fn check_titles(schema: &Schema, is_externally_tagged_enum_variant: bool) {
     if is_externally_tagged_enum_variant {
         // Okay to not have titles for externally tagged enum variants if the corresponding sub-schema has a title.
         return;
-    };
+    }
     if is_top_level_metadata_object_variant(schema) {
         // Top-level metadata objects are handled specially in tooling, so okay to not have title for those.
         return;

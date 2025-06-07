@@ -239,7 +239,6 @@ impl<'a> Lexer<'a> {
 
                     b' ' | b'\t' | b'\n' | b',' | b'\r' => {
                         self.scan_whitespace();
-                        continue;
                     }
 
                     // Integers and Floating point numbers
@@ -254,7 +253,6 @@ impl<'a> Lexer<'a> {
                             c != b'\r' && c != b'\n'
                         });
                         self.ix += comment_length;
-                        continue;
                     }
 
                     // Punctuation

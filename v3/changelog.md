@@ -1,5 +1,60 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+### Changed
+
+### Added
+
+## [v2025.06.04]
+
+### Fixed
+
+- Fixed a bug when missing variables for enum type arguments to functions and
+  procedures did not obey the `validate_non_nullable_graphql_variables` feature
+  flags.
+
+## [v2025.05.29]
+
+### Added
+
+- When the `send_missing_arguments_to_ndc_as_nulls` flag is enabled, the engine
+  will now send null values for missing arguments to the data connector rather
+  than omitting them. Note that may be a breaking change for some data
+  connectors, particularly `ndc-postgres` before `v2.1.0`.
+
+## [v2025.05.14]
+
+### Fixed
+
+- Properly support missing or null `predicate` in relationship filters, to align
+  with
+  [the docs](https://hasura.io/docs/3.0/reference/metadata-reference/permissions/#modelpermissions-relationshippredicate).
+
+## [v2025.05.13]
+
+### Fixed
+
+- Fixed a bug where scalar type lookups in remote relationships would fail due
+  to looking up in the source rather than target data connector
+
+## [v2025.04.30]
+
+### Fixed
+
+### Changed
+
+### Added
+
+## [v2025.04.28]
+
+### Fixed
+
+- Fixed regression where `is_null` calls on nested array fields would throw an
+  error
+
 ## [v2025.04.23]
 
 ### Added
@@ -1576,7 +1631,13 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.04.23...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.06.04...HEAD
+[v2025.06.04]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.04
+[v2025.05.29]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.29
+[v2025.05.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.14
+[v2025.05.13]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.13
+[v2025.04.30]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.30
+[v2025.04.28]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.28
 [v2025.04.23]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.23
 [v2025.04.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.14
 [v2025.04.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.04.02

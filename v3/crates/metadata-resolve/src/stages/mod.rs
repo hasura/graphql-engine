@@ -8,6 +8,7 @@ pub mod commands;
 mod conflicting_types;
 pub mod data_connector_scalar_types;
 pub mod data_connectors;
+pub mod glossaries;
 pub mod graphql_config;
 pub mod model_permissions;
 pub mod models;
@@ -264,12 +265,13 @@ fn resolve_internal(
 
     // now we know about relationships, we can check our arguments (particularly, any
     // boolean expressions they use and whether their relationships are valid)
-    let issues = arguments::resolve(
+    let arguments::ArgumentsOutput { issues, arguments } = arguments::resolve(
         &commands,
         &models,
         &object_types_with_relationships,
         &scalar_types,
         &boolean_expression_types,
+        &data_connector_scalars,
         &metadata_accessor.flags,
     )
     .map_err(flatten_multiple_errors)?;
@@ -286,6 +288,7 @@ fn resolve_internal(
         &models,
         &commands,
         &object_types_with_relationships,
+        &arguments,
         &boolean_expression_types,
         &mut track_root_fields,
         &graphql_config,
@@ -305,6 +308,7 @@ fn resolve_internal(
         &commands,
         &object_types_with_relationships,
         &scalar_types,
+        &arguments,
         &boolean_expression_types,
         &models_with_graphql,
         &data_connector_scalars,
@@ -328,10 +332,16 @@ fn resolve_internal(
 
     all_issues.extend(model_permission_issues.into_iter().map(Warning::from));
 
+    let glossaries::GlossaryOutput { glossaries, issues } =
+        glossaries::resolve(&metadata_accessor).map_err(flatten_multiple_errors)?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
+
     let roles = roles::resolve(
         &object_types_with_relationships,
         &models_with_permissions,
         &commands_with_permissions,
+        &glossaries,
     );
 
     // include data connector information for each scalar type
@@ -360,6 +370,7 @@ fn resolve_internal(
             boolean_expression_types,
             order_by_expressions,
             aggregate_expressions,
+            glossaries,
             graphql_config: graphql_config.global,
             roles,
             plugin_configs,

@@ -1,0 +1,101 @@
+---
+sidebar_label: Logs
+description: Traces via OpenTelemetry for Hasura GraphQL Engine Enterprise Edition
+title: 'Troubleshooting Guide for logs'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - opentelemetry
+  - OpenTelemetry
+  - traces
+  - metrics
+  - logs
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+Logs are critical for monitoring, debugging, and ensuring the stability of your Hasura-powered applications. By
+reviewing logs, you can gain insights into the behavior of your GraphQL API, diagnose errors, and monitor performance
+trends.
+
+### Configuring Logs in Hasura
+
+To enable logs, you must configure the following environment variable:
+
+```bash
+HASURA_GRAPHQL_ENABLED_LOG_TYPES
+```
+
+You can find detailed information about different log types supported by Hasura in the
+[Hasura Documentation](/deployment/logging/#configurable-log-types). Grafana provides a filter that allows you to filter
+different log types.
+
+<Thumbnail src="/img/observability/troubleshoot/errorsuccesslogs.jpeg" alt="traces" />
+
+### Searching Logs in Grafana
+
+You can perform searches in Grafana using the search bar. Example searches include:
+
+- `OperationName`
+- `request_id`
+- `error`
+
+### Separate Logs for Errors and Successes
+
+- For effective troubleshooting, it's recommended to separate error logs and success logs. This makes it easier to
+  pinpoint issues when they arise.
+- You can add custom filters to your log searches for faster identification of issues. Examples include:
+  - `OperationName`
+  - `Roles`
+
+---
+
+## How to Troubleshoot a Query Using Logs
+
+To troubleshoot a query, focus on the following important attributes:
+
+- `attributes_type`
+- `body_operation_error_error`
+- `body_operation_query_operationName`
+- `body_operation_query_query`
+- `body_http_info_url`
+- `body_operation_error_code`
+
+### Steps to Troubleshoot
+
+1. **Collect Request ID and Trace ID**: These identifiers are crucial for tracking and diagnosing issues.
+2. **Check `operationName`**: Look under `body_operation_query_operationName` and, if enabled, check
+   `body_operation_query_query` for the GraphQL query.
+3. **Check Database Queries**: You can find database query details in the trace logs.
+
+### Issues with Loki?
+
+If you're encountering issues with Loki, consider the following configuration suggestions:
+
+- **Suggested Configuration**: Ensure that your Loki configuration aligns with your system's requirements and
+  optimizations. More details are available in the
+  [Loki Documentation](https://github.com/hasura/postsales/tree/main/Observability/self-hosted/docker-based/loki).
+
+---
+
+### Sample Loki Queries
+
+- **Filter by error messages**:
+  ```bash
+  {service_name="hasura"} |= "error"
+  ```
+- **Filter by validation errors**:
+  ```bash
+  {service_name="hasura"} |= "validation-failed"
+  ```
+
+---
+
+## Examples
+
+Check out the
+[enterprise observability boilerplate](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise).

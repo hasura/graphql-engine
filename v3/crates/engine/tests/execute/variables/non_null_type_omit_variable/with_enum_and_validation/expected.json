@@ -1,0 +1,10 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: expected a value for non-nullable variable yes_no of type YesNo! but no value was provided"
+      }
+    ]
+  }
+]

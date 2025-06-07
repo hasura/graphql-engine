@@ -1,0 +1,26 @@
+[
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "id": 3,
+          "location": {
+            "city": null,
+            "campuses": null
+          },
+          "staff": null,
+          "staff_first_name": null,
+          "departments": ["nothing", null]
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Query: InstitutionMany"
+      }
+    ]
+  }
+]

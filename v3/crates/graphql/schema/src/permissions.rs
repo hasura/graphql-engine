@@ -1,5 +1,6 @@
 use indexmap::IndexMap;
 use open_dds::types::FieldName;
+use std::collections::BTreeSet;
 use std::collections::HashMap;
 
 use crate::Role;
@@ -208,8 +209,8 @@ pub(crate) fn get_allowed_roles_for_field<'a>(
 pub(crate) fn get_node_field_namespace_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     model: &metadata_resolve::ModelWithPermissions,
-) -> HashMap<Role, metadata_resolve::FilterPermission> {
-    let mut permissions = HashMap::new();
+) -> BTreeSet<Role> {
+    let mut permissions = BTreeSet::new();
 
     for (role, type_output_permission) in &object_type_representation.type_output_permissions {
         let is_global_id_field_accessible = object_type_representation
@@ -221,15 +222,10 @@ pub(crate) fn get_node_field_namespace_permissions(
         if is_global_id_field_accessible {
             let select_permission = model.select_permissions.get(role).map(|s| s.filter.clone());
 
-            match select_permission {
-                // Select permission doesn't exist for the role, so no `FilterPermission` can
-                // be obtained.
-                None => {}
-                Some(select_permission) => {
-                    permissions.insert(role.clone(), select_permission);
-                }
+            if select_permission.is_some() {
+                permissions.insert(role.clone());
             }
-        };
+        }
     }
 
     permissions
@@ -239,8 +235,8 @@ pub(crate) fn get_node_field_namespace_permissions(
 pub(crate) fn get_entities_field_namespace_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     model: &metadata_resolve::ModelWithPermissions,
-) -> HashMap<Role, metadata_resolve::FilterPermission> {
-    let mut permissions = HashMap::new();
+) -> BTreeSet<Role> {
+    let mut permissions = BTreeSet::new();
 
     for (role, type_output_permission) in &object_type_representation.type_output_permissions {
         if let Some(apollo_federation_config) = &object_type_representation
@@ -258,15 +254,10 @@ pub(crate) fn get_entities_field_namespace_permissions(
                 let select_permission =
                     model.select_permissions.get(role).map(|s| s.filter.clone());
 
-                match select_permission {
-                    // Select permission doesn't exist for the role, so no `FilterPermission` can
-                    // be obtained.
-                    None => {}
-                    Some(select_permission) => {
-                        permissions.insert(role.clone(), select_permission);
-                    }
+                if select_permission.is_some() {
+                    permissions.insert(role.clone());
                 }
-            };
+            }
         }
     }
 

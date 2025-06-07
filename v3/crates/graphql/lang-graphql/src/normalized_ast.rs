@@ -1,10 +1,9 @@
-use serde::Serialize;
 use serde_json as json;
-use serde_with::serde_as;
 use std::collections::HashMap;
 
 use crate::ast::common::{self as ast, TypeContainer, TypeName};
 use crate::schema::{NodeInfo, SchemaContext};
+use crate::validation::NonNullGraphqlVariablesValidation;
 use indexmap::IndexMap;
 
 #[derive(Debug, thiserror::Error)]
@@ -36,7 +35,7 @@ pub enum Error {
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SimpleValue<'s, S: SchemaContext> {
     /// `null`.
     Null,
@@ -57,13 +56,13 @@ pub enum SimpleValue<'s, S: SchemaContext> {
     Enum(EnumValue<'s, S>),
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EnumValue<'s, S: SchemaContext> {
     pub name: ast::Name,
     pub info: NodeInfo<'s, S>,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct InputField<'s, S: SchemaContext> {
     pub name: ast::Name,
     pub info: NodeInfo<'s, S>,
@@ -72,7 +71,7 @@ pub struct InputField<'s, S: SchemaContext> {
 
 pub type Object<'s, S> = IndexMap<ast::Name, InputField<'s, S>>;
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Value<'s, S: SchemaContext> {
     /// A leaf value
     SimpleValue(SimpleValue<'s, S>),
@@ -199,10 +198,23 @@ impl<'s, S: SchemaContext> Value<'s, S> {
         }
     }
 
-    pub fn is_null(&self) -> bool {
-        // Check if the value is null.
-        matches!(self, Value::SimpleValue(SimpleValue::Null)) // Simple value comes from inbuilt scalars
+    pub fn is_null(
+        &self,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
+    ) -> bool {
+        match validate_non_null_graphql_variables {
+            // the new, correct, behaviour
+            NonNullGraphqlVariablesValidation::Validate => {
+                // Check if the value is null.
+                matches!(self, Value::SimpleValue(SimpleValue::Null)) // Simple value comes from inbuilt scalars
             || matches!(self, Value::Json(serde_json::Value::Null)) // JSON value comes from custom scalars
+            }
+            // the old, broken, behaviour that we need to support for backwards compatibility
+            NonNullGraphqlVariablesValidation::DoNotValidate => {
+                // Check if the value is null.
+                matches!(self, Value::SimpleValue(SimpleValue::Null)) // Simple value comes from inbuilt scalars
+            }
+        }
     }
 
     pub fn as_enum(&self) -> Result<&EnumValue<'s, S>> {
@@ -217,9 +229,10 @@ impl<'s, S: SchemaContext> Value<'s, S> {
 
     pub fn as_nullable<'a, T, E>(
         &'a self,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
         f: impl FnOnce(&'a Value<'s, S>) -> core::result::Result<T, E>,
     ) -> core::result::Result<Option<T>, E> {
-        if self.is_null() {
+        if self.is_null(validate_non_null_graphql_variables) {
             Ok(None)
         } else {
             f(self).map(Some)
@@ -227,13 +240,13 @@ impl<'s, S: SchemaContext> Value<'s, S> {
     }
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Directive<'s, S: SchemaContext> {
     pub name: ast::Name,
     pub arguments: IndexMap<ast::Name, InputField<'s, S>>,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct FieldCall<'s, S: SchemaContext> {
     pub name: ast::Name,
     /// Info
@@ -256,11 +269,9 @@ impl<'s, S: SchemaContext> FieldCall<'s, S> {
 
 pub type FieldCalls<'s, S> = HashMap<Vec<ast::TypeName>, FieldCall<'s, S>>;
 
-#[serde_as]
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Field<'s, S: SchemaContext> {
     pub alias: ast::Alias,
-    #[serde_as(as = "Vec<(_, _)>")]
     pub field_calls: FieldCalls<'s, S>,
     pub selection_set: SelectionSet<'s, S>,
     pub type_container: TypeContainer<TypeName>,
@@ -278,7 +289,7 @@ impl<'s, S: SchemaContext> Field<'s, S> {
     }
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SelectionSet<'s, S: SchemaContext> {
     pub fields: IndexMap<ast::Alias, Field<'s, S>>,
     pub type_name: Option<ast::TypeName>,
@@ -320,9 +331,9 @@ impl<'s, S: SchemaContext> SelectionSet<'s, S> {
                         if x == &type_name.clone() {
                             field_calls.insert(xs.to_vec(), field_call.clone());
                             should_retain = true;
-                        };
+                        }
                     }
-                };
+                }
             }
 
             if should_retain {
@@ -376,7 +387,7 @@ impl<'s, S: SchemaContext> SelectionSet<'s, S> {
     }
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Operation<'s, S: SchemaContext> {
     pub ty: ast::OperationType,
     pub name: Option<ast::Name>,

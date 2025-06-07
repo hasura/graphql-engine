@@ -218,7 +218,12 @@ pub(crate) fn build_input_field_presets_annotation(
                 .type_input_permissions
                 .get(role)
                 .map(|input_permissions| {
-                    let presets_fields = input_permissions.field_presets.clone();
+                    let presets_fields = input_permissions
+                        .field_presets
+                        .clone()
+                        .into_iter()
+                        .map(|(name, field_preset)| (name, field_preset.deprecated))
+                        .collect::<BTreeMap<_, _>>();
                     NamespaceAnnotation::InputFieldPresets {
                         presets_fields,
                         type_name: field_type_name.clone(),

@@ -1,4 +1,6 @@
-use super::arguments::{get_unresolved_arguments, resolve_arguments};
+use super::arguments::{
+    add_missing_nullable_arguments, get_unresolved_arguments, resolve_arguments,
+};
 use super::{field_selection, process_argument_presets_for_command};
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::{PermissionError, PlanError};
@@ -178,7 +180,7 @@ pub(crate) fn from_command_selection(
             "role {} does not have permission for command {}",
             session.role, qualified_command_name
         ))))?;
-    };
+    }
 
     // resolve arguments, adding in presets
     let unresolved_arguments = get_unresolved_arguments(
@@ -200,6 +202,14 @@ pub(crate) fn from_command_selection(
         session,
         request_headers,
         &mut usage_counts,
+    )?;
+
+    // add in any missing arguments as nulls
+    let unresolved_arguments = add_missing_nullable_arguments(
+        unresolved_arguments,
+        &command.command.arguments,
+        &command_source.argument_mappings,
+        &metadata.runtime_flags,
     )?;
 
     let resolved_arguments = resolve_arguments(

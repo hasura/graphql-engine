@@ -25,8 +25,6 @@ pub use remote_joins::{
     RemoteJoinVariableSet, SourceFieldAlias, TargetField, mk_argument_target_variable_name,
 };
 
-// these versions of the types are equivalent to the old "Resolved" versions
-
 #[derive(Debug, PartialEq)]
 pub struct NDCQueryExecution {
     pub execution_tree: QueryExecutionTree,
@@ -96,7 +94,7 @@ impl ProcessResponseAs {
             ProcessResponseAs::Object { is_nullable }
             | ProcessResponseAs::Array { is_nullable }
             | ProcessResponseAs::CommandResponse { is_nullable, .. } => *is_nullable,
-            ProcessResponseAs::Aggregates { .. } => false,
+            ProcessResponseAs::Aggregates => false,
         }
     }
 }

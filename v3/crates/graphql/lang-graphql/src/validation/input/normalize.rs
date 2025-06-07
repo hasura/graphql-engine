@@ -1,6 +1,7 @@
 use crate::ast::common as ast;
 use crate::normalized_ast as normalized;
 use crate::schema;
+use crate::validation::NonNullGraphqlVariablesValidation;
 use crate::validation::error::*;
 
 use super::source::*;
@@ -18,14 +19,51 @@ fn normalize_scalar_value<
     location_type: &LocationType<'q, 's>,
     value: &V,
     scalar: &'s schema::Scalar,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<normalized::Value<'s, S>> {
     match scalar.name.as_str() {
-        "Int" => value.get_integer(schema, namespaced_getter, context, location_type),
-        "ID" => value.get_id(schema, namespaced_getter, context, location_type),
-        "Float" => value.get_float(schema, namespaced_getter, context, location_type),
-        "Boolean" => value.get_boolean(schema, namespaced_getter, context, location_type),
-        "String" => value.get_string(schema, namespaced_getter, context, location_type),
-        _ => value.as_json_normalized(schema, namespaced_getter, context, location_type),
+        "Int" => value.get_integer(
+            schema,
+            namespaced_getter,
+            context,
+            location_type,
+            validate_non_null_graphql_variables,
+        ),
+        "ID" => value.get_id(
+            schema,
+            namespaced_getter,
+            context,
+            location_type,
+            validate_non_null_graphql_variables,
+        ),
+        "Float" => value.get_float(
+            schema,
+            namespaced_getter,
+            context,
+            location_type,
+            validate_non_null_graphql_variables,
+        ),
+        "Boolean" => value.get_boolean(
+            schema,
+            namespaced_getter,
+            context,
+            location_type,
+            validate_non_null_graphql_variables,
+        ),
+        "String" => value.get_string(
+            schema,
+            namespaced_getter,
+            context,
+            location_type,
+            validate_non_null_graphql_variables,
+        ),
+        _ => value.as_json_normalized(
+            schema,
+            namespaced_getter,
+            context,
+            location_type,
+            validate_non_null_graphql_variables,
+        ),
     }
 }
 
@@ -42,6 +80,7 @@ pub fn normalize<
     value: &V,
     location_type: &LocationType<'q, 's>,
     type_info: &schema::InputType<'s, S>,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<normalized::Value<'s, S>>
 where
     's: 'q,
@@ -53,7 +92,7 @@ where
                 return Ok(normalized::Value::SimpleValue(
                     normalized::SimpleValue::Null,
                 ));
-            };
+            }
             match type_info {
                 schema::InputType::Scalar(scalar) => normalize_scalar_value(
                     schema,
@@ -62,6 +101,7 @@ where
                     location_type,
                     value,
                     scalar,
+                    validate_non_null_graphql_variables,
                 ),
                 schema::InputType::Enum(enum_info) => normalize_enum_value(
                     schema,
@@ -70,6 +110,7 @@ where
                     location_type,
                     value,
                     enum_info,
+                    validate_non_null_graphql_variables,
                 ),
                 schema::InputType::InputObject(input_object) => {
                     let normalized_object = normalize_input_object(
@@ -79,6 +120,7 @@ where
                         location_type,
                         value,
                         input_object,
+                        validate_non_null_graphql_variables,
                     )?;
                     Ok(normalized_object)
                 }
@@ -95,6 +137,7 @@ where
                     namespaced_getter,
                     context,
                     location_type,
+                    validate_non_null_graphql_variables,
                     |mut l, v| {
                         // when normalizing list values, we don't want to coerce values as lists
                         // i.e, `[1,2]` isn't a valid value for `[[Int]]` but `1` is a valid value for `[Int]`
@@ -114,6 +157,7 @@ where
                                     type_: wrapped_type,
                                 },
                                 type_info,
+                                validate_non_null_graphql_variables,
                             )?);
                             Ok(l)
                         }
@@ -134,6 +178,7 @@ where
                         type_: expected_base_type,
                     },
                     type_info,
+                    validate_non_null_graphql_variables,
                 )?;
                 // Wrap the coerced value into a list, dimension times.
                 Ok(create_nested_vec(
@@ -143,7 +188,9 @@ where
             }
         }
     }?;
-    if !location_type.type_().nullable && normalized_value.is_null() {
+    if !location_type.type_().nullable
+        && normalized_value.is_null(validate_non_null_graphql_variables)
+    {
         Err(Error::UnexpectedNull {
             expected_type: location_type.type_().clone(),
         })
@@ -176,12 +223,14 @@ fn normalize_enum_value<
     location_type: &LocationType<'q, 's>,
     value: &V,
     enum_info: &'s schema::Enum<S>,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<normalized::Value<'s, S>> {
     value.fold_enum(
         schema,
         namespaced_getter,
         context,
         location_type,
+        validate_non_null_graphql_variables,
         |raw_enum_value| {
             let (enum_info, namespaced) = namespaced_getter
                 .get(enum_info.values.get(raw_enum_value).ok_or_else(|| {
@@ -221,6 +270,7 @@ fn normalize_input_object<
     location_type: &LocationType<'q, 's>,
     value: &V,
     input_object: &'s schema::InputObject<S>,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<normalized::Value<'s, S>>
 where
     's: 'q,
@@ -232,6 +282,7 @@ where
             namespaced_getter,
             context,
             location_type,
+            validate_non_null_graphql_variables,
             // (IndexMap::new(), 0),
             |mut normalized_object, field, field_value| {
                 // |(mut normalized_object, mut required_field_count), field, field_value| {
@@ -276,6 +327,7 @@ where
                         default_value: field_info.default_value.as_ref(),
                     },
                     &field_type_info,
+                    &crate::validation::NonNullGraphqlVariablesValidation::Validate,
                 )?;
 
                 let normalized_input_field = normalized::InputField {
@@ -400,6 +452,7 @@ mod test {
             &value,
             &location_type,
             &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
         )
         .unwrap();
         assert_eq!(normalized_value, expected_value);
@@ -428,6 +481,7 @@ mod test {
             &value,
             &location_type,
             &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
         )
         .unwrap();
         assert_eq!(normalized_value, expected_value);
@@ -454,6 +508,7 @@ mod test {
             &value,
             &location_type,
             &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
         )
         .unwrap();
         assert_eq!(normalized_value, expected_value);
@@ -482,6 +537,7 @@ mod test {
             &value,
             &location_type,
             &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
         );
         assert!(normalized_value.is_err());
     }
@@ -511,6 +567,7 @@ mod test {
             &value,
             &location_type,
             &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
         )
         .unwrap();
         assert_eq!(normalized_value, expected_value);
@@ -538,6 +595,7 @@ mod test {
             &value,
             &location_type,
             &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
         );
         assert!(normalized_value.is_err());
     }
@@ -565,6 +623,7 @@ mod test {
             &value,
             &location_type,
             &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
         )
         .unwrap();
         assert_eq!(normalized_value, expected_value);
@@ -604,6 +663,7 @@ mod test {
             &value,
             &location_type,
             &int_scalar_type_info,
+            &crate::validation::NonNullGraphqlVariablesValidation::Validate,
         )
         .unwrap();
         assert_eq!(normalized_value, expected_value);

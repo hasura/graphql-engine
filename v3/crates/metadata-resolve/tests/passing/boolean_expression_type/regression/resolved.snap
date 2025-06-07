@@ -4861,28 +4861,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                9,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -4920,7 +4898,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                     global_id_fields: [],
-                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -5242,90 +5219,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     ),
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: Some(
-                            Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Artist_Where_Exp",
-                                    ),
-                                ),
-                            },
-                        ),
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [
-                                    SelectUniqueGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "ArtistByID",
-                                        ),
-                                        unique_identifier: [
-                                            FieldName(
-                                                Identifier(
-                                                    "ArtistId",
-                                                ),
-                                            ),
-                                        ],
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "Artist",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: None,
-                                apollo_federation: Some(
-                                    ModelApolloFederationConfiguration {
-                                        entity_source: true,
-                                    },
-                                ),
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: Some(
-                                GraphQlTypeName(
-                                    "Artist_Order_By",
-                                ),
-                            ),
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "ArtistId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "Name",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
-                        },
-                    },
                 },
+                arguments: {},
                 select_permissions: {
                     Role(
                         "admin",
@@ -6695,6 +6590,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -6743,28 +6639,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                11,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -6819,7 +6693,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                     global_id_fields: [],
-                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -7217,96 +7090,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: Some(
-                            Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Album_Where_Exp",
-                                    ),
-                                ),
-                            },
-                        ),
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [
-                                    SelectUniqueGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "AlbumByID",
-                                        ),
-                                        unique_identifier: [
-                                            FieldName(
-                                                Identifier(
-                                                    "AlbumId",
-                                                ),
-                                            ),
-                                        ],
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "Album",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: None,
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: Some(
-                                GraphQlTypeName(
-                                    "Album_Order_By",
-                                ),
-                            ),
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "AlbumId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "Title",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "ArtistId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
-                        },
-                    },
                 },
+                arguments: {},
                 select_permissions: {
                     Role(
                         "admin",
@@ -8014,6 +7799,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -8062,28 +7848,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                13,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -8138,7 +7902,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                     global_id_fields: [],
-                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -8536,96 +8299,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: Some(
-                            Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Track_Where_Exp",
-                                    ),
-                                ),
-                            },
-                        ),
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [
-                                    SelectUniqueGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "TrackByID",
-                                        ),
-                                        unique_identifier: [
-                                            FieldName(
-                                                Identifier(
-                                                    "TrackId",
-                                                ),
-                                            ),
-                                        ],
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "Track",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: None,
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: Some(
-                                GraphQlTypeName(
-                                    "Track_Order_By",
-                                ),
-                            ),
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "TrackId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "Name",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "AlbumId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
-                        },
-                    },
                 },
+                arguments: {},
                 select_permissions: {
                     Role(
                         "admin",
@@ -9310,6 +8985,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -9358,28 +9034,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                15,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -9417,7 +9071,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                     global_id_fields: [],
-                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -9734,95 +9387,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     ),
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: Some(
-                            Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "PlaylistTrack_Where_Exp",
-                                    ),
-                                ),
-                            },
-                        ),
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [
-                                    SelectUniqueGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "PlaylistTrackByID",
-                                        ),
-                                        unique_identifier: [
-                                            FieldName(
-                                                Identifier(
-                                                    "PlaylistId",
-                                                ),
-                                            ),
-                                            FieldName(
-                                                Identifier(
-                                                    "TrackId",
-                                                ),
-                                            ),
-                                        ],
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "PlaylistTrack",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: None,
-                                apollo_federation: Some(
-                                    ModelApolloFederationConfiguration {
-                                        entity_source: true,
-                                    },
-                                ),
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: Some(
-                                GraphQlTypeName(
-                                    "PlaylistTrack_Order_By",
-                                ),
-                            ),
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "PlaylistId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "TrackId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
-                        },
-                    },
                 },
+                arguments: {},
                 select_permissions: {
                     Role(
                         "admin",
@@ -10295,6 +9861,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -10343,28 +9910,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                17,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -10402,52 +9947,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                     global_id_fields: [],
-                    arguments: {
-                        ArgumentName(
-                            Identifier(
-                                "id",
-                            ),
-                        ): ArgumentInfo {
-                            argument_type: QualifiedTypeReference {
-                                underlying_type: Named(
-                                    Inbuilt(
-                                        Int,
-                                    ),
-                                ),
-                                nullable: false,
-                            },
-                            description: None,
-                            argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        17,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
-                        },
-                    },
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -10768,72 +10267,24 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: Some(
-                            Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "artist_below_id_Where_Exp",
-                                    ),
-                                ),
-                            },
+                },
+                arguments: {
+                    ArgumentName(
+                        Identifier(
+                            "id",
                         ),
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "artist_below_id",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: Some(
-                                    GraphQlTypeName(
-                                        "artist_below_id_Args",
-                                    ),
-                                ),
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: Some(
-                                GraphQlTypeName(
-                                    "artist_below_id_Order_By",
+                    ): ArgumentInfo {
+                        argument_type: QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
                                 ),
                             ),
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "ArtistId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "Name",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
+                            nullable: false,
                         },
+                        description: None,
+                        argument_kind: Other,
+                        type_representation: None,
                     },
                 },
                 select_permissions: {
@@ -11340,6 +10791,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -11388,28 +10840,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                67,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -11464,7 +10894,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                     global_id_fields: [],
-                    arguments: {},
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -11862,96 +11291,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: Some(
-                            Qualified {
-                                subgraph: SubgraphName(
-                                    "default",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Song_Where_Exp",
-                                    ),
-                                ),
-                            },
-                        ),
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [
-                                    SelectUniqueGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "SongByID",
-                                        ),
-                                        unique_identifier: [
-                                            FieldName(
-                                                Identifier(
-                                                    "SongId",
-                                                ),
-                                            ),
-                                        ],
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "Song",
-                                        ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
-                                    },
-                                ),
-                                arguments_input_type: None,
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: Some(
-                                GraphQlTypeName(
-                                    "Song_Order_By",
-                                ),
-                            ),
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "SongId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "Name",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "AlbumId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
-                        },
-                    },
                 },
+                arguments: {},
                 select_permissions: {
                     Role(
                         "admin",
@@ -13279,6 +12620,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
         },
         commands: {
@@ -13336,34 +12678,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        20,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -13380,34 +12695,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        20,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -13424,34 +12712,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        20,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        2,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                     },
                     graphql_api: Some(
@@ -14102,34 +13363,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        21,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -14146,34 +13380,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        21,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                     },
                     graphql_api: Some(
@@ -14719,34 +13926,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "The identifier of a playlist",
                             ),
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        25,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -14765,34 +13945,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "The identifier of a track",
                             ),
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        25,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -14820,34 +13973,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "Delete permission predicate over the 'PlaylistTrack' collection",
                             ),
                             argument_kind: NDCExpression,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        25,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        2,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                     },
                     graphql_api: Some(
@@ -15465,34 +14591,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        50,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -15520,34 +14619,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "Insert permission predicate over the 'Artist' collection",
                             ),
                             argument_kind: NDCExpression,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        50,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                     },
                     graphql_api: Some(
@@ -16379,34 +15451,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "The identifier of an artist",
                             ),
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        61,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -16434,34 +15479,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "Update permission post-condition predicate over the 'Artist' collection",
                             ),
                             argument_kind: NDCExpression,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        61,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        1,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -16489,34 +15507,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                 "Update permission pre-condition predicate over the 'Artist' collection",
                             ),
                             argument_kind: NDCExpression,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        61,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        2,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                         ArgumentName(
                             Identifier(
@@ -16542,34 +15533,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                             },
                             description: None,
                             argument_kind: Other,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        61,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        3,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
+                            type_representation: None,
                         },
                     },
                     graphql_api: Some(
@@ -22341,6 +21305,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
             propagate_boolean_expression_deprecation_status: false,
             multiple_order_by_input_object_fields: Allow,
         },
+        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],
