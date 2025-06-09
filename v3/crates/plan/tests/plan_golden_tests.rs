@@ -86,6 +86,7 @@ fn test_environment_setup() -> metadata_resolve::Metadata {
 
     let configuration = configuration::Configuration {
         unstable_features: configuration::UnstableFeatures {
+            enable_authorization_rules: true,
             enable_aggregation_predicates: true,
         },
     };

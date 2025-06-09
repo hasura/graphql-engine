@@ -18,6 +18,7 @@
 #[serde(rename_all = "snake_case")]
 pub enum UnstableFeature {
     EnableAggregationPredicates,
+    EnableAuthorizationRules,
 }
 
 pub fn resolve_unstable_features(
@@ -29,6 +30,9 @@ pub fn resolve_unstable_features(
         match unstable_feature {
             UnstableFeature::EnableAggregationPredicates => {
                 features.enable_aggregation_predicates = true;
+            }
+            UnstableFeature::EnableAuthorizationRules => {
+                features.enable_authorization_rules = true;
             }
         }
     }

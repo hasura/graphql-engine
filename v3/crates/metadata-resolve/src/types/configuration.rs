@@ -15,4 +15,5 @@ pub struct Configuration {
 #[allow(clippy::struct_excessive_bools)]
 pub struct UnstableFeatures {
     pub enable_aggregation_predicates: bool,
+    pub enable_authorization_rules: bool,
 }

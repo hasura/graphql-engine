@@ -91,6 +91,7 @@ fn read_test_configuration(
 ) -> Result<configuration::Configuration, Box<dyn std::error::Error>> {
     let unstable_features = configuration::UnstableFeatures {
         enable_aggregation_predicates: true,
+        enable_authorization_rules: true,
     };
 
     let configuration_path = directory.join("configuration.json");

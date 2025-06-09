@@ -83,7 +83,8 @@ watch: start-docker-test-deps
       --otlp-endpoint http://localhost:4317 \
       --authn-config-path static/auth/auth_config_v3.json \
       --metadata-path static/metadata.json \
-      --expose-internal-errors'
+      --expose-internal-errors \
+      --unstable-feature enable-authorization-rules'
 
 # check the code is fine
 lint:
