@@ -148,7 +148,7 @@ pub struct CommandView {}
 
 // fetch a command from metadata, ensuring we have CommandPermissions
 // and permissions to access the return type
-fn get_command(
+pub fn get_command(
     metadata: &Metadata,
     command_name: &'_ Qualified<CommandName>,
     role: &'_ Role,
