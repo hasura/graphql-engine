@@ -24,9 +24,6 @@ pub enum Error {
     #[error("unable to decode JSON response from connector: {0}")]
     Serde(#[from] serde_json::Error),
 
-    #[error("internal IO error: {0}")]
-    Io(#[from] std::io::Error),
-
     #[error("invalid connector base URL")]
     InvalidBaseURL,
 
