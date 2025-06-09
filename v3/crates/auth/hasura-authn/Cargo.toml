@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+all-or-list = { path = "../../utils/all-or-list" }
 engine-types = { path = "../../engine-types" }
 hasura-authn-core = { path = "../hasura-authn-core" }
 hasura-authn-jwt = { path = "../hasura-authn-jwt" }

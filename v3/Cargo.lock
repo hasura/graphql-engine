@@ -41,6 +41,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "all-or-list"
+version = "3.0.0"
+dependencies = [
+ "schemars",
+ "serde",
+ "serde-ext",
+ "serde_json",
+]
+
+[[package]]
 name = "alloc-no-stdlib"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2623,6 +2633,7 @@ checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
 name = "hasura-authn"
 version = "3.0.0"
 dependencies = [
+ "all-or-list",
  "anyhow",
  "axum",
  "engine-types",
@@ -2700,6 +2711,7 @@ dependencies = [
 name = "hasura-authn-webhook"
 version = "3.0.0"
 dependencies = [
+ "all-or-list",
  "axum",
  "engine-types",
  "hasura-authn-core",
