@@ -43,7 +43,7 @@ pub struct MetadataAccessor {
     pub model_permissions: Vec<QualifiedObject<permissions::ModelPermissionsV2>>,
     pub relationships: Vec<QualifiedObject<relationships::RelationshipV1>>,
     pub commands: Vec<QualifiedObject<commands::CommandV1>>,
-    pub command_permissions: Vec<QualifiedObject<permissions::CommandPermissionsV1>>,
+    pub command_permissions: Vec<QualifiedObject<permissions::CommandPermissionsV2>>,
     pub flags: flags::OpenDdFlags,
     // `graphql_config` is a vector because we want to do some validation depending on the presence of the object
     pub graphql_config: Vec<QualifiedObject<graphql_config::GraphqlConfig>>,

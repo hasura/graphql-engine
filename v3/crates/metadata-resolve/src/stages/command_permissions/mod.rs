@@ -106,7 +106,7 @@ fn resolve_command_permission(
         data_connector_scalar_types::DataConnectorScalars,
     >,
     subgraph: &SubgraphName,
-    command_permissions: &open_dds::permissions::CommandPermissionsV1,
+    command_permissions: &open_dds::permissions::CommandPermissionsV2,
     issues: &mut Vec<CommandPermissionIssue>,
     commands_with_permissions: &mut IndexMap<Qualified<CommandName>, CommandWithPermissions>,
 ) -> Result<(), Error> {

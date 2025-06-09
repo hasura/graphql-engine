@@ -329,7 +329,7 @@ pub struct ModelPermissionsV1 {
 /// Configuration for role-based model permissions
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[opendd(externally_tagged, json_schema(title = "TypePermissionOperand"))]
+#[opendd(externally_tagged, json_schema(title = "ModelPermissionOperand"))]
 pub enum ModelPermissionOperand {
     /// Definition of role-based type permissions on an OpenDD model
     #[opendd(json_schema(title = "RoleBased"))]
@@ -490,6 +490,8 @@ impl CommandPermission {
 /// Definition of permissions for an OpenDD command.
 pub enum CommandPermissions {
     V1(CommandPermissionsV1),
+    #[opendd(hidden = true)]
+    V2(CommandPermissionsV2),
 }
 
 impl CommandPermissions {
@@ -515,9 +517,13 @@ impl CommandPermissions {
         )
     }
 
-    pub fn upgrade(self) -> CommandPermissionsV1 {
+    pub fn upgrade(self) -> CommandPermissionsV2 {
         match self {
-            CommandPermissions::V1(v1) => v1,
+            CommandPermissions::V1(v1) => CommandPermissionsV2 {
+                command_name: v1.command_name,
+                permissions: CommandPermissionOperand::RoleBased(v1.permissions),
+            },
+            CommandPermissions::V2(v2) => v2,
         }
     }
 }
@@ -531,6 +537,27 @@ pub struct CommandPermissionsV1 {
     pub command_name: CommandName,
     /// A list of command permissions, one for each role.
     pub permissions: Vec<CommandPermission>,
+}
+
+/// Configuration for role-based command permissions
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(externally_tagged, json_schema(title = "CommandPermissionOperand"))]
+pub enum CommandPermissionOperand {
+    /// Definition of role-based type permissions on an OpenDD command
+    #[opendd(json_schema(title = "RoleBased"))]
+    RoleBased(Vec<CommandPermission>),
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "CommandPermissionsV2"))]
+/// Definition of permissions for an OpenDD command.
+pub struct CommandPermissionsV2 {
+    /// The name of the command for which permissions are being defined.
+    pub command_name: CommandName,
+    /// The permissions for the command.
+    pub permissions: CommandPermissionOperand,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
