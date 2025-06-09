@@ -37,6 +37,7 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
             ),
         ]),
         uniqueness_constraints: BTreeMap::new(),
+        relational_mutations: None,
     }
 }
 

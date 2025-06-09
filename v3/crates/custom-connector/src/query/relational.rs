@@ -356,6 +356,16 @@ fn convert_relation_to_logical_plan(
             );
             Ok(window_plan)
         }
+        Relation::Union { relations } => {
+            let input_plans = relations
+                .iter()
+                .map(|relation| Ok(Arc::new(convert_relation_to_logical_plan(relation, state)?)))
+                .collect::<datafusion::error::Result<Vec<_>>>()?;
+            let union_plan = datafusion::logical_expr::LogicalPlan::Union(
+                datafusion::logical_expr::Union::try_new_by_name(input_plans)?,
+            );
+            Ok(union_plan)
+        }
     }
 }
 
@@ -790,6 +800,13 @@ fn convert_expression_to_logical_expr(
                 },
             ))
         }
+        RelationalExpression::BinaryConcat { left, right } => Ok(
+            datafusion::prelude::Expr::BinaryExpr(datafusion::logical_expr::BinaryExpr {
+                left: Box::new(convert_expression_to_logical_expr(left, schema)?),
+                op: datafusion::logical_expr::Operator::StringConcat,
+                right: Box::new(convert_expression_to_logical_expr(right, schema)?),
+            }),
+        ),
         RelationalExpression::IsNaN { expr } => {
             Ok(isnan(convert_expression_to_logical_expr(expr, schema)?))
         }
@@ -1353,5 +1370,6 @@ fn convert_date_part_unit_to_literal_expr(
         ndc_models::DatePartUnit::Microsecond => "microsecond",
         ndc_models::DatePartUnit::Millisecond => "millisecond",
         ndc_models::DatePartUnit::Nanosecond => "nanosecond",
+        ndc_models::DatePartUnit::Epoch => "epoch",
     }))))
 }
