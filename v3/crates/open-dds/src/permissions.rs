@@ -226,6 +226,8 @@ pub struct FieldPreset {
 /// Definition of permissions for an OpenDD model.
 pub enum ModelPermissions {
     V1(ModelPermissionsV1),
+    #[opendd(hidden = true)]
+    V2(ModelPermissionsV2),
 }
 
 impl ModelPermissions {
@@ -302,9 +304,13 @@ impl ModelPermissions {
         )
     }
 
-    pub fn upgrade(self) -> ModelPermissionsV1 {
+    pub fn upgrade(self) -> ModelPermissionsV2 {
         match self {
-            ModelPermissions::V1(v1) => v1,
+            ModelPermissions::V1(v1) => ModelPermissionsV2 {
+                model_name: v1.model_name,
+                permissions: ModelPermissionOperand::RoleBased(v1.permissions),
+            },
+            ModelPermissions::V2(v2) => v2,
         }
     }
 }
@@ -318,6 +324,27 @@ pub struct ModelPermissionsV1 {
     pub model_name: Spanned<ModelName>,
     /// A list of model permissions, one for each role.
     pub permissions: Vec<ModelPermission>,
+}
+
+/// Configuration for role-based model permissions
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(externally_tagged, json_schema(title = "TypePermissionOperand"))]
+pub enum ModelPermissionOperand {
+    /// Definition of role-based type permissions on an OpenDD model
+    #[opendd(json_schema(title = "RoleBased"))]
+    RoleBased(Vec<ModelPermission>),
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "ModelPermissionsV2"))]
+/// Definition of permissions for an OpenDD model.
+pub struct ModelPermissionsV2 {
+    /// The name of the model for which permissions are being defined.
+    pub model_name: Spanned<ModelName>,
+    /// Permissions for this model
+    pub permissions: ModelPermissionOperand,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]

@@ -40,7 +40,7 @@ pub struct MetadataAccessor {
     pub aggregate_expressions: Vec<QualifiedObject<aggregates::AggregateExpressionV1>>,
     pub models: Vec<QualifiedObject<models::Model>>,
     pub type_permissions: Vec<QualifiedObject<permissions::TypePermissionsV2>>,
-    pub model_permissions: Vec<QualifiedObject<permissions::ModelPermissionsV1>>,
+    pub model_permissions: Vec<QualifiedObject<permissions::ModelPermissionsV2>>,
     pub relationships: Vec<QualifiedObject<relationships::RelationshipV1>>,
     pub commands: Vec<QualifiedObject<commands::CommandV1>>,
     pub command_permissions: Vec<QualifiedObject<permissions::CommandPermissionsV1>>,

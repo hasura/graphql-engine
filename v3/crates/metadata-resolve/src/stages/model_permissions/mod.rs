@@ -101,7 +101,7 @@ fn resolve_model_permissions(
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models_with_permissions: &mut IndexMap<Qualified<ModelName>, ModelWithPermissions>,
-    permissions: &open_dds::permissions::ModelPermissionsV1,
+    permissions: &open_dds::permissions::ModelPermissionsV2,
     issues: &mut Vec<ModelPermissionIssue>,
 ) -> Result<(), Error> {
     let model_name =
