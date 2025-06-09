@@ -57,6 +57,8 @@ pub struct ArgumentPreset {
 /// Definition of permissions for an OpenDD type.
 pub enum TypePermissions {
     V1(TypePermissionsV1),
+    #[opendd(hidden = true)]
+    V2(TypePermissionsV2),
 }
 
 impl TypePermissions {
@@ -93,9 +95,13 @@ impl TypePermissions {
         )
     }
 
-    pub fn upgrade(self) -> TypePermissionsV1 {
+    pub fn upgrade(self) -> TypePermissionsV2 {
         match self {
-            TypePermissions::V1(v1) => v1,
+            TypePermissions::V1(v1) => TypePermissionsV2 {
+                type_name: v1.type_name,
+                permissions: TypePermissionOperand::RoleBased(v1.permissions),
+            },
+            TypePermissions::V2(v2) => v2,
         }
     }
 }
@@ -109,6 +115,27 @@ pub struct TypePermissionsV1 {
     pub type_name: CustomTypeName,
     /// A list of type permissions, one for each role.
     pub permissions: Vec<TypePermission>,
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "TypePermissionsV1"))]
+/// Definition of permissions for an OpenDD type.
+pub struct TypePermissionsV2 {
+    /// The name of the type for which permissions are being defined. Must be an object type.
+    pub type_name: CustomTypeName,
+    /// Type permissions definitions
+    pub permissions: TypePermissionOperand,
+}
+
+/// Configuration for role-based type permissions
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(externally_tagged, json_schema(title = "TypePermissionOperand"))]
+pub enum TypePermissionOperand {
+    /// Definition of role-nased type permissions on an OpenDD object type
+    #[opendd(json_schema(title = "RoleBased"))]
+    RoleBased(Vec<TypePermission>),
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
