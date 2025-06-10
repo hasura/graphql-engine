@@ -1123,7 +1123,7 @@ fn ndc_nested_field_selection_for(
 
                 let mut fields = IndexMap::new();
 
-                for (field_name, field_mapping) in field_mappings {
+                for (field_name, field_mapping) in field_mappings.iter() {
                     // `ObjectType` will only include a field if the role has access to it.
                     if let Some(field_def) = object_type.fields.get(field_name) {
                         let nested_fields: Option<NestedField> = ndc_nested_field_selection_for(

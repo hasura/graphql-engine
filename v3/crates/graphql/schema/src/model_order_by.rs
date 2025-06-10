@@ -189,7 +189,7 @@ pub fn build_model_order_by_input_schema(
                 type_name: order_by_expression.ordered_type.clone(),
             })?;
 
-        let field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>> =
+        let field_permissions: HashMap<Role, Option<Box<types::NamespaceAnnotation>>> =
             permissions::get_allowed_roles_for_field(object_type_representation, field_name)
                 .map(|role| (role.clone(), None))
                 .collect();

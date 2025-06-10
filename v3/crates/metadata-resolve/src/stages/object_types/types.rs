@@ -15,6 +15,7 @@ use serde_with::serde_as;
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::ops::Deref;
+use std::sync::Arc;
 
 use crate::types::subgraph::Qualified;
 
@@ -431,7 +432,7 @@ pub enum TypeMapping {
     /// Mapping from an object to their fields, which contain the types of fields.
     Object {
         ndc_object_type_name: DataConnectorObjectType,
-        field_mappings: BTreeMap<FieldName, FieldMapping>,
+        field_mappings: Arc<BTreeMap<FieldName, FieldMapping>>,
     },
 }
 

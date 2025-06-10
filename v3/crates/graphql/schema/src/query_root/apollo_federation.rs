@@ -24,7 +24,7 @@ pub(crate) struct ApolloFederationFieldOutput {
     pub apollo_federation_entities_field: gql_schema::Field<GDS>,
     /// Roles having access to the `_entities` field.
     pub apollo_federation_entities_field_permissions:
-        HashMap<Role, Option<types::NamespaceAnnotation>>,
+        HashMap<Role, Option<Box<types::NamespaceAnnotation>>>,
     /// The _service field.
     pub apollo_federation_service_field: gql_schema::Field<GDS>,
 }
@@ -75,9 +75,9 @@ pub(crate) fn apollo_federation_field(
     for (role, role_type_permission) in roles_type_permissions {
         apollo_federation_entities_field_permissions.insert(
             role.clone(),
-            Some(types::NamespaceAnnotation::EntityTypeMappings(
+            Some(Box::new(types::NamespaceAnnotation::EntityTypeMappings(
                 role_type_permission,
-            )),
+            ))),
         );
     }
 

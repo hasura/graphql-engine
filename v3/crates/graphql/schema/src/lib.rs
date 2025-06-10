@@ -117,7 +117,9 @@ impl GDS {
 impl gql_schema::SchemaContext for GDS {
     type Namespace = Role;
     type GenericNodeInfo = types::Annotation;
-    type NamespacedNodeInfo = Option<types::NamespaceAnnotation>;
+    // We add Box indirection here to save memory when None's of this fairly large enum are stored
+    // in containers
+    type NamespacedNodeInfo = Option<Box<types::NamespaceAnnotation>>;
 
     fn introspection_node() -> types::Annotation {
         types::Annotation::Output(types::OutputAnnotation::RootField(

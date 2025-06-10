@@ -170,7 +170,7 @@ fn input_object_type_input_fields(
                                 role,
                                 &field_definition.field_type,
                             );
-                            role_map.insert(Role(role.0.clone()), annotation);
+                            role_map.insert(Role(role.0.clone()), annotation.map(Box::new));
                         }
                     }
                     // for roles present in the metadata, but does not have any
@@ -192,7 +192,7 @@ fn input_object_type_input_fields(
                             role,
                             &field_definition.field_type,
                         );
-                        role_map.insert(Role(role.0.clone()), annotation);
+                        role_map.insert(Role(role.0.clone()), annotation.map(Box::new));
                     }
 
                     builder.conditional_namespaced(input_field, role_map)

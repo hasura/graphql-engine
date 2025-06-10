@@ -43,7 +43,7 @@ fn get_entity_namespace_typename_mappings<'s>(
         .info
         .namespaced
         .as_ref()
-        .and_then(|annotation| match annotation {
+        .and_then(|annotation| match annotation.as_ref() {
             NamespaceAnnotation::EntityTypeMappings(type_mappings) => Some(type_mappings),
             _ => None,
         })

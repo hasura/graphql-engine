@@ -33,7 +33,8 @@ pub struct ModelWithPermissions {
     pub model: models_graphql::Model,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub select_permissions: BTreeMap<Role, SelectPermission>,
-    pub filter_expression_type: Option<boolean_expressions::ResolvedObjectBooleanExpressionType>,
+    pub filter_expression_type:
+        Option<Arc<boolean_expressions::ResolvedObjectBooleanExpressionType>>,
     pub graphql_api: models_graphql::ModelGraphQlApi,
     pub description: Option<String>,
 }

@@ -84,7 +84,10 @@ pub fn model_target_to_ndc_query(
                 session,
                 &model_source.type_mappings,
                 model_object_type,
-                model.filter_expression_type.as_ref(),
+                model
+                    .filter_expression_type
+                    .as_ref()
+                    .map(std::convert::AsRef::as_ref),
                 expr,
                 &model_source.data_connector,
                 &mut usage_counts,

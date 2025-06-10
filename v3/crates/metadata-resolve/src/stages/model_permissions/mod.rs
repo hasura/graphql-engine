@@ -114,7 +114,10 @@ fn resolve_model_permissions(
         })?;
 
     if model.select_permissions.is_empty() {
-        let boolean_expression = model.filter_expression_type.as_ref();
+        let boolean_expression = model
+            .filter_expression_type
+            .as_ref()
+            .map(derive_more::AsRef::as_ref);
 
         let select_permissions = model_permission::resolve_all_model_select_permissions(
             &metadata_accessor.flags,

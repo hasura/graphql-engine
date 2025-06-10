@@ -19,7 +19,7 @@ pub fn node_interface_schema(
     let mut fields = BTreeMap::new();
     let mut implemented_by = BTreeMap::new();
     let mut typename_global_id_mappings = HashMap::new();
-    let mut roles_implementing_global_id: HashMap<Role, Option<types::NamespaceAnnotation>> =
+    let mut roles_implementing_global_id: HashMap<Role, Option<Box<types::NamespaceAnnotation>>> =
         HashMap::new();
     for model in gds.metadata.models.values() {
         if model.model.global_id_source.is_some() {
