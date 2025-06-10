@@ -252,6 +252,7 @@ fn migrate_collection_info_from_v01(
                 (name, migrate_uniqueness_constraint_from_v01(old_constraint))
             })
             .collect(),
+        relational_mutations: None,
     }
 }
 

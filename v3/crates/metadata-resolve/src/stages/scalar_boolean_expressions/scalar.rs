@@ -75,7 +75,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
                     name: comparison_operator.name.clone(),
                 },
             );
-        };
+        }
     }
 
     let mut data_connector_operator_mappings = BTreeMap::new();

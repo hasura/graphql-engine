@@ -1,5 +1,3 @@
-use serde::Deserializer;
-
 use super::build;
 use super::*;
 
@@ -14,28 +12,6 @@ pub struct SDL {
     query: ast::Name,
     mutation: Option<ast::Name>,
     subscription: Option<ast::Name>,
-}
-
-// Using the Debug interface to implement this. Ideally SchemaContext shouldn't
-// require this constraint. See the note there
-impl Serialize for SDL {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(format!("{self:?}").as_str())
-    }
-}
-
-impl<'de> Deserialize<'de> for SDL {
-    fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Err(serde::de::Error::custom(
-            "SDL isn't expected to be deserialized",
-        ))
-    }
 }
 
 impl SDL {
@@ -59,7 +35,7 @@ impl SDL {
                         .is_some()
                     {
                         return Err(SDLError::DuplicateDefinitions(type_name));
-                    };
+                    }
                 }
                 sdl::TypeSystemDefinition::Directive(_) => {}
             }
@@ -132,7 +108,7 @@ impl From<build::Error> for SDLError {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Namespace;
 
 impl Display for Namespace {

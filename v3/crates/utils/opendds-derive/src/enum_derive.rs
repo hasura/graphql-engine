@@ -260,7 +260,7 @@ fn generate_enum_variants(
 
 fn gen_deserialize_from(tag_type: &EnumTagType) -> proc_macro2::TokenStream {
     match tag_type {
-        EnumTagType::External { .. } => quote! {
+        EnumTagType::External => quote! {
             __tag_value
         },
         EnumTagType::Internal { .. } => quote! {

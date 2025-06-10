@@ -49,7 +49,7 @@ pub(crate) fn join_responses(
                             rhs_response,
                         )?;
                     }
-                };
+                }
             }
         }
     }
@@ -198,43 +198,41 @@ fn visit_location_path_and_insert_value(
             row_set.rows = Some(rows);
             *row_field_val = ndc_models::RowFieldValue(json::to_value(row_set)?);
         }
-        LocationKind::NestedData => {
-            match row_field_val.0 {
-                serde_json::Value::Array(_) => {
-                    if let Ok(mut rows) = serde_json::from_value::<
-                        Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>,
-                    >(row_field_val.0.clone())
-                    {
-                        for inner_row in &mut rows {
-                            insert_value_into_row(
-                                path_tail,
-                                join_node,
-                                inner_row,
-                                remote_alias.clone(),
-                                rhs_response,
-                            )?;
-                        }
-                        *row_field_val = ndc_models::RowFieldValue(json::to_value(rows)?);
-                    }
-                }
-                serde_json::Value::Object(_) => {
-                    if let Ok(mut inner_row) = serde_json::from_value::<
-                        IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
-                    >(row_field_val.0.clone())
-                    {
+        LocationKind::NestedData => match row_field_val.0 {
+            serde_json::Value::Array(_) => {
+                if let Ok(mut rows) = serde_json::from_value::<
+                    Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>,
+                >(row_field_val.0.clone())
+                {
+                    for inner_row in &mut rows {
                         insert_value_into_row(
                             path_tail,
                             join_node,
-                            &mut inner_row,
-                            remote_alias,
+                            inner_row,
+                            remote_alias.clone(),
                             rhs_response,
                         )?;
-                        *row_field_val = ndc_models::RowFieldValue(json::to_value(inner_row)?);
                     }
+                    *row_field_val = ndc_models::RowFieldValue(json::to_value(rows)?);
                 }
-                _ => (),
-            };
-        }
+            }
+            serde_json::Value::Object(_) => {
+                if let Ok(mut inner_row) = serde_json::from_value::<
+                    IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
+                >(row_field_val.0.clone())
+                {
+                    insert_value_into_row(
+                        path_tail,
+                        join_node,
+                        &mut inner_row,
+                        remote_alias,
+                        rhs_response,
+                    )?;
+                    *row_field_val = ndc_models::RowFieldValue(json::to_value(inner_row)?);
+                }
+            }
+            _ => (),
+        },
     }
     Ok(())
 }

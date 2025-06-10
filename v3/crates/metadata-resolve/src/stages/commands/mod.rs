@@ -17,7 +17,7 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 
 use open_dds::commands::CommandName;
-pub use types::{Command, CommandSource, CommandsIssue, CommandsOutput};
+pub use types::{Command, CommandGraphQlApi, CommandSource, CommandsIssue, CommandsOutput};
 
 use open_dds::types::CustomTypeName;
 

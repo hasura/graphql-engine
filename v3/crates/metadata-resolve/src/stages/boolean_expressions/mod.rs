@@ -101,7 +101,7 @@ pub fn resolve(
             .is_some()
         {
             issues.push(BooleanExpressionIssue::DuplicateBooleanExpressionType { type_name });
-        };
+        }
     }
     let mut results = vec![];
     let mut boolean_expression_object_types = BTreeMap::new();

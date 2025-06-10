@@ -2,13 +2,15 @@ mod command_permission;
 use indexmap::IndexMap;
 
 use open_dds::identifier::SubgraphName;
+use open_dds::query::ArgumentName;
 use open_dds::{
     commands::CommandName, data_connector::DataConnectorName, models::ModelName,
     types::CustomTypeName,
 };
 
+use crate::ArgumentInfo;
 use crate::stages::{
-    boolean_expressions, commands, data_connector_scalar_types, models_graphql,
+    arguments, boolean_expressions, commands, data_connector_scalar_types, models_graphql,
     object_relationships, scalar_types,
 };
 use crate::types::error::Error;
@@ -16,7 +18,9 @@ use crate::types::subgraph::Qualified;
 
 use std::collections::BTreeMap;
 mod types;
-pub use types::{CommandPermissionIssue, CommandPermissionsOutput, CommandWithPermissions};
+pub use types::{
+    Command, CommandPermissionIssue, CommandPermissionsOutput, CommandWithPermissions,
+};
 
 /// resolve command permissions
 pub fn resolve(
@@ -27,6 +31,7 @@ pub fn resolve(
         object_relationships::ObjectTypeWithRelationships,
     >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    arguments: &BTreeMap<arguments::ArgumentSource, IndexMap<ArgumentName, ArgumentInfo>>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     data_connector_scalars: &BTreeMap<
@@ -44,7 +49,17 @@ pub fn resolve(
                 (
                     command_name.clone(),
                     CommandWithPermissions {
-                        command: command.clone(),
+                        command: Command {
+                            name: command.name.clone(),
+                            output_type: command.output_type.clone(),
+                            arguments: arguments
+                                .get(&arguments::ArgumentSource::Command(command_name.clone()))
+                                .unwrap_or(&IndexMap::new())
+                                .clone(),
+                            description: command.description.clone(),
+                            graphql_api: command.graphql_api.clone(),
+                            source: command.source.clone(),
+                        },
                         permissions: BTreeMap::new(),
                     },
                 )
@@ -91,7 +106,7 @@ fn resolve_command_permission(
         data_connector_scalar_types::DataConnectorScalars,
     >,
     subgraph: &SubgraphName,
-    command_permissions: &open_dds::permissions::CommandPermissionsV1,
+    command_permissions: &open_dds::permissions::CommandPermissionsV2,
     issues: &mut Vec<CommandPermissionIssue>,
     commands_with_permissions: &mut IndexMap<Qualified<CommandName>, CommandWithPermissions>,
 ) -> Result<(), Error> {

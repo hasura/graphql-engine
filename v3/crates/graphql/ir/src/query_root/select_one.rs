@@ -4,6 +4,7 @@
 
 use crate::arguments;
 use crate::error;
+use crate::flags::GraphqlIrFlags;
 use crate::model_selection;
 /// Generates the IR for a 'select_one' operation
 // TODO: Remove once TypeMapping has more than one variant
@@ -53,6 +54,7 @@ pub fn select_one_generate_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     model_name: &'s Qualified<open_dds::models::ModelName>,
+    flags: &GraphqlIrFlags,
 ) -> Result<ModelSelectOne<'n>, error::Error> {
     let mut unique_identifier_arguments = vec![];
     let mut model_argument_fields = Vec::new();
@@ -65,17 +67,8 @@ pub fn select_one_generate_ir<'n, 's>(
                 ModelInputAnnotation::ModelArgument { .. } => {
                     model_argument_fields.push(argument);
                 }
-                ModelInputAnnotation::ModelUniqueIdentifierArgument {
-                    field_name,
-                    ndc_column,
-                } => {
-                    let ndc_column = ndc_column.as_ref().ok_or_else(|| error::InternalEngineError::InternalGeneric {
-                        description: format!("Missing NDC column mapping for unique identifier argument {} on field {}", argument.name, field_call.name)})?;
-                    unique_identifier_arguments.push((
-                        ndc_column,
-                        field_name,
-                        argument.value.as_json(),
-                    ));
+                ModelInputAnnotation::ModelUniqueIdentifierArgument { field_name } => {
+                    unique_identifier_arguments.push((field_name, argument.value.as_json()));
                 }
                 _ => Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
@@ -92,8 +85,8 @@ pub fn select_one_generate_ir<'n, 's>(
 
     let filter_expressions: Vec<_> = unique_identifier_arguments
         .into_iter()
-        .map(|(_ndc_column, field_name, argument_value)| {
-            open_dds::query::BooleanExpression::Comparison {
+        .map(
+            |(field_name, argument_value)| open_dds::query::BooleanExpression::Comparison {
                 operand: open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
                     target: Box::new(open_dds::query::ObjectFieldTarget {
                         arguments: IndexMap::new(),
@@ -103,8 +96,8 @@ pub fn select_one_generate_ir<'n, 's>(
                 }),
                 operator: open_dds::query::ComparisonOperator::Equals,
                 argument: Box::new(open_dds::query::Value::Literal(argument_value)),
-            }
-        })
+            },
+        )
         .collect();
 
     let mut where_clause = None;
@@ -118,6 +111,7 @@ pub fn select_one_generate_ir<'n, 's>(
             arguments::resolve_argument_opendd(
                 argument,
                 &model_source.type_mappings,
+                flags,
                 &mut usage_counts,
             )
         })
@@ -136,6 +130,7 @@ pub fn select_one_generate_ir<'n, 's>(
         None,   // offset
         &session.variables,
         request_headers,
+        flags,
         // Get all the models/commands that were used as relationships
         &mut usage_counts,
     )?;

@@ -151,7 +151,7 @@ impl<T: OpenDd> OpenDd for Option<T> {
                 .extensions
                 .insert("nullable".to_owned(), serde_json::json!(true));
             schema = Schema::Object(schema_obj);
-        };
+        }
         schema
     }
 
@@ -167,7 +167,7 @@ fn add_null_type(instance_type: &mut SingleOrVec<InstanceType>) {
         }
         SingleOrVec::Vec(ty) if !ty.contains(&InstanceType::Null) => ty.push(InstanceType::Null),
         _ => {}
-    };
+    }
 }
 
 seq_impl!(Vec<T>, false);

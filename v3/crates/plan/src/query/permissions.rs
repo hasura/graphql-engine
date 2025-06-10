@@ -126,7 +126,6 @@ pub fn process_model_predicate<'s>(
                 &relationship_info.target_model_name,
                 &relationship_info.target_source.model,
                 &relationship_info.target_source.capabilities,
-                &relationship_info.target_type,
                 &relationship_info.mappings,
                 relationship_predicate,
             )?)

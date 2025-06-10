@@ -3,20 +3,33 @@ use indexmap::IndexMap;
 use open_dds::commands::CommandName;
 use serde::{Deserialize, Serialize};
 
-use crate::Qualified;
 use crate::helpers::typecheck;
 use crate::stages::commands;
 use crate::types::error::ShouldBeAnError;
 use crate::types::permission::ValueExpressionOrPredicate;
 use crate::types::subgraph::QualifiedTypeReference;
+use crate::{ArgumentInfo, Qualified};
 use open_dds::arguments::ArgumentName;
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandWithPermissions {
-    pub command: commands::Command,
+    pub command: Command,
     pub permissions: BTreeMap<Role, CommandPermission>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Command {
+    pub name: Qualified<CommandName>,
+    pub output_type: QualifiedTypeReference,
+    pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
+    pub graphql_api: Option<commands::CommandGraphQlApi>,
+    pub source: Option<Arc<commands::CommandSource>>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

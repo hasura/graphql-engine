@@ -3,6 +3,7 @@ use nonempty::NonEmpty;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
+use super::NonNullGraphqlVariablesValidation;
 use super::collect;
 use super::error::*;
 use super::input;
@@ -27,6 +28,7 @@ pub fn normalize_selection_set<
 
     selection_type: &collect::SelectableType<'s, S>,
     selection_set: &'q executable::SelectionSet,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<normalized::SelectionSet<'s, S>>
 where
     's: 'q,
@@ -39,6 +41,7 @@ where
         variables,
         selection_type,
         Vec::from([(&reachability, Vec::from([&selection_set.items]))]),
+        validate_non_null_graphql_variables,
     )
 }
 
@@ -56,6 +59,7 @@ fn normalize_selection_sets<'q, 's, S: schema::SchemaContext, NSGet: schema::Nam
         &Vec<&'s ast::TypeName>,
         Vec<&'q Vec<spanning::Spanning<executable::Selection>>>,
     )>,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<normalized::SelectionSet<'s, S>>
 where
     's: 'q,
@@ -108,6 +112,7 @@ where
             &alias,
             alias_type,
             typed_fields,
+            validate_non_null_graphql_variables,
         )?;
         // if let normalized::FieldCalls::Conditional(conditional) = &field_calls {
         if !field_calls.is_empty() {
@@ -152,6 +157,7 @@ fn merge_fields<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGette
     alias: &ast::Alias,
     alias_type: &ast::Type,
     typed_fields: HashMap<&Vec<&'s ast::TypeName>, NonEmpty<&collect::CollectedField<'q, 's, S>>>,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<(
     normalized::FieldCalls<'s, S>,
     normalized::SelectionSet<'s, S>,
@@ -179,6 +185,7 @@ where
             &canonical_field.info.generic.name,
             &canonical_field.info.generic.arguments,
             canonical_field.field.arguments.as_ref(),
+            validate_non_null_graphql_variables,
         )?;
         let canonical_field_type = &canonical_field.info.generic.field_type;
         if canonical_field_type != alias_type {
@@ -210,6 +217,7 @@ where
                 &field.info.generic.name,
                 &field.info.generic.arguments,
                 field.field.arguments.as_ref(),
+                validate_non_null_graphql_variables,
             )?;
             if arguments != this_arguments {
                 return Err(Error::FieldsConflictDifferingArguments {
@@ -246,6 +254,7 @@ where
             variables,
             &selection_type,
             alias_selection_sets,
+            validate_non_null_graphql_variables,
         )?,
         None => normalized::SelectionSet {
             fields: IndexMap::new(),
@@ -267,6 +276,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
     field_name: &ast::Name,
     arguments_schema: &'s BTreeMap<ast::Name, schema::Namespaced<S, schema::InputField<S>>>,
     arguments: Option<&'q Spanning<Vec<executable::Argument>>>,
+    validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
 ) -> Result<IndexMap<ast::Name, normalized::InputField<'s, S>>> {
     let mut arguments_map = HashMap::new();
     if let Some(arguments) = arguments {
@@ -335,6 +345,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
                             default_value: argument_info.default_value.as_ref(),
                         },
                         &argument_type_info,
+                        validate_non_null_graphql_variables,
                     )?)
                 }
 
@@ -353,6 +364,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
                             default_value: argument_info.default_value.as_ref(),
                         },
                         &argument_type_info,
+                        validate_non_null_graphql_variables,
                     )?)
                 }
             };

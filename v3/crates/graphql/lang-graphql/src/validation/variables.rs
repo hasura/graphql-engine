@@ -39,6 +39,7 @@ impl VariableValue<'_> {
         input_schema: &schema::InputType<'s, S>,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
             VariableValue::Provided(value, type_) => normalize(
@@ -48,6 +49,7 @@ impl VariableValue<'_> {
                 *value,
                 &LocationType::NoLocation { type_ },
                 input_schema,
+                validate_non_null_graphql_variables,
             ),
             VariableValue::Default(value, type_) => normalize(
                 schema,
@@ -56,6 +58,7 @@ impl VariableValue<'_> {
                 *value,
                 &LocationType::NoLocation { type_ },
                 input_schema,
+                validate_non_null_graphql_variables,
             ),
         }
     }
@@ -146,6 +149,7 @@ impl<'q, 's, S: schema::SchemaContext> Variables<'q, 's, S> {
         variable_name: &ast::Name,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
+        validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         let variable =
             self.variables
@@ -182,6 +186,7 @@ impl<'q, 's, S: schema::SchemaContext> Variables<'q, 's, S> {
                             default_value,
                             location_type,
                             &variable.input_schema,
+                            validate_non_null_graphql_variables,
                         )
                     } else {
                         // If the variable is not provided and there is no default value, return null.
@@ -192,7 +197,12 @@ impl<'q, 's, S: schema::SchemaContext> Variables<'q, 's, S> {
                 }
                 Some(variable_value) => {
                     // Normalize the variable value.
-                    variable_value.normalize(&variable.input_schema, schema, namespaced_getter)
+                    variable_value.normalize(
+                        &variable.input_schema,
+                        schema,
+                        namespaced_getter,
+                        validate_non_null_graphql_variables,
+                    )
                 }
             }
         } else {

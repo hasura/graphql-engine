@@ -2,7 +2,7 @@
 
 use lang_graphql::{ast::common as ast, schema as gql_schema};
 use open_dds::types::CustomTypeName;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use crate::permissions::get_node_field_namespace_permissions;
 use crate::types::RelayInputAnnotation;
@@ -15,7 +15,6 @@ use crate::types::{
     },
 };
 use crate::{GDS, Role};
-use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::Qualified;
 
@@ -50,12 +49,10 @@ pub(crate) fn relay_node_field(
     // objects implementing the interface define all the fields
     // defined by the interface.
 
-    let mut roles_type_permissions: HashMap<
-        Role,
-        HashMap<Qualified<CustomTypeName>, metadata_resolve::FilterPermission>,
-    > = HashMap::new();
+    let mut roles_type_permissions: HashMap<Role, BTreeSet<Qualified<CustomTypeName>>> =
+        HashMap::new();
     for model in gds.metadata.models.values() {
-        if let Some(global_id_source) = &model.model.global_id_source {
+        if model.model.global_id_source.is_some() {
             let output_typename = get_custom_output_type(gds, builder, &model.model.data_type)?;
 
             let object_type_representation =
@@ -64,10 +61,9 @@ pub(crate) fn relay_node_field(
             let node_field_permissions =
                 get_node_field_namespace_permissions(object_type_representation, model);
 
-            for (role, model_predicate) in &node_field_permissions {
+            for role in node_field_permissions {
                 let role_type_permissions = roles_type_permissions.entry(role.clone()).or_default();
-                role_type_permissions
-                    .insert(model.model.data_type.clone(), model_predicate.clone());
+                role_type_permissions.insert(model.model.data_type.clone());
             }
 
             if typename_mappings
@@ -77,7 +73,6 @@ pub(crate) fn relay_node_field(
                         model_name: model.model.name.clone(),
                         type_name: model.model.data_type.clone(),
                         model_source: model.model.source.clone(),
-                        global_id_fields_ndc_mapping: global_id_source.ndc_mapping.clone(),
                     },
                 )
                 .is_some()
@@ -87,7 +82,7 @@ pub(crate) fn relay_node_field(
                 return Err(crate::Error::InternalErrorDuplicateGlobalIdSourceFound {
                     type_name: output_typename.type_name().clone(),
                 });
-            };
+            }
         }
     }
     let id_argument: gql_schema::InputField<GDS> = gql_schema::InputField::new(
@@ -112,7 +107,7 @@ pub(crate) fn relay_node_field(
         relay_node_field_permissions.insert(
             role.clone(),
             Some(types::NamespaceAnnotation::NodeFieldTypeMappings(
-                HashMapWithJsonKey(role_type_permission),
+                role_type_permission,
             )),
         );
     }

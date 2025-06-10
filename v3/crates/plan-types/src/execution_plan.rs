@@ -94,7 +94,7 @@ impl ProcessResponseAs {
             ProcessResponseAs::Object { is_nullable }
             | ProcessResponseAs::Array { is_nullable }
             | ProcessResponseAs::CommandResponse { is_nullable, .. } => *is_nullable,
-            ProcessResponseAs::Aggregates { .. } => false,
+            ProcessResponseAs::Aggregates => false,
         }
     }
 }

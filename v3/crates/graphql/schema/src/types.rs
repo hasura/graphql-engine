@@ -5,7 +5,7 @@ use lang_graphql::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap},
     fmt::Display,
     sync::Arc,
 };
@@ -13,19 +13,15 @@ use std::{
 use open_dds::{
     aggregates,
     arguments::ArgumentName,
-    commands,
-    data_connector::{DataConnectorName, DataConnectorOperatorName},
-    models,
-    types::{self, DataConnectorArgumentName, Deprecated},
+    commands, models,
+    types::{self, Deprecated},
 };
 
 use metadata_resolve::{
-    self, FieldPresetInfo, LogicalOperators, NdcColumnForComparison, OperatorMapping,
-    OrderByExpressionIdentifier, Qualified, QualifiedTypeReference,
-    deserialize_non_string_key_btreemap, serialize_non_string_key_btreemap,
+    self, LogicalOperators, NdcColumnForComparison, OrderByExpressionIdentifier, Qualified,
+    QualifiedTypeReference,
 };
 
-use json_ext::HashMapWithJsonKey;
 use strum_macros::Display;
 
 use self::output_type::relationship::{
@@ -60,7 +56,6 @@ pub struct NodeFieldTypeNameMapping {
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
     pub model_source: Option<Arc<metadata_resolve::ModelSource>>,
-    pub global_id_fields_ndc_mapping: BTreeMap<types::FieldName, NdcColumnForComparison>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -190,7 +185,6 @@ pub enum ModelInputAnnotation {
         argument_name: ArgumentName,
         argument_type: QualifiedTypeReference,
         argument_kind: metadata_resolve::ArgumentKind,
-        ndc_table_argument: Option<DataConnectorArgumentName>,
     },
     ModelOrderByExpression,
     ModelOrderByNestedExpression {
@@ -216,8 +210,6 @@ pub enum ModelInputAnnotation {
     ModelUniqueIdentifierArgument {
         // in future this will be the only thing required
         field_name: types::FieldName,
-        // Optional because we allow building schema without specifying a data source
-        ndc_column: Option<NdcColumnForComparison>,
     },
     ModelFilterInputArgument,
 }
@@ -252,13 +244,6 @@ pub enum ObjectBooleanExpressionField {
 pub enum ScalarBooleanExpressionField {
     LogicalOperatorField(LogicalOperatorField),
     ComparisonOperation {
-        #[serde(
-            serialize_with = "serialize_non_string_key_btreemap",
-            deserialize_with = "deserialize_non_string_key_btreemap"
-        )]
-        operator_mapping: BTreeMap<Qualified<DataConnectorName>, DataConnectorOperatorName>,
-        /// In OpenDD IR we don't need to think about the data connector, so we'll just need this
-        /// name:
         operator_name: open_dds::types::OperatorName,
     },
     IsNullOperation,
@@ -299,7 +284,6 @@ pub enum InputAnnotation {
         argument_name: ArgumentName,
         argument_type: QualifiedTypeReference,
         argument_kind: metadata_resolve::ArgumentKind,
-        ndc_func_proc_argument: Option<DataConnectorArgumentName>,
     },
     Relay(RelayInputAnnotation),
     ApolloFederationRepresentationsInput(ApolloFederationInputAnnotation),
@@ -314,8 +298,8 @@ pub enum InputAnnotation {
 /// Each entity has two parts to it:
 ///
 /// 1. What schema it is supposed to generate?
-///      This is done while building the metadata. The entity is supposed to
-///      contain all the data it needs to be able to execute it successfully.
+///    This is done while building the metadata. The entity is supposed to
+///    contain all the data it needs to be able to execute it successfully.
 ///
 /// 2. When a request is executed, how the entity is supposed to be executed using the data it has?
 ///
@@ -328,6 +312,7 @@ pub enum Annotation {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 pub enum NamespaceAnnotation {
     /// any arguments that we should prefill for a command or type
+    /// Only used in query usage analytics
     Command(
         BTreeMap<
             ArgumentName,
@@ -339,7 +324,9 @@ pub enum NamespaceAnnotation {
     ),
     /// any filter and arguments for selecting from a model
     Model {
+        // only used in query usage analytics
         filter: metadata_resolve::FilterPermission,
+        // only used in query usage analytics
         argument_presets: BTreeMap<
             ArgumentName,
             (
@@ -356,22 +343,14 @@ pub enum NamespaceAnnotation {
     /// AST is used to analyze query usage, and additional context is not available.
     /// Therefore, the field presets are annotated to track their usage.
     InputFieldPresets {
-        presets_fields: BTreeMap<types::FieldName, FieldPresetInfo>,
+        // only used in query usage analytics
+        presets_fields: BTreeMap<types::FieldName, Option<Deprecated>>,
         type_name: Qualified<types::CustomTypeName>,
     },
-    /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
-    /// While executing the `node` field, the `id` field is supposed to be decoded and after
-    /// decoding, a typename will be obtained. We need to use that typename to look up the
-    /// Hashmap to get the appropriate `metadata_resolve::model::FilterPermission`.
-    NodeFieldTypeMappings(
-        HashMapWithJsonKey<Qualified<types::CustomTypeName>, metadata_resolve::FilterPermission>,
-    ),
-    /// `EntityTypeMappings` is similar to the `NodeFieldTypeMappings`. While executing the `_entities` field, the
-    /// `representations` argument is used, which contains typename. We need to use that typename to look up the hashmap
-    /// to get the appropriate `metadata_resolve::model::FilterPermission`.
-    EntityTypeMappings(
-        HashMapWithJsonKey<Qualified<types::CustomTypeName>, metadata_resolve::FilterPermission>,
-    ),
+    /// The `NodeFieldTypeMappings` contains a BTreeSet of typenames we're allowed to access
+    NodeFieldTypeMappings(BTreeSet<Qualified<types::CustomTypeName>>),
+    /// `EntityTypeMappings` is similar to the `NodeFieldTypeMappings`.
+    EntityTypeMappings(BTreeSet<Qualified<types::CustomTypeName>>),
 }
 
 #[derive(Serialize, Clone, Debug, Hash, PartialEq, Eq)]
@@ -404,7 +383,6 @@ pub enum TypeId {
     InputScalarBooleanExpressionType {
         graphql_type_name: ast::TypeName,
         operators: Vec<(ast::Name, QualifiedTypeReference)>,
-        operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
         is_null_operator_name: Option<ast::Name>,
         logical_operators: LogicalOperators,
     },

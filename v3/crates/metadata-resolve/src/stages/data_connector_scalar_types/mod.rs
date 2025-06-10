@@ -141,7 +141,7 @@ fn resolve_data_connector_scalar_type(
     // to not conflict with other graphql type names
     if let Some(new_graphql_type) = &scalar_type_by_ndc_type.comparison_expression_name {
         let _ = graphql_types.store(Some(new_graphql_type));
-    };
+    }
     Ok(())
 }
 

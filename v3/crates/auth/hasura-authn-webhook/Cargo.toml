@@ -8,6 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
+all-or-list = { path = "../../utils/all-or-list"}
 engine-types = { path = "../../engine-types" }
 hasura-authn-core = { path = "../hasura-authn-core" }
 open-dds = { path = "../../open-dds" }

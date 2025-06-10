@@ -13,11 +13,11 @@ use super::{
     filter,
     selection_set::{self, generate_selection_set_open_dd_ir},
 };
-use crate::order_by;
 use crate::{
     error,
     query_root::select_aggregate::{AggregateQuery, aggregate_query},
 };
+use crate::{flags::GraphqlIrFlags, order_by};
 use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, GDS, InputAnnotation,
     ModelAggregateRelationshipAnnotation, ModelInputAnnotation, ModelRelationshipAnnotation,
@@ -66,6 +66,7 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
     relationship_annotation: &'s ModelRelationshipAnnotation,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::RelationshipSelection, error::Error> {
     // Add the target model being used in the usage counts
@@ -86,14 +87,20 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                             // Limit is optional
                             limit = argument
                                 .value
-                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .as_nullable(
+                                    &flags.validate_non_null_graphql_variables,
+                                    normalized_ast::Value::as_int_u32,
+                                )
                                 .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
                         ModelInputAnnotation::ModelOffsetArgument => {
                             // Offset is optional
                             offset = argument
                                 .value
-                                .as_nullable(normalized_ast::Value::as_int_u32)
+                                .as_nullable(
+                                    &flags.validate_non_null_graphql_variables,
+                                    normalized_ast::Value::as_int_u32,
+                                )
                                 .map_err(error::Error::map_unexpected_value_to_external_error)?;
                         }
                         ModelInputAnnotation::ModelOrderByExpression => {
@@ -117,13 +124,16 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                                     }
                                 })?;
                             // order by is optional
-                            if let Some(open_dd_order_by) = argument.value.as_nullable(|v| {
-                                order_by::build_order_by_open_dd_ir(
-                                    v,
-                                    usage_counts,
-                                    &target_model_source.data_connector,
-                                )
-                            })? {
+                            if let Some(open_dd_order_by) = argument.value.as_nullable(
+                                &flags.validate_non_null_graphql_variables,
+                                |v| {
+                                    order_by::build_order_by_open_dd_ir(
+                                        v,
+                                        usage_counts,
+                                        &target_model_source.data_connector,
+                                    )
+                                },
+                            )? {
                                 order_by.extend(open_dd_order_by);
                             }
                         }
@@ -137,13 +147,11 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
                 InputAnnotation::BooleanExpression(
                     BooleanExpressionAnnotation::BooleanExpressionRootField,
                 ) => {
-                    if let Some(_target_capabilities) = &relationship_annotation.target_capabilities
-                    {
-                        // where argument is optional
-                        where_input = argument
-                            .value
-                            .as_nullable(normalized_ast::Value::as_object)?;
-                    }
+                    // where argument is optional
+                    where_input = argument.value.as_nullable(
+                        &flags.validate_non_null_graphql_variables,
+                        normalized_ast::Value::as_object,
+                    )?;
                 }
 
                 _ => {
@@ -177,6 +185,7 @@ pub fn generate_model_relationship_open_dd_ir<'s>(
         object_types,
         session_variables,
         request_headers,
+        flags,
         usage_counts,
     )?;
 
@@ -218,6 +227,7 @@ pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
         Qualified<open_dds::models::ModelName>,
         metadata_resolve::ModelWithPermissions,
     >,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::RelationshipAggregateSelection, error::Error> {
     // Add the target model being used in the usage counts
@@ -256,6 +266,7 @@ pub fn generate_model_aggregate_relationship_open_dd_ir<'s>(
         field_call,
         &relationship_annotation.target_model_name,
         model_source,
+        flags,
         usage_counts,
     )?;
 
@@ -285,6 +296,7 @@ pub fn generate_command_relationship_open_dd_ir<'s>(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<open_dds::query::RelationshipSelection, error::Error> {
     count_command(&relationship_annotation.command_name, usage_counts);
@@ -297,6 +309,7 @@ pub fn generate_command_relationship_open_dd_ir<'s>(
         object_types,
         session_variables,
         request_headers,
+        flags,
         usage_counts,
     )?;
 

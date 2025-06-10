@@ -188,7 +188,6 @@ pub fn build_order_by_element_open_dd_ir<'s>(
                         relationship_name,
                         relationship_type: _,
                         source_type,
-                        object_type_name: _,
                         target_source,
                         target_type: _,
                         target_model_name,

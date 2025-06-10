@@ -95,7 +95,6 @@ pub(crate) fn generate_select_one_arguments(
             Annotation::Input(types::InputAnnotation::Model(
                 ModelInputAnnotation::ModelUniqueIdentifierArgument {
                     field_name: field_name.clone(),
-                    ndc_column: field.ndc_column.clone(),
                 },
             )),
             get_input_type(gds, builder, &field.field_type)?,

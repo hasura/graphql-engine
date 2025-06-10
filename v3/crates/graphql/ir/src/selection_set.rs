@@ -15,6 +15,7 @@ use super::model_selection::ModelSelection;
 use super::relationship::{self, RemoteCommandRelationshipInfo, RemoteModelRelationshipInfo};
 use crate::aggregates::mk_alias_from_graphql_field_path;
 use crate::error;
+use crate::flags::GraphqlIrFlags;
 use crate::global_id;
 use graphql_schema::{
     AggregateOutputAnnotation, AggregationFunctionAnnotation, InputAnnotation, TypeKind,
@@ -150,6 +151,7 @@ pub fn generate_nested_selection_open_dd_ir(
     field: &normalized_ast::Field<'_, GDS>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<
     Option<IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>>,
@@ -179,6 +181,7 @@ pub fn generate_nested_selection_open_dd_ir(
                 field,
                 session_variables,
                 request_headers,
+                flags,
                 usage_counts,
             )?;
             Ok(array_selection)
@@ -198,6 +201,7 @@ pub fn generate_nested_selection_open_dd_ir(
                                 object_types,
                                 session_variables,
                                 request_headers,
+                                flags,
                                 usage_counts,
                             )?;
                             Ok(Some(nested_selection))
@@ -224,6 +228,7 @@ pub fn generate_selection_set_open_dd_ir(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session_variables: &SessionVariables,
     request_headers: &reqwest::header::HeaderMap,
+    flags: &GraphqlIrFlags,
     usage_counts: &mut UsagesCounts,
 ) -> Result<IndexMap<open_dds::query::Alias, open_dds::query::ObjectSubSelection>, error::Error> {
     let mut fields = IndexMap::new();
@@ -251,6 +256,7 @@ pub fn generate_selection_set_open_dd_ir(
                             field,
                             session_variables,
                             request_headers,
+                            flags,
                             usage_counts,
                         )?;
                         let mut field_arguments = IndexMap::new();
@@ -277,6 +283,7 @@ pub fn generate_selection_set_open_dd_ir(
                                         argument_type,
                                         &val.value,
                                         type_mappings,
+                                        flags,
                                     )?;
                                     field_arguments.insert(
                                         argument_name.clone(),
@@ -343,6 +350,7 @@ pub fn generate_selection_set_open_dd_ir(
                                     relationship_annotation,
                                     session_variables,
                                     request_headers,
+                                    flags,
                                     usage_counts,
                                 )?,
                             ),
@@ -356,6 +364,7 @@ pub fn generate_selection_set_open_dd_ir(
                                     field,
                                     relationship_annotation,
                                     models,
+                                    flags,
                                     usage_counts,
                                 )?,
                             ),
@@ -373,6 +382,7 @@ pub fn generate_selection_set_open_dd_ir(
                                     object_types,
                                     session_variables,
                                     request_headers,
+                                    flags,
                                     usage_counts,
                                 )?,
                             ),

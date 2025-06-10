@@ -6,6 +6,7 @@ use ndc_models;
 use crate::{query::Result, state::AppState};
 
 pub mod add_movie_with_genres;
+pub mod flip_yes_no;
 pub mod login;
 pub mod noop_procedure;
 pub mod update_actor_name_by_id;
@@ -16,6 +17,7 @@ pub mod upsert_actor;
 
 pub(crate) fn get_procedures() -> Vec<ndc_models::ProcedureInfo> {
     vec![
+        flip_yes_no::procedure_info(),
         upsert_actor::procedure_info(),
         update_actor_name_by_id::procedure_info(),
         uppercase_actor_name_by_id::procedure_info(),
@@ -53,6 +55,7 @@ pub(crate) fn execute_procedure(
         "add_movie_with_genres" => {
             add_movie_with_genres::execute(arguments, fields, collection_relationships, state)
         }
+        "flip_yes_no_procedure" => flip_yes_no::execute(arguments),
         _ => Err((
             StatusCode::BAD_REQUEST,
             Json(ndc_models::ErrorResponse {

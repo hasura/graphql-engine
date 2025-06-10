@@ -20,6 +20,7 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
                 unique_columns: vec!["id".into()],
             },
         )]),
+        relational_mutations: None,
     }
 }
 

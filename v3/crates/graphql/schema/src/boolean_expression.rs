@@ -1,7 +1,6 @@
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema};
-use open_dds::data_connector::DataConnectorName;
 use open_dds::types::Deprecated;
 use open_dds::{
     relationships::RelationshipType,
@@ -17,10 +16,10 @@ use super::types::{ObjectFieldKind, TypeId};
 use metadata_resolve::{
     BooleanExpressionComparableRelationship, ComparisonExpressionInfo, GlobalGraphqlConfig,
     IncludeLogicalOperators, ModelWithPermissions, ObjectBooleanExpressionGraphqlConfig,
-    ObjectComparisonExpressionInfo, ObjectComparisonKind, ObjectTypeWithRelationships,
-    OperatorMapping, Qualified, QualifiedTypeReference, RelationshipCapabilities,
-    RelationshipField, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
-    ScalarBooleanExpressionGraphqlConfig, ScalarComparisonKind, mk_name,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, ObjectTypeWithRelationships, Qualified,
+    QualifiedTypeReference, RelationshipCapabilities, RelationshipField, RelationshipModelMapping,
+    ResolvedObjectBooleanExpressionType, ScalarBooleanExpressionGraphqlConfig,
+    ScalarComparisonKind, mk_name,
 };
 
 use crate::GDS;
@@ -545,7 +544,6 @@ fn get_scalar_boolean_expression_type(
         builder.register_type(TypeId::InputScalarBooleanExpressionType {
             graphql_type_name,
             operators,
-            operator_mapping: comparison_expression.operator_mapping.clone(),
             is_null_operator_name: scalar_boolean_expression_graphql
                 .is_null_operator_name
                 .clone(),
@@ -569,7 +567,6 @@ pub fn build_scalar_boolean_expression_input(
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &ast::TypeName,
     operators: &Vec<(ast::Name, QualifiedTypeReference)>,
-    operator_mapping: &BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
     maybe_is_null_operator_name: Option<&ast::Name>,
     logical_operator: &metadata_resolve::LogicalOperators,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
@@ -635,18 +632,6 @@ pub fn build_scalar_boolean_expression_input(
         // OperatorName should be the same
         let operator_name = open_dds::types::OperatorName::new(op_name.as_str().into());
 
-        // for each set of mappings, only return the mapping we actually need
-        // default to existing mapping where one is missing
-        let this_operator_mapping = operator_mapping
-            .iter()
-            .map(|(data_connector_name, mappings)| {
-                (
-                    data_connector_name.clone(),
-                    mappings.get(&operator_name).clone(),
-                )
-            })
-            .collect();
-
         input_fields.insert(
             op_name.clone(),
             builder.allow_all_namespaced(gql_schema::InputField::new(
@@ -654,10 +639,7 @@ pub fn build_scalar_boolean_expression_input(
                 None,
                 types::Annotation::Input(types::InputAnnotation::BooleanExpression(
                     types::BooleanExpressionAnnotation::ScalarBooleanExpressionField(
-                        types::ScalarBooleanExpressionField::ComparisonOperation {
-                            operator_mapping: this_operator_mapping,
-                            operator_name,
-                        },
+                        types::ScalarBooleanExpressionField::ComparisonOperation { operator_name },
                     ),
                 )),
                 nullable_input_type,

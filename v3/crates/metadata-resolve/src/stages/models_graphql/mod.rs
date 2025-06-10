@@ -4,21 +4,23 @@ mod graphql;
 mod order_by;
 mod types;
 
-use crate::Warning;
+use crate::{ArgumentInfo, Warning};
 pub use error::ModelGraphqlError;
 use indexmap::IndexMap;
+use open_dds::query::ArgumentName;
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 
 use crate::helpers::types::TrackGraphQLRootFields;
 use crate::stages::{
-    boolean_expressions, commands, graphql_config, models, object_relationships, scalar_types,
+    arguments, boolean_expressions, commands, graphql_config, models, object_relationships,
+    scalar_types,
 };
 use crate::types::subgraph::Qualified;
 
 pub(crate) use types::ModelWithGraphql;
 pub use types::{
-    ModelGraphQlApi, ModelGraphqlIssue, ModelOrderByExpression, ModelsWithGraphqlOutput,
+    Model, ModelGraphQlApi, ModelGraphqlIssue, ModelOrderByExpression, ModelsWithGraphqlOutput,
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
     SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
@@ -33,6 +35,7 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
     >,
+    arguments: &BTreeMap<arguments::ArgumentSource, IndexMap<ArgumentName, ArgumentInfo>>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     track_root_fields: &mut TrackGraphQLRootFields,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -51,6 +54,7 @@ pub fn resolve(
             model,
             metadata_accessor,
             object_types,
+            arguments,
             boolean_expression_types,
             models,
             commands,
@@ -78,6 +82,7 @@ fn resolve_model_with_graphql(
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
     >,
+    arguments: &BTreeMap<arguments::ArgumentSource, IndexMap<ArgumentName, ArgumentInfo>>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
@@ -149,10 +154,32 @@ fn resolve_model_with_graphql(
         None => types::ModelGraphQlApi::default(),
     };
 
+    // use the resolved arguments
+    let arguments = arguments
+        .get(&arguments::ArgumentSource::Model(model.name.clone()))
+        .cloned()
+        .unwrap_or_default();
+
+    let description = model.raw.description;
+
+    let model = types::Model {
+        path: model.path,
+        name: model.name,
+        data_type: model.data_type,
+        type_fields: model.type_fields,
+        aggregate_expression: model.aggregate_expression,
+        source: model.source,
+        apollo_federation_key_source: model.apollo_federation_key_source,
+        global_id_source: model.global_id_source,
+        global_id_fields: model.global_id_fields,
+    };
+
     models_with_graphql.insert(
         model_name,
         types::ModelWithGraphql {
             inner: model,
+            arguments,
+            description,
             graphql_api,
             filter_expression_type,
         },

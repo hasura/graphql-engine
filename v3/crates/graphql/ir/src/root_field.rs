@@ -2,7 +2,6 @@
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use open_dds::permissions::Role;
-use serde::Serialize;
 
 use super::{
     commands,
@@ -11,7 +10,7 @@ use super::{
 use graphql_schema::GDS;
 
 /// IR of a query root field
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub enum QueryRootField<'n, 's> {
     // __typename field on query root
     TypeName {
@@ -56,7 +55,7 @@ pub enum QueryRootField<'n, 's> {
     ApolloFederation(ApolloFederationRootFields<'n, 's>),
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub enum ApolloFederationRootFields<'n, 's> {
     // Operation that selects entities according to the Apollo Federation spec
     EntitiesSelect(Vec<apollo_federation::EntitySelect<'n, 's>>),
@@ -69,7 +68,7 @@ pub enum ApolloFederationRootFields<'n, 's> {
 }
 
 /// IR of a mutation root field
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub enum MutationRootField<'n, 's> {
     // __typename field on mutation root
     TypeName {
@@ -82,7 +81,7 @@ pub enum MutationRootField<'n, 's> {
 }
 
 /// IR of a subscription root field
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub enum SubscriptionRootField<'n, 's> {
     // Operation that selects a single row from a model
     ModelSelectOne {

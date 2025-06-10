@@ -4,6 +4,7 @@ use serde_json as json;
 use crate::ast::common as ast;
 use crate::normalized_ast as normalized;
 use crate::schema;
+use crate::validation::NonNullGraphqlVariablesValidation;
 use crate::validation::error::*;
 
 use super::source::*;
@@ -28,6 +29,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<json::Value> {
         Ok(self.clone())
     }
@@ -38,6 +40,8 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
+
         f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
@@ -59,6 +63,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         self.as_i64()
             .ok_or_else(|| Error::IncorrectFormat {
@@ -74,6 +79,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         self.as_f64()
             .ok_or_else(|| Error::IncorrectFormat {
@@ -89,6 +95,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         self.as_bool()
             .ok_or_else(|| Error::IncorrectFormat {
@@ -104,6 +111,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         self.as_str()
             .ok_or_else(|| Error::IncorrectFormat {
@@ -119,6 +127,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
     ) -> Result<normalized::Value<'s, S>> {
         self.as_str()
             .ok_or_else(|| Error::IncorrectFormat {
@@ -134,6 +143,8 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
+
         mut f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
@@ -162,6 +173,7 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         _namespaced_getter: &NSGet,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
+        _validate_non_null_graphql_variables: &NonNullGraphqlVariablesValidation,
         f: F,
     ) -> Result<normalized::Value<'s, S>>
     where

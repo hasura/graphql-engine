@@ -11,6 +11,7 @@ use graphql_schema::GDS;
 
 use super::{commands, root_field};
 use crate::error;
+use crate::flags::GraphqlIrFlags;
 use graphql_schema::{OutputAnnotation, RootFieldAnnotation};
 
 /// Generates IR for the selection set of type 'mutation root'
@@ -79,6 +80,7 @@ pub fn generate_ir<'n, 's>(
                                     source,
                                     &session.variables,
                                     request_headers,
+                                    &GraphqlIrFlags::from_runtime_flags(&metadata.runtime_flags),
                                 )?,
                             })
                         }

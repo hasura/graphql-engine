@@ -8,6 +8,8 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use open_dds::models;
 
+use crate::flags::GraphqlIrFlags;
+
 use super::error;
 use super::query_root::{select_aggregate, select_many, select_one};
 use super::root_field;
@@ -54,6 +56,7 @@ pub fn generate_ir<'n, 's>(
                                 request_headers,
                                 model_name,
                                 polling_interval_ms,
+                                &GraphqlIrFlags::from_runtime_flags(&metadata.runtime_flags),
                             )?;
                             Ok((alias.clone(), ir))
                         }
@@ -94,6 +97,7 @@ fn generate_model_rootfield_ir<'n, 's>(
     request_headers: &reqwest::header::HeaderMap,
     model_name: &'s metadata_resolve::Qualified<models::ModelName>,
     polling_interval_ms: &u64,
+    flags: &GraphqlIrFlags,
 ) -> Result<root_field::SubscriptionRootField<'n, 's>, error::Error> {
     let source = model.model.source.as_deref().ok_or_else(|| {
         error::InternalDeveloperError::NoSourceDataConnector {
@@ -125,6 +129,7 @@ fn generate_model_rootfield_ir<'n, 's>(
                 session,
                 request_headers,
                 model_name,
+                flags,
             )?,
             polling_interval_ms: *polling_interval_ms,
         },
@@ -139,13 +144,14 @@ fn generate_model_rootfield_ir<'n, 's>(
                 session,
                 request_headers,
                 model_name,
+                flags,
             )?,
             polling_interval_ms: *polling_interval_ms,
         },
         RootFieldKind::SelectAggregate => root_field::SubscriptionRootField::ModelSelectAggregate {
             selection_set: &field.selection_set,
             ir: select_aggregate::select_aggregate_generate_ir(
-                field, field_call, source, model_name,
+                field, field_call, source, model_name, flags,
             )?,
             polling_interval_ms: *polling_interval_ms,
         },

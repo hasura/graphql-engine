@@ -296,7 +296,6 @@ fn to_filter_expression_internal<'metadata>(
                                             .clone(),
                                     }
                                 })?,
-                                &model_target.target_typename,
                                 &model_target.mappings,
                                 predicate,
                             )?);
@@ -762,7 +761,7 @@ fn to_scalar_comparison_field<'metadata>(
                     &data_connector.name,
                     data_connector_operator_name,
                 )?;
-            };
+            }
 
             let eq_expr =
                 Expression::LocalField(plan_types::LocalFieldComparison::BinaryComparison {

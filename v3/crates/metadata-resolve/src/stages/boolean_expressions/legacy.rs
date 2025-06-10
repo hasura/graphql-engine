@@ -329,7 +329,7 @@ fn resolve_comparable_fields(
                 type_name: boolean_expression_type_name.clone(),
                 name: comparable_field.field_name.clone(),
             });
-        };
+        }
     }
 
     // doing this validation when there is no graphql configuration is a breaking change, so we
@@ -369,7 +369,7 @@ fn resolve_comparable_fields(
                                 .clone(),
                         },
                     );
-                };
+                }
             }
         }
     }

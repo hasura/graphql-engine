@@ -318,6 +318,7 @@ data RestRoutineType
   | SCALAR_FUNCTION
   | PROCEDURE
   | TABLE_VALUED_FUNCTION
+  | AGGREGATE_FUNCTION
   deriving (Show, Eq, Generic)
 
 instance FromJSON RestRoutineType

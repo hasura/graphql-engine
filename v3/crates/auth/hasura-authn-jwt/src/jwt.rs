@@ -580,15 +580,15 @@ pub(crate) async fn decode_and_parse_hasura_claims(
     // Additional validations according to the `jwt_config`.
     if let Some(aud) = &jwt_config.audience {
         validation.set_audience(&aud.iter().collect::<Vec<_>>());
-    };
+    }
 
     if let Some(issuer) = &jwt_config.issuer {
         validation.set_issuer(&[issuer]);
-    };
+    }
 
     if let Some(leeway) = jwt_config.allowed_skew {
         validation.leeway = leeway;
-    };
+    }
 
     let claims: serde_json::Value = decode(&jwt, &decoding_key, &validation)
         .map_err(InternalError::JWTDecodingError)?

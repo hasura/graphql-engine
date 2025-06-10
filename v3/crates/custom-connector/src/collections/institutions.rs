@@ -20,6 +20,7 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
                 unique_columns: vec!["id".into()],
             },
         )]),
+        relational_mutations: None,
     }
 }
 
@@ -84,7 +85,7 @@ fn check_institution_query<'a>(
                 return true;
             }
         }
-    };
+    }
 
     // check location
     if let Some(query_location) = &institution_query.location {
@@ -118,7 +119,7 @@ fn check_institution_query<'a>(
                 }
             }
         }
-    };
+    }
 
     // TODO: implement filters for the other fields
 

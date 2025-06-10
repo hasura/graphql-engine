@@ -570,6 +570,10 @@ pub struct DataConnectorRelationalQueryCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_window: Option<DataConnectorRelationalWindowCapabilities>,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_union: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -749,6 +753,10 @@ pub struct DataConnectorRelationalScalarExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_concat: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_binary_concat: bool,
 
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
@@ -993,6 +1001,10 @@ pub struct DatePartScalarExpressionCapability {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_nanosecond: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_epoch: bool,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -1232,6 +1244,7 @@ fn mk_ndc_02_capabilities(
                         ),
                     }
                 }),
+                supports_union: r.union.is_some(),
             }
         }),
     }
@@ -1265,6 +1278,7 @@ fn mk_relational_expression_capabilities(
             supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
                 supports_abs: capabilities.scalar.abs.is_some(),
                 supports_array_element: capabilities.scalar.array_element.is_some(),
+                supports_binary_concat: capabilities.scalar.binary_concat.is_some(),
                 supports_btrim: capabilities.scalar.btrim.is_some(),
                 supports_ceil: capabilities.scalar.ceil.is_some(),
                 supports_character_length: capabilities.scalar.character_length.is_some(),
@@ -1288,6 +1302,7 @@ fn mk_relational_expression_capabilities(
                         supports_microsecond: c.microsecond.is_some(),
                         supports_millisecond: c.millisecond.is_some(),
                         supports_nanosecond: c.nanosecond.is_some(),
+                        supports_epoch: c.epoch.is_some(),
                     }
                 }),
                 supports_date_trunc: capabilities.scalar.date_trunc.is_some(),

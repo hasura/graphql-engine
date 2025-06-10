@@ -1,0 +1,115 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/glossary/metadata.json
+---
+(
+    Metadata {
+        object_types: {},
+        scalar_types: {},
+        models: {},
+        commands: {},
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {},
+            scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
+        },
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+            scalars: {},
+        },
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "order_by",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
+        },
+        glossaries: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: GlossaryName(
+                    Identifier(
+                        "Surfing",
+                    ),
+                ),
+            }: Glossary {
+                name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: GlossaryName(
+                        Identifier(
+                            "Surfing",
+                        ),
+                    ),
+                },
+                terms: {
+                    GlossaryTermName(
+                        "Bailing",
+                    ): GlossaryTermDescription(
+                        "Letting go of your surfboard",
+                    ),
+                    GlossaryTermName(
+                        "Deck",
+                    ): GlossaryTermDescription(
+                        "The top of the surfboard",
+                    ),
+                    GlossaryTermName(
+                        "Knot",
+                    ): GlossaryTermDescription(
+                        "A unit of speed equal to one nautical mile per hour",
+                    ),
+                },
+                roles_with_access: {
+                    Role(
+                        "surfer",
+                    ),
+                },
+            },
+        },
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+        },
+        roles: {
+            Role(
+                "surfer",
+            ),
+        },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
+    },
+    [],
+)

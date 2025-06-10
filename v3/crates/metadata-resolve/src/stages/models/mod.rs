@@ -245,7 +245,7 @@ fn resolve_model(
         global_id_source = Some(NDCFieldSourceMapping {
             ndc_mapping: BTreeMap::new(),
         });
-    };
+    }
     let mut apollo_federation_key_source = None;
     let graphql = model.graphql();
     if graphql

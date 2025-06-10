@@ -194,7 +194,6 @@ impl gql_schema::SchemaContext for GDS {
             types::TypeId::InputScalarBooleanExpressionType {
                 graphql_type_name,
                 operators,
-                operator_mapping,
                 is_null_operator_name,
                 logical_operators,
             } => boolean_expression::build_scalar_boolean_expression_input(
@@ -202,7 +201,6 @@ impl gql_schema::SchemaContext for GDS {
                 builder,
                 graphql_type_name,
                 operators,
-                operator_mapping,
                 is_null_operator_name.as_ref(),
                 logical_operators,
             ),

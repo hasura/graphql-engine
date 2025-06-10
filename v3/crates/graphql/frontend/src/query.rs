@@ -12,6 +12,7 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use std::sync::Arc;
+use tracing_util::set_status_on_current_span;
 use tracing_util::{AttributeVisibility, SpanVisibility, set_attribute_on_active_span};
 
 pub async fn execute_query(
@@ -149,6 +150,11 @@ pub async fn execute_query_internal(
                         })
                         .await;
 
+                    // Set the response status in this (parent) span. Otherwise folks might not
+                    // find the error-ing traces they are looking for. Do we want to insist all
+                    // parent spans of error-ing spans are also error? Then handle in the tracing
+                    // code.
+                    set_status_on_current_span(&response);
                     Ok((normalized_request.ty, response))
                 })
             },

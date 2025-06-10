@@ -96,7 +96,9 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
                 window: Some(ndc_models::RelationalWindowCapabilities {
                     expression: expression_capabilities(),
                 }),
+                union: Some(ndc_models::LeafCapability {}),
             }),
+            relational_mutation: None,
         },
     }
 }
@@ -126,6 +128,7 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
         scalar: ndc_models::RelationalScalarExpressionCapabilities {
             abs: Some(ndc_models::LeafCapability {}),
             array_element: Some(ndc_models::LeafCapability {}),
+            binary_concat: Some(ndc_models::LeafCapability {}),
             btrim: Some(ndc_models::LeafCapability {}),
             ceil: Some(ndc_models::LeafCapability {}),
             character_length: Some(ndc_models::LeafCapability {}),
@@ -149,6 +152,7 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
                 microsecond: Some(ndc_models::LeafCapability {}),
                 millisecond: Some(ndc_models::LeafCapability {}),
                 nanosecond: Some(ndc_models::LeafCapability {}),
+                epoch: Some(ndc_models::LeafCapability {}),
             }),
             date_trunc: Some(ndc_models::LeafCapability {}),
             exp: Some(ndc_models::LeafCapability {}),

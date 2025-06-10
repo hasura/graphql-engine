@@ -386,28 +386,6 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                             ),
                         ),
                     },
-                    data_type_path: JSONPath(
-                        [
-                            Key(
-                                "subgraphs",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "objects",
-                            ),
-                            Index(
-                                0,
-                            ),
-                            Key(
-                                "definition",
-                            ),
-                            Key(
-                                "objectType",
-                            ),
-                        ],
-                    ),
                     type_fields: {
                         FieldName(
                             Identifier(
@@ -462,61 +440,6 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                         },
                     },
                     global_id_fields: [],
-                    arguments: {
-                        ArgumentName(
-                            Identifier(
-                                "special_where",
-                            ),
-                        ): ArgumentInfo {
-                            argument_type: QualifiedTypeReference {
-                                underlying_type: Named(
-                                    Custom(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "subgraphs",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Album_bool_exp",
-                                                ),
-                                            ),
-                                        },
-                                    ),
-                                ),
-                                nullable: false,
-                            },
-                            description: None,
-                            argument_kind: NDCExpression,
-                            path: JSONPath(
-                                [
-                                    Key(
-                                        "subgraphs",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "objects",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "definition",
-                                    ),
-                                    Key(
-                                        "arguments",
-                                    ),
-                                    Index(
-                                        0,
-                                    ),
-                                    Key(
-                                        "name",
-                                    ),
-                                ],
-                            ),
-                        },
-                    },
                     source: Some(
                         ModelSource {
                             data_connector: DataConnectorLink {
@@ -855,74 +778,33 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                     global_id_source: None,
                     apollo_federation_key_source: None,
                     aggregate_expression: None,
-                    raw: ModelRaw {
-                        filter_expression_type: Some(
-                            Qualified {
-                                subgraph: SubgraphName(
-                                    "subgraphs",
-                                ),
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "Album_bool_exp",
-                                    ),
-                                ),
-                            },
+                },
+                arguments: {
+                    ArgumentName(
+                        Identifier(
+                            "special_where",
                         ),
-                        graphql: Some(
-                            ModelGraphQlDefinitionV2 {
-                                select_uniques: [],
-                                select_many: Some(
-                                    SelectManyGraphQlDefinition {
-                                        query_root_field: GraphQlFieldName(
-                                            "Albums",
+                    ): ArgumentInfo {
+                        argument_type: QualifiedTypeReference {
+                            underlying_type: Named(
+                                Custom(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "subgraphs",
                                         ),
-                                        description: None,
-                                        deprecated: None,
-                                        subscription: None,
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "Album_bool_exp",
+                                            ),
+                                        ),
                                     },
                                 ),
-                                arguments_input_type: None,
-                                apollo_federation: None,
-                                filter_input_type_name: None,
-                                aggregate: None,
-                            },
-                        ),
-                        description: None,
-                        order_by: ModelV1 {
-                            graphql_type_name: None,
-                            orderable_fields: [
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "AlbumId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "ArtistId",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                                OrderableField {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "Title",
-                                        ),
-                                    ),
-                                    order_by_directions: EnableAll(
-                                        true,
-                                    ),
-                                },
-                            ],
+                            ),
+                            nullable: false,
                         },
+                        description: None,
+                        argument_kind: NDCExpression,
+                        type_representation: None,
                     },
                 },
                 select_permissions: {
@@ -1300,6 +1182,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                     ),
                     filter_input_type_name: None,
                 },
+                description: None,
             },
         },
         commands: {},
@@ -1879,6 +1762,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
             propagate_boolean_expression_deprecation_status: true,
             multiple_order_by_input_object_fields: Allow,
         },
+        glossaries: {},
         plugin_configs: LifecyclePluginConfigs {
             pre_parse_plugins: [],
             pre_response_plugins: [],

@@ -1,5 +1,6 @@
 use std::{fmt::Display, str::FromStr};
 
+use all_or_list::AllOrList;
 use axum::http::HeaderMap;
 use hasura_authn_core::{Identity, Role};
 use hasura_authn_jwt::{auth as jwt_auth, jwt};
@@ -281,7 +282,7 @@ fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error>
                             .and_then(|c| c.headers.as_ref())
                         {
                             warnings.extend(validate_header_config(headers_config));
-                        };
+                        }
                     }
                     webhook::AuthHookConfigV3::POST(config) => {
                         if let Some(headers_config) = config
@@ -290,7 +291,7 @@ fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error>
                             .and_then(|c| c.headers.as_ref())
                         {
                             warnings.extend(validate_header_config(headers_config));
-                        };
+                        }
                         if let Some(body_header_config) = config
                             .custom_headers_config
                             .as_ref()
@@ -298,7 +299,7 @@ fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error>
                             .and_then(|c| c.headers.as_ref())
                         {
                             warnings.extend(validate_header_config(body_header_config));
-                        };
+                        }
                     }
                 }
             }
@@ -329,7 +330,7 @@ fn auth_config_warnings_as_error_by_compatibility(
 // Validate the header config
 fn validate_header_config(header_config: &webhook::AuthHookConfigV3Headers) -> Vec<Warning> {
     let mut warnings = vec![];
-    if let webhook::AllOrList::List(list) = &header_config.forward {
+    if let AllOrList::List(list) = &header_config.forward {
         for header_name in list {
             if let Err(_e) = axum::http::header::HeaderName::from_str(header_name.as_str()) {
                 warnings.push(Warning::InvalidHeaderName(header_name.to_string()));

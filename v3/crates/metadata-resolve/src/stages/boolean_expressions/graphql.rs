@@ -90,7 +90,7 @@ pub(crate) fn resolve_object_boolean_graphql(
                                     },
                                 },
                             );
-                        };
+                        }
                     }
                 }
             }
