@@ -197,6 +197,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(

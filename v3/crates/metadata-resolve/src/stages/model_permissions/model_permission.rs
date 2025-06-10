@@ -211,3 +211,30 @@ fn resolve_model_select_permissions(
 
     Ok(resolved_permission)
 }
+
+pub fn resolve_all_model_relational_insert_permissions(
+    model_name: &Qualified<ModelName>,
+    model_permissions: &ModelPermissionsV2,
+    issues: &mut Vec<ModelPermissionIssue>,
+) -> BTreeSet<Role> {
+    let mut validated_permissions = BTreeSet::new();
+    let mut resolved_roles = BTreeSet::new();
+
+    match &model_permissions.permissions {
+        ModelPermissionOperand::RoleBased(role_based_model_permissions) => {
+            for model_permission in role_based_model_permissions {
+                if !resolved_roles.insert(model_permission.role.value.clone()) {
+                    issues.push(ModelPermissionIssue::DuplicateRole {
+                        role: model_permission.role.clone(),
+                        model_name: model_name.clone(),
+                    });
+                }
+
+                if model_permission.relational_insert.is_some() {
+                    validated_permissions.insert(model_permission.role.value.clone());
+                }
+            }
+            validated_permissions
+        }
+    }
+}

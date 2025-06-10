@@ -346,6 +346,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(

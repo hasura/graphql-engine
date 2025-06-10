@@ -176,3 +176,102 @@ pub async fn fetch_from_data_connector_mutation(
         )
         .await
 }
+
+pub async fn fetch_from_data_connector_insert_rel(
+    http_context: &HttpContext,
+    insert_request: &ndc_models::RelationalInsertRequest,
+    data_connector: &metadata_resolve::DataConnectorLink,
+    project_id: Option<&ProjectId>,
+) -> Result<ndc_models::RelationalInsertResponse, client::Error> {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "fetch_from_data_connector_insert_rel",
+            format!(
+                "Execute relational insert on data connector {}",
+                data_connector.name
+            ),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let headers =
+                        append_project_id_to_headers(&data_connector.headers.0, project_id)?;
+                    let ndc_config = client::Configuration {
+                        base_path: data_connector.url.get_url(ast::OperationType::Mutation),
+                        // This is isn't expensive, reqwest::Client is behind an Arc
+                        client: http_context.client.clone(),
+                        headers,
+                        response_size_limit: http_context.ndc_response_size_limit,
+                    };
+                    client::mutation_relational_insert_post(ndc_config, insert_request).await
+                })
+            },
+        )
+        .await
+}
+
+pub async fn fetch_from_data_connector_update_rel(
+    http_context: &HttpContext,
+    update_request: &ndc_models::RelationalUpdateRequest,
+    data_connector: &metadata_resolve::DataConnectorLink,
+    project_id: Option<&ProjectId>,
+) -> Result<ndc_models::RelationalUpdateResponse, client::Error> {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "fetch_from_data_connector_update_rel",
+            format!(
+                "Execute relational update on data connector {}",
+                data_connector.name
+            ),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let headers =
+                        append_project_id_to_headers(&data_connector.headers.0, project_id)?;
+                    let ndc_config = client::Configuration {
+                        base_path: data_connector.url.get_url(ast::OperationType::Mutation),
+                        // This is isn't expensive, reqwest::Client is behind an Arc
+                        client: http_context.client.clone(),
+                        headers,
+                        response_size_limit: http_context.ndc_response_size_limit,
+                    };
+                    client::mutation_relational_update_post(ndc_config, update_request).await
+                })
+            },
+        )
+        .await
+}
+
+pub async fn fetch_from_data_connector_delete_rel(
+    http_context: &HttpContext,
+    delete_request: &ndc_models::RelationalDeleteRequest,
+    data_connector: &metadata_resolve::DataConnectorLink,
+    project_id: Option<&ProjectId>,
+) -> Result<ndc_models::RelationalDeleteResponse, client::Error> {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "fetch_from_data_connector_delete_rel",
+            format!(
+                "Execute relational delete on data connector {}",
+                data_connector.name
+            ),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let headers =
+                        append_project_id_to_headers(&data_connector.headers.0, project_id)?;
+                    let ndc_config = client::Configuration {
+                        base_path: data_connector.url.get_url(ast::OperationType::Mutation),
+                        // This is isn't expensive, reqwest::Client is behind an Arc
+                        client: http_context.client.clone(),
+                        headers,
+                        response_size_limit: http_context.ndc_response_size_limit,
+                    };
+                    client::mutation_relational_delete_post(ndc_config, delete_request).await
+                })
+            },
+        )
+        .await
+}

@@ -98,7 +98,11 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
                 }),
                 union: Some(ndc_models::LeafCapability {}),
             }),
-            relational_mutation: None,
+            relational_mutation: Some(ndc_models::RelationalMutationCapabilities {
+                insert: Some(ndc_models::LeafCapability {}),
+                update: Some(ndc_models::LeafCapability {}),
+                delete: Some(ndc_models::LeafCapability {}),
+            }),
         },
     }
 }

@@ -324,6 +324,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_types_not_co
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -519,6 +520,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_types_not_co
                     },
                 },
                 select_permissions: {},
+                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: Some(

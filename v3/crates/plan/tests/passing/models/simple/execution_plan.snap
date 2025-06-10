@@ -121,6 +121,7 @@ Queries(
                             },
                         ),
                         supports_relational_queries: None,
+                        supports_relational_mutations: None,
                     },
                 },
             },

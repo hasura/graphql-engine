@@ -324,6 +324,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -514,6 +515,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                     },
                 },
                 select_permissions: {},
+                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: Some(

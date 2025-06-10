@@ -2803,6 +2803,17 @@
               "type": "null"
             }
           ]
+        },
+        "relationalInsert": {
+          "description": "The permissions for relational insert operations on this model for this role. If this is null, the role is not allowed to perform relational inserts on this model. This is only applicable for data connectors that support relational operations.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RelationalInsertPermission"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -5695,6 +5706,13 @@
           "$ref": "#/definitions/EnvironmentValue"
         }
       },
+      "additionalProperties": false
+    },
+    "RelationalInsertPermission": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationalInsertPermission",
+      "title": "RelationalInsertPermission",
+      "description": "Defines the permissions for relational insert operations on a model for a role. If null, the role is not allowed to perform relational inserts on this model. This is only applicable for data connectors that support relational operations.",
+      "type": "object",
       "additionalProperties": false
     },
     "RelationshipGraphQlDefinition": {

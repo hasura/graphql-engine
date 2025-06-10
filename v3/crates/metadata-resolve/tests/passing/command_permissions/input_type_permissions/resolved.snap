@@ -2503,6 +2503,7 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(

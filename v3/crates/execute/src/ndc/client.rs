@@ -12,6 +12,12 @@ use super::{
     NdcQueryResponse,
 };
 
+// Add the new type imports
+use ndc_models::{
+    RelationalDeleteRequest, RelationalDeleteResponse, RelationalInsertRequest,
+    RelationalInsertResponse, RelationalUpdateRequest, RelationalUpdateResponse,
+};
+
 /// Error type for the NDC API client interactions
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -330,6 +336,114 @@ pub async fn query_relational_post(
             || {
                 Box::pin(async {
                     let url = append_path(configuration.base_path, &["query", "relational"])?;
+                    let response_size_limit = configuration.response_size_limit;
+
+                    let request = construct_request(
+                        configuration,
+                        NdcVersion::V02,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+                    let response =
+                        execute_request(request, response_size_limit, NdcErrorResponse::V02)
+                            .await?;
+                    Ok(response)
+                })
+            },
+        )
+        .await
+}
+
+/// POST on /mutation/rel/insert endpoint
+///
+/// Sends a relational insert request to the connector
+pub async fn mutation_relational_insert_post(
+    configuration: Configuration<'_>,
+    request: &RelationalInsertRequest,
+) -> Result<RelationalInsertResponse, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "mutation_rel_insert_post",
+            "Post relational insert mutation",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let url = append_path(configuration.base_path, &["mutation", "rel", "insert"])?;
+                    let response_size_limit = configuration.response_size_limit;
+
+                    let request = construct_request(
+                        configuration,
+                        NdcVersion::V02,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+                    let response =
+                        execute_request(request, response_size_limit, NdcErrorResponse::V02)
+                            .await?;
+                    Ok(response)
+                })
+            },
+        )
+        .await
+}
+
+/// POST on /mutation/rel/update endpoint
+///
+/// Sends a relational update request to the connector
+pub async fn mutation_relational_update_post(
+    configuration: Configuration<'_>,
+    request: &RelationalUpdateRequest,
+) -> Result<RelationalUpdateResponse, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "mutation_rel_update_post",
+            "Post relational update mutation",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let url = append_path(configuration.base_path, &["mutation", "rel", "update"])?;
+                    let response_size_limit = configuration.response_size_limit;
+
+                    let request = construct_request(
+                        configuration,
+                        NdcVersion::V02,
+                        reqwest::Method::POST,
+                        url,
+                        |r| r.json(request),
+                    );
+                    let response =
+                        execute_request(request, response_size_limit, NdcErrorResponse::V02)
+                            .await?;
+                    Ok(response)
+                })
+            },
+        )
+        .await
+}
+
+/// POST on /mutation/rel/delete endpoint
+///
+/// Sends a relational delete request to the connector
+pub async fn mutation_relational_delete_post(
+    configuration: Configuration<'_>,
+    request: &RelationalDeleteRequest,
+) -> Result<RelationalDeleteResponse, Error> {
+    let tracer = tracing_util::global_tracer();
+
+    tracer
+        .in_span_async(
+            "mutation_rel_delete_post",
+            "Post relational delete mutation",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let url = append_path(configuration.base_path, &["mutation", "rel", "delete"])?;
                     let response_size_limit = configuration.response_size_limit;
 
                     let request = construct_request(
