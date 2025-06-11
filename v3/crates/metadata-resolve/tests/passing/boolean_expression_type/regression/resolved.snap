@@ -4965,6 +4965,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -5316,6 +5317,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 },
                                             ),
                                             supports_relational_queries: None,
+                                            supports_relational_mutations: None,
                                         },
                                     },
                                     source_type_mappings: {
@@ -5606,6 +5608,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         },
                                                     ),
                                                     supports_relational_queries: None,
+                                                    supports_relational_mutations: None,
                                                 },
                                             },
                                             collection: CollectionName(
@@ -6047,6 +6050,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         allow_subscriptions: false,
                     },
                 },
+                relational_insert_permissions: {},
                 filter_expression_type: Some(
                     ResolvedObjectBooleanExpressionType {
                         name: Qualified {
@@ -6760,6 +6764,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -7101,6 +7106,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         allow_subscriptions: false,
                     },
                 },
+                relational_insert_permissions: {},
                 filter_expression_type: Some(
                     ResolvedObjectBooleanExpressionType {
                         name: Qualified {
@@ -7969,6 +7975,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -8310,6 +8317,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         allow_subscriptions: false,
                     },
                 },
+                relational_insert_permissions: {},
                 filter_expression_type: Some(
                     ResolvedObjectBooleanExpressionType {
                         name: Qualified {
@@ -9138,6 +9146,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -9398,6 +9407,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         allow_subscriptions: false,
                     },
                 },
+                relational_insert_permissions: {},
                 filter_expression_type: Some(
                     ResolvedObjectBooleanExpressionType {
                         name: Qualified {
@@ -10014,6 +10024,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -10296,6 +10307,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         allow_subscriptions: false,
                     },
                 },
+                relational_insert_permissions: {},
                 filter_expression_type: Some(
                     ResolvedObjectBooleanExpressionType {
                         name: Qualified {
@@ -10961,6 +10973,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -11381,6 +11394,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                 },
                                             ),
                                             supports_relational_queries: None,
+                                            supports_relational_mutations: None,
                                         },
                                     },
                                     source_type_mappings: {
@@ -11764,6 +11778,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                                         },
                                                     ),
                                                     supports_relational_queries: None,
+                                                    supports_relational_mutations: None,
                                                 },
                                             },
                                             collection: CollectionName(
@@ -12209,6 +12224,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         allow_subscriptions: false,
                     },
                 },
+                relational_insert_permissions: {},
                 filter_expression_type: Some(
                     ResolvedObjectBooleanExpressionType {
                         name: Qualified {
@@ -12791,6 +12807,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(
@@ -13459,6 +13476,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(
@@ -14052,6 +14070,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(
@@ -14698,6 +14717,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(
@@ -15612,6 +15632,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             source: Procedure(

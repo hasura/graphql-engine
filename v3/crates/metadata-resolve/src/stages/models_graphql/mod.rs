@@ -10,6 +10,7 @@ use indexmap::IndexMap;
 use open_dds::query::ArgumentName;
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use crate::helpers::types::TrackGraphQLRootFields;
 use crate::stages::{
@@ -120,7 +121,7 @@ fn resolve_model_with_graphql(
 
             issues.extend(filter_issues.into_iter().map(Warning::from));
 
-            Some(filter_expression_type)
+            Some(Arc::new(filter_expression_type))
         }
         None => None,
     };

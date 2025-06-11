@@ -27,7 +27,8 @@ pub struct ModelsWithGraphqlOutput {
 #[derive(Debug)]
 pub(crate) struct ModelWithGraphql {
     pub inner: Model,
-    pub filter_expression_type: Option<boolean_expressions::ResolvedObjectBooleanExpressionType>,
+    pub filter_expression_type:
+        Option<Arc<boolean_expressions::ResolvedObjectBooleanExpressionType>>,
     pub graphql_api: ModelGraphQlApi,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub description: Option<String>,

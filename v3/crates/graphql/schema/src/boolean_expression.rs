@@ -176,7 +176,7 @@ fn build_comparable_fields_schema(
             ));
 
             // calculate permissions
-            let field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>> =
+            let field_permissions: HashMap<Role, Option<Box<types::NamespaceAnnotation>>> =
                 permissions::get_allowed_roles_for_field(object_type_representation, field_name)
                     .map(|role| (role.clone(), None))
                     .collect();
@@ -255,7 +255,7 @@ fn build_comparable_fields_schema(
             ));
 
             // calculate permissions
-            let field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>> =
+            let field_permissions: HashMap<Role, Option<Box<types::NamespaceAnnotation>>> =
                 permissions::get_allowed_roles_for_type(field_object_type_representation)
                     .map(|role| (role.clone(), None))
                     .collect();

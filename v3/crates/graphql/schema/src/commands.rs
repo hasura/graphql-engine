@@ -50,7 +50,7 @@ pub(crate) fn generate_command_argument(
         if !permission.argument_presets.contains_key(argument_name) {
             let annotation =
                 build_input_field_presets_annotation(gds, namespace, &argument_type.argument_type);
-            namespaced_annotations.insert(namespace.clone(), annotation);
+            namespaced_annotations.insert(namespace.clone(), annotation.map(Box::new));
         }
     }
 

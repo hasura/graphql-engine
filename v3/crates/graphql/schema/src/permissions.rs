@@ -10,17 +10,17 @@ use metadata_resolve::{self};
 /// Build namespace annotation for select permissions
 pub(crate) fn get_select_permissions_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut namespace_annotations = HashMap::new();
 
     for (role, select_permission) in &model.select_permissions {
         namespace_annotations.insert(
             role.clone(),
-            Some(types::NamespaceAnnotation::Model {
+            Some(Box::new(types::NamespaceAnnotation::Model {
                 filter: select_permission.filter.clone(),
                 argument_presets: select_permission.argument_presets.clone(),
                 allow_subscriptions: select_permission.allow_subscriptions,
-            }),
+            })),
         );
     }
 
@@ -34,7 +34,7 @@ pub(crate) fn get_select_one_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let select_permissions = get_select_permissions_namespace_annotations(model);
 
     let permissions = select_permissions
@@ -57,7 +57,7 @@ pub(crate) fn get_model_relationship_namespace_annotations(
     source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     target_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     mappings: &[metadata_resolve::RelationshipModelMapping],
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let select_permissions = get_select_permissions_namespace_annotations(target_model);
     let permissions = select_permissions
         .into_iter()
@@ -92,7 +92,7 @@ pub(crate) fn get_model_relationship_namespace_annotations(
 /// Build namespace annotation for commands
 pub(crate) fn get_command_namespace_annotations(
     command: &metadata_resolve::CommandWithPermissions,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut permissions = HashMap::new();
 
     // process command permissions, and annotate any command argument presets
@@ -100,9 +100,9 @@ pub(crate) fn get_command_namespace_annotations(
         if permission.allow_execution {
             permissions.insert(
                 role.clone(),
-                Some(types::NamespaceAnnotation::Command(
+                Some(Box::new(types::NamespaceAnnotation::Command(
                     permission.argument_presets.clone(),
-                )),
+                ))),
             );
         }
     }
@@ -117,7 +117,7 @@ pub(crate) fn get_command_relationship_namespace_annotations(
     command: &metadata_resolve::CommandWithPermissions,
     source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     mappings: &[metadata_resolve::RelationshipCommandMapping],
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let select_permissions = get_command_namespace_annotations(command);
 
     select_permissions
@@ -140,7 +140,7 @@ pub(crate) fn get_command_relationship_namespace_annotations(
 /// to all the Global ID fields.
 pub(crate) fn get_node_interface_annotations(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut permissions = HashMap::new();
     for (role, type_output_permission) in &object_type_representation.type_output_permissions {
         let is_permitted = object_type_representation
@@ -161,7 +161,7 @@ pub(crate) fn get_node_interface_annotations(
 /// to all the key fields.
 pub(crate) fn get_entity_union_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut permissions = HashMap::new();
     for (role, type_output_permission) in &object_type_representation.type_output_permissions {
         let is_permitted = object_type_representation

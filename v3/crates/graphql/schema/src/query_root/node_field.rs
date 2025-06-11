@@ -21,7 +21,10 @@ use metadata_resolve::Qualified;
 pub(crate) struct RelayNodeFieldOutput {
     pub relay_node_gql_field: gql_schema::Field<GDS>,
     /// Roles having access to the `node` field.
-    pub relay_node_field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>>,
+    ///
+    /// We add Box indirection here to save memory when None's of this fairly large enum are stored
+    /// in containers
+    pub relay_node_field_permissions: HashMap<Role, Option<Box<types::NamespaceAnnotation>>>,
 }
 
 /// Calculates the relay `node` field and also returns the
@@ -106,9 +109,9 @@ pub(crate) fn relay_node_field(
     for (role, role_type_permission) in roles_type_permissions {
         relay_node_field_permissions.insert(
             role.clone(),
-            Some(types::NamespaceAnnotation::NodeFieldTypeMappings(
+            Some(Box::new(types::NamespaceAnnotation::NodeFieldTypeMappings(
                 role_type_permission,
-            )),
+            ))),
         );
     }
     let relay_node_gql_field = gql_schema::Field::new(

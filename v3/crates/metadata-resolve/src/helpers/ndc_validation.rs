@@ -215,7 +215,7 @@ pub fn validate_ndc(
             model_name: model_name.clone(),
             type_name: model.data_type.clone(),
         })?;
-    for (field_name, field_mapping) in field_mappings {
+    for (field_name, field_mapping) in field_mappings.iter() {
         let column_name = &field_mapping.column;
         let column = collection_type
             .fields
@@ -393,7 +393,7 @@ pub fn validate_ndc_command(
                             type_name: custom_type.clone(),
                         })?;
                     // Check if the field mappings for the output_type is valid
-                    for (field_name, field_mapping) in field_mappings {
+                    for (field_name, field_mapping) in field_mappings.iter() {
                         let column_name = &field_mapping.column;
                         if !actual_command_source_type
                             .fields

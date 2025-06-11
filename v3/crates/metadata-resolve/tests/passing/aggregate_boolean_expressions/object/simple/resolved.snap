@@ -820,6 +820,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -1003,6 +1004,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                 },
                 arguments: {},
                 select_permissions: {},
+                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
@@ -1190,6 +1192,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                                         },
                                     ),
                                     supports_relational_queries: None,
+                                    supports_relational_mutations: None,
                                 },
                             },
                             collection: CollectionName(
@@ -1446,6 +1449,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                 },
                 arguments: {},
                 select_permissions: {},
+                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,

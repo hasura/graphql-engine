@@ -8,6 +8,7 @@ use open_dds::aggregates::{
 };
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use open_dds::commands::ArgumentMapping;
 use open_dds::{
@@ -587,7 +588,7 @@ pub fn resolve_data_connector_type_mapping(
         ndc_object_type_name: data_connector_type_mapping
             .data_connector_object_type
             .clone(),
-        field_mappings: resolved_field_mappings,
+        field_mappings: Arc::new(resolved_field_mappings),
     };
 
     Ok((resolved_type_mapping, issues))

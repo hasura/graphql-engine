@@ -108,14 +108,14 @@ fn generate_model_rootfield_ir<'n, 's>(
     // Check if subscription is allowed
     // We won't be generating graphql schema any way if subscription is not allowed in permission.
     // This is just a double check, if in case we missed something.
-    if let Some(NamespaceAnnotation::Model {
-        allow_subscriptions,
-        ..
-    }) = field_call.info.namespaced
-    {
-        if !allow_subscriptions {
-            Err(error::InternalEngineError::SubscriptionNotAllowed)?;
-        }
+    if matches!(
+        field_call.info.namespaced.as_deref(),
+        Some(NamespaceAnnotation::Model {
+            allow_subscriptions: false,
+            ..
+        })
+    ) {
+        Err(error::InternalEngineError::SubscriptionNotAllowed)?;
     }
     let ir = match kind {
         RootFieldKind::SelectOne => root_field::SubscriptionRootField::ModelSelectOne {

@@ -357,6 +357,10 @@ pub struct ModelPermission {
     /// The permissions for selecting from this model for this role.
     /// If this is null, the role is not allowed to query the model.
     pub select: Option<SelectPermission>,
+    /// The permissions for relational insert operations on this model for this role.
+    /// If this is null, the role is not allowed to perform relational inserts on this model.
+    /// This is only applicable for data connectors that support relational operations.
+    pub relational_insert: Option<RelationalInsertPermission>,
 }
 
 impl ModelPermission {
@@ -868,3 +872,14 @@ impl traits::OpenDd for ValueExpressionOrPredicate {
 }
 
 impl_JsonSchema_with_OpenDd_for!(ValueExpressionOrPredicate);
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "RelationalInsertPermission"))]
+/// Defines the permissions for relational insert operations on a model for a role.
+/// If null, the role is not allowed to perform relational inserts on this model.
+/// This is only applicable for data connectors that support relational operations.
+pub struct RelationalInsertPermission {
+    // Empty for now, will be extended later with filter predicates and argument presets
+}

@@ -1,6 +1,6 @@
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use open_dds::{
@@ -28,12 +28,19 @@ use crate::{
 };
 use error_context::{Context, Step};
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct RelationalInsertPermission {
+    // Empty for now, will be extended later with filter predicates
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
     pub model: models_graphql::Model,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub select_permissions: BTreeMap<Role, SelectPermission>,
-    pub filter_expression_type: Option<boolean_expressions::ResolvedObjectBooleanExpressionType>,
+    pub relational_insert_permissions: BTreeSet<Role>,
+    pub filter_expression_type:
+        Option<Arc<boolean_expressions::ResolvedObjectBooleanExpressionType>>,
     pub graphql_api: models_graphql::ModelGraphQlApi,
     pub description: Option<String>,
 }

@@ -1186,6 +1186,11 @@
                       "ActorByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -1197,6 +1202,11 @@
                       "MovieByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -1208,6 +1218,11 @@
                       "CountryByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -1219,6 +1234,11 @@
                       "ContinentByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -1230,6 +1250,11 @@
                       "InstitutionByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -2487,6 +2512,9 @@
                         }
                       }
                     }
+                  },
+                  "relational_mutation": {
+                    "insert": {}
                   }
                 }
               }
@@ -3675,6 +3703,11 @@
                       "ActorByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -3686,6 +3719,11 @@
                       "MovieByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -3697,6 +3735,11 @@
                       "CountryByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -3708,6 +3751,11 @@
                       "ContinentByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -3719,6 +3767,11 @@
                       "InstitutionByID": {
                         "unique_columns": ["id"]
                       }
+                    },
+                    "relational_mutations": {
+                      "insertable": true,
+                      "updatable": true,
+                      "deletable": true
                     }
                   },
                   {
@@ -4976,6 +5029,9 @@
                         }
                       }
                     }
+                  },
+                  "relational_mutation": {
+                    "insert": {}
                   }
                 }
               }
