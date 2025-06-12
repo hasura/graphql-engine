@@ -23,6 +23,8 @@ pub fn resolve(metadata_accessor: &open_dds::accessor::MetadataAccessor) -> Life
             LifecyclePluginHookV1::Route(plugin) => {
                 pre_route_plugins.push(plugin.clone());
             }
+            LifecyclePluginHookV1::NdcRequest(_plugin) => {}
+            LifecyclePluginHookV1::NdcResponse(_plugin) => {}
         }
     }
 
