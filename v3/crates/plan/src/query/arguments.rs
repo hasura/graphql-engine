@@ -87,8 +87,9 @@ pub fn process_argument_presets_for_model<'s>(
     })?;
 
     let argument_presets = &model
-        .select_permissions
+        .permissions
         .get(&session.role)
+        .and_then(|permissions| permissions.select.as_ref())
         .ok_or_else(
             || ArgumentPresetExecutionError::ModelArgumentPresetsNotFound {
                 model_name: model.model.name.clone(),

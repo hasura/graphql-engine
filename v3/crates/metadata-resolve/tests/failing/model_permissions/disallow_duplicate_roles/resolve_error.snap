@@ -10,10 +10,3 @@ Error: The role 'user' has been defined more than once in model permissions for 
     │                         ───┬──  
     │                            ╰──── This role is a duplicate
 ────╯
-Error: The role 'user' has been defined more than once in model permissions for model 'Albums (in subgraph subgraphs)'
-    ╭─[ <unknown>:59:25 ]
-    │
- 59 │                 "role": "user",
-    │                         ───┬──  
-    │                            ╰──── This role is a duplicate
-────╯

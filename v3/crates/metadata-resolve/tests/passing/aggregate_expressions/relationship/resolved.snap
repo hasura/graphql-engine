@@ -3951,8 +3951,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     ),
                 },
                 arguments: {},
-                select_permissions: {},
-                relational_insert_permissions: {},
+                permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
@@ -4996,8 +4995,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     ),
                 },
                 arguments: {},
-                select_permissions: {},
-                relational_insert_permissions: {},
+                permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,

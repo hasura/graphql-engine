@@ -1,6 +1,6 @@
 use super::predicate;
-use super::types::ModelPermissionIssue;
 use super::types::{FilterPermission, SelectPermission};
+use super::types::{ModelPermissionIssue, RelationalInsertPermission, ResolvedPermissions};
 use super::{ModelPermissionError, NamedModelPermissionError};
 use crate::ArgumentInfo;
 use crate::helpers::argument::resolve_value_expression_for_argument;
@@ -20,7 +20,7 @@ use open_dds::spanned::Spanned;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::{BTreeMap, BTreeSet};
 
-pub fn resolve_all_model_select_permissions(
+pub fn resolve_all_model_permissions(
     flags: &open_dds::flags::OpenDdFlags,
     model: &models_graphql::Model,
     arguments: &IndexMap<ArgumentName, ArgumentInfo>,
@@ -38,7 +38,7 @@ pub fn resolve_all_model_select_permissions(
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     issues: &mut Vec<ModelPermissionIssue>,
-) -> Result<BTreeMap<Role, SelectPermission>, Error> {
+) -> Result<BTreeMap<Role, ResolvedPermissions>, Error> {
     let mut validated_permissions = BTreeMap::new();
     let mut resolved_roles = BTreeSet::new();
 
@@ -50,10 +50,18 @@ pub fn resolve_all_model_select_permissions(
                         role: model_permission.role.clone(),
                         model_name: model.name.clone(),
                     });
+                    // Continue processing this role's permissions, but we've already
+                    // recorded the duplicate role issue
                 }
 
+                let mut resolved_permission = ResolvedPermissions {
+                    select: None,
+                    relational_insert: None,
+                };
+
+                // Resolve select permissions
                 if let Some(select_perms) = &model_permission.select {
-                    let resolved_permission = resolve_model_select_permissions(
+                    let select_permission = resolve_model_select_permissions(
                         select_perms,
                         &model_permission.role,
                         flags,
@@ -68,9 +76,17 @@ pub fn resolve_all_model_select_permissions(
                         issues,
                     )?;
 
-                    validated_permissions
-                        .insert(model_permission.role.value.clone(), resolved_permission);
+                    resolved_permission.select = Some(select_permission);
                 }
+
+                // Resolve relational insert permissions
+                if let Some(_relational_insert) = &model_permission.relational_insert {
+                    resolved_permission.relational_insert = Some(RelationalInsertPermission {});
+                }
+
+                // Insert the resolved permissions for this role
+                validated_permissions
+                    .insert(model_permission.role.value.clone(), resolved_permission);
             }
             Ok(validated_permissions)
         }
@@ -210,31 +226,4 @@ fn resolve_model_select_permissions(
     };
 
     Ok(resolved_permission)
-}
-
-pub fn resolve_all_model_relational_insert_permissions(
-    model_name: &Qualified<ModelName>,
-    model_permissions: &ModelPermissionsV2,
-    issues: &mut Vec<ModelPermissionIssue>,
-) -> BTreeSet<Role> {
-    let mut validated_permissions = BTreeSet::new();
-    let mut resolved_roles = BTreeSet::new();
-
-    match &model_permissions.permissions {
-        ModelPermissionOperand::RoleBased(role_based_model_permissions) => {
-            for model_permission in role_based_model_permissions {
-                if !resolved_roles.insert(model_permission.role.value.clone()) {
-                    issues.push(ModelPermissionIssue::DuplicateRole {
-                        role: model_permission.role.clone(),
-                        model_name: model_name.clone(),
-                    });
-                }
-
-                if model_permission.relational_insert.is_some() {
-                    validated_permissions.insert(model_permission.role.value.clone());
-                }
-            }
-            validated_permissions
-        }
-    }
 }

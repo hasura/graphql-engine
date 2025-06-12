@@ -519,8 +519,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_types_not_co
                         type_representation: None,
                     },
                 },
-                select_permissions: {},
-                relational_insert_permissions: {},
+                permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: Some(

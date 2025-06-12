@@ -31,7 +31,7 @@ pub fn resolve(
         }
     }
     for model in models.values() {
-        for role in model.select_permissions.keys() {
+        for role in model.permissions.keys() {
             roles.insert(role.clone());
         }
     }

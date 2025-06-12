@@ -1255,16 +1255,20 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                     aggregate_expression: None,
                 },
                 arguments: {},
-                select_permissions: {
+                permissions: {
                     Role(
                         "user",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: AllowAll,
+                                argument_presets: {},
+                                allow_subscriptions: false,
+                            },
+                        ),
+                        relational_insert: None,
                     },
                 },
-                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
@@ -1682,16 +1686,20 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                         type_representation: None,
                     },
                 },
-                select_permissions: {
+                permissions: {
                     Role(
                         "user",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: AllowAll,
+                                argument_presets: {},
+                                allow_subscriptions: false,
+                            },
+                        ),
+                        relational_insert: None,
                     },
                 },
-                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,

@@ -514,8 +514,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                         type_representation: None,
                     },
                 },
-                select_permissions: {},
-                relational_insert_permissions: {},
+                permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: Some(

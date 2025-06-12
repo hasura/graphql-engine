@@ -1125,76 +1125,90 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                     aggregate_expression: None,
                 },
                 arguments: {},
-                select_permissions: {
+                permissions: {
                     Role(
                         "admin",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: AllowAll,
+                                argument_presets: {},
+                                allow_subscriptions: false,
+                            },
+                        ),
+                        relational_insert: None,
                     },
                     Role(
                         "user1",
-                    ): SelectPermission {
-                        filter: Filter(
-                            BinaryFieldComparison {
-                                field: FieldName(
-                                    Identifier(
-                                        "author_id",
-                                    ),
-                                ),
-                                field_parent_type: Qualified {
-                                    subgraph: SubgraphName(
-                                        "article_namespace",
-                                    ),
-                                    name: CustomTypeName(
-                                        Identifier(
-                                            "article",
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: Filter(
+                                    BinaryFieldComparison {
+                                        field: FieldName(
+                                            Identifier(
+                                                "author_id",
+                                            ),
                                         ),
-                                    ),
-                                },
-                                ndc_column: DataConnectorColumnName(
-                                    "author_id",
-                                ),
-                                operator: ResolvedOperator {
-                                    data_connector_operator_name: DataConnectorOperatorName(
-                                        "_eq",
-                                    ),
-                                    comparison_operator: Equals,
-                                },
-                                column_path: [],
-                                argument_type: QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Inbuilt(
-                                            Int,
+                                        field_parent_type: Qualified {
+                                            subgraph: SubgraphName(
+                                                "article_namespace",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "article",
+                                                ),
+                                            ),
+                                        },
+                                        ndc_column: DataConnectorColumnName(
+                                            "author_id",
                                         ),
-                                    ),
-                                    nullable: true,
-                                },
-                                value: SessionVariable(
-                                    SessionVariableReference {
-                                        name: SessionVariableName(
-                                            "x-hasura-user-id",
+                                        operator: ResolvedOperator {
+                                            data_connector_operator_name: DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            comparison_operator: Equals,
+                                        },
+                                        column_path: [],
+                                        argument_type: QualifiedTypeReference {
+                                            underlying_type: Named(
+                                                Inbuilt(
+                                                    Int,
+                                                ),
+                                            ),
+                                            nullable: true,
+                                        },
+                                        value: SessionVariable(
+                                            SessionVariableReference {
+                                                name: SessionVariableName(
+                                                    "x-hasura-user-id",
+                                                ),
+                                                passed_as_json: false,
+                                                disallow_unknown_fields: false,
+                                            },
                                         ),
-                                        passed_as_json: false,
-                                        disallow_unknown_fields: false,
+                                        deprecated: None,
                                     },
                                 ),
-                                deprecated: None,
+                                argument_presets: {},
+                                allow_subscriptions: false,
                             },
                         ),
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                        relational_insert: None,
                     },
                     Role(
                         "user2",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: AllowAll,
+                                argument_presets: {},
+                                allow_subscriptions: false,
+                            },
+                        ),
+                        relational_insert: None,
                     },
                 },
-                relational_insert_permissions: {},
                 filter_expression_type: Some(
                     ResolvedObjectBooleanExpressionType {
                         name: Qualified {

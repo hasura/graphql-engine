@@ -13,15 +13,17 @@ pub(crate) fn get_select_permissions_namespace_annotations(
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut namespace_annotations = HashMap::new();
 
-    for (role, select_permission) in &model.select_permissions {
-        namespace_annotations.insert(
-            role.clone(),
-            Some(Box::new(types::NamespaceAnnotation::Model {
-                filter: select_permission.filter.clone(),
-                argument_presets: select_permission.argument_presets.clone(),
-                allow_subscriptions: select_permission.allow_subscriptions,
-            })),
-        );
+    for (role, resolved_permissions) in &model.permissions {
+        if let Some(select_permission) = &resolved_permissions.select {
+            namespace_annotations.insert(
+                role.clone(),
+                Some(Box::new(types::NamespaceAnnotation::Model {
+                    filter: select_permission.filter.clone(),
+                    argument_presets: select_permission.argument_presets.clone(),
+                    allow_subscriptions: select_permission.allow_subscriptions,
+                })),
+            );
+        }
     }
 
     namespace_annotations
@@ -220,7 +222,11 @@ pub(crate) fn get_node_field_namespace_permissions(
             .all(|field_name| type_output_permission.allowed_fields.contains(field_name));
 
         if is_global_id_field_accessible {
-            let select_permission = model.select_permissions.get(role).map(|s| s.filter.clone());
+            let select_permission = model
+                .permissions
+                .get(role)
+                .and_then(|permissions| permissions.select.as_ref())
+                .map(|s| s.filter.clone());
 
             if select_permission.is_some() {
                 permissions.insert(role.clone());
@@ -251,8 +257,11 @@ pub(crate) fn get_entities_field_namespace_permissions(
                 });
 
             if is_all_keys_field_accessible {
-                let select_permission =
-                    model.select_permissions.get(role).map(|s| s.filter.clone());
+                let select_permission = model
+                    .permissions
+                    .get(role)
+                    .and_then(|permissions| permissions.select.as_ref())
+                    .map(|s| s.filter.clone());
 
                 if select_permission.is_some() {
                     permissions.insert(role.clone());

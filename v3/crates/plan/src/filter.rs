@@ -1048,10 +1048,17 @@ pub(crate) fn resolve_model_permission_filter(
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<ResolvedFilterExpression>, PlanError> {
     let model_name = &model.model.name;
-    let model_select_permission = model.select_permissions.get(&session.role).ok_or_else(|| {
+    let model_permission = model.permissions.get(&session.role).ok_or_else(|| {
         PlanError::Permission(PermissionError::Other(format!(
-            "role {} does not have select permission for model {model_name}",
-            session.role
+            "Role '{}' does not have select permission for model '{}'",
+            session.role, model_name
+        )))
+    })?;
+
+    let model_select_permission = model_permission.select.as_ref().ok_or_else(|| {
+        PlanError::Permission(PermissionError::Other(format!(
+            "Role '{}' does not have select permission for model '{}'",
+            session.role, model_name
         )))
     })?;
 
