@@ -360,6 +360,7 @@ pub struct ModelPermission {
     /// The permissions for relational insert operations on this model for this role.
     /// If this is null, the role is not allowed to perform relational inserts on this model.
     /// This is only applicable for data connectors that support relational operations.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub relational_insert: Option<RelationalInsertPermission>,
 }
 
