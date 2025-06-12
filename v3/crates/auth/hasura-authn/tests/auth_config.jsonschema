@@ -65,6 +65,26 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "title": "AuthConfigV4",
+      "type": "object",
+      "required": [
+        "definition",
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "enum": [
+            "v4"
+          ]
+        },
+        "definition": {
+          "$ref": "#/definitions/AuthConfigV4"
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
@@ -365,33 +385,21 @@
         }
       ]
     },
-    "AuthHookConfigV3Body": {
-      "$id": "https://hasura.io/jsonschemas/metadata/AuthHookConfigV3Body",
-      "title": "AuthHookConfigV3Body",
-      "description": "The configuration for the body to be sent to the POST auth hook.",
-      "examples": [
-        {
-          "headers": {
-            "forward": [
-              "Authorization"
-            ],
-            "additional": {}
-          }
-        }
-      ],
+    "AlternativeMode": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AlternativeMode",
+      "title": "AlternativeMode",
+      "description": "Alternative Authentication Modes",
       "type": "object",
+      "required": [
+        "config",
+        "identifier"
+      ],
       "properties": {
-        "headers": {
-          "description": "The configuration for the headers to be sent as part of the body to the POST auth hook.",
-          "default": null,
-          "anyOf": [
-            {
-              "$ref": "#/definitions/AuthHookConfigV3Headers"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "identifier": {
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/AuthModeConfigV3"
         }
       },
       "additionalProperties": false
@@ -1241,6 +1249,61 @@
               "type": "null"
             }
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "AuthHookConfigV3Body": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AuthHookConfigV3Body",
+      "title": "AuthHookConfigV3Body",
+      "description": "The configuration for the body to be sent to the POST auth hook.",
+      "examples": [
+        {
+          "headers": {
+            "forward": [
+              "Authorization"
+            ],
+            "additional": {}
+          }
+        }
+      ],
+      "type": "object",
+      "properties": {
+        "headers": {
+          "description": "The configuration for the headers to be sent as part of the body to the POST auth hook.",
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AuthHookConfigV3Headers"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "AuthConfigV4": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AuthConfigV4",
+      "title": "AuthConfigV4",
+      "description": "Definition of the authentication configuration v4, used by the API server.",
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "#/definitions/AuthModeConfigV3"
+        },
+        "alternativeModes": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/AlternativeMode"
+          }
         }
       },
       "additionalProperties": false

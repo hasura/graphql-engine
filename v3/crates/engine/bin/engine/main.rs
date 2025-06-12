@@ -72,6 +72,11 @@ struct ServerOptions {
     /// Service name output in OpenTelemetry traces
     #[arg(long, env = "OTEL_SERVICE_NAME")]
     otel_service_name: Option<String>,
+
+    /// The name of the header used to specify the auth mode when using alternative Auth Modes.
+    /// Defaults to "X-Hasura-Auth-Mode" if not specified.
+    #[arg(long, env = "AUTH_MODE_HEADER", default_value = "X-Hasura-Auth-Mode")]
+    auth_mode_header: String,
 }
 
 #[tokio::main]
@@ -137,8 +142,13 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     )
     .map_err(StartupError::ReadSchema)?;
 
-    let state = engine::build_state(expose_internal_errors, auth_config, resolved_metadata)
-        .map_err(StartupError::ReadSchema)?;
+    let state = engine::build_state(
+        expose_internal_errors,
+        auth_config,
+        resolved_metadata,
+        server.auth_mode_header.clone(),
+    )
+    .map_err(StartupError::ReadSchema)?;
 
     let mut app = get_base_routes(state.clone());
 

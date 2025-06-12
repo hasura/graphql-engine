@@ -8,6 +8,42 @@
 
 ### Added
 
+#### Support for multiple authentication modes (AuthConfig v4)
+
+AuthConfig v4 is a new version of the AuthConfig that allows for multiple
+authentication modes. The default mode is specified in the `mode` field, and
+alternative modes are specified in the `alternativeModes` field.
+
+The following is an example of the OpenDD metadata for the AuthConfig v4:
+
+```yaml
+version: v4
+definition:
+  mode:
+    noAuth:
+      role: admin
+      sessionVariables:
+        x-hasura-user-id: "1"
+  alternativeModes:
+    - identifier: webhook
+      config:
+        webhook:
+          url:
+            value: http://auth_hook:3050/validate-request
+          method: POST
+```
+
+The `X-Hasura-Auth-Mode` header can be used to specify the authentication mode
+when making requests.
+
+In the above example, if no `X-Hasura-Auth-Mode` header is specified, the
+default mode (`noAuth`) will be used. If the header is specified, the
+authentication mode specified in the header will be used if it exists in the
+`alternativeModes` field. If the header is specified but the authentication mode
+does not exist in the `alternativeModes` field, the default mode will be used.
+
+**Note**: The AuthConfig v4 is backwards compatible with the AuthConfig v3.
+
 ## [v2025.06.04]
 
 ### Fixed

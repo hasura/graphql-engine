@@ -702,6 +702,7 @@ async fn run_query_graphql_ws(
         auth_config: Arc::new(dummy_auth_config),
         metrics: graphql_ws::NoOpWebSocketMetrics,
         handshake_headers: Arc::new(request_headers.clone()),
+        auth_mode_header: "x-hasura-auth-mode".to_string(),
     };
     let (channel_sender, mut channel_receiver) =
         tokio::sync::mpsc::channel::<graphql_ws::Message>(10);
