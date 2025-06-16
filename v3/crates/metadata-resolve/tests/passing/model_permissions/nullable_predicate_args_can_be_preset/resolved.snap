@@ -893,6 +893,8 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
                             },
                         ),
                         relational_insert: None,
+                        relational_update: None,
+                        relational_delete: None,
                     },
                 },
                 filter_expression_type: Some(

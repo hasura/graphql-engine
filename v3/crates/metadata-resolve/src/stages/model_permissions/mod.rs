@@ -12,7 +12,8 @@ use open_dds::{data_connector::DataConnectorName, models::ModelName, types::Cust
 use std::collections::BTreeMap;
 pub use types::{
     FilterPermission, ModelPermissionIssue, ModelPermissionsOutput, ModelPredicate,
-    ModelTargetSource, ModelWithPermissions, PredicateRelationshipInfo, SelectPermission,
+    ModelTargetSource, ModelWithPermissions, PredicateRelationshipInfo, RelationalDeletePermission,
+    RelationalInsertPermission, RelationalUpdatePermission, SelectPermission,
     UnaryComparisonOperator,
 };
 mod model_permission;
@@ -22,9 +23,12 @@ use crate::types::error::Error;
 
 use crate::types::subgraph::Qualified;
 
+use super::data_connectors;
+
 /// resolve model permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -69,6 +73,7 @@ pub fn resolve(
         results.push(resolve_model_permissions(
             metadata_accessor,
             subgraph,
+            data_connectors,
             data_connector_scalars,
             object_types,
             scalar_types,
@@ -89,6 +94,7 @@ pub fn resolve(
 fn resolve_model_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     subgraph: &SubgraphName,
+    data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -125,6 +131,7 @@ fn resolve_model_permissions(
             &model.arguments,
             permissions,
             boolean_expression,
+            data_connectors,
             data_connector_scalars,
             object_types,
             scalar_types,

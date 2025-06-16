@@ -362,6 +362,16 @@ pub struct ModelPermission {
     /// This is only applicable for data connectors that support relational operations.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub relational_insert: Option<RelationalInsertPermission>,
+    /// The permissions for relational update operations on this model for this role.
+    /// If this is null, the role is not allowed to perform relational updates on this model.
+    /// This is only applicable for data connectors that support relational operations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relational_update: Option<RelationalUpdatePermission>,
+    /// The permissions for relational delete operations on this model for this role.
+    /// If this is null, the role is not allowed to perform relational deletes on this model.
+    /// This is only applicable for data connectors that support relational operations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relational_delete: Option<RelationalDeletePermission>,
 }
 
 impl ModelPermission {
@@ -882,5 +892,27 @@ impl_JsonSchema_with_OpenDd_for!(ValueExpressionOrPredicate);
 /// If null, the role is not allowed to perform relational inserts on this model.
 /// This is only applicable for data connectors that support relational operations.
 pub struct RelationalInsertPermission {
+    // Empty for now, will be extended later with filter predicates and argument presets
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "RelationalUpdatePermission"))]
+/// Defines the permissions for relational update operations on a model for a role.
+/// If null, the role is not allowed to perform relational updates on this model.
+/// This is only applicable for data connectors that support relational operations.
+pub struct RelationalUpdatePermission {
+    // Empty for now, will be extended later with filter predicates and argument presets
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "RelationalDeletePermission"))]
+/// Defines the permissions for relational delete operations on a model for a role.
+/// If null, the role is not allowed to perform relational deletes on this model.
+/// This is only applicable for data connectors that support relational operations.
+pub struct RelationalDeletePermission {
     // Empty for now, will be extended later with filter predicates and argument presets
 }

@@ -1,8 +1,8 @@
-use super::predicate;
-use super::types::{FilterPermission, SelectPermission};
-use super::types::{ModelPermissionIssue, RelationalInsertPermission, ResolvedPermissions};
-use super::{ModelPermissionError, NamedModelPermissionError};
-use crate::ArgumentInfo;
+use super::types::{FilterPermission, ModelPermissionIssue, ResolvedPermissions, SelectPermission};
+use super::{
+    ModelPermissionError, NamedModelPermissionError, RelationalDeletePermission,
+    RelationalInsertPermission, RelationalUpdatePermission, predicate,
+};
 use crate::helpers::argument::resolve_value_expression_for_argument;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, models_graphql, object_relationships,
@@ -10,6 +10,7 @@ use crate::stages::{
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
+use crate::{ArgumentInfo, ModelsError, data_connectors};
 
 use indexmap::IndexMap;
 use open_dds::permissions::{
@@ -26,6 +27,7 @@ pub fn resolve_all_model_permissions(
     arguments: &IndexMap<ArgumentName, ArgumentInfo>,
     model_permissions: &ModelPermissionsV2,
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
+    data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -57,6 +59,8 @@ pub fn resolve_all_model_permissions(
                 let mut resolved_permission = ResolvedPermissions {
                     select: None,
                     relational_insert: None,
+                    relational_update: None,
+                    relational_delete: None,
                 };
 
                 // Resolve select permissions
@@ -81,7 +85,59 @@ pub fn resolve_all_model_permissions(
 
                 // Resolve relational insert permissions
                 if let Some(_relational_insert) = &model_permission.relational_insert {
+                    let collection_info =
+                        lookup_collection_info(model, model_permission, data_connectors)?;
+                    if !collection_info
+                        .relational_mutations
+                        .as_ref()
+                        .is_some_and(|caps| caps.insertable)
+                    {
+                        return Err(Error::ModelPermissionsError(NamedModelPermissionError {
+                            model_name: model.name.clone(),
+                            role: model_permission.role.clone(),
+                            error: ModelPermissionError::RelationalInsertNotSupported,
+                        }));
+                    }
+
                     resolved_permission.relational_insert = Some(RelationalInsertPermission {});
+                }
+
+                // Resolve relational update permissions
+                if let Some(_relational_update) = &model_permission.relational_update {
+                    let collection_info =
+                        lookup_collection_info(model, model_permission, data_connectors)?;
+                    if !collection_info
+                        .relational_mutations
+                        .as_ref()
+                        .is_some_and(|caps| caps.updatable)
+                    {
+                        return Err(Error::ModelPermissionsError(NamedModelPermissionError {
+                            model_name: model.name.clone(),
+                            role: model_permission.role.clone(),
+                            error: ModelPermissionError::RelationalUpdateNotSupported,
+                        }));
+                    }
+
+                    resolved_permission.relational_update = Some(RelationalUpdatePermission {});
+                }
+
+                // Resolve relational delete permissions
+                if let Some(_relational_delete) = &model_permission.relational_delete {
+                    let collection_info =
+                        lookup_collection_info(model, model_permission, data_connectors)?;
+                    if !collection_info
+                        .relational_mutations
+                        .as_ref()
+                        .is_some_and(|caps| caps.deletable)
+                    {
+                        return Err(Error::ModelPermissionsError(NamedModelPermissionError {
+                            model_name: model.name.clone(),
+                            role: model_permission.role.clone(),
+                            error: ModelPermissionError::RelationalDeleteNotSupported,
+                        }));
+                    }
+
+                    resolved_permission.relational_delete = Some(RelationalDeletePermission {});
                 }
 
                 // Insert the resolved permissions for this role
@@ -91,6 +147,46 @@ pub fn resolve_all_model_permissions(
             Ok(validated_permissions)
         }
     }
+}
+
+fn lookup_collection_info<'a>(
+    model: &'a crate::Model,
+    model_permission: &'a open_dds::permissions::ModelPermission,
+    data_connectors: &'a data_connectors::DataConnectors<'_>,
+) -> Result<&'a ndc_models::CollectionInfo, Error> {
+    let model_source = model.source.as_ref().ok_or_else(|| {
+        Error::ModelPermissionsError(NamedModelPermissionError {
+            model_name: model.name.clone(),
+            role: model_permission.role.clone(),
+            error: ModelPermissionError::ModelSourceRequiredForRelationalPermissions,
+        })
+    })?;
+
+    let collection_info = data_connectors
+        .0
+        .get(&model_source.data_connector.name)
+        .ok_or_else(|| {
+            Error::ModelsError(ModelsError::UnknownModelDataConnector {
+                model_name: model.name.clone(),
+                data_connector: model_source.data_connector.name.clone(),
+                data_connector_path: None,
+            })
+        })?
+        .schema
+        .collections
+        .get(model_source.collection.as_str())
+        .ok_or_else(|| {
+            Error::ModelPermissionsError(NamedModelPermissionError {
+                model_name: model.name.clone(),
+                role: model_permission.role.clone(),
+                error: ModelPermissionError::UnknownModelCollection {
+                    data_connector: model_source.data_connector.name.clone(),
+                    collection: model_source.collection.clone(),
+                },
+            })
+        })?;
+
+    Ok(collection_info)
 }
 
 fn resolve_model_select_permissions(

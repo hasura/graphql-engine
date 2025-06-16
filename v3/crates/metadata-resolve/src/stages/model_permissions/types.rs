@@ -33,11 +33,22 @@ pub struct RelationalInsertPermission {
     // Empty for now, will be extended later with filter predicates
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct RelationalUpdatePermission {
+    // Empty for now, will be extended later with filter predicates
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct RelationalDeletePermission {
+    // Empty for now, will be extended later with filter predicates
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ResolvedPermissions {
     pub select: Option<SelectPermission>,
     pub relational_insert: Option<RelationalInsertPermission>,
-    // We'll add update and delete later
+    pub relational_update: Option<RelationalUpdatePermission>,
+    pub relational_delete: Option<RelationalDeletePermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
