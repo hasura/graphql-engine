@@ -8,6 +8,10 @@
 
 ### Added
 
+## [v2025.06.16]
+
+### Added
+
 #### Support for multiple authentication modes (AuthConfig v4)
 
 AuthConfig v4 is a new version of the AuthConfig that allows for multiple
@@ -1667,7 +1671,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.06.04...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.06.16...HEAD
+[v2025.06.16]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.16
 [v2025.06.04]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.04
 [v2025.05.29]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.29
 [v2025.05.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.05.14
