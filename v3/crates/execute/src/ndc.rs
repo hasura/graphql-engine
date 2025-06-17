@@ -61,7 +61,8 @@ pub async fn fetch_from_data_connector(
     project_id: Option<&ProjectId>,
 ) -> Result<NdcQueryResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
-    tracer
+
+    let response = tracer
         .in_span_async(
             "fetch_from_data_connector",
             "Fetch from data connector",
@@ -82,7 +83,9 @@ pub async fn fetch_from_data_connector(
                 })
             },
         )
-        .await
+        .await?;
+
+    Ok(response)
 }
 
 // This function appends project-id (if present) to the HeaderMap defined by the data_connector object
@@ -154,7 +157,8 @@ pub async fn fetch_from_data_connector_mutation(
     project_id: Option<&ProjectId>,
 ) -> Result<NdcMutationResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
-    tracer
+
+    let response = tracer
         .in_span_async(
             "fetch_from_data_connector_mutation",
             format!("Execute mutation on data connector {}", data_connector.name),
@@ -174,7 +178,80 @@ pub async fn fetch_from_data_connector_mutation(
                 })
             },
         )
-        .await
+        .await?;
+
+    Ok(response)
+}
+
+pub async fn fetch_from_data_connector_explain(
+    http_context: &HttpContext,
+
+    query_request: &NdcQueryRequest,
+    data_connector: &metadata_resolve::DataConnectorLink,
+    project_id: Option<&ProjectId>,
+) -> Result<NdcExplainResponse, client::Error> {
+    let tracer = tracing_util::global_tracer();
+
+    let response = tracer
+        .in_span_async(
+            "fetch_from_data_connector_explain",
+            format!("Execute explain on data connector {}", data_connector.name),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let headers =
+                        append_project_id_to_headers(&data_connector.headers.0, project_id)?;
+                    let ndc_config = client::Configuration {
+                        base_path: data_connector.url.get_url(ast::OperationType::Query),
+                        // This is isn't expensive, reqwest::Client is behind an Arc
+                        client: http_context.client.clone(),
+                        headers,
+                        response_size_limit: http_context.ndc_response_size_limit,
+                    };
+                    client::explain_query_post(ndc_config, query_request).await
+                })
+            },
+        )
+        .await?;
+
+    Ok(response)
+}
+
+pub async fn fetch_from_data_connector_mutation_explain(
+    http_context: &HttpContext,
+
+    query_request: &NdcMutationRequest,
+    data_connector: &metadata_resolve::DataConnectorLink,
+    project_id: Option<&ProjectId>,
+) -> Result<NdcExplainResponse, client::Error> {
+    let tracer = tracing_util::global_tracer();
+
+    let response = tracer
+        .in_span_async(
+            "fetch_from_data_connector_mutation_explain",
+            format!(
+                "Execute mutation explain on data connector {}",
+                data_connector.name
+            ),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let headers =
+                        append_project_id_to_headers(&data_connector.headers.0, project_id)?;
+                    let ndc_config = client::Configuration {
+                        base_path: data_connector.url.get_url(ast::OperationType::Mutation),
+                        // This is isn't expensive, reqwest::Client is behind an Arc
+                        client: http_context.client.clone(),
+                        headers,
+                        response_size_limit: http_context.ndc_response_size_limit,
+                    };
+                    client::explain_mutation_post(ndc_config, query_request).await
+                })
+            },
+        )
+        .await?;
+
+    Ok(response)
 }
 
 pub async fn fetch_from_data_connector_insert_rel(

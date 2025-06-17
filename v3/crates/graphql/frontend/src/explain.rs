@@ -1,13 +1,12 @@
 pub mod types;
 use super::steps;
 
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use async_recursion::async_recursion;
 use engine_types::{ExposeInternalErrors, HttpContext};
-use execute::ndc::client as ndc_client;
+use execute::ndc::{fetch_from_data_connector_explain, fetch_from_data_connector_mutation_explain};
 use graphql_ir::{ApolloFederationSelect, MutationPlan, NodeQueryPlan, QueryPlan, RequestPlan};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
@@ -622,30 +621,33 @@ pub(crate) async fn fetch_explain_from_data_connector(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let ndc_config = ndc_client::Configuration {
-                        base_path: data_connector.url.get_url(ast::OperationType::Query),
-                        // This is isn't expensive, reqwest::Client is behind an Arc
-                        client: http_context.client.clone(),
-                        headers: Cow::Borrowed(&data_connector.headers.0),
-                        response_size_limit: http_context.ndc_response_size_limit,
-                    };
                     match ndc_request {
                         types::NDCRequest::Query(query_request) => {
                             if data_connector.capabilities.supports_explaining_queries {
-                                ndc_client::explain_query_post(ndc_config, query_request)
-                                    .await
-                                    .map(Some)
-                                    .map_err(execute::FieldError::from)
+                                fetch_from_data_connector_explain(
+                                    http_context,
+                                    query_request,
+                                    data_connector,
+                                    None,
+                                )
+                                .await
+                                .map(Some)
+                                .map_err(execute::FieldError::from)
                             } else {
                                 Ok(None)
                             }
                         }
                         types::NDCRequest::Mutation(mutation_request) => {
                             if data_connector.capabilities.supports_explaining_mutations {
-                                ndc_client::explain_mutation_post(ndc_config, mutation_request)
-                                    .await
-                                    .map(Some)
-                                    .map_err(execute::FieldError::from)
+                                fetch_from_data_connector_mutation_explain(
+                                    http_context,
+                                    mutation_request,
+                                    data_connector,
+                                    None,
+                                )
+                                .await
+                                .map(Some)
+                                .map_err(execute::FieldError::from)
                             } else {
                                 Ok(None)
                             }

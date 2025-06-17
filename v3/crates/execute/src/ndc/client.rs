@@ -92,7 +92,7 @@ pub struct Configuration<'s> {
 /// POST on /query/explain endpoint
 ///
 /// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request>
-pub async fn explain_query_post(
+pub(crate) async fn explain_query_post(
     configuration: Configuration<'_>,
     query_request: &NdcQueryRequest,
 ) -> Result<NdcExplainResponse, Error> {
@@ -150,7 +150,7 @@ pub async fn explain_query_post(
 /// POST on /mutation/explain endpoint
 ///
 /// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request-1>
-pub async fn explain_mutation_post(
+pub(crate) async fn explain_mutation_post(
     configuration: Configuration<'_>,
     mutation_request: &NdcMutationRequest,
 ) -> Result<NdcExplainResponse, Error> {
@@ -208,7 +208,7 @@ pub async fn explain_mutation_post(
 /// POST on /mutation endpoint
 ///
 /// <https://hasura.github.io/ndc-spec/specification/mutations/index.html>
-pub async fn mutation_post(
+pub(crate) async fn mutation_post(
     configuration: Configuration<'_>,
     mutation_request: &NdcMutationRequest,
 ) -> Result<NdcMutationResponse, Error> {
@@ -266,7 +266,7 @@ pub async fn mutation_post(
 /// POST on /query endpoint
 ///
 /// <https://hasura.github.io/ndc-spec/specification/queries/index.html>
-pub async fn query_post(
+pub(crate) async fn query_post(
     configuration: Configuration<'_>,
     query_request: &NdcQueryRequest,
 ) -> Result<NdcQueryResponse, Error> {
