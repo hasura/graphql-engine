@@ -3319,6 +3319,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             pre_parse_plugins: [],
             pre_response_plugins: [],
             pre_route_plugins: [],
+            pre_ndc_request_plugins: [],
+            pre_ndc_response_plugins: [],
         },
         roles: {
             Role(

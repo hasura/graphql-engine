@@ -13,7 +13,7 @@ use crate::Qualified;
 #[serde(rename_all = "camelCase")]
 pub struct ResolvedLifecyclePreNdcRequestPluginHook {
     /// The name of the lifecycle plugin hook.
-    pub name: LifecyclePluginName,
+    pub name: Qualified<LifecyclePluginName>,
     /// A list of data connectors that this plugin hook should be applied to.
     /// There can only be one plugin hook of this type per data connector.
     pub connectors: Vec<Qualified<DataConnectorName>>,
@@ -27,7 +27,7 @@ pub struct ResolvedLifecyclePreNdcRequestPluginHook {
 #[serde(rename_all = "camelCase")]
 pub struct ResolvedLifecyclePreNdcResponsePluginHook {
     /// The name of the lifecycle plugin hook.
-    pub name: LifecyclePluginName,
+    pub name: Qualified<LifecyclePluginName>,
     /// A list of data connectors that this plugin hook should be applied to.
     /// There can only be one plugin hook of this type per data connector.
     pub connectors: Vec<Qualified<DataConnectorName>>,
