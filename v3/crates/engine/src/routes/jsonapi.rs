@@ -115,6 +115,7 @@ async fn handle_jsonapi_request(
                 Box::pin(jsonapi::handler_internal(
                     Arc::new(request_headers),
                     Arc::new(state.http_context.clone()),
+                    Arc::new(state.resolved_metadata.plugin_configs.clone()),
                     Arc::new(session),
                     &state.jsonapi_catalog,
                     state.resolved_metadata,

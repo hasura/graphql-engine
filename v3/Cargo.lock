@@ -2150,6 +2150,7 @@ dependencies = [
  "bytes",
  "engine-types",
  "graphql-schema",
+ "hasura-authn-core",
  "indexmap 2.9.0",
  "lang-graphql",
  "metadata-resolve",

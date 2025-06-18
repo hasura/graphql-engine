@@ -7,6 +7,7 @@ use hasura_authn_core::{
 };
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
+use metadata_resolve::LifecyclePluginConfigs;
 use metadata_resolve::data_connectors::NdcVersion;
 use open_dds::session_variables::{SESSION_VARIABLE_ROLE, SessionVariableName};
 use pretty_assertions::assert_eq;
@@ -122,6 +123,14 @@ pub(crate) fn test_introspection_expectation(
             })
             .collect::<Result<_, _>>()?;
 
+        let plugins = LifecyclePluginConfigs {
+            pre_ndc_request_plugins: Vec::new(),
+            pre_ndc_response_plugins: Vec::new(),
+            pre_parse_plugins: Vec::new(),
+            pre_response_plugins: Vec::new(),
+            pre_route_plugins: Vec::new(),
+        };
+
         let raw_request = RawRequest {
             operation_name: None,
             query,
@@ -136,6 +145,7 @@ pub(crate) fn test_introspection_expectation(
                 &test_ctx.http_context,
                 &schema,
                 &arc_resolved_metadata,
+                &plugins,
                 session,
                 &request_headers,
                 raw_request.clone(),
@@ -236,6 +246,7 @@ async fn test_jsonapi(
             let result = jsonapi::handler_internal(
                 Arc::new(HeaderMap::default()),
                 Arc::new(test_ctx.http_context.clone()),
+                Arc::new(resolved_metadata.plugin_configs.clone()),
                 Arc::new(session.clone()),
                 &catalog,
                 resolved_metadata.clone(),
@@ -389,6 +400,14 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 })
                 .collect::<Result<_, _>>()?;
 
+            let plugins = LifecyclePluginConfigs {
+                pre_ndc_request_plugins: Vec::new(),
+                pre_ndc_response_plugins: Vec::new(),
+                pre_parse_plugins: Vec::new(),
+                pre_response_plugins: Vec::new(),
+                pre_route_plugins: Vec::new(),
+            };
+
             // expected response headers are a `Vec<String>`; one set for each
             // session/role.
             let expected_headers: Option<Vec<Vec<String>>> =
@@ -413,6 +432,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             &test_ctx.http_context,
                             &schema,
                             &arc_resolved_metadata.clone(),
+                            &plugins,
                             session,
                             &request_headers,
                             raw_request.clone(),
@@ -453,6 +473,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             &test_ctx.http_context,
                             &schema,
                             &arc_resolved_metadata,
+                            &plugins,
                             session,
                             &request_headers,
                             raw_request.clone(),
@@ -590,6 +611,13 @@ pub fn test_execute_explain(
                 )]);
             resolve_session(session_variables)
         }?;
+        let plugins = LifecyclePluginConfigs {
+            pre_ndc_request_plugins: Vec::new(),
+            pre_ndc_response_plugins: Vec::new(),
+            pre_parse_plugins: Vec::new(),
+            pre_response_plugins: Vec::new(),
+            pre_route_plugins: Vec::new(),
+        };
         let query = read_to_string(&root_test_dir.join(gql_request_file_path))?;
         let raw_request = lang_graphql::http::RawRequest {
             operation_name: None,
@@ -599,6 +627,7 @@ pub fn test_execute_explain(
         let (_, raw_response) = graphql_frontend::execute_explain(
             ExposeInternalErrors::Expose,
             &test_ctx.http_context,
+            &plugins,
             &schema,
             &arc_resolved_metadata,
             &session,

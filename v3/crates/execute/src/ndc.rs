@@ -1,6 +1,8 @@
 pub mod client;
 pub mod migration;
 pub mod types;
+use hasura_authn_core::Session;
+use metadata_resolve::LifecyclePluginConfigs;
 pub use types::*;
 
 use std::borrow::Cow;
@@ -17,6 +19,8 @@ use engine_types::{HttpContext, ProjectId};
 /// Executes a NDC operation
 pub async fn execute_ndc_query(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     execution_span_attribute: &'static str,
@@ -44,9 +48,15 @@ pub async fn execute_ndc_query(
                         "field",
                         field_span_attribute,
                     );
-                    let connector_response =
-                        fetch_from_data_connector(http_context, query, data_connector, project_id)
-                            .await?;
+                    let connector_response = fetch_from_data_connector(
+                        http_context,
+                        plugins,
+                        session,
+                        query,
+                        data_connector,
+                        project_id,
+                    )
+                    .await?;
                     Ok(connector_response)
                 })
             },
@@ -56,6 +66,8 @@ pub async fn execute_ndc_query(
 
 pub async fn fetch_from_data_connector(
     http_context: &HttpContext,
+    _plugins: &LifecyclePluginConfigs,
+    _session: &Session,
     query_request: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
@@ -109,6 +121,8 @@ pub fn append_project_id_to_headers<'a>(
 /// Executes a NDC mutation
 pub(crate) async fn execute_ndc_mutation(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query: &NdcMutationRequest,
     data_connector: &Arc<metadata_resolve::DataConnectorLink>,
     execution_span_attribute: &'static str,
@@ -138,6 +152,8 @@ pub(crate) async fn execute_ndc_mutation(
                     );
                     let connector_response = fetch_from_data_connector_mutation(
                         http_context,
+                        plugins,
+                        session,
                         query,
                         data_connector,
                         project_id,
@@ -152,6 +168,8 @@ pub(crate) async fn execute_ndc_mutation(
 
 pub async fn fetch_from_data_connector_mutation(
     http_context: &HttpContext,
+    _plugins: &LifecyclePluginConfigs,
+    _session: &Session,
     query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
@@ -185,7 +203,8 @@ pub async fn fetch_from_data_connector_mutation(
 
 pub async fn fetch_from_data_connector_explain(
     http_context: &HttpContext,
-
+    _plugins: &LifecyclePluginConfigs,
+    _session: &Session,
     query_request: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
@@ -219,7 +238,8 @@ pub async fn fetch_from_data_connector_explain(
 
 pub async fn fetch_from_data_connector_mutation_explain(
     http_context: &HttpContext,
-
+    _plugins: &LifecyclePluginConfigs,
+    _session: &Session,
     query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
