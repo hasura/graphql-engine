@@ -11,7 +11,9 @@ use open_dds::plugins::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
-use types::{ResolvedLifecyclePreNdcRequestPluginHook, ResolvedLifecyclePreNdcResponsePluginHook};
+pub use types::{
+    ResolvedLifecyclePreNdcRequestPluginHook, ResolvedLifecyclePreNdcResponsePluginHook,
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct LifecyclePluginConfigs {

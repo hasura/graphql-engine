@@ -66,7 +66,10 @@ pub use stages::order_by_expressions::{
     OrderableRelationship, OrderableRelationshipError, OrderableScalarField,
     validate_orderable_relationship,
 };
-pub use stages::plugins::LifecyclePluginConfigs;
+pub use stages::plugins::{
+    LifecyclePluginConfigs, ResolvedLifecyclePreNdcRequestPluginHook,
+    ResolvedLifecyclePreNdcResponsePluginHook,
+};
 pub use stages::scalar_boolean_expressions::{
     LogicalOperators, LogicalOperatorsGraphqlConfig, ResolvedScalarBooleanExpressionType,
 };

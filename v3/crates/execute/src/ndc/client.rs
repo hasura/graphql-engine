@@ -44,6 +44,12 @@ pub enum Error {
 
     #[error("invalid connector error: {0}")]
     InvalidConnector(InvalidConnectorError),
+
+    #[error("Error while executing pre ndc request plugin: {0}")]
+    PreNdcRequestPluginError(#[from] pre_ndc_request_plugin::execute::Error),
+
+    #[error("Error while executing pre ndc response plugin: {0}")]
+    PreNdcResponsePluginError(#[from] pre_ndc_response_plugin::execute::Error),
 }
 
 impl tracing_util::TraceableError for Error {

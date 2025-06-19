@@ -2160,6 +2160,8 @@ dependencies = [
  "nonempty",
  "open-dds",
  "plan-types",
+ "pre-ndc-request-plugin",
+ "pre-ndc-response-plugin",
  "pretty_assertions",
  "reqwest",
  "serde",
@@ -4514,6 +4516,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
 dependencies = [
  "zerocopy 0.8.24",
+]
+
+[[package]]
+name = "pre-ndc-request-plugin"
+version = "3.0.0"
+dependencies = [
+ "axum",
+ "engine-types",
+ "hasura-authn-core",
+ "lang-graphql",
+ "metadata-resolve",
+ "open-dds",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "tracing-util",
+]
+
+[[package]]
+name = "pre-ndc-response-plugin"
+version = "3.0.0"
+dependencies = [
+ "axum",
+ "engine-types",
+ "hasura-authn-core",
+ "lang-graphql",
+ "metadata-resolve",
+ "open-dds",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "tracing-util",
 ]
 
 [[package]]

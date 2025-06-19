@@ -1,8 +1,17 @@
 pub mod client;
 pub mod migration;
+mod plugins;
 pub mod types;
 use hasura_authn_core::Session;
 use metadata_resolve::LifecyclePluginConfigs;
+use plugins::{
+    execute_pre_ndc_mutation_explain_request_plugins,
+    execute_pre_ndc_mutation_explain_response_plugins, execute_pre_ndc_mutation_request_plugins,
+    execute_pre_ndc_mutation_response_plugins, execute_pre_ndc_query_explain_request_plugins,
+    execute_pre_ndc_query_explain_response_plugins, execute_pre_ndc_query_request_plugins,
+    execute_pre_ndc_query_response_plugins,
+};
+use pre_ndc_request_plugin::execute::PreNdcRequestPluginResponse;
 pub use types::*;
 
 use std::borrow::Cow;
@@ -66,13 +75,33 @@ pub async fn execute_ndc_query(
 
 pub async fn fetch_from_data_connector(
     http_context: &HttpContext,
-    _plugins: &LifecyclePluginConfigs,
-    _session: &Session,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query_request: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
 ) -> Result<NdcQueryResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
+
+    let plugin_execution_result = execute_pre_ndc_query_request_plugins(
+        &plugins.pre_ndc_request_plugins,
+        data_connector,
+        http_context,
+        session,
+        query_request,
+    )
+    .await?;
+
+    // plugin can return nothing, a new request to be used, or a response to be returned immediately
+    let owned_request;
+    let query_request = match plugin_execution_result {
+        None => query_request,
+        Some(PreNdcRequestPluginResponse::NdcRequest(ndc_request)) => {
+            owned_request = ndc_request;
+            &owned_request
+        }
+        Some(PreNdcRequestPluginResponse::NdcResponse(ndc_response)) => return Ok(ndc_response),
+    };
 
     let response = tracer
         .in_span_async(
@@ -96,6 +125,17 @@ pub async fn fetch_from_data_connector(
             },
         )
         .await?;
+
+    let response = execute_pre_ndc_query_response_plugins(
+        &plugins.pre_ndc_response_plugins,
+        data_connector,
+        http_context,
+        session,
+        query_request,
+        &response,
+    )
+    .await?
+    .unwrap_or(response);
 
     Ok(response)
 }
@@ -168,13 +208,33 @@ pub(crate) async fn execute_ndc_mutation(
 
 pub async fn fetch_from_data_connector_mutation(
     http_context: &HttpContext,
-    _plugins: &LifecyclePluginConfigs,
-    _session: &Session,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
 ) -> Result<NdcMutationResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
+
+    let plugin_execution_result = execute_pre_ndc_mutation_request_plugins(
+        &plugins.pre_ndc_request_plugins,
+        data_connector,
+        http_context,
+        session,
+        query_request,
+    )
+    .await?;
+
+    // plugin can return nothing, a new request to be used, or a response to be returned immediately
+    let owned_request;
+    let query_request = match plugin_execution_result {
+        None => query_request,
+        Some(PreNdcRequestPluginResponse::NdcRequest(ndc_request)) => {
+            owned_request = ndc_request;
+            &owned_request
+        }
+        Some(PreNdcRequestPluginResponse::NdcResponse(ndc_response)) => return Ok(ndc_response),
+    };
 
     let response = tracer
         .in_span_async(
@@ -198,18 +258,49 @@ pub async fn fetch_from_data_connector_mutation(
         )
         .await?;
 
+    let response = execute_pre_ndc_mutation_response_plugins(
+        &plugins.pre_ndc_response_plugins,
+        data_connector,
+        http_context,
+        session,
+        query_request,
+        &response,
+    )
+    .await?
+    .unwrap_or(response);
+
     Ok(response)
 }
 
 pub async fn fetch_from_data_connector_explain(
     http_context: &HttpContext,
-    _plugins: &LifecyclePluginConfigs,
-    _session: &Session,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query_request: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
 ) -> Result<NdcExplainResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
+
+    let plugin_execution_result = execute_pre_ndc_query_explain_request_plugins(
+        &plugins.pre_ndc_request_plugins,
+        data_connector,
+        http_context,
+        session,
+        query_request,
+    )
+    .await?;
+
+    // plugin can return nothing, a new request to be used, or a response to be returned immediately
+    let owned_request;
+    let query_request = match plugin_execution_result {
+        None => query_request,
+        Some(PreNdcRequestPluginResponse::NdcRequest(ndc_request)) => {
+            owned_request = ndc_request;
+            &owned_request
+        }
+        Some(PreNdcRequestPluginResponse::NdcResponse(ndc_response)) => return Ok(ndc_response),
+    };
 
     let response = tracer
         .in_span_async(
@@ -233,18 +324,49 @@ pub async fn fetch_from_data_connector_explain(
         )
         .await?;
 
+    let response = execute_pre_ndc_query_explain_response_plugins(
+        &plugins.pre_ndc_response_plugins,
+        data_connector,
+        http_context,
+        session,
+        query_request,
+        &response,
+    )
+    .await?
+    .unwrap_or(response);
+
     Ok(response)
 }
 
 pub async fn fetch_from_data_connector_mutation_explain(
     http_context: &HttpContext,
-    _plugins: &LifecyclePluginConfigs,
-    _session: &Session,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
 ) -> Result<NdcExplainResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
+
+    let plugin_execution_result = execute_pre_ndc_mutation_explain_request_plugins(
+        &plugins.pre_ndc_request_plugins,
+        data_connector,
+        http_context,
+        session,
+        query_request,
+    )
+    .await?;
+
+    // plugin can return nothing, a new request to be used, or a response to be returned immediately
+    let owned_request;
+    let query_request = match plugin_execution_result {
+        None => query_request,
+        Some(PreNdcRequestPluginResponse::NdcRequest(ndc_request)) => {
+            owned_request = ndc_request;
+            &owned_request
+        }
+        Some(PreNdcRequestPluginResponse::NdcResponse(ndc_response)) => return Ok(ndc_response),
+    };
 
     let response = tracer
         .in_span_async(
@@ -270,6 +392,17 @@ pub async fn fetch_from_data_connector_mutation_explain(
             },
         )
         .await?;
+
+    let response = execute_pre_ndc_mutation_explain_response_plugins(
+        &plugins.pre_ndc_response_plugins,
+        data_connector,
+        http_context,
+        session,
+        query_request,
+        &response,
+    )
+    .await?
+    .unwrap_or(response);
 
     Ok(response)
 }
