@@ -6,6 +6,7 @@ use open_dds::{
     },
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 use crate::Qualified;
 
@@ -16,7 +17,7 @@ pub struct ResolvedLifecyclePreNdcRequestPluginHook {
     pub name: Qualified<LifecyclePluginName>,
     /// A list of data connectors that this plugin hook should be applied to.
     /// There can only be one plugin hook of this type per data connector.
-    pub connectors: Vec<Qualified<DataConnectorName>>,
+    pub connectors: HashSet<Qualified<DataConnectorName>>,
     /// The URL to access the lifecycle plugin hook.
     pub url: LifecyclePluginUrl,
     /// Configuration for the lifecycle plugin hook.
@@ -30,7 +31,7 @@ pub struct ResolvedLifecyclePreNdcResponsePluginHook {
     pub name: Qualified<LifecyclePluginName>,
     /// A list of data connectors that this plugin hook should be applied to.
     /// There can only be one plugin hook of this type per data connector.
-    pub connectors: Vec<Qualified<DataConnectorName>>,
+    pub connectors: HashSet<Qualified<DataConnectorName>>,
     /// The URL to access the lifecycle plugin hook.
     pub url: LifecyclePluginUrl,
     /// Configuration for the lifecycle plugin hook.

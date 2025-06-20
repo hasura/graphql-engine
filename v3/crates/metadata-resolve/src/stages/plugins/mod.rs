@@ -3,7 +3,6 @@ pub mod types;
 use crate::Qualified;
 pub use error::PluginValidationError;
 use open_dds::data_connector::DataConnectorName;
-use open_dds::identifier::SubgraphName;
 use open_dds::plugins::LifecyclePluginHookV1;
 use open_dds::plugins::{
     LifecyclePluginName, LifecyclePreParsePluginHook, LifecyclePreResponsePluginHook,
@@ -11,6 +10,7 @@ use open_dds::plugins::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
+use std::sync::Arc;
 pub use types::{
     ResolvedLifecyclePreNdcRequestPluginHook, ResolvedLifecyclePreNdcResponsePluginHook,
 };
@@ -20,8 +20,10 @@ pub struct LifecyclePluginConfigs {
     pub pre_parse_plugins: Vec<LifecyclePreParsePluginHook>,
     pub pre_response_plugins: Vec<LifecyclePreResponsePluginHook>,
     pub pre_route_plugins: Vec<LifecyclePreRoutePluginHook>,
-    pub pre_ndc_request_plugins: Vec<ResolvedLifecyclePreNdcRequestPluginHook>,
-    pub pre_ndc_response_plugins: Vec<ResolvedLifecyclePreNdcResponsePluginHook>,
+    pub pre_ndc_request_plugins:
+        BTreeMap<Qualified<DataConnectorName>, Arc<ResolvedLifecyclePreNdcRequestPluginHook>>,
+    pub pre_ndc_response_plugins:
+        BTreeMap<Qualified<DataConnectorName>, Arc<ResolvedLifecyclePreNdcResponsePluginHook>>,
 }
 
 /// Resolves plugin configurations from metadata
@@ -31,21 +33,13 @@ pub fn resolve(
     let mut pre_parse_plugins = Vec::new();
     let mut pre_response_plugins = Vec::new();
     let mut pre_route_plugins = Vec::new();
-    let mut pre_ndc_request_plugins = Vec::new();
-    let mut pre_ndc_response_plugins = Vec::new();
+    let mut pre_ndc_request_plugins = BTreeMap::new();
+    let mut pre_ndc_response_plugins = BTreeMap::new();
 
     let mut validation_errors = Vec::new();
 
-    // Track which data connectors are referenced by which plugins
-    let mut ndc_request_plugin_connectors: BTreeMap<
-        Qualified<DataConnectorName>,
-        Qualified<LifecyclePluginName>,
-    > = BTreeMap::new();
+    // Track which plugin names have been seen
     let mut ndc_request_plugin_names: HashSet<Qualified<LifecyclePluginName>> = HashSet::new();
-    let mut ndc_response_plugin_connectors: BTreeMap<
-        Qualified<DataConnectorName>,
-        Qualified<LifecyclePluginName>,
-    > = BTreeMap::new();
     let mut ndc_response_plugin_names: HashSet<Qualified<LifecyclePluginName>> = HashSet::new();
 
     // Create a set of all available data connectors
@@ -78,23 +72,42 @@ pub fn resolve(
                     });
                 }
 
-                let connectors = resolve_ndc_plugin_connectors(
-                    &plugin.connectors,
-                    subgraph,
-                    &qualified_plugin_name,
-                    "NdcRequest",
-                    &available_data_connectors,
-                    &mut ndc_request_plugin_connectors,
-                    &mut validation_errors,
-                );
+                // build a set of connectors for this plugin. Duplicates will be silently dropped
+                let connectors: HashSet<_> = plugin
+                    .connectors
+                    .iter()
+                    .map(|connector| Qualified::new(subgraph.clone(), connector.clone()))
+                    .collect();
 
-                // Create the resolved plugin hook
-                pre_ndc_request_plugins.push(ResolvedLifecyclePreNdcRequestPluginHook {
-                    name: qualified_plugin_name,
-                    connectors,
+                let resolved_plugin = Arc::new(ResolvedLifecyclePreNdcRequestPluginHook {
+                    name: qualified_plugin_name.clone(),
+                    connectors: connectors.clone(),
                     url: plugin.url.clone(),
                     config: plugin.config.clone(),
                 });
+
+                for connector in &connectors {
+                    if !available_data_connectors.contains(connector) {
+                        validation_errors.push(PluginValidationError::UnknownDataConnector {
+                            plugin_name: qualified_plugin_name.clone(),
+                            data_connector_name: connector.clone(),
+                        });
+                    }
+
+                    // report an error if there are multiple plugins of the same type for a single connector
+                    if let Some(plugin_b) =
+                        pre_ndc_request_plugins.insert(connector.clone(), resolved_plugin.clone())
+                    {
+                        validation_errors.push(
+                            PluginValidationError::DuplicatePluginForDataConnector {
+                                plugin_type: "NdcRequest".to_string(),
+                                data_connector_name: connector.clone(),
+                                plugin_name_a: plugin_b.name.clone(),
+                                plugin_name_b: qualified_plugin_name.clone(),
+                            },
+                        );
+                    }
+                }
             }
             LifecyclePluginHookV1::NdcResponse(plugin) => {
                 let qualified_plugin_name = Qualified::new(subgraph.clone(), plugin.name.clone());
@@ -106,23 +119,41 @@ pub fn resolve(
                     });
                 }
 
-                let connectors = resolve_ndc_plugin_connectors(
-                    &plugin.connectors,
-                    subgraph,
-                    &qualified_plugin_name,
-                    "NdcResponse",
-                    &available_data_connectors,
-                    &mut ndc_response_plugin_connectors,
-                    &mut validation_errors,
-                );
+                let connectors: HashSet<_> = plugin
+                    .connectors
+                    .iter()
+                    .map(|connector| Qualified::new(subgraph.clone(), connector.clone()))
+                    .collect();
 
-                // Create the resolved plugin hook
-                pre_ndc_response_plugins.push(ResolvedLifecyclePreNdcResponsePluginHook {
-                    name: qualified_plugin_name,
-                    connectors,
+                let resolved_plugin = Arc::new(ResolvedLifecyclePreNdcResponsePluginHook {
+                    name: qualified_plugin_name.clone(),
+                    connectors: connectors.clone(),
                     url: plugin.url.clone(),
                     config: plugin.config.clone(),
                 });
+
+                for connector in &connectors {
+                    if !available_data_connectors.contains(connector) {
+                        validation_errors.push(PluginValidationError::UnknownDataConnector {
+                            plugin_name: qualified_plugin_name.clone(),
+                            data_connector_name: connector.clone(),
+                        });
+                    }
+
+                    // report an error if there are multiple plugins of the same type for a single connector
+                    if let Some(plugin_b) =
+                        pre_ndc_response_plugins.insert(connector.clone(), resolved_plugin.clone())
+                    {
+                        validation_errors.push(
+                            PluginValidationError::DuplicatePluginForDataConnector {
+                                plugin_type: "NdcResponse".to_string(),
+                                data_connector_name: connector.clone(),
+                                plugin_name_a: plugin_b.name.clone(),
+                                plugin_name_b: qualified_plugin_name.clone(),
+                            },
+                        );
+                    }
+                }
             }
         }
     }
@@ -138,66 +169,4 @@ pub fn resolve(
     } else {
         Err(validation_errors)
     }
-}
-
-/// Resolves and validates connectors for a ndc plugin config
-/// Will append validation errors to the `validation_errors` vector if:
-/// - a connector is referenced multiple times in the same plugin
-/// - a connector is referenced by multiple plugins of the same type
-/// - a connector is referenced but not defined
-fn resolve_ndc_plugin_connectors(
-    plugin_connectors: &Vec<DataConnectorName>,
-    subgraph: &SubgraphName,
-    qualified_plugin_name: &Qualified<LifecyclePluginName>,
-    plugin_type: &str,
-    available_data_connectors: &HashSet<Qualified<DataConnectorName>>,
-    ndc_plugin_connectors: &mut BTreeMap<
-        Qualified<DataConnectorName>,
-        Qualified<LifecyclePluginName>,
-    >,
-    validation_errors: &mut Vec<PluginValidationError>,
-) -> Vec<Qualified<DataConnectorName>> {
-    let mut connectors = Vec::new();
-
-    for connector in plugin_connectors {
-        let qualified_connector_name = Qualified::new(subgraph.clone(), connector.clone());
-
-        // Check for references to unknown data connectors
-        if available_data_connectors.contains(&qualified_connector_name) {
-            // ignore duplicate references to the same connector
-            if connectors.contains(&qualified_connector_name) {
-                validation_errors.push(PluginValidationError::DuplicateConnectorName {
-                    plugin_name: qualified_plugin_name.clone(),
-                    connector_name: connector.clone(),
-                });
-            } else {
-                if let Some(plugin_a) =
-                    // track we have a plugin of this type for this connector
-                    ndc_plugin_connectors.insert(
-                        qualified_connector_name.clone(),
-                        qualified_plugin_name.clone(),
-                    )
-                {
-                    // error if there is already another plugin of this type for this connector
-                    validation_errors.push(
-                        PluginValidationError::DuplicatePluginForDataConnector {
-                            plugin_type: plugin_type.to_string(),
-                            data_connector_name: qualified_connector_name.clone(),
-                            plugin_name_a: plugin_a.clone(),
-                            plugin_name_b: qualified_plugin_name.clone(),
-                        },
-                    );
-                }
-
-                connectors.push(qualified_connector_name);
-            }
-        } else {
-            validation_errors.push(PluginValidationError::UnknownDataConnector {
-                plugin_name: qualified_plugin_name.clone(),
-                data_connector_name: qualified_connector_name.clone(),
-            });
-        }
-    }
-
-    connectors
 }

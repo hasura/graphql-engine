@@ -18,11 +18,6 @@ pub enum PluginValidationError {
         plugin_name_a: Qualified<LifecyclePluginName>,
         plugin_name_b: Qualified<LifecyclePluginName>,
     },
-    #[error("Plugin {plugin_name} has duplicate connector name {connector_name}")]
-    DuplicateConnectorName {
-        plugin_name: Qualified<LifecyclePluginName>,
-        connector_name: DataConnectorName,
-    },
     #[error("Plugin {plugin_name} is defined more than once")]
     DuplicatePluginName {
         plugin_name: Qualified<LifecyclePluginName>,

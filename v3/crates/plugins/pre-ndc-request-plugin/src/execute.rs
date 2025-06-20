@@ -7,7 +7,7 @@ use metadata_resolve::{DataConnectorLink, Qualified, ResolvedLifecyclePreNdcRequ
 use open_dds::data_connector::DataConnectorName;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+use std::{collections::BTreeMap, str::FromStr, sync::Arc};
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError, set_attribute_on_active_span};
 
 #[derive(Debug, thiserror::Error)]
@@ -102,7 +102,10 @@ pub struct PreNdcRequestPluginRequestBody<Req> {
 /// If there are no plugins, returns the ndc request as-is.
 /// May instead return an error from any plugins
 pub async fn execute_pre_ndc_request_plugins<Req, Res>(
-    pre_ndc_request_plugins: &[ResolvedLifecyclePreNdcRequestPluginHook],
+    pre_ndc_request_plugins: &BTreeMap<
+        Qualified<DataConnectorName>,
+        Arc<ResolvedLifecyclePreNdcRequestPluginHook>,
+    >,
     data_connector: &DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
@@ -114,12 +117,7 @@ where
     Req: Serialize + for<'de> Deserialize<'de> + Clone + Send + Sync,
     Res: for<'de> Deserialize<'de>,
 {
-    match pre_ndc_request_plugins.iter().find(|plugin| {
-        plugin
-            .connectors
-            .iter()
-            .any(|connector_name| connector_name == &data_connector.name)
-    }) {
+    match pre_ndc_request_plugins.get(&data_connector.name) {
         None => Ok(None),
         Some(plugin) => {
             handle_pre_ndc_request_plugin(

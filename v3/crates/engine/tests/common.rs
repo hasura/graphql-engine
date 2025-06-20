@@ -124,8 +124,8 @@ pub(crate) fn test_introspection_expectation(
             .collect::<Result<_, _>>()?;
 
         let plugins = LifecyclePluginConfigs {
-            pre_ndc_request_plugins: Vec::new(),
-            pre_ndc_response_plugins: Vec::new(),
+            pre_ndc_request_plugins: BTreeMap::new(),
+            pre_ndc_response_plugins: BTreeMap::new(),
             pre_parse_plugins: Vec::new(),
             pre_response_plugins: Vec::new(),
             pre_route_plugins: Vec::new(),
@@ -401,8 +401,8 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 .collect::<Result<_, _>>()?;
 
             let plugins = LifecyclePluginConfigs {
-                pre_ndc_request_plugins: Vec::new(),
-                pre_ndc_response_plugins: Vec::new(),
+                pre_ndc_request_plugins: BTreeMap::new(),
+                pre_ndc_response_plugins: BTreeMap::new(),
                 pre_parse_plugins: Vec::new(),
                 pre_response_plugins: Vec::new(),
                 pre_route_plugins: Vec::new(),
@@ -612,8 +612,8 @@ pub fn test_execute_explain(
             resolve_session(session_variables)
         }?;
         let plugins = LifecyclePluginConfigs {
-            pre_ndc_request_plugins: Vec::new(),
-            pre_ndc_response_plugins: Vec::new(),
+            pre_ndc_request_plugins: BTreeMap::new(),
+            pre_ndc_response_plugins: BTreeMap::new(),
             pre_parse_plugins: Vec::new(),
             pre_response_plugins: Vec::new(),
             pre_route_plugins: Vec::new(),

@@ -42,7 +42,13 @@ fn test_get_succeeding_requests() {
 
                 let session = create_default_session();
 
-                let plugins = LifecyclePluginConfigs { pre_parse_plugins: Vec::new(), pre_response_plugins: Vec::new(), pre_route_plugins: Vec::new(), pre_ndc_request_plugins: Vec::new(), pre_ndc_response_plugins: Vec::new() };
+                let plugins = LifecyclePluginConfigs {
+                    pre_parse_plugins: Vec::new(),
+                    pre_response_plugins: Vec::new(),
+                    pre_route_plugins: Vec::new(),
+                    pre_ndc_request_plugins: BTreeMap::new(),
+                    pre_ndc_response_plugins: BTreeMap::new(),
+                };
 
                 let result = jsonapi::handler_internal(
                     Arc::new(HeaderMap::default()),
@@ -112,8 +118,8 @@ fn test_get_failing_requests() {
                     pre_parse_plugins: Vec::new(),
                     pre_response_plugins: Vec::new(),
                     pre_route_plugins: Vec::new(),
-                    pre_ndc_request_plugins: Vec::new(),
-                    pre_ndc_response_plugins: Vec::new()
+                    pre_ndc_request_plugins: BTreeMap::new(),
+                    pre_ndc_response_plugins: BTreeMap::new()
                 };
 
                 let result = jsonapi::handler_internal(

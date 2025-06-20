@@ -95,8 +95,8 @@ pub fn bench_execute(
         .build_session(BTreeMap::new());
 
     let plugins = LifecyclePluginConfigs {
-        pre_ndc_request_plugins: Vec::new(),
-        pre_ndc_response_plugins: Vec::new(),
+        pre_ndc_request_plugins: BTreeMap::new(),
+        pre_ndc_response_plugins: BTreeMap::new(),
         pre_parse_plugins: Vec::new(),
         pre_response_plugins: Vec::new(),
         pre_route_plugins: Vec::new(),

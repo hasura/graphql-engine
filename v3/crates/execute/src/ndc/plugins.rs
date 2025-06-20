@@ -1,12 +1,14 @@
 use engine_types::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve::{
-    ResolvedLifecyclePreNdcRequestPluginHook, ResolvedLifecyclePreNdcResponsePluginHook,
+    Qualified, ResolvedLifecyclePreNdcRequestPluginHook, ResolvedLifecyclePreNdcResponsePluginHook,
 };
+use open_dds::data_connector::DataConnectorName;
 use pre_ndc_request_plugin::execute::{
     PreNdcRequestPluginResponse, execute_pre_ndc_request_plugins,
 };
 use pre_ndc_response_plugin::execute::execute_pre_ndc_response_plugins;
+use std::{collections::BTreeMap, sync::Arc};
 
 use crate::ndc::NdcExplainResponse;
 
@@ -15,7 +17,7 @@ use super::{NdcMutationRequest, NdcMutationResponse, NdcQueryRequest, NdcQueryRe
 /// Wrapper for execute_pre_ndc_request_plugins that is specific to queries, and aware of the NdcQueryRequestEnum and variants.
 /// It handles converting the NdcQueryRequestEnum to the specific request type, and back.
 pub async fn execute_pre_ndc_query_request_plugins(
-    plugins: &[ResolvedLifecyclePreNdcRequestPluginHook],
+    plugins: &BTreeMap<Qualified<DataConnectorName>, Arc<ResolvedLifecyclePreNdcRequestPluginHook>>,
     data_connector: &metadata_resolve::DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
@@ -70,7 +72,10 @@ pub async fn execute_pre_ndc_query_request_plugins(
 /// Wrapper for execute_pre_ndc_response_plugins that is specific to queries, and aware of the NdcQueryRequestEnum and variants.
 /// It handles converting the NdcQueryRequestEnum to the specific request type, and back.
 pub async fn execute_pre_ndc_query_response_plugins(
-    plugins: &[ResolvedLifecyclePreNdcResponsePluginHook],
+    plugins: &BTreeMap<
+        Qualified<DataConnectorName>,
+        Arc<ResolvedLifecyclePreNdcResponsePluginHook>,
+    >,
     data_connector: &metadata_resolve::DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
@@ -119,7 +124,7 @@ pub async fn execute_pre_ndc_query_response_plugins(
 /// Wrapper for execute_pre_ndc_request_plugins that is specific to mutations, and aware of the NdcMutationRequestEnum and variants.
 /// It handles converting the NdcMutationRequestEnum to the specific request type, and back.
 pub async fn execute_pre_ndc_mutation_request_plugins(
-    plugins: &[ResolvedLifecyclePreNdcRequestPluginHook],
+    plugins: &BTreeMap<Qualified<DataConnectorName>, Arc<ResolvedLifecyclePreNdcRequestPluginHook>>,
     data_connector: &metadata_resolve::DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
@@ -181,7 +186,10 @@ pub async fn execute_pre_ndc_mutation_request_plugins(
 /// Wrapper for execute_pre_ndc_response_plugins that is specific to mutations, and aware of the NdcMutationRequestEnum and variants.
 /// It handles converting the NdcMutationRequestEnum to the specific request type, and back.
 pub async fn execute_pre_ndc_mutation_response_plugins(
-    plugins: &[ResolvedLifecyclePreNdcResponsePluginHook],
+    plugins: &BTreeMap<
+        Qualified<DataConnectorName>,
+        Arc<ResolvedLifecyclePreNdcResponsePluginHook>,
+    >,
     data_connector: &metadata_resolve::DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
@@ -230,7 +238,7 @@ pub async fn execute_pre_ndc_mutation_response_plugins(
 /// Wrapper for execute_pre_ndc_request_plugins that is specific to query explain requests, and aware of the NdcQueryRequestEnum and variants.
 /// It handles converting the NdcQueryRequestEnum to the specific request type, and back.
 pub async fn execute_pre_ndc_query_explain_request_plugins(
-    plugins: &[ResolvedLifecyclePreNdcRequestPluginHook],
+    plugins: &BTreeMap<Qualified<DataConnectorName>, Arc<ResolvedLifecyclePreNdcRequestPluginHook>>,
     data_connector: &metadata_resolve::DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
@@ -286,7 +294,10 @@ pub async fn execute_pre_ndc_query_explain_request_plugins(
 /// Wrapper for execute_pre_ndc_response_plugins that is specific to query explain requests, and aware of the NdcQueryRequestEnum and variants.
 /// It handles converting the NdcQueryRequestEnum to the specific request type, and back.
 pub async fn execute_pre_ndc_query_explain_response_plugins(
-    plugins: &[ResolvedLifecyclePreNdcResponsePluginHook],
+    plugins: &BTreeMap<
+        Qualified<DataConnectorName>,
+        Arc<ResolvedLifecyclePreNdcResponsePluginHook>,
+    >,
     data_connector: &metadata_resolve::DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
@@ -335,7 +346,7 @@ pub async fn execute_pre_ndc_query_explain_response_plugins(
 /// Wrapper for execute_pre_ndc_request_plugins that is specific to mutation explain requests, and aware of the NdcMutationRequestEnum and variants.
 /// It handles converting the NdcMutationRequestEnum to the specific request type, and back.
 pub async fn execute_pre_ndc_mutation_explain_request_plugins(
-    plugins: &[ResolvedLifecyclePreNdcRequestPluginHook],
+    plugins: &BTreeMap<Qualified<DataConnectorName>, Arc<ResolvedLifecyclePreNdcRequestPluginHook>>,
     data_connector: &metadata_resolve::DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
@@ -391,7 +402,10 @@ pub async fn execute_pre_ndc_mutation_explain_request_plugins(
 }
 
 pub async fn execute_pre_ndc_mutation_explain_response_plugins(
-    plugins: &[ResolvedLifecyclePreNdcResponsePluginHook],
+    plugins: &BTreeMap<
+        Qualified<DataConnectorName>,
+        Arc<ResolvedLifecyclePreNdcResponsePluginHook>,
+    >,
     data_connector: &metadata_resolve::DataConnectorLink,
     http_context: &HttpContext,
     session: &Session,
