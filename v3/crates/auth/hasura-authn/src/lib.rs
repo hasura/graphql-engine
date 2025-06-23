@@ -355,8 +355,8 @@ fn validate_auth_config(auth_config: &AuthConfig) -> Result<Vec<Warning>, Error>
     match auth_config {
         AuthConfig::V1(_) => warnings.push(Warning::PleaseUpgradeV1ToV4),
         AuthConfig::V2(_) => warnings.push(Warning::PleaseUpgradeV2ToV4),
-        AuthConfig::V3(_) => warnings.push(Warning::PleaseUpgradeV3ToV4),
-        AuthConfig::V4(_) => (),
+        // We are not raising any warnings for v3 of AuthConfig.
+        AuthConfig::V3(_) | AuthConfig::V4(_) => (),
     }
     match auth_config {
         AuthConfig::V1(_) | AuthConfig::V2(_) => (),
