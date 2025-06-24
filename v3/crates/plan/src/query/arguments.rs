@@ -16,7 +16,7 @@ use open_dds::{
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use plan_types::{
-    Argument, Expression, PredicateQueryTrees, Relationship, UniqueNumber, UsagesCounts,
+    Argument, Expression, PlanState, PredicateQueryTrees, Relationship, UsagesCounts,
 };
 use reqwest::header::HeaderMap;
 use serde::Serialize;
@@ -639,7 +639,7 @@ pub fn resolve_arguments(
     arguments_with_presets: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'_>>,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<BTreeMap<DataConnectorArgumentName, Argument>, PlanError> {
     // now we turn the GraphQL IR `Arguments` type into the `execute` "resolved" argument type
     // by resolving any `Expression` types inside
@@ -648,7 +648,7 @@ pub fn resolve_arguments(
         let resolved_argument_value = match argument_value {
             UnresolvedArgument::BooleanExpression { predicate } => {
                 let resolved_filter_expression =
-                    plan_expression(&predicate, relationships, remote_predicates, unique_number)?;
+                    plan_expression(&predicate, relationships, remote_predicates, plan_state)?;
 
                 Argument::BooleanExpression {
                     predicate: resolved_filter_expression,

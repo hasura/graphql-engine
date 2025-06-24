@@ -7,7 +7,7 @@ use metadata_resolve::{Qualified, RelationshipTarget, TypeMapping};
 use open_dds::{
     data_connector::DataConnectorColumnName, query::OrderByElement, types::CustomTypeName,
 };
-use plan_types::{PredicateQueryTrees, ResolvedFilterExpression, UniqueNumber, UsagesCounts};
+use plan_types::{PlanState, PredicateQueryTrees, ResolvedFilterExpression, UsagesCounts};
 
 pub fn to_resolved_order_by_element(
     metadata: &metadata_resolve::Metadata,
@@ -19,7 +19,7 @@ pub fn to_resolved_order_by_element(
     element: &OrderByElement,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByElement<ResolvedFilterExpression>, PlanError> {
     let order_direction = match element.direction {
@@ -38,7 +38,7 @@ pub fn to_resolved_order_by_element(
         vec![], // Start with empty field path
         collect_relationships,
         remote_predicates,
-        unique_number,
+        plan_state,
         usage_counts,
     )?;
     Ok(plan_types::OrderByElement {
@@ -59,7 +59,7 @@ fn from_operand(
     field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
     match operand {
@@ -75,7 +75,7 @@ fn from_operand(
             field_path,
             collect_relationships,
             remote_predicates,
-            unique_number,
+            plan_state,
             usage_counts,
         ),
         open_dds::query::Operand::Relationship(relationship_operand) => {
@@ -91,7 +91,7 @@ fn from_operand(
                 field_path,
                 collect_relationships,
                 remote_predicates,
-                unique_number,
+                plan_state,
                 usage_counts,
             )
         }
@@ -116,7 +116,7 @@ fn resolve_field_operand(
     mut field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
     let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
@@ -176,7 +176,7 @@ fn resolve_field_operand(
             field_path,
             collect_relationships,
             remote_predicates,
-            unique_number,
+            plan_state,
             usage_counts,
         )
     } else {
@@ -209,7 +209,7 @@ fn resolve_relationship_operand(
     mut field_path: Vec<DataConnectorColumnName>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<plan_types::OrderByTarget<ResolvedFilterExpression>, PlanError> {
     let relationship_name = &operand.target.relationship_name;
@@ -271,7 +271,7 @@ fn resolve_relationship_operand(
                 &metadata.object_types,
                 collect_relationships,
                 remote_predicates,
-                unique_number,
+                plan_state,
                 usage_counts,
             )?;
 
@@ -314,7 +314,7 @@ fn resolve_relationship_operand(
                     field_path,
                     collect_relationships,
                     remote_predicates,
-                    unique_number,
+                    plan_state,
                     usage_counts,
                 ),
                 None => Err(OrderByError::Internal(

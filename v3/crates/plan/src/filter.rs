@@ -15,7 +15,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 use plan_types::{
-    Expression, PredicateQueryTrees, ResolvedFilterExpression, UniqueNumber, UsagesCounts,
+    Expression, PlanState, PredicateQueryTrees, ResolvedFilterExpression, UsagesCounts,
 };
 use std::collections::BTreeMap;
 
@@ -1044,7 +1044,7 @@ pub(crate) fn resolve_model_permission_filter(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<ResolvedFilterExpression>, PlanError> {
     let model_name = &model.model.name;
@@ -1078,7 +1078,7 @@ pub(crate) fn resolve_model_permission_filter(
                 &filter_ir,
                 collect_relationships,
                 remote_predicates,
-                unique_number,
+                plan_state,
             )?;
 
             Ok(filter.remove_always_true_expression())

@@ -20,7 +20,7 @@ use plan_types::{
     NdcFieldAlias, NdcRelationshipName, NestedArray, NestedField, NestedObject,
     PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode, Relationship,
 };
-use plan_types::{FUNCTION_IR_VALUE_COLUMN_NAME, UniqueNumber};
+use plan_types::{FUNCTION_IR_VALUE_COLUMN_NAME, PlanState};
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
@@ -39,7 +39,7 @@ pub fn from_command(
     metadata: &Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<FromCommand, PlanError> {
     let command_target = &command_selection.target;
     let qualified_command_name = metadata_resolve::Qualified::new(
@@ -68,7 +68,7 @@ pub fn from_command(
         &qualified_command_name,
         command,
         command_source,
-        unique_number,
+        plan_state,
     )
 }
 
@@ -82,7 +82,7 @@ fn from_command_output_type(
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<
     (
         IndexMap<NdcFieldAlias, Field>,
@@ -102,7 +102,7 @@ fn from_command_output_type(
             relationships,
             remote_join_executions,
             remote_predicates,
-            unique_number,
+            plan_state,
         ),
         OutputShape::Object {
             object: output_object_type,
@@ -123,7 +123,7 @@ fn from_command_output_type(
                 relationships,
                 remote_join_executions,
                 remote_predicates,
-                unique_number,
+                plan_state,
             )?;
 
             let extract_response_from = match &command_source.data_connector.response_config {
@@ -149,7 +149,7 @@ pub(crate) fn from_command_selection(
     qualified_command_name: &Qualified<CommandName>,
     command: &metadata_resolve::CommandWithPermissions,
     command_source: &metadata_resolve::CommandSource,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<FromCommand, PlanError> {
     let mut relationships = BTreeMap::new();
     let mut usage_counts = plan_types::UsagesCounts::default();
@@ -168,7 +168,7 @@ pub(crate) fn from_command_selection(
         &mut relationships,
         &mut remote_join_executions,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     if !command
@@ -216,7 +216,7 @@ pub(crate) fn from_command_selection(
         unresolved_arguments,
         &mut relationships,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     let command_plan = match &command_source.source {

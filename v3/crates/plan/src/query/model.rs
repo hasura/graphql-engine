@@ -20,8 +20,8 @@ use open_dds::query::{
 };
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, Grouping, JoinLocations,
-    NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode,
-    UniqueNumber,
+    NdcFieldAlias, PlanState, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree,
+    QueryNode,
 };
 
 pub fn from_model_group_by(
@@ -31,7 +31,7 @@ pub fn from_model_group_by(
     metadata: &Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<QueryExecutionTree, PlanError> {
     let mut remote_predicates = PredicateQueryTrees::new();
 
@@ -227,7 +227,7 @@ pub fn from_model_group_by(
         model_source,
         &model_object_type,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     // only send an ordering if there are actually elements
@@ -285,7 +285,7 @@ pub fn from_model_aggregate_selection(
     session: &Session,
     relationship_aggregate_expression: Option<&Qualified<AggregateExpressionName>>,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<QueryExecutionTree, PlanError> {
     let mut remote_predicates = PredicateQueryTrees::new();
 
@@ -346,7 +346,7 @@ pub fn from_model_aggregate_selection(
         model_source,
         &model_object_type,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     let query_aggregate_fields = if fields.is_empty() {
@@ -608,7 +608,7 @@ pub fn from_model_selection(
     metadata: &Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<QueryExecutionTree, PlanError> {
     let mut remote_predicates = PredicateQueryTrees::new();
     let mut remote_join_executions = JoinLocations::new();
@@ -649,7 +649,7 @@ pub fn from_model_selection(
         &mut relationships,
         &mut remote_join_executions,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     let mut query = model_target::model_target_to_ndc_query(
@@ -661,7 +661,7 @@ pub fn from_model_selection(
         model_source,
         &model_object_type,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     // collect relationships accummulated in this scope.
