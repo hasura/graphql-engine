@@ -18,6 +18,7 @@ pub fn get_schema() -> ndc_models::SchemaResponse {
                 }),
             }),
         }),
+        request_arguments: None,
     }
 }
 
