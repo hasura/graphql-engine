@@ -22,12 +22,12 @@ alias fmt := format
 
 fix:
     cargo clippy --all-targets --no-deps --fix --allow-no-vcs
-    cargo fmt
     just fix-format
-    ! command -v nix || nix fmt .
 
 fix-format:
     npx --yes prettier --write .
+    cargo fmt
+    ! command -v nix || nix fmt .
 
 run-local-with-shell:
     #!/usr/bin/env bash
