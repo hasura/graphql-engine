@@ -1,6 +1,7 @@
 use super::permissions;
 use crate::metadata_accessor;
 use crate::plan_expression;
+use crate::types::PlanState;
 use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
@@ -15,9 +16,7 @@ use open_dds::{
     models::ModelName,
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
-use plan_types::{
-    Argument, Expression, PlanState, PredicateQueryTrees, Relationship, UsagesCounts,
-};
+use plan_types::{Argument, Expression, PredicateQueryTrees, Relationship, UsagesCounts};
 use reqwest::header::HeaderMap;
 use serde::Serialize;
 use std::borrow::Cow;
@@ -584,6 +583,7 @@ pub fn get_unresolved_arguments<'s>(
     session: &Session,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector: &'s metadata_resolve::DataConnectorLink,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     let mut arguments = BTreeMap::new();
@@ -611,6 +611,8 @@ pub fn get_unresolved_arguments<'s>(
                     metadata,
                     &boolean_expression_type.object_type,
                     &session.role,
+                    &session.variables,
+                    plan_state,
                 )?;
 
                 let predicate = crate::filter::to_filter_expression(
@@ -621,6 +623,7 @@ pub fn get_unresolved_arguments<'s>(
                     Some(boolean_expression_type),
                     bool_exp,
                     data_connector,
+                    plan_state,
                     usage_counts,
                 )?;
 

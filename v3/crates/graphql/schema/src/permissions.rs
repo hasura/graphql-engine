@@ -144,7 +144,9 @@ pub(crate) fn get_node_interface_annotations(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut permissions = HashMap::new();
-    for (role, type_output_permission) in &object_type_representation.type_output_permissions {
+    for (role, type_output_permission) in
+        &object_type_representation.type_output_permissions.by_role
+    {
         let is_permitted = object_type_representation
             .object_type
             .global_id_fields
@@ -165,7 +167,9 @@ pub(crate) fn get_entity_union_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut permissions = HashMap::new();
-    for (role, type_output_permission) in &object_type_representation.type_output_permissions {
+    for (role, type_output_permission) in
+        &object_type_representation.type_output_permissions.by_role
+    {
         let is_permitted = object_type_representation
             .object_type
             .global_id_fields
@@ -197,6 +201,7 @@ pub(crate) fn get_allowed_roles_for_field<'a>(
 ) -> impl Iterator<Item = &'a Role> {
     object_type_representation
         .type_output_permissions
+        .by_role
         .iter()
         .filter_map(|(role, type_output_permission)| {
             if type_output_permission.allowed_fields.contains(field_name) {
@@ -213,8 +218,9 @@ pub(crate) fn get_node_field_namespace_permissions(
     model: &metadata_resolve::ModelWithPermissions,
 ) -> BTreeSet<Role> {
     let mut permissions = BTreeSet::new();
-
-    for (role, type_output_permission) in &object_type_representation.type_output_permissions {
+    for (role, type_output_permission) in
+        &object_type_representation.type_output_permissions.by_role
+    {
         let is_global_id_field_accessible = object_type_representation
             .object_type
             .global_id_fields
@@ -233,7 +239,6 @@ pub(crate) fn get_node_field_namespace_permissions(
             }
         }
     }
-
     permissions
 }
 
@@ -244,7 +249,9 @@ pub(crate) fn get_entities_field_namespace_permissions(
 ) -> BTreeSet<Role> {
     let mut permissions = BTreeSet::new();
 
-    for (role, type_output_permission) in &object_type_representation.type_output_permissions {
+    for (role, type_output_permission) in
+        &object_type_representation.type_output_permissions.by_role
+    {
         if let Some(apollo_federation_config) = &object_type_representation
             .object_type
             .apollo_federation_config
@@ -269,6 +276,5 @@ pub(crate) fn get_entities_field_namespace_permissions(
             }
         }
     }
-
     permissions
 }

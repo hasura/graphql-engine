@@ -109,6 +109,9 @@ input_file: crates/metadata-resolve/tests/passing/glossary/metadata.json
                 "surfer",
             ),
         },
+        conditions: Conditions {
+            conditions: {},
+        },
         runtime_flags: RuntimeFlags(
             {},
         ),

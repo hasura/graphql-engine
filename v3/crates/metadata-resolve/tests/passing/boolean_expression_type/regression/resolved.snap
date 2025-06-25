@@ -82,26 +82,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "AlbumId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Title",
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -704,21 +730,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "returning",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "affected_rows",
+                                FieldName(
+                                    Identifier(
+                                        "affected_rows",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "affected_rows",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -938,37 +985,75 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
                         },
-                    },
-                    Role(
-                        "complex-permission",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                9591853440105325468,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                            },
+                        },
+                        Role(
+                            "complex-permission",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1377,21 +1462,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "returning",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "affected_rows",
+                                FieldName(
+                                    Identifier(
+                                        "affected_rows",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "affected_rows",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1617,21 +1723,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "PlaylistId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "PlaylistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "TrackId",
+                                FieldName(
+                                    Identifier(
+                                        "TrackId",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "PlaylistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "TrackId",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1924,26 +2051,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "SongId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "SongId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "AlbumId",
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "SongId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -2448,26 +2601,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "TrackId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "TrackId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "AlbumId",
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "TrackId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -2948,16 +3127,32 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Update the 'ArtistId' column in the 'Artist' collection",
                     ),
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "set",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "set",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "set",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -3133,16 +3328,32 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Update the 'Name' column in the 'Artist' collection",
                     ),
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "set",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "set",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "set",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -3370,21 +3581,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Responses from the 'v2_delete_PlaylistTrack_by_PlaylistId_and_TrackId' procedure",
                     ),
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "affectedRows",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "returning",
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -3594,21 +3826,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -3929,21 +4182,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Responses from the 'v2_insert_Artist' procedure",
                     ),
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "affectedRows",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "returning",
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -4173,21 +4447,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Responses from the 'v2_update_Artist_by_ArtistId' procedure",
                     ),
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "affectedRows",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "returning",
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -4421,21 +4716,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Update the columns of the 'Artist' collection",
                     ),
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -4563,21 +4879,42 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -21387,6 +21724,44 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
             Role(
                 "user",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    9591853440105325468,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("complex-permission"),
+                    ),
+                },
+                ConditionHash(
+                    14539879520726521060,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

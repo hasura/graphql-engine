@@ -306,6 +306,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
             pre_ndc_response_plugins: {},
         },
         roles: {},
+        conditions: Conditions {
+            conditions: {},
+        },
         runtime_flags: RuntimeFlags(
             {},
         ),

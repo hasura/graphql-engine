@@ -65,7 +65,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {},
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 type_input_permissions: {},
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -369,26 +372,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "id",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "id",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "title",
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "rating",
+                                FieldName(
+                                    Identifier(
+                                        "rating",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "rating",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -2103,6 +2132,27 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
             Role(
                 "admin",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    14539879520726521060,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

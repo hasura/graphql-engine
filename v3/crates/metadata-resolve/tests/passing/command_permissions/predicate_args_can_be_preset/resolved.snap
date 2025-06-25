@@ -88,26 +88,52 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/predicate_
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "user",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "AlbumId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Title",
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                9295230919520119376,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1309,6 +1335,27 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/predicate_
             Role(
                 "user",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    9295230919520119376,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: true,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

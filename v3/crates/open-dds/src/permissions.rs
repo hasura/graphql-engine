@@ -128,12 +128,12 @@ pub struct TypePermissionsV2 {
     pub permissions: TypePermissionOperand,
 }
 
-/// Configuration for role-based type permissions
+/// Configuration for type permissions
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(externally_tagged, json_schema(title = "TypePermissionOperand"))]
 pub enum TypePermissionOperand {
-    /// Definition of role-nased type permissions on an OpenDD object type
+    /// Definition of role-based type permissions on an OpenDD object type
     #[opendd(json_schema(title = "RoleBased"))]
     RoleBased(Vec<TypePermission>),
 }

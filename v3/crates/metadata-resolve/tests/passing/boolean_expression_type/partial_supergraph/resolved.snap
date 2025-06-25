@@ -88,58 +88,118 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "article_id",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "article_id",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "title",
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "author_id",
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
                                 ),
-                            ),
-                        },
-                    },
-                    Role(
-                        "user1",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "title",
-                                ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "author_id",
-                                ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
                         },
-                    },
-                    Role(
-                        "user2",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "title",
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "author_id",
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14454357423896325477,
                             ),
+                        },
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                            ],
+                            condition: ConditionHash(
+                                1826476065993054670,
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "article_id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                            },
+                        },
+                        Role(
+                            "user1",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                            },
+                        },
+                        Role(
+                            "user2",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -2108,6 +2168,61 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
             Role(
                 "user2",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    1826476065993054670,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user2"),
+                    ),
+                },
+                ConditionHash(
+                    14454357423896325477,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user1"),
+                    ),
+                },
+                ConditionHash(
+                    14539879520726521060,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

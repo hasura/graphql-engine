@@ -2,7 +2,8 @@ use super::error;
 use crate::{FunctionBasedCommand, ProcedureBasedCommand};
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
-use plan_types::{MutationExecutionTree, PlanState, QueryExecutionTree};
+use plan::PlanState;
+use plan_types::{MutationExecutionTree, QueryExecutionTree};
 
 pub(crate) fn plan_query_execution(
     ir: &FunctionBasedCommand<'_>,

@@ -6,10 +6,10 @@ use super::types::NDCQuery;
 use crate::filter::{resolve_model_permission_filter, to_filter_expression};
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::order_by::to_resolved_order_by_element;
-use crate::types::PlanError;
+use crate::types::{PlanError, PlanState};
 use hasura_authn_core::Session;
 use open_dds::query::ModelTarget;
-use plan_types::{PlanState, PredicateQueryTrees, Relationship, ResolvedFilterExpression};
+use plan_types::{PredicateQueryTrees, Relationship, ResolvedFilterExpression};
 use std::collections::BTreeMap;
 
 pub fn model_target_to_ndc_query(
@@ -49,6 +49,7 @@ pub fn model_target_to_ndc_query(
         session,
         &model_source.type_mappings,
         &model_source.data_connector,
+        plan_state,
         &mut usage_counts,
     )?;
 
@@ -90,6 +91,7 @@ pub fn model_target_to_ndc_query(
                     .map(std::convert::AsRef::as_ref),
                 expr,
                 &model_source.data_connector,
+                plan_state,
                 &mut usage_counts,
             )?;
 

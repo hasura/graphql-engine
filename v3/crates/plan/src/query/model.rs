@@ -1,6 +1,6 @@
 use super::{field_selection, model_target};
 
-use crate::types::PlanError;
+use crate::types::{PlanError, PlanState};
 use crate::{OutputObjectTypeView, column::to_resolved_column};
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
@@ -20,8 +20,7 @@ use open_dds::query::{
 };
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, Grouping, JoinLocations,
-    NdcFieldAlias, PlanState, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree,
-    QueryNode,
+    NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode,
 };
 
 pub fn from_model_group_by(
@@ -54,6 +53,8 @@ pub fn from_model_group_by(
         metadata,
         &model.model.data_type,
         &session.role,
+        &session.variables,
+        plan_state,
     )?;
 
     let data_connector = &model_source.data_connector;
@@ -72,11 +73,12 @@ pub fn from_model_group_by(
         let dimension = match operand {
             Operand::Field(operand) => {
                 let column = to_resolved_column(
-                    &session.role,
+                    session,
                     metadata,
                     &model_source.type_mappings,
                     &model_object_type,
                     operand,
+                    plan_state,
                 )?;
                 let field_mapping: FieldMapping = column.field_mapping;
                 let extraction_functions = field_mapping
@@ -214,6 +216,7 @@ pub fn from_model_group_by(
             aggregate,
             field_alias,
             ndc_version,
+            plan_state,
         )?;
         aggregates.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_aggregate);
     }
@@ -309,6 +312,8 @@ pub fn from_model_aggregate_selection(
         metadata,
         &model.model.data_type,
         &session.role,
+        &session.variables,
+        plan_state,
     )?;
 
     let data_connector = &model_source.data_connector;
@@ -332,6 +337,7 @@ pub fn from_model_aggregate_selection(
             aggregate,
             field_alias,
             ndc_version,
+            plan_state,
         )?;
 
         fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_aggregate);
@@ -410,6 +416,7 @@ fn to_ndc_aggregate(
     aggregate: &Aggregate,
     field_alias: &Name,
     ndc_version: NdcVersion,
+    plan_state: &mut PlanState,
 ) -> Result<AggregateFieldSelection, PlanError> {
     let resolved_column = aggregate
         .operand
@@ -417,11 +424,12 @@ fn to_ndc_aggregate(
         .map(|operand| {
             let field_operand = extract_field_operand_for_aggregation(operand)?;
             to_resolved_column(
-                &session.role,
+                session,
                 metadata,
                 &model_source.type_mappings,
                 model_object_type,
                 &field_operand,
+                plan_state,
             )
         })
         .transpose()?;
@@ -633,6 +641,8 @@ pub fn from_model_selection(
         metadata,
         &model.model.data_type,
         &session.role,
+        &session.variables,
+        plan_state,
     )?;
 
     let mut relationships = BTreeMap::new();

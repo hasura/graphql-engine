@@ -11,9 +11,10 @@ use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use lang_graphql as gql;
 pub use metadata_resolve::Metadata;
+use plan::PlanState;
 use plan_types::{
     CommandReturnKind, NDCMutationExecution, NDCQueryExecution, NDCSubscriptionExecution,
-    PlanState, ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree,
+    ProcessResponseAs, QueryExecutionPlan, QueryExecutionTree,
 };
 pub use types::{
     ApolloFederationSelect, MutationPlan, MutationSelect, NodeQueryPlan, QueryPlan, RequestPlan,

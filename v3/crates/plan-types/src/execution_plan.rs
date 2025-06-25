@@ -15,7 +15,7 @@ pub use field::{Field, NestedArray, NestedField, NestedObject};
 pub use filter::ResolvedFilterExpression;
 pub use mutation::MutationExecutionPlan;
 pub use query::{
-    AggregateFieldsSelection, FieldsSelection, PlanState, PredicateQueryTree, PredicateQueryTrees,
+    AggregateFieldsSelection, FieldsSelection, PredicateQueryTree, PredicateQueryTrees,
     QueryExecutionPlan, QueryNode, RemotePredicateKey, UniqueNumber,
 };
 pub use relationships::{Relationship, RelationshipArgument};

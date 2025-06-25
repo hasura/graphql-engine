@@ -8,6 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
+authorization-rules = { path = "../auth/authorization-rules" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }

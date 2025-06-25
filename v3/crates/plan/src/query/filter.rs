@@ -1,7 +1,7 @@
 use super::relationships::{
     get_relationship_field_mapping_of_field_name, process_model_relationship_definition,
 };
-use crate::types::{PlanError, RelationshipError};
+use crate::types::{PlanError, PlanState, RelationshipError};
 use indexmap::IndexMap;
 use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified, RelationshipCapabilities};
 use open_dds::{
@@ -12,7 +12,7 @@ use open_dds::{
 };
 use plan_types::{
     Expression, Field, FieldsSelection, JoinLocations, LocalModelRelationshipInfo, NdcFieldAlias,
-    NdcRelationshipName, PlanState, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan,
+    NdcRelationshipName, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan,
     QueryExecutionTree, QueryNode, Relationship, RelationshipColumnMapping,
     ResolvedFilterExpression, SourceNdcColumn,
 };

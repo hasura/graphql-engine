@@ -67,26 +67,6 @@ impl Default for PredicateQueryTrees {
 #[derive(Debug, PartialEq, Eq, PartialOrd, derive_more::Display, Ord, Hash, Clone, Copy)]
 pub struct RemotePredicateKey(pub u64);
 
-// Any state that needs to be threaded through the plan
-// Nothing here should last more than a single request
-pub struct PlanState {
-    pub unique_number: UniqueNumber,
-}
-
-impl PlanState {
-    pub fn new() -> Self {
-        Self {
-            unique_number: UniqueNumber::new(),
-        }
-    }
-}
-
-impl Default for PlanState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 // we need to generate unique identifiers for remote predicates
 // in a reproducable fashion so we thread this around
 pub struct UniqueNumber(u64);

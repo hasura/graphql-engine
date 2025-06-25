@@ -1,13 +1,13 @@
 use std::collections::BTreeMap;
 
 use super::types::{OrderByError, PlanError};
-use crate::metadata_accessor::OutputObjectTypeView;
+use crate::{metadata_accessor::OutputObjectTypeView, types::PlanState};
 use hasura_authn_core::Session;
 use metadata_resolve::{Qualified, RelationshipTarget, TypeMapping};
 use open_dds::{
     data_connector::DataConnectorColumnName, query::OrderByElement, types::CustomTypeName,
 };
-use plan_types::{PlanState, PredicateQueryTrees, ResolvedFilterExpression, UsagesCounts};
+use plan_types::{PredicateQueryTrees, ResolvedFilterExpression, UsagesCounts};
 
 pub fn to_resolved_order_by_element(
     metadata: &metadata_resolve::Metadata,
@@ -160,8 +160,13 @@ fn resolve_field_operand(
                 .into_plan_error()
             })?;
 
-        let field_object_type =
-            crate::metadata_accessor::get_output_object_type(metadata, field_type, &session.role)?;
+        let field_object_type = crate::metadata_accessor::get_output_object_type(
+            metadata,
+            field_type,
+            &session.role,
+            &session.variables,
+            plan_state,
+        )?;
 
         field_path.push(column_name);
         from_operand(
@@ -298,6 +303,8 @@ fn resolve_relationship_operand(
                 metadata,
                 target_type,
                 &session.role,
+                &session.variables,
+                plan_state,
             )?;
 
             // Handle nested operand

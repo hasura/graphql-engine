@@ -1,7 +1,7 @@
 use crate::stages::model_permissions;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ValueExpression {
     Literal(serde_json::Value),
     SessionVariable(open_dds::session_variables::SessionVariableReference),

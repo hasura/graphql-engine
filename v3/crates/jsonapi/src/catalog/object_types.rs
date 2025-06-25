@@ -20,6 +20,7 @@ pub fn build_object_type(
     // if we have no output permissions for the underlying object type, ignore it
     let output_permissions_for_role = object_type
         .type_output_permissions
+        .by_role
         .get(role)
         .ok_or(ObjectTypeWarning::NoObjectTypePermission {})?;
 
@@ -94,7 +95,10 @@ fn object_type_permission_access(
 ) -> bool {
     let mut accessible = false;
     if let Some(object_type) = object_types.get(type_name) {
-        accessible = object_type.type_output_permissions.contains_key(role);
+        accessible = object_type
+            .type_output_permissions
+            .by_role
+            .contains_key(role);
     }
     accessible
 }

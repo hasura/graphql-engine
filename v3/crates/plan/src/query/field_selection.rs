@@ -7,8 +7,8 @@ use super::{
         process_command_relationship_definition, process_model_relationship_definition,
     },
 };
-use crate::metadata_accessor::OutputObjectTypeView;
 use crate::types::{PlanError, RelationshipError};
+use crate::{metadata_accessor::OutputObjectTypeView, types::PlanState};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{
@@ -29,7 +29,7 @@ use open_dds::{
 };
 use plan_types::{
     CommandReturnKind, Field, JoinLocations, JoinNode, Location, LocationKind, NdcFieldAlias,
-    NestedArray, NestedField, NestedObject, PlanState, PredicateQueryTrees, ProcessResponseAs,
+    NestedArray, NestedField, NestedObject, PredicateQueryTrees, ProcessResponseAs,
     QueryExecutionPlan, QueryExecutionTree, RemoteJoin, RemoteJoinType, ResolvedFilterExpression,
 };
 use std::collections::BTreeMap;
@@ -240,7 +240,7 @@ fn resolve_nested_field_selection(
     match &field_selection.selection {
         None => {
             // Nested selection not found. Fallback to selecting all accessible nested fields.
-            ndc_nested_field_selection_for(metadata, session, field_type, type_mappings)
+            ndc_nested_field_selection_for(metadata, session, field_type, type_mappings, plan_state)
         }
         Some(nested_selection) => {
             // Get the underlying object type
@@ -258,6 +258,8 @@ fn resolve_nested_field_selection(
                 metadata,
                 field_type_name,
                 &session.role,
+                &session.variables,
+                plan_state,
             )?;
 
             let new_relationship_field_nestedness = match field_type.underlying_type {
@@ -1099,6 +1101,7 @@ fn ndc_nested_field_selection_for(
     session: &Session,
     column_type: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    plan_state: &mut PlanState,
 ) -> Result<Option<NestedField>, PlanError> {
     match &column_type.underlying_type {
         metadata_resolve::QualifiedBaseType::Named(name) => match name {
@@ -1111,6 +1114,8 @@ fn ndc_nested_field_selection_for(
                     metadata,
                     name,
                     &session.role,
+                    &session.variables,
+                    plan_state,
                 )?;
 
                 let TypeMapping::Object {
@@ -1130,6 +1135,7 @@ fn ndc_nested_field_selection_for(
                             session,
                             field_def.field_type,
                             type_mappings,
+                            plan_state,
                         )?;
                         fields.insert(
                             NdcFieldAlias::from(field_name.as_str()),
@@ -1152,6 +1158,7 @@ fn ndc_nested_field_selection_for(
                 session,
                 list_type.as_ref(),
                 type_mappings,
+                plan_state,
             )?;
 
             Ok(fields.map(|fields| {

@@ -61,6 +61,9 @@ input_file: crates/metadata-resolve/tests/passing/data_connector_link/invalid_nd
             pre_ndc_response_plugins: {},
         },
         roles: {},
+        conditions: Conditions {
+            conditions: {},
+        },
         runtime_flags: RuntimeFlags(
             {},
         ),

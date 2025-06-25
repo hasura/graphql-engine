@@ -1,5 +1,6 @@
 use crate::error::InternalError;
 use crate::query::{ArgumentPresetExecutionError, RelationshipFieldMappingError};
+use authorization_rules::ConditionCache;
 use hasura_authn_core::Role;
 use metadata_resolve::Qualified;
 use open_dds::data_connector::DataConnectorOperatorName;
@@ -11,6 +12,7 @@ use open_dds::{
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
 };
+use plan_types::UniqueNumber;
 use tracing_util::{ErrorVisibility, TraceableError};
 
 #[derive(Debug, thiserror::Error)]
@@ -116,6 +118,8 @@ pub enum PermissionError {
         relationship_name: RelationshipName,
         boolean_expression_type_name: Qualified<CustomTypeName>,
     },
+    #[error("Error evaluating condition: {0}")]
+    ConditionEvaluationError(#[from] authorization_rules::ConditionError),
 
     #[error("{0}")]
     Other(String),
@@ -136,7 +140,8 @@ impl TraceableError for PermissionError {
             | Self::InternalMissingRelationshipCapabilities { .. }
             | Self::FieldNotFoundInBooleanExpressionType { .. }
             | Self::RelationshipNotFoundInBooleanExpressionType { .. }
-            | Self::ObjectBooleanExpressionTypeNotFound { .. } => ErrorVisibility::Internal,
+            | Self::ObjectBooleanExpressionTypeNotFound { .. }
+            | Self::ConditionEvaluationError(_) => ErrorVisibility::Internal,
             Self::Other(_) => ErrorVisibility::User,
         }
     }
@@ -274,5 +279,27 @@ impl TraceableError for BooleanExpressionError {
         match self {
             Self::ComparisonOperatorNotFound { .. } => ErrorVisibility::User,
         }
+    }
+}
+
+// Any state that needs to be threaded through the plan
+// Nothing here should last more than a single request
+pub struct PlanState {
+    pub unique_number: UniqueNumber,
+    pub condition_cache: ConditionCache,
+}
+
+impl PlanState {
+    pub fn new() -> Self {
+        Self {
+            unique_number: UniqueNumber::new(),
+            condition_cache: ConditionCache::new(),
+        }
+    }
+}
+
+impl Default for PlanState {
+    fn default() -> Self {
+        Self::new()
     }
 }

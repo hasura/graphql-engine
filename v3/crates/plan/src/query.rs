@@ -7,7 +7,7 @@ pub mod model_target;
 mod permissions;
 mod relationships;
 mod types;
-use crate::types::PlanError;
+use crate::types::{PlanError, PlanState};
 pub use arguments::{
     ArgumentPresetExecutionError, MapFieldNamesError, UnresolvedArgument,
     process_argument_presets_for_command, process_argument_presets_for_model,
@@ -26,7 +26,7 @@ pub use relationships::{
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use open_dds::query::{Alias, Query, QueryRequest};
-use plan_types::{PlanState, QueryExecutionTree};
+use plan_types::QueryExecutionTree;
 
 // these types should probably live in `plan-types`
 #[derive(Debug)]

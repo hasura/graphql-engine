@@ -168,6 +168,9 @@ input_file: crates/metadata-resolve/tests/passing/glossary/with_warnings/metadat
                 "surfer",
             ),
         },
+        conditions: Conditions {
+            conditions: {},
+        },
         runtime_flags: RuntimeFlags(
             {},
         ),
