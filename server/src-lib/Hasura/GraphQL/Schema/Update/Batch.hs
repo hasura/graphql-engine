@@ -69,7 +69,15 @@ buildAnnotatedUpdateGField scenario tableInfo fieldName description parseOutput 
   updateVariantParser <- mkUpdateVariantParser updatePerms
   pure
     $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
-    $ mkAnnotatedUpdateG tableName columns updatePerms (Just tCase) validateInput
+    $ ( \(updateVariant, output, _) ->
+          mkAnnotatedUpdateG
+            tableName
+            columns
+            updatePerms
+            (Just tCase)
+            validateInput
+            (updateVariant, output)
+      )
     <$> P.subselection fieldName description updateVariantParser outputParser
 
 -- | Construct a root field, normally called update_tablename, that can be used

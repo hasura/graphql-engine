@@ -94,7 +94,7 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
           <*> storedProcedureArgsParser
       )
       selectionListParser
-    <&> \((lmArgs, spArgs), fields) ->
+    <&> \((lmArgs, spArgs), fields, directives) ->
       QDBMultipleRows
         $ IR.AnnSelectG
           { IR._asnFields = fields,
@@ -108,6 +108,7 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
                   },
             IR._asnPerm = logicalModelPermissions,
             IR._asnArgs = lmArgs,
+            IR._asnDirectives = (Just directives),
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
           }
