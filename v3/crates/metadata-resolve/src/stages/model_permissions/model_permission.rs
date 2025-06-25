@@ -10,7 +10,9 @@ use crate::stages::{
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
-use crate::{ArgumentInfo, ModelsError, data_connectors};
+use crate::{
+    ArgumentInfo, ModelsError, QualifiedTypeReference, ValueExpressionOrPredicate, data_connectors,
+};
 
 use indexmap::IndexMap;
 use open_dds::permissions::{
@@ -65,13 +67,25 @@ pub fn resolve_all_model_permissions(
 
                 // Resolve select permissions
                 if let Some(select_perms) = &model_permission.select {
-                    let select_permission = resolve_model_select_permissions(
+                    let filter = resolve_model_select_permissions(
+                        select_perms,
+                        &model_permission.role,
+                        flags,
+                        model,
+                        boolean_expression,
+                        data_connector_scalars,
+                        object_types,
+                        scalar_types,
+                        boolean_expression_types,
+                        models,
+                    )?;
+
+                    let argument_presets = resolve_model_argument_presets(
                         select_perms,
                         &model_permission.role,
                         flags,
                         model,
                         arguments,
-                        boolean_expression,
                         data_connector_scalars,
                         object_types,
                         scalar_types,
@@ -79,6 +93,12 @@ pub fn resolve_all_model_permissions(
                         models,
                         issues,
                     )?;
+
+                    let select_permission = SelectPermission {
+                        filter,
+                        argument_presets,
+                        allow_subscriptions: select_perms.allow_subscriptions,
+                    };
 
                     resolved_permission.select = Some(select_permission);
                 }
@@ -194,7 +214,6 @@ fn resolve_model_select_permissions(
     role: &Spanned<open_dds::permissions::Role>,
     flags: &open_dds::flags::OpenDdFlags,
     model: &models_graphql::Model,
-    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
     boolean_expression: Option<&boolean_expressions::ResolvedObjectBooleanExpressionType>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -204,9 +223,8 @@ fn resolve_model_select_permissions(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
-    issues: &mut Vec<ModelPermissionIssue>,
-) -> Result<SelectPermission, Error> {
-    let resolved_predicate = match &select_perms.filter {
+) -> Result<FilterPermission, Error> {
+    match &select_perms.filter {
         NullableModelPredicate::NotNull(model_predicate) => {
             predicate::resolve_model_predicate_with_model(
                 flags,
@@ -226,11 +244,28 @@ fn resolve_model_select_permissions(
                     error,
                 })
             })
-            .map(FilterPermission::Filter)?
+            .map(FilterPermission::Filter)
         }
-        NullableModelPredicate::Null(()) => FilterPermission::AllowAll,
-    };
+        NullableModelPredicate::Null(()) => Ok(FilterPermission::AllowAll),
+    }
+}
 
+fn resolve_model_argument_presets(
+    select_perms: &open_dds::permissions::SelectPermission,
+    role: &Spanned<open_dds::permissions::Role>,
+    flags: &open_dds::flags::OpenDdFlags,
+    model: &models_graphql::Model,
+    arguments: &IndexMap<ArgumentName, ArgumentInfo>,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::DataConnectorScalars<'_>,
+    >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, crate::ObjectTypeWithRelationships>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
+    issues: &mut Vec<ModelPermissionIssue>,
+) -> Result<BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>, Error> {
     let mut argument_presets = BTreeMap::new();
     for argument_preset in &select_perms.argument_presets {
         if argument_presets.contains_key(&argument_preset.argument.value) {
@@ -315,11 +350,6 @@ fn resolve_model_select_permissions(
             (argument.argument_type.clone(), value_expression),
         );
     }
-    let resolved_permission = SelectPermission {
-        filter: resolved_predicate,
-        argument_presets,
-        allow_subscriptions: select_perms.allow_subscriptions,
-    };
 
-    Ok(resolved_permission)
+    Ok(argument_presets)
 }
