@@ -9,10 +9,11 @@ pub use error::{ModelPermissionError, NamedModelPermissionError};
 use indexmap::IndexMap;
 use open_dds::identifier::SubgraphName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 pub use types::{
     FilterPermission, ModelPermissionIssue, ModelPermissionsOutput, ModelPredicate,
-    ModelTargetSource, ModelWithPermissions, PredicateRelationshipInfo, SelectPermission,
+    ModelTargetSource, ModelWithPermissions, PredicateRelationshipInfo, RelationalDeletePermission,
+    RelationalInsertPermission, RelationalUpdatePermission, SelectPermission,
     UnaryComparisonOperator,
 };
 mod model_permission;
@@ -22,9 +23,12 @@ use crate::types::error::Error;
 
 use crate::types::subgraph::Qualified;
 
+use super::data_connectors;
+
 /// resolve model permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -48,8 +52,7 @@ pub fn resolve(
                     arguments: model.arguments.clone(),
                     filter_expression_type: model.filter_expression_type.clone(),
                     graphql_api: model.graphql_api.clone(),
-                    select_permissions: BTreeMap::new(),
-                    relational_insert_permissions: BTreeSet::new(),
+                    permissions: BTreeMap::new(),
                     description: model.description.clone(),
                 },
             )
@@ -70,6 +73,7 @@ pub fn resolve(
         results.push(resolve_model_permissions(
             metadata_accessor,
             subgraph,
+            data_connectors,
             data_connector_scalars,
             object_types,
             scalar_types,
@@ -90,6 +94,7 @@ pub fn resolve(
 fn resolve_model_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     subgraph: &SubgraphName,
+    data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -114,37 +119,28 @@ fn resolve_model_permissions(
             model_name: model_name.clone(),
         })?;
 
-    if model.select_permissions.is_empty() {
+    if model.permissions.is_empty() {
         let boolean_expression = model
             .filter_expression_type
             .as_ref()
             .map(derive_more::AsRef::as_ref);
 
-        let select_permissions = model_permission::resolve_all_model_select_permissions(
+        let permissions = model_permission::resolve_all_model_permissions(
             &metadata_accessor.flags,
             &model.model,
             &model.arguments,
             permissions,
             boolean_expression,
+            data_connectors,
             data_connector_scalars,
             object_types,
             scalar_types,
-            models, // This is required to get the model for the relationship target
+            models,
             boolean_expression_types,
             issues,
         )?;
 
-        model.select_permissions = select_permissions;
-
-        // Add relational insert permissions
-        let relational_insert_permissions =
-            model_permission::resolve_all_model_relational_insert_permissions(
-                &model_name.value,
-                permissions,
-                issues,
-            );
-
-        model.relational_insert_permissions = relational_insert_permissions;
+        model.permissions = permissions;
     } else {
         return Err(Error::DuplicateModelPermissions {
             model_name: model_name.clone(),

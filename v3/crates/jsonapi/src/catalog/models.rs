@@ -13,7 +13,12 @@ pub fn build_model(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 ) -> Result<Model, ModelWarning> {
     // if we have no select permission for the model, ignore it
-    if !model.select_permissions.contains_key(role) {
+    if model
+        .permissions
+        .get(role)
+        .and_then(|permissions| permissions.select.as_ref())
+        .is_none()
+    {
         return Err(ModelWarning::NoSelectPermission);
     }
     object_types

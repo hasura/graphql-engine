@@ -10,7 +10,9 @@ use crate::error::FieldError;
 use crate::ndc;
 use async_recursion::async_recursion;
 use engine_types::{HttpContext, ProjectId};
+use hasura_authn_core::Session;
 use indexmap::IndexMap;
+use metadata_resolve::LifecyclePluginConfigs;
 pub use ndc_request::{
     make_ndc_mutation_request, make_ndc_query_request, v01::NdcV01CompatibilityError,
 };
@@ -25,6 +27,8 @@ use std::collections::BTreeMap;
 // run ndc query, do any joins, and process result
 pub async fn resolve_ndc_query_execution(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     ndc_query: NDCQueryExecution,
     project_id: Option<&ProjectId>,
 ) -> Result<Vec<ndc_models::RowSet>, FieldError> {
@@ -37,6 +41,8 @@ pub async fn resolve_ndc_query_execution(
 
     execute_query_execution_tree(
         http_context,
+        plugins,
+        session,
         execution_tree,
         field_span_attribute,
         execution_span_attribute,
@@ -52,6 +58,8 @@ pub async fn resolve_ndc_query_execution(
 pub async fn execute_remote_predicates(
     remote_predicates: &PredicateQueryTrees,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     field_span_attribute: &str,
     execution_span_attribute: &'static str,
     process_response_as: &ProcessResponseAs,
@@ -67,6 +75,8 @@ pub async fn execute_remote_predicates(
             let child_filter_expressions = execute_remote_predicates(
                 &remote_predicate.children,
                 http_context,
+                plugins,
+                session,
                 field_span_attribute,
                 execution_span_attribute,
                 process_response_as,
@@ -80,6 +90,8 @@ pub async fn execute_remote_predicates(
         // from the child predicates
         let result_row_set = execute_query_execution_tree(
             http_context,
+            plugins,
+            session,
             remote_predicate.query.clone(),
             field_span_attribute,
             execution_span_attribute,
@@ -118,6 +130,8 @@ pub(crate) fn get_single_rowset(
 #[async_recursion]
 async fn execute_query_execution_tree<'s>(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     execution_tree: QueryExecutionTree,
     field_span_attribute: &str,
     execution_span_attribute: &'static str,
@@ -135,6 +149,8 @@ async fn execute_query_execution_tree<'s>(
     let mut filter_expressions = execute_remote_predicates(
         &execution_tree.remote_predicates,
         http_context,
+        plugins,
+        session,
         field_span_attribute,
         execution_span_attribute,
         process_response_as,
@@ -154,6 +170,8 @@ async fn execute_query_execution_tree<'s>(
     // create our `main` NDC request
     let response_rowsets = execute_ndc_query(
         http_context,
+        plugins,
+        session,
         query_execution_plan_with_predicates,
         field_span_attribute,
         execution_span_attribute,
@@ -165,6 +183,8 @@ async fn execute_query_execution_tree<'s>(
     // the results with the original rowsets
     run_remote_joins(
         http_context,
+        plugins,
+        session,
         execution_tree.remote_join_executions,
         execution_span_attribute,
         process_response_as,
@@ -177,6 +197,8 @@ async fn execute_query_execution_tree<'s>(
 // construct an NDC query request and execute it
 async fn execute_ndc_query(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query_execution_plan: QueryExecutionPlan,
     field_span_attribute: &str,
     execution_span_attribute: &'static str,
@@ -188,6 +210,8 @@ async fn execute_ndc_query(
 
     let response = ndc::execute_ndc_query(
         http_context,
+        plugins,
+        session,
         &query_request,
         &data_connector,
         execution_span_attribute,
@@ -202,6 +226,8 @@ async fn execute_ndc_query(
 // given results of ndc query, do any joins, and process result
 async fn run_remote_joins(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     remote_join_executions: JoinLocations,
     execution_span_attribute: &'static str,
     process_response_as: &ProcessResponseAs,
@@ -212,6 +238,8 @@ async fn run_remote_joins(
     // https://github.com/hasura/v3-engine/issues/229
     remote_joins::execute_join_locations(
         http_context,
+        plugins,
+        session,
         execution_span_attribute,
         &mut response_rowsets,
         process_response_as,
@@ -227,6 +255,8 @@ async fn run_remote_joins(
 
 pub async fn resolve_ndc_mutation_execution(
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     ndc_mutation_execution: NDCMutationExecution,
     project_id: Option<&ProjectId>,
 ) -> Result<ndc_models::MutationResponse, FieldError> {
@@ -243,6 +273,8 @@ pub async fn resolve_ndc_mutation_execution(
 
     let mutation_response = ndc::execute_ndc_mutation(
         http_context,
+        plugins,
+        session,
         &mutation_request,
         &data_connector,
         execution_span_attribute,
@@ -256,6 +288,8 @@ pub async fn resolve_ndc_mutation_execution(
         mutation_response_to_query_response(mutation_response);
     let response_rowsets = run_remote_joins(
         http_context,
+        plugins,
+        session,
         execution_tree.remote_join_executions,
         execution_span_attribute,
         &process_response_as,

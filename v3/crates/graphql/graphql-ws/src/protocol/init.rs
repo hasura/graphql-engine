@@ -30,6 +30,7 @@ pub async fn handle_connection_init<M: WebSocketMetrics>(
                         &context.http_context,
                         &context.handshake_headers,
                         &context.auth_config,
+                        &context.auth_mode_header,
                         payload,
                     )
                     .await
@@ -67,6 +68,7 @@ async fn initialize(
     http_context: &HttpContext,
     client_headers: &http::HeaderMap,
     auth_config: &ResolvedAuthConfig,
+    auth_mode_header: &str,
     payload: Option<InitPayload>,
 ) -> Result<(Session, http::HeaderMap), ConnectionInitError> {
     let tracer = tracing_util::global_tracer();
@@ -91,8 +93,13 @@ async fn initialize(
                             // dynamically injected authentication or routing information remains intact.
                             headers.extend(client_headers.clone());
                             // Authenticate the client based on headers and context
-                            let identity =
-                                authenticate(&headers, &http_context.client, auth_config).await?;
+                            let identity = authenticate(
+                                &headers,
+                                &http_context.client,
+                                auth_config,
+                                auth_mode_header,
+                            )
+                            .await?;
                             // Authorize the authenticated identity
                             let session = authorize_identity(&identity, &headers)?;
                             Ok((session, headers))

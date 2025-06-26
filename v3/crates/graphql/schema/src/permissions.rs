@@ -13,15 +13,17 @@ pub(crate) fn get_select_permissions_namespace_annotations(
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut namespace_annotations = HashMap::new();
 
-    for (role, select_permission) in &model.select_permissions {
-        namespace_annotations.insert(
-            role.clone(),
-            Some(Box::new(types::NamespaceAnnotation::Model {
-                filter: select_permission.filter.clone(),
-                argument_presets: select_permission.argument_presets.clone(),
-                allow_subscriptions: select_permission.allow_subscriptions,
-            })),
-        );
+    for (role, resolved_permissions) in &model.permissions {
+        if let Some(select_permission) = &resolved_permissions.select {
+            namespace_annotations.insert(
+                role.clone(),
+                Some(Box::new(types::NamespaceAnnotation::Model {
+                    filter: select_permission.filter.clone(),
+                    argument_presets: select_permission.argument_presets.clone(),
+                    allow_subscriptions: select_permission.allow_subscriptions,
+                })),
+            );
+        }
     }
 
     namespace_annotations
@@ -142,7 +144,9 @@ pub(crate) fn get_node_interface_annotations(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut permissions = HashMap::new();
-    for (role, type_output_permission) in &object_type_representation.type_output_permissions {
+    for (role, type_output_permission) in
+        &object_type_representation.type_output_permissions.by_role
+    {
         let is_permitted = object_type_representation
             .object_type
             .global_id_fields
@@ -163,7 +167,9 @@ pub(crate) fn get_entity_union_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> HashMap<Role, Option<Box<types::NamespaceAnnotation>>> {
     let mut permissions = HashMap::new();
-    for (role, type_output_permission) in &object_type_representation.type_output_permissions {
+    for (role, type_output_permission) in
+        &object_type_representation.type_output_permissions.by_role
+    {
         let is_permitted = object_type_representation
             .object_type
             .global_id_fields
@@ -195,6 +201,7 @@ pub(crate) fn get_allowed_roles_for_field<'a>(
 ) -> impl Iterator<Item = &'a Role> {
     object_type_representation
         .type_output_permissions
+        .by_role
         .iter()
         .filter_map(|(role, type_output_permission)| {
             if type_output_permission.allowed_fields.contains(field_name) {
@@ -211,8 +218,9 @@ pub(crate) fn get_node_field_namespace_permissions(
     model: &metadata_resolve::ModelWithPermissions,
 ) -> BTreeSet<Role> {
     let mut permissions = BTreeSet::new();
-
-    for (role, type_output_permission) in &object_type_representation.type_output_permissions {
+    for (role, type_output_permission) in
+        &object_type_representation.type_output_permissions.by_role
+    {
         let is_global_id_field_accessible = object_type_representation
             .object_type
             .global_id_fields
@@ -220,14 +228,17 @@ pub(crate) fn get_node_field_namespace_permissions(
             .all(|field_name| type_output_permission.allowed_fields.contains(field_name));
 
         if is_global_id_field_accessible {
-            let select_permission = model.select_permissions.get(role).map(|s| s.filter.clone());
+            let select_permission = model
+                .permissions
+                .get(role)
+                .and_then(|permissions| permissions.select.as_ref())
+                .map(|s| s.filter.clone());
 
             if select_permission.is_some() {
                 permissions.insert(role.clone());
             }
         }
     }
-
     permissions
 }
 
@@ -238,7 +249,9 @@ pub(crate) fn get_entities_field_namespace_permissions(
 ) -> BTreeSet<Role> {
     let mut permissions = BTreeSet::new();
 
-    for (role, type_output_permission) in &object_type_representation.type_output_permissions {
+    for (role, type_output_permission) in
+        &object_type_representation.type_output_permissions.by_role
+    {
         if let Some(apollo_federation_config) = &object_type_representation
             .object_type
             .apollo_federation_config
@@ -251,8 +264,11 @@ pub(crate) fn get_entities_field_namespace_permissions(
                 });
 
             if is_all_keys_field_accessible {
-                let select_permission =
-                    model.select_permissions.get(role).map(|s| s.filter.clone());
+                let select_permission = model
+                    .permissions
+                    .get(role)
+                    .and_then(|permissions| permissions.select.as_ref())
+                    .map(|s| s.filter.clone());
 
                 if select_permission.is_some() {
                     permissions.insert(role.clone());
@@ -260,6 +276,5 @@ pub(crate) fn get_entities_field_namespace_permissions(
             }
         }
     }
-
     permissions
 }

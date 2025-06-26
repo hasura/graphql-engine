@@ -113,6 +113,7 @@ pub async fn authentication_middleware(
                     &headers_map,
                     &engine_state.http_context.client,
                     &engine_state.auth_config,
+                    &engine_state.auth_mode_header,
                 ))
             },
         )

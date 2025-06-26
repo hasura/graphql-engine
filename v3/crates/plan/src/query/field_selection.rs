@@ -7,8 +7,8 @@ use super::{
         process_command_relationship_definition, process_model_relationship_definition,
     },
 };
-use crate::metadata_accessor::OutputObjectTypeView;
 use crate::types::{PlanError, RelationshipError};
+use crate::{metadata_accessor::OutputObjectTypeView, types::PlanState};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{
@@ -31,7 +31,6 @@ use plan_types::{
     CommandReturnKind, Field, JoinLocations, JoinNode, Location, LocationKind, NdcFieldAlias,
     NestedArray, NestedField, NestedObject, PredicateQueryTrees, ProcessResponseAs,
     QueryExecutionPlan, QueryExecutionTree, RemoteJoin, RemoteJoinType, ResolvedFilterExpression,
-    UniqueNumber,
 };
 use std::collections::BTreeMap;
 
@@ -47,7 +46,7 @@ pub fn resolve_field_selection(
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<IndexMap<NdcFieldAlias, Field>, PlanError> {
     let metadata_resolve::TypeMapping::Object { field_mappings, .. } = type_mappings
         .get(object_type.object_type_name)
@@ -78,7 +77,7 @@ pub fn resolve_field_selection(
                     relationships,
                     remote_join_executions,
                     remote_predicates,
-                    unique_number,
+                    plan_state,
                 )?;
             }
             ObjectSubSelection::Relationship(relationship_selection) => {
@@ -97,7 +96,7 @@ pub fn resolve_field_selection(
                     relationships,
                     remote_join_executions,
                     remote_predicates,
-                    unique_number,
+                    plan_state,
                 )?;
             }
             ObjectSubSelection::RelationshipAggregate(relationship_aggregate_selection) => {
@@ -116,7 +115,7 @@ pub fn resolve_field_selection(
                     relationships,
                     remote_join_executions,
                     remote_predicates,
-                    unique_number,
+                    plan_state,
                 )?;
             }
         }
@@ -140,7 +139,7 @@ fn from_field_selection(
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<(), PlanError> {
     let ObjectFieldTarget {
         field_name,
@@ -169,7 +168,7 @@ fn from_field_selection(
         relationships,
         &mut nested_remote_join_executions,
         remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     if !nested_remote_join_executions.locations.is_empty() {
@@ -236,12 +235,12 @@ fn resolve_nested_field_selection(
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<Option<NestedField>, PlanError> {
     match &field_selection.selection {
         None => {
             // Nested selection not found. Fallback to selecting all accessible nested fields.
-            ndc_nested_field_selection_for(metadata, session, field_type, type_mappings)
+            ndc_nested_field_selection_for(metadata, session, field_type, type_mappings, plan_state)
         }
         Some(nested_selection) => {
             // Get the underlying object type
@@ -259,6 +258,8 @@ fn resolve_nested_field_selection(
                 metadata,
                 field_type_name,
                 &session.role,
+                &session.variables,
+                plan_state,
             )?;
 
             let new_relationship_field_nestedness = match field_type.underlying_type {
@@ -279,7 +280,7 @@ fn resolve_nested_field_selection(
                 relationships,
                 remote_join_executions,
                 remote_predicates,
-                unique_number,
+                plan_state,
             )?;
 
             // Build the nested field based on the underlying type
@@ -322,7 +323,7 @@ fn from_relationship_selection(
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<(), PlanError> {
     let relationship_name = &relationship_selection.target.relationship_name;
     let relationship_field = get_relationship_field(object_type, relationship_name)?;
@@ -345,7 +346,7 @@ fn from_relationship_selection(
                 relationships,
                 remote_join_executions,
                 remote_predicates,
-                unique_number,
+                plan_state,
             )
         }
         metadata_resolve::RelationshipTarget::Command(command_relationship_target) => {
@@ -366,7 +367,7 @@ fn from_relationship_selection(
                 relationships,
                 remote_join_executions,
                 remote_predicates,
-                unique_number,
+                plan_state,
             )?)
         }
     }
@@ -389,7 +390,7 @@ fn from_model_relationship(
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<(), PlanError> {
     let RelationshipSelection { target, selection } = relationship_selection;
     let RelationshipTarget {
@@ -457,7 +458,7 @@ fn from_model_relationship(
                 metadata,
                 session,
                 request_headers,
-                unique_number,
+                plan_state,
             )?;
 
             let ModelRemoteRelationshipParts {
@@ -548,7 +549,7 @@ fn from_model_relationship(
                 metadata,
                 session,
                 request_headers,
-                unique_number,
+                plan_state,
             )?;
 
             // Collect relationships from the generated query above
@@ -599,7 +600,7 @@ fn from_command_relationship(
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<(), PlanError> {
     let RelationshipSelection { target, selection } = relationship_selection;
     // Query parameters (limit, offset etc.) are not applicable for command selections
@@ -665,7 +666,7 @@ fn from_command_relationship(
         command_name,
         command,
         command_source,
-        unique_number,
+        plan_state,
     )?;
 
     // is it local or remote?
@@ -878,7 +879,7 @@ fn from_relationship_aggregate_selection(
     collect_relationships: &mut BTreeMap<plan_types::NdcRelationshipName, plan_types::Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<(), PlanError> {
     let RelationshipAggregateSelection { target, selection } = relationship_aggregate_selection;
     let RelationshipTarget {
@@ -949,7 +950,7 @@ fn from_relationship_aggregate_selection(
                         session,
                         relationship_aggregate_expression,
                         request_headers,
-                        unique_number,
+                        plan_state,
                     )?;
 
                     let ModelRemoteRelationshipParts {
@@ -1053,7 +1054,7 @@ fn from_relationship_aggregate_selection(
                         session,
                         relationship_aggregate_expression,
                         request_headers,
-                        unique_number,
+                        plan_state,
                     )?;
 
                     // Collect relationships from the generated query above
@@ -1100,6 +1101,7 @@ fn ndc_nested_field_selection_for(
     session: &Session,
     column_type: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    plan_state: &mut PlanState,
 ) -> Result<Option<NestedField>, PlanError> {
     match &column_type.underlying_type {
         metadata_resolve::QualifiedBaseType::Named(name) => match name {
@@ -1112,6 +1114,8 @@ fn ndc_nested_field_selection_for(
                     metadata,
                     name,
                     &session.role,
+                    &session.variables,
+                    plan_state,
                 )?;
 
                 let TypeMapping::Object {
@@ -1131,6 +1135,7 @@ fn ndc_nested_field_selection_for(
                             session,
                             field_def.field_type,
                             type_mappings,
+                            plan_state,
                         )?;
                         fields.insert(
                             NdcFieldAlias::from(field_name.as_str()),
@@ -1153,6 +1158,7 @@ fn ndc_nested_field_selection_for(
                 session,
                 list_type.as_ref(),
                 type_mappings,
+                plan_state,
             )?;
 
             Ok(fields.map(|fields| {

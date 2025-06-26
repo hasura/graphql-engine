@@ -26,7 +26,7 @@ pub struct ObjectTypeWithRelationships {
     pub object_type: object_types::ObjectTypeRepresentation,
     /// permissions on this type, when it is used in an output context (e.g. as
     /// a return type of Model or Command)
-    pub type_output_permissions: BTreeMap<Role, open_dds::permissions::TypeOutputPermission>,
+    pub type_output_permissions: type_permissions::TypeOutputPermissions,
     /// permissions on this type, when it is used in an input context (e.g. in
     /// an argument type of Model or Command)
     pub type_input_permissions: BTreeMap<Role, type_permissions::TypeInputPermission>,

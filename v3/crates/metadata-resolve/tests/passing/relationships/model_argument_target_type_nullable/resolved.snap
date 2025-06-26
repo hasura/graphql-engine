@@ -99,31 +99,62 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "user",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "AlbumId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "ArtistTenantId",
+                                FieldName(
+                                    Identifier(
+                                        "ArtistTenantId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Title",
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                5261800314210927403,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ArtistTenantId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Title",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -595,21 +626,42 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "user",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "ArtistId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                5261800314210927403,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "user",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "ArtistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1255,16 +1307,22 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                     aggregate_expression: None,
                 },
                 arguments: {},
-                select_permissions: {
+                permissions: {
                     Role(
                         "user",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: AllowAll,
+                                argument_presets: {},
+                                allow_subscriptions: false,
+                            },
+                        ),
+                        relational_insert: None,
+                        relational_update: None,
+                        relational_delete: None,
                     },
                 },
-                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
@@ -1684,16 +1742,22 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
                         type_representation: None,
                     },
                 },
-                select_permissions: {
+                permissions: {
                     Role(
                         "user",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: AllowAll,
+                                argument_presets: {},
+                                allow_subscriptions: false,
+                            },
+                        ),
+                        relational_insert: None,
+                        relational_update: None,
+                        relational_delete: None,
                     },
                 },
-                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
@@ -1813,11 +1877,34 @@ input_file: crates/metadata-resolve/tests/passing/relationships/model_argument_t
             pre_parse_plugins: [],
             pre_response_plugins: [],
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {
             Role(
                 "user",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    5261800314210927403,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

@@ -2814,6 +2814,28 @@
               "type": "null"
             }
           ]
+        },
+        "relationalUpdate": {
+          "description": "The permissions for relational update operations on this model for this role. If this is null, the role is not allowed to perform relational updates on this model. This is only applicable for data connectors that support relational operations.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RelationalUpdatePermission"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relationalDelete": {
+          "description": "The permissions for relational delete operations on this model for this role. If this is null, the role is not allowed to perform relational deletes on this model. This is only applicable for data connectors that support relational operations.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RelationalDeletePermission"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -5708,10 +5730,24 @@
       },
       "additionalProperties": false
     },
+    "RelationalDeletePermission": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationalDeletePermission",
+      "title": "RelationalDeletePermission",
+      "description": "Defines the permissions for relational delete operations on a model for a role. If null, the role is not allowed to perform relational deletes on this model. This is only applicable for data connectors that support relational operations.",
+      "type": "object",
+      "additionalProperties": false
+    },
     "RelationalInsertPermission": {
       "$id": "https://hasura.io/jsonschemas/metadata/RelationalInsertPermission",
       "title": "RelationalInsertPermission",
       "description": "Defines the permissions for relational insert operations on a model for a role. If null, the role is not allowed to perform relational inserts on this model. This is only applicable for data connectors that support relational operations.",
+      "type": "object",
+      "additionalProperties": false
+    },
+    "RelationalUpdatePermission": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationalUpdatePermission",
+      "title": "RelationalUpdatePermission",
+      "description": "Defines the permissions for relational update operations on a model for a role. If null, the role is not allowed to perform relational updates on this model. This is only applicable for data connectors that support relational operations.",
       "type": "object",
       "additionalProperties": false
     },

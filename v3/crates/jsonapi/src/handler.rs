@@ -7,6 +7,7 @@ use crate::catalog::{Catalog, Model, State};
 use axum::http::{HeaderMap, Method, Uri};
 use engine_types::HttpContext;
 use hasura_authn_core::Session;
+use metadata_resolve::LifecyclePluginConfigs;
 use metadata_resolve::Metadata;
 use plan_types::{NDCQueryExecution, ProcessResponseAs};
 use tracing_util::SpanVisibility;
@@ -15,6 +16,7 @@ use tracing_util::SpanVisibility;
 pub async fn handler_internal(
     request_headers: Arc<HeaderMap>,
     http_context: Arc<HttpContext>,
+    plugins: Arc<LifecyclePluginConfigs>,
     session: Arc<Session>,
     catalog: &Catalog,
     metadata: Arc<Metadata>,
@@ -65,6 +67,7 @@ pub async fn handler_internal(
                             &metadata,
                             &session,
                             &http_context,
+                            &plugins,
                             &request_headers,
                         ))
                     },
@@ -106,6 +109,7 @@ async fn query_engine_execute(
     metadata: &Metadata,
     session: &Session,
     http_context: &Arc<HttpContext>,
+    plugins: &LifecyclePluginConfigs,
     request_headers: &HeaderMap,
 ) -> Result<Vec<ndc_models::RowSet>, RequestError> {
     let execution_plan = plan::plan_query_request(query_ir, metadata, session, request_headers)
@@ -119,11 +123,15 @@ async fn query_engine_execute(
                     field_span_attribute: "REST".into(),
                     process_response_as: ProcessResponseAs::Array { is_nullable: false },
                 };
-                Ok(
-                    execute::resolve_ndc_query_execution(http_context, ndc_query_execution, None)
-                        .await
-                        .map_err(RequestError::ExecuteError)?,
+                Ok(execute::resolve_ndc_query_execution(
+                    http_context,
+                    plugins,
+                    session,
+                    ndc_query_execution,
+                    None,
                 )
+                .await
+                .map_err(RequestError::ExecuteError)?)
             }
             None => todo!("handle empty query result in JSONAPI"),
         },

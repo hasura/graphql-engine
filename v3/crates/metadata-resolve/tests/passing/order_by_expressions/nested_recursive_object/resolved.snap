@@ -74,21 +74,42 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested_re
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "Name",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "ManagesEmployee",
+                                FieldName(
+                                    Identifier(
+                                        "ManagesEmployee",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "ManagesEmployee",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -499,16 +520,22 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested_re
                     aggregate_expression: None,
                 },
                 arguments: {},
-                select_permissions: {
+                permissions: {
                     Role(
                         "admin",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: AllowAll,
+                                argument_presets: {},
+                                allow_subscriptions: false,
+                            },
+                        ),
+                        relational_insert: None,
+                        relational_update: None,
+                        relational_delete: None,
                     },
                 },
-                relational_insert_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
                     arguments_input_config: None,
@@ -754,11 +781,34 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested_re
             pre_parse_plugins: [],
             pre_response_plugins: [],
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {
             Role(
                 "admin",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    3363483249683024545,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: true,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

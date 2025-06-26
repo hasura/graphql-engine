@@ -3,7 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error as Serde
 use schemars::JsonSchema;
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, PartialEq, Eq)]
 #[serde(untagged)]
 #[schemars(title = "AllOrList")]
 #[schemars(example = "AllOrList::<String>::example")]

@@ -2,19 +2,21 @@ use std::collections::BTreeMap;
 
 mod error;
 mod types;
+use crate::types::condition::{BinaryOperation, Condition, Conditions};
+use crate::types::subgraph::Qualified;
 pub use error::{
     TypeInputPermissionError, TypeOutputPermissionError, TypePermissionError, TypePermissionIssue,
 };
+use hasura_authn_core::SESSION_VARIABLE_ROLE;
+use indexmap::IndexSet;
 use open_dds::identifier::SubgraphName;
-use open_dds::permissions::{
-    FieldPreset, Role, TypeOutputPermission, TypePermissionOperand, TypePermissionsV2,
-};
-use open_dds::types::CustomTypeName;
+use open_dds::permissions::{FieldPreset, Role, TypePermissionOperand, TypePermissionsV2};
+use open_dds::session_variables::SessionVariableReference;
+use open_dds::types::{CustomTypeName, FieldName};
 pub use types::{
-    FieldPresetInfo, ObjectTypeWithPermissions, ObjectTypesWithPermissions, TypeInputPermission,
+    FieldAuthorizationRule, FieldPresetInfo, ObjectTypeWithPermissions, ObjectTypesWithPermissions,
+    TypeInputPermission, TypeOutputPermissions,
 };
-
-use crate::types::subgraph::Qualified;
 
 use crate::ValueExpression;
 use crate::helpers::typecheck;
@@ -24,6 +26,7 @@ use crate::stages::object_types;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     object_types: object_types::ObjectTypesWithTypeMappings,
+    conditions: &mut Conditions,
 ) -> Result<(ObjectTypesWithPermissions, Vec<TypePermissionIssue>), Vec<TypePermissionError>> {
     let mut issues = Vec::new();
     let object_types_context = object_types
@@ -51,6 +54,7 @@ pub fn resolve(
             &object_types_context,
             &metadata_accessor.flags,
             &mut type_permissions,
+            conditions,
             &mut issues,
         ));
     }
@@ -69,7 +73,10 @@ pub fn resolve(
                     .remove(&qualified_type_name)
                     .unwrap_or_else(|| Permissions {
                         input: BTreeMap::new(),
-                        output: BTreeMap::new(),
+                        output: TypeOutputPermissions {
+                            authorization_rules: vec![],
+                            by_role: BTreeMap::new(),
+                        },
                     }); // Assume no permissions if not found in the map
                 (
                     qualified_type_name,
@@ -90,7 +97,7 @@ pub fn resolve(
 }
 
 struct Permissions {
-    output: BTreeMap<Role, TypeOutputPermission>,
+    output: TypeOutputPermissions,
     input: BTreeMap<Role, TypeInputPermission>,
 }
 
@@ -104,6 +111,7 @@ fn resolve_type_permission(
     >,
     flags: &open_dds::flags::OpenDdFlags,
     type_permissions: &mut BTreeMap<Qualified<CustomTypeName>, Permissions>,
+    conditions: &mut Conditions,
     issues: &mut Vec<TypePermissionIssue>,
 ) -> Result<(), TypePermissionError> {
     let qualified_type_name =
@@ -118,8 +126,12 @@ fn resolve_type_permission(
             ));
         }
         Some(object_type) => {
-            let type_output_permissions =
-                resolve_output_type_permission(&object_type.object_type, output_type_permission)?;
+            let type_output_permissions = resolve_output_type_permission(
+                &object_type.object_type,
+                output_type_permission,
+                flags,
+                conditions,
+            )?;
 
             let type_input_permissions = resolve_input_type_permission(
                 flags,
@@ -144,8 +156,11 @@ fn resolve_type_permission(
 pub fn resolve_output_type_permission(
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV2,
-) -> Result<BTreeMap<Role, TypeOutputPermission>, TypeOutputPermissionError> {
-    let mut resolved_type_permissions = BTreeMap::new();
+    flags: &open_dds::flags::OpenDdFlags,
+    conditions: &mut Conditions,
+) -> Result<TypeOutputPermissions, TypeOutputPermissionError> {
+    let mut authorization_rules = Vec::new();
+    let mut by_role = BTreeMap::new();
 
     match &type_permissions.permissions {
         TypePermissionOperand::RoleBased(role_based_type_permissions) => {
@@ -156,14 +171,22 @@ pub fn resolve_output_type_permission(
                     for field_name in &output.allowed_fields {
                         if !object_type_representation.fields.contains_key(field_name) {
                             return Err(
-                        TypeOutputPermissionError::UnknownFieldInOutputPermissionsDefinition {
-                            field_name: field_name.clone(),
-                            type_name: type_permissions.type_name.clone(),
-                        },
-                    );
+                                TypeOutputPermissionError::UnknownFieldInOutputPermissionsDefinition {
+                                    field_name: field_name.clone(),
+                                    type_name: type_permissions.type_name.clone(),
+                                },
+                            );
                         }
                     }
-                    if resolved_type_permissions
+
+                    let authorization_rule = authorization_rule_for_role(
+                        &role_based_type_permission.role,
+                        &output.allowed_fields,
+                        flags,
+                        conditions,
+                    );
+
+                    if by_role
                         .insert(role_based_type_permission.role.clone(), output.clone())
                         .is_some()
                     {
@@ -171,10 +194,42 @@ pub fn resolve_output_type_permission(
                             type_name: type_permissions.type_name.clone(),
                         });
                     }
+
+                    authorization_rules.push(authorization_rule);
                 }
             }
-            Ok(resolved_type_permissions)
+            Ok(TypeOutputPermissions {
+                authorization_rules,
+                by_role,
+            })
         }
+    }
+}
+
+// given a role and some fields, return a FieldAuthorizationRule
+// that allows those exact fields given `x-hasura-role` session variable matches the role
+fn authorization_rule_for_role(
+    role: &Role,
+    allowed_fields: &IndexSet<FieldName>,
+    flags: &open_dds::flags::OpenDdFlags,
+    conditions: &mut Conditions,
+) -> FieldAuthorizationRule {
+    let condition = Condition::BinaryOperation {
+        op: BinaryOperation::Equals,
+        left: ValueExpression::SessionVariable(SessionVariableReference {
+            name: SESSION_VARIABLE_ROLE,
+            passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
+            disallow_unknown_fields: flags
+                .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
+        }),
+        right: ValueExpression::Literal(serde_json::Value::String(role.0.clone())),
+    };
+
+    let hash = conditions.add(condition);
+
+    FieldAuthorizationRule::AllowFields {
+        fields: allowed_fields.iter().cloned().collect(),
+        condition: hash,
     }
 }
 

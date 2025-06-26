@@ -8,6 +8,7 @@ use graphql_ir::{RequestPlan, generate_request_plan};
 use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;
+use metadata_resolve::LifecyclePluginConfigs;
 use open_dds::permissions::Role;
 use std::collections::BTreeMap;
 use std::fs;
@@ -92,6 +93,14 @@ pub fn bench_execute(
         .get_role_authorization(None)
         .unwrap()
         .build_session(BTreeMap::new());
+
+    let plugins = LifecyclePluginConfigs {
+        pre_ndc_request_plugins: BTreeMap::new(),
+        pre_ndc_response_plugins: BTreeMap::new(),
+        pre_parse_plugins: Vec::new(),
+        pre_response_plugins: Vec::new(),
+        pre_route_plugins: Vec::new(),
+    };
 
     let mut group = c.benchmark_group(benchmark_group);
 
@@ -202,15 +211,22 @@ pub fn bench_execute(
                 {
                     RequestPlan::QueryPlan(query_plan) => {
                         let execute_query_result =
-                            execute_query_plan(&http_context, query_plan, None).await;
+                            execute_query_plan(&http_context, &plugins, &session, query_plan, None)
+                                .await;
                         assert!(
                             !execute_query_result.root_fields.is_empty(),
                             "IndexMap is empty!"
                         );
                     }
                     RequestPlan::MutationPlan(mutation_plan) => {
-                        let execute_query_result =
-                            execute_mutation_plan(&http_context, mutation_plan, None).await;
+                        let execute_query_result = execute_mutation_plan(
+                            &http_context,
+                            &plugins,
+                            &session,
+                            mutation_plan,
+                            None,
+                        )
+                        .await;
                         assert!(
                             !execute_query_result.root_fields.is_empty(),
                             "IndexMap is empty!"
@@ -234,6 +250,7 @@ pub fn bench_execute(
                 execute_query_internal(
                     ExposeInternalErrors::Expose,
                     &http_context,
+                    &plugins,
                     schema,
                     &resolved_metadata.clone().into(),
                     &session,

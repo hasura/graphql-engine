@@ -163,6 +163,7 @@ fn add_aggregatable_fields(
         // Only allow access to aggregations of the field if the type permissions allow it
         let allowed_roles = object_type
             .type_output_permissions
+            .by_role
             .iter()
             .filter(|(_role, perms)| {
                 perms
@@ -171,6 +172,7 @@ fn add_aggregatable_fields(
             })
             .map(|(role, _perms)| (role.clone(), None))
             .collect::<HashMap<Role, Option<Box<NamespaceAnnotation>>>>();
+
         let namespaced_field = builder.conditional_namespaced(field, allowed_roles);
 
         if type_fields

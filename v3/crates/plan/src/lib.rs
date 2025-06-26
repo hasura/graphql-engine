@@ -24,4 +24,4 @@ pub use query::{
     process_command_relationship_definition, process_model_predicate,
     process_model_relationship_definition, query_to_plan,
 };
-pub use types::{PermissionError, PlanError};
+pub use types::{PermissionError, PlanError, PlanState};

@@ -1,6 +1,6 @@
 use super::types::PlanError;
-use crate::metadata_accessor::OutputObjectTypeView;
-use hasura_authn_core::Role;
+use crate::{metadata_accessor::OutputObjectTypeView, types::PlanState};
+use hasura_authn_core::Session;
 use metadata_resolve::{
     FieldMapping, Qualified, QualifiedBaseType, QualifiedTypeName, TypeMapping,
 };
@@ -19,11 +19,12 @@ pub struct ResolvedColumn {
 /// that additional mapping data (e.g. operators) can be extracted.
 #[allow(clippy::assigning_clones)]
 pub fn to_resolved_column(
-    role: &Role,
+    session: &Session,
     metadata: &metadata_resolve::Metadata,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     model_object_type: &OutputObjectTypeView,
     operand: &open_dds::query::ObjectFieldOperand,
+    plan_state: &mut PlanState,
 ) -> Result<ResolvedColumn, PlanError> {
     let TypeMapping::Object {
         ndc_object_type_name: _,
@@ -58,7 +59,7 @@ pub fn to_resolved_column(
     // Keep track of the rest of the tree to consider:
     let mut nested = operand.nested.clone();
 
-    let field_type = model_object_type.get_field(&operand.target.field_name, role)?;
+    let field_type = model_object_type.get_field(&operand.target.field_name, &session.role)?;
 
     // Keep track of the type of the current field under consideration
     // (this will be an object type until we reach the bottom of the tree):
@@ -108,10 +109,12 @@ pub fn to_resolved_column(
                 let object_type = crate::metadata_accessor::get_output_object_type(
                     metadata,
                     &object_type_name,
-                    role,
+                    &session.role,
+                    &session.variables,
+                    plan_state,
                 )?;
 
-                let field_defn = object_type.get_field(field_name, role)?;
+                let field_defn = object_type.get_field(field_name, &session.role)?;
 
                 let field_type = &field_defn.field_type.underlying_type;
 

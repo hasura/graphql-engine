@@ -1104,6 +1104,12 @@ pub struct DataConnectorRelationalMutationCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_insert: bool,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_update: bool,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_delete: bool,
 }
 
 fn mk_ndc_01_capabilities(
@@ -1263,6 +1269,8 @@ fn mk_ndc_02_capabilities(
         supports_relational_mutations: capabilities.relational_mutation.as_ref().map(|r| {
             DataConnectorRelationalMutationCapabilities {
                 supports_insert: r.insert.is_some(),
+                supports_update: r.update.is_some(),
+                supports_delete: r.delete.is_some(),
             }
         }),
     }

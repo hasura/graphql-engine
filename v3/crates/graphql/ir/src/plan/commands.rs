@@ -2,14 +2,15 @@ use super::error;
 use crate::{FunctionBasedCommand, ProcedureBasedCommand};
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
-use plan_types::{MutationExecutionTree, QueryExecutionTree, UniqueNumber};
+use plan::PlanState;
+use plan_types::{MutationExecutionTree, QueryExecutionTree};
 
 pub(crate) fn plan_query_execution(
     ir: &FunctionBasedCommand<'_>,
     metadata: &'_ Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<QueryExecutionTree, error::Error> {
     // TODO: expose more specific function in `plan` for command selections
     let single_node_execution_plan = plan::query_to_plan(
@@ -17,7 +18,7 @@ pub(crate) fn plan_query_execution(
         metadata,
         session,
         request_headers,
-        unique_number,
+        plan_state,
     )?;
     match single_node_execution_plan {
         plan::SingleNodeExecutionPlan::Query(execution_tree) => Ok(execution_tree),
@@ -34,14 +35,14 @@ pub(crate) fn plan_mutation_execution(
     metadata: &'_ Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<MutationExecutionTree, error::Error> {
     let single_node_execution_plan = plan::query_to_plan(
         &open_dds::query::Query::Command(ir.command_info.selection.clone()),
         metadata,
         session,
         request_headers,
-        unique_number,
+        plan_state,
     )?;
     match single_node_execution_plan {
         plan::SingleNodeExecutionPlan::Query(_) => {

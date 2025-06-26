@@ -3,8 +3,9 @@ use super::arguments::{
 };
 use super::{field_selection, process_argument_presets_for_command};
 use crate::metadata_accessor::OutputObjectTypeView;
+use crate::types::PlanState;
 use crate::{PermissionError, PlanError};
-use hasura_authn_core::{Role, Session};
+use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::{
     Metadata, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
@@ -15,12 +16,12 @@ use open_dds::{
     commands::DataConnectorCommand,
     data_connector::{CollectionName, DataConnectorColumnName},
 };
+use plan_types::FUNCTION_IR_VALUE_COLUMN_NAME;
 use plan_types::{
     Argument, Field, JoinLocations, MutationArgument, MutationExecutionPlan, MutationExecutionTree,
     NdcFieldAlias, NdcRelationshipName, NestedArray, NestedField, NestedObject,
     PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode, Relationship,
 };
-use plan_types::{FUNCTION_IR_VALUE_COLUMN_NAME, UniqueNumber};
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
@@ -39,7 +40,7 @@ pub fn from_command(
     metadata: &Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<FromCommand, PlanError> {
     let command_target = &command_selection.target;
     let qualified_command_name = metadata_resolve::Qualified::new(
@@ -68,7 +69,7 @@ pub fn from_command(
         &qualified_command_name,
         command,
         command_source,
-        unique_number,
+        plan_state,
     )
 }
 
@@ -82,7 +83,7 @@ fn from_command_output_type(
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     remote_join_executions: &mut JoinLocations,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<
     (
         IndexMap<NdcFieldAlias, Field>,
@@ -102,7 +103,7 @@ fn from_command_output_type(
             relationships,
             remote_join_executions,
             remote_predicates,
-            unique_number,
+            plan_state,
         ),
         OutputShape::Object {
             object: output_object_type,
@@ -123,7 +124,7 @@ fn from_command_output_type(
                 relationships,
                 remote_join_executions,
                 remote_predicates,
-                unique_number,
+                plan_state,
             )?;
 
             let extract_response_from = match &command_source.data_connector.response_config {
@@ -149,14 +150,20 @@ pub(crate) fn from_command_selection(
     qualified_command_name: &Qualified<CommandName>,
     command: &metadata_resolve::CommandWithPermissions,
     command_source: &metadata_resolve::CommandSource,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<FromCommand, PlanError> {
     let mut relationships = BTreeMap::new();
     let mut usage_counts = plan_types::UsagesCounts::default();
     let mut remote_join_executions = JoinLocations::new();
     let mut remote_predicates = PredicateQueryTrees::new();
 
-    let output_shape = return_type_shape(&command.command.output_type, metadata, &session.role)?;
+    let output_shape = return_type_shape(
+        &command.command.output_type,
+        metadata,
+        &session.role,
+        &session.variables,
+        plan_state,
+    )?;
 
     let (ndc_fields, extract_response_from) = from_command_output_type(
         &output_shape,
@@ -168,7 +175,7 @@ pub(crate) fn from_command_selection(
         &mut relationships,
         &mut remote_join_executions,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     if !command
@@ -191,6 +198,7 @@ pub(crate) fn from_command_selection(
         session,
         &command_source.type_mappings,
         &command_source.data_connector,
+        plan_state,
         &mut usage_counts,
     )?;
 
@@ -216,7 +224,7 @@ pub(crate) fn from_command_selection(
         unresolved_arguments,
         &mut relationships,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     let command_plan = match &command_source.source {
@@ -382,6 +390,8 @@ fn return_type_shape<'metadata>(
     output_type: &'metadata QualifiedTypeReference,
     metadata: &'metadata Metadata,
     role: &'_ Role,
+    session_variables: &SessionVariables,
+    plan_state: &mut PlanState,
 ) -> Result<OutputShape<'metadata>, PlanError> {
     match &output_type.underlying_type {
         QualifiedBaseType::Named(QualifiedTypeName::Inbuilt(_)) => Ok(OutputShape::ScalarType {
@@ -396,6 +406,8 @@ fn return_type_shape<'metadata>(
                     metadata,
                     custom_type,
                     role,
+                    session_variables,
+                    plan_state,
                 )
                 .map(|output_object_type| OutputShape::Object {
                     object: output_object_type.clone(),
@@ -403,7 +415,13 @@ fn return_type_shape<'metadata>(
             }
         }
         QualifiedBaseType::List(type_reference) => {
-            let inner = return_type_shape(type_reference, metadata, role)?;
+            let inner = return_type_shape(
+                type_reference,
+                metadata,
+                role,
+                session_variables,
+                plan_state,
+            )?;
             Ok(OutputShape::Array {
                 inner: Box::new(inner),
             })

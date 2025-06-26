@@ -1,5 +1,6 @@
 use super::steps;
 use indexmap::IndexMap;
+use metadata_resolve::LifecyclePluginConfigs;
 
 use super::types::GraphQLResponse;
 use crate::execute::{
@@ -20,6 +21,7 @@ pub async fn execute_query(
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     metadata: &Arc<metadata_resolve::Metadata>,
+    plugins: &LifecyclePluginConfigs,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
@@ -28,6 +30,7 @@ pub async fn execute_query(
     execute_query_internal(
         expose_internal_errors,
         http_context,
+        plugins,
         schema,
         metadata,
         session,
@@ -51,6 +54,7 @@ pub async fn execute_query(
 pub async fn execute_query_internal(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
+    plugins: &metadata_resolve::LifecyclePluginConfigs,
     schema: &gql::schema::Schema<GDS>,
     metadata: &Arc<metadata_resolve::Metadata>,
     session: &Session,
@@ -109,14 +113,22 @@ pub async fn execute_query_internal(
                                     graphql_ir::RequestPlan::MutationPlan(mutation_plan) => {
                                         execute_mutation_plan(
                                             http_context,
+                                            plugins,
+                                            session,
                                             mutation_plan,
                                             project_id,
                                         )
                                         .await
                                     }
                                     graphql_ir::RequestPlan::QueryPlan(query_plan) => {
-                                        execute_query_plan(http_context, query_plan, project_id)
-                                            .await
+                                        execute_query_plan(
+                                            http_context,
+                                            plugins,
+                                            session,
+                                            query_plan,
+                                            project_id,
+                                        )
+                                        .await
                                     }
                                     graphql_ir::RequestPlan::SubscriptionPlan(
                                         alias,

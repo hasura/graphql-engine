@@ -6,10 +6,10 @@ use super::types::NDCQuery;
 use crate::filter::{resolve_model_permission_filter, to_filter_expression};
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::order_by::to_resolved_order_by_element;
-use crate::types::PlanError;
+use crate::types::{PlanError, PlanState};
 use hasura_authn_core::Session;
 use open_dds::query::ModelTarget;
-use plan_types::{PredicateQueryTrees, Relationship, ResolvedFilterExpression, UniqueNumber};
+use plan_types::{PredicateQueryTrees, Relationship, ResolvedFilterExpression};
 use std::collections::BTreeMap;
 
 pub fn model_target_to_ndc_query(
@@ -23,7 +23,7 @@ pub fn model_target_to_ndc_query(
     model_source: &metadata_resolve::ModelSource,
     model_object_type: &OutputObjectTypeView,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<NDCQuery, PlanError> {
     let mut usage_counts = plan_types::UsagesCounts::default();
     let mut relationships: BTreeMap<plan_types::NdcRelationshipName, Relationship> =
@@ -37,7 +37,7 @@ pub fn model_target_to_ndc_query(
         &metadata.object_types,
         &mut relationships,
         remote_predicates,
-        unique_number,
+        plan_state,
         &mut usage_counts,
     )?;
 
@@ -49,6 +49,7 @@ pub fn model_target_to_ndc_query(
         session,
         &model_source.type_mappings,
         &model_source.data_connector,
+        plan_state,
         &mut usage_counts,
     )?;
 
@@ -74,7 +75,7 @@ pub fn model_target_to_ndc_query(
         unresolved_arguments,
         &mut relationships,
         remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     let model_filter = match &model_target.filter {
@@ -90,6 +91,7 @@ pub fn model_target_to_ndc_query(
                     .map(std::convert::AsRef::as_ref),
                 expr,
                 &model_source.data_connector,
+                plan_state,
                 &mut usage_counts,
             )?;
 
@@ -97,7 +99,7 @@ pub fn model_target_to_ndc_query(
                 &expression,
                 &mut relationships,
                 remote_predicates,
-                unique_number,
+                plan_state,
             )?;
 
             resolved_filter_expression.remove_always_true_expression()
@@ -128,7 +130,7 @@ pub fn model_target_to_ndc_query(
                 element,
                 &mut relationships,
                 remote_predicates,
-                unique_number,
+                plan_state,
                 &mut usage_counts,
             )
         })

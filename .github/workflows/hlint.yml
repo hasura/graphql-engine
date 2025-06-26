@@ -7,7 +7,7 @@ on:
 
 jobs:
   hlint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: "!contains(github.event.pull_request.labels.*.name, 'ignore-server-hlint-checks') && github.event.label.name != 'ignore-server-hlint-checks'"
     env:
       working-directory: .

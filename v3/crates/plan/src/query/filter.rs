@@ -1,7 +1,7 @@
 use super::relationships::{
     get_relationship_field_mapping_of_field_name, process_model_relationship_definition,
 };
-use crate::types::{PlanError, RelationshipError};
+use crate::types::{PlanError, PlanState, RelationshipError};
 use indexmap::IndexMap;
 use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified, RelationshipCapabilities};
 use open_dds::{
@@ -14,7 +14,7 @@ use plan_types::{
     Expression, Field, FieldsSelection, JoinLocations, LocalModelRelationshipInfo, NdcFieldAlias,
     NdcRelationshipName, PredicateQueryTree, PredicateQueryTrees, QueryExecutionPlan,
     QueryExecutionTree, QueryNode, Relationship, RelationshipColumnMapping,
-    ResolvedFilterExpression, SourceNdcColumn, UniqueNumber,
+    ResolvedFilterExpression, SourceNdcColumn,
 };
 use std::collections::BTreeMap;
 
@@ -23,7 +23,7 @@ pub fn plan_expression<'a>(
     expression: &'a Expression<'_>,
     relationships: &'a mut BTreeMap<NdcRelationshipName, Relationship>,
     remote_predicates: &'a mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<ResolvedFilterExpression, PlanError> {
     match expression {
         Expression::And {
@@ -31,12 +31,8 @@ pub fn plan_expression<'a>(
         } => {
             let mut results = Vec::new();
             for and_expression in and_expressions {
-                let result = plan_expression(
-                    and_expression,
-                    relationships,
-                    remote_predicates,
-                    unique_number,
-                )?;
+                let result =
+                    plan_expression(and_expression, relationships, remote_predicates, plan_state)?;
                 results.push(result);
             }
             Ok(ResolvedFilterExpression::mk_and(results))
@@ -46,12 +42,8 @@ pub fn plan_expression<'a>(
         } => {
             let mut results = Vec::new();
             for or_expression in or_expressions {
-                let result = plan_expression(
-                    or_expression,
-                    relationships,
-                    remote_predicates,
-                    unique_number,
-                )?;
+                let result =
+                    plan_expression(or_expression, relationships, remote_predicates, plan_state)?;
                 results.push(result);
             }
             Ok(ResolvedFilterExpression::mk_or(results))
@@ -59,12 +51,8 @@ pub fn plan_expression<'a>(
         Expression::Not {
             expression: not_expression,
         } => {
-            let result = plan_expression(
-                not_expression,
-                relationships,
-                remote_predicates,
-                unique_number,
-            )?;
+            let result =
+                plan_expression(not_expression, relationships, remote_predicates, plan_state)?;
             Ok(ResolvedFilterExpression::mk_not(result))
         }
         Expression::LocalField(local_field_comparison) => Ok(
@@ -76,7 +64,7 @@ pub fn plan_expression<'a>(
             column,
         } => {
             let resolved_predicate =
-                plan_expression(predicate, relationships, remote_predicates, unique_number)?;
+                plan_expression(predicate, relationships, remote_predicates, plan_state)?;
             Ok(ResolvedFilterExpression::LocalNestedArray {
                 column: column.clone(),
                 field_path: field_path.clone(),
@@ -89,7 +77,7 @@ pub fn plan_expression<'a>(
             column,
         } => {
             let resolved_predicate =
-                plan_expression(predicate, relationships, remote_predicates, unique_number)?;
+                plan_expression(predicate, relationships, remote_predicates, plan_state)?;
             Ok(ResolvedFilterExpression::LocalNestedScalarArray {
                 column: column.clone(),
                 field_path: field_path.clone(),
@@ -103,7 +91,7 @@ pub fn plan_expression<'a>(
             info,
         } => {
             let relationship_filter =
-                plan_expression(predicate, relationships, remote_predicates, unique_number)?;
+                plan_expression(predicate, relationships, remote_predicates, plan_state)?;
 
             relationships.insert(
                 relationship.clone(),
@@ -123,7 +111,7 @@ pub fn plan_expression<'a>(
             predicate,
         } => {
             let (remote_query_node, rest_predicate_trees, collection_relationships) =
-                plan_remote_predicate(ndc_column_mapping, predicate, unique_number)?;
+                plan_remote_predicate(ndc_column_mapping, predicate, plan_state)?;
 
             let query_execution_plan: QueryExecutionPlan = QueryExecutionPlan {
                 query_node: remote_query_node,
@@ -145,7 +133,8 @@ pub fn plan_expression<'a>(
                 children: rest_predicate_trees,
             };
 
-            let remote_predicate_id = remote_predicates.insert(unique_number, predicate_query_tree);
+            let remote_predicate_id =
+                remote_predicates.insert(&mut plan_state.unique_number, predicate_query_tree);
 
             Ok(ResolvedFilterExpression::RemoteRelationshipComparison {
                 remote_predicate_id,
@@ -158,7 +147,7 @@ pub fn plan_expression<'a>(
 pub fn plan_remote_predicate<'a>(
     ndc_column_mapping: &'a [RelationshipColumnMapping],
     predicate: &'a Expression<'_>,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<
     (
         QueryNode,
@@ -173,7 +162,7 @@ pub fn plan_remote_predicate<'a>(
         predicate,
         &mut relationships,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     let query_node = QueryNode {

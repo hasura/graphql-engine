@@ -42,7 +42,10 @@ input_file: crates/metadata-resolve/tests/passing/object_types/with_boolean_expr
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {},
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 type_input_permissions: {},
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -94,7 +97,10 @@ input_file: crates/metadata-resolve/tests/passing/object_types/with_boolean_expr
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {},
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 type_input_permissions: {},
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -193,8 +199,13 @@ input_file: crates/metadata-resolve/tests/passing/object_types/with_boolean_expr
             pre_parse_plugins: [],
             pre_response_plugins: [],
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {},
+        conditions: Conditions {
+            conditions: {},
+        },
         runtime_flags: RuntimeFlags(
             {},
         ),

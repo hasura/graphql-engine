@@ -40,7 +40,8 @@ pub use stages::data_connectors::{
 pub use stages::graphql_config::{GlobalGraphqlConfig, MultipleOrderByInputObjectFields};
 pub use stages::model_permissions::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
-    PredicateRelationshipInfo, SelectPermission, UnaryComparisonOperator,
+    PredicateRelationshipInfo, RelationalDeletePermission, RelationalInsertPermission,
+    RelationalUpdatePermission, SelectPermission, UnaryComparisonOperator,
 };
 pub use stages::models::{ModelSource, ModelsError};
 pub use stages::models_graphql::{
@@ -56,8 +57,9 @@ pub use stages::object_relationships::{
     field_selection_relationship_execution_category,
 };
 pub use stages::object_types::{
-    AggregateFunctions, ComparisonOperators, ExtractionFunctions, FieldArgumentInfo, FieldMapping,
-    ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
+    AggregateFunctions, ComparisonOperators, ExtractionFunctions, FieldArgumentInfo,
+    FieldDefinition, FieldMapping, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig,
+    TypeMapping,
 };
 pub use stages::order_by_expressions::{
     ObjectOrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
@@ -65,18 +67,22 @@ pub use stages::order_by_expressions::{
     OrderableRelationship, OrderableRelationshipError, OrderableScalarField,
     validate_orderable_relationship,
 };
-pub use stages::plugins::LifecyclePluginConfigs;
+pub use stages::plugins::{
+    LifecyclePluginConfigs, ResolvedLifecyclePreNdcRequestPluginHook,
+    ResolvedLifecyclePreNdcResponsePluginHook,
+};
 pub use stages::scalar_boolean_expressions::{
     LogicalOperators, LogicalOperatorsGraphqlConfig, ResolvedScalarBooleanExpressionType,
 };
 pub use stages::scalar_type_representations::ScalarTypeRepresentation;
-pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};
+pub use stages::type_permissions::{FieldAuthorizationRule, FieldPresetInfo, TypeInputPermission};
 pub use stages::{Metadata, resolve};
 pub use stages::{
     command_permissions::{Command, CommandWithPermissions},
     commands::CommandSource,
     data_connectors,
 };
+pub use types::condition::{BinaryOperation, Condition, ConditionHash, Conditions, UnaryOperation};
 pub use types::configuration;
 pub use types::error::{Error, WithContext};
 pub use types::flags::{self, RuntimeFlags};

@@ -115,26 +115,52 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "albumId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "albumId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "artistId",
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "title",
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "albumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -623,21 +649,42 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "name",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "lengthMins",
+                                FieldName(
+                                    Identifier(
+                                        "lengthMins",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "lengthMins",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1100,31 +1147,62 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "albumId",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "albumId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "artistId",
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "title",
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "discs",
+                                FieldName(
+                                    Identifier(
+                                        "discs",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "albumId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "discs",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1691,21 +1769,42 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         "Responses from the 'insert_album' procedure",
                     ),
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "affectedRows",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "returning",
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "affectedRows",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "returning",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1957,21 +2056,42 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                     ),
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "name",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "exclusiveRights",
+                                FieldName(
+                                    Identifier(
+                                        "exclusiveRights",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "exclusiveRights",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -5959,11 +6079,34 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
             pre_parse_plugins: [],
             pre_response_plugins: [],
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {
             Role(
                 "admin",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    3363483249683024545,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: true,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

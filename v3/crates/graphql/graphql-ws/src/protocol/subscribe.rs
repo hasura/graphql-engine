@@ -338,13 +338,19 @@ async fn execute<M: WebSocketMetrics>(
 ) {
     let project_id = connection.context.project_id.as_ref();
     let http_context = &connection.context.http_context;
+    let plugins = &connection.context.metadata.plugin_configs;
     let expose_internal_errors = connection.context.expose_internal_errors;
     match request_plan {
         // Handle mutations.
         RequestPlan::MutationPlan(mutation_plan) => {
-            let execute_query_result =
-                graphql_frontend::execute_mutation_plan(http_context, mutation_plan, project_id)
-                    .await;
+            let execute_query_result = graphql_frontend::execute_mutation_plan(
+                http_context,
+                plugins,
+                &session,
+                mutation_plan,
+                project_id,
+            )
+            .await;
             send_single_result_operation_response(
                 client_address,
                 operation_id,
@@ -359,8 +365,14 @@ async fn execute<M: WebSocketMetrics>(
         }
         // Handle queries.
         RequestPlan::QueryPlan(query_plan) => {
-            let execute_query_result =
-                graphql_frontend::execute_query_plan(http_context, query_plan, project_id).await;
+            let execute_query_result = graphql_frontend::execute_query_plan(
+                http_context,
+                plugins,
+                &session,
+                query_plan,
+                project_id,
+            )
+            .await;
             send_single_result_operation_response(
                 client_address,
                 operation_id,
@@ -409,6 +421,8 @@ async fn execute<M: WebSocketMetrics>(
                                         // Fetch response from the connector
                                         let response = execute::fetch_from_data_connector(
                                             http_context,
+                                            plugins,
+                                            &session,
                                             &query_request,
                                             &data_connector,
                                             None,

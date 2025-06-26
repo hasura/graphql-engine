@@ -3,6 +3,7 @@
 use engine_types::HttpContext;
 use hasura_authn_core::{Identity, Role};
 use jsonapi_library::api::{DocumentData, IdentifierData, PrimaryData};
+use metadata_resolve::LifecyclePluginConfigs;
 use reqwest::header::HeaderMap;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -41,9 +42,18 @@ fn test_get_succeeding_requests() {
 
                 let session = create_default_session();
 
+                let plugins = LifecyclePluginConfigs {
+                    pre_parse_plugins: Vec::new(),
+                    pre_response_plugins: Vec::new(),
+                    pre_route_plugins: Vec::new(),
+                    pre_ndc_request_plugins: BTreeMap::new(),
+                    pre_ndc_response_plugins: BTreeMap::new(),
+                };
+
                 let result = jsonapi::handler_internal(
                     Arc::new(HeaderMap::default()),
                     Arc::new(http_context.clone()),
+                    Arc::new(plugins.clone()),
                     Arc::new(session.clone()),
                     &jsonapi_catalog,
                     metadata.into(),
@@ -104,9 +114,18 @@ fn test_get_failing_requests() {
 
                 let session = create_default_session();
 
+                let plugins = LifecyclePluginConfigs {
+                    pre_parse_plugins: Vec::new(),
+                    pre_response_plugins: Vec::new(),
+                    pre_route_plugins: Vec::new(),
+                    pre_ndc_request_plugins: BTreeMap::new(),
+                    pre_ndc_response_plugins: BTreeMap::new()
+                };
+
                 let result = jsonapi::handler_internal(
                     Arc::new(HeaderMap::default()),
                     Arc::new(http_context.clone()),
+                    Arc::new(plugins.clone()),
                     Arc::new(session.clone()),
                     &jsonapi_catalog,
                     metadata.into(),

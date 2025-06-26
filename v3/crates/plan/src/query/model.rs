@@ -1,6 +1,6 @@
 use super::{field_selection, model_target};
 
-use crate::types::PlanError;
+use crate::types::{PlanError, PlanState};
 use crate::{OutputObjectTypeView, column::to_resolved_column};
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
@@ -21,7 +21,6 @@ use open_dds::query::{
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, FieldsSelection, Grouping, JoinLocations,
     NdcFieldAlias, PredicateQueryTrees, QueryExecutionPlan, QueryExecutionTree, QueryNode,
-    UniqueNumber,
 };
 
 pub fn from_model_group_by(
@@ -31,7 +30,7 @@ pub fn from_model_group_by(
     metadata: &Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<QueryExecutionTree, PlanError> {
     let mut remote_predicates = PredicateQueryTrees::new();
 
@@ -54,6 +53,8 @@ pub fn from_model_group_by(
         metadata,
         &model.model.data_type,
         &session.role,
+        &session.variables,
+        plan_state,
     )?;
 
     let data_connector = &model_source.data_connector;
@@ -72,11 +73,12 @@ pub fn from_model_group_by(
         let dimension = match operand {
             Operand::Field(operand) => {
                 let column = to_resolved_column(
-                    &session.role,
+                    session,
                     metadata,
                     &model_source.type_mappings,
                     &model_object_type,
                     operand,
+                    plan_state,
                 )?;
                 let field_mapping: FieldMapping = column.field_mapping;
                 let extraction_functions = field_mapping
@@ -214,6 +216,7 @@ pub fn from_model_group_by(
             aggregate,
             field_alias,
             ndc_version,
+            plan_state,
         )?;
         aggregates.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_aggregate);
     }
@@ -227,7 +230,7 @@ pub fn from_model_group_by(
         model_source,
         &model_object_type,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     // only send an ordering if there are actually elements
@@ -285,7 +288,7 @@ pub fn from_model_aggregate_selection(
     session: &Session,
     relationship_aggregate_expression: Option<&Qualified<AggregateExpressionName>>,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<QueryExecutionTree, PlanError> {
     let mut remote_predicates = PredicateQueryTrees::new();
 
@@ -309,6 +312,8 @@ pub fn from_model_aggregate_selection(
         metadata,
         &model.model.data_type,
         &session.role,
+        &session.variables,
+        plan_state,
     )?;
 
     let data_connector = &model_source.data_connector;
@@ -332,6 +337,7 @@ pub fn from_model_aggregate_selection(
             aggregate,
             field_alias,
             ndc_version,
+            plan_state,
         )?;
 
         fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_aggregate);
@@ -346,7 +352,7 @@ pub fn from_model_aggregate_selection(
         model_source,
         &model_object_type,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     let query_aggregate_fields = if fields.is_empty() {
@@ -410,6 +416,7 @@ fn to_ndc_aggregate(
     aggregate: &Aggregate,
     field_alias: &Name,
     ndc_version: NdcVersion,
+    plan_state: &mut PlanState,
 ) -> Result<AggregateFieldSelection, PlanError> {
     let resolved_column = aggregate
         .operand
@@ -417,11 +424,12 @@ fn to_ndc_aggregate(
         .map(|operand| {
             let field_operand = extract_field_operand_for_aggregation(operand)?;
             to_resolved_column(
-                &session.role,
+                session,
                 metadata,
                 &model_source.type_mappings,
                 model_object_type,
                 &field_operand,
+                plan_state,
             )
         })
         .transpose()?;
@@ -608,7 +616,7 @@ pub fn from_model_selection(
     metadata: &Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<QueryExecutionTree, PlanError> {
     let mut remote_predicates = PredicateQueryTrees::new();
     let mut remote_join_executions = JoinLocations::new();
@@ -633,6 +641,8 @@ pub fn from_model_selection(
         metadata,
         &model.model.data_type,
         &session.role,
+        &session.variables,
+        plan_state,
     )?;
 
     let mut relationships = BTreeMap::new();
@@ -649,7 +659,7 @@ pub fn from_model_selection(
         &mut relationships,
         &mut remote_join_executions,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     let mut query = model_target::model_target_to_ndc_query(
@@ -661,7 +671,7 @@ pub fn from_model_selection(
         model_source,
         &model_object_type,
         &mut remote_predicates,
-        unique_number,
+        plan_state,
     )?;
 
     // collect relationships accummulated in this scope.

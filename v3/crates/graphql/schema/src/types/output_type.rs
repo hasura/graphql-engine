@@ -235,7 +235,7 @@ fn object_type_fields(
             // include fields
             let namespaced_field = {
                 let mut role_map = HashMap::new();
-                for (role, perms) in &object_type_representation.type_output_permissions {
+                for (role, perms) in &object_type_representation.type_output_permissions.by_role {
                     if perms.allowed_fields.contains(field_name) {
                         role_map.insert(Role(role.0.clone()), None);
                     }

@@ -65,7 +65,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {},
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 type_input_permissions: {},
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
@@ -369,26 +372,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     graphql_input_type_name: None,
                     description: None,
                 },
-                type_output_permissions: {
-                    Role(
-                        "admin",
-                    ): TypeOutputPermission {
-                        allowed_fields: {
-                            FieldName(
-                                Identifier(
-                                    "id",
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "id",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "title",
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
                                 ),
-                            ),
-                            FieldName(
-                                Identifier(
-                                    "rating",
+                                FieldName(
+                                    Identifier(
+                                        "rating",
+                                    ),
                                 ),
+                            ],
+                            condition: ConditionHash(
+                                14539879520726521060,
                             ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "rating",
+                                    ),
+                                ),
+                            },
                         },
                     },
                 },
@@ -1204,16 +1233,22 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     aggregate_expression: None,
                 },
                 arguments: {},
-                select_permissions: {
+                permissions: {
                     Role(
                         "admin",
-                    ): SelectPermission {
-                        filter: AllowAll,
-                        argument_presets: {},
-                        allow_subscriptions: false,
+                    ): ResolvedPermissions {
+                        select: Some(
+                            SelectPermission {
+                                filter: AllowAll,
+                                argument_presets: {},
+                                allow_subscriptions: false,
+                            },
+                        ),
+                        relational_insert: None,
+                        relational_update: None,
+                        relational_delete: None,
                     },
                 },
-                relational_insert_permissions: {},
                 filter_expression_type: Some(
                     ResolvedObjectBooleanExpressionType {
                         name: Qualified {
@@ -2090,11 +2125,34 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
             pre_parse_plugins: [],
             pre_response_plugins: [],
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {
             Role(
                 "admin",
             ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    14539879520726521060,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+            },
         },
         runtime_flags: RuntimeFlags(
             {},

@@ -23,18 +23,24 @@ let
   buildPlatform = pkgs.stdenv.buildPlatform;
   hostPlatform = pkgs.stdenv.hostPlatform;
 
+  # nixpkgs decided to change the name of the darwin targets which wrecks everything
+  hostPlatformName =
+    if hostPlatform.config == "arm64-apple-darwin"
+    then "aarch64-apple-darwin"
+    else hostPlatform.config;
+
   # When possibly cross-compiling we get several versions of nixpkgs of the
   # form, `pkgs.pkgs<where it runs><platform it produces outputs for>`. We use
   # `pkgs.pkgsBuildHost` to get packages that run at build time (so run on the
   # build platform), and that produce outputs for the host platform which is the
   # cross-compilation target.
   rustBin = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchainFile ../rust-toolchain.toml;
-  rustToolchain = rustBin.override { targets = [ hostPlatform.config ]; };
+  rustToolchain = rustBin.override { targets = [ hostPlatformName ]; };
   craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
   buildEnv = {
-    CARGO_BUILD_TARGET = hostPlatform.config;
-    "CARGO_TARGET_${envCase hostPlatform.config}_LINKER" = "${pkgs.stdenv.cc.targetPrefix}cc";
+    CARGO_BUILD_TARGET = hostPlatformName;
+    "CARGO_TARGET_${envCase hostPlatformName}_LINKER" = "${pkgs.stdenv.cc.targetPrefix}cc";
 
     # This environment variable may be necessary if any of your dependencies use
     # a build-script which invokes the `cc` crate to build some other code. The

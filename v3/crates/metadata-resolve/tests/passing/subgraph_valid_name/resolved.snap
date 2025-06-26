@@ -57,8 +57,13 @@ input_file: crates/metadata-resolve/tests/passing/subgraph_valid_name/metadata.j
             pre_parse_plugins: [],
             pre_response_plugins: [],
             pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
         },
         roles: {},
+        conditions: Conditions {
+            conditions: {},
+        },
         runtime_flags: RuntimeFlags(
             {},
         ),

@@ -1,6 +1,7 @@
 use super::permissions;
 use crate::metadata_accessor;
 use crate::plan_expression;
+use crate::types::PlanState;
 use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
@@ -15,9 +16,7 @@ use open_dds::{
     models::ModelName,
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
-use plan_types::{
-    Argument, Expression, PredicateQueryTrees, Relationship, UniqueNumber, UsagesCounts,
-};
+use plan_types::{Argument, Expression, PredicateQueryTrees, Relationship, UsagesCounts};
 use reqwest::header::HeaderMap;
 use serde::Serialize;
 use std::borrow::Cow;
@@ -87,8 +86,9 @@ pub fn process_argument_presets_for_model<'s>(
     })?;
 
     let argument_presets = &model
-        .select_permissions
+        .permissions
         .get(&session.role)
+        .and_then(|permissions| permissions.select.as_ref())
         .ok_or_else(
             || ArgumentPresetExecutionError::ModelArgumentPresetsNotFound {
                 model_name: model.model.name.clone(),
@@ -583,6 +583,7 @@ pub fn get_unresolved_arguments<'s>(
     session: &Session,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector: &'s metadata_resolve::DataConnectorLink,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     let mut arguments = BTreeMap::new();
@@ -610,6 +611,8 @@ pub fn get_unresolved_arguments<'s>(
                     metadata,
                     &boolean_expression_type.object_type,
                     &session.role,
+                    &session.variables,
+                    plan_state,
                 )?;
 
                 let predicate = crate::filter::to_filter_expression(
@@ -620,6 +623,7 @@ pub fn get_unresolved_arguments<'s>(
                     Some(boolean_expression_type),
                     bool_exp,
                     data_connector,
+                    plan_state,
                     usage_counts,
                 )?;
 
@@ -638,7 +642,7 @@ pub fn resolve_arguments(
     arguments_with_presets: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'_>>,
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
     remote_predicates: &mut PredicateQueryTrees,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<BTreeMap<DataConnectorArgumentName, Argument>, PlanError> {
     // now we turn the GraphQL IR `Arguments` type into the `execute` "resolved" argument type
     // by resolving any `Expression` types inside
@@ -647,7 +651,7 @@ pub fn resolve_arguments(
         let resolved_argument_value = match argument_value {
             UnresolvedArgument::BooleanExpression { predicate } => {
                 let resolved_filter_expression =
-                    plan_expression(&predicate, relationships, remote_predicates, unique_number)?;
+                    plan_expression(&predicate, relationships, remote_predicates, plan_state)?;
 
                 Argument::BooleanExpression {
                     predicate: resolved_filter_expression,

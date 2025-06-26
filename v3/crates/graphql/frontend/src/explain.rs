@@ -1,20 +1,19 @@
 pub mod types;
 use super::steps;
 
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use async_recursion::async_recursion;
 use engine_types::{ExposeInternalErrors, HttpContext};
-use execute::ndc::client as ndc_client;
+use execute::ndc::{fetch_from_data_connector_explain, fetch_from_data_connector_mutation_explain};
 use graphql_ir::{ApolloFederationSelect, MutationPlan, NodeQueryPlan, QueryPlan, RequestPlan};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
-use metadata_resolve::DataConnectorLink;
+use metadata_resolve::{DataConnectorLink, LifecyclePluginConfigs};
 use nonempty::NonEmpty;
 use plan_types::{
     JoinLocations, JoinNode, NDCQueryExecution, PredicateQueryTrees, ProcessResponseAs,
@@ -25,6 +24,7 @@ use tracing_util::{AttributeVisibility, SpanVisibility};
 pub async fn execute_explain(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
     schema: &Schema<GDS>,
     metadata: &Arc<metadata_resolve::Metadata>,
     session: &Session,
@@ -34,6 +34,7 @@ pub async fn execute_explain(
     explain_query_internal(
         expose_internal_errors,
         http_context,
+        plugins,
         schema,
         metadata,
         session,
@@ -56,6 +57,7 @@ pub async fn execute_explain(
 async fn explain_query_internal(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
     schema: &gql::schema::Schema<GDS>,
     metadata: &Arc<metadata_resolve::Metadata>,
     session: &Session,
@@ -118,6 +120,8 @@ async fn explain_query_internal(
                                             explain_mutation_plan(
                                                 expose_internal_errors,
                                                 http_context,
+                                                plugins,
+                                                session,
                                                 mutation_plan,
                                             )
                                             .await
@@ -126,6 +130,8 @@ async fn explain_query_internal(
                                             explain_query_plan(
                                                 expose_internal_errors,
                                                 http_context,
+                                                plugins,
+                                                session,
                                                 query_plan,
                                             )
                                             .await
@@ -163,6 +169,8 @@ async fn explain_query_internal(
 pub(crate) async fn explain_query_plan(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     query_plan: QueryPlan<'_, '_, '_>,
 ) -> Result<types::Step, crate::RequestError> {
     let mut parallel_root_steps = vec![];
@@ -187,6 +195,8 @@ pub(crate) async fn explain_query_plan(
                     execution_tree.remote_predicates,
                     expose_internal_errors,
                     http_context,
+                    plugins,
+                    session,
                     alias.to_string(),
                     &process_response_as,
                 )
@@ -195,6 +205,8 @@ pub(crate) async fn explain_query_plan(
                 let sequence_steps = get_execution_steps(
                     expose_internal_errors,
                     http_context,
+                    plugins,
+                    session,
                     alias.to_string(),
                     &process_response_as,
                     remote_join_executions,
@@ -226,6 +238,8 @@ pub(crate) async fn explain_query_plan(
                             execution_tree.remote_predicates,
                             expose_internal_errors,
                             http_context,
+                            plugins,
+                            session,
                             alias.to_string(),
                             &process_response_as,
                         )
@@ -234,6 +248,8 @@ pub(crate) async fn explain_query_plan(
                     let sequence_steps = get_execution_steps(
                         expose_internal_errors,
                         http_context,
+                        plugins,
+                        session,
                         alias.to_string(),
                         &process_response_as,
                         remote_join_executions,
@@ -287,6 +303,8 @@ pub(crate) async fn explain_query_plan(
 pub(crate) async fn explain_mutation_plan(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     mutation_plan: MutationPlan<'_, '_>,
 ) -> Result<types::Step, crate::RequestError> {
     let mut root_steps = vec![];
@@ -314,6 +332,8 @@ pub(crate) async fn explain_mutation_plan(
             let sequence_steps = get_execution_steps(
                 expose_internal_errors,
                 http_context,
+                plugins,
+                session,
                 alias.to_string(),
                 &ndc_mutation_execution
                     .mutation_execution
@@ -350,6 +370,8 @@ pub(crate) async fn explain_mutation_plan(
 async fn get_execution_steps(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     alias: String,
     process_response_as: &ProcessResponseAs,
     join_locations: JoinLocations,
@@ -362,6 +384,8 @@ async fn get_execution_steps(
             let data_connector_explain = fetch_explain_from_data_connector(
                 expose_internal_errors,
                 http_context,
+                plugins,
+                session,
                 &ndc_request,
                 data_connector,
             )
@@ -381,6 +405,8 @@ async fn get_execution_steps(
             let data_connector_explain = fetch_explain_from_data_connector(
                 expose_internal_errors,
                 http_context,
+                plugins,
+                session,
                 &ndc_request,
                 data_connector,
             )
@@ -393,8 +419,14 @@ async fn get_execution_steps(
         }
     };
 
-    if let Some(join_steps) =
-        get_join_steps(expose_internal_errors, join_locations, http_context).await?
+    if let Some(join_steps) = get_join_steps(
+        expose_internal_errors,
+        join_locations,
+        http_context,
+        plugins,
+        session,
+    )
+    .await?
     {
         sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
@@ -407,6 +439,8 @@ async fn get_remote_predicate_steps(
     expose_internal_errors: ExposeInternalErrors,
     remote_predicates: PredicateQueryTrees,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     alias: String,
     process_response_as: &ProcessResponseAs,
     filter_expressions: &BTreeMap<RemotePredicateKey, ResolvedFilterExpression>,
@@ -418,6 +452,8 @@ async fn get_remote_predicate_steps(
                 expose_internal_errors,
                 remote_predicate.children,
                 http_context,
+                plugins,
+                session,
                 alias.clone(),
                 process_response_as,
                 filter_expressions,
@@ -445,6 +481,8 @@ async fn get_remote_predicate_steps(
         let sequence_steps = get_execution_steps(
             expose_internal_errors,
             http_context,
+            plugins,
+            session,
             remote_predicate.target_model_name.to_string(),
             process_response_as,
             remote_predicate.query.remote_join_executions,
@@ -464,6 +502,8 @@ async fn construct_ndc_query(
     remote_predicates: PredicateQueryTrees,
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     alias: String,
     process_response_as: &ProcessResponseAs,
 ) -> Result<
@@ -480,6 +520,8 @@ async fn construct_ndc_query(
     let filter_expressions = execute::execute_remote_predicates(
         &remote_predicates,
         http_context,
+        plugins,
+        session,
         "execute_remote_predicate",
         "execute_remote_predicate",
         process_response_as,
@@ -493,6 +535,8 @@ async fn construct_ndc_query(
         expose_internal_errors,
         remote_predicates,
         http_context,
+        plugins,
+        session,
         alias,
         process_response_as,
         &filter_expressions,
@@ -522,6 +566,8 @@ async fn get_join_steps(
     expose_internal_errors: ExposeInternalErrors,
     join_locations: JoinLocations,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
 ) -> Result<Option<NonEmpty<Box<types::Step>>>, crate::RequestError> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
@@ -540,6 +586,8 @@ async fn get_join_steps(
             let data_connector_explain = fetch_explain_from_data_connector(
                 expose_internal_errors,
                 http_context,
+                plugins,
+                session,
                 &ndc_request,
                 &target_data_connector,
             )
@@ -565,8 +613,14 @@ async fn get_join_steps(
                 },
             )));
         }
-        if let Some(rest_join_steps) =
-            get_join_steps(expose_internal_errors, location.rest, http_context).await?
+        if let Some(rest_join_steps) = get_join_steps(
+            expose_internal_errors,
+            location.rest,
+            http_context,
+            plugins,
+            session,
+        )
+        .await?
         {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));
@@ -611,6 +665,8 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
 pub(crate) async fn fetch_explain_from_data_connector(
     expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
+    plugins: &LifecyclePluginConfigs,
+    session: &Session,
     ndc_request: &types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
 ) -> types::NDCExplainResponse {
@@ -622,30 +678,37 @@ pub(crate) async fn fetch_explain_from_data_connector(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let ndc_config = ndc_client::Configuration {
-                        base_path: data_connector.url.get_url(ast::OperationType::Query),
-                        // This is isn't expensive, reqwest::Client is behind an Arc
-                        client: http_context.client.clone(),
-                        headers: Cow::Borrowed(&data_connector.headers.0),
-                        response_size_limit: http_context.ndc_response_size_limit,
-                    };
                     match ndc_request {
                         types::NDCRequest::Query(query_request) => {
                             if data_connector.capabilities.supports_explaining_queries {
-                                ndc_client::explain_query_post(ndc_config, query_request)
-                                    .await
-                                    .map(Some)
-                                    .map_err(execute::FieldError::from)
+                                fetch_from_data_connector_explain(
+                                    http_context,
+                                    plugins,
+                                    session,
+                                    query_request,
+                                    data_connector,
+                                    None,
+                                )
+                                .await
+                                .map(Some)
+                                .map_err(execute::FieldError::from)
                             } else {
                                 Ok(None)
                             }
                         }
                         types::NDCRequest::Mutation(mutation_request) => {
                             if data_connector.capabilities.supports_explaining_mutations {
-                                ndc_client::explain_mutation_post(ndc_config, mutation_request)
-                                    .await
-                                    .map(Some)
-                                    .map_err(execute::FieldError::from)
+                                fetch_from_data_connector_mutation_explain(
+                                    http_context,
+                                    plugins,
+                                    session,
+                                    mutation_request,
+                                    data_connector,
+                                    None,
+                                )
+                                .await
+                                .map(Some)
+                                .map_err(execute::FieldError::from)
                             } else {
                                 Ok(None)
                             }

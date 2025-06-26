@@ -88,11 +88,16 @@ pub fn build_model_argument_fields(
 
             let mut namespaced_annotations = HashMap::new();
 
-            for (namespace, permission) in &model.select_permissions {
-                // if there is a preset for this argument, remove it from the schema
-                // so the user cannot provide one
-                if !permission.argument_presets.contains_key(argument_name) {
-                    namespaced_annotations.insert(namespace.clone(), None);
+            for (namespace, permission) in &model.permissions {
+                if let Some(select_permission) = &permission.select {
+                    // if there is a preset for this argument, remove it from the schema
+                    // so the user cannot provide one
+                    if !select_permission
+                        .argument_presets
+                        .contains_key(argument_name)
+                    {
+                        namespaced_annotations.insert(namespace.clone(), None);
+                    }
                 }
             }
 
@@ -141,10 +146,15 @@ pub fn add_model_arguments_field(
         .arguments
         .keys()
         .filter(|argument_name| {
-            for permission in model.select_permissions.values() {
-                // if there is a preset for this argument, it will not be included in the schema
-                if permission.argument_presets.contains_key(*argument_name) {
-                    return false;
+            for permission in model.permissions.values() {
+                if let Some(select_permission) = &permission.select {
+                    // if there is a preset for this argument, it will not be included in the schema
+                    if select_permission
+                        .argument_presets
+                        .contains_key(*argument_name)
+                    {
+                        return false;
+                    }
                 }
             }
             // is the argument nullable? if so we don't _need_ it to be provided

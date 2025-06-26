@@ -1,6 +1,6 @@
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use open_dds::{
@@ -33,12 +33,29 @@ pub struct RelationalInsertPermission {
     // Empty for now, will be extended later with filter predicates
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct RelationalUpdatePermission {
+    // Empty for now, will be extended later with filter predicates
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct RelationalDeletePermission {
+    // Empty for now, will be extended later with filter predicates
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct ResolvedPermissions {
+    pub select: Option<SelectPermission>,
+    pub relational_insert: Option<RelationalInsertPermission>,
+    pub relational_update: Option<RelationalUpdatePermission>,
+    pub relational_delete: Option<RelationalDeletePermission>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
     pub model: models_graphql::Model,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
-    pub select_permissions: BTreeMap<Role, SelectPermission>,
-    pub relational_insert_permissions: BTreeSet<Role>,
+    pub permissions: BTreeMap<Role, ResolvedPermissions>,
     pub filter_expression_type:
         Option<Arc<boolean_expressions::ResolvedObjectBooleanExpressionType>>,
     pub graphql_api: models_graphql::ModelGraphQlApi,

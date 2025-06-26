@@ -7,7 +7,7 @@ pub mod model_target;
 mod permissions;
 mod relationships;
 mod types;
-use crate::types::PlanError;
+use crate::types::{PlanError, PlanState};
 pub use arguments::{
     ArgumentPresetExecutionError, MapFieldNamesError, UnresolvedArgument,
     process_argument_presets_for_command, process_argument_presets_for_model,
@@ -26,7 +26,7 @@ pub use relationships::{
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use open_dds::query::{Alias, Query, QueryRequest};
-use plan_types::{QueryExecutionTree, UniqueNumber};
+use plan_types::QueryExecutionTree;
 
 // these types should probably live in `plan-types`
 #[derive(Debug)]
@@ -52,19 +52,14 @@ where
     'metadata: 'req,
 {
     let QueryRequest::V1(query_request_v1) = query_request;
-    let mut unique_number = UniqueNumber::new();
+    let mut plan_state = PlanState::new();
 
     let mut queries = IndexMap::new();
     let mut mutation = None;
 
     for (alias, query) in &query_request_v1.queries {
-        let single_node = query_to_plan(
-            query,
-            metadata,
-            session,
-            request_headers,
-            &mut unique_number,
-        )?;
+        let single_node =
+            query_to_plan(query, metadata, session, request_headers, &mut plan_state)?;
 
         match single_node {
             SingleNodeExecutionPlan::Query(execution_tree) => {
@@ -99,7 +94,7 @@ pub fn query_to_plan<'req, 'metadata>(
     metadata: &'metadata Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    unique_number: &mut UniqueNumber,
+    plan_state: &mut PlanState,
 ) -> Result<SingleNodeExecutionPlan, PlanError>
 where
     'metadata: 'req,
@@ -111,7 +106,7 @@ where
                 metadata,
                 session,
                 request_headers,
-                unique_number,
+                plan_state,
             )?;
 
             Ok(SingleNodeExecutionPlan::Query(execution_tree))
@@ -124,7 +119,7 @@ where
                 session,
                 None,
                 request_headers,
-                unique_number,
+                plan_state,
             )?;
 
             Ok(SingleNodeExecutionPlan::Query(execution_tree))
@@ -137,7 +132,7 @@ where
                 metadata,
                 session,
                 request_headers,
-                unique_number,
+                plan_state,
             )?;
 
             Ok(SingleNodeExecutionPlan::Query(execution_tree))
@@ -151,7 +146,7 @@ where
                 metadata,
                 session,
                 request_headers,
-                unique_number,
+                plan_state,
             )?;
             match command_plan {
                 command::CommandPlan::Function(execution_tree) => {

@@ -1,7 +1,11 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{EnvironmentValue, data_connector::HttpHeaders, impl_OpenDd_default_for};
+use crate::{
+    EnvironmentValue,
+    data_connector::{DataConnectorName, HttpHeaders},
+    impl_OpenDd_default_for,
+};
 
 #[derive(
     Serialize, Deserialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd, JsonSchema,
@@ -76,11 +80,19 @@ pub enum LifecyclePluginHookV1 {
     Response(LifecyclePreResponsePluginHook),
     /// Definition of a lifecycle plugin hook for the pre-route stage.
     Route(LifecyclePreRoutePluginHook),
+    /// Definition of a lifecycle plugin hook for the pre-ndc-request stage.
+    #[opendd(hidden = true)]
+    #[schemars(skip)]
+    NdcRequest(LifecyclePreNdcRequestPluginHook),
+    /// Definition of a lifecycle plugin hook for the pre-ndc-response stage.
+    #[opendd(hidden = true)]
+    #[schemars(skip)]
+    NdcResponse(LifecyclePreNdcResponsePluginHook),
 }
 
-type LifecyclePluginUrl = EnvironmentValue;
+pub type LifecyclePluginUrl = EnvironmentValue;
 
-type LifecyclePluginName = String;
+pub type LifecyclePluginName = String;
 
 #[derive(
     Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
@@ -316,6 +328,101 @@ pub struct PreRouteRequestConfig {
 pub struct LifecyclePreRoutePluginHookConfigResponse {
     /// Configuration for the headers in the response from the engine.
     pub headers: Option<LifecyclePluginHookHeadersConfig>,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreNdcRequestPluginHook")]
+pub struct LifecyclePreNdcRequestPluginHook {
+    /// The name of the lifecycle plugin hook.
+    pub name: LifecyclePluginName,
+    /// A list of data connectors that this plugin hook should be applied to.
+    /// There can only be one plugin hook of this type per data connector.
+    pub connectors: Vec<DataConnectorName>,
+    /// The URL to access the lifecycle plugin hook.
+    pub url: LifecyclePluginUrl,
+    /// Configuration for the lifecycle plugin hook.
+    pub config: LifecyclePreNdcRequestPluginHookConfig,
+}
+
+/// config for pre-ndc-request hook
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreNdcRequestPluginHookConfig")]
+/// Configuration for a lifecycle plugin hook.
+pub struct LifecyclePreNdcRequestPluginHookConfig {
+    /// Configuration for the request to the lifecycle plugin hook.
+    pub request: LifecyclePreNdcRequestPluginHookConfigRequest,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreNdcRequestPluginHookConfigRequest")]
+/// Configuration for a lifecycle plugin hook request.
+pub struct LifecyclePreNdcRequestPluginHookConfigRequest {
+    /// Configuration for the headers.
+    pub headers: Option<HttpHeaders>,
+    /// Configuration for the session (includes roles and session variables).
+    pub session: Option<LeafConfig>,
+    /// Configuration for the request.
+    pub ndc_request: Option<LeafConfig>,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreNdcResponsePluginHook")]
+pub struct LifecyclePreNdcResponsePluginHook {
+    /// The name of the lifecycle plugin hook.
+    pub name: LifecyclePluginName,
+    /// A list of data connectors that this plugin hook should be applied to.
+    /// There can only be one plugin hook of this type per data connector.
+    pub connectors: Vec<DataConnectorName>,
+    /// The URL to access the lifecycle plugin hook.
+    pub url: LifecyclePluginUrl,
+    /// Configuration for the lifecycle plugin hook.
+    pub config: LifecyclePreNdcResponsePluginHookConfig,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreNdcResponsePluginHookConfig")]
+/// Configuration for a lifecycle plugin hook.
+pub struct LifecyclePreNdcResponsePluginHookConfig {
+    /// Configuration for the request to the lifecycle plugin hook.
+    pub request: LifecyclePreNdcResponsePluginHookConfigRequest,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreNdcResponsePluginHookConfigRequest")]
+/// Configuration for a lifecycle plugin hook request.
+pub struct LifecyclePreNdcResponsePluginHookConfigRequest {
+    /// Configuration for the headers.
+    pub headers: Option<HttpHeaders>,
+    /// Configuration for the session (includes roles and session variables).
+    pub session: Option<LeafConfig>,
+    /// Configuration for the request.
+    pub ndc_request: Option<LeafConfig>,
+    /// Configuration for the response.
+    pub ndc_response: Option<LeafConfig>,
 }
 
 #[test]
