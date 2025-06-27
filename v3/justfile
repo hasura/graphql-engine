@@ -44,7 +44,13 @@ run-local-with-shell:
 # start all the docker deps for running tests (not engine)
 start-docker-test-deps:
     # start connectors and wait for health
-    docker compose up --wait auth_hook postgres postgres_connector postgres_connector_ndc_v01 custom_connector custom_connector_no_relationships custom_connector_ndc_v01
+    docker compose \
+    -f ci.docker-compose.yaml \
+    up --wait \
+    auth_hook postgres postgres_connector \
+    postgres_connector_ndc_v01 custom_connector \
+    custom_connector_no_relationships custom_connector_ndc_v01 \
+    postgres_promptql
 
 # pull / build all docker deps
 docker-refresh: stop-docker
@@ -55,7 +61,7 @@ alias refresh-docker := docker-refresh
 
 # stop all the docker deps
 stop-docker:
-    docker compose down -v
+    docker compose -f ci.docker-compose.yaml down -v
 
 # run the tests using local engine (once)
 test *ARGS: start-docker-test-deps
@@ -179,7 +185,10 @@ reorder-json-in-test-metadata: && fix-format
 # start docker deps for running engine (rather than running tests) 
 start-docker-run-deps:
     # start connectors and wait for health
-    docker compose up --wait postgres postgres_connector_ndc_v01 custom_connector 
+    docker compose \
+    -f ci.docker-compose.yaml \
+    up --wait \
+    postgres postgres_connector_ndc_v01 custom_connector postgres_promptql 
 
 # run the engine with settings for testing SQL frontend 
 run-for-sql METADATA_PATH="static/metadata.json": start-docker-run-deps 
