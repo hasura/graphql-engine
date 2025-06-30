@@ -54,8 +54,10 @@ start-docker-test-deps:
 
 # pull / build all docker deps
 docker-refresh: stop-docker
-    docker compose pull postgres_connector postgres_connector_ndc_v01
-    docker compose build custom_connector custom_connector_no_relationships auth_hook
+    docker compose -f ci.docker-compose.yaml pull \
+      postgres_connector postgres_connector_ndc_v01 postgres_promptql
+    docker compose -f ci.docker-compose.yaml build \
+      custom_connector custom_connector_no_relationships auth_hook
 
 alias refresh-docker := docker-refresh
 
