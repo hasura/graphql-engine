@@ -45,12 +45,12 @@ run-local-with-shell:
 start-docker-test-deps:
     # start connectors and wait for health
     docker compose \
-    -f ci.docker-compose.yaml \
-    up --wait \
-    auth_hook postgres postgres_connector \
-    postgres_connector_ndc_v01 custom_connector \
-    custom_connector_no_relationships custom_connector_ndc_v01 \
-    postgres_promptql
+      -f ci.docker-compose.yaml \
+      up --wait \
+      auth_hook postgres postgres_connector \
+      postgres_connector_ndc_v01 custom_connector \
+      custom_connector_no_relationships custom_connector_ndc_v01 \
+      postgres_promptql
 
 # pull / build all docker deps
 docker-refresh: stop-docker
@@ -109,20 +109,22 @@ update-golden-files: start-docker-test-deps
     just fix-format
 
 update-custom-connector-schema-in-test-metadata:
-    docker compose up --build --wait custom_connector custom_connector_no_relationships
+    docker compose -f ci.docker-compose.yaml up \
+    --build --wait custom_connector custom_connector_no_relationships
 
     just update-schema-in-test-metadata "8102" "v0.2"
     just update-schema-in-test-metadata "8103" "v0.2"
 
-    docker compose down
+    docker compose -f ci.docker-compose.yaml down
 
 update-postgres-schema-in-test-metadata:
-    docker compose up --build --wait postgres postgres_connector postgres_connector_ndc_v01
+    docker compose -f ci.docker-compose.yaml up \
+    --build --wait postgres postgres_connector postgres_connector_ndc_v01
 
     just update-schema-in-test-metadata "8080" "v0.1"
     just update-schema-in-test-metadata "8082" "v0.2"
 
-    docker compose down
+    docker compose -f ci.docker-compose.yaml down
 
 update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
     #!/usr/bin/env bash
@@ -188,9 +190,9 @@ reorder-json-in-test-metadata: && fix-format
 start-docker-run-deps:
     # start connectors and wait for health
     docker compose \
-    -f ci.docker-compose.yaml \
-    up --wait \
-    postgres postgres_connector_ndc_v01 custom_connector postgres_promptql 
+      -f ci.docker-compose.yaml \
+      up --wait \
+      postgres postgres_connector_ndc_v01 custom_connector postgres_promptql 
 
 # run the engine with settings for testing SQL frontend 
 run-for-sql METADATA_PATH="static/metadata.json": start-docker-run-deps 
