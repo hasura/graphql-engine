@@ -2,11 +2,9 @@
 
 ## [Unreleased]
 
-### Fixed
+## [v2025.07.02]
 
-### Changed
-
-### Added
+No changes since last release.
 
 ## [v2025.06.27]
 
@@ -1679,7 +1677,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.06.27...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.02...HEAD
+[v2025.07.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.02
 [v2025.06.27]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.27
 [v2025.06.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.26
 [v2025.06.16]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.16
