@@ -7,7 +7,7 @@ use axum::{
 };
 use axum_core::body::Body;
 use schemars::JsonSchema;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, btree_map};
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
@@ -100,8 +100,32 @@ impl SessionVariables {
     pub fn get(&self, session_variable: &SessionVariableName) -> Option<&SessionVariableValue> {
         self.0.get(session_variable)
     }
+
+    pub fn iter(&self) -> btree_map::Iter<'_, SessionVariableName, SessionVariableValue> {
+        self.0.iter()
+    }
 }
 
+impl IntoIterator for SessionVariables {
+    type Item = (SessionVariableName, SessionVariableValue);
+    type IntoIter = btree_map::IntoIter<SessionVariableName, SessionVariableValue>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a SessionVariables {
+    type Item = (
+        &'a open_dds::session_variables::SessionVariableName,
+        &'a SessionVariableValue,
+    );
+    type IntoIter =
+        btree_map::Iter<'a, open_dds::session_variables::SessionVariableName, SessionVariableValue>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
 // The privilege with which a request is executed
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct Session {
