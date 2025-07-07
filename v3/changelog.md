@@ -2,15 +2,23 @@
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Fixed
+
+## [v2025.07.07]
+
 ### Pre-NDC Request and Pre-NDC Response Plugins
 
-Add support for pre-ndc-request and pre-ndc-response plugins. These plugins
+Add support for `pre-ndc-request` and `pre-ndc-response` plugins. These plugins
 allow HTTP webhooks to modify requests before they're sent to data connectors
 and modify responses before they're processed by the engine.
 
 #### Pre-NDC Request Plugin Behavior
 
-The pre-ndc-request plugin is called before a request is sent to a data
+The `pre-ndc-request` plugin is called before a request is sent to a data
 connector.
 
 Example metadata:
@@ -69,7 +77,7 @@ The plugin can respond in the following ways:
 
 #### Pre-NDC Response Plugin Behavior
 
-The pre-ndc-response plugin is called after receiving a response from a data
+The `pre-ndc-response` plugin is called after receiving a response from a data
 connector but before processing it.
 
 Example metadata:
@@ -129,9 +137,9 @@ The plugin can respond in the following ways:
 
 #### A note on request headers
 
-Request headers are not forwarded to the pre-ndc-response and pre-ndc-request
-plugins. If you need values from these headers in the plugins, you should add
-the value in question to the session via an auth webhook.
+Request headers are not forwarded to the `pre-ndc-response` and
+`pre-ndc-request` plugins. If you need values from these headers in the plugins,
+you should add the value in question to the session via an auth webhook.
 
 ## [v2025.07.02]
 
@@ -1808,7 +1816,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.02...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.07...HEAD
+[v2025.07.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.07
 [v2025.07.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.02
 [v2025.06.27]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.27
 [v2025.06.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.26
