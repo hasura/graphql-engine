@@ -4099,6 +4099,10 @@
         "send_missing_arguments_to_ndc_as_nulls": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_literals_as_boolean_expression_arguments": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false

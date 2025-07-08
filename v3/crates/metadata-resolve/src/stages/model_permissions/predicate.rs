@@ -24,7 +24,7 @@ use open_dds::{
     data_connector::DataConnectorName, models::ModelName, query::ComparisonOperator,
     types::CustomTypeName,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub fn resolve_model_predicate_with_model(
     flags: &open_dds::flags::OpenDdFlags,
@@ -119,6 +119,7 @@ pub(crate) fn resolve_model_predicate_with_type(
             data_connector_link,
             data_connector_scalars,
             object_types,
+            &boolean_expression_types.get_type_names(),
         )?),
         open_dds::permissions::ModelPredicate::FieldIsNull(
             open_dds::permissions::FieldIsNullPredicate { field },
@@ -678,6 +679,7 @@ fn resolve_field_comparison(
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
     >,
+    boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
 ) -> Result<ModelPredicate, TypePredicateError> {
     let field_definition = object_type_representation
         .object_type
@@ -792,6 +794,7 @@ fn resolve_field_comparison(
             .iter()
             .map(|(field_name, object_type)| (field_name, &object_type.object_type))
             .collect(),
+        boolean_expression_type_names,
         &field_definition.field_type,
         value,
     )?;

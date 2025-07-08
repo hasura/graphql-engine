@@ -6,6 +6,10 @@
 
 ### Changed
 
+- Added `disallow_literals_as_boolean_expression_arguments` feature flag to
+  disallow literals as arguments to boolean expression operators that expect a
+  boolean expression.
+
 ### Fixed
 
 ## [v2025.07.07]
@@ -16,7 +20,7 @@ Add support for `pre-ndc-request` and `pre-ndc-response` plugins. These plugins
 allow HTTP webhooks to modify requests before they're sent to data connectors
 and modify responses before they're processed by the engine.
 
-#### Pre-NDC Request Plugin Behavior
+##### Pre-NDC Request Plugin Behavior
 
 The `pre-ndc-request` plugin is called before a request is sent to a data
 connector.
@@ -75,7 +79,7 @@ The plugin can respond in the following ways:
    returned to the client.
 4. Any other status code: Treated as an internal error.
 
-#### Pre-NDC Response Plugin Behavior
+##### Pre-NDC Response Plugin Behavior
 
 The `pre-ndc-response` plugin is called after receiving a response from a data
 connector but before processing it.

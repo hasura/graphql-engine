@@ -17,7 +17,7 @@ use open_dds::{
 use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Display;
 
 #[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
@@ -151,6 +151,20 @@ pub struct BooleanExpressionTypes {
         Qualified<CustomTypeName>,
         aggregate_boolean_expressions::ScalarAggregateBooleanExpression,
     >,
+}
+
+impl BooleanExpressionTypes {
+    pub fn get_type_names(&self) -> BTreeSet<&Qualified<CustomTypeName>> {
+        let mut type_names = BTreeSet::new();
+        type_names.extend(self.objects.keys());
+        type_names.extend(self.scalars.keys().filter_map(|k| match k {
+            BooleanExpressionTypeIdentifier::FromBooleanExpressionType(tn) => Some(tn),
+            BooleanExpressionTypeIdentifier::FromDataConnectorScalarRepresentation(_) => None,
+        }));
+        type_names.extend(self.object_aggregates.keys());
+        type_names.extend(self.scalar_aggregates.keys());
+        type_names
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -1,0 +1,2120 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_used_for_boolean_expression_argument_preset/metadata.json
+---
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "actor",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "actor_id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "Actor",
+                            ),
+                        ),
+                    ),
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: TypeOutputPermissions {
+                    authorization_rules: [
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "actor_id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                            ],
+                            condition: ConditionHash(
+                                3363483249683024545,
+                            ),
+                        },
+                        AllowFields {
+                            fields: [
+                                FieldName(
+                                    Identifier(
+                                        "actor_id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                            ],
+                            condition: ConditionHash(
+                                11131531502033717022,
+                            ),
+                        },
+                    ],
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "actor_id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                            },
+                        },
+                        Role(
+                            "literal_user",
+                        ): TypeOutputPermission {
+                            allowed_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "actor_id",
+                                    ),
+                                ),
+                                FieldName(
+                                    Identifier(
+                                        "name",
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                },
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "custom",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "actor",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "actor",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "actor_id",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "id",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "Int",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Int32,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ),
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        extraction_functions: Some(
+                                            ExtractionFunctions {
+                                                year_function: None,
+                                                month_function: None,
+                                                day_function: None,
+                                                nanosecond_function: None,
+                                                microsecond_function: None,
+                                                millisecond_function: None,
+                                                second_function: None,
+                                                minute_function: None,
+                                                hour_function: None,
+                                                week_function: None,
+                                                quarter_function: None,
+                                                day_of_week_function: None,
+                                                day_of_year_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "name",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "name",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "String",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                eq_operator: Some(
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ),
+                                                in_operator: None,
+                                                lt_operator: None,
+                                                lte_operator: None,
+                                                gt_operator: None,
+                                                gte_operator: None,
+                                                contains_operator: None,
+                                                icontains_operator: None,
+                                                starts_with_operator: None,
+                                                istarts_with_operator: None,
+                                                ends_with_operator: None,
+                                                iends_with_operator: None,
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_contains",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_icontains",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ends_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "iends_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "istarts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        aggregate_functions: Some(
+                                            AggregateFunctions {
+                                                sum_function: None,
+                                                min_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "min",
+                                                    ),
+                                                ),
+                                                max_function: Some(
+                                                    DataConnectorAggregationFunctionName(
+                                                        "max",
+                                                    ),
+                                                ),
+                                                avg_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        extraction_functions: Some(
+                                            ExtractionFunctions {
+                                                year_function: None,
+                                                month_function: None,
+                                                day_function: None,
+                                                nanosecond_function: None,
+                                                microsecond_function: None,
+                                                millisecond_function: None,
+                                                second_function: None,
+                                                minute_function: None,
+                                                hour_function: None,
+                                                week_function: None,
+                                                quarter_function: None,
+                                                day_of_week_function: None,
+                                                day_of_year_function: None,
+                                                other_functions: [],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        scalar_types: {},
+        models: {},
+        commands: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CommandName(
+                    Identifier(
+                        "get_actors_by_bool_exp",
+                    ),
+                ),
+            }: CommandWithPermissions {
+                command: Command {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CommandName(
+                            Identifier(
+                                "get_actors_by_bool_exp",
+                            ),
+                        ),
+                    },
+                    output_type: QualifiedTypeReference {
+                        underlying_type: List(
+                            QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "actor",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                        ),
+                        nullable: true,
+                    },
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "actor_bool_exp",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "actor_bool_exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            argument_kind: NDCExpression,
+                            type_representation: None,
+                        },
+                    },
+                    graphql_api: None,
+                    source: Some(
+                        CommandSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "custom",
+                                        ),
+                                    ),
+                                },
+                                url: SingleUrl(
+                                    SerializableUrl(
+                                        Url {
+                                            scheme: "http",
+                                            cannot_be_a_base: false,
+                                            username: "",
+                                            password: None,
+                                            host: Some(
+                                                Domain(
+                                                    "localhost",
+                                                ),
+                                            ),
+                                            port: Some(
+                                                8102,
+                                            ),
+                                            path: "/",
+                                            query: None,
+                                            fragment: None,
+                                        },
+                                    ),
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: Some(
+                                    CommandsResponseConfig {
+                                        headers_field: DataConnectorColumnName(
+                                            "headers",
+                                        ),
+                                        result_field: DataConnectorColumnName(
+                                            "response",
+                                        ),
+                                        forward_headers: [
+                                            SerializableHeaderName(
+                                                "set-cookie",
+                                            ),
+                                        ],
+                                    },
+                                ),
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V02,
+                                    supports_explaining_queries: false,
+                                    supports_explaining_mutations: false,
+                                    supports_nested_object_filtering: true,
+                                    supports_nested_object_ordering: true,
+                                    supports_nested_object_array_filtering: true,
+                                    supports_nested_scalar_array_filtering: true,
+                                    supports_aggregates: Some(
+                                        DataConnectorAggregateCapabilities {
+                                            supports_nested_object_aggregations: true,
+                                            aggregate_count_scalar_type: Some(
+                                                DataConnectorScalarType(
+                                                    "Int",
+                                                ),
+                                            ),
+                                            supports_grouping: Some(
+                                                DataConnectorGroupingCapabilities {
+                                                    supports_pagination: true,
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                    supports_query_variables: true,
+                                    supports_relationships: Some(
+                                        DataConnectorRelationshipCapabilities {
+                                            supports_relation_comparisons: true,
+                                            supports_nested_relationships: Some(
+                                                DataConnectorNestedRelationshipCapabilities {
+                                                    supports_nested_array_selection: true,
+                                                    supports_nested_in_filtering: true,
+                                                    supports_nested_in_ordering: true,
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                    supports_relational_queries: Some(
+                                        DataConnectorRelationalQueryCapabilities {
+                                            supports_project: DataConnectorRelationalProjectionCapabilities {
+                                                expression_capabilities: DataConnectorRelationalExpressionCapabilities {
+                                                    supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
+                                                        supports_case: true,
+                                                        supports_nullif: true,
+                                                    },
+                                                    supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
+                                                        supports_like: true,
+                                                        supports_ilike: true,
+                                                        supports_between: true,
+                                                        supports_contains: true,
+                                                        supports_is_nan: true,
+                                                        supports_is_zero: true,
+                                                        supports_greater_than_eq: true,
+                                                        supports_greater_than: true,
+                                                        supports_in_list: true,
+                                                        supports_is_false: true,
+                                                        supports_is_null: true,
+                                                        supports_is_true: true,
+                                                        supports_less_than: true,
+                                                        supports_less_than_eq: true,
+                                                    },
+                                                    supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
+                                                        supports_abs: true,
+                                                        supports_array_element: true,
+                                                        supports_btrim: true,
+                                                        supports_ceil: true,
+                                                        supports_character_length: true,
+                                                        supports_concat: true,
+                                                        supports_binary_concat: true,
+                                                        supports_cos: true,
+                                                        supports_current_date: true,
+                                                        supports_current_time: true,
+                                                        supports_current_timestamp: true,
+                                                        supports_date_part: Some(
+                                                            DatePartScalarExpressionCapability {
+                                                                supports_year: true,
+                                                                supports_quarter: true,
+                                                                supports_month: true,
+                                                                supports_week: true,
+                                                                supports_day_of_week: true,
+                                                                supports_day_of_year: true,
+                                                                supports_day: true,
+                                                                supports_hour: true,
+                                                                supports_minute: true,
+                                                                supports_second: true,
+                                                                supports_microsecond: true,
+                                                                supports_millisecond: true,
+                                                                supports_nanosecond: true,
+                                                                supports_epoch: true,
+                                                            },
+                                                        ),
+                                                        supports_date_trunc: true,
+                                                        supports_exp: true,
+                                                        supports_floor: true,
+                                                        supports_get_field: true,
+                                                        supports_greatest: true,
+                                                        supports_least: true,
+                                                        supports_left: true,
+                                                        supports_ln: true,
+                                                        supports_log: true,
+                                                        supports_log10: true,
+                                                        supports_log2: true,
+                                                        supports_lpad: true,
+                                                        supports_ltrim: true,
+                                                        supports_nvl: true,
+                                                        supports_power: true,
+                                                        supports_random: true,
+                                                        supports_replace: true,
+                                                        supports_reverse: true,
+                                                        supports_right: true,
+                                                        supports_round: true,
+                                                        supports_rpad: true,
+                                                        supports_rtrim: true,
+                                                        supports_sqrt: true,
+                                                        supports_str_pos: true,
+                                                        supports_substr: true,
+                                                        supports_substr_index: true,
+                                                        supports_tan: true,
+                                                        supports_to_date: true,
+                                                        supports_to_timestamp: true,
+                                                        supports_trunc: true,
+                                                        supports_to_lower: true,
+                                                        supports_to_upper: true,
+                                                        supports_and: true,
+                                                        supports_coalesce: true,
+                                                        supports_divide: true,
+                                                        supports_minus: true,
+                                                        supports_modulo: true,
+                                                        supports_multiply: true,
+                                                        supports_negate: true,
+                                                        supports_not: true,
+                                                        supports_or: true,
+                                                        supports_plus: true,
+                                                    },
+                                                    supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
+                                                        supports_bool_and: false,
+                                                        supports_bool_or: false,
+                                                        supports_count: Some(
+                                                            DataConnectorRelationalAggregateFunctionCapabilities {
+                                                                supports_distinct: true,
+                                                            },
+                                                        ),
+                                                        supports_first_value: false,
+                                                        supports_last_value: false,
+                                                        supports_median: false,
+                                                        supports_string_agg: false,
+                                                        supports_var: false,
+                                                        supports_avg: true,
+                                                        supports_sum: true,
+                                                        supports_min: true,
+                                                        supports_max: true,
+                                                        supports_stddev: true,
+                                                        supports_stddev_pop: true,
+                                                        supports_approx_percentile_cont: true,
+                                                        supports_approx_distinct: true,
+                                                        supports_array_agg: true,
+                                                    },
+                                                    supports_window: DataConnectorRelationalWindowExpressionCapabilities {
+                                                        supports_row_number: true,
+                                                        supports_dense_rank: false,
+                                                        supports_ntile: true,
+                                                        supports_rank: false,
+                                                        supports_cume_dist: false,
+                                                        supports_percent_rank: false,
+                                                    },
+                                                },
+                                            },
+                                            supports_filter: Some(
+                                                DataConnectorRelationalExpressionCapabilities {
+                                                    supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
+                                                        supports_case: true,
+                                                        supports_nullif: true,
+                                                    },
+                                                    supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
+                                                        supports_like: true,
+                                                        supports_ilike: true,
+                                                        supports_between: true,
+                                                        supports_contains: true,
+                                                        supports_is_nan: true,
+                                                        supports_is_zero: true,
+                                                        supports_greater_than_eq: true,
+                                                        supports_greater_than: true,
+                                                        supports_in_list: true,
+                                                        supports_is_false: true,
+                                                        supports_is_null: true,
+                                                        supports_is_true: true,
+                                                        supports_less_than: true,
+                                                        supports_less_than_eq: true,
+                                                    },
+                                                    supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
+                                                        supports_abs: true,
+                                                        supports_array_element: true,
+                                                        supports_btrim: true,
+                                                        supports_ceil: true,
+                                                        supports_character_length: true,
+                                                        supports_concat: true,
+                                                        supports_binary_concat: true,
+                                                        supports_cos: true,
+                                                        supports_current_date: true,
+                                                        supports_current_time: true,
+                                                        supports_current_timestamp: true,
+                                                        supports_date_part: Some(
+                                                            DatePartScalarExpressionCapability {
+                                                                supports_year: true,
+                                                                supports_quarter: true,
+                                                                supports_month: true,
+                                                                supports_week: true,
+                                                                supports_day_of_week: true,
+                                                                supports_day_of_year: true,
+                                                                supports_day: true,
+                                                                supports_hour: true,
+                                                                supports_minute: true,
+                                                                supports_second: true,
+                                                                supports_microsecond: true,
+                                                                supports_millisecond: true,
+                                                                supports_nanosecond: true,
+                                                                supports_epoch: false,
+                                                            },
+                                                        ),
+                                                        supports_date_trunc: true,
+                                                        supports_exp: true,
+                                                        supports_floor: true,
+                                                        supports_get_field: true,
+                                                        supports_greatest: true,
+                                                        supports_least: true,
+                                                        supports_left: true,
+                                                        supports_ln: true,
+                                                        supports_log: true,
+                                                        supports_log10: true,
+                                                        supports_log2: true,
+                                                        supports_lpad: true,
+                                                        supports_ltrim: true,
+                                                        supports_nvl: true,
+                                                        supports_power: true,
+                                                        supports_random: true,
+                                                        supports_replace: true,
+                                                        supports_reverse: true,
+                                                        supports_right: true,
+                                                        supports_round: true,
+                                                        supports_rpad: true,
+                                                        supports_rtrim: true,
+                                                        supports_sqrt: true,
+                                                        supports_str_pos: true,
+                                                        supports_substr: true,
+                                                        supports_substr_index: true,
+                                                        supports_tan: true,
+                                                        supports_to_date: true,
+                                                        supports_to_timestamp: true,
+                                                        supports_trunc: true,
+                                                        supports_to_lower: true,
+                                                        supports_to_upper: true,
+                                                        supports_and: true,
+                                                        supports_coalesce: true,
+                                                        supports_divide: true,
+                                                        supports_minus: true,
+                                                        supports_modulo: true,
+                                                        supports_multiply: true,
+                                                        supports_negate: true,
+                                                        supports_not: true,
+                                                        supports_or: true,
+                                                        supports_plus: true,
+                                                    },
+                                                    supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
+                                                        supports_bool_and: false,
+                                                        supports_bool_or: false,
+                                                        supports_count: Some(
+                                                            DataConnectorRelationalAggregateFunctionCapabilities {
+                                                                supports_distinct: true,
+                                                            },
+                                                        ),
+                                                        supports_first_value: false,
+                                                        supports_last_value: false,
+                                                        supports_median: false,
+                                                        supports_string_agg: false,
+                                                        supports_var: false,
+                                                        supports_avg: true,
+                                                        supports_sum: true,
+                                                        supports_min: true,
+                                                        supports_max: true,
+                                                        supports_stddev: true,
+                                                        supports_stddev_pop: true,
+                                                        supports_approx_percentile_cont: true,
+                                                        supports_approx_distinct: true,
+                                                        supports_array_agg: true,
+                                                    },
+                                                    supports_window: DataConnectorRelationalWindowExpressionCapabilities {
+                                                        supports_row_number: true,
+                                                        supports_dense_rank: false,
+                                                        supports_ntile: true,
+                                                        supports_rank: false,
+                                                        supports_cume_dist: false,
+                                                        supports_percent_rank: false,
+                                                    },
+                                                },
+                                            ),
+                                            supports_sort: Some(
+                                                DataConnectorRelationalSortCapabilities {
+                                                    expression_capabilities: DataConnectorRelationalExpressionCapabilities {
+                                                        supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
+                                                            supports_case: true,
+                                                            supports_nullif: true,
+                                                        },
+                                                        supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
+                                                            supports_like: true,
+                                                            supports_ilike: true,
+                                                            supports_between: true,
+                                                            supports_contains: true,
+                                                            supports_is_nan: true,
+                                                            supports_is_zero: true,
+                                                            supports_greater_than_eq: true,
+                                                            supports_greater_than: true,
+                                                            supports_in_list: true,
+                                                            supports_is_false: true,
+                                                            supports_is_null: true,
+                                                            supports_is_true: true,
+                                                            supports_less_than: true,
+                                                            supports_less_than_eq: true,
+                                                        },
+                                                        supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
+                                                            supports_abs: true,
+                                                            supports_array_element: true,
+                                                            supports_btrim: true,
+                                                            supports_ceil: true,
+                                                            supports_character_length: true,
+                                                            supports_concat: true,
+                                                            supports_binary_concat: true,
+                                                            supports_cos: true,
+                                                            supports_current_date: true,
+                                                            supports_current_time: true,
+                                                            supports_current_timestamp: true,
+                                                            supports_date_part: Some(
+                                                                DatePartScalarExpressionCapability {
+                                                                    supports_year: true,
+                                                                    supports_quarter: true,
+                                                                    supports_month: true,
+                                                                    supports_week: true,
+                                                                    supports_day_of_week: true,
+                                                                    supports_day_of_year: true,
+                                                                    supports_day: true,
+                                                                    supports_hour: true,
+                                                                    supports_minute: true,
+                                                                    supports_second: true,
+                                                                    supports_microsecond: true,
+                                                                    supports_millisecond: true,
+                                                                    supports_nanosecond: true,
+                                                                    supports_epoch: true,
+                                                                },
+                                                            ),
+                                                            supports_date_trunc: true,
+                                                            supports_exp: true,
+                                                            supports_floor: true,
+                                                            supports_get_field: true,
+                                                            supports_greatest: true,
+                                                            supports_least: true,
+                                                            supports_left: true,
+                                                            supports_ln: true,
+                                                            supports_log: true,
+                                                            supports_log10: true,
+                                                            supports_log2: true,
+                                                            supports_lpad: true,
+                                                            supports_ltrim: true,
+                                                            supports_nvl: true,
+                                                            supports_power: true,
+                                                            supports_random: true,
+                                                            supports_replace: true,
+                                                            supports_reverse: true,
+                                                            supports_right: true,
+                                                            supports_round: true,
+                                                            supports_rpad: true,
+                                                            supports_rtrim: true,
+                                                            supports_sqrt: true,
+                                                            supports_str_pos: true,
+                                                            supports_substr: true,
+                                                            supports_substr_index: true,
+                                                            supports_tan: true,
+                                                            supports_to_date: true,
+                                                            supports_to_timestamp: true,
+                                                            supports_trunc: true,
+                                                            supports_to_lower: true,
+                                                            supports_to_upper: true,
+                                                            supports_and: true,
+                                                            supports_coalesce: true,
+                                                            supports_divide: true,
+                                                            supports_minus: true,
+                                                            supports_modulo: true,
+                                                            supports_multiply: true,
+                                                            supports_negate: true,
+                                                            supports_not: true,
+                                                            supports_or: true,
+                                                            supports_plus: true,
+                                                        },
+                                                        supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
+                                                            supports_bool_and: false,
+                                                            supports_bool_or: false,
+                                                            supports_count: Some(
+                                                                DataConnectorRelationalAggregateFunctionCapabilities {
+                                                                    supports_distinct: true,
+                                                                },
+                                                            ),
+                                                            supports_first_value: false,
+                                                            supports_last_value: false,
+                                                            supports_median: false,
+                                                            supports_string_agg: false,
+                                                            supports_var: false,
+                                                            supports_avg: true,
+                                                            supports_sum: true,
+                                                            supports_min: true,
+                                                            supports_max: true,
+                                                            supports_stddev: true,
+                                                            supports_stddev_pop: true,
+                                                            supports_approx_percentile_cont: true,
+                                                            supports_approx_distinct: true,
+                                                            supports_array_agg: true,
+                                                        },
+                                                        supports_window: DataConnectorRelationalWindowExpressionCapabilities {
+                                                            supports_row_number: true,
+                                                            supports_dense_rank: false,
+                                                            supports_ntile: true,
+                                                            supports_rank: false,
+                                                            supports_cume_dist: false,
+                                                            supports_percent_rank: false,
+                                                        },
+                                                    },
+                                                },
+                                            ),
+                                            supports_join: Some(
+                                                DataConnectorRelationalJoinCapabilities {
+                                                    expression_capabilities: DataConnectorRelationalExpressionCapabilities {
+                                                        supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
+                                                            supports_case: true,
+                                                            supports_nullif: true,
+                                                        },
+                                                        supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
+                                                            supports_like: true,
+                                                            supports_ilike: true,
+                                                            supports_between: true,
+                                                            supports_contains: true,
+                                                            supports_is_nan: true,
+                                                            supports_is_zero: true,
+                                                            supports_greater_than_eq: true,
+                                                            supports_greater_than: true,
+                                                            supports_in_list: true,
+                                                            supports_is_false: true,
+                                                            supports_is_null: true,
+                                                            supports_is_true: true,
+                                                            supports_less_than: true,
+                                                            supports_less_than_eq: true,
+                                                        },
+                                                        supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
+                                                            supports_abs: true,
+                                                            supports_array_element: true,
+                                                            supports_btrim: true,
+                                                            supports_ceil: true,
+                                                            supports_character_length: true,
+                                                            supports_concat: true,
+                                                            supports_binary_concat: true,
+                                                            supports_cos: true,
+                                                            supports_current_date: true,
+                                                            supports_current_time: true,
+                                                            supports_current_timestamp: true,
+                                                            supports_date_part: Some(
+                                                                DatePartScalarExpressionCapability {
+                                                                    supports_year: true,
+                                                                    supports_quarter: true,
+                                                                    supports_month: true,
+                                                                    supports_week: true,
+                                                                    supports_day_of_week: true,
+                                                                    supports_day_of_year: true,
+                                                                    supports_day: true,
+                                                                    supports_hour: true,
+                                                                    supports_minute: true,
+                                                                    supports_second: true,
+                                                                    supports_microsecond: true,
+                                                                    supports_millisecond: true,
+                                                                    supports_nanosecond: true,
+                                                                    supports_epoch: true,
+                                                                },
+                                                            ),
+                                                            supports_date_trunc: true,
+                                                            supports_exp: true,
+                                                            supports_floor: true,
+                                                            supports_get_field: true,
+                                                            supports_greatest: true,
+                                                            supports_least: true,
+                                                            supports_left: true,
+                                                            supports_ln: true,
+                                                            supports_log: true,
+                                                            supports_log10: true,
+                                                            supports_log2: true,
+                                                            supports_lpad: true,
+                                                            supports_ltrim: true,
+                                                            supports_nvl: true,
+                                                            supports_power: true,
+                                                            supports_random: true,
+                                                            supports_replace: true,
+                                                            supports_reverse: true,
+                                                            supports_right: true,
+                                                            supports_round: true,
+                                                            supports_rpad: true,
+                                                            supports_rtrim: true,
+                                                            supports_sqrt: true,
+                                                            supports_str_pos: true,
+                                                            supports_substr: true,
+                                                            supports_substr_index: true,
+                                                            supports_tan: true,
+                                                            supports_to_date: true,
+                                                            supports_to_timestamp: true,
+                                                            supports_trunc: true,
+                                                            supports_to_lower: true,
+                                                            supports_to_upper: true,
+                                                            supports_and: true,
+                                                            supports_coalesce: true,
+                                                            supports_divide: true,
+                                                            supports_minus: true,
+                                                            supports_modulo: true,
+                                                            supports_multiply: true,
+                                                            supports_negate: true,
+                                                            supports_not: true,
+                                                            supports_or: true,
+                                                            supports_plus: true,
+                                                        },
+                                                        supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
+                                                            supports_bool_and: false,
+                                                            supports_bool_or: false,
+                                                            supports_count: Some(
+                                                                DataConnectorRelationalAggregateFunctionCapabilities {
+                                                                    supports_distinct: true,
+                                                                },
+                                                            ),
+                                                            supports_first_value: false,
+                                                            supports_last_value: false,
+                                                            supports_median: false,
+                                                            supports_string_agg: false,
+                                                            supports_var: false,
+                                                            supports_avg: true,
+                                                            supports_sum: true,
+                                                            supports_min: true,
+                                                            supports_max: true,
+                                                            supports_stddev: true,
+                                                            supports_stddev_pop: true,
+                                                            supports_approx_percentile_cont: true,
+                                                            supports_approx_distinct: true,
+                                                            supports_array_agg: true,
+                                                        },
+                                                        supports_window: DataConnectorRelationalWindowExpressionCapabilities {
+                                                            supports_row_number: true,
+                                                            supports_dense_rank: false,
+                                                            supports_ntile: true,
+                                                            supports_rank: false,
+                                                            supports_cume_dist: false,
+                                                            supports_percent_rank: false,
+                                                        },
+                                                    },
+                                                    supports_join_types: DataConnectorRelationalJoinTypeCapabilities {
+                                                        supports_left: true,
+                                                        supports_right: true,
+                                                        supports_inner: true,
+                                                        supports_full: true,
+                                                        supports_left_semi: true,
+                                                        supports_left_anti: true,
+                                                        supports_right_semi: true,
+                                                        supports_right_anti: true,
+                                                    },
+                                                },
+                                            ),
+                                            supports_aggregate: Some(
+                                                DataConnectorRelationalAggregateCapabilities {
+                                                    expression_capabilities: DataConnectorRelationalExpressionCapabilities {
+                                                        supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
+                                                            supports_case: true,
+                                                            supports_nullif: true,
+                                                        },
+                                                        supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
+                                                            supports_like: true,
+                                                            supports_ilike: true,
+                                                            supports_between: true,
+                                                            supports_contains: true,
+                                                            supports_is_nan: true,
+                                                            supports_is_zero: true,
+                                                            supports_greater_than_eq: true,
+                                                            supports_greater_than: true,
+                                                            supports_in_list: true,
+                                                            supports_is_false: true,
+                                                            supports_is_null: true,
+                                                            supports_is_true: true,
+                                                            supports_less_than: true,
+                                                            supports_less_than_eq: true,
+                                                        },
+                                                        supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
+                                                            supports_abs: true,
+                                                            supports_array_element: true,
+                                                            supports_btrim: true,
+                                                            supports_ceil: true,
+                                                            supports_character_length: true,
+                                                            supports_concat: true,
+                                                            supports_binary_concat: true,
+                                                            supports_cos: true,
+                                                            supports_current_date: true,
+                                                            supports_current_time: true,
+                                                            supports_current_timestamp: true,
+                                                            supports_date_part: Some(
+                                                                DatePartScalarExpressionCapability {
+                                                                    supports_year: true,
+                                                                    supports_quarter: true,
+                                                                    supports_month: true,
+                                                                    supports_week: true,
+                                                                    supports_day_of_week: true,
+                                                                    supports_day_of_year: true,
+                                                                    supports_day: true,
+                                                                    supports_hour: true,
+                                                                    supports_minute: true,
+                                                                    supports_second: true,
+                                                                    supports_microsecond: true,
+                                                                    supports_millisecond: true,
+                                                                    supports_nanosecond: true,
+                                                                    supports_epoch: true,
+                                                                },
+                                                            ),
+                                                            supports_date_trunc: true,
+                                                            supports_exp: true,
+                                                            supports_floor: true,
+                                                            supports_get_field: true,
+                                                            supports_greatest: true,
+                                                            supports_least: true,
+                                                            supports_left: true,
+                                                            supports_ln: true,
+                                                            supports_log: true,
+                                                            supports_log10: true,
+                                                            supports_log2: true,
+                                                            supports_lpad: true,
+                                                            supports_ltrim: true,
+                                                            supports_nvl: true,
+                                                            supports_power: true,
+                                                            supports_random: true,
+                                                            supports_replace: true,
+                                                            supports_reverse: true,
+                                                            supports_right: true,
+                                                            supports_round: true,
+                                                            supports_rpad: true,
+                                                            supports_rtrim: true,
+                                                            supports_sqrt: true,
+                                                            supports_str_pos: true,
+                                                            supports_substr: true,
+                                                            supports_substr_index: true,
+                                                            supports_tan: true,
+                                                            supports_to_date: true,
+                                                            supports_to_timestamp: true,
+                                                            supports_trunc: true,
+                                                            supports_to_lower: true,
+                                                            supports_to_upper: true,
+                                                            supports_and: true,
+                                                            supports_coalesce: true,
+                                                            supports_divide: true,
+                                                            supports_minus: true,
+                                                            supports_modulo: true,
+                                                            supports_multiply: true,
+                                                            supports_negate: true,
+                                                            supports_not: true,
+                                                            supports_or: true,
+                                                            supports_plus: true,
+                                                        },
+                                                        supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
+                                                            supports_bool_and: false,
+                                                            supports_bool_or: false,
+                                                            supports_count: Some(
+                                                                DataConnectorRelationalAggregateFunctionCapabilities {
+                                                                    supports_distinct: true,
+                                                                },
+                                                            ),
+                                                            supports_first_value: false,
+                                                            supports_last_value: false,
+                                                            supports_median: false,
+                                                            supports_string_agg: false,
+                                                            supports_var: false,
+                                                            supports_avg: true,
+                                                            supports_sum: true,
+                                                            supports_min: true,
+                                                            supports_max: true,
+                                                            supports_stddev: true,
+                                                            supports_stddev_pop: true,
+                                                            supports_approx_percentile_cont: true,
+                                                            supports_approx_distinct: true,
+                                                            supports_array_agg: true,
+                                                        },
+                                                        supports_window: DataConnectorRelationalWindowExpressionCapabilities {
+                                                            supports_row_number: true,
+                                                            supports_dense_rank: false,
+                                                            supports_ntile: true,
+                                                            supports_rank: false,
+                                                            supports_cume_dist: false,
+                                                            supports_percent_rank: false,
+                                                        },
+                                                    },
+                                                    supports_group_by: true,
+                                                },
+                                            ),
+                                            supports_window: Some(
+                                                DataConnectorRelationalWindowCapabilities {
+                                                    expression_capabilities: DataConnectorRelationalExpressionCapabilities {
+                                                        supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
+                                                            supports_case: true,
+                                                            supports_nullif: true,
+                                                        },
+                                                        supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
+                                                            supports_like: true,
+                                                            supports_ilike: true,
+                                                            supports_between: true,
+                                                            supports_contains: true,
+                                                            supports_is_nan: true,
+                                                            supports_is_zero: true,
+                                                            supports_greater_than_eq: true,
+                                                            supports_greater_than: true,
+                                                            supports_in_list: true,
+                                                            supports_is_false: true,
+                                                            supports_is_null: true,
+                                                            supports_is_true: true,
+                                                            supports_less_than: true,
+                                                            supports_less_than_eq: true,
+                                                        },
+                                                        supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
+                                                            supports_abs: true,
+                                                            supports_array_element: true,
+                                                            supports_btrim: true,
+                                                            supports_ceil: true,
+                                                            supports_character_length: true,
+                                                            supports_concat: true,
+                                                            supports_binary_concat: true,
+                                                            supports_cos: true,
+                                                            supports_current_date: true,
+                                                            supports_current_time: true,
+                                                            supports_current_timestamp: true,
+                                                            supports_date_part: Some(
+                                                                DatePartScalarExpressionCapability {
+                                                                    supports_year: true,
+                                                                    supports_quarter: true,
+                                                                    supports_month: true,
+                                                                    supports_week: true,
+                                                                    supports_day_of_week: true,
+                                                                    supports_day_of_year: true,
+                                                                    supports_day: true,
+                                                                    supports_hour: true,
+                                                                    supports_minute: true,
+                                                                    supports_second: true,
+                                                                    supports_microsecond: true,
+                                                                    supports_millisecond: true,
+                                                                    supports_nanosecond: true,
+                                                                    supports_epoch: true,
+                                                                },
+                                                            ),
+                                                            supports_date_trunc: true,
+                                                            supports_exp: true,
+                                                            supports_floor: true,
+                                                            supports_get_field: true,
+                                                            supports_greatest: true,
+                                                            supports_least: true,
+                                                            supports_left: true,
+                                                            supports_ln: true,
+                                                            supports_log: true,
+                                                            supports_log10: true,
+                                                            supports_log2: true,
+                                                            supports_lpad: true,
+                                                            supports_ltrim: true,
+                                                            supports_nvl: true,
+                                                            supports_power: true,
+                                                            supports_random: true,
+                                                            supports_replace: true,
+                                                            supports_reverse: true,
+                                                            supports_right: true,
+                                                            supports_round: true,
+                                                            supports_rpad: true,
+                                                            supports_rtrim: true,
+                                                            supports_sqrt: true,
+                                                            supports_str_pos: true,
+                                                            supports_substr: true,
+                                                            supports_substr_index: true,
+                                                            supports_tan: true,
+                                                            supports_to_date: true,
+                                                            supports_to_timestamp: true,
+                                                            supports_trunc: true,
+                                                            supports_to_lower: true,
+                                                            supports_to_upper: true,
+                                                            supports_and: true,
+                                                            supports_coalesce: true,
+                                                            supports_divide: true,
+                                                            supports_minus: true,
+                                                            supports_modulo: true,
+                                                            supports_multiply: true,
+                                                            supports_negate: true,
+                                                            supports_not: true,
+                                                            supports_or: true,
+                                                            supports_plus: true,
+                                                        },
+                                                        supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities {
+                                                            supports_bool_and: false,
+                                                            supports_bool_or: false,
+                                                            supports_count: Some(
+                                                                DataConnectorRelationalAggregateFunctionCapabilities {
+                                                                    supports_distinct: true,
+                                                                },
+                                                            ),
+                                                            supports_first_value: false,
+                                                            supports_last_value: false,
+                                                            supports_median: false,
+                                                            supports_string_agg: false,
+                                                            supports_var: false,
+                                                            supports_avg: true,
+                                                            supports_sum: true,
+                                                            supports_min: true,
+                                                            supports_max: true,
+                                                            supports_stddev: true,
+                                                            supports_stddev_pop: true,
+                                                            supports_approx_percentile_cont: true,
+                                                            supports_approx_distinct: true,
+                                                            supports_array_agg: true,
+                                                        },
+                                                        supports_window: DataConnectorRelationalWindowExpressionCapabilities {
+                                                            supports_row_number: true,
+                                                            supports_dense_rank: false,
+                                                            supports_ntile: true,
+                                                            supports_rank: false,
+                                                            supports_cume_dist: false,
+                                                            supports_percent_rank: false,
+                                                        },
+                                                    },
+                                                },
+                                            ),
+                                            supports_union: true,
+                                        },
+                                    ),
+                                    supports_relational_mutations: Some(
+                                        DataConnectorRelationalMutationCapabilities {
+                                            supports_insert: true,
+                                            supports_update: true,
+                                            supports_delete: true,
+                                        },
+                                    ),
+                                },
+                            },
+                            source: Function(
+                                FunctionName(
+                                    "get_actors_by_bool_exp",
+                                ),
+                            ),
+                            ndc_type_opendd_type_same: true,
+                            type_mappings: {
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "actor",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "actor",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "actor_id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "id",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "Int",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Int32,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            extraction_functions: Some(
+                                                ExtractionFunctions {
+                                                    year_function: None,
+                                                    month_function: None,
+                                                    day_function: None,
+                                                    nanosecond_function: None,
+                                                    microsecond_function: None,
+                                                    millisecond_function: None,
+                                                    second_function: None,
+                                                    minute_function: None,
+                                                    hour_function: None,
+                                                    week_function: None,
+                                                    quarter_function: None,
+                                                    day_of_week_function: None,
+                                                    day_of_year_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "name",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "String",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    eq_operator: Some(
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ),
+                                                    in_operator: None,
+                                                    lt_operator: None,
+                                                    lte_operator: None,
+                                                    gt_operator: None,
+                                                    gte_operator: None,
+                                                    contains_operator: None,
+                                                    icontains_operator: None,
+                                                    starts_with_operator: None,
+                                                    istarts_with_operator: None,
+                                                    ends_with_operator: None,
+                                                    iends_with_operator: None,
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_contains",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_icontains",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ends_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "iends_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "istarts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            aggregate_functions: Some(
+                                                AggregateFunctions {
+                                                    sum_function: None,
+                                                    min_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "min",
+                                                        ),
+                                                    ),
+                                                    max_function: Some(
+                                                        DataConnectorAggregationFunctionName(
+                                                            "max",
+                                                        ),
+                                                    ),
+                                                    avg_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            extraction_functions: Some(
+                                                ExtractionFunctions {
+                                                    year_function: None,
+                                                    month_function: None,
+                                                    day_function: None,
+                                                    nanosecond_function: None,
+                                                    microsecond_function: None,
+                                                    millisecond_function: None,
+                                                    second_function: None,
+                                                    minute_function: None,
+                                                    hour_function: None,
+                                                    week_function: None,
+                                                    quarter_function: None,
+                                                    day_of_week_function: None,
+                                                    day_of_year_function: None,
+                                                    other_functions: [],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                            },
+                            argument_mappings: {
+                                ArgumentName(
+                                    Identifier(
+                                        "actor_bool_exp",
+                                    ),
+                                ): DataConnectorArgumentName(
+                                    "actor_bool_exp",
+                                ),
+                            },
+                            data_connector_link_argument_presets: {},
+                            source_arguments: {
+                                DataConnectorArgumentName(
+                                    "actor_bool_exp",
+                                ): Predicate {
+                                    object_type_name: ObjectTypeName(
+                                        TypeName(
+                                            "actor",
+                                        ),
+                                    ),
+                                },
+                            },
+                        },
+                    ),
+                    description: None,
+                },
+                permissions: {
+                    Role(
+                        "literal_user",
+                    ): CommandPermission {
+                        allow_execution: true,
+                        argument_presets: {
+                            ArgumentName(
+                                Identifier(
+                                    "actor_bool_exp",
+                                ),
+                            ): (
+                                QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Custom(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "actor_bool_exp",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                Literal(
+                                    Object {
+                                        "value": String("not_allowed"),
+                                    },
+                                ),
+                            ),
+                        },
+                    },
+                },
+            },
+        },
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "actor_bool_exp",
+                        ),
+                    ),
+                }: ResolvedObjectBooleanExpressionType {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "actor_bool_exp",
+                            ),
+                        ),
+                    },
+                    object_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "actor",
+                            ),
+                        ),
+                    },
+                    graphql: None,
+                    fields: ResolvedObjectBooleanExpressionTypeFields {
+                        object_fields: {},
+                        scalar_fields: {
+                            FieldName(
+                                Identifier(
+                                    "actor_id",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                boolean_expression_type_name: FromBooleanExpressionType(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "int_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {
+                                    OperatorName(
+                                        "_eq",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                    OperatorName(
+                                        "_gt",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                    OperatorName(
+                                        "_gte",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                    OperatorName(
+                                        "_lt",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                    OperatorName(
+                                        "_lte",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Inbuilt(
+                                                Int,
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                },
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "custom",
+                                            ),
+                                        ),
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                            OperatorName(
+                                                "_gt",
+                                            ): DataConnectorOperatorName(
+                                                "_gt",
+                                            ),
+                                            OperatorName(
+                                                "_gte",
+                                            ): DataConnectorOperatorName(
+                                                "_gte",
+                                            ),
+                                            OperatorName(
+                                                "_lt",
+                                            ): DataConnectorOperatorName(
+                                                "_lt",
+                                            ),
+                                            OperatorName(
+                                                "_lte",
+                                            ): DataConnectorOperatorName(
+                                                "_lte",
+                                            ),
+                                        },
+                                    ),
+                                },
+                                logical_operators: Exclude,
+                                field_kind: Scalar,
+                            },
+                        },
+                        relationship_fields: {},
+                    },
+                    include_logical_operators: Yes,
+                    data_connector: None,
+                },
+            },
+            scalars: {
+                FromBooleanExpressionType(
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "int_bool_exp",
+                            ),
+                        ),
+                    },
+                ): ResolvedScalarBooleanExpressionType {
+                    operand_type: Inbuilt(
+                        Int,
+                    ),
+                    comparison_operators: {
+                        OperatorName(
+                            "_eq",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: true,
+                        },
+                        OperatorName(
+                            "_gt",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: true,
+                        },
+                        OperatorName(
+                            "_gte",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: true,
+                        },
+                        OperatorName(
+                            "_lt",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: true,
+                        },
+                        OperatorName(
+                            "_lte",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Inbuilt(
+                                    Int,
+                                ),
+                            ),
+                            nullable: true,
+                        },
+                    },
+                    data_connector_operator_mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "custom",
+                                ),
+                            ),
+                        }: DataConnectorOperatorMapping {
+                            data_connector_name: DataConnectorName(
+                                Identifier(
+                                    "custom",
+                                ),
+                            ),
+                            data_connector_scalar_type: DataConnectorScalarType(
+                                "Int",
+                            ),
+                            operator_mapping: {
+                                OperatorName(
+                                    "_eq",
+                                ): DataConnectorOperatorName(
+                                    "_eq",
+                                ),
+                                OperatorName(
+                                    "_gt",
+                                ): DataConnectorOperatorName(
+                                    "_gt",
+                                ),
+                                OperatorName(
+                                    "_gte",
+                                ): DataConnectorOperatorName(
+                                    "_gte",
+                                ),
+                                OperatorName(
+                                    "_lt",
+                                ): DataConnectorOperatorName(
+                                    "_lt",
+                                ),
+                                OperatorName(
+                                    "_lte",
+                                ): DataConnectorOperatorName(
+                                    "_lte",
+                                ),
+                            },
+                        },
+                    },
+                    graphql_name: None,
+                    logical_operators: Exclude,
+                    is_null_operator: Include {
+                        graphql: Some(
+                            IsNullOperatorGraphqlConfig {
+                                is_null_operator_name: Name(
+                                    "_is_null",
+                                ),
+                            },
+                        ),
+                    },
+                },
+            },
+            object_aggregates: {},
+            scalar_aggregates: {},
+        },
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+            scalars: {},
+        },
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "order_by",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
+            multiple_order_by_input_object_fields: Allow,
+        },
+        glossaries: {},
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+            pre_route_plugins: [],
+            pre_ndc_request_plugins: {},
+            pre_ndc_response_plugins: {},
+        },
+        roles: {
+            Role(
+                "admin",
+            ),
+            Role(
+                "literal_user",
+            ),
+        },
+        conditions: Conditions {
+            conditions: {
+                ConditionHash(
+                    3363483249683024545,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: true,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("admin"),
+                    ),
+                },
+                ConditionHash(
+                    11131531502033717022,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: true,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("literal_user"),
+                    ),
+                },
+            },
+        },
+        runtime_flags: RuntimeFlags(
+            {},
+        ),
+    },
+    [
+        ScalarBooleanExpressionIssue(
+            OperatorIssue(
+                MappedOperatorNotFound {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "int_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "_gt",
+                    ),
+                    mapped_operator_name: ComparisonOperatorName(
+                        "_gt",
+                    ),
+                    data_connector_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "custom",
+                            ),
+                        ),
+                    },
+                },
+            ),
+        ),
+        ScalarBooleanExpressionIssue(
+            OperatorIssue(
+                MappedOperatorNotFound {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "int_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "_gte",
+                    ),
+                    mapped_operator_name: ComparisonOperatorName(
+                        "_gte",
+                    ),
+                    data_connector_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "custom",
+                            ),
+                        ),
+                    },
+                },
+            ),
+        ),
+        ScalarBooleanExpressionIssue(
+            OperatorIssue(
+                MappedOperatorNotFound {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "int_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "_lt",
+                    ),
+                    mapped_operator_name: ComparisonOperatorName(
+                        "_lt",
+                    ),
+                    data_connector_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "custom",
+                            ),
+                        ),
+                    },
+                },
+            ),
+        ),
+        ScalarBooleanExpressionIssue(
+            OperatorIssue(
+                MappedOperatorNotFound {
+                    type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "int_bool_exp",
+                            ),
+                        ),
+                    },
+                    operator_name: OperatorName(
+                        "_lte",
+                    ),
+                    mapped_operator_name: ComparisonOperatorName(
+                        "_lte",
+                    ),
+                    data_connector_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "custom",
+                            ),
+                        ),
+                    },
+                },
+            ),
+        ),
+        ScalarBooleanExpressionIssue(
+            LogicalOperatorsUnavailable {
+                type_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CustomTypeName(
+                        Identifier(
+                            "int_bool_exp",
+                        ),
+                    ),
+                },
+            },
+        ),
+        CommandPermissionIssue(
+            CommandArgumentPresetTypecheckIssue {
+                role: Role(
+                    "literal_user",
+                ),
+                command_name: Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: CommandName(
+                        Identifier(
+                            "get_actors_by_bool_exp",
+                        ),
+                    ),
+                },
+                argument_name: ArgumentName(
+                    Identifier(
+                        "actor_bool_exp",
+                    ),
+                ),
+                typecheck_issue: LiteralValueUsedForBooleanExpression {
+                    boolean_expression_type_name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "actor_bool_exp",
+                            ),
+                        ),
+                    },
+                },
+            },
+        ),
+    ],
+)

@@ -316,6 +316,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                     .iter()
                     .map(|(field_name, object_type)| (field_name, &object_type.object_type))
                     .collect(), // Convert &BTreeMap<field_name, object_type> to BTreeMap<&field_name, &object_type>
+                &boolean_expression_types.get_type_names(),
                 argument_type,
                 json_value,
                 &mut issues,
