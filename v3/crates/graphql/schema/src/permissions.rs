@@ -98,7 +98,7 @@ pub(crate) fn get_command_namespace_annotations(
     let mut permissions = HashMap::new();
 
     // process command permissions, and annotate any command argument presets
-    for (role, permission) in &command.permissions {
+    for (role, permission) in &command.permissions.by_role {
         if permission.allow_execution {
             permissions.insert(
                 role.clone(),

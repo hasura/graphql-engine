@@ -1518,42 +1518,88 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                     ),
                     description: None,
                 },
-                permissions: {
-                    Role(
-                        "literal_user",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {
-                            ArgumentName(
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "literal_user",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {
+                                ArgumentName(
+                                    Identifier(
+                                        "actor_bool_exp",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "actor_bool_exp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                    Literal(
+                                        Object {
+                                            "value": String("not_allowed"),
+                                        },
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    11131531502033717022,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        ArgumentPresetValue {
+                            condition: Some(
+                                ConditionHash(
+                                    11131531502033717022,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
                                 Identifier(
                                     "actor_bool_exp",
                                 ),
-                            ): (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "default",
+                            ),
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "actor_bool_exp",
                                                 ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "actor_bool_exp",
-                                                    ),
-                                                ),
-                                            },
-                                        ),
+                                            ),
+                                        },
                                     ),
-                                    nullable: false,
-                                },
-                                Literal(
-                                    Object {
-                                        "value": String("not_allowed"),
-                                    },
                                 ),
+                                nullable: false,
+                            },
+                            value: Literal(
+                                Object {
+                                    "value": String("not_allowed"),
+                                },
                             ),
                         },
-                    },
+                    ],
                 },
             },
         },

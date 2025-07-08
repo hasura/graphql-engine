@@ -663,7 +663,6 @@ fn from_command_relationship(
         metadata,
         session,
         request_headers,
-        command_name,
         command,
         command_source,
         plan_state,

@@ -7,19 +7,21 @@ use open_dds::{
     commands::CommandName, data_connector::DataConnectorName, models::ModelName,
     types::CustomTypeName,
 };
+use types::CommandPermissions;
 
-use crate::ArgumentInfo;
 use crate::stages::{
     arguments, boolean_expressions, commands, data_connector_scalar_types, models_graphql,
     object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
+use crate::{ArgumentInfo, Conditions};
 
 use std::collections::BTreeMap;
 mod types;
 pub use types::{
-    Command, CommandPermissionIssue, CommandPermissionsOutput, CommandWithPermissions,
+    AllowOrDeny, Command, CommandAuthorizationRule, CommandPermissionIssue,
+    CommandPermissionsOutput, CommandWithPermissions,
 };
 
 /// resolve command permissions
@@ -38,6 +40,7 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
     >,
+    conditions: &mut Conditions,
 ) -> Result<CommandPermissionsOutput, Vec<Error>> {
     let mut issues = Vec::new();
     let mut results = vec![];
@@ -60,7 +63,10 @@ pub fn resolve(
                             graphql_api: command.graphql_api.clone(),
                             source: command.source.clone(),
                         },
-                        permissions: BTreeMap::new(),
+                        permissions: CommandPermissions {
+                            by_role: BTreeMap::new(),
+                            authorization_rules: vec![],
+                        },
                     },
                 )
             })
@@ -81,6 +87,7 @@ pub fn resolve(
             data_connector_scalars,
             subgraph,
             command_permissions,
+            conditions,
             &mut issues,
             &mut commands_with_permissions,
         ));
@@ -107,6 +114,7 @@ fn resolve_command_permission(
     >,
     subgraph: &SubgraphName,
     command_permissions: &open_dds::permissions::CommandPermissionsV2,
+    conditions: &mut Conditions,
     issues: &mut Vec<CommandPermissionIssue>,
     commands_with_permissions: &mut IndexMap<Qualified<CommandName>, CommandWithPermissions>,
 ) -> Result<(), Error> {
@@ -117,7 +125,7 @@ fn resolve_command_permission(
         .ok_or_else(|| Error::UnknownCommandInCommandPermissions {
             command_name: qualified_command_name.clone(),
         })?;
-    if command.permissions.is_empty() {
+    if command.permissions.by_role.is_empty() {
         command.permissions = command_permission::resolve_command_permissions(
             &metadata_accessor.flags,
             &command.command,
@@ -127,6 +135,7 @@ fn resolve_command_permission(
             boolean_expression_types,
             models,
             data_connector_scalars,
+            conditions,
             issues,
         )?;
     } else {

@@ -2,15 +2,12 @@ use super::arguments::{
     add_missing_nullable_arguments, get_unresolved_arguments, resolve_arguments,
 };
 use super::{field_selection, process_argument_presets_for_command};
+use crate::PlanError;
 use crate::metadata_accessor::OutputObjectTypeView;
 use crate::types::PlanState;
-use crate::{PermissionError, PlanError};
 use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
-use metadata_resolve::{
-    Metadata, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
-};
-use open_dds::commands::CommandName;
+use metadata_resolve::{Metadata, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 use open_dds::query::CommandSelection;
 use open_dds::{
     commands::DataConnectorCommand,
@@ -66,7 +63,6 @@ pub fn from_command(
         metadata,
         session,
         request_headers,
-        &qualified_command_name,
         command,
         command_source,
         plan_state,
@@ -147,7 +143,6 @@ pub(crate) fn from_command_selection(
     metadata: &Metadata,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
-    qualified_command_name: &Qualified<CommandName>,
     command: &metadata_resolve::CommandWithPermissions,
     command_source: &metadata_resolve::CommandSource,
     plan_state: &mut PlanState,
@@ -178,16 +173,13 @@ pub(crate) fn from_command_selection(
         plan_state,
     )?;
 
-    if !command
-        .permissions
-        .get(&session.role)
-        .is_some_and(|permission| permission.allow_execution)
-    {
-        Err(PlanError::Permission(PermissionError::Other(format!(
-            "role {} does not have permission for command {}",
-            session.role, qualified_command_name
-        ))))?;
-    }
+    let command_view = crate::metadata_accessor::get_command(
+        metadata,
+        &command.command.name,
+        &session.role,
+        &session.variables,
+        plan_state,
+    )?;
 
     // resolve arguments, adding in presets
     let unresolved_arguments = get_unresolved_arguments(
@@ -206,6 +198,7 @@ pub(crate) fn from_command_selection(
     let unresolved_arguments = process_argument_presets_for_command(
         unresolved_arguments,
         command,
+        &command_view,
         &metadata.object_types,
         session,
         request_headers,

@@ -7,6 +7,7 @@ use hasura_authn_core::{SessionVariableName, SessionVariables};
 use metadata_resolve::{
     BinaryOperation, Condition, ConditionHash, Conditions, UnaryOperation, ValueExpression,
 };
+use open_dds::query::ArgumentName;
 
 use crate::ConditionCache;
 
@@ -26,6 +27,10 @@ pub enum ConditionError {
         "Number for {side}-hand value of comparison operation is outside precision or range of a double-precision float"
     )]
     NumberOutOfRange { side: Side },
+    #[error(
+        "Tried to combine a predicate with a literal in argument presets for argument {argument_name}"
+    )]
+    CouldNotCombinePredicateAndLiteralArgumentPresets { argument_name: ArgumentName },
 }
 
 // evaluate conditions used in permissions
@@ -109,6 +114,24 @@ fn as_float(value: &serde_json::Value, side: Side) -> Result<f64, ConditionError
     } else {
         Err(ConditionError::NumberOutOfRange { side })
     }
+}
+
+pub fn evaluate_optional_condition_hash(
+    condition_hash: Option<&ConditionHash>,
+    session_variables: &SessionVariables,
+    conditions: &Conditions,
+    condition_cache: &mut ConditionCache,
+) -> Result<bool, ConditionError> {
+    let Some(condition_hash) = condition_hash else {
+        // if there is no condition, it always applies
+        return Ok(true);
+    };
+    evaluate_condition_hash(
+        condition_hash,
+        session_variables,
+        conditions,
+        condition_cache,
+    )
 }
 
 // evaluate a condition, saving the result in a cache

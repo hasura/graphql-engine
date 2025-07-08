@@ -4168,18 +4168,142 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                         "Insert into the album table",
                     ),
                 },
-                permissions: {
-                    Role(
-                        "admin",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {
-                            ArgumentName(
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {
+                                ArgumentName(
+                                    Identifier(
+                                        "postCheck",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "AlbumBoolExp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                    BooleanExpression(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "artistId",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "Album",
+                                                    ),
+                                                ),
+                                            },
+                                            ndc_column: DataConnectorColumnName(
+                                                "artist_id",
+                                            ),
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                comparison_operator: Equals,
+                                            },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Custom(
+                                                        Qualified {
+                                                            subgraph: SubgraphName(
+                                                                "default",
+                                                            ),
+                                                            name: CustomTypeName(
+                                                                Identifier(
+                                                                    "Int4",
+                                                                ),
+                                                            ),
+                                                        },
+                                                    ),
+                                                ),
+                                                nullable: false,
+                                            },
+                                            value: SessionVariable(
+                                                SessionVariableReference {
+                                                    name: SessionVariableName(
+                                                        "x-hasura-artist-id",
+                                                    ),
+                                                    passed_as_json: true,
+                                                    disallow_unknown_fields: false,
+                                                },
+                                            ),
+                                            deprecated: None,
+                                        },
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    3363483249683024545,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
                                 Identifier(
                                     "postCheck",
                                 ),
-                            ): (
-                                QualifiedTypeReference {
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "artistId",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Album",
+                                        ),
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "artist_id",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "_eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
                                     underlying_type: Named(
                                         Custom(
                                             Qualified {
@@ -4188,73 +4312,27 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/input_type
                                                 ),
                                                 name: CustomTypeName(
                                                     Identifier(
-                                                        "AlbumBoolExp",
+                                                        "Int4",
                                                     ),
                                                 ),
                                             },
                                         ),
                                     ),
-                                    nullable: true,
+                                    nullable: false,
                                 },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "artistId",
-                                            ),
+                                value: SessionVariable(
+                                    SessionVariableReference {
+                                        name: SessionVariableName(
+                                            "x-hasura-artist-id",
                                         ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Album",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "artist_id",
-                                        ),
-                                        operator: ResolvedOperator {
-                                            data_connector_operator_name: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                            comparison_operator: Equals,
-                                        },
-                                        column_path: [],
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Custom(
-                                                    Qualified {
-                                                        subgraph: SubgraphName(
-                                                            "default",
-                                                        ),
-                                                        name: CustomTypeName(
-                                                            Identifier(
-                                                                "Int4",
-                                                            ),
-                                                        ),
-                                                    },
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: SessionVariable(
-                                            SessionVariableReference {
-                                                name: SessionVariableName(
-                                                    "x-hasura-artist-id",
-                                                ),
-                                                passed_as_json: true,
-                                                disallow_unknown_fields: false,
-                                            },
-                                        ),
-                                        deprecated: None,
+                                        passed_as_json: true,
+                                        disallow_unknown_fields: false,
                                     },
                                 ),
-                            ),
+                                deprecated: None,
+                            },
                         },
-                    },
+                    ],
                 },
             },
         },

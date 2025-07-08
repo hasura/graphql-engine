@@ -547,7 +547,10 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
                     source: None,
                     description: None,
                 },
-                permissions: {},
+                permissions: CommandPermissions {
+                    by_role: {},
+                    authorization_rules: [],
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -618,7 +621,10 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
                     source: None,
                     description: None,
                 },
-                permissions: {},
+                permissions: CommandPermissions {
+                    by_role: {},
+                    authorization_rules: [],
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -689,7 +695,10 @@ input_file: crates/metadata-resolve/tests/passing/object_types/recursive_types_i
                     source: None,
                     description: None,
                 },
-                permissions: {},
+                permissions: CommandPermissions {
+                    by_role: {},
+                    authorization_rules: [],
+                },
             },
         },
         boolean_expression_types: BooleanExpressionTypes {

@@ -786,84 +786,153 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
                     ),
                     description: None,
                 },
-                permissions: {
-                    Role(
-                        "user",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {
-                            ArgumentName(
-                                Identifier(
-                                    "where",
-                                ),
-                            ): (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "user",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {
+                                ArgumentName(
+                                    Identifier(
+                                        "where",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "subgraphs",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "Album_bool_exp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                    BooleanExpression(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "AlbumId",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
                                                 subgraph: SubgraphName(
                                                     "subgraphs",
                                                 ),
                                                 name: CustomTypeName(
                                                     Identifier(
-                                                        "Album_bool_exp",
+                                                        "Album",
                                                     ),
                                                 ),
                                             },
-                                        ),
-                                    ),
-                                    nullable: true,
-                                },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
+                                            ndc_column: DataConnectorColumnName(
                                                 "AlbumId",
                                             ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "subgraphs",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Album",
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "eq",
                                                 ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "AlbumId",
-                                        ),
-                                        operator: ResolvedOperator {
-                                            data_connector_operator_name: DataConnectorOperatorName(
-                                                "eq",
-                                            ),
-                                            comparison_operator: Equals,
-                                        },
-                                        column_path: [],
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    Int,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: SessionVariable(
-                                            SessionVariableReference {
-                                                name: SessionVariableName(
-                                                    "x-hasura-album-id",
-                                                ),
-                                                passed_as_json: true,
-                                                disallow_unknown_fields: false,
+                                                comparison_operator: Equals,
                                             },
-                                        ),
-                                        deprecated: None,
-                                    },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Inbuilt(
+                                                        Int,
+                                                    ),
+                                                ),
+                                                nullable: false,
+                                            },
+                                            value: SessionVariable(
+                                                SessionVariableReference {
+                                                    name: SessionVariableName(
+                                                        "x-hasura-album-id",
+                                                    ),
+                                                    passed_as_json: true,
+                                                    disallow_unknown_fields: false,
+                                                },
+                                            ),
+                                            deprecated: None,
+                                        },
+                                    ),
                                 ),
-                            ),
+                            },
                         },
                     },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    9295230919520119376,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
+                                Identifier(
+                                    "where",
+                                ),
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "AlbumId",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "subgraphs",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Album",
+                                        ),
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "AlbumId",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                value: SessionVariable(
+                                    SessionVariableReference {
+                                        name: SessionVariableName(
+                                            "x-hasura-album-id",
+                                        ),
+                                        passed_as_json: true,
+                                        disallow_unknown_fields: false,
+                                    },
+                                ),
+                                deprecated: None,
+                            },
+                        },
+                    ],
                 },
             },
         },

@@ -44,7 +44,7 @@ pub(crate) fn generate_command_argument(
     // a role is "allowed" to use this argument if it DOESN'T have a preset argument defined
     let mut namespaced_annotations = HashMap::new();
 
-    for (namespace, permission) in &command.permissions {
+    for (namespace, permission) in &command.permissions.by_role {
         // if there is a preset for this argument, remove it from the schema
         // so the user cannot provide one
         if !permission.argument_presets.contains_key(argument_name) {

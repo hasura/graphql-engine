@@ -36,7 +36,7 @@ pub fn resolve(
         }
     }
     for command in commands.values() {
-        for role in command.permissions.keys() {
+        for role in command.permissions.by_role.keys() {
             roles.insert(role.clone());
         }
     }
