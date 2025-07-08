@@ -1,4 +1,3 @@
-pub mod build;
 mod cors;
 pub mod internal_flags;
 mod middleware;
