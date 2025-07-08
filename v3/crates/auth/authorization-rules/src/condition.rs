@@ -1,5 +1,7 @@
 //! this is where we evaluate Conditions
 
+use std::fmt::Display;
+
 use hasura_authn_core::{SessionVariableName, SessionVariables};
 
 use metadata_resolve::{
@@ -16,41 +18,96 @@ pub enum ConditionError {
     SerdeError { error: String },
     #[error("Condition {condition_hash} not found")]
     ConditionNotFound { condition_hash: ConditionHash },
+    #[error("Expected array or null for right-hand value of contains operation")]
+    ExpectedArrayOrNullForContains,
+    #[error("Expected number for {side}-hand value of comparison operation")]
+    ExpectedNumberForComparison { side: Side },
+    #[error(
+        "Number for {side}-hand value of comparison operation is outside precision or range of a double-precision float"
+    )]
+    NumberOutOfRange { side: Side },
 }
 
 // evaluate conditions used in permissions
-// enough to evaluate `x-hasura-role` == "some-string" and not much else
-// fortunately that's all we need for now
 fn evaluate_condition(
     condition: &Condition,
     session_variables: &SessionVariables,
 ) -> Result<bool, ConditionError> {
     match condition {
-        Condition::And(conditions) => conditions.iter().try_fold(true, |acc, condition| {
+        Condition::All(conditions) => conditions.iter().try_fold(true, |acc, condition| {
             Ok(acc && evaluate_condition(condition, session_variables)?)
         }),
-        Condition::Or(conditions) => conditions.iter().try_fold(true, |acc, condition| {
+        Condition::Any(conditions) => conditions.iter().try_fold(false, |acc, condition| {
             Ok(acc || evaluate_condition(condition, session_variables)?)
         }),
         Condition::Not(condition) => {
             let value = evaluate_condition(condition, session_variables)?;
             Ok(!value)
         }
-        Condition::UnaryOperation { op, value: _ } => match op {
-            UnaryOperation::IsNull => todo!("UnaryOperation::IsNull"),
+        Condition::UnaryOperation { op, value } => match op {
+            UnaryOperation::IsNull => {
+                Ok(evaluate_value_expression(value, session_variables)?.is_null())
+            }
         },
         Condition::BinaryOperation { left, right, op } => {
             let left = evaluate_value_expression(left, session_variables)?;
             let right = evaluate_value_expression(right, session_variables)?;
-            Ok(match op {
-                BinaryOperation::Equals => left == right,
-                BinaryOperation::Contains => todo!("BinaryOperation::Contains"),
-                BinaryOperation::GreaterThan => todo!("BinaryOperation::GreaterThan"),
-                BinaryOperation::LessThan => todo!("BinaryOperation::LessThan"),
-                BinaryOperation::GreaterThanOrEqual => todo!("BinaryOperation::GreaterThanOrEqual"),
-                BinaryOperation::LessThanOrEqual => todo!("BinaryOperation::LessThanOrEqual"),
-            })
+            binary_operation(&left, op, &right)
         }
+    }
+}
+
+fn binary_operation(
+    left: &serde_json::Value,
+    op: &BinaryOperation,
+    right: &serde_json::Value,
+) -> Result<bool, ConditionError> {
+    match op {
+        BinaryOperation::Equals => Ok(left == right),
+        BinaryOperation::Contains => match right {
+            serde_json::Value::Array(values) => Ok(values.contains(left)),
+            serde_json::Value::Null => Ok(false),
+            _ => Err(ConditionError::ExpectedArrayOrNullForContains),
+        },
+        BinaryOperation::GreaterThan => {
+            Ok(as_float(left, Side::Left)? > as_float(right, Side::Right)?)
+        }
+        BinaryOperation::LessThan => {
+            Ok(as_float(left, Side::Left)? < as_float(right, Side::Right)?)
+        }
+        BinaryOperation::GreaterThanOrEqual => {
+            Ok(as_float(left, Side::Left)? >= as_float(right, Side::Right)?)
+        }
+        BinaryOperation::LessThanOrEqual => {
+            Ok(as_float(left, Side::Left)? <= as_float(right, Side::Right)?)
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Side {
+    Left,
+    Right,
+}
+
+impl Display for Side {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Side::Left => write!(f, "left"),
+            Side::Right => write!(f, "right"),
+        }
+    }
+}
+
+fn as_float(value: &serde_json::Value, side: Side) -> Result<f64, ConditionError> {
+    let serde_json::Value::Number(number) = value else {
+        return Err(ConditionError::ExpectedNumberForComparison { side });
+    };
+
+    if let Some(f) = number.as_f64() {
+        Ok(f)
+    } else {
+        Err(ConditionError::NumberOutOfRange { side })
     }
 }
 
@@ -131,13 +188,30 @@ mod tests {
 
         let false_val = ValueExpression::Literal(serde_json::Value::Bool(false));
 
+        let null_val = ValueExpression::Literal(serde_json::Value::Null);
+
         let string = |s: &str| ValueExpression::Literal(serde_json::Value::String(s.to_string()));
+
+        let number = |f: f64| {
+            ValueExpression::Literal(serde_json::Value::Number(
+                serde_json::Number::from_f64(f).unwrap(),
+            ))
+        };
+
+        let array_of_strings = |values: Vec<&str>| {
+            ValueExpression::Literal(serde_json::Value::Array(
+                values
+                    .into_iter()
+                    .map(|s| serde_json::Value::String(s.to_string()))
+                    .collect(),
+            ))
+        };
 
         let not = |condition: Condition| Condition::Not(Box::new(condition));
 
-        let and = |conditions: Vec<Condition>| Condition::And(conditions);
+        let all = |conditions: Vec<Condition>| Condition::All(conditions);
 
-        let or = |conditions: Vec<Condition>| Condition::Or(conditions);
+        let any = |conditions: Vec<Condition>| Condition::Any(conditions);
 
         let session_variable = |name: &str| {
             ValueExpression::SessionVariable(SessionVariableReference {
@@ -153,19 +227,69 @@ mod tests {
             op: BinaryOperation::Equals,
         };
 
+        let contains = |left: ValueExpression, right: ValueExpression| Condition::BinaryOperation {
+            left,
+            right,
+            op: BinaryOperation::Contains,
+        };
+
+        let greater_than =
+            |left: ValueExpression, right: ValueExpression| Condition::BinaryOperation {
+                left,
+                right,
+                op: BinaryOperation::GreaterThan,
+            };
+
+        let less_than =
+            |left: ValueExpression, right: ValueExpression| Condition::BinaryOperation {
+                left,
+                right,
+                op: BinaryOperation::LessThan,
+            };
+
+        let less_than_or_equal =
+            |left: ValueExpression, right: ValueExpression| Condition::BinaryOperation {
+                left,
+                right,
+                op: BinaryOperation::LessThanOrEqual,
+            };
+
+        let greater_than_or_equal =
+            |left: ValueExpression, right: ValueExpression| Condition::BinaryOperation {
+                left,
+                right,
+                op: BinaryOperation::GreaterThanOrEqual,
+            };
+
+        let is_null = |value: ValueExpression| Condition::UnaryOperation {
+            op: UnaryOperation::IsNull,
+            value,
+        };
+
         let test_cases_that_should_succeed = vec![
             equals(true_val.clone(), true_val.clone()),
             equals(session_variable("x-hasura-role"), string("user")),
+            contains(
+                session_variable("x-hasura-role"),
+                array_of_strings(vec!["user"]),
+            ),
+            greater_than(number(1.0), number(0.0)),
+            greater_than_or_equal(number(1.0), number(0.0)),
+            greater_than_or_equal(number(1.0), number(1.0)),
+            less_than(number(0.0), number(1.0)),
+            less_than_or_equal(number(0.0), number(1.0)),
+            less_than_or_equal(number(0.0), number(0.0)),
             not(equals(session_variable("x-hasura-role"), string("admin"))),
-            and(vec![
+            all(vec![
                 equals(true_val.clone(), true_val.clone()),
                 equals(true_val.clone(), true_val.clone()),
             ]),
-            or(vec![
+            any(vec![
                 equals(false_val.clone(), true_val.clone()),
                 equals(true_val.clone(), true_val.clone()),
             ]),
-            not(equals(false_val, true_val)),
+            not(equals(false_val.clone(), true_val.clone())),
+            is_null(null_val.clone()),
         ];
 
         // return an arbitrary identity with role emulation enabled
@@ -177,6 +301,33 @@ mod tests {
 
         for test in test_cases_that_should_succeed {
             assert_eq!(evaluate_condition(&test, &session.variables), Ok(true));
+        }
+
+        let test_cases_that_should_fail = vec![
+            equals(true_val.clone(), false_val.clone()),
+            equals(session_variable("x-hasura-role"), string("not-user")),
+            contains(
+                session_variable("x-hasura-role"),
+                array_of_strings(vec!["loser"]),
+            ),
+            contains(session_variable("x-hasura-role"), null_val.clone()),
+            greater_than(number(0.0), number(1.0)),
+            greater_than_or_equal(number(0.0), number(1.0)),
+            less_than(number(1.0), number(0.0)),
+            less_than_or_equal(number(1.0), number(0.0)),
+            not(equals(session_variable("x-hasura-role"), string("user"))),
+            all(vec![
+                equals(true_val.clone(), true_val.clone()),
+                equals(true_val.clone(), false_val.clone()),
+            ]),
+            any(vec![equals(false_val.clone(), true_val)]),
+            any(vec![]),
+            not(equals(false_val.clone(), false_val)),
+            not(is_null(null_val)),
+        ];
+
+        for test in test_cases_that_should_fail {
+            assert_eq!(evaluate_condition(&test, &session.variables), Ok(false));
         }
     }
 }

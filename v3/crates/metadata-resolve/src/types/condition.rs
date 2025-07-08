@@ -23,8 +23,8 @@ pub enum UnaryOperation {
 // An optimization we could consider in future is allowing referring to `ConditionHash`
 // so that we can reuse common parts like `ValueExpression` comparisons.
 pub enum Condition {
-    And(Vec<Condition>),
-    Or(Vec<Condition>),
+    All(Vec<Condition>),
+    Any(Vec<Condition>),
     Not(Box<Condition>),
     BinaryOperation {
         op: BinaryOperation,
