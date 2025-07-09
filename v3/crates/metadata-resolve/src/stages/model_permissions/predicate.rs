@@ -350,7 +350,7 @@ fn resolve_nested_field(
         column_path,
         nested_type_name,
         nested_object_type_representation,
-        nested_boolean_expression_type,
+        nested_boolean_expression_type.map(|v| &**v),
         data_connector_type_mappings,
         data_connector_link,
         data_connector_scalars,

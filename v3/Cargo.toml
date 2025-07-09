@@ -26,6 +26,7 @@ members = [
 
 # generally following guidance from https://nnethercote.github.io/perf-book/build-configuration.html
 [profile.release]
+# FYI increasing this to 16 or more when profiling seems to be effective in getting more granularity in heaptrack profiles
 codegen-units = 1 # reduce parallelisation to increase optimisations
 
 [workspace.lints.clippy]

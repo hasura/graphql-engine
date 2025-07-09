@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Display;
+use std::sync::Arc;
 
 #[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
 pub enum BooleanExpressionIssue {
@@ -135,7 +136,7 @@ pub enum FieldNameSource {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub struct BooleanExpressionTypes {
     #[serde_as(as = "Vec<(_, _)>")]
-    pub objects: BTreeMap<Qualified<CustomTypeName>, ResolvedObjectBooleanExpressionType>,
+    pub objects: BTreeMap<Qualified<CustomTypeName>, Arc<ResolvedObjectBooleanExpressionType>>,
     #[serde_as(as = "Vec<(_, _)>")]
     pub scalars: BTreeMap<
         BooleanExpressionTypeIdentifier,

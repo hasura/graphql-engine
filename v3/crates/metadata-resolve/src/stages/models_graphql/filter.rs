@@ -4,6 +4,7 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use open_dds::{models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 // given a valid source and a filter expression type, try and resolve a predicate type for this
 // model
@@ -21,7 +22,7 @@ pub(crate) fn resolve_filter_expression_type(
     flags: &open_dds::flags::OpenDdFlags,
 ) -> Result<
     (
-        boolean_expressions::ResolvedObjectBooleanExpressionType,
+        Arc<boolean_expressions::ResolvedObjectBooleanExpressionType>,
         Vec<boolean_expressions::BooleanExpressionIssue>,
     ),
     boolean_expressions::BooleanExpressionError,
@@ -82,7 +83,7 @@ pub(crate) fn resolve_filter_expression_type(
                     flags,
                 )?;
             Ok((
-                boolean_expression_object_type.clone(),
+                Arc::clone(boolean_expression_object_type),
                 data_connector_issues,
             ))
         }
