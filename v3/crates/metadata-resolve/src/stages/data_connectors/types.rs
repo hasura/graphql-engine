@@ -659,6 +659,15 @@ pub struct DataConnectorRelationalExpressionCapabilities {
     pub supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities,
 
     pub supports_window: DataConnectorRelationalWindowExpressionCapabilities,
+
+    pub supports_scalar_types: Option<DataConnectorRelationalScalarTypeCapabilities>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorRelationalScalarTypeCapabilities {
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_interval: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -1428,6 +1437,11 @@ fn mk_relational_expression_capabilities(
                 supports_cume_dist: capabilities.window.cume_dist.is_some(),
                 supports_percent_rank: capabilities.window.percent_rank.is_some(),
             },
+            supports_scalar_types: capabilities.scalar_types.as_ref().map(|scalar_types| {
+                DataConnectorRelationalScalarTypeCapabilities {
+                    supports_interval: scalar_types.interval.is_some(),
+                }
+            }),
         };
     data_connector_relational_expression_capabilities
 }

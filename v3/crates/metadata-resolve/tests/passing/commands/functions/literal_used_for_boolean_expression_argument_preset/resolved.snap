@@ -626,6 +626,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                         supports_cume_dist: false,
                                                         supports_percent_rank: false,
                                                     },
+                                                    supports_scalar_types: None,
                                                 },
                                             },
                                             supports_filter: Some(
@@ -754,6 +755,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                         supports_cume_dist: false,
                                                         supports_percent_rank: false,
                                                     },
+                                                    supports_scalar_types: None,
                                                 },
                                             ),
                                             supports_sort: Some(
@@ -883,6 +885,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_cume_dist: false,
                                                             supports_percent_rank: false,
                                                         },
+                                                        supports_scalar_types: None,
                                                     },
                                                 },
                                             ),
@@ -1013,6 +1016,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_cume_dist: false,
                                                             supports_percent_rank: false,
                                                         },
+                                                        supports_scalar_types: None,
                                                     },
                                                     supports_join_types: DataConnectorRelationalJoinTypeCapabilities {
                                                         supports_left: true,
@@ -1153,6 +1157,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_cume_dist: false,
                                                             supports_percent_rank: false,
                                                         },
+                                                        supports_scalar_types: None,
                                                     },
                                                     supports_group_by: true,
                                                 },
@@ -1284,6 +1289,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_cume_dist: false,
                                                             supports_percent_rank: false,
                                                         },
+                                                        supports_scalar_types: None,
                                                     },
                                                 },
                                             ),

@@ -230,5 +230,8 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
             cume_dist: None,
             percent_rank: None,
         },
+        scalar_types: Some(ndc_models::RelationalScalarTypeCapabilities {
+            interval: Some(ndc_models::LeafCapability {}),
+        }),
     }
 }

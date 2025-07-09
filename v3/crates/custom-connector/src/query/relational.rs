@@ -592,7 +592,7 @@ fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataT
             (datafusion::arrow::datatypes::DataType::Utf8, false)
         }
         ndc_models::Type::Named { name } if name.as_str() == "Date" => {
-            (datafusion::arrow::datatypes::DataType::Utf8, false)
+            (datafusion::arrow::datatypes::DataType::Date32, false)
         }
         ndc_models::Type::Named { name } if name.as_str() == "location" => {
             (crate::types::location::arrow_type(), true)
@@ -1340,6 +1340,9 @@ fn convert_cast_type_to_data_type(
         ndc_models::CastType::Duration => datafusion::arrow::datatypes::DataType::Duration(
             datafusion::arrow::datatypes::TimeUnit::Nanosecond,
         ),
+        ndc_models::CastType::Interval => datafusion::arrow::datatypes::DataType::Interval(
+            datafusion::arrow::datatypes::IntervalUnit::MonthDayNano,
+        ),
     }
 }
 
@@ -1400,6 +1403,13 @@ fn convert_literal_to_logical_expr(literal: &RelationalLiteral) -> ScalarValue {
         RelationalLiteral::DurationNanosecond { value } => {
             ScalarValue::DurationNanosecond(Some(*value))
         }
+        RelationalLiteral::Interval {
+            months,
+            days,
+            nanoseconds,
+        } => ScalarValue::IntervalMonthDayNano(Some(
+            datafusion::arrow::datatypes::IntervalMonthDayNano::new(*months, *days, *nanoseconds),
+        )),
     }
 }
 
