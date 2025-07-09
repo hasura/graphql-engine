@@ -57,6 +57,8 @@ pub enum Error {
     CookieParseError { err: cookie::ParseError },
     #[error("Missing corresponding value for the cookie with cookie name: {cookie_name}")]
     MissingCookieValue { cookie_name: String },
+    #[error("JWT validation error: {0}")]
+    JWTValidationError(jwt::errors::Error),
     #[error("Internal Error - {0}")]
     Internal(#[from] InternalError),
 }
@@ -116,7 +118,8 @@ impl Error {
             }
             | Error::CookieParseError { err: _ }
             | Error::MissingCookieValue { cookie_name: _ }
-            | Error::ClaimMustBeAString { claim_name: _ } => StatusCode::BAD_REQUEST,
+            | Error::ClaimMustBeAString { claim_name: _ }
+            | Error::JWTValidationError(_) => StatusCode::BAD_REQUEST,
         }
     }
 
@@ -141,7 +144,8 @@ impl Error {
             }
             | Error::CookieParseError { err: _ }
             | Error::MissingCookieValue { cookie_name: _ }
-            | Error::ClaimMustBeAString { claim_name: _ } => false,
+            | Error::ClaimMustBeAString { claim_name: _ }
+            | Error::JWTValidationError(_) => false,
         };
         engine_types::MiddlewareError {
             status: self.to_status_code(),
@@ -557,6 +561,46 @@ pub enum AudienceValidationMode {
     Optional,
 }
 
+/// Determines whether a JWT error should be treated as a client error (4xx) or server error (5xx)
+#[allow(clippy::match_same_arms)]
+fn categorize_jwt_error(jwt_error: jwt::errors::Error) -> Error {
+    use jwt::errors::ErrorKind;
+
+    match jwt_error.kind() {
+        // Client errors - issues with the token provided by the client These are clearly client-side validation
+        // failures
+        ErrorKind::ExpiredSignature
+        | ErrorKind::InvalidToken
+        | ErrorKind::InvalidSignature
+        | ErrorKind::InvalidIssuer
+        | ErrorKind::InvalidAudience
+        | ErrorKind::InvalidSubject
+        | ErrorKind::ImmatureSignature
+        | ErrorKind::MissingRequiredClaim(_) => Error::JWTValidationError(jwt_error),
+
+        // Server errors - issues with server configuration or key management These indicate problems with the server
+        // setup, not the client's token
+        ErrorKind::InvalidEcdsaKey
+        | ErrorKind::InvalidRsaKey(_)
+        | ErrorKind::RsaFailedSigning
+        | ErrorKind::InvalidAlgorithmName
+        | ErrorKind::InvalidKeyFormat
+        | ErrorKind::InvalidAlgorithm
+        | ErrorKind::MissingAlgorithm
+        | ErrorKind::Crypto(_) => Error::Internal(InternalError::JWTDecodingError(jwt_error)),
+
+        // Ambiguous errors - could be either client or server issues We treat these as server errors to maintain
+        // backward compatibility These could be caused by malformed tokens (client) or server parsing issues
+        ErrorKind::Base64(_) | ErrorKind::Json(_) | ErrorKind::Utf8(_) => {
+            Error::Internal(InternalError::JWTDecodingError(jwt_error))
+        }
+
+        // Catch-all for any future error variants added to the jsonwebtoken library Default to internal error for now,
+        // but when new variants are added, they should be explicitly categorized above
+        _ => Error::Internal(InternalError::JWTDecodingError(jwt_error)),
+    }
+}
+
 pub(crate) async fn decode_and_parse_hasura_claims(
     http_client: &reqwest::Client,
     jwt_config: &JWTConfig,
@@ -591,7 +635,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
     }
 
     let claims: serde_json::Value = decode(&jwt, &decoding_key, &validation)
-        .map_err(InternalError::JWTDecodingError)?
+        .map_err(categorize_jwt_error)?
         .claims;
 
     let hasura_claims = match &jwt_config.claims_config {
@@ -1385,6 +1429,84 @@ mod tests {
             .to_string(),
             "Internal Error - No matching JWK found for the given kid: random_kid_3"
         );
+        Ok(())
+    }
+
+    #[tokio::test]
+    // This test verifies that expired JWT tokens return a client error (400) instead of server error (500)
+    // while other JWT errors maintain backward compatibility and still return 500
+    async fn test_expired_jwt_returns_client_error() -> anyhow::Result<()> {
+        let hasura_claims = get_default_hasura_claims();
+
+        // Create a JWT with an expired timestamp
+        let expired_claims = json!(
+            {
+                "sub": "1234567890",
+                "name": "John Doe",
+                "iat": 1693439022,
+                "exp": 1693439022, // Same as iat, so it's immediately expired
+                "claims.jwt.hasura.io": hasura_claims
+            }
+        );
+        let claims: Claims = serde_json::from_value(expired_claims)?;
+
+        let jwt_header = jwt::Header {
+            alg: jwt::Algorithm::HS256,
+            ..Default::default()
+        };
+
+        let encoded_claims = encode(
+            &jwt_header,
+            &claims,
+            &EncodingKey::from_secret("token".as_ref()),
+        )?;
+
+        let jwt_secret_config_json = json!(
+            {
+               "key": {
+                 "fixed": {
+                    "algorithm": "HS256",
+                    "key": {
+                       "value": "token"
+                    }
+                 }
+               },
+               "tokenLocation": {
+                  "type": "BearerAuthorization"
+               },
+               "claimsConfig": {
+                  "namespace": {
+                     "claimsFormat": "Json",
+                     "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                  }
+               }
+            }
+        );
+
+        let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
+        let http_client = reqwest::Client::new();
+
+        let result = decode_and_parse_hasura_claims(
+            &http_client,
+            &jwt_config,
+            encoded_claims,
+            AudienceValidationMode::Required,
+        )
+        .await;
+
+        // Verify that we get a JWTValidationError (client error) not an Internal error
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        match &error {
+            Error::JWTValidationError(jwt_error) => {
+                assert_eq!(jwt_error.kind(), &jwt::errors::ErrorKind::ExpiredSignature);
+            }
+            _ => panic!("Expected JWTValidationError but got: {error:?}"),
+        }
+
+        // Verify the status code is 400 (Bad Request)
+        assert_eq!(error.to_status_code(), StatusCode::BAD_REQUEST);
+
         Ok(())
     }
 

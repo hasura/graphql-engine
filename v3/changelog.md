@@ -12,6 +12,9 @@
 
 ### Fixed
 
+- Fixed JWT authentication errors to return correct HTTP status codes. Expired
+  tokens now return `400 Bad Request` instead of `500 Internal Server Error`.
+
 ## [v2025.07.07]
 
 ### Pre-NDC Request and Pre-NDC Response Plugins
