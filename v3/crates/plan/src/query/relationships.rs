@@ -186,6 +186,7 @@ pub fn process_command_relationship_definition(
         target_collection: CollectionName::from(function_name.as_str()),
         arguments,
     };
+
     Ok(relationship)
 }
 

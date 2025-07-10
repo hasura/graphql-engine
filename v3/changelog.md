@@ -8,6 +8,25 @@
 
 ### Fixed
 
+- Fixed arguments passed to command relationships
+
+```graphql
+query MyQuery {
+  Analytics {
+    ActorByMovieIdBounds(upper_bound: 7) {
+      name
+    }
+  }
+}
+```
+
+In this query, `ActorByMovieIdBounds` is a relationship from the `Analytics`
+model to a `Command` that takes two arguments.
+
+One argument, `lower_bound`, is provided by the relationship, but the
+`upper_bound` is provided by the user in the query. Previously we were not
+including the user's arguments in the generated plan, but now we are.
+
 ## [v2025.07.10]
 
 ### Changed

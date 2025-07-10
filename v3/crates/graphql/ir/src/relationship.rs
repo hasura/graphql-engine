@@ -14,7 +14,7 @@ use super::{
     selection_set::{self, generate_selection_set_open_dd_ir},
 };
 use crate::{
-    error,
+    arguments, error,
     query_root::select_aggregate::{AggregateQuery, aggregate_query},
 };
 use crate::{flags::GraphqlIrFlags, order_by};
@@ -301,6 +301,15 @@ pub fn generate_command_relationship_open_dd_ir<'s>(
 ) -> Result<open_dds::query::RelationshipSelection, error::Error> {
     count_command(&relationship_annotation.command_name, usage_counts);
 
+    let arguments = &field.field_call()?.arguments;
+
+    let target_arguments = arguments::resolve_model_arguments_input_opendd(
+        arguments,
+        type_mappings,
+        flags,
+        usage_counts,
+    )?;
+
     let selection = generate_selection_set_open_dd_ir(
         &field.selection_set,
         metadata_resolve::FieldNestedness::NotNested,
@@ -315,7 +324,7 @@ pub fn generate_command_relationship_open_dd_ir<'s>(
 
     let target = open_dds::query::RelationshipTarget {
         relationship_name: relationship_annotation.relationship_name.clone(),
-        arguments: IndexMap::new(),
+        arguments: target_arguments,
         filter: None,
         limit: None,
         offset: None,

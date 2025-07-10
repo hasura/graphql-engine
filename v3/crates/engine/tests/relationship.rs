@@ -384,6 +384,19 @@ fn test_remote_relationships_model_to_command_array() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_remote_relationships_model_to_command_with_relationship_argument() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/remote_relationships/command/model_to_command/with_relationship_argument";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            "execute/common_metadata/postgres_connector_ndc_v01_schema.json",
+            "execute/common_metadata/custom_connector_v02_schema.json",
+        ],
+    )
+}
+
+#[test]
 fn test_remote_relationships_model_to_multiple_commands_not_nested() -> anyhow::Result<()> {
     let test_path_string =
         "execute/remote_relationships/command/model_to_command/multiple_commands/not_nested";
