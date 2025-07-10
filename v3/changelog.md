@@ -6,6 +6,12 @@
 
 ### Changed
 
+### Fixed
+
+## [v2025.07.10]
+
+### Changed
+
 - Added `disallow_literals_as_boolean_expression_arguments` feature flag to
   disallow literals as arguments to boolean expression operators that expect a
   boolean expression.
@@ -1823,7 +1829,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.07...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.10...HEAD
+[v2025.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.10
 [v2025.07.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.07
 [v2025.07.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.02
 [v2025.06.27]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.27
