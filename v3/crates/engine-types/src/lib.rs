@@ -55,6 +55,10 @@ impl<S> WithMiddlewareErrorConverter<S> {
 
 #[derive(Debug, Clone, Copy)]
 pub enum ErrorType {
+    // error caused by user actions, such as syntax error or expired JWT token
     User,
+    // internal errors that we count in our alerting. this should not include 5xx errors from downstream services
     Internal,
+    // errors whilst calling external services such as a connector. these should not count in our alerting, but should still be returned as 5xx errors
+    External,
 }
