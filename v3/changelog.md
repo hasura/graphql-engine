@@ -8,6 +8,10 @@
 
 ### Fixed
 
+## [v2025.07.14]
+
+### Fixed
+
 - Fixed arguments passed to command relationships
 
 ```graphql
@@ -1848,7 +1852,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.10...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.14...HEAD
+[v2025.07.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.14
 [v2025.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.10
 [v2025.07.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.07
 [v2025.07.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.02
