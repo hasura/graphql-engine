@@ -28,6 +28,7 @@ serde_json = { workspace = true }
 serde = { workspace = true }
 sha2 = { workspace = true }
 tokio = { workspace = true }
+tower-http = { workspace = true }
 uuid = { workspace = true }
 serde_arrow = { workspace = true }
 

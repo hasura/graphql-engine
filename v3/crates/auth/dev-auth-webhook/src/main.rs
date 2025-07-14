@@ -7,6 +7,7 @@ use axum_core::body::Body;
 use clap::Parser;
 use serde::Serialize;
 use serde_json::Value;
+use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 use tracing::debug;
 
@@ -47,7 +48,12 @@ async fn main() -> anyhow::Result<()> {
         .layer(axum::middleware::from_fn(
             graphql_request_tracing_middleware,
         ))
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        // Add compression layer to support zstd and gzip response compression
+        // Use fastest compression level (1) based on experiments in crates/cloud/build-artifacts/src/encode.rs
+        // which showed level 1 provides good compression with minimal performance impact
+        // NOTE: Fastest can't be used here, see: https://github.com/tower-rs/tower-http/issues/590
+        .layer(CompressionLayer::new().quality(tower_http::CompressionLevel::Precise(1)));
 
     let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
     let port = env::var("PORT")

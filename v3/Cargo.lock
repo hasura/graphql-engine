@@ -1215,6 +1215,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "tokio",
+ "tower-http",
  "uuid",
 ]
 
@@ -4897,6 +4898,7 @@ version = "0.12.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d19c46a6fdd48bc4dab94b6103fccc55d34c67cc0ad04653aad4ea2a07cd7bbb"
 dependencies = [
+ "async-compression",
  "base64 0.22.1",
  "bytes",
  "encoding_rs",
