@@ -624,7 +624,7 @@ fn convert_expression_to_logical_expr(
     match expr {
         // Data Selection
         RelationalExpression::Literal { literal } => Ok(datafusion::prelude::Expr::Literal(
-            convert_literal_to_logical_expr(literal),
+            convert_literal_to_logical_expr(literal),None
         )),
         RelationalExpression::Column { index } => Ok(datafusion::prelude::Expr::Column(
             schema.columns()[usize::try_from(*index).expect("cast u64 to usize in column index")]
@@ -919,7 +919,7 @@ fn convert_expression_to_logical_expr(
                 expr: Box::new(datafusion::logical_expr::Expr::Literal(
                     convert_literal_to_logical_expr(&RelationalLiteral::UInt64 {
                         value: *index as u64,
-                    }),
+                    }),None
                 )),
             }),
         )),
@@ -1433,20 +1433,23 @@ fn convert_sort_to_logical_sort(
 fn convert_date_part_unit_to_literal_expr(
     part: ndc_models::DatePartUnit,
 ) -> datafusion::logical_expr::Expr {
-    datafusion::logical_expr::Expr::Literal(ScalarValue::Utf8(Some(String::from(match part {
-        ndc_models::DatePartUnit::Year => "year",
-        ndc_models::DatePartUnit::Quarter => "quarter",
-        ndc_models::DatePartUnit::Month => "month",
-        ndc_models::DatePartUnit::Week => "week",
-        ndc_models::DatePartUnit::DayOfWeek => "dow",
-        ndc_models::DatePartUnit::DayOfYear => "doy",
-        ndc_models::DatePartUnit::Day => "day",
-        ndc_models::DatePartUnit::Hour => "hour",
-        ndc_models::DatePartUnit::Minute => "minute",
-        ndc_models::DatePartUnit::Second => "second",
-        ndc_models::DatePartUnit::Microsecond => "microsecond",
-        ndc_models::DatePartUnit::Millisecond => "millisecond",
-        ndc_models::DatePartUnit::Nanosecond => "nanosecond",
-        ndc_models::DatePartUnit::Epoch => "epoch",
-    }))))
+    datafusion::logical_expr::Expr::Literal(
+        ScalarValue::Utf8(Some(String::from(match part {
+            ndc_models::DatePartUnit::Year => "year",
+            ndc_models::DatePartUnit::Quarter => "quarter",
+            ndc_models::DatePartUnit::Month => "month",
+            ndc_models::DatePartUnit::Week => "week",
+            ndc_models::DatePartUnit::DayOfWeek => "dow",
+            ndc_models::DatePartUnit::DayOfYear => "doy",
+            ndc_models::DatePartUnit::Day => "day",
+            ndc_models::DatePartUnit::Hour => "hour",
+            ndc_models::DatePartUnit::Minute => "minute",
+            ndc_models::DatePartUnit::Second => "second",
+            ndc_models::DatePartUnit::Microsecond => "microsecond",
+            ndc_models::DatePartUnit::Millisecond => "millisecond",
+            ndc_models::DatePartUnit::Nanosecond => "nanosecond",
+            ndc_models::DatePartUnit::Epoch => "epoch",
+        }))),
+        None,
+    )
 }
