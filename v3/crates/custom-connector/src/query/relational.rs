@@ -31,10 +31,13 @@ use std::sync::Arc;
 
 pub type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
+#[allow(clippy::print_stdout)]
 pub async fn execute_relational_query(
     state: &AppState,
     query: &RelationalQuery,
 ) -> Result<Vec<Vec<serde_json::Value>>> {
+    println!("[SELECT]: query={query:?}");
+
     let logical_plan: datafusion::logical_expr::LogicalPlan =
         convert_relation_to_logical_plan(&query.root_relation, state).map_err(|err| {
             (
@@ -67,6 +70,7 @@ pub async fn execute_relational_query(
                 }),
             )
         })?;
+
     let results = datafusion::physical_plan::collect(physical_plan, task_ctx)
         .await
         .map_err(|err| {
@@ -201,6 +205,7 @@ fn convert_relation_to_logical_plan(
         }
         Relation::Paginate { input, fetch, skip } => {
             let input_plan = convert_relation_to_logical_plan(input, state)?;
+
             let logical_plan =
                 datafusion::logical_expr::LogicalPlan::Limit(datafusion::logical_expr::Limit {
                     input: Arc::new(input_plan),
@@ -211,6 +216,7 @@ fn convert_relation_to_logical_plan(
                         i64::try_from(*skip).expect("cast u64 to i64").lit(),
                     )),
                 });
+
             Ok(logical_plan)
         }
         Relation::Project { input, exprs } => {
@@ -223,8 +229,10 @@ fn convert_relation_to_logical_plan(
                 let name = format!("column_{i}");
                 let logical_expr: datafusion::logical_expr::Expr =
                     convert_expression_to_logical_expr(expr, input_plan.schema())?;
+
                 let (data_type, nullable) =
                     logical_expr.data_type_and_nullable(input_plan.schema())?;
+
                 logical_exprs.push(logical_expr.alias(&name));
                 schema_builder.push(Field::new(&name, data_type, nullable));
             }
@@ -328,14 +336,17 @@ fn convert_relation_to_logical_plan(
             aggregates,
         } => {
             let input_plan = convert_relation_to_logical_plan(input, state)?;
+
             let group_by = group_by
                 .iter()
                 .map(|expr| convert_expression_to_logical_expr(expr, input_plan.schema()))
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
+
             let aggr_expr = aggregates
                 .iter()
                 .map(|expr| convert_expression_to_logical_expr(expr, input_plan.schema()))
                 .collect::<datafusion::error::Result<Vec<_>>>()?;
+
             let aggregate_plan = datafusion::logical_expr::LogicalPlan::Aggregate(
                 datafusion::logical_expr::Aggregate::try_new(
                     Arc::new(input_plan),
@@ -559,11 +570,15 @@ fn get_table_provider(
                 .collect(),
             crate::types::institution::definition().fields,
         ),
-        _ => unimplemented!(),
+        _ => {
+            return Err(DataFusionError::Internal(format!(
+                "Collection {collection_name} not found"
+            )));
+        }
     };
     let mut schema_builder = SchemaBuilder::new();
     for (field_name, object_field) in &collection_fields {
-        let (data_type, nullable) = to_df_datatype(&object_field.r#type);
+        let (data_type, nullable) = to_df_datatype(&object_field.r#type)?;
         schema_builder.push(Field::new(field_name.as_str(), data_type, nullable));
     }
 
@@ -576,8 +591,10 @@ fn get_table_provider(
     Ok(Arc::new(mem_table))
 }
 
-fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataType, bool) {
-    match ty {
+fn to_df_datatype(
+    ty: &ndc_models::Type,
+) -> datafusion::error::Result<(datafusion::arrow::datatypes::DataType, bool)> {
+    Ok(match ty {
         ndc_models::Type::Named { name } if name.as_str() == "Int" => {
             (datafusion::arrow::datatypes::DataType::Int64, false)
         }
@@ -601,11 +618,11 @@ fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataT
             (crate::types::staff_member::arrow_type(), true)
         }
         ndc_models::Type::Nullable { underlying_type } => {
-            let (dt, _) = to_df_datatype(underlying_type);
+            let (dt, _) = to_df_datatype(underlying_type)?;
             (dt, true)
         }
         ndc_models::Type::Array { element_type } => {
-            let (dt, _) = to_df_datatype(element_type);
+            let (dt, _) = to_df_datatype(element_type)?;
             (
                 datafusion::arrow::datatypes::DataType::List(Arc::new(Field::new(
                     "item", dt, true,
@@ -613,8 +630,12 @@ fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataT
                 true,
             )
         }
-        _ => unimplemented!(),
-    }
+        _ => {
+            return Err(DataFusionError::Internal(format!(
+                "Unsupported type: {ty:?}"
+            )));
+        }
+    })
 }
 
 fn convert_expression_to_logical_expr(
@@ -1131,7 +1152,7 @@ fn convert_expression_to_logical_expr(
         })),
 
         // Aggregate functions
-        RelationalExpression::Average { expr: _ } => {
+        RelationalExpression::Average { expr } => {
             Ok(datafusion::prelude::Expr::AggregateFunction(
                 datafusion::logical_expr::expr::AggregateFunction {
                     func: average::avg_udaf(),
@@ -1163,7 +1184,7 @@ fn convert_expression_to_logical_expr(
         }
         RelationalExpression::FirstValue { expr: _ } => unimplemented!(),
         RelationalExpression::LastValue { expr: _ } => unimplemented!(),
-        RelationalExpression::Max { expr: _ } => Ok(datafusion::prelude::Expr::AggregateFunction(
+        RelationalExpression::Max { expr  } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: min_max::max_udaf(),
                 params: AggregateFunctionParams {
@@ -1176,7 +1197,7 @@ fn convert_expression_to_logical_expr(
             },
         )),
         RelationalExpression::Median { expr: _ } => unimplemented!(),
-        RelationalExpression::Min { expr: _ } => Ok(datafusion::prelude::Expr::AggregateFunction(
+        RelationalExpression::Min { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: min_max::min_udaf(),
                 params: AggregateFunctionParams {
