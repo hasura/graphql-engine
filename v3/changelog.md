@@ -2,11 +2,188 @@
 
 ## [Unreleased]
 
-### Fixed
+### Added
 
 ### Changed
 
-### Added
+### Fixed
+
+## [v2025.07.14]
+
+### Fixed
+
+- Fixed arguments passed to command relationships
+
+```graphql
+query MyQuery {
+  Analytics {
+    ActorByMovieIdBounds(upper_bound: 7) {
+      name
+    }
+  }
+}
+```
+
+In this query, `ActorByMovieIdBounds` is a relationship from the `Analytics`
+model to a `Command` that takes two arguments.
+
+One argument, `lower_bound`, is provided by the relationship, but the
+`upper_bound` is provided by the user in the query. Previously we were not
+including the user's arguments in the generated plan, but now we are.
+
+## [v2025.07.10]
+
+### Changed
+
+- Added `disallow_literals_as_boolean_expression_arguments` feature flag to
+  disallow literals as arguments to boolean expression operators that expect a
+  boolean expression.
+
+### Fixed
+
+- Fixed JWT authentication errors to return correct HTTP status codes. Expired
+  tokens now return `400 Bad Request` instead of `500 Internal Server Error`.
+
+## [v2025.07.07]
+
+### Pre-NDC Request and Pre-NDC Response Plugins
+
+Add support for `pre-ndc-request` and `pre-ndc-response` plugins. These plugins
+allow HTTP webhooks to modify requests before they're sent to data connectors
+and modify responses before they're processed by the engine.
+
+##### Pre-NDC Request Plugin Behavior
+
+The `pre-ndc-request` plugin is called before a request is sent to a data
+connector.
+
+Example metadata:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  pre: ndcRequest
+  name: request_modifier # Plugin name must be unique
+  connectors:
+    - postgres # List of data connectors this plugin applies to. This is scoped to the current subgraph. Connectors can only be referenced by a single plugin of each type.
+  url:
+    value: http://localhost:5001/modify-request # Webhook URL to call
+  config:
+    request:
+      headers:
+        # Map of custom headers to send to the webhook
+        hasura-m-auth:
+          value: "your-strong-m-auth-key"
+      session: {} # Include session information in the webhook request
+      ndcRequest: {} # Include the NDC request in the webhook request
+```
+
+The plugin receives a request body with the following structure:
+
+```json
+{
+  "session": {
+    /* Session information if configured */
+    "role": "user",
+    "variables": {
+      "x-hasura-user-id": "1"
+    }
+  },
+  "ndcRequest": {
+    /* The NDC request if configured */
+  },
+  "dataConnectorName": "qualified.connector.name",
+  "operationType": "query|queryExplain|mutation|mutationExplain",
+  "ndcVersion": "v0.1.x|v0.2.x"
+}
+```
+
+The plugin can respond in the following ways:
+
+1. HTTP 204 (No Content): The original request will be used without
+   modification.
+2. HTTP 200 (OK) with a JSON body containing either:
+   - `{"ndcRequest": {...}}`: A modified request that will replace the original.
+   - `{"ndcResponse": {...}}`: A response that will be used instead of calling
+     the data connector.
+3. HTTP 400 (Bad Request): The plugin encountered a user error, which will be
+   returned to the client.
+4. Any other status code: Treated as an internal error.
+
+##### Pre-NDC Response Plugin Behavior
+
+The `pre-ndc-response` plugin is called after receiving a response from a data
+connector but before processing it.
+
+Example metadata:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  pre: ndcResponse
+  name: response_modifier # Plugin name must be unique
+  connectors:
+    - postgres # List of data connectors this plugin applies to. This is scoped to the current subgraph. Connectors can only be referenced by a single plugin of each type.
+  url:
+    value: http://localhost:5001/modify-response # Webhook URL to call
+  config:
+    request:
+      headers:
+        # Map of custom headers to send to the webhook
+        hasura-m-auth:
+          value: "your-strong-m-auth-key"
+      session: {} # Include session information in the webhook request
+      ndcRequest: {} # Include the original NDC request in the webhook request
+      ndcResponse: {} # Include the NDC response in the webhook request
+```
+
+The plugin receives a request body with the following structure:
+
+```json
+{
+  "session": {
+    /* Session information if configured */
+    "role": "user",
+    "variables": {
+      "x-hasura-user-id": "1"
+    }
+  },
+  "ndcRequest": {
+    /* The original NDC request if configured */
+  },
+  "ndcResponse": {
+    /* The NDC response if configured */
+  },
+  "dataConnectorName": "qualified.connector.name",
+  "operationType": "query|queryExplain|mutation|mutationExplain",
+  "ndcVersion": "v0.1.x|v0.2.x"
+}
+```
+
+The plugin can respond in the following ways:
+
+1. HTTP 204 (No Content): The original response will be used without
+   modification.
+2. HTTP 200 (OK) with a JSON body containing the modified response.
+3. HTTP 400 (Bad Request): The plugin encountered a user error, which will be
+   returned to the client.
+4. Any other status code: Treated as an internal error.
+
+#### A note on request headers
+
+Request headers are not forwarded to the `pre-ndc-response` and
+`pre-ndc-request` plugins. If you need values from these headers in the plugins,
+you should add the value in question to the session via an auth webhook.
+
+## [v2025.07.02]
+
+No changes since last release.
+
+## [v2025.06.27]
+
+No changes since last release.
 
 ## [v2025.06.26]
 
@@ -1675,7 +1852,12 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.06.26...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.14...HEAD
+[v2025.07.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.14
+[v2025.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.10
+[v2025.07.07]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.07
+[v2025.07.02]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.02
+[v2025.06.27]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.27
 [v2025.06.26]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.26
 [v2025.06.16]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.16
 [v2025.06.04]: https://github.com/hasura/v3-engine/releases/tag/v2025.06.04

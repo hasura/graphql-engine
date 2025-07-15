@@ -663,7 +663,6 @@ fn from_command_relationship(
         metadata,
         session,
         request_headers,
-        command_name,
         command,
         command_source,
         plan_state,
@@ -680,7 +679,7 @@ fn from_command_relationship(
             let CommandRemoteRelationshipParts {
                 join_mapping,
                 object_type_field_mappings,
-                arguments: new_arguments,
+                arguments: arguments_from_join,
             } = calculate_remote_relationship_fields_for_command_target(
                 session,
                 metadata,
@@ -712,8 +711,8 @@ fn from_command_relationship(
                 }
             };
 
-            // add the new arguments
-            query_execution_plan.arguments.extend(new_arguments);
+            // add arguments from join
+            query_execution_plan.arguments.extend(arguments_from_join);
 
             // we push remote predicates to the outer list
             remote_predicates.0.extend(new_remote_predicates.0);

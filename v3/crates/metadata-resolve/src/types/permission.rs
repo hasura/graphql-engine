@@ -13,3 +13,15 @@ pub enum ValueExpressionOrPredicate {
     SessionVariable(open_dds::session_variables::SessionVariableReference),
     BooleanExpression(Box<model_permissions::ModelPredicate>),
 }
+
+impl ValueExpressionOrPredicate {
+    pub fn split_predicate(self) -> Result<ValueExpression, model_permissions::ModelPredicate> {
+        match self {
+            ValueExpressionOrPredicate::BooleanExpression(p) => Err(*p),
+            ValueExpressionOrPredicate::Literal(value) => Ok(ValueExpression::Literal(value)),
+            ValueExpressionOrPredicate::SessionVariable(session_variable) => {
+                Ok(ValueExpression::SessionVariable(session_variable))
+            }
+        }
+    }
+}

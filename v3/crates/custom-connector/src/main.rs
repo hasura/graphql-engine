@@ -8,6 +8,7 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
+use tower_http::compression::CompressionLayer;
 
 use custom_connector::state::AppState;
 use ndc_models::{RelationalQuery, RelationalQueryResponse};
@@ -31,6 +32,11 @@ async fn main() -> anyhow::Result<()> {
         .route("/mutation/rel/insert", post(post_mutation_rel_insert))
         .route("/mutation/rel/update", post(post_mutation_rel_update))
         .route("/mutation/rel/delete", post(post_mutation_rel_delete))
+        // Add compression layer to support zstd and gzip response compression
+        // Use fastest compression level (1) based on experiments in crates/cloud/build-artifacts/src/encode.rs
+        // which showed level 1 provides good compression with minimal performance impact
+        // NOTE: Fastest can't be used here, see: https://github.com/tower-rs/tower-http/issues/590
+        .layer(CompressionLayer::new().quality(tower_http::CompressionLevel::Precise(1)))
         .with_state(app_state);
 
     // run it with hyper on localhost:8102

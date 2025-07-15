@@ -1,7 +1,9 @@
 use super::permissions;
 use crate::metadata_accessor;
+use crate::metadata_accessor::CommandView;
 use crate::plan_expression;
 use crate::types::PlanState;
+use authorization_rules::ArgumentPolicy;
 use hasura_authn_core::{Role, Session, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::ArgumentPresetValue;
@@ -115,6 +117,7 @@ pub fn process_argument_presets_for_model<'s>(
 pub fn process_argument_presets_for_command<'s>(
     arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     command: &'s CommandWithPermissions,
+    command_view: &'s CommandView<'s>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session: &Session,
     request_headers: &HeaderMap,
@@ -126,22 +129,11 @@ pub fn process_argument_presets_for_command<'s>(
         }
     })?;
 
-    let argument_presets = &command
-        .permissions
-        .get(&session.role)
-        .ok_or_else(
-            || ArgumentPresetExecutionError::CommandArgumentPresetsNotFound {
-                command_name: command.command.name.clone(),
-                role: session.role.clone(),
-            },
-        )?
-        .argument_presets;
-
-    process_argument_presets(
+    process_argument_presets_for_auth_rules(
         arguments,
         &command.command.arguments,
         &command_source.argument_mappings,
-        argument_presets,
+        &command_view.argument_presets,
         object_types,
         &command_source.type_mappings,
         &command_source.data_connector,
@@ -150,6 +142,84 @@ pub fn process_argument_presets_for_command<'s>(
         request_headers,
         usage_counts,
     )
+}
+
+// the commands and model types are subtly different now. once models use rules-based
+// auth we can keep this as the only one
+fn process_argument_presets_for_auth_rules<'s>(
+    mut arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
+    argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
+    argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    argument_presets: &'s BTreeMap<&'s ArgumentName, ArgumentPolicy<'s>>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
+    session: &Session,
+    request_headers: &HeaderMap,
+    usage_counts: &mut UsagesCounts,
+) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
+    // Preset arguments from `DataConnectorLink` argument presets
+    for (argument_name, value) in process_connector_link_presets(
+        data_connector_link_argument_presets,
+        &session.variables,
+        request_headers,
+        type_mappings,
+        object_types,
+    )? {
+        arguments.insert(argument_name, UnresolvedArgument::Literal { value });
+    }
+
+    // Preset arguments from Model/CommandPermission argument presets
+    for (argument_name, argument_value) in argument_presets {
+        let data_connector_argument_name =
+            argument_mappings.get(*argument_name).ok_or_else(|| {
+                ArgumentPresetExecutionError::ArgumentMappingNotFound {
+                    argument_name: (*argument_name).clone(),
+                }
+            })?;
+
+        let argument_value =
+            permissions::make_argument_from_value_expression_or_predicate_auth_rules(
+                data_connector_link,
+                type_mappings,
+                argument_value,
+                &session.variables,
+                object_types,
+                usage_counts,
+            )?;
+
+        arguments.insert(data_connector_argument_name.clone(), argument_value);
+    }
+
+    // Apply input field presets from the TypePermissions involved in the arguments' types
+    for (argument_name, argument_info) in argument_infos {
+        let data_connector_argument_name =
+            argument_mappings.get(argument_name).ok_or_else(|| {
+                ArgumentPresetExecutionError::ArgumentMappingNotFound {
+                    argument_name: argument_name.clone(),
+                }
+            })?;
+
+        if let Some(existing_argument_value) = arguments.get_mut(data_connector_argument_name) {
+            match existing_argument_value {
+                UnresolvedArgument::Literal { value } => {
+                    apply_input_field_presets_to_value(
+                        value,
+                        &argument_info.argument_type,
+                        type_mappings,
+                        object_types,
+                        session,
+                    )?;
+                }
+                UnresolvedArgument::BooleanExpression { .. } => {
+                    // We don't apply input field presets to boolean expression arguments
+                }
+            }
+        }
+    }
+
+    Ok(arguments)
 }
 
 fn process_argument_presets<'s>(

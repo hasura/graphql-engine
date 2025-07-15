@@ -7,6 +7,7 @@ use engine_types::ExposeInternalErrors;
 use serde::Serialize;
 use std::net;
 use std::path::PathBuf;
+use tower_http::compression::CompressionLayer;
 use tracing_util::{SpanVisibility, add_event_on_active_span, set_attribute_on_active_span};
 
 #[global_allocator]
@@ -164,6 +165,12 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     if server.enable_cors {
         app = app.layer(get_cors_layer(&server.cors_allow_origin));
     }
+
+    // Add compression layer to support zstd and gzip response compression
+    // Use fastest compression level (1) based on experiments in crates/cloud/build-artifacts/src/encode.rs
+    // which showed level 1 provides good compression with minimal performance impact
+    // NOTE: Fastest can't be used here, see: https://github.com/tower-rs/tower-http/issues/590
+    app = app.layer(CompressionLayer::new().quality(tower_http::CompressionLevel::Precise(1)));
 
     let address = net::SocketAddr::new(server.host, server.port);
     let log = format!("starting server on {address}");

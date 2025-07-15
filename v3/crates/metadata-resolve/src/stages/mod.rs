@@ -317,6 +317,7 @@ fn resolve_internal(
         &boolean_expression_types,
         &models_with_graphql,
         &data_connector_scalars,
+        &mut conditions,
     )
     .map_err(flatten_multiple_errors)?;
 

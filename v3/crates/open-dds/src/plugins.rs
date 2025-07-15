@@ -81,12 +81,8 @@ pub enum LifecyclePluginHookV1 {
     /// Definition of a lifecycle plugin hook for the pre-route stage.
     Route(LifecyclePreRoutePluginHook),
     /// Definition of a lifecycle plugin hook for the pre-ndc-request stage.
-    #[opendd(hidden = true)]
-    #[schemars(skip)]
     NdcRequest(LifecyclePreNdcRequestPluginHook),
     /// Definition of a lifecycle plugin hook for the pre-ndc-response stage.
-    #[opendd(hidden = true)]
-    #[schemars(skip)]
     NdcResponse(LifecyclePreNdcResponsePluginHook),
 }
 

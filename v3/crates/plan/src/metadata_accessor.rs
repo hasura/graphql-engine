@@ -1,5 +1,8 @@
 use crate::{PermissionError, types::PlanState};
-use authorization_rules::{ConditionCache, evaluate_field_authorization_rules};
+use authorization_rules::{
+    ArgumentPolicy, ConditionCache, evaluate_command_authorization_rules,
+    evaluate_field_authorization_rules,
+};
 use hasura_authn_core::{Role, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::{
@@ -9,6 +12,7 @@ use metadata_resolve::{
 use open_dds::{
     commands::CommandName,
     models::ModelName,
+    query::ArgumentName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
 };
@@ -144,7 +148,7 @@ pub fn get_model<'metadata>(
 
     if let Some(permission) = model.permissions.get(role) {
         if let Some(select_permission) = &permission.select {
-            if can_access_object_type(
+            if is_allowed_access_to_object_type(
                 metadata,
                 &model.model.data_type,
                 session_variables,
@@ -170,17 +174,19 @@ pub fn get_model<'metadata>(
     })
 }
 
-pub struct CommandView {}
+pub struct CommandView<'a> {
+    pub argument_presets: BTreeMap<&'a ArgumentName, ArgumentPolicy<'a>>,
+}
 
 // fetch a command from metadata, ensuring we have CommandPermissions
 // and permissions to access the return type
-pub fn get_command(
-    metadata: &Metadata,
+pub fn get_command<'a>(
+    metadata: &'a Metadata,
     command_name: &'_ Qualified<CommandName>,
     role: &'_ Role,
     session_variables: &'_ SessionVariables,
     plan_state: &mut PlanState,
-) -> Result<CommandView, PermissionError> {
+) -> Result<CommandView<'a>, PermissionError> {
     let command =
         metadata
             .commands
@@ -189,30 +195,45 @@ pub fn get_command(
                 command_name: command_name.clone(),
             })?;
 
-    // if we have a custom type, we need to check permissions on that too
-    let can_access_type = if let Some(custom_type_name) =
+    // if the command return type is a custom type (as opposed to a built-in like Int),
+    // check that we have access to it
+    let is_allowed_access_to_return_type = if let Some(custom_type_name) =
         metadata_resolve::unwrap_custom_type_name(&command.command.output_type)
     {
-        can_access_object_type(
-            metadata,
-            custom_type_name,
-            session_variables,
-            &mut plan_state.condition_cache,
-        )? || is_valid_scalar_type(metadata, custom_type_name)
+        is_valid_scalar_type(metadata, custom_type_name)
+            || is_allowed_access_to_object_type(
+                metadata,
+                custom_type_name,
+                session_variables,
+                &mut plan_state.condition_cache,
+            )?
     } else {
+        // if the return type is a built-in, we're good
         true
     };
-    if can_access_type && command.permissions.contains_key(role) {
-        Ok(CommandView {})
-    } else {
-        Err(PermissionError::CommandNotAccessible {
-            command_name: command_name.clone(),
-            role: role.clone(),
-        })
+
+    // evaluate authorization rules for the command, to decide a) are we allowed to access it?
+    // and b) which argument presets are applicable?
+    if let Some(command_permission) = evaluate_command_authorization_rules(
+        &command.permissions.authorization_rules,
+        session_variables,
+        &metadata.conditions,
+        &mut plan_state.condition_cache,
+    )? {
+        if is_allowed_access_to_return_type {
+            return Ok(CommandView {
+                argument_presets: command_permission.argument_presets,
+            });
+        }
     }
+
+    Err(PermissionError::CommandNotAccessible {
+        command_name: command_name.clone(),
+        role: role.clone(),
+    })
 }
 
-// we use this at leaves to stop recursing forever
+// scalar types don't have their own permissions, but we do need to check that they exist
 fn is_valid_scalar_type(
     metadata: &Metadata,
     scalar_type_name: &'_ Qualified<CustomTypeName>,
@@ -220,8 +241,8 @@ fn is_valid_scalar_type(
     metadata.scalar_types.contains_key(scalar_type_name)
 }
 
-// we use this at leaves to stop recursing forever
-fn can_access_object_type(
+// are we allowed access to at least one field of this object type?
+fn is_allowed_access_to_object_type(
     metadata: &Metadata,
     object_type_name: &'_ Qualified<CustomTypeName>,
     session_variables: &'_ SessionVariables,
@@ -243,7 +264,7 @@ fn can_access_object_type(
     }
 }
 
-// we use this at leaves to stop recursing forever
+// which fields of this object type are we allowed to access?
 fn get_accessible_fields_for_object<'a>(
     object_type: &'a ObjectTypeWithRelationships,
     session_variables: &'_ SessionVariables,

@@ -1,11 +1,12 @@
 use axum::http::{HeaderMap, HeaderName};
 use engine_types::HttpContext;
-// use execute_types::ndc::types::{NdcMutationRequest, NdcMutationResponse};
-// use execute_types::ndc::types::{NdcQueryRequest, NdcQueryResponse};
-use hasura_authn_core::Session;
+use hasura_authn_core::{Role, Session, SessionVariableName};
 use metadata_resolve::{DataConnectorLink, Qualified, ResolvedLifecyclePreNdcRequestPluginHook};
 use open_dds::data_connector::DataConnectorName;
-use reqwest::Client;
+use reqwest::{
+    Client,
+    header::{InvalidHeaderName, InvalidHeaderValue},
+};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, str::FromStr, sync::Arc};
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError, set_attribute_on_active_span};
@@ -15,7 +16,7 @@ pub enum Error {
     #[error("Error while making the HTTP request to the pre-parse plugin {0} - {1}")]
     ErrorWhileMakingHTTPRequestToTheHook(String, reqwest::Error),
     #[error("Error while building the request for the pre-parse plugin {0} - {1}")]
-    BuildRequestError(String, String),
+    BuildRequestError(String, #[source] BuildRequestError),
     #[error("Reqwest error: {0}")]
     ReqwestError(reqwest::Error),
     #[error("Unexpected status code: {0}")]
@@ -34,38 +35,41 @@ pub enum Error {
     },
 }
 
-impl Error {
-    pub fn into_graphql_error(self) -> lang_graphql::http::GraphQLError {
-        let is_internal = match self.visibility() {
-            ErrorVisibility::Internal => true,
-            ErrorVisibility::User => false,
-        };
-        lang_graphql::http::GraphQLError {
-            message: self.to_string(),
-            path: None,
-            extensions: None,
-            is_internal,
-        }
-    }
-
-    pub fn get_details(&self) -> Option<serde_json::Value> {
-        match self {
-            Error::PluginUserError { error, .. } => Some(error.clone()),
-            _ => None,
-        }
-    }
+#[derive(Debug, thiserror::Error)]
+pub enum BuildRequestError {
+    #[error("Invalid header name {header_name}: {error}")]
+    InvalidHeaderName {
+        header_name: String,
+        #[source]
+        error: InvalidHeaderName,
+    },
+    #[error("Invalid header value for header {header_name}: {error}")]
+    InvalidHeaderValue {
+        header_name: HeaderName,
+        #[source]
+        error: InvalidHeaderValue,
+    },
+    #[error("Failed to convert session: {0}")]
+    SessionConversionError(String),
+    #[error("Failed to convert session variable '{variable_name}': {error}")]
+    SessionVariableConversionError {
+        variable_name: SessionVariableName,
+        error: serde_json::Error,
+    },
+    #[error("Serialization error: {0}")]
+    SerializationError(#[from] serde_json::Error),
 }
 
 impl TraceableError for Error {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Error::PluginUserError { .. } => ErrorVisibility::User,
-            Error::BuildRequestError(_, _)
+            Error::BuildRequestError(_, _) => ErrorVisibility::Internal,
+            Error::PluginUserError { .. }
             | Error::ReqwestError(_)
             | Error::PluginRequestParseError(_)
             | Error::ErrorWhileMakingHTTPRequestToTheHook(_, _)
             | Error::UnexpectedStatusCode(_)
-            | Error::PluginInternalError { .. } => ErrorVisibility::Internal,
+            | Error::PluginInternalError { .. } => ErrorVisibility::User,
         }
     }
 }
@@ -88,9 +92,31 @@ pub enum OperationType {
 }
 
 #[derive(Serialize, Clone, Debug)]
+struct PreNdcRequestSession {
+    role: Role,
+    variables: BTreeMap<SessionVariableName, serde_json::Value>,
+}
+
+impl TryFrom<Session> for PreNdcRequestSession {
+    type Error = BuildRequestError;
+
+    fn try_from(session: Session) -> Result<Self, Self::Error> {
+        let variables = session
+            .variables
+            .into_iter()
+            .map(|(k, v)| Ok((k, v.as_value()?)))
+            .collect::<Result<_, Self::Error>>()?;
+        Ok(Self {
+            role: session.role,
+            variables,
+        })
+    }
+}
+
+#[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct PreNdcRequestPluginRequestBody<Req> {
-    pub session: Option<Session>,
+struct PreNdcRequestPluginRequestBody<Req> {
+    pub session: Option<PreNdcRequestSession>,
     pub ndc_request: Option<Req>,
     pub data_connector_name: Qualified<DataConnectorName>,
     pub operation_type: OperationType,
@@ -240,7 +266,7 @@ async fn execute_pre_ndc_request_plugin(
         .in_span_async(
             "request_to_webhook",
             "Send request to webhook",
-            SpanVisibility::Internal,
+            SpanVisibility::User,
             || {
                 Box::pin(async {
                     http_client.execute(http_request).await.map_err(|e| {
@@ -263,7 +289,7 @@ fn build_request<Req>(
     ndc_request: Req,
     operation_type: OperationType,
     ndc_version: &str,
-) -> Result<reqwest::RequestBuilder, String>
+) -> Result<reqwest::RequestBuilder, BuildRequestError>
 where
     Req: Serialize,
 {
@@ -272,11 +298,18 @@ where
     if let Some(headers) = &pre_ndc_request_plugin.config.request.headers {
         for (key, value) in &headers.0 {
             let header_name =
-                HeaderName::from_str(key).map_err(|_| format!("Invalid header name {key}"))?;
-            let header_value = value
-                .value
-                .parse()
-                .map_err(|_| format!("Invalid value for the header {key}"))?;
+                HeaderName::from_str(key).map_err(|err| BuildRequestError::InvalidHeaderName {
+                    header_name: key.clone(),
+                    error: err,
+                })?;
+            let header_value =
+                value
+                    .value
+                    .parse()
+                    .map_err(|error| BuildRequestError::InvalidHeaderValue {
+                        header_name: header_name.clone(),
+                        error,
+                    })?;
             http_headers.insert(header_name, header_value);
         }
     }
@@ -293,7 +326,7 @@ where
         ndc_version: ndc_version.to_string(),
     };
     if pre_ndc_request_plugin.config.request.session.is_some() {
-        request_body.session = Some(session.clone());
+        request_body.session = Some(session.clone().try_into()?);
     }
     if pre_ndc_request_plugin.config.request.ndc_request.is_some() {
         request_body.ndc_request = Some(ndc_request);

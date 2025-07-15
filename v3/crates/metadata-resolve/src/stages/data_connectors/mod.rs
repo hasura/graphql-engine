@@ -19,9 +19,10 @@ pub use types::{
     DataConnectorRelationalExpressionCapabilities, DataConnectorRelationalJoinCapabilities,
     DataConnectorRelationalJoinTypeCapabilities, DataConnectorRelationalProjectionCapabilities,
     DataConnectorRelationalQueryCapabilities, DataConnectorRelationalScalarExpressionCapabilities,
-    DataConnectorRelationalSortCapabilities, DataConnectorRelationalWindowCapabilities,
-    DataConnectorRelationalWindowExpressionCapabilities, DataConnectorRelationshipCapabilities,
-    DataConnectorSchema, DataConnectors, DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
+    DataConnectorRelationalScalarTypeCapabilities, DataConnectorRelationalSortCapabilities,
+    DataConnectorRelationalWindowCapabilities, DataConnectorRelationalWindowExpressionCapabilities,
+    DataConnectorRelationshipCapabilities, DataConnectorSchema, DataConnectors,
+    DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
 };
 
 /// Resolve data connectors.

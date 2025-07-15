@@ -216,6 +216,11 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
             string_agg: None,
             sum: Some(ndc_models::LeafCapability {}),
             var: None,
+            stddev: Some(ndc_models::LeafCapability {}),
+            stddev_pop: Some(ndc_models::LeafCapability {}),
+            approx_percentile_cont: Some(ndc_models::LeafCapability {}),
+            approx_distinct: Some(ndc_models::LeafCapability {}),
+            array_agg: Some(ndc_models::LeafCapability {}),
         },
         window: ndc_models::RelationalWindowExpressionCapabilities {
             row_number: Some(ndc_models::LeafCapability {}),
@@ -225,5 +230,8 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
             cume_dist: None,
             percent_rank: None,
         },
+        scalar_types: Some(ndc_models::RelationalScalarTypeCapabilities {
+            interval: Some(ndc_models::LeafCapability {}),
+        }),
     }
 }

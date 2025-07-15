@@ -270,7 +270,10 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                     ),
                     description: None,
                 },
-                permissions: {},
+                permissions: CommandPermissions {
+                    by_role: {},
+                    authorization_rules: [],
+                },
             },
         },
         boolean_expression_types: BooleanExpressionTypes {

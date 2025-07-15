@@ -592,7 +592,7 @@ fn to_df_datatype(ty: &ndc_models::Type) -> (datafusion::arrow::datatypes::DataT
             (datafusion::arrow::datatypes::DataType::Utf8, false)
         }
         ndc_models::Type::Named { name } if name.as_str() == "Date" => {
-            (datafusion::arrow::datatypes::DataType::Utf8, false)
+            (datafusion::arrow::datatypes::DataType::Date32, false)
         }
         ndc_models::Type::Named { name } if name.as_str() == "location" => {
             (crate::types::location::arrow_type(), true)
@@ -624,7 +624,7 @@ fn convert_expression_to_logical_expr(
     match expr {
         // Data Selection
         RelationalExpression::Literal { literal } => Ok(datafusion::prelude::Expr::Literal(
-            convert_literal_to_logical_expr(literal),
+            convert_literal_to_logical_expr(literal),None
         )),
         RelationalExpression::Column { index } => Ok(datafusion::prelude::Expr::Column(
             schema.columns()[usize::try_from(*index).expect("cast u64 to usize in column index")]
@@ -919,7 +919,7 @@ fn convert_expression_to_logical_expr(
                 expr: Box::new(datafusion::logical_expr::Expr::Literal(
                     convert_literal_to_logical_expr(&RelationalLiteral::UInt64 {
                         value: *index as u64,
-                    }),
+                    }),None
                 )),
             }),
         )),
@@ -1182,6 +1182,73 @@ fn convert_expression_to_logical_expr(
             },
         )),
         RelationalExpression::Var { expr: _ } => unimplemented!(),
+        RelationalExpression::Stddev { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
+            datafusion::logical_expr::expr::AggregateFunction {
+                func: datafusion::functions_aggregate::stddev::stddev_udaf(),
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
+            },
+        )),
+        RelationalExpression::StddevPop { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
+            datafusion::logical_expr::expr::AggregateFunction {
+                func: datafusion::functions_aggregate::stddev::stddev_pop_udaf(),
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
+            },
+        )),
+        RelationalExpression::ApproxPercentileCont { expr, percentile } => {
+            Ok(datafusion::prelude::Expr::AggregateFunction(
+                datafusion::logical_expr::expr::AggregateFunction {
+                    func: datafusion::functions_aggregate::approx_percentile_cont::approx_percentile_cont_udaf(),
+                    params: AggregateFunctionParams {
+                        args: vec![
+                            convert_expression_to_logical_expr(expr, schema)?,
+                            percentile.0.lit(),
+                        ],
+                        distinct: false,
+                        filter: None,
+                        order_by: None,
+                        null_treatment: None,
+                    },
+                },
+            ))
+        },
+        RelationalExpression::ApproxDistinct { expr } => {
+            Ok(datafusion::prelude::Expr::AggregateFunction(
+                datafusion::logical_expr::expr::AggregateFunction {
+                    func: datafusion::functions_aggregate::approx_distinct::approx_distinct_udaf(),
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                        distinct: false,
+                        filter: None,
+                        order_by: None,
+                        null_treatment: None,
+                    },
+                },
+            ))
+        },
+        RelationalExpression::ArrayAgg { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
+            datafusion::logical_expr::expr::AggregateFunction {
+                func: datafusion::functions_aggregate::array_agg::array_agg_udaf(),
+                params: AggregateFunctionParams {
+                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                    distinct: false,
+                    filter: None,
+                    order_by: None,
+                    null_treatment: None,
+                },
+            },
+        )),
 
         // Window functions
         RelationalExpression::RowNumber {
@@ -1273,6 +1340,9 @@ fn convert_cast_type_to_data_type(
         ndc_models::CastType::Duration => datafusion::arrow::datatypes::DataType::Duration(
             datafusion::arrow::datatypes::TimeUnit::Nanosecond,
         ),
+        ndc_models::CastType::Interval => datafusion::arrow::datatypes::DataType::Interval(
+            datafusion::arrow::datatypes::IntervalUnit::MonthDayNano,
+        ),
     }
 }
 
@@ -1280,8 +1350,8 @@ fn convert_literal_to_logical_expr(literal: &RelationalLiteral) -> ScalarValue {
     match literal {
         RelationalLiteral::Null => ScalarValue::Null,
         RelationalLiteral::Boolean { value } => ScalarValue::Boolean(Some(*value)),
-        RelationalLiteral::Float32 { value } => ScalarValue::Float32(Some(*value)),
-        RelationalLiteral::Float64 { value } => ScalarValue::Float64(Some(*value)),
+        RelationalLiteral::Float32 { value } => ScalarValue::Float32(Some(value.0)),
+        RelationalLiteral::Float64 { value } => ScalarValue::Float64(Some(value.0)),
         RelationalLiteral::Int8 { value } => ScalarValue::Int8(Some(*value)),
         RelationalLiteral::Int16 { value } => ScalarValue::Int16(Some(*value)),
         RelationalLiteral::Int32 { value } => ScalarValue::Int32(Some(*value)),
@@ -1333,6 +1403,13 @@ fn convert_literal_to_logical_expr(literal: &RelationalLiteral) -> ScalarValue {
         RelationalLiteral::DurationNanosecond { value } => {
             ScalarValue::DurationNanosecond(Some(*value))
         }
+        RelationalLiteral::Interval {
+            months,
+            days,
+            nanoseconds,
+        } => ScalarValue::IntervalMonthDayNano(Some(
+            datafusion::arrow::datatypes::IntervalMonthDayNano::new(*months, *days, *nanoseconds),
+        )),
     }
 }
 
@@ -1356,20 +1433,23 @@ fn convert_sort_to_logical_sort(
 fn convert_date_part_unit_to_literal_expr(
     part: ndc_models::DatePartUnit,
 ) -> datafusion::logical_expr::Expr {
-    datafusion::logical_expr::Expr::Literal(ScalarValue::Utf8(Some(String::from(match part {
-        ndc_models::DatePartUnit::Year => "year",
-        ndc_models::DatePartUnit::Quarter => "quarter",
-        ndc_models::DatePartUnit::Month => "month",
-        ndc_models::DatePartUnit::Week => "week",
-        ndc_models::DatePartUnit::DayOfWeek => "dow",
-        ndc_models::DatePartUnit::DayOfYear => "doy",
-        ndc_models::DatePartUnit::Day => "day",
-        ndc_models::DatePartUnit::Hour => "hour",
-        ndc_models::DatePartUnit::Minute => "minute",
-        ndc_models::DatePartUnit::Second => "second",
-        ndc_models::DatePartUnit::Microsecond => "microsecond",
-        ndc_models::DatePartUnit::Millisecond => "millisecond",
-        ndc_models::DatePartUnit::Nanosecond => "nanosecond",
-        ndc_models::DatePartUnit::Epoch => "epoch",
-    }))))
+    datafusion::logical_expr::Expr::Literal(
+        ScalarValue::Utf8(Some(String::from(match part {
+            ndc_models::DatePartUnit::Year => "year",
+            ndc_models::DatePartUnit::Quarter => "quarter",
+            ndc_models::DatePartUnit::Month => "month",
+            ndc_models::DatePartUnit::Week => "week",
+            ndc_models::DatePartUnit::DayOfWeek => "dow",
+            ndc_models::DatePartUnit::DayOfYear => "doy",
+            ndc_models::DatePartUnit::Day => "day",
+            ndc_models::DatePartUnit::Hour => "hour",
+            ndc_models::DatePartUnit::Minute => "minute",
+            ndc_models::DatePartUnit::Second => "second",
+            ndc_models::DatePartUnit::Microsecond => "microsecond",
+            ndc_models::DatePartUnit::Millisecond => "millisecond",
+            ndc_models::DatePartUnit::Nanosecond => "nanosecond",
+            ndc_models::DatePartUnit::Epoch => "epoch",
+        }))),
+        None,
+    )
 }

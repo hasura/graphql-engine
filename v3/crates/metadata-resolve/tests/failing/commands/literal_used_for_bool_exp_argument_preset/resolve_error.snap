@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: string
+input_file: crates/metadata-resolve/tests/failing/commands/literal_used_for_bool_exp_argument_preset/metadata.json
+---
+Error: Type error in preset argument actor_bool_exp for role literal_user in command get_actors_by_bool_exp (in subgraph default): Found a literal value but the argument is a boolean expression type 'actor_bool_exp (in subgraph default)'

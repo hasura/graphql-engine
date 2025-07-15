@@ -13691,19 +13691,39 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     description: None,
                 },
-                permissions: {
-                    Role(
-                        "admin",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {},
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {},
+                        },
+                        Role(
+                            "user",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {},
+                        },
                     },
-                    Role(
-                        "user",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {},
-                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                    ],
                 },
             },
             Qualified {
@@ -14253,19 +14273,39 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                     ),
                     description: None,
                 },
-                permissions: {
-                    Role(
-                        "admin",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {},
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {},
+                        },
+                        Role(
+                            "user",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {},
+                        },
                     },
-                    Role(
-                        "user",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {},
-                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    5261800314210927403,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                    ],
                 },
             },
             Qualified {
@@ -14848,78 +14888,141 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Delete any value on the 'PlaylistTrack' collection using the 'PlaylistId' and 'TrackId' keys",
                     ),
                 },
-                permissions: {
-                    Role(
-                        "admin",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {
-                            ArgumentName(
-                                Identifier(
-                                    "pre_check",
-                                ),
-                            ): (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {
+                                ArgumentName(
+                                    Identifier(
+                                        "pre_check",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "PlaylistTrackBoolExp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                    BooleanExpression(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "TrackId",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
                                                 subgraph: SubgraphName(
                                                     "default",
                                                 ),
                                                 name: CustomTypeName(
                                                     Identifier(
-                                                        "PlaylistTrackBoolExp",
+                                                        "PlaylistTrack",
                                                     ),
                                                 ),
                                             },
+                                            ndc_column: DataConnectorColumnName(
+                                                "TrackId",
+                                            ),
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                comparison_operator: Equals,
+                                            },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Inbuilt(
+                                                        Int,
+                                                    ),
+                                                ),
+                                                nullable: false,
+                                            },
+                                            value: Literal(
+                                                Number(8),
+                                            ),
+                                            deprecated: None,
+                                        },
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
+                                Identifier(
+                                    "pre_check",
+                                ),
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "TrackId",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "PlaylistTrack",
+                                        ),
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "TrackId",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "_eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            Int,
                                         ),
                                     ),
                                     nullable: false,
                                 },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "TrackId",
-                                            ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "PlaylistTrack",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "TrackId",
-                                        ),
-                                        operator: ResolvedOperator {
-                                            data_connector_operator_name: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                            comparison_operator: Equals,
-                                        },
-                                        column_path: [],
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    Int,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: Literal(
-                                            Number(8),
-                                        ),
-                                        deprecated: None,
-                                    },
+                                value: Literal(
+                                    Number(8),
                                 ),
-                            ),
+                                deprecated: None,
+                            },
                         },
-                    },
+                    ],
                 },
             },
             Qualified {
@@ -15721,78 +15824,141 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Insert into the Artist table",
                     ),
                 },
-                permissions: {
-                    Role(
-                        "admin",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {
-                            ArgumentName(
-                                Identifier(
-                                    "post_check",
-                                ),
-                            ): (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {
+                                ArgumentName(
+                                    Identifier(
+                                        "post_check",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "ArtistBoolExp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                    BooleanExpression(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "Name",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
                                                 subgraph: SubgraphName(
                                                     "default",
                                                 ),
                                                 name: CustomTypeName(
                                                     Identifier(
-                                                        "ArtistBoolExp",
+                                                        "Artist",
                                                     ),
                                                 ),
                                             },
+                                            ndc_column: DataConnectorColumnName(
+                                                "Name",
+                                            ),
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                comparison_operator: Equals,
+                                            },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Inbuilt(
+                                                        String,
+                                                    ),
+                                                ),
+                                                nullable: false,
+                                            },
+                                            value: Literal(
+                                                String("Olympians"),
+                                            ),
+                                            deprecated: None,
+                                        },
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            allow_or_deny: Allow,
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
+                                Identifier(
+                                    "post_check",
+                                ),
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Artist",
+                                        ),
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "Name",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "_eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            String,
                                         ),
                                     ),
                                     nullable: false,
                                 },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "Name",
-                                            ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Artist",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "Name",
-                                        ),
-                                        operator: ResolvedOperator {
-                                            data_connector_operator_name: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                            comparison_operator: Equals,
-                                        },
-                                        column_path: [],
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    String,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: Literal(
-                                            String("Olympians"),
-                                        ),
-                                        deprecated: None,
-                                    },
+                                value: Literal(
+                                    String("Olympians"),
                                 ),
-                            ),
+                                deprecated: None,
+                            },
                         },
-                    },
+                    ],
                 },
             },
             Qualified {
@@ -16734,142 +16900,256 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         "Update any row on the 'Artist' collection using the 'ArtistId' key",
                     ),
                 },
-                permissions: {
-                    Role(
-                        "admin",
-                    ): CommandPermission {
-                        allow_execution: true,
-                        argument_presets: {
-                            ArgumentName(
-                                Identifier(
-                                    "postCheck",
-                                ),
-                            ): (
-                                QualifiedTypeReference {
-                                    underlying_type: Named(
-                                        Custom(
-                                            Qualified {
+                permissions: CommandPermissions {
+                    by_role: {
+                        Role(
+                            "admin",
+                        ): CommandPermission {
+                            allow_execution: true,
+                            argument_presets: {
+                                ArgumentName(
+                                    Identifier(
+                                        "postCheck",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "ArtistBoolExp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: false,
+                                    },
+                                    BooleanExpression(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "Name",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
                                                 subgraph: SubgraphName(
                                                     "default",
                                                 ),
                                                 name: CustomTypeName(
                                                     Identifier(
-                                                        "ArtistBoolExp",
+                                                        "Artist",
                                                     ),
                                                 ),
                                             },
-                                        ),
-                                    ),
-                                    nullable: false,
-                                },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
+                                            ndc_column: DataConnectorColumnName(
                                                 "Name",
                                             ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Artist",
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "_eq",
                                                 ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "Name",
-                                        ),
-                                        operator: ResolvedOperator {
-                                            data_connector_operator_name: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                            comparison_operator: Equals,
-                                        },
-                                        column_path: [],
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    String,
+                                                comparison_operator: Equals,
+                                            },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Inbuilt(
+                                                        String,
+                                                    ),
                                                 ),
+                                                nullable: false,
+                                            },
+                                            value: Literal(
+                                                String("Olympians"),
                                             ),
-                                            nullable: false,
+                                            deprecated: None,
                                         },
-                                        value: Literal(
-                                            String("Olympians"),
+                                    ),
+                                ),
+                                ArgumentName(
+                                    Identifier(
+                                        "preCheck",
+                                    ),
+                                ): (
+                                    QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "ArtistBoolExp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
                                         ),
-                                        deprecated: None,
+                                        nullable: false,
                                     },
+                                    BooleanExpression(
+                                        BinaryFieldComparison {
+                                            field: FieldName(
+                                                Identifier(
+                                                    "Name",
+                                                ),
+                                            ),
+                                            field_parent_type: Qualified {
+                                                subgraph: SubgraphName(
+                                                    "default",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "Artist",
+                                                    ),
+                                                ),
+                                            },
+                                            ndc_column: DataConnectorColumnName(
+                                                "Name",
+                                            ),
+                                            operator: ResolvedOperator {
+                                                data_connector_operator_name: DataConnectorOperatorName(
+                                                    "_eq",
+                                                ),
+                                                comparison_operator: Equals,
+                                            },
+                                            column_path: [],
+                                            argument_type: QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Inbuilt(
+                                                        String,
+                                                    ),
+                                                ),
+                                                nullable: false,
+                                            },
+                                            value: Literal(
+                                                String("AC/DC"),
+                                            ),
+                                            deprecated: None,
+                                        },
+                                    ),
+                                ),
+                            },
+                        },
+                    },
+                    authorization_rules: [
+                        Access {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
                                 ),
                             ),
-                            ArgumentName(
+                            allow_or_deny: Allow,
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
+                                ),
+                            ),
+                            argument_name: ArgumentName(
                                 Identifier(
                                     "preCheck",
                                 ),
-                            ): (
-                                QualifiedTypeReference {
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Artist",
+                                        ),
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "Name",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "_eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
                                     underlying_type: Named(
-                                        Custom(
-                                            Qualified {
-                                                subgraph: SubgraphName(
-                                                    "default",
-                                                ),
-                                                name: CustomTypeName(
-                                                    Identifier(
-                                                        "ArtistBoolExp",
-                                                    ),
-                                                ),
-                                            },
+                                        Inbuilt(
+                                            String,
                                         ),
                                     ),
                                     nullable: false,
                                 },
-                                BooleanExpression(
-                                    BinaryFieldComparison {
-                                        field: FieldName(
-                                            Identifier(
-                                                "Name",
-                                            ),
-                                        ),
-                                        field_parent_type: Qualified {
-                                            subgraph: SubgraphName(
-                                                "default",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "Artist",
-                                                ),
-                                            ),
-                                        },
-                                        ndc_column: DataConnectorColumnName(
-                                            "Name",
-                                        ),
-                                        operator: ResolvedOperator {
-                                            data_connector_operator_name: DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                            comparison_operator: Equals,
-                                        },
-                                        column_path: [],
-                                        argument_type: QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Inbuilt(
-                                                    String,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                        value: Literal(
-                                            String("AC/DC"),
-                                        ),
-                                        deprecated: None,
-                                    },
+                                value: Literal(
+                                    String("AC/DC"),
+                                ),
+                                deprecated: None,
+                            },
+                        },
+                        ArgumentAuthPredicate {
+                            condition: Some(
+                                ConditionHash(
+                                    14539879520726521060,
                                 ),
                             ),
+                            argument_name: ArgumentName(
+                                Identifier(
+                                    "postCheck",
+                                ),
+                            ),
+                            predicate: BinaryFieldComparison {
+                                field: FieldName(
+                                    Identifier(
+                                        "Name",
+                                    ),
+                                ),
+                                field_parent_type: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Artist",
+                                        ),
+                                    ),
+                                },
+                                ndc_column: DataConnectorColumnName(
+                                    "Name",
+                                ),
+                                operator: ResolvedOperator {
+                                    data_connector_operator_name: DataConnectorOperatorName(
+                                        "_eq",
+                                    ),
+                                    comparison_operator: Equals,
+                                },
+                                column_path: [],
+                                argument_type: QualifiedTypeReference {
+                                    underlying_type: Named(
+                                        Inbuilt(
+                                            String,
+                                        ),
+                                    ),
+                                    nullable: false,
+                                },
+                                value: Literal(
+                                    String("Olympians"),
+                                ),
+                                deprecated: None,
+                            },
                         },
-                    },
+                    ],
                 },
             },
         },
@@ -21727,6 +22007,23 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
         },
         conditions: Conditions {
             conditions: {
+                ConditionHash(
+                    5261800314210927403,
+                ): BinaryOperation {
+                    op: Equals,
+                    left: SessionVariable(
+                        SessionVariableReference {
+                            name: SessionVariableName(
+                                "x-hasura-role",
+                            ),
+                            passed_as_json: false,
+                            disallow_unknown_fields: false,
+                        },
+                    ),
+                    right: Literal(
+                        String("user"),
+                    ),
+                },
                 ConditionHash(
                     9591853440105325468,
                 ): BinaryOperation {

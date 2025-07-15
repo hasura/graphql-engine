@@ -1,0 +1,10 @@
+query MyQuery {
+  Analytics {
+    ActorByMovieIdBounds(upper_bound: 7) {
+      name
+    }
+    analytics_id
+    movie_id
+    total_votes
+  }
+}

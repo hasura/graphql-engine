@@ -2197,8 +2197,239 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "title": "LifecyclePreNdcRequestPluginHook",
+          "description": "Definition of a lifecycle plugin hook for the pre-ndc-request stage.",
+          "type": "object",
+          "required": [
+            "config",
+            "connectors",
+            "name",
+            "pre",
+            "url"
+          ],
+          "properties": {
+            "pre": {
+              "type": "string",
+              "enum": [
+                "ndcRequest"
+              ]
+            },
+            "name": {
+              "description": "The name of the lifecycle plugin hook.",
+              "type": "string"
+            },
+            "connectors": {
+              "description": "A list of data connectors that this plugin hook should be applied to. There can only be one plugin hook of this type per data connector.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DataConnectorName"
+              }
+            },
+            "url": {
+              "description": "The URL to access the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/EnvironmentValue"
+                }
+              ]
+            },
+            "config": {
+              "description": "Configuration for the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LifecyclePreNdcRequestPluginHookConfig"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "LifecyclePreNdcResponsePluginHook",
+          "description": "Definition of a lifecycle plugin hook for the pre-ndc-response stage.",
+          "type": "object",
+          "required": [
+            "config",
+            "connectors",
+            "name",
+            "pre",
+            "url"
+          ],
+          "properties": {
+            "pre": {
+              "type": "string",
+              "enum": [
+                "ndcResponse"
+              ]
+            },
+            "name": {
+              "description": "The name of the lifecycle plugin hook.",
+              "type": "string"
+            },
+            "connectors": {
+              "description": "A list of data connectors that this plugin hook should be applied to. There can only be one plugin hook of this type per data connector.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DataConnectorName"
+              }
+            },
+            "url": {
+              "description": "The URL to access the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/EnvironmentValue"
+                }
+              ]
+            },
+            "config": {
+              "description": "Configuration for the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LifecyclePreNdcResponsePluginHookConfig"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       ]
+    },
+    "LifecyclePreNdcRequestPluginHookConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreNdcRequestPluginHookConfig",
+      "title": "LifecyclePreNdcRequestPluginHookConfig",
+      "description": "config for pre-ndc-request hook Configuration for a lifecycle plugin hook.",
+      "type": "object",
+      "required": [
+        "request"
+      ],
+      "properties": {
+        "request": {
+          "description": "Configuration for the request to the lifecycle plugin hook.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreNdcRequestPluginHookConfigRequest"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreNdcRequestPluginHookConfigRequest": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreNdcRequestPluginHookConfigRequest",
+      "title": "LifecyclePreNdcRequestPluginHookConfigRequest",
+      "description": "Configuration for a lifecycle plugin hook request.",
+      "type": "object",
+      "properties": {
+        "headers": {
+          "description": "Configuration for the headers.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HttpHeaders"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session": {
+          "description": "Configuration for the session (includes roles and session variables).",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ndcRequest": {
+          "description": "Configuration for the request.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreNdcResponsePluginHookConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreNdcResponsePluginHookConfig",
+      "title": "LifecyclePreNdcResponsePluginHookConfig",
+      "description": "Configuration for a lifecycle plugin hook.",
+      "type": "object",
+      "required": [
+        "request"
+      ],
+      "properties": {
+        "request": {
+          "description": "Configuration for the request to the lifecycle plugin hook.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreNdcResponsePluginHookConfigRequest"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreNdcResponsePluginHookConfigRequest": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreNdcResponsePluginHookConfigRequest",
+      "title": "LifecyclePreNdcResponsePluginHookConfigRequest",
+      "description": "Configuration for a lifecycle plugin hook request.",
+      "type": "object",
+      "properties": {
+        "headers": {
+          "description": "Configuration for the headers.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HttpHeaders"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session": {
+          "description": "Configuration for the session (includes roles and session variables).",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ndcRequest": {
+          "description": "Configuration for the request.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ndcResponse": {
+          "description": "Configuration for the response.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "LifecyclePreParsePluginHookConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreParsePluginHookConfig",
@@ -3866,6 +4097,10 @@
           "type": "boolean"
         },
         "send_missing_arguments_to_ndc_as_nulls": {
+          "default": false,
+          "type": "boolean"
+        },
+        "disallow_literals_as_boolean_expression_arguments": {
           "default": false,
           "type": "boolean"
         }
@@ -6698,10 +6933,10 @@
               ]
             },
             "schema": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.2/ndc-models/tests/json_schema/schema_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.6/ndc-models/tests/json_schema/schema_response.jsonschema"
             },
             "capabilities": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.2/ndc-models/tests/json_schema/capabilities_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.6/ndc-models/tests/json_schema/capabilities_response.jsonschema"
             }
           },
           "additionalProperties": false

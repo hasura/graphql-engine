@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 mod error;
 mod types;
@@ -22,6 +22,28 @@ use crate::ValueExpression;
 use crate::helpers::typecheck;
 use crate::stages::object_types;
 
+fn get_boolean_expression_type_names(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+) -> BTreeSet<Qualified<CustomTypeName>> {
+    let mut boolean_expression_types: BTreeSet<Qualified<CustomTypeName>> = BTreeSet::new();
+
+    for qualified_object in &metadata_accessor.boolean_expression_types {
+        boolean_expression_types.insert(Qualified::new(
+            qualified_object.subgraph.clone(),
+            qualified_object.object.name.clone(),
+        ));
+    }
+
+    for qualified_object in &metadata_accessor.object_boolean_expression_types {
+        boolean_expression_types.insert(Qualified::new(
+            qualified_object.subgraph.clone(),
+            qualified_object.object.name.clone(),
+        ));
+    }
+
+    boolean_expression_types
+}
+
 /// resolve type permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -38,6 +60,8 @@ pub fn resolve(
     // A temporary map to store the resolved permissions
     let mut type_permissions = BTreeMap::new();
 
+    let boolean_expression_type_names = get_boolean_expression_type_names(metadata_accessor);
+
     let mut results = vec![];
 
     // resolve type permissions
@@ -51,6 +75,7 @@ pub fn resolve(
             output_type_permission,
             subgraph,
             &object_types,
+            &boolean_expression_type_names.iter().collect(),
             &object_types_context,
             &metadata_accessor.flags,
             &mut type_permissions,
@@ -105,6 +130,7 @@ fn resolve_type_permission(
     output_type_permission: &TypePermissionsV2,
     subgraph: &SubgraphName,
     object_types: &object_types::ObjectTypesWithTypeMappings,
+    boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
     object_types_context: &BTreeMap<
         &Qualified<open_dds::types::CustomTypeName>,
         &object_types::ObjectTypeRepresentation,
@@ -136,6 +162,7 @@ fn resolve_type_permission(
             let type_input_permissions = resolve_input_type_permission(
                 flags,
                 object_types_context,
+                boolean_expression_type_names,
                 &object_type.object_type,
                 output_type_permission,
                 issues,
@@ -239,6 +266,7 @@ pub(crate) fn resolve_input_type_permission(
         &Qualified<open_dds::types::CustomTypeName>,
         &object_types::ObjectTypeRepresentation,
     >,
+    boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV2,
     issues: &mut Vec<TypePermissionIssue>,
@@ -264,6 +292,7 @@ pub(crate) fn resolve_input_type_permission(
                                 // check if the value is provided typechecks
                                 let new_issues = typecheck::typecheck_value_expression(
                                     object_types,
+                                    boolean_expression_type_names,
                                     &field_definition.field_type,
                                     value,
                                 )

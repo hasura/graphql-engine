@@ -659,6 +659,15 @@ pub struct DataConnectorRelationalExpressionCapabilities {
     pub supports_aggregate: DataConnectorRelationalAggregateExpressionCapabilities,
 
     pub supports_window: DataConnectorRelationalWindowExpressionCapabilities,
+
+    pub supports_scalar_types: Option<DataConnectorRelationalScalarTypeCapabilities>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorRelationalScalarTypeCapabilities {
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_interval: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -1062,6 +1071,26 @@ pub struct DataConnectorRelationalAggregateExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_max: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_stddev: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_stddev_pop: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_approx_percentile_cont: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_approx_distinct: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_array_agg: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -1391,6 +1420,14 @@ fn mk_relational_expression_capabilities(
                 supports_sum: capabilities.aggregate.sum.is_some(),
                 supports_min: capabilities.aggregate.min.is_some(),
                 supports_max: capabilities.aggregate.max.is_some(),
+                supports_stddev: capabilities.aggregate.stddev.is_some(),
+                supports_stddev_pop: capabilities.aggregate.stddev_pop.is_some(),
+                supports_approx_percentile_cont: capabilities
+                    .aggregate
+                    .approx_percentile_cont
+                    .is_some(),
+                supports_approx_distinct: capabilities.aggregate.approx_distinct.is_some(),
+                supports_array_agg: capabilities.aggregate.array_agg.is_some(),
             },
             supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                 supports_row_number: capabilities.window.row_number.is_some(),
@@ -1400,6 +1437,11 @@ fn mk_relational_expression_capabilities(
                 supports_cume_dist: capabilities.window.cume_dist.is_some(),
                 supports_percent_rank: capabilities.window.percent_rank.is_some(),
             },
+            supports_scalar_types: capabilities.scalar_types.as_ref().map(|scalar_types| {
+                DataConnectorRelationalScalarTypeCapabilities {
+                    supports_interval: scalar_types.interval.is_some(),
+                }
+            }),
         };
     data_connector_relational_expression_capabilities
 }

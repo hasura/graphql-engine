@@ -8,7 +8,7 @@ use crate::stages::commands;
 use crate::types::error::ShouldBeAnError;
 use crate::types::permission::ValueExpressionOrPredicate;
 use crate::types::subgraph::QualifiedTypeReference;
-use crate::{ArgumentInfo, Qualified};
+use crate::{ArgumentInfo, ConditionHash, ModelPredicate, Qualified, ValueExpression};
 use open_dds::arguments::ArgumentName;
 
 use std::collections::BTreeMap;
@@ -17,7 +17,13 @@ use std::sync::Arc;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandWithPermissions {
     pub command: Command,
-    pub permissions: BTreeMap<Role, CommandPermission>,
+    pub permissions: CommandPermissions,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct CommandPermissions {
+    pub by_role: BTreeMap<Role, CommandPermission>,
+    pub authorization_rules: Vec<CommandAuthorizationRule>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -66,4 +72,33 @@ impl ShouldBeAnError for CommandPermissionIssue {
 pub struct CommandPermissionsOutput {
     pub permissions: IndexMap<Qualified<CommandName>, CommandWithPermissions>,
     pub issues: Vec<CommandPermissionIssue>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum AllowOrDeny {
+    Allow,
+    Deny,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum CommandAuthorizationRule {
+    // are we allowed to call this function?
+    Access {
+        condition: Option<ConditionHash>,
+        allow_or_deny: AllowOrDeny,
+    },
+    // value for an argument preset. the last value wins where multiple items are used.
+    ArgumentPresetValue {
+        condition: Option<ConditionHash>,
+        argument_name: ArgumentName,
+        argument_type: QualifiedTypeReference,
+        value: ValueExpression,
+    },
+    // boolean expression for an argument preset. if multiple items are provided for one argument
+    // then we "and" them together
+    ArgumentAuthPredicate {
+        condition: Option<ConditionHash>,
+        argument_name: ArgumentName,
+        predicate: ModelPredicate,
+    },
 }
