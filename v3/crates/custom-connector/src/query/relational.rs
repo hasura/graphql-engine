@@ -632,7 +632,13 @@ fn convert_expression_to_logical_expr(
         )),
 
         // Conditional operators
-        RelationalExpression::Case { when, default } => {
+        RelationalExpression::Case { scrutinee, when, default } => {
+            let scrutinee_expr = scrutinee
+                .as_ref()
+                .map(|e| -> datafusion::error::Result<_> {
+                    Ok(Box::new(convert_expression_to_logical_expr(e, schema)?))
+                })
+                .transpose()?;
             let when_then_expr = when
                 .iter()
                 .map(|case_when: &CaseWhen| {
@@ -649,7 +655,7 @@ fn convert_expression_to_logical_expr(
                 })
                 .transpose()?;
             Ok(datafusion::prelude::Expr::Case(
-                datafusion::logical_expr::Case::new(None, when_then_expr, else_expr),
+                datafusion::logical_expr::Case::new(scrutinee_expr, when_then_expr, else_expr),
             ))
         }
 
@@ -733,6 +739,20 @@ fn convert_expression_to_logical_expr(
         RelationalExpression::IsNotFalse { expr } => Ok(datafusion::prelude::Expr::IsNotFalse(
             Box::new(convert_expression_to_logical_expr(expr, schema)?),
         )),
+        RelationalExpression::IsDistinctFrom { left, right } => Ok(
+            datafusion::prelude::Expr::BinaryExpr(datafusion::logical_expr::BinaryExpr {
+                left: Box::new(convert_expression_to_logical_expr(left, schema)?),
+                op: datafusion::logical_expr::Operator::IsDistinctFrom,
+                right: Box::new(convert_expression_to_logical_expr(right, schema)?),
+            }),
+        ),
+        RelationalExpression::IsNotDistinctFrom { left, right } => Ok(
+            datafusion::prelude::Expr::BinaryExpr(datafusion::logical_expr::BinaryExpr {
+                left: Box::new(convert_expression_to_logical_expr(left, schema)?),
+                op: datafusion::logical_expr::Operator::IsNotDistinctFrom,
+                right: Box::new(convert_expression_to_logical_expr(right, schema)?),
+            }),
+        ),
         RelationalExpression::In { expr, list } => {
             let list = list
                 .iter()

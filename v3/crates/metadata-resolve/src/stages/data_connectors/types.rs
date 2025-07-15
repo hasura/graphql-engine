@@ -671,10 +671,17 @@ pub struct DataConnectorRelationalScalarTypeCapabilities {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorRelationalCaseExpressionCapabilities {
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_scrutinee: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct DataConnectorRelationalConditionalExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
-    pub supports_case: bool,
+    pub supports_case: Option<DataConnectorRelationalCaseExpressionCapabilities>,
 
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
@@ -739,6 +746,11 @@ pub struct DataConnectorRelationalComparisonExpressionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_less_than_eq: bool,
+
+    /// Whether the is distinct from comparison is supported
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_is_distinct_from: bool,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -1311,7 +1323,11 @@ fn mk_relational_expression_capabilities(
     let data_connector_relational_expression_capabilities =
         DataConnectorRelationalExpressionCapabilities {
             supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
-                supports_case: capabilities.conditional.case.is_some(),
+                supports_case: capabilities.conditional.case.as_ref().map(|c| {
+                    DataConnectorRelationalCaseExpressionCapabilities {
+                        supports_scrutinee: c.scrutinee.is_some(),
+                    }
+                }),
                 supports_nullif: capabilities.conditional.nullif.is_some(),
             },
             supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
@@ -1319,6 +1335,7 @@ fn mk_relational_expression_capabilities(
                 supports_ilike: capabilities.comparison.ilike.is_some(),
                 supports_between: capabilities.comparison.between.is_some(),
                 supports_contains: capabilities.comparison.contains.is_some(),
+                supports_is_distinct_from: capabilities.comparison.is_distinct_from.is_some(),
                 supports_is_nan: capabilities.comparison.is_nan.is_some(),
                 supports_is_zero: capabilities.comparison.is_zero.is_some(),
                 supports_greater_than_eq: capabilities.comparison.greater_than_eq.is_some(),

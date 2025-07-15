@@ -503,7 +503,11 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                             supports_project: DataConnectorRelationalProjectionCapabilities {
                                                 expression_capabilities: DataConnectorRelationalExpressionCapabilities {
                                                     supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
-                                                        supports_case: true,
+                                                        supports_case: Some(
+                                                            DataConnectorRelationalCaseExpressionCapabilities {
+                                                                supports_scrutinee: false,
+                                                            },
+                                                        ),
                                                         supports_nullif: true,
                                                     },
                                                     supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
@@ -521,6 +525,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                         supports_is_true: true,
                                                         supports_less_than: true,
                                                         supports_less_than_eq: true,
+                                                        supports_is_distinct_from: false,
                                                     },
                                                     supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
                                                         supports_abs: true,
@@ -632,7 +637,11 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                             supports_filter: Some(
                                                 DataConnectorRelationalExpressionCapabilities {
                                                     supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
-                                                        supports_case: true,
+                                                        supports_case: Some(
+                                                            DataConnectorRelationalCaseExpressionCapabilities {
+                                                                supports_scrutinee: false,
+                                                            },
+                                                        ),
                                                         supports_nullif: true,
                                                     },
                                                     supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
@@ -650,6 +659,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                         supports_is_true: true,
                                                         supports_less_than: true,
                                                         supports_less_than_eq: true,
+                                                        supports_is_distinct_from: false,
                                                     },
                                                     supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
                                                         supports_abs: true,
@@ -762,7 +772,11 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                 DataConnectorRelationalSortCapabilities {
                                                     expression_capabilities: DataConnectorRelationalExpressionCapabilities {
                                                         supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
-                                                            supports_case: true,
+                                                            supports_case: Some(
+                                                                DataConnectorRelationalCaseExpressionCapabilities {
+                                                                    supports_scrutinee: false,
+                                                                },
+                                                            ),
                                                             supports_nullif: true,
                                                         },
                                                         supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
@@ -780,6 +794,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_is_true: true,
                                                             supports_less_than: true,
                                                             supports_less_than_eq: true,
+                                                            supports_is_distinct_from: false,
                                                         },
                                                         supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
                                                             supports_abs: true,
@@ -893,7 +908,11 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                 DataConnectorRelationalJoinCapabilities {
                                                     expression_capabilities: DataConnectorRelationalExpressionCapabilities {
                                                         supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
-                                                            supports_case: true,
+                                                            supports_case: Some(
+                                                                DataConnectorRelationalCaseExpressionCapabilities {
+                                                                    supports_scrutinee: false,
+                                                                },
+                                                            ),
                                                             supports_nullif: true,
                                                         },
                                                         supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
@@ -911,6 +930,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_is_true: true,
                                                             supports_less_than: true,
                                                             supports_less_than_eq: true,
+                                                            supports_is_distinct_from: false,
                                                         },
                                                         supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
                                                             supports_abs: true,
@@ -1034,7 +1054,11 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                 DataConnectorRelationalAggregateCapabilities {
                                                     expression_capabilities: DataConnectorRelationalExpressionCapabilities {
                                                         supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
-                                                            supports_case: true,
+                                                            supports_case: Some(
+                                                                DataConnectorRelationalCaseExpressionCapabilities {
+                                                                    supports_scrutinee: false,
+                                                                },
+                                                            ),
                                                             supports_nullif: true,
                                                         },
                                                         supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
@@ -1052,6 +1076,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_is_true: true,
                                                             supports_less_than: true,
                                                             supports_less_than_eq: true,
+                                                            supports_is_distinct_from: false,
                                                         },
                                                         supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
                                                             supports_abs: true,
@@ -1166,7 +1191,11 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                 DataConnectorRelationalWindowCapabilities {
                                                     expression_capabilities: DataConnectorRelationalExpressionCapabilities {
                                                         supports_conditional: DataConnectorRelationalConditionalExpressionCapabilities {
-                                                            supports_case: true,
+                                                            supports_case: Some(
+                                                                DataConnectorRelationalCaseExpressionCapabilities {
+                                                                    supports_scrutinee: false,
+                                                                },
+                                                            ),
                                                             supports_nullif: true,
                                                         },
                                                         supports_comparison: DataConnectorRelationalComparisonExpressionCapabilities {
@@ -1184,6 +1213,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_is_true: true,
                                                             supports_less_than: true,
                                                             supports_less_than_eq: true,
+                                                            supports_is_distinct_from: false,
                                                         },
                                                         supports_scalar: DataConnectorRelationalScalarExpressionCapabilities {
                                                             supports_abs: true,

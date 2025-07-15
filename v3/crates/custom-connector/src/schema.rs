@@ -111,7 +111,9 @@ pub fn get_capabilities(state: &AppState) -> ndc_models::CapabilitiesResponse {
 fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
     ndc_models::RelationalExpressionCapabilities {
         conditional: ndc_models::RelationalConditionalExpressionCapabilities {
-            case: Some(ndc_models::LeafCapability {}),
+            case: Some(ndc_models::RelationalCaseCapabilities {
+                scrutinee: Some(ndc_models::LeafCapability {}),
+            }),
             nullif: Some(ndc_models::LeafCapability {}),
         },
         comparison: ndc_models::RelationalComparisonExpressionCapabilities {
@@ -127,6 +129,7 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
             is_false: Some(ndc_models::LeafCapability {}),
             is_null: Some(ndc_models::LeafCapability {}),
             is_true: Some(ndc_models::LeafCapability {}),
+            is_distinct_from: Some(ndc_models::LeafCapability {}),
             less_than_eq: Some(ndc_models::LeafCapability {}),
             less_than: Some(ndc_models::LeafCapability {}),
         },
