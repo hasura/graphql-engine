@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, str::FromStr};
+use std::{borrow::Cow, collections::BTreeMap, str::FromStr};
 
 use axum::{
     http::{HeaderMap, HeaderName, StatusCode},
@@ -13,6 +13,12 @@ use open_dds::plugins::LifecyclePreParsePluginHook;
 use tracing_util::{
     ErrorVisibility, SpanVisibility, Traceable, TraceableError, set_attribute_on_active_span,
 };
+
+/// HTTP status code used by pre-parse plugins to indicate they want to continue
+/// processing with a modified request body.
+///
+/// We use 299 (an unassigned 2xx status code) as a special signal for this.
+const CONTINUE_WITH_REQUEST_STATUS: u16 = 299;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -107,13 +113,15 @@ impl std::fmt::Display for ErrorResponse {
     }
 }
 
-impl Traceable for PreExecutePluginResponse {
+impl Traceable for PreParsePluginResponse {
     type ErrorType<'a> = ErrorResponse;
 
     fn get_error(&self) -> Option<ErrorResponse> {
         match self {
-            PreExecutePluginResponse::Continue | PreExecutePluginResponse::Return(_) => None,
-            PreExecutePluginResponse::ReturnError {
+            PreParsePluginResponse::Continue
+            | PreParsePluginResponse::Return(_)
+            | PreParsePluginResponse::ContinueWithRequest(_) => None,
+            PreParsePluginResponse::ReturnError {
                 plugin_name: _,
                 error,
             } => Some(error.clone()),
@@ -131,13 +139,20 @@ impl TraceableError for ErrorResponse {
 }
 
 #[derive(Debug, Clone)]
-pub enum PreExecutePluginResponse {
+pub enum PreParsePluginResponse {
     Return(Vec<u8>),
     Continue,
+    ContinueWithRequest(RawRequest),
     ReturnError {
         plugin_name: String,
         error: ErrorResponse,
     },
+}
+
+#[derive(Debug)]
+pub enum ProcessedPreParsePluginResponse {
+    Continue(Option<RawRequest>),
+    Return(axum::response::Response),
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -150,7 +165,7 @@ pub struct RawRequestBody {
 
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct PreExecutePluginRequestBody {
+pub struct PreParsePluginRequestBody {
     pub session: Option<Session>,
     pub raw_request: RawRequestBody,
 }
@@ -195,7 +210,7 @@ fn build_request(
     let mut request_builder = http_client
         .post(config.url.value.clone())
         .headers(pre_plugin_headers);
-    let mut request_body = PreExecutePluginRequestBody {
+    let mut request_body = PreParsePluginRequestBody {
         session: None,
         raw_request: RawRequestBody {
             query: None,
@@ -226,7 +241,7 @@ pub async fn execute_plugin(
     client_headers: &HeaderMap,
     session: &Session,
     raw_request: &RawRequest,
-) -> Result<PreExecutePluginResponse, Error> {
+) -> Result<PreParsePluginResponse, Error> {
     let tracer = tracing_util::global_tracer();
     let response = tracer
         .in_span_async(
@@ -253,15 +268,15 @@ pub async fn execute_plugin(
         )
         .await?;
     match response.status() {
-        StatusCode::NO_CONTENT => Ok(PreExecutePluginResponse::Continue),
+        StatusCode::NO_CONTENT => Ok(PreParsePluginResponse::Continue),
         StatusCode::OK => {
             let body = response.bytes().await.map_err(Error::ReqwestError)?;
-            Ok(PreExecutePluginResponse::Return(body.to_vec()))
+            Ok(PreParsePluginResponse::Return(body.to_vec()))
         }
         StatusCode::INTERNAL_SERVER_ERROR => {
             let body = response.json().await.map_err(Error::ReqwestError)?;
 
-            Ok(PreExecutePluginResponse::ReturnError {
+            Ok(PreParsePluginResponse::ReturnError {
                 plugin_name: config.name.clone(),
                 error: ErrorResponse::InternalError(Some(body)),
             })
@@ -269,12 +284,21 @@ pub async fn execute_plugin(
         StatusCode::BAD_REQUEST => {
             let response_json: serde_json::Value =
                 response.json().await.map_err(Error::ReqwestError)?;
-            Ok(PreExecutePluginResponse::ReturnError {
+            Ok(PreParsePluginResponse::ReturnError {
                 plugin_name: config.name.clone(),
                 error: ErrorResponse::UserError(response_json),
             })
         }
-        _ => Err(Error::UnexpectedStatusCode(response.status().as_u16())),
+        other_status_code => {
+            if other_status_code
+                == StatusCode::from_u16(CONTINUE_WITH_REQUEST_STATUS)
+                    .expect("CONTINUE_WITH_REQUEST_STATUS should be a valid status code")
+            {
+                let body: RawRequest = response.json().await.map_err(Error::ReqwestError)?;
+                return Ok(PreParsePluginResponse::ContinueWithRequest(body));
+            }
+            Err(Error::UnexpectedStatusCode(response.status().as_u16()))
+        }
     }
 }
 
@@ -285,15 +309,14 @@ pub async fn pre_parse_plugins_handler(
     session: Session,
     raw_request_bytes: &axum::body::Bytes,
     headers_map: HeaderMap,
-) -> Result<Option<axum::response::Response>, Error> {
+) -> Result<ProcessedPreParsePluginResponse, Error> {
     let tracer = tracing_util::global_tracer();
-    let mut response = None;
     let raw_request = serde_json::from_slice::<RawRequest>(raw_request_bytes)
         .map_err(Error::PluginRequestParseError)?;
     let result = tracer
         .in_span_async(
             "pre_parse_plugin_middleware",
-            "Pre-execution Plugin middleware",
+            "Pre-parse Plugin middleware",
             SpanVisibility::User,
             || {
                 Box::pin(async {
@@ -312,26 +335,92 @@ pub async fn pre_parse_plugins_handler(
         .await?;
 
     match result {
-        PreExecutePluginResponse::Return(value) => {
+        PreParsePluginResponse::Return(value) => {
             let plugin_response = axum::response::Response::builder()
                 .status(StatusCode::OK)
                 .header("Content-Type", "application/json")
                 .body(axum::body::Body::from(value))
                 .unwrap();
 
-            response = Some(plugin_response);
+            Ok(ProcessedPreParsePluginResponse::Return(plugin_response))
         }
-        PreExecutePluginResponse::Continue => {}
-        PreExecutePluginResponse::ReturnError { plugin_name, error } => {
+        PreParsePluginResponse::Continue => Ok(ProcessedPreParsePluginResponse::Continue(None)),
+        PreParsePluginResponse::ReturnError { plugin_name, error } => {
             let status_code = error.to_status_code();
             let graphql_error = error.into_graphql_error(&plugin_name);
             let error_response =
                 lang_graphql::http::Response::error_with_status(status_code, graphql_error)
                     .into_response();
-            response = Some(error_response);
+            Ok(ProcessedPreParsePluginResponse::Return(error_response))
         }
+        PreParsePluginResponse::ContinueWithRequest(new_raw_request) => Ok(
+            ProcessedPreParsePluginResponse::Continue(Some(new_raw_request)),
+        ),
     }
-    Ok(response)
+}
+
+fn set_response_attributes(plugin_response: &Result<PreParsePluginResponse, Error>) {
+    match plugin_response {
+        Err(err) => {
+            set_attribute_on_active_span(
+                tracing_util::AttributeVisibility::Default,
+                "plugin.error",
+                err.to_string(),
+            );
+        }
+        Ok(response) => match response {
+            PreParsePluginResponse::Continue => {
+                set_attribute_on_active_span(
+                    tracing_util::AttributeVisibility::Default,
+                    "plugin.response",
+                    "continue".to_string(),
+                );
+            }
+            PreParsePluginResponse::ContinueWithRequest(_) => {
+                set_attribute_on_active_span(
+                    tracing_util::AttributeVisibility::Default,
+                    "plugin.response",
+                    "continue_with_new_request".to_string(),
+                );
+            }
+            PreParsePluginResponse::Return(_) => {
+                set_attribute_on_active_span(
+                    tracing_util::AttributeVisibility::Default,
+                    "plugin.response",
+                    "return".to_string(),
+                );
+            }
+            PreParsePluginResponse::ReturnError {
+                plugin_name: _,
+                error,
+            } => {
+                set_attribute_on_active_span(
+                    tracing_util::AttributeVisibility::Default,
+                    "plugin.response",
+                    "return_error".to_string(),
+                );
+                match error {
+                    ErrorResponse::InternalError(error_value) => {
+                        set_attribute_on_active_span(
+                            tracing_util::AttributeVisibility::Default,
+                            "plugin.internal_error",
+                            error_value
+                                .as_ref()
+                                .unwrap_or(&serde_json::Value::Null)
+                                .to_string(),
+                        );
+                    }
+                    ErrorResponse::UserError(error_value) => {
+                        set_attribute_on_active_span(
+                            tracing_util::AttributeVisibility::Default,
+                            "plugin.user_error",
+                            error_value.to_string(),
+                        );
+                    }
+                }
+            }
+        },
+    }
 }
 
 /// Execute all the pre-parse plugins in sequence.
@@ -343,8 +432,9 @@ pub async fn execute_pre_parse_plugins(
     session: &Session,
     headers_map: &HeaderMap,
     raw_request: &RawRequest,
-) -> Result<PreExecutePluginResponse, Error> {
+) -> Result<PreParsePluginResponse, Error> {
     let tracer = tracing_util::global_tracer();
+    let mut raw_request = Cow::Borrowed(raw_request);
     for plugin_config in pre_parse_plugins_config {
         let plugin_response = tracer
             .in_span_async(
@@ -364,47 +454,34 @@ pub async fn execute_pre_parse_plugins(
                             plugin_config,
                             headers_map,
                             session,
-                            raw_request,
+                            &raw_request,
                         )
                         .await;
-                        if let Ok(PreExecutePluginResponse::ReturnError {
-                            plugin_name: _,
-                            error: ErrorResponse::InternalError(error_value),
-                        }) = &plugin_response
-                        {
-                            let error_value =
-                                error_value.as_ref().unwrap_or(&serde_json::Value::Null);
-                            set_attribute_on_active_span(
-                                tracing_util::AttributeVisibility::Default,
-                                "plugin.internal_error",
-                                error_value.to_string(),
-                            );
-                        }
-                        if let Ok(PreExecutePluginResponse::ReturnError {
-                            plugin_name: _,
-                            error: ErrorResponse::UserError(error_value),
-                        }) = &plugin_response
-                        {
-                            set_attribute_on_active_span(
-                                tracing_util::AttributeVisibility::Default,
-                                "plugin.user_error",
-                                error_value.to_string(),
-                            );
-                        }
+                        set_response_attributes(&plugin_response);
                         plugin_response
                     })
                 },
             )
             .await?; // Short Circuit; stop executing remaining plugins if current one errors.
         match plugin_response {
-            PreExecutePluginResponse::Continue => (),
+            PreParsePluginResponse::Continue => (),
+            PreParsePluginResponse::ContinueWithRequest(new_raw_request) => {
+                // Update the raw request if it was modified by the plugin
+                raw_request = Cow::Owned(new_raw_request);
+            }
             // Stop executing the next plugin if current plugin returns an error or a response
-            response @ (PreExecutePluginResponse::Return(_)
-            | PreExecutePluginResponse::ReturnError {
+            response @ (PreParsePluginResponse::Return(_)
+            | PreParsePluginResponse::ReturnError {
                 plugin_name: _,
                 error: _,
             }) => return Ok(response),
         }
     }
-    Ok(PreExecutePluginResponse::Continue)
+    // If we have an owned request (meaning it was modified), return it
+    match raw_request {
+        Cow::Owned(modified_request) => Ok(PreParsePluginResponse::ContinueWithRequest(
+            modified_request,
+        )),
+        Cow::Borrowed(_) => Ok(PreParsePluginResponse::Continue),
+    }
 }

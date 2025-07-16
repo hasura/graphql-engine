@@ -167,11 +167,24 @@ pub async fn plugins_middleware(
             .await
             .map_err(|err| state.handle_error(err.into_middleware_error()))?;
 
-            if let Some(response) = response {
-                Ok(response)
-            } else {
-                let recreated_request = Request::from_parts(parts, axum::body::Body::from(bytes));
-                Ok(next.run(recreated_request).await)
+            match response {
+                pre_parse_plugin::execute::ProcessedPreParsePluginResponse::Return(response) => {
+                    Ok(response)
+                }
+                pre_parse_plugin::execute::ProcessedPreParsePluginResponse::Continue(
+                    new_raw_request,
+                ) => {
+                    let recreated_request = if let Some(new_raw_request) = new_raw_request {
+                        let bytes = serde_json::to_vec(&new_raw_request).map_err(|err| {
+                            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+                                .into_response()
+                        })?;
+                        Request::from_parts(parts, axum::body::Body::from(bytes))
+                    } else {
+                        Request::from_parts(parts, axum::body::Body::from(bytes))
+                    };
+                    Ok(next.run(recreated_request).await)
+                }
             }
         }
     }?;

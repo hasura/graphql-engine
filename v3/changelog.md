@@ -4,6 +4,9 @@
 
 ### Added
 
+- Allow pre-parse plugins to modify the request before it is sent to the engine.
+  Use HTTP status code `299` to indicate that the request should be modified.
+
 ### Changed
 
 ### Fixed

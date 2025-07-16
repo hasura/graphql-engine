@@ -78,12 +78,10 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
                                         )
                                         .await
                                     }
-                                    None => {
-                                        Ok(pre_parse_plugin::PreExecutePluginResponse::Continue)
-                                    }
+                                    None => Ok(pre_parse_plugin::PreParsePluginResponse::Continue),
                                 }?;
                                 match plugin_response {
-                                    pre_parse_plugin::PreExecutePluginResponse::Continue => {
+                                    pre_parse_plugin::PreParsePluginResponse::Continue => {
                                         // Start a new poller for the operation and insert it into the connection.
                                         let current_span_link =
                                             tracing_util::SpanLink::from_current_span();
@@ -100,8 +98,28 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
                                         connection
                                             .insert_poller(operation_id.clone(), poller)
                                             .await;
+                                    },
+                                    pre_parse_plugin::PreParsePluginResponse::ContinueWithRequest(
+                                        new_raw_request,
+                                    ) => {
+                                        // Start a new poller for the operation and insert it into the connection.
+                                        let current_span_link =
+                                            tracing_util::SpanLink::from_current_span();
+                                        let poller = start_poller(
+                                            client_address,
+                                            operation_id.clone(),
+                                            session.clone(),
+                                            headers.clone(),
+                                            connection.clone(),
+                                            new_raw_request,
+                                            current_span_link,
+                                            runtime_flags,
+                                        );
+                                        connection
+                                            .insert_poller(operation_id.clone(), poller)
+                                            .await;
                                     }
-                                    pre_parse_plugin::PreExecutePluginResponse::Return(bytes) => {
+                                    pre_parse_plugin::PreParsePluginResponse::Return(bytes) => {
                                         // Send the plugin response to the client
                                         connection
                                             .send(ws::Message::Raw(
@@ -109,7 +127,7 @@ pub async fn handle_subscribe<M: WebSocketMetrics>(
                                             ))
                                             .await;
                                     }
-                                    pre_parse_plugin::PreExecutePluginResponse::ReturnError {
+                                    pre_parse_plugin::PreParsePluginResponse::ReturnError {
                                         plugin_name,
                                         error,
                                     } => {
