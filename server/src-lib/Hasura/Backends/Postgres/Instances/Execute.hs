@@ -541,6 +541,7 @@ pgDBStreamingSubscriptionPlan ::
     PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
+  Options.RemoveEmptySubscriptionResponses ->
   UserInfo ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
@@ -548,12 +549,12 @@ pgDBStreamingSubscriptionPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)), [ModelInfoPart])
-pgDBStreamingSubscriptionPlan userInfo sourceName sourceConfig (rootFieldAlias, unpreparedAST) reqHeaders operationName = do
+pgDBStreamingSubscriptionPlan removeEmptySubscriptionResponses userInfo sourceName sourceConfig (rootFieldAlias, unpreparedAST) reqHeaders operationName = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty
       $ traverse (PGL.resolveMultiplexedValue (_uiSession userInfo)) unpreparedAST
   subscriptionQueryTagsComment <- ask
-  multiplexedQuery <- PGL.mkStreamingMultiplexedQuery userInfo (G._rfaAlias rootFieldAlias, preparedAST)
+  multiplexedQuery <- PGL.mkStreamingMultiplexedQuery removeEmptySubscriptionResponses userInfo (G._rfaAlias rootFieldAlias, preparedAST)
   let multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = addQueryTagsToSql (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo
