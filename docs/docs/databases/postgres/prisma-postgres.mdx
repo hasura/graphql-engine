@@ -1,0 +1,112 @@
+---
+description: Using Hasura with a Prisma Postgres database
+title: 'Cloud: Using Hasura Cloud with a Prisma Postgres database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - prisma
+sidebar_label: Prisma Postgres
+sidebar_position: 21
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Connecting Hasura to a Prisma Postgres Database
+
+## Introduction
+
+This guide explains how to connect a new or existing [Prisma Postgres database](https://pris.ly/ppg) to a
+Hasura instance.
+
+## Step 1: Sign up or log in to Prisma Postgres
+
+Navigate to the [Prisma Postgres console](https://console.prisma.io) and sign up or log in.
+
+## Step 2: Create a new Prisma Postgres Project
+
+Click the `New Project` button.
+
+<Thumbnail src="/img/cloud-dbs/prisma-postgres/prisma-new-project-button.png" alt="Prisma Postgres console showing the New Project button" width="700px" />
+
+Input the proper credentials you'd like to use for your project.
+
+<Thumbnail src="/img/cloud-dbs/prisma-postgres/prisma-input-project-settings.png" alt="Prisma Postgres project creation form with input fields for project credentials" width="700px" />
+
+Click `Create Project`.
+
+You should now see your new project in the Prisma Postgres console. 
+
+## Step 3: Generate Credentials
+
+From the project sidebar, click the `Dashboard` button, then press `Connect`.
+
+<Thumbnail src="/img/cloud-dbs/prisma-postgres/prisma-tcp-connect-button.png" alt="Prisma Postgres dashboard with Connect button highlighted" width="700px" />
+
+Switch to the `Any Client (Preview)` tab.
+
+Click the `Generate Credentials` button to get the database connection string.
+
+<Thumbnail src="/img/cloud-dbs/prisma-postgres/prisma-tcp-credentials.png" alt="Prisma Postgres TCP credentials page with connection string and Generate Credentials button" width="700px" />
+
+Congratulations! You've now created a Postgres instance on Prisma Postgres which you can use with Hasura GraphQL Engine.
+
+## Step 4: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 5: Store the database connection string in Hasura Cloud
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Hasura Cloud dashboard with Create Project button" />
+
+After the project is initialized successfully, click on `Env Vars`, then `New Env Var` to import the database connection string you generated in the previous section.
+
+<Thumbnail src="/img/cloud-dbs/prisma-postgres/hasura-env-var.png" alt="Hasura Cloud environment variables page with New Env Var button" width="700px" />
+
+From there, give your env var a name like `DATABASE_URL`, paste in the database connection string, and press `Save`.
+
+## Step 6: Launch the Hasura Console
+
+Click on `Launch Console` to open the Hasura Console in your browser.
+
+<Thumbnail src="/img/cloud-dbs/launch-console.png" alt="Hasura Cloud project dashboard with Launch Console button" width="700px" />
+
+
+## Step 7: Connect the database to Hasura Cloud
+
+On the Hasura Console, navigate to the `Data` tab and press `Connect Database` at the top.
+
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console Data tab with Connect Database button" width="700px" />
+
+From there, select `Postgres` and press `Connect Existing Database`.
+
+<Thumbnail src="/img/cloud-dbs/prisma-postgres/hasura-connect-existing-db.png" alt="Hasura Console database connection page with Postgres selected and Connect Existing Database button" width="700px" />
+
+Enter the name of your Env Var you created earlier, then press `Connect Database`.
+
+<Thumbnail src="/img/cloud-dbs/prisma-postgres/hasura-connect-env-var.png" alt="Hasura Console database connection form with environment variable input field and Connect Database button" width="700px" />
+
+That's it! You're now connected to your Prisma Postgres database and can start building.
+
+## Next steps
+
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/hasura-cloud/projects/collaborators.mdx#manage-project-collaborators),
+  [env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) or
+  [custom domains](/hasura-cloud/domains.mdx#manage-project-domains)).
+
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
+
+:::info Note
+
+For more information on which Postgres features we support, check out [this page](/databases/feature-support.mdx).
+
+:::
