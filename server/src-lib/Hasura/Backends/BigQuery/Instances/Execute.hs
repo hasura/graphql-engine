@@ -53,7 +53,7 @@ instance BackendExecute 'BigQuery where
   mkDBMutationPlan = bqDBMutationPlan
   mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
-  mkDBStreamingSubscriptionPlan _ _ _ _ _ _ =
+  mkDBStreamingSubscriptionPlan _ _ _ _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
   mkDBQueryExplain = bqDBQueryExplain
   mkSubscriptionExplain _ =

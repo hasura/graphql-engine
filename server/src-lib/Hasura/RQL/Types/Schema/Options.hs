@@ -224,9 +224,9 @@ instance ToJSON NoNullUnboundVariableDefault where
     DefaultUnboundNullableVariablesToNull -> Bool False
 
 -- | When we're dealing with many multiplexed streaming subscriptions that
--- don't update often, network overhead can become very large due to us sending
--- back empty result sets. This option allows the user to stipulate that empty
--- result sets should not be returned.
+-- don't update often, network overhead can become very large due to us
+-- returning empty result sets from the database. This option allows the user
+-- to stipulate that empty result sets should not be returned.
 data RemoveEmptySubscriptionResponses
   = RemoveEmptyResponses
   | PreserveEmptyResponses
