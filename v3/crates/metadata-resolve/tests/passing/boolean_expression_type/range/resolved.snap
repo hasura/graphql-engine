@@ -69,7 +69,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     authorization_rules: [],
                     by_role: {},
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -421,7 +424,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {

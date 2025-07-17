@@ -86,7 +86,10 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                     authorization_rules: [],
                     by_role: {},
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {
                     RelationshipName(
                         Identifier(
@@ -495,7 +498,10 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                     authorization_rules: [],
                     by_role: {},
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {

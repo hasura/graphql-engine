@@ -345,6 +345,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                         // is there a preset for this role and this field?
                         let has_preset = object_type_representation
                             .type_input_permissions
+                            .by_role
                             .get(role)
                             .is_some_and(|type_input_permission| {
                                 type_input_permission.field_presets.contains_key(field_name)

@@ -78,6 +78,7 @@ pub fn process_argument_presets_for_model<'s>(
     metadata: &'s Metadata,
     session: &Session,
     request_headers: &HeaderMap,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     let model_source = model.model.source.as_ref().ok_or_else(|| {
@@ -109,6 +110,7 @@ pub fn process_argument_presets_for_model<'s>(
         &model_source.data_connector_link_argument_presets,
         session,
         request_headers,
+        plan_state,
         usage_counts,
     )
 }
@@ -120,6 +122,7 @@ pub fn process_argument_presets_for_command<'s>(
     metadata: &Metadata,
     session: &Session,
     request_headers: &HeaderMap,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     let command_source = command.command.source.as_ref().ok_or_else(|| {
@@ -139,6 +142,7 @@ pub fn process_argument_presets_for_command<'s>(
         &command_source.data_connector_link_argument_presets,
         session,
         request_headers,
+        plan_state,
         usage_counts,
     )
 }
@@ -156,6 +160,7 @@ fn process_argument_presets_for_auth_rules<'s>(
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     session: &Session,
     request_headers: &HeaderMap,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     // Preset arguments from `DataConnectorLink` argument presets
@@ -209,6 +214,7 @@ fn process_argument_presets_for_auth_rules<'s>(
                         &argument_info.argument_type,
                         type_mappings,
                         session,
+                        plan_state,
                     )?;
                 }
                 UnresolvedArgument::BooleanExpression { .. } => {
@@ -235,6 +241,7 @@ fn process_argument_presets<'s>(
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     session: &Session,
     request_headers: &HeaderMap,
+    plan_state: &mut PlanState,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, PlanError> {
     // Preset arguments from `DataConnectorLink` argument presets
@@ -288,6 +295,7 @@ fn process_argument_presets<'s>(
                         &argument_info.argument_type,
                         type_mappings,
                         session,
+                        plan_state,
                     )?;
                 }
                 UnresolvedArgument::BooleanExpression { .. } => {
@@ -306,6 +314,7 @@ fn apply_input_field_presets_to_value(
     type_reference: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     session: &Session,
+    plan_state: &mut PlanState,
 ) -> Result<(), PlanError> {
     match &type_reference.underlying_type {
         QualifiedBaseType::List(list_element_type) => {
@@ -321,6 +330,7 @@ fn apply_input_field_presets_to_value(
                     list_element_type,
                     type_mappings,
                     session,
+                    plan_state,
                 )?;
             }
         }
@@ -354,7 +364,7 @@ fn apply_input_field_presets_to_value(
                 };
 
             let InputObjectTypeView { field_presets } =
-                get_input_object_type(metadata, object_type_name, &session.role)?;
+                get_input_object_type(metadata, object_type_name, &session.variables, plan_state)?;
 
             // Get the data connector type mapping for this object type
             let TypeMapping::Object { field_mappings, .. } = type_mappings
@@ -364,36 +374,34 @@ fn apply_input_field_presets_to_value(
                 })?;
 
             // Apply all input field presets to the object value
-            if let Some(field_presets) = field_presets {
-                for (field_name, field_preset) in field_presets {
-                    // Get the data connector field mapping for this field
-                    let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
-                        ArgumentPresetExecutionError::FieldMappingNotFound {
-                            field_name: field_name.clone(),
-                            object_type_name: object_type_name.clone(),
-                        }
+            for (field_name, value_expression) in field_presets {
+                // Get the data connector field mapping for this field
+                let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
+                    ArgumentPresetExecutionError::FieldMappingNotFound {
+                        field_name: field_name.clone(),
+                        object_type_name: object_type_name.clone(),
+                    }
+                })?;
+
+                // Get the type information about the field
+                let field_info = object_type_info
+                    .object_type
+                    .fields
+                    .get(field_name)
+                    .ok_or_else(|| ArgumentPresetExecutionError::FieldDefinitionNotFound {
+                        field_name: field_name.clone(),
+                        object_type_name: object_type_name.clone(),
                     })?;
 
-                    // Get the type information about the field
-                    let field_info = object_type_info
-                        .object_type
-                        .fields
-                        .get(field_name)
-                        .ok_or_else(|| ArgumentPresetExecutionError::FieldDefinitionNotFound {
-                            field_name: field_name.clone(),
-                            object_type_name: object_type_name.clone(),
-                        })?;
+                let argument_value = permissions::make_argument_from_value_expression(
+                    value_expression,
+                    &field_info.field_type,
+                    &session.variables,
+                    type_mappings,
+                    &metadata.object_types,
+                )?;
 
-                    let argument_value = permissions::make_argument_from_value_expression(
-                        &field_preset.value,
-                        &field_info.field_type,
-                        &session.variables,
-                        type_mappings,
-                        &metadata.object_types,
-                    )?;
-
-                    object_value.insert(field_mapping.column.as_str().to_owned(), argument_value);
-                }
+                object_value.insert(field_mapping.column.as_str().to_owned(), argument_value);
             }
 
             // Recur and apply input field presets to the values of all the object fields
@@ -414,6 +422,7 @@ fn apply_input_field_presets_to_value(
                         &field_info.field_type,
                         type_mappings,
                         session,
+                        plan_state,
                     )?;
                 } else {
                     let mut field_value = serde_json::Value::Null;
@@ -424,6 +433,7 @@ fn apply_input_field_presets_to_value(
                         &field_info.field_type,
                         type_mappings,
                         session,
+                        plan_state,
                     )?;
 
                     // If the field value is still null, don't insert it into the object

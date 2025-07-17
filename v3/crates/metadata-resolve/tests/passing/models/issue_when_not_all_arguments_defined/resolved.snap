@@ -46,7 +46,10 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                     authorization_rules: [],
                     by_role: {},
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {

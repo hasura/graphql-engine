@@ -202,6 +202,7 @@ pub(crate) fn from_command_selection(
         metadata,
         session,
         request_headers,
+        plan_state,
         &mut usage_counts,
     )?;
 

@@ -1,13 +1,13 @@
 use crate::{PermissionError, types::PlanState};
 use authorization_rules::{
-    ArgumentPolicy, ConditionCache, evaluate_command_authorization_rules,
-    evaluate_field_authorization_rules,
+    ArgumentPolicy, ConditionCache, ObjectInputPolicy, evaluate_command_authorization_rules,
+    evaluate_field_authorization_rules, evaluate_type_input_authorization_rules,
 };
 use hasura_authn_core::{Role, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::{
-    Conditions, FieldDefinition, FieldPresetInfo, Metadata, ObjectTypeWithRelationships, Qualified,
-    QualifiedTypeReference, RelationshipTarget,
+    Conditions, FieldDefinition, Metadata, ObjectTypeWithRelationships, Qualified,
+    QualifiedTypeReference, RelationshipTarget, ValueExpression,
 };
 use open_dds::{
     commands::CommandName,
@@ -126,13 +126,14 @@ pub fn get_output_object_type<'metadata>(
 
 #[derive(Debug, Clone)]
 pub struct InputObjectTypeView<'metadata> {
-    pub field_presets: Option<&'metadata BTreeMap<FieldName, FieldPresetInfo>>,
+    pub field_presets: BTreeMap<&'metadata FieldName, &'metadata ValueExpression>,
 }
 
 pub fn get_input_object_type<'metadata>(
     metadata: &'metadata Metadata,
     object_type_name: &'metadata Qualified<CustomTypeName>,
-    role: &'_ Role,
+    session_variables: &'_ SessionVariables,
+    plan_state: &mut PlanState,
 ) -> Result<InputObjectTypeView<'metadata>, PermissionError> {
     let object_type = metadata.object_types.get(object_type_name).ok_or_else(|| {
         PermissionError::ObjectTypeNotFound {
@@ -140,11 +141,12 @@ pub fn get_input_object_type<'metadata>(
         }
     })?;
 
-    // Get the input permissions for this object type for the current role
-    let field_presets = object_type
-        .type_input_permissions
-        .get(role)
-        .map(|input_permission| &input_permission.field_presets);
+    let ObjectInputPolicy { field_presets } = evaluate_type_input_authorization_rules(
+        &object_type.type_input_permissions.authorization_rules,
+        session_variables,
+        &metadata.conditions,
+        &mut plan_state.condition_cache,
+    )?;
 
     Ok(InputObjectTypeView { field_presets })
 }

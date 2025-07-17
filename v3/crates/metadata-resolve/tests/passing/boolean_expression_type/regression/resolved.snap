@@ -131,7 +131,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {
                     RelationshipName(
                         Identifier(
@@ -769,7 +772,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -1057,7 +1063,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {
                     RelationshipName(
                         Identifier(
@@ -1501,7 +1510,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -1762,7 +1774,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -2100,7 +2115,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {
                     RelationshipName(
                         Identifier(
@@ -2650,7 +2668,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {
                     RelationshipName(
                         Identifier(
@@ -3156,7 +3177,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -3357,7 +3381,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -3620,7 +3647,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -3865,7 +3895,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -4221,7 +4254,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -4486,7 +4522,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -4755,7 +4794,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {
@@ -4918,7 +4960,10 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/regres
                         },
                     },
                 },
-                type_input_permissions: {},
+                type_input_permissions: TypeInputPermissions {
+                    authorization_rules: [],
+                    by_role: {},
+                },
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {

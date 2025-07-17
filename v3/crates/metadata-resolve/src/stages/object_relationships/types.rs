@@ -4,7 +4,6 @@ use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use indexmap::IndexMap;
 use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::DataConnectorName;
-use open_dds::permissions::Role;
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +28,7 @@ pub struct ObjectTypeWithRelationships {
     pub type_output_permissions: type_permissions::TypeOutputPermissions,
     /// permissions on this type, when it is used in an input context (e.g. in
     /// an argument type of Model or Command)
-    pub type_input_permissions: BTreeMap<Role, type_permissions::TypeInputPermission>,
+    pub type_input_permissions: type_permissions::TypeInputPermissions,
     /// any relationship fields defined on this object, indexed by relationship name
     pub relationship_fields: IndexMap<RelationshipName, RelationshipField>,
     /// type mappings for each data connector

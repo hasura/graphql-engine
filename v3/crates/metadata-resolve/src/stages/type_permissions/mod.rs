@@ -15,7 +15,7 @@ use open_dds::session_variables::SessionVariableReference;
 use open_dds::types::{CustomTypeName, FieldName};
 pub use types::{
     FieldAuthorizationRule, FieldPresetInfo, ObjectTypeWithPermissions, ObjectTypesWithPermissions,
-    TypeInputPermission, TypeOutputPermissions,
+    TypeInputAuthorizationRule, TypeInputPermission, TypeInputPermissions, TypeOutputPermissions,
 };
 
 use crate::ValueExpression;
@@ -97,7 +97,10 @@ pub fn resolve(
                 } = type_permissions
                     .remove(&qualified_type_name)
                     .unwrap_or_else(|| Permissions {
-                        input: BTreeMap::new(),
+                        input: TypeInputPermissions {
+                            by_role: BTreeMap::new(),
+                            authorization_rules: vec![],
+                        },
                         output: TypeOutputPermissions {
                             authorization_rules: vec![],
                             by_role: BTreeMap::new(),
@@ -123,7 +126,7 @@ pub fn resolve(
 
 struct Permissions {
     output: TypeOutputPermissions,
-    input: BTreeMap<Role, TypeInputPermission>,
+    input: TypeInputPermissions,
 }
 
 fn resolve_type_permission(
@@ -165,6 +168,7 @@ fn resolve_type_permission(
                 boolean_expression_type_names,
                 &object_type.object_type,
                 output_type_permission,
+                conditions,
                 issues,
             )?;
 
@@ -269,12 +273,14 @@ pub(crate) fn resolve_input_type_permission(
     boolean_expression_type_names: &BTreeSet<&Qualified<CustomTypeName>>,
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV2,
+    conditions: &mut Conditions,
     issues: &mut Vec<TypePermissionIssue>,
-) -> Result<BTreeMap<Role, TypeInputPermission>, TypeInputPermissionError> {
-    let mut resolved_type_permissions = BTreeMap::new();
-
+) -> Result<TypeInputPermissions, TypeInputPermissionError> {
     match &type_permissions.permissions {
         TypePermissionOperand::RoleBased(role_based_type_permissions) => {
+            let mut by_role = BTreeMap::new();
+            let mut authorization_rules = Vec::new();
+
             for role_based_type_permission in role_based_type_permissions {
                 if let Some(input) = &role_based_type_permission.input {
                     let mut resolved_field_presets = BTreeMap::new();
@@ -339,6 +345,15 @@ pub(crate) fn resolve_input_type_permission(
                                 },
                             ),
                         };
+
+                        authorization_rules.push(authorization_rule_for_field_preset(
+                            &role_based_type_permission.role,
+                            field_name,
+                            &resolved_value,
+                            flags,
+                            conditions,
+                        ));
+
                         resolved_field_presets.insert(
                             field_name.clone(),
                             FieldPresetInfo {
@@ -347,7 +362,7 @@ pub(crate) fn resolve_input_type_permission(
                             },
                         );
                     }
-                    if resolved_type_permissions
+                    if by_role
                         .insert(
                             role_based_type_permission.role.clone(),
                             TypeInputPermission {
@@ -362,7 +377,39 @@ pub(crate) fn resolve_input_type_permission(
                     }
                 }
             }
-            Ok(resolved_type_permissions)
+            Ok(TypeInputPermissions {
+                authorization_rules,
+                by_role,
+            })
         }
+    }
+}
+
+// given a role and a field preset return an authorization rule
+// that includes this preset field given `x-hasura-role` session variable matches the role
+fn authorization_rule_for_field_preset(
+    role: &Role,
+    field_name: &FieldName,
+    value: &ValueExpression,
+    flags: &open_dds::flags::OpenDdFlags,
+    conditions: &mut Conditions,
+) -> TypeInputAuthorizationRule {
+    let condition = Condition::BinaryOperation {
+        op: BinaryOperation::Equals,
+        left: ValueExpression::SessionVariable(SessionVariableReference {
+            name: SESSION_VARIABLE_ROLE,
+            passed_as_json: flags.contains(open_dds::flags::Flag::JsonSessionVariables),
+            disallow_unknown_fields: flags
+                .contains(open_dds::flags::Flag::DisallowUnknownValuesInArguments),
+        }),
+        right: ValueExpression::Literal(serde_json::Value::String(role.0.clone())),
+    };
+
+    let hash = conditions.add(condition);
+
+    TypeInputAuthorizationRule::FieldPresetValue {
+        field_name: field_name.clone(),
+        value: value.clone(),
+        condition: Some(hash),
     }
 }

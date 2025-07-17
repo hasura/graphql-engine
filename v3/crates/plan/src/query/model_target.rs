@@ -60,6 +60,7 @@ pub fn model_target_to_ndc_query(
         metadata,
         session,
         request_headers,
+        plan_state,
         &mut usage_counts,
     )?;
 
