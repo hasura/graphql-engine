@@ -1,6 +1,6 @@
 use super::permissions;
-use crate::metadata_accessor;
-use crate::metadata_accessor::CommandView;
+use crate::metadata_accessor::{self, get_input_object_type};
+use crate::metadata_accessor::{CommandView, InputObjectTypeView};
 use crate::plan_expression;
 use crate::types::PlanState;
 use authorization_rules::ArgumentPolicy;
@@ -21,7 +21,6 @@ use open_dds::{
 use plan_types::{Argument, Expression, PredicateQueryTrees, Relationship, UsagesCounts};
 use reqwest::header::HeaderMap;
 use serde::Serialize;
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 use tracing_util::{ErrorVisibility, TraceableError};
 
@@ -76,7 +75,7 @@ pub fn add_missing_nullable_arguments<'s>(
 pub fn process_argument_presets_for_model<'s>(
     arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     model: &'s ModelWithPermissions,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    metadata: &'s Metadata,
     session: &Session,
     request_headers: &HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -104,7 +103,7 @@ pub fn process_argument_presets_for_model<'s>(
         &model.arguments,
         &model_source.argument_mappings,
         argument_presets,
-        object_types,
+        metadata,
         &model_source.type_mappings,
         &model_source.data_connector,
         &model_source.data_connector_link_argument_presets,
@@ -118,7 +117,7 @@ pub fn process_argument_presets_for_command<'s>(
     arguments: BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>,
     command: &'s CommandWithPermissions,
     command_view: &'s CommandView<'s>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    metadata: &Metadata,
     session: &Session,
     request_headers: &HeaderMap,
     usage_counts: &mut UsagesCounts,
@@ -134,7 +133,7 @@ pub fn process_argument_presets_for_command<'s>(
         &command.command.arguments,
         &command_source.argument_mappings,
         &command_view.argument_presets,
-        object_types,
+        metadata,
         &command_source.type_mappings,
         &command_source.data_connector,
         &command_source.data_connector_link_argument_presets,
@@ -151,7 +150,7 @@ fn process_argument_presets_for_auth_rules<'s>(
     argument_infos: &IndexMap<ArgumentName, ArgumentInfo>,
     argument_mappings: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
     argument_presets: &'s BTreeMap<&'s ArgumentName, ArgumentPolicy<'s>>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    metadata: &Metadata,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
@@ -165,7 +164,7 @@ fn process_argument_presets_for_auth_rules<'s>(
         &session.variables,
         request_headers,
         type_mappings,
-        object_types,
+        &metadata.object_types,
     )? {
         arguments.insert(argument_name, UnresolvedArgument::Literal { value });
     }
@@ -185,7 +184,7 @@ fn process_argument_presets_for_auth_rules<'s>(
                 type_mappings,
                 argument_value,
                 &session.variables,
-                object_types,
+                &metadata.object_types,
                 usage_counts,
             )?;
 
@@ -206,9 +205,9 @@ fn process_argument_presets_for_auth_rules<'s>(
                 UnresolvedArgument::Literal { value } => {
                     apply_input_field_presets_to_value(
                         value,
+                        metadata,
                         &argument_info.argument_type,
                         type_mappings,
-                        object_types,
                         session,
                     )?;
                 }
@@ -230,7 +229,7 @@ fn process_argument_presets<'s>(
         ArgumentName,
         (QualifiedTypeReference, ValueExpressionOrPredicate),
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+    metadata: &Metadata,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
@@ -244,7 +243,7 @@ fn process_argument_presets<'s>(
         &session.variables,
         request_headers,
         type_mappings,
-        object_types,
+        &metadata.object_types,
     )? {
         arguments.insert(argument_name, UnresolvedArgument::Literal { value });
     }
@@ -264,7 +263,7 @@ fn process_argument_presets<'s>(
             argument_value,
             field_type,
             &session.variables,
-            object_types,
+            &metadata.object_types,
             usage_counts,
         )?;
 
@@ -285,9 +284,9 @@ fn process_argument_presets<'s>(
                 UnresolvedArgument::Literal { value } => {
                     apply_input_field_presets_to_value(
                         value,
+                        metadata,
                         &argument_info.argument_type,
                         type_mappings,
-                        object_types,
                         session,
                     )?;
                 }
@@ -303,9 +302,9 @@ fn process_argument_presets<'s>(
 
 fn apply_input_field_presets_to_value(
     value: &mut serde_json::Value,
+    metadata: &Metadata,
     type_reference: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     session: &Session,
 ) -> Result<(), PlanError> {
     match &type_reference.underlying_type {
@@ -318,9 +317,9 @@ fn apply_input_field_presets_to_value(
             for element_value in array_elements {
                 apply_input_field_presets_to_value(
                     element_value,
+                    metadata,
                     list_element_type,
                     type_mappings,
-                    object_types,
                     session,
                 )?;
             }
@@ -330,7 +329,8 @@ fn apply_input_field_presets_to_value(
             let Some((object_type_name, object_type_info)) = qualified_type_name
                 .get_custom_type_name()
                 .and_then(|type_name| {
-                    object_types
+                    metadata
+                        .object_types
                         .get(type_name)
                         .map(|object_type_info| (type_name, object_type_info))
                 })
@@ -353,14 +353,8 @@ fn apply_input_field_presets_to_value(
                     value.as_object_mut().unwrap() // This is safe because we just created an object value
                 };
 
-            // Get the input permissions for this object type for the current role
-            let field_presets = object_type_info
-                .type_input_permissions
-                .get(&session.role)
-                .map_or_else(
-                    || Cow::Owned(BTreeMap::new()),
-                    |input_permissions| Cow::Borrowed(&input_permissions.field_presets),
-                );
+            let InputObjectTypeView { field_presets } =
+                get_input_object_type(metadata, object_type_name, &session.role)?;
 
             // Get the data connector type mapping for this object type
             let TypeMapping::Object { field_mappings, .. } = type_mappings
@@ -370,34 +364,36 @@ fn apply_input_field_presets_to_value(
                 })?;
 
             // Apply all input field presets to the object value
-            for (field_name, field_preset) in field_presets.as_ref() {
-                // Get the data connector field mapping for this field
-                let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
-                    ArgumentPresetExecutionError::FieldMappingNotFound {
-                        field_name: field_name.clone(),
-                        object_type_name: object_type_name.clone(),
-                    }
-                })?;
-
-                // Get the type information about the field
-                let field_info = object_type_info
-                    .object_type
-                    .fields
-                    .get(field_name)
-                    .ok_or_else(|| ArgumentPresetExecutionError::FieldDefinitionNotFound {
-                        field_name: field_name.clone(),
-                        object_type_name: object_type_name.clone(),
+            if let Some(field_presets) = field_presets {
+                for (field_name, field_preset) in field_presets {
+                    // Get the data connector field mapping for this field
+                    let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
+                        ArgumentPresetExecutionError::FieldMappingNotFound {
+                            field_name: field_name.clone(),
+                            object_type_name: object_type_name.clone(),
+                        }
                     })?;
 
-                let argument_value = permissions::make_argument_from_value_expression(
-                    &field_preset.value,
-                    &field_info.field_type,
-                    &session.variables,
-                    type_mappings,
-                    object_types,
-                )?;
+                    // Get the type information about the field
+                    let field_info = object_type_info
+                        .object_type
+                        .fields
+                        .get(field_name)
+                        .ok_or_else(|| ArgumentPresetExecutionError::FieldDefinitionNotFound {
+                            field_name: field_name.clone(),
+                            object_type_name: object_type_name.clone(),
+                        })?;
 
-                object_value.insert(field_mapping.column.as_str().to_owned(), argument_value);
+                    let argument_value = permissions::make_argument_from_value_expression(
+                        &field_preset.value,
+                        &field_info.field_type,
+                        &session.variables,
+                        type_mappings,
+                        &metadata.object_types,
+                    )?;
+
+                    object_value.insert(field_mapping.column.as_str().to_owned(), argument_value);
+                }
             }
 
             // Recur and apply input field presets to the values of all the object fields
@@ -414,9 +410,9 @@ fn apply_input_field_presets_to_value(
                 if let Some(field_value) = object_value.get_mut(field_mapping.column.as_str()) {
                     apply_input_field_presets_to_value(
                         field_value,
+                        metadata,
                         &field_info.field_type,
                         type_mappings,
-                        object_types,
                         session,
                     )?;
                 } else {
@@ -424,9 +420,9 @@ fn apply_input_field_presets_to_value(
 
                     apply_input_field_presets_to_value(
                         &mut field_value,
+                        metadata,
                         &field_info.field_type,
                         type_mappings,
-                        object_types,
                         session,
                     )?;
 

@@ -6,7 +6,7 @@ use authorization_rules::{
 use hasura_authn_core::{Role, SessionVariables};
 use indexmap::IndexMap;
 use metadata_resolve::{
-    Conditions, FieldDefinition, Metadata, ObjectTypeWithRelationships, Qualified,
+    Conditions, FieldDefinition, FieldPresetInfo, Metadata, ObjectTypeWithRelationships, Qualified,
     QualifiedTypeReference, RelationshipTarget,
 };
 use open_dds::{
@@ -122,6 +122,31 @@ pub fn get_output_object_type<'metadata>(
         fields,
         relationship_fields,
     })
+}
+
+#[derive(Debug, Clone)]
+pub struct InputObjectTypeView<'metadata> {
+    pub field_presets: Option<&'metadata BTreeMap<FieldName, FieldPresetInfo>>,
+}
+
+pub fn get_input_object_type<'metadata>(
+    metadata: &'metadata Metadata,
+    object_type_name: &'metadata Qualified<CustomTypeName>,
+    role: &'_ Role,
+) -> Result<InputObjectTypeView<'metadata>, PermissionError> {
+    let object_type = metadata.object_types.get(object_type_name).ok_or_else(|| {
+        PermissionError::ObjectTypeNotFound {
+            object_type_name: object_type_name.clone(),
+        }
+    })?;
+
+    // Get the input permissions for this object type for the current role
+    let field_presets = object_type
+        .type_input_permissions
+        .get(role)
+        .map(|input_permission| &input_permission.field_presets);
+
+    Ok(InputObjectTypeView { field_presets })
 }
 
 pub struct ModelView<'metadata> {

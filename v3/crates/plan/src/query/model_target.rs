@@ -57,7 +57,7 @@ pub fn model_target_to_ndc_query(
     let unresolved_arguments = process_argument_presets_for_model(
         unresolved_arguments,
         model,
-        &metadata.object_types,
+        metadata,
         session,
         request_headers,
         &mut usage_counts,

@@ -199,7 +199,7 @@ pub(crate) fn from_command_selection(
         unresolved_arguments,
         command,
         &command_view,
-        &metadata.object_types,
+        metadata,
         session,
         request_headers,
         &mut usage_counts,
