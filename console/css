@@ -1,0 +1,13 @@
+body.dark-mode {
+  background-color: #121212;
+  color: white;
+}
+
+body.dark-mode a {
+  color: #80cbc4;
+}
+
+body.dark-mode button {
+  background-color: white;
+  color: #121212;
+}
