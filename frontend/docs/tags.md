@@ -6,7 +6,7 @@ There is 3 tag groups : scope, type, meta.
 
 You should use the internal generators to create libraries and application, they will have selectors for the tags groups.
 
-Next here, you can find all of the tags that we have, along side the explanation and the import rule matrix.
+Next here, you can find all of the tags that we have, alongside the explanation and the import rule matrix.
 
 ## `scope` tag group
 
@@ -34,7 +34,7 @@ Shared libraries, used across all other libraries
 
 Here is the import rule matrix :
 
-| ![Can row import colum](./can-import-icon.png) | `scope:shared` | `scope:console` | `scope:nx-plugins` |
+| ![Can row import column](./can-import-icon.png) | `scope:shared` | `scope:console` | `scope:nx-plugins` |
 | ---------------------------------------------- | :------------: | :-------------: | :----------------: |
 | `scope:shared`                                 |       ✅       |       ⛔        |         ⛔         |
 | `scope:console`                                |       ✅       |       ✅        |         ⛔         |
@@ -82,7 +82,7 @@ End to end tests projects
 
 Here is the import rule matrix :
 
-| ![Can row import colum](./can-import-icon.png) | `type:utils` | `type:data` | `type:ui` | `type:feature` | `type:app` | `type:storybook` | `type:e2e` |
+| ![Can row import column](./can-import-icon.png) | `type:utils` | `type:data` | `type:ui` | `type:feature` | `type:app` | `type:storybook` | `type:e2e` |
 | ---------------------------------------------- | :----------: | :---------: | :-------: | :------------: | :--------: | :--------------: | :--------: |
 | `type:utils`                                   |      ✅      |     ⛔      |    ⛔     |       ⛔       |     ⛔     |        ⛔        |     ⛔     |
 | `type:data`                                    |      ✅      |     ✅      |    ⛔     |       ⛔       |     ⛔     |        ⛔        |     ⛔     |
@@ -94,7 +94,7 @@ Here is the import rule matrix :
 
 ## `meta` tag group
 
-A meta tags is used to add artifical boundaries when needed
+A meta tags is used to add artificial boundaries when needed
 
 ### Tag list :
 
@@ -114,7 +114,7 @@ A package is a library published to NPM. And it can only depends on publishable 
 
 Here is the import rule matrix :
 
-| ![Can row import colum](./can-import-icon.png) | `meta:legacy` | `meta:package` |
+| ![Can row import column](./can-import-icon.png) | `meta:legacy` | `meta:package` |
 | ---------------------------------------------- | :-----------: | :------------: |
 | `meta:legacy`                                  |      ✅       |       ⛔       |
 | `meta:package`                                 |      ⛔       |       ✅       |
