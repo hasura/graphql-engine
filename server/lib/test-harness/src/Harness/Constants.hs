@@ -305,7 +305,9 @@ serveOptions =
       soEventsHttpPoolSize = Init._default Init.graphqlEventsHttpPoolSizeOption,
       soEventsFetchInterval = Init._default Init.graphqlEventsFetchIntervalOption,
       soAsyncActionsFetchInterval = Skip,
+      -- Toggle for "graphql-schema-with-role-permissions" test:
       soEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
+      -- soEnableRemoteSchemaPermissions = Options.EnableRemoteSchemaPermissions,
       soConnectionOptions = WS.defaultConnectionOptions,
       soWebSocketKeepAlive = Init._default Init.webSocketKeepAliveOption,
       soInferFunctionPermissions = Options.InferFunctionPermissions,
