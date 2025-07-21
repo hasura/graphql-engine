@@ -11,6 +11,7 @@
 -- the tests.
 module Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec (spec) where
 
+import Control.Exception (SomeException, throwIO, try)
 import Data.Aeson qualified as J
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
@@ -18,6 +19,7 @@ import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Server.Types
 import Data.Morpheus.Types qualified as Morpheus
+import Data.Text qualified as T
 import Data.Text qualified as Text
 import Data.Typeable (Typeable)
 import Harness.Backend.Citus qualified as Citus
@@ -39,7 +41,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -641,9 +643,13 @@ lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 [gqlDocument|
 
+"A music album with track information"
 type Album {
+  "Unique identifier for the album"
   id: Int!
+  "Album title"
   title: String!
+  "ID of the artist who created this album"
   artist_id: Int
 }
 
@@ -674,8 +680,7 @@ rhsRemoteSchemaSetupAction :: (TestEnvironment, Server) -> Fixture.SetupAction
 rhsRemoteSchemaSetupAction (testEnv, server) =
   Fixture.SetupAction
     (rhsRemoteSchemaSetup (testEnv, server))
-    ( const $ rhsRemoteSchemaTeardown (testEnv, server)
-    )
+    (const $ rhsRemoteSchemaTeardown (testEnv, server))
 
 clearMetadataSetupAction :: TestEnvironment -> Fixture.SetupAction
 clearMetadataSetupAction testEnv =
@@ -801,7 +806,7 @@ executionTests = describe "execution" do
       expectedResponse
 
 schemaTests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
-schemaTests =
+schemaTests = do
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table
   -- 1. track's where clause does not have 'album' field
@@ -814,6 +819,7 @@ schemaTests =
             track_fields: __type(name: "#{lhsSchema}_track") {
               fields {
                 name
+                description
               }
             }
             track_where_exp_fields: __type(name: "#{lhsSchema}_track_bool_exp") {
@@ -834,9 +840,13 @@ schemaTests =
             track_fields:
               fields:
               - name: album
+                description: "A music album with track information"
               - name: album_id
+                description: null
               - name: id
+                description: null
               - name: title
+                description: null
             track_where_exp_fields:
               inputFields:
               - name: _and
@@ -855,3 +865,99 @@ schemaTests =
       testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
+
+  -- Test role-based remote schema permissions preserve descriptions
+  -- Note: This test requires HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true equivalent,
+  -- which must be set manually in Harness.Constants, since turning that on by default would
+  -- break other tests and there is no way currently to specify `serveOptions` on a per-test
+  -- basis.
+  it "graphql-schema-with-role-permissions" \(testEnvironment, _) -> do
+    -- First, set up remote schema permissions for a user role
+    -- This will fail if remote schema permissions are not enabled
+    result <-
+      try
+        $ GraphqlEngine.postMetadata_
+          testEnvironment
+          [yaml|
+        type: add_remote_schema_permissions
+        args:
+          remote_schema: target
+          role: user
+          definition:
+            schema: |
+              type Query {
+                album(album_id: Int!): Album
+              }
+              type Album {
+                id: Int!
+                title: String!
+                artist_id: Int
+              }
+      |]
+
+    case result of
+      Left (err :: SomeException) -> do
+        -- Skip test if remote schema permissions are disabled. In the test-harness
+        -- this is enabled in `src/Harness/Constants.hs`
+        if "remote schema permissions can only be added" `T.isInfixOf` tshow err
+          then pendingWith "Test requires HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true"
+          else throwIO err
+      Right () -> do
+        -- Add permissions for user role to access the track table
+        let lhsSchema = Schema.getSchemaName testEnvironment
+        GraphqlEngine.postMetadata_
+          testEnvironment
+          [yaml|
+            type: postgres_create_select_permission
+            args:
+              source: source
+              table:
+                schema: *lhsSchema
+                name: track
+              role: user
+              permission:
+                columns: "*"
+                filter: {}
+          |]
+
+    let lhsSchema = Schema.getSchemaName testEnvironment
+        userHeaders = [("X-Hasura-Role", "user")]
+        query =
+          [graphql|
+          query {
+            track_fields: __type(name: "#{lhsSchema}_track") {
+              fields {
+                name
+                description
+              }
+            }
+          }
+          |]
+        expectedResponse =
+          [yaml|
+          data:
+            track_fields:
+              fields:
+              - name: album
+                description: "A music album with track information"
+              - name: album_id
+                description: null
+              - name: id
+                description: null
+              - name: title
+                description: null
+          |]
+
+    shouldReturnYaml
+      testEnvironment
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
+      expectedResponse
+
+    -- validate, ensuring that role-based access is working
+    shouldReturnYaml
+      testEnvironment
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment [("X-Hasura-Role", "nonexistent-user")] query)
+      [yaml|
+          data:
+            track_fields: null
+          |]
