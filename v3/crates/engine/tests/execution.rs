@@ -1306,6 +1306,18 @@ fn test_model_select_many_where_nested_scalar_array() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_model_select_many_where_nested_scalar_array_fails_on_v01() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/where/nested_scalar_array/not_supported",
+        &[],
+        BTreeMap::from([(
+            NdcVersion::V01,
+            vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+        )]),
+    )
+}
+
+#[test]
 fn test_model_select_many_object_type_input_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/object_type_input_arguments";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";

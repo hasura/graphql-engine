@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Check data connector capabilities for nested scalar comparisons in `plan`
+  stage so any errors are returned as user rather than internal errors.
+
 ### Fixed
 
 ### Added

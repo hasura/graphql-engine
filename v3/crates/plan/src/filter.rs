@@ -621,6 +621,16 @@ fn to_field_comparison_expression<'metadata>(
                     )?,
                 };
 
+                if !data_connector
+                    .capabilities
+                    .supports_nested_scalar_array_filtering
+                {
+                    return Err(PermissionError::NestedScalarFilteringNotSupported {
+                        data_connector_name: data_connector.name.clone(),
+                    }
+                    .into());
+                }
+
                 Ok(Expression::LocalNestedScalarArray {
                     field_path,
                     column,
