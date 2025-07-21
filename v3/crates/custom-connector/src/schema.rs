@@ -216,14 +216,20 @@ fn expression_capabilities() -> ndc_models::RelationalExpressionCapabilities {
             max: Some(ndc_models::LeafCapability {}),
             median: None,
             min: Some(ndc_models::LeafCapability {}),
-            string_agg: None,
+            string_agg: Some(ndc_models::RelationalOrderedAggregateFunctionCapabilities {
+                distinct: Some(ndc_models::LeafCapability {}),
+                order_by: Some(ndc_models::LeafCapability {}),
+            }),
             sum: Some(ndc_models::LeafCapability {}),
             var: None,
             stddev: Some(ndc_models::LeafCapability {}),
             stddev_pop: Some(ndc_models::LeafCapability {}),
             approx_percentile_cont: Some(ndc_models::LeafCapability {}),
             approx_distinct: Some(ndc_models::LeafCapability {}),
-            array_agg: Some(ndc_models::LeafCapability {}),
+            array_agg: Some(ndc_models::RelationalOrderedAggregateFunctionCapabilities {
+                distinct: Some(ndc_models::LeafCapability {}),
+                order_by: Some(ndc_models::LeafCapability {}),
+            }),
         },
         window: ndc_models::RelationalWindowExpressionCapabilities {
             row_number: Some(ndc_models::LeafCapability {}),

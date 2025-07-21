@@ -614,7 +614,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                         supports_first_value: false,
                                                         supports_last_value: false,
                                                         supports_median: false,
-                                                        supports_string_agg: false,
+                                                        supports_string_agg: None,
                                                         supports_var: false,
                                                         supports_avg: true,
                                                         supports_sum: true,
@@ -624,7 +624,12 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                         supports_stddev_pop: true,
                                                         supports_approx_percentile_cont: true,
                                                         supports_approx_distinct: true,
-                                                        supports_array_agg: true,
+                                                        supports_array_agg: Some(
+                                                            DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                                                                supports_distinct: false,
+                                                                supports_order_by: false,
+                                                            },
+                                                        ),
                                                     },
                                                     supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                                                         supports_row_number: true,
@@ -748,7 +753,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                         supports_first_value: false,
                                                         supports_last_value: false,
                                                         supports_median: false,
-                                                        supports_string_agg: false,
+                                                        supports_string_agg: None,
                                                         supports_var: false,
                                                         supports_avg: true,
                                                         supports_sum: true,
@@ -758,7 +763,12 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                         supports_stddev_pop: true,
                                                         supports_approx_percentile_cont: true,
                                                         supports_approx_distinct: true,
-                                                        supports_array_agg: true,
+                                                        supports_array_agg: Some(
+                                                            DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                                                                supports_distinct: false,
+                                                                supports_order_by: false,
+                                                            },
+                                                        ),
                                                     },
                                                     supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                                                         supports_row_number: true,
@@ -883,7 +893,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_first_value: false,
                                                             supports_last_value: false,
                                                             supports_median: false,
-                                                            supports_string_agg: false,
+                                                            supports_string_agg: None,
                                                             supports_var: false,
                                                             supports_avg: true,
                                                             supports_sum: true,
@@ -893,7 +903,12 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_stddev_pop: true,
                                                             supports_approx_percentile_cont: true,
                                                             supports_approx_distinct: true,
-                                                            supports_array_agg: true,
+                                                            supports_array_agg: Some(
+                                                                DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                                                                    supports_distinct: false,
+                                                                    supports_order_by: false,
+                                                                },
+                                                            ),
                                                         },
                                                         supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                                                             supports_row_number: true,
@@ -1019,7 +1034,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_first_value: false,
                                                             supports_last_value: false,
                                                             supports_median: false,
-                                                            supports_string_agg: false,
+                                                            supports_string_agg: None,
                                                             supports_var: false,
                                                             supports_avg: true,
                                                             supports_sum: true,
@@ -1029,7 +1044,12 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_stddev_pop: true,
                                                             supports_approx_percentile_cont: true,
                                                             supports_approx_distinct: true,
-                                                            supports_array_agg: true,
+                                                            supports_array_agg: Some(
+                                                                DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                                                                    supports_distinct: false,
+                                                                    supports_order_by: false,
+                                                                },
+                                                            ),
                                                         },
                                                         supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                                                             supports_row_number: true,
@@ -1165,7 +1185,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_first_value: false,
                                                             supports_last_value: false,
                                                             supports_median: false,
-                                                            supports_string_agg: false,
+                                                            supports_string_agg: None,
                                                             supports_var: false,
                                                             supports_avg: true,
                                                             supports_sum: true,
@@ -1175,7 +1195,12 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_stddev_pop: true,
                                                             supports_approx_percentile_cont: true,
                                                             supports_approx_distinct: true,
-                                                            supports_array_agg: true,
+                                                            supports_array_agg: Some(
+                                                                DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                                                                    supports_distinct: false,
+                                                                    supports_order_by: false,
+                                                                },
+                                                            ),
                                                         },
                                                         supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                                                             supports_row_number: true,
@@ -1302,7 +1327,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_first_value: false,
                                                             supports_last_value: false,
                                                             supports_median: false,
-                                                            supports_string_agg: false,
+                                                            supports_string_agg: None,
                                                             supports_var: false,
                                                             supports_avg: true,
                                                             supports_sum: true,
@@ -1312,7 +1337,12 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/literal_use
                                                             supports_stddev_pop: true,
                                                             supports_approx_percentile_cont: true,
                                                             supports_approx_distinct: true,
-                                                            supports_array_agg: true,
+                                                            supports_array_agg: Some(
+                                                                DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                                                                    supports_distinct: false,
+                                                                    supports_order_by: false,
+                                                                },
+                                                            ),
                                                         },
                                                         supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                                                             supports_row_number: true,

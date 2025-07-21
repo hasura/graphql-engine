@@ -896,12 +896,13 @@ fn convert_expression_to_logical_expr(
         ))),
 
         // Scalar functions
-        RelationalExpression::Cast { expr, as_type } => {
+        RelationalExpression::Cast { expr, from_type: _, as_type } => {
             convert_expression_to_logical_expr(expr, schema)?
                 .cast_to(&convert_cast_type_to_data_type(as_type), schema)
         }
         RelationalExpression::TryCast {
             expr: _,
+            from_type: _,
             as_type: _,
         } => unimplemented!(),
         RelationalExpression::Abs { expr } => {
@@ -1209,7 +1210,28 @@ fn convert_expression_to_logical_expr(
                 },
             },
         )),
-        RelationalExpression::StringAgg { expr: _ } => unimplemented!(),
+        RelationalExpression::StringAgg { expr, separator, distinct, order_by } => {
+            let order_by = order_by.as_ref()
+                .map(|order_by| {
+                    order_by
+                        .iter()
+                        .map(|s| convert_sort_to_logical_sort(s, schema))
+                        .collect::<datafusion::error::Result<Vec<_>>>()
+                })
+                .transpose()?;
+            Ok(datafusion::prelude::Expr::AggregateFunction(
+                datafusion::logical_expr::expr::AggregateFunction {
+                    func: datafusion::functions_aggregate::string_agg::string_agg_udaf(),
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?, separator.lit()],
+                        distinct: *distinct,
+                        filter: None,
+                        order_by,
+                        null_treatment: None,
+                    },
+                },
+            ))
+        }
         RelationalExpression::Sum { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
             datafusion::logical_expr::expr::AggregateFunction {
                 func: sum::sum_udaf(),
@@ -1278,19 +1300,28 @@ fn convert_expression_to_logical_expr(
                 },
             ))
         },
-        RelationalExpression::ArrayAgg { expr } => Ok(datafusion::prelude::Expr::AggregateFunction(
-            datafusion::logical_expr::expr::AggregateFunction {
-                func: datafusion::functions_aggregate::array_agg::array_agg_udaf(),
-                params: AggregateFunctionParams {
-                    args: vec![convert_expression_to_logical_expr(expr, schema)?],
-                    distinct: false,
-                    filter: None,
-                    order_by: None,
-                    null_treatment: None,
+        RelationalExpression::ArrayAgg { expr, distinct, order_by } => {
+            let order_by = order_by.as_ref()
+                .map(|order_by| {
+                    order_by
+                        .iter()
+                        .map(|s| convert_sort_to_logical_sort(s, schema))
+                        .collect::<datafusion::error::Result<Vec<_>>>()
+                })
+                .transpose()?;
+            Ok(datafusion::prelude::Expr::AggregateFunction(
+                datafusion::logical_expr::expr::AggregateFunction {
+                    func: datafusion::functions_aggregate::array_agg::array_agg_udaf(),
+                    params: AggregateFunctionParams {
+                        args: vec![convert_expression_to_logical_expr(expr, schema)?],
+                        distinct: *distinct,
+                        filter: None,
+                        order_by,
+                        null_treatment: None,
+                    },
                 },
-            },
-        )),
-
+            ))
+        },
         // Window functions
         RelationalExpression::RowNumber {
             order_by,

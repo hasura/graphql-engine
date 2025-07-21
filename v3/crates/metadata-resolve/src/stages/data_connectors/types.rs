@@ -1062,7 +1062,7 @@ pub struct DataConnectorRelationalAggregateExpressionCapabilities {
 
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
-    pub supports_string_agg: bool,
+    pub supports_string_agg: Option<DataConnectorRelationalOrderedAggregateFunctionCapabilities>,
 
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
@@ -1102,7 +1102,7 @@ pub struct DataConnectorRelationalAggregateExpressionCapabilities {
 
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
-    pub supports_array_agg: bool,
+    pub supports_array_agg: Option<DataConnectorRelationalOrderedAggregateFunctionCapabilities>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -1110,6 +1110,17 @@ pub struct DataConnectorRelationalAggregateFunctionCapabilities {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_distinct: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_distinct: bool,
+
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
+    pub supports_order_by: bool,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -1431,7 +1442,12 @@ fn mk_relational_expression_capabilities(
                 supports_first_value: capabilities.aggregate.first_value.is_some(),
                 supports_last_value: capabilities.aggregate.last_value.is_some(),
                 supports_median: capabilities.aggregate.median.is_some(),
-                supports_string_agg: capabilities.aggregate.string_agg.is_some(),
+                supports_string_agg: capabilities.aggregate.string_agg.as_ref().map(|c| {
+                    DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                        supports_distinct: c.distinct.is_some(),
+                        supports_order_by: c.order_by.is_some(),
+                    }
+                }),
                 supports_var: capabilities.aggregate.var.is_some(),
                 supports_avg: capabilities.aggregate.avg.is_some(),
                 supports_sum: capabilities.aggregate.sum.is_some(),
@@ -1444,7 +1460,12 @@ fn mk_relational_expression_capabilities(
                     .approx_percentile_cont
                     .is_some(),
                 supports_approx_distinct: capabilities.aggregate.approx_distinct.is_some(),
-                supports_array_agg: capabilities.aggregate.array_agg.is_some(),
+                supports_array_agg: capabilities.aggregate.array_agg.as_ref().map(|c| {
+                    DataConnectorRelationalOrderedAggregateFunctionCapabilities {
+                        supports_distinct: c.distinct.is_some(),
+                        supports_order_by: c.order_by.is_some(),
+                    }
+                }),
             },
             supports_window: DataConnectorRelationalWindowExpressionCapabilities {
                 supports_row_number: capabilities.window.row_number.is_some(),
