@@ -4,12 +4,11 @@ use std::fmt::Display;
 
 use hasura_authn_core::{SessionVariableName, SessionVariables};
 
+use crate::ConditionCache;
 use metadata_resolve::{
     BinaryOperation, Condition, ConditionHash, Conditions, UnaryOperation, ValueExpression,
 };
 use open_dds::query::ArgumentName;
-
-use crate::ConditionCache;
 
 #[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum ConditionError {

@@ -3,6 +3,7 @@ mod cache;
 mod command;
 mod condition;
 mod field_presets;
+mod has_access;
 
 pub use allow_fields::evaluate_field_authorization_rules;
 pub use cache::ConditionCache;
