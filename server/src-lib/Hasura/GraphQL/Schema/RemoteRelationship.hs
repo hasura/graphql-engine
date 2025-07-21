@@ -118,11 +118,13 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
       <<> " not found "
   -- These are the arguments that are given by the user while executing a query
   let remoteFieldUserArguments = map snd $ HashMap.toList remoteFieldParamMap
+      -- Extract description from the target type definition
+      typeDescription = extractTypeDescription fieldTypeDefinition
   remoteFld <-
     withRemoteSchemaCustomization remoteSchemaCustomizer
       $ lift
       $ P.wrapFieldParser nestedFieldType
-      <$> remoteField remoteRelationshipIntrospection remoteSchemaRelationships remoteSchemaRoot fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+      <$> remoteField remoteRelationshipIntrospection remoteSchemaRelationships remoteSchemaRoot fieldName typeDescription remoteFieldUserArguments fieldTypeDefinition
 
   pure
     $ remoteFld
@@ -173,6 +175,16 @@ lookupNestedFieldType parentTypeName remoteSchemaIntrospection (fieldCall :| res
     Nothing -> pure fieldType
     Just rest' -> do
       lookupNestedFieldType (G.getBaseType fieldType) remoteSchemaIntrospection rest'
+
+-- | Extract description from a GraphQL TypeDefinition
+extractTypeDescription :: G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition -> Maybe G.Description
+extractTypeDescription = \case
+  G.TypeDefinitionScalar (G.ScalarTypeDefinition desc _ _) -> desc
+  G.TypeDefinitionObject (G.ObjectTypeDefinition desc _ _ _ _) -> desc
+  G.TypeDefinitionInterface (G.InterfaceTypeDefinition desc _ _ _ _) -> desc
+  G.TypeDefinitionUnion (G.UnionTypeDefinition desc _ _ _) -> desc
+  G.TypeDefinitionEnum (G.EnumTypeDefinition desc _ _ _) -> desc
+  G.TypeDefinitionInputObject (G.InputObjectTypeDefinition desc _ _ _) -> desc
 
 -- | Parser(s) for remote relationship fields to a database table.
 -- Note that when the target is a database table, an array relationship
