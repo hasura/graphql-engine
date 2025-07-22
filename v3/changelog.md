@@ -4,12 +4,16 @@
 
 ### Changed
 
-- Check data connector capabilities for nested scalar comparisons in `plan`
-  stage so any errors are returned as user rather than internal errors.
-
 ### Fixed
 
 ### Added
+
+## [v2025.07.22]
+
+### Changed
+
+- Check data connector capabilities for nested scalar comparisons in `plan`
+  stage so any errors are returned as user rather than internal errors.
 
 ## [v2025.07.21]
 
@@ -1862,7 +1866,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.21...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2025.07.22...HEAD
+[v2025.07.22]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.22
 [v2025.07.21]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.21
 [v2025.07.14]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.14
 [v2025.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2025.07.10
