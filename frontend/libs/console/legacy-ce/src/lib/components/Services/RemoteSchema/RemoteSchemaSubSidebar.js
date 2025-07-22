@@ -71,7 +71,7 @@ const RemoteSchemaSubSidebar = ({
             <li key={i} data-test={`remote-schema-sidebar-links-${i + 1}`}>
               <Link
                 className={activeTableClass}
-                to={`${appPrefix}/manage/${d.name}/details`}
+                to={`${appPrefix}/manage/${encodeURIComponent(d.name)}/details`}
                 data-test={d.name}
               >
                 <IoGitBranch aria-hidden="true" size="12px" className="mr-xs" />

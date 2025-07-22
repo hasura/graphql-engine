@@ -140,8 +140,6 @@ class Common extends React.Component {
             disabled
             required
             data-test="remote-schema-schema-name"
-            pattern="^[a-zA-Z0-9-_]*$"
-            title="Special characters except '-' or '_' are not allowed"
           />
         </label>
         <hr className="my-md" />

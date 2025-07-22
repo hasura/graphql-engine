@@ -23,7 +23,9 @@ export const RemoteSchemaDetailsNavigation = (
   if (remoteSchemaName) {
     breadCrumbs.push({
       title: remoteSchemaName.trim(),
-      url: `/remote-schemas/manage/${remoteSchemaName.trim()}/details`,
+      url: `/remote-schemas/manage/${encodeURIComponent(
+        remoteSchemaName.trim()
+      )}/details`,
     });
     breadCrumbs.push({
       title: 'details',
@@ -37,7 +39,7 @@ export const RemoteSchemaDetailsNavigation = (
       currentTab="details"
       heading={remoteSchemaName}
       breadCrumbs={breadCrumbs}
-      baseUrl={`/remote-schemas/manage/${remoteSchemaName}`}
+      baseUrl={`/remote-schemas/manage/${encodeURIComponent(remoteSchemaName)}`}
       showLoader={false}
       testPrefix="remote-schema-details"
     />

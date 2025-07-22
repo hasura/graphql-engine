@@ -184,7 +184,7 @@ class Edit extends React.Component {
           '/' +
           'manage' +
           '/' +
-          remoteSchemaName.trim() +
+          encodeURIComponent(remoteSchemaName.trim()) +
           '/' +
           'details',
       });
@@ -217,7 +217,9 @@ class Edit extends React.Component {
           currentTab="modify"
           heading={remoteSchemaName}
           breadCrumbs={breadCrumbs}
-          baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
+          baseUrl={`${appPrefix}/manage/${encodeURIComponent(
+            remoteSchemaName
+          )}`}
           showLoader={isFetching}
         />
 

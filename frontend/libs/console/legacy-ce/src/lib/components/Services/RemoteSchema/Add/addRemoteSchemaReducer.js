@@ -122,7 +122,7 @@ const addRemoteSchema = () => (dispatch, getState) => {
 
   const manualUrl = currState?.manualUrl?.trim();
   const envName = currState?.envName?.trim();
-  const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
+  const remoteSchemaName = currState.name.trim();
   const remoteSchemaDef = {
     timeout_seconds: timeoutSeconds,
     forward_client_headers: currState.forwardClientHeaders,
@@ -144,7 +144,10 @@ const addRemoteSchema = () => (dispatch, getState) => {
     remoteSchemaDef.url_from_env = envName;
   }
 
-  const migrationName = `create_remote_schema_${remoteSchemaName}`;
+  const migrationName = `create_remote_schema_${remoteSchemaName.replace(
+    / +/g,
+    '_'
+  )}`;
   const payload = addRemoteSchemaQuery(
     remoteSchemaName,
     remoteSchemaDef,
@@ -160,7 +163,13 @@ const addRemoteSchema = () => (dispatch, getState) => {
     Promise.all([
       dispatch({ type: RESET }),
       dispatch(exportMetadata()).then(() => {
-        dispatch(_push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
+        dispatch(
+          _push(
+            `${prefixUrl}/manage/${encodeURIComponent(
+              remoteSchemaName
+            )}/details`
+          )
+        );
       }),
       dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
     ]);
@@ -204,7 +213,7 @@ const deleteRemoteSchema = () => (dispatch, getState) => {
 
   const migrationName = `remove_remote_schema_${remoteSchemaName
     .trim()
-    .replace(/ +/g, '')}`;
+    .replace(/ +/g, '_')}`;
   const payload = removeRemoteSchemaQuery(remoteSchemaName);
   const downPayload = addRemoteSchemaQuery(
     remoteSchemaName,
@@ -251,7 +260,7 @@ const modifyRemoteSchema = () => (dispatch, getState) => {
 
   const manualUrl = currState?.manualUrl?.trim();
   const envName = currState?.envName?.trim();
-  const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
+  const remoteSchemaName = currState.name.trim();
   const remoteSchemaDef = {
     timeout_seconds: timeoutSeconds,
     forward_client_headers: currState.forwardClientHeaders,
@@ -303,7 +312,10 @@ const modifyRemoteSchema = () => (dispatch, getState) => {
   );
 
   const migration = new Migration();
-  const migrationName = `update_remote_schema_${remoteSchemaName}`;
+  const migrationName = `update_remote_schema_${remoteSchemaName.replace(
+    / +/g,
+    '_'
+  )}`;
   migration.add(upQuery, downQuery);
 
   const requestMsg = 'Modifying remote schema...';
@@ -314,7 +326,11 @@ const modifyRemoteSchema = () => (dispatch, getState) => {
     dispatch({ type: RESET, data: data });
     dispatch(_push(`${prefixUrl}/manage/schemas`)); // to avoid 404
     dispatch(exportMetadata()).then(() => {
-      dispatch(_push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
+      dispatch(
+        _push(
+          `${prefixUrl}/manage/${encodeURIComponent(remoteSchemaName)}/details`
+        )
+      );
       dispatch(fetchRemoteSchema(remoteSchemaName));
     });
     clearIntrospectionSchemaCache();
