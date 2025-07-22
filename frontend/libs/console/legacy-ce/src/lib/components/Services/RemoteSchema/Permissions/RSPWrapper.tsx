@@ -47,7 +47,7 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
     },
     {
       title: remoteSchemaName,
-      url: `${appPrefix}/manage/${remoteSchemaName}/modify`,
+      url: `${appPrefix}/manage/${encodeURIComponent(remoteSchemaName)}/modify`,
     },
     {
       title: tabName,
